@@ -1,0 +1,36 @@
+{
+  "name": "@guarani/cryptography",
+  "version": "0.0.0",
+  "description": "Cryptography utilities and functionalities used throughout Guarani.",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/guaranijs/guarani/tree/master/packages/cryptography#readme",
+  "bugs": "https://github.com/guaranijs/guarani/issues",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/guaranijs/guarani.git",
+    "directory": "packages/cryptography"
+  },
+  "author": {
+    "name": "Eduardo Ribeiro Rezende",
+    "email": "eduardorbr7@gmail.com",
+    "url": "https://github.com/revensky"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@guarani/utils": "^0.0.0"
+  }
+}

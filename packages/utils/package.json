@@ -1,0 +1,33 @@
+{
+  "name": "@guarani/utils",
+  "version": "0.0.0",
+  "description": "Utility functionalities for usage within Guarani.",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/guaranijs/guarani/tree/master/packages/utils#readme",
+  "bugs": "https://github.com/guaranijs/guarani/issues",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/guaranijs/guarani.git",
+    "directory": "packages/utils"
+  },
+  "author": {
+    "name": "Eduardo Ribeiro Rezende",
+    "email": "eduardorbr7@gmail.com",
+    "url": "https://github.com/revensky"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  }
+}

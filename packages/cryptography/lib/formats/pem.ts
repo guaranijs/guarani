@@ -1,11 +1,7 @@
-export class PEM {
-  public constructor (private data: Buffer) {}
-
-  public encode (label?: string): string {
-    if (!label) throw new Error('You MUST provide a valid label.')
-
+export namespace PEM {
+  export function encode (data: Buffer, label: string): string {
     let i = 0
-    const b64 = this.data.toString('base64')
+    const b64 = data.toString('base64')
 
     let response = `-----BEGIN ${label}-----\n`
 

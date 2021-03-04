@@ -13,7 +13,7 @@ export class Sequence extends Node {
     this.value = Buffer.concat([
       Primitives.toBuffer(Sequence.tag),
       encodeLength(nodes.reduce<number>((length, node) => (length += node.length), 0)),
-      ...nodes.map(node => node.data)
+      ...nodes.map(node => node.encode())
     ])
     this._nodes = nodes
   }

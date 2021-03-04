@@ -43,6 +43,7 @@
     "dist"
   ],
   "scripts": {
+    "build": "tsc",
     "test": "jest"
   },
   "dependencies": {

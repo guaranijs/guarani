@@ -1,10 +1,15 @@
-import { createPrivateKey, createPublicKey, KeyObject } from 'crypto'
+import {
+  createPrivateKey,
+  createPublicKey,
+  generateKeyPairSync,
+  KeyObject
+} from 'crypto'
 
-import { ASN1, Encoders, Nodes } from '@guarani/cryptography'
+import { ASN1, Decoder, Nodes, PEM } from '@guarani/cryptography'
 import { Base64Url } from '@guarani/utils'
 
 import { InvalidKey, JoseError } from '../../exceptions'
-import { JWKAlgorithm, JWKParams } from './_base'
+import { JWKAlgorithm, JWKParams } from './algorithm'
 
 export interface RSAPublicParams extends JWKParams {
   n: string
@@ -43,7 +48,7 @@ export class RSAPublicKey extends JWKAlgorithm implements RSAPublicParams {
     const asn1 = this.getPublicParamsAsASN1()
 
     return createPublicKey({
-      key: new Encoders.DER(asn1.data).encode(),
+      key: asn1.encode(),
       format: 'der',
       type: 'pkcs1'
     })
@@ -52,7 +57,7 @@ export class RSAPublicKey extends JWKAlgorithm implements RSAPublicParams {
   public export (type?: 'pkcs1' | 'pkcs8'): string {
     if (type === 'pkcs1') {
       const asn1 = this.getPublicParamsAsASN1()
-      return new Encoders.PEM(asn1.data).encode('RSA PUBLIC KEY')
+      return PEM.encode(asn1.encode(), 'RSA PUBLIC KEY')
     }
 
     if (type === 'pkcs8') {
@@ -63,11 +68,11 @@ export class RSAPublicKey extends JWKAlgorithm implements RSAPublicParams {
             new Nodes.ObjectId('1.2.840.113549.1.1.1'),
             new Nodes.Null()
           ),
-          new Nodes.BitString(key.data)
+          new Nodes.BitString(key.encode())
         )
       )
 
-      return new Encoders.PEM(asn1.data).encode('PUBLIC KEY')
+      return PEM.encode(asn1.encode(), 'PUBLIC KEY')
     }
 
     throw new JoseError('You MUST provide a valid type argument.')
@@ -130,7 +135,7 @@ export class RSAPrivateKey extends RSAPublicKey implements RSAPrivateParams {
     const asn1 = this.getPrivateParamsAsASN1()
 
     return createPrivateKey({
-      key: new Encoders.DER(asn1.data).encode(),
+      key: asn1.encode(),
       format: 'der',
       type: 'pkcs1'
     })
@@ -139,7 +144,7 @@ export class RSAPrivateKey extends RSAPublicKey implements RSAPrivateParams {
   public export (type?: 'pkcs1' | 'pkcs8'): string {
     if (type === 'pkcs1') {
       const asn1 = this.getPrivateParamsAsASN1()
-      return new Encoders.PEM(asn1.data).encode('RSA PRIVATE KEY')
+      return PEM.encode(asn1.encode(), 'RSA PRIVATE KEY')
     }
 
     if (type === 'pkcs8') {
@@ -151,13 +156,75 @@ export class RSAPrivateKey extends RSAPublicKey implements RSAPrivateParams {
             new Nodes.ObjectId('1.2.840.113549.1.1.1'),
             new Nodes.Null()
           ),
-          new Nodes.OctetString(key.data)
+          new Nodes.OctetString(key.encode())
         )
       )
 
-      return new Encoders.PEM(asn1.data).encode('PRIVATE KEY')
+      return PEM.encode(asn1.encode(), 'PRIVATE KEY')
     }
 
     throw new JoseError('You MUST provide a valid type argument.')
   }
+}
+
+export function createRsaKey (
+  modulusLength: number = 2048,
+  publicExponent: number = 65537
+): [RSAPublicKey, RSAPrivateKey] {
+  const privateKey = generateKeyPairSync('rsa', { modulusLength, publicExponent }).privateKey
+  const der = privateKey.export({ format: 'der', type: 'pkcs1' })
+  const decoder = new Decoder(der).sequence()
+
+  // Extracts the version of the private key.
+  decoder.integer()
+
+  const n = Base64Url.encodeInt(decoder.integer())
+  const e = Base64Url.encodeInt(decoder.integer())
+  const d = Base64Url.encodeInt(decoder.integer())
+  const p = Base64Url.encodeInt(decoder.integer())
+  const q = Base64Url.encodeInt(decoder.integer())
+  const dp = Base64Url.encodeInt(decoder.integer())
+  const dq = Base64Url.encodeInt(decoder.integer())
+  const qi = Base64Url.encodeInt(decoder.integer())
+
+  return [
+    new RSAPublicKey({ kty: 'RSA', n, e }),
+    new RSAPrivateKey({ kty: 'RSA', n, e, d, p, q, dp, dq, qi })
+  ]
+}
+
+/* eslint-disable no-redeclare */
+export function parseRsaKey (data: string, keyType: 'public'): RSAPublicKey
+export function parseRsaKey (data: string, keyType: 'private'): RSAPrivateKey
+export function parseRsaKey (data: string, keyType: 'public' | 'private') {
+  if (keyType === 'public') {
+    const key = createPublicKey(data)
+    const decoder = new Decoder(key.export({ format: 'der', type: 'pkcs1' })).sequence()
+
+    const n = Base64Url.encodeInt(decoder.integer())
+    const e = Base64Url.encodeInt(decoder.integer())
+
+    return new RSAPublicKey({ kty: 'RSA', n, e })
+  }
+
+  if (keyType === 'private') {
+    const key = createPrivateKey(data)
+    const decoder = new Decoder(key.export({ format: 'der', type: 'pkcs1' })).sequence()
+
+    // Extracts the version of the private key.
+    decoder.integer()
+
+    const n = Base64Url.encodeInt(decoder.integer())
+    const e = Base64Url.encodeInt(decoder.integer())
+    const d = Base64Url.encodeInt(decoder.integer())
+    const p = Base64Url.encodeInt(decoder.integer())
+    const q = Base64Url.encodeInt(decoder.integer())
+    const dp = Base64Url.encodeInt(decoder.integer())
+    const dq = Base64Url.encodeInt(decoder.integer())
+    const qi = Base64Url.encodeInt(decoder.integer())
+
+    return new RSAPrivateKey({ kty: 'RSA', n, e, d, p, q, dp, dq, qi })
+  }
+
+  throw new InvalidKey('The key is neither public nor private.')
 }

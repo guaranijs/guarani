@@ -1,5 +1,5 @@
 /**
- * Removes nullish values from an the properties of an object or an array of objects.
+ * Removes nullish values from the properties of an object or an array of objects.
  *
  * @param {*} data Object or array of objects to be cleansed.
  * @returns Object or array of objects without nullish values.

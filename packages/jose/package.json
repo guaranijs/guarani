@@ -22,6 +22,7 @@
   ],
   "license": "MIT",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "homepage": "https://github.com/guaranijs/guarani/tree/master/packages/jose#readme",
   "bugs": "https://github.com/guaranijs/guarani/issues",
   "repository": {
@@ -41,11 +42,7 @@
   "files": [
     "dist"
   ],
-  "publishConfig": {
-    "registry": "https://registry.npm.org"
-  },
   "scripts": {
-    "build": "tsc",
     "test": "jest"
   },
   "dependencies": {

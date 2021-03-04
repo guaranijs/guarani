@@ -4,6 +4,7 @@
   "description": "Utility functionalities for usage within Guarani.",
   "license": "MIT",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "homepage": "https://github.com/guaranijs/guarani/tree/master/packages/utils#readme",
   "bugs": "https://github.com/guaranijs/guarani/issues",
   "repository": {
@@ -23,9 +24,6 @@
   "files": [
     "dist"
   ],
-  "publishConfig": {
-    "registry": "https://registry.yarnpkg.com"
-  },
   "scripts": {
     "build": "tsc",
     "test": "jest"

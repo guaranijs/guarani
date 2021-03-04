@@ -16,7 +16,7 @@ function bufferToInt (data: Buffer): bigint {
     return res.concat(n)
   }, '')
 
-  return BigInt(`0x${strRepr}`)
+  return BigInt(`0x${strRepr || '00'}`)
 }
 
 /**

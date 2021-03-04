@@ -16,9 +16,11 @@
     "url": "https://github.com/revensky"
   },
   "scripts": {
-    "start": "lerna exec -- tsc --watch",
+    "prebuild": "lerna exec --parallel -- rimraf dist",
     "build": "lerna run build --stream",
-    "test": "lerna run test"
+    "test": "lerna run test",
+    "lint": "eslint packages --ext ts",
+    "tsc": "tsc --skipLibCheck"
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",
@@ -32,6 +34,7 @@
     "eslint-plugin-promise": "^4.3.1",
     "jest": "^26.6.3",
     "lerna": "^3.22.1",
+    "rimraf": "^3.0.2",
     "ts-jest": "^26.5.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.2"

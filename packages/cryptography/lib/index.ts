@@ -1,2 +1,3 @@
-export * as ASN1 from './asn1'
-export * from './encoders'
+export * from './asn1'
+export { Decoder } from './decoder'
+export * from './formats'

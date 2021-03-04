@@ -1,7 +1,7 @@
 import { fromBuffer, toBuffer } from './primitives'
 
 /**
- * Encodes a buffer object into a base64-url string.
+ * Encodes a Buffer object into a base64-url string.
  *
  * @param {Buffer} data Buffer to be encoded in base64-url.
  * @returns Encoded base64-url string.

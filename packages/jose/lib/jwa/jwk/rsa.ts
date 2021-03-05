@@ -1,15 +1,12 @@
-import {
-  createPrivateKey,
-  createPublicKey,
-  generateKeyPairSync,
-  KeyObject
-} from 'crypto'
+import { createPrivateKey, createPublicKey, generateKeyPairSync, KeyObject } from 'crypto'
 
-import { ASN1, Decoder, Nodes, PEM } from '@guarani/cryptography'
+import { ASN1, Decoders, Encoders } from '@guarani/cryptography'
 import { Base64Url } from '@guarani/utils'
 
 import { InvalidKey, JoseError } from '../../exceptions'
 import { JWKAlgorithm, JWKParams } from './algorithm'
+
+const { Nodes } = ASN1
 
 export interface RSAPublicParams extends JWKParams {
   n: string
@@ -35,8 +32,8 @@ export class RSAPublicKey extends JWKAlgorithm implements RSAPublicParams {
     this.e = data.e
   }
 
-  private getPublicParamsAsASN1 (): ASN1 {
-    return new ASN1(
+  private getPublicParamsAsASN1 (): ASN1.ASN1 {
+    return new ASN1.ASN1(
       new Nodes.Sequence(
         new Nodes.Integer(Base64Url.decodeInt(this.n)),
         new Nodes.Integer(Base64Url.decodeInt(this.e))
@@ -57,12 +54,12 @@ export class RSAPublicKey extends JWKAlgorithm implements RSAPublicParams {
   public export (type?: 'pkcs1' | 'pkcs8'): string {
     if (type === 'pkcs1') {
       const asn1 = this.getPublicParamsAsASN1()
-      return PEM.encode(asn1.encode(), 'RSA PUBLIC KEY')
+      return Encoders.PEM(asn1.encode(), 'RSA PUBLIC KEY')
     }
 
     if (type === 'pkcs8') {
       const key = this.getPublicParamsAsASN1()
-      const asn1 = new ASN1(
+      const asn1 = new ASN1.ASN1(
         new Nodes.Sequence(
           new Nodes.Sequence(
             new Nodes.ObjectId('1.2.840.113549.1.1.1'),
@@ -72,7 +69,7 @@ export class RSAPublicKey extends JWKAlgorithm implements RSAPublicParams {
         )
       )
 
-      return PEM.encode(asn1.encode(), 'PUBLIC KEY')
+      return Encoders.PEM(asn1.encode(), 'PUBLIC KEY')
     }
 
     throw new JoseError('You MUST provide a valid type argument.')
@@ -115,8 +112,8 @@ export class RSAPrivateKey extends RSAPublicKey implements RSAPrivateParams {
     this.qi = data.qi
   }
 
-  private getPrivateParamsAsASN1 (): ASN1 {
-    return new ASN1(
+  private getPrivateParamsAsASN1 (): ASN1.ASN1 {
+    return new ASN1.ASN1(
       new Nodes.Sequence(
         new Nodes.Integer(0x00),
         new Nodes.Integer(Base64Url.decodeInt(this.n)),
@@ -144,12 +141,12 @@ export class RSAPrivateKey extends RSAPublicKey implements RSAPrivateParams {
   public export (type?: 'pkcs1' | 'pkcs8'): string {
     if (type === 'pkcs1') {
       const asn1 = this.getPrivateParamsAsASN1()
-      return PEM.encode(asn1.encode(), 'RSA PRIVATE KEY')
+      return Encoders.PEM(asn1.encode(), 'RSA PRIVATE KEY')
     }
 
     if (type === 'pkcs8') {
       const key = this.getPrivateParamsAsASN1()
-      const asn1 = new ASN1(
+      const asn1 = new ASN1.ASN1(
         new Nodes.Sequence(
           new Nodes.Integer(0x00),
           new Nodes.Sequence(
@@ -160,7 +157,7 @@ export class RSAPrivateKey extends RSAPublicKey implements RSAPrivateParams {
         )
       )
 
-      return PEM.encode(asn1.encode(), 'PRIVATE KEY')
+      return Encoders.PEM(asn1.encode(), 'PRIVATE KEY')
     }
 
     throw new JoseError('You MUST provide a valid type argument.')
@@ -173,7 +170,7 @@ export function createRsaKey (
 ): [RSAPublicKey, RSAPrivateKey] {
   const privateKey = generateKeyPairSync('rsa', { modulusLength, publicExponent }).privateKey
   const der = privateKey.export({ format: 'der', type: 'pkcs1' })
-  const decoder = new Decoder(der).sequence()
+  const decoder = Decoders.DER(der).sequence()
 
   // Extracts the version of the private key.
   decoder.integer()
@@ -199,7 +196,7 @@ export function parseRsaKey (data: string, keyType: 'private'): RSAPrivateKey
 export function parseRsaKey (data: string, keyType: 'public' | 'private') {
   if (keyType === 'public') {
     const key = createPublicKey(data)
-    const decoder = new Decoder(key.export({ format: 'der', type: 'pkcs1' })).sequence()
+    const decoder = Decoders.DER(key.export({ format: 'der', type: 'pkcs1' })).sequence()
 
     const n = Base64Url.encodeInt(decoder.integer())
     const e = Base64Url.encodeInt(decoder.integer())
@@ -209,7 +206,7 @@ export function parseRsaKey (data: string, keyType: 'public' | 'private') {
 
   if (keyType === 'private') {
     const key = createPrivateKey(data)
-    const decoder = new Decoder(key.export({ format: 'der', type: 'pkcs1' })).sequence()
+    const decoder = Decoders.DER(key.export({ format: 'der', type: 'pkcs1' })).sequence()
 
     // Extracts the version of the private key.
     decoder.integer()

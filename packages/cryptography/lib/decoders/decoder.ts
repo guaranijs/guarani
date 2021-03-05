@@ -1,5 +1,5 @@
 import { Primitives } from '@guarani/utils'
-import { decodeLength } from './_utils'
+import { decodeLength } from '../_utils'
 
 const Tags = {
   ZERO: 0x00,

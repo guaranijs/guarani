@@ -1,6 +1,5 @@
 export abstract class Node {
-  public static tag: number
-  protected value: Buffer
+  protected abstract value: Buffer
 
   public constructor () {}
 

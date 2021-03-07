@@ -3,7 +3,7 @@ import { encodeLength } from '../../_utils'
 import { Node } from './node'
 
 export class ObjectId extends Node {
-  public static tag: number = 0x06
+  protected value: Buffer
 
   public constructor (value: string) {
     super()
@@ -38,6 +38,6 @@ export class ObjectId extends Node {
     const buffer = Buffer.concat([firstByte, ...bytes.reverse()])
     const length = encodeLength(buffer.length)
 
-    this.value = Buffer.concat([Primitives.toBuffer(ObjectId.tag), length, buffer])
+    this.value = Buffer.concat([Primitives.toBuffer(0x06), length, buffer])
   }
 }

@@ -3,13 +3,13 @@ import { encodeLength } from '../../_utils'
 import { Node } from './node'
 
 export class OctetString extends Node {
-  public static tag: number = 0x04
+  protected value: Buffer
 
   public constructor (value: Buffer) {
     super()
 
     this.value = Buffer.concat([
-      Primitives.toBuffer(OctetString.tag),
+      Primitives.toBuffer(0x04),
       encodeLength(value.length),
       value
     ])

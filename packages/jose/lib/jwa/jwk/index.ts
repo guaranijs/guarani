@@ -1,6 +1,15 @@
 export { JWKAlgorithm, JWKParams } from './algorithm'
 
 export {
+  createEcKey,
+  ECPrivateKey,
+  ECPrivateParams,
+  ECPublicKey,
+  ECPublicParams,
+  parseEcKey
+} from './ec'
+
+export {
   createOctKey,
   OCTSecretKey,
   OCTSecretParams,

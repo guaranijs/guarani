@@ -17,3 +17,13 @@ export function removeNullishValues (data: unknown): unknown {
     return r
   }, {})
 }
+
+/**
+ * Reverses the entries of an object.
+ *
+ * @param {unknown} data Object that will have its entries reversed.
+ * @returns Object with its entries reversed.
+ */
+export function reverseEntries (data: unknown): unknown {
+  return Object.entries(data).reduce((p, [k, v]) => { p[v] = k; return p }, {})
+}

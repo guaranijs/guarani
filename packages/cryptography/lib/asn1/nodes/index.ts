@@ -1,5 +1,6 @@
 export { BitString } from './bit-string'
 export { Boolean } from './boolean'
+export { ContextSpecific } from './context-specific'
 export { Integer } from './integer'
 export { Node } from './node'
 export { Null } from './null'

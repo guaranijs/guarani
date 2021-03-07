@@ -4,14 +4,14 @@ import { encodeLength } from '../../_utils'
 import { Node } from './node'
 
 export class Sequence extends Node {
-  public static tag: number = 0x30
+  protected value: Buffer
   private _nodes: Node[]
 
   public constructor (...nodes: Node[]) {
     super()
 
     this.value = Buffer.concat([
-      Primitives.toBuffer(Sequence.tag),
+      Primitives.toBuffer(0x30),
       encodeLength(nodes.reduce<number>((length, node) => (length += node.length), 0)),
       ...nodes.map(node => node.encode())
     ])

@@ -51,13 +51,13 @@ export class RSAPublicKey extends JWKAlgorithm implements RSAPublicParams {
     })
   }
 
-  public export (type?: 'pkcs1' | 'pkcs8'): string {
+  public export (type?: 'pkcs1' | 'spki'): string {
     if (type === 'pkcs1') {
       const asn1 = this.getPublicParamsAsASN1()
       return Encoders.PEM(asn1.encode(), 'RSA PUBLIC KEY')
     }
 
-    if (type === 'pkcs8') {
+    if (type === 'spki') {
       const key = this.getPublicParamsAsASN1()
       const asn1 = new ASN1.ASN1(
         new Nodes.Sequence(
@@ -138,6 +138,7 @@ export class RSAPrivateKey extends RSAPublicKey implements RSAPrivateParams {
     })
   }
 
+  // @ts-expect-error
   public export (type?: 'pkcs1' | 'pkcs8'): string {
     if (type === 'pkcs1') {
       const asn1 = this.getPrivateParamsAsASN1()

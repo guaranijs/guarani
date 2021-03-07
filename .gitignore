@@ -115,3 +115,7 @@ dist
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
+
+# IDE files
+.vscode/*
+.idea/*

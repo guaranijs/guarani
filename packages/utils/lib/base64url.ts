@@ -42,3 +42,23 @@ export function encodeInt (integer: number | bigint): string {
 export function decodeInt (data: string): bigint {
   return fromBuffer(decode(data), 'integer') as bigint
 }
+
+/**
+ * Transforms a Base64 string into a Base64Url string.
+ *
+ * @param {string} data Base64 string to be transformed.
+ * @returns Base64Url string.
+ */
+export function fromBase64 (data: string): string {
+  return encode(Buffer.from(data, 'base64'))
+}
+
+/**
+ * Transforms a Base64Url string into a Base64 string.
+ *
+ * @param {string} data Base64Url string to be transformed.
+ * @returns Base64 string.
+ */
+export function toBase64 (data: string): string {
+  return decode(data).toString('base64')
+}

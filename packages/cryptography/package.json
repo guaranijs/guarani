@@ -1,6 +1,6 @@
 {
   "name": "@guarani/cryptography",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Cryptography utilities and functionalities used throughout Guarani.",
   "license": "MIT",
   "main": "dist/index.js",
@@ -33,6 +33,6 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@guarani/utils": "0.0.1"
+    "@guarani/utils": "0.1.0"
   }
 }

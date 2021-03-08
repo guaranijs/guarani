@@ -1,6 +1,6 @@
 {
   "name": "@guarani/utils",
-  "version": "0.0.2",
+  "version": "0.0.0",
   "description": "Utility functionalities for usage within Guarani.",
   "license": "MIT",
   "main": "dist/index.js",
@@ -30,6 +30,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "gitHead": "e66ea4811a88446f2370958792429870b3a4eb4a"
+  }
 }

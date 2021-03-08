@@ -19,7 +19,8 @@
     "prebuild": "lerna exec --parallel -- rimraf dist",
     "build": "lerna run build --stream",
     "prepublishOnly": "npm run test && npm run build",
-    "publish:stable": "yarn build && yarn lerna publish",
+    "publish:canary": "lerna version prerelease --no-changelog --preid next",
+    "publish:stable": "lerna version --no-changelog",
     "test": "lerna run test",
     "lint": "eslint packages --ext ts",
     "tsc": "tsc --skipLibCheck"

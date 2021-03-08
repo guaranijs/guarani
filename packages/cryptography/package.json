@@ -1,6 +1,6 @@
 {
   "name": "@guarani/cryptography",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Cryptography utilities and functionalities used throughout Guarani.",
   "license": "MIT",
   "main": "dist/index.js",
@@ -32,7 +32,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@guarani/utils": "0.0.1"
+    "@guarani/utils": "0.0.2"
   },
   "gitHead": "e66ea4811a88446f2370958792429870b3a4eb4a"
 }

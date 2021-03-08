@@ -1,6 +1,6 @@
 {
   "name": "@guarani/jose",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Implementation of the RFCs of the JOSE Working Group.",
   "keywords": [
     "JOSE",
@@ -50,8 +50,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@guarani/cryptography": "0.0.1",
-    "@guarani/utils": "0.0.1"
+    "@guarani/cryptography": "0.0.2",
+    "@guarani/utils": "0.0.2"
   },
   "gitHead": "e66ea4811a88446f2370958792429870b3a4eb4a"
 }

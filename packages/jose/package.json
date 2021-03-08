@@ -46,8 +46,12 @@
     "build": "tsc",
     "test": "jest"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@guarani/cryptography": "0.0.1",
     "@guarani/utils": "0.0.1"
-  }
+  },
+  "gitHead": "e66ea4811a88446f2370958792429870b3a4eb4a"
 }

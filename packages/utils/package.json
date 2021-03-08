@@ -27,5 +27,9 @@
   "scripts": {
     "build": "tsc",
     "test": "jest"
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "e66ea4811a88446f2370958792429870b3a4eb4a"
 }

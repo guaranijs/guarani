@@ -19,7 +19,7 @@
     "prebuild": "lerna exec --parallel -- rimraf dist",
     "build": "lerna run build --stream",
     "prepublishOnly": "npm run test && npm run build",
-    "publish:canary": "lerna publish prerelease --no-changelog --preid next",
+    "publish:canary": "lerna publish prerelease --no-changelog --preid alpha",
     "publish:stable": "lerna publish --no-changelog",
     "test": "lerna run test",
     "lint": "eslint packages --ext ts",

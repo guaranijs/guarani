@@ -1,4 +1,4 @@
 export * from './exceptions'
-export { JWKA } from './jwa'
+export { JWKA, JWSA } from './jwa'
 export { JWKParams, JsonWebKey } from './jwk'
 export { JsonWebKeySet } from './jwks'

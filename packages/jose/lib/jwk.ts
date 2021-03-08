@@ -122,7 +122,8 @@ export class JsonWebKey<KeyAlg extends JWKAParams = JWKParams> implements JWKPar
   public static parse (kty: 'RSA', data: string, keyType: 'private'): JsonWebKey<RSA.PrivateParams>
   public static parse (kty: 'RSA', data: string, keyType: 'public'): JsonWebKey<RSA.PublicParams>
   public static parse (kty: 'EC' | 'oct' | 'RSA', data: string | Buffer, keyType?: 'private' | 'public') {
-    return SupportedAlgorithms[kty].parse(data, keyType)
+    const keyAlg = SupportedAlgorithms[kty].parse(data, keyType)
+    return new JsonWebKey({ kty, ...keyAlg })
   }
 
   public get secretKey (): KeyObject {

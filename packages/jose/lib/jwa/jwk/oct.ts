@@ -65,6 +65,7 @@ export namespace OCT {
     }
 
     const secret = (typeof data === 'string') ? Base64Url.fromBase64(data) : Base64Url.encode(data)
+
     return new SecretKey({ kty: 'oct', k: secret })
   }
 }

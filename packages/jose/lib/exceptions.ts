@@ -19,6 +19,12 @@ export class InvalidKeySet extends JoseError {
   }
 }
 
+export class InvalidSignature extends JoseError {
+  public constructor (message = 'The provided signature does not match the provided data.') {
+    super(message)
+  }
+}
+
 export class UnsupportedAlgorithm extends JoseError {
   public constructor (message = 'The provided algorithm is currently not supported.') {
     super(message)

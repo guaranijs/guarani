@@ -18,4 +18,14 @@ describe('Base64 URL functionalities', () => {
   it('should decode a Base64 URL string into an integer.', () => {
     expect(Base64Url.decodeInt('AQAB')).toEqual(65537n)
   })
+
+  it('should convert a Base64 string into a Base64Url string.', () => {
+    expect(Base64Url.fromBase64('qDM80igvja4Tg/tNsEuWDhl2bMM6/NgJEldFhIEuwqQ='))
+      .toEqual('qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ')
+  })
+
+  it('should convert a Base64Url string into a Base64 string.', () => {
+    expect(Base64Url.toBase64('qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ'))
+      .toEqual('qDM80igvja4Tg/tNsEuWDhl2bMM6/NgJEldFhIEuwqQ=')
+  })
 })

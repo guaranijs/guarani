@@ -27,7 +27,7 @@ export class JsonWebKeySet {
     const ids = keys.map(key => key.kid)
 
     if (ids.some(id => !id)) {
-      throw new InvalidKeySet('One or more keys do not have an ID.')
+      throw new InvalidKeySet('You MUST provide an unique ID to each key.')
     }
 
     if (new Set(ids).size !== ids.length) {

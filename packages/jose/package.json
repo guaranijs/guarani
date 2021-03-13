@@ -51,7 +51,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@guarani/cryptography": "0.1.0",
+    "@guarani/asn1": "^0.1.0",
     "@guarani/utils": "0.1.0"
   }
 }

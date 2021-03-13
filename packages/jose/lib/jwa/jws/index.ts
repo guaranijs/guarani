@@ -1,3 +1,9 @@
+/**
+ * Implements the Section 3 of the RFC 7518.
+ *
+ * @module JWSA
+ */
+
 export { JWSAlgorithm } from './algorithm'
 export { ES256, ES384, ES512 } from './ecdsa'
 export { HS256, HS384, HS512 } from './hmac'

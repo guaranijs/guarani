@@ -6,7 +6,9 @@ describe('Operations to and from primitive types', () => {
   })
 
   it('should transform a Buffer into an integer.', () => {
-    expect(Primitives.fromBuffer(Buffer.from([0x01, 0x00, 0x01]), 'integer')).toEqual(65537n)
+    expect(
+      Primitives.fromBuffer(Buffer.from([0x01, 0x00, 0x01]), 'integer')
+    ).toEqual(BigInt(65537))
   })
 
   it('should transform a string into a Buffer.', () => {

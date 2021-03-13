@@ -13,20 +13,51 @@ export type SupportedHashes = 'sha256' | 'sha384' | 'sha512'
  * implement its methods.
  */
 export abstract class JWSAlgorithm {
-  public constructor (protected hash: SupportedHashes, protected algorithm: string) {}
+  /**
+   * Instantiates a new JWS Algorithm to sign and verify the messages.
+   *
+   * @param hash - Hash algorithm used to sign and verify the messages.
+   * @param algorithm - Name of the algorithm.
+   */
+  public constructor(
+    protected hash: SupportedHashes,
+    protected algorithm: string
+  ) {}
 
-  public abstract sign (data: Buffer, key: JsonWebKey): string
-  public abstract verify (signature: string, data: Buffer, key: JsonWebKey): void
+  /**
+   * Signs a message with the given key.
+   *
+   * @param data - Data to be signed.
+   * @param key - JWK used to sign the data.
+   * @returns Base64Url string representation of the signed message.
+   */
+  public abstract sign(data: Buffer, key: JsonWebKey): string
+
+  /**
+   * Matches a signature against a message with the given key.
+   *
+   * @param signature - Signature to be matched against the message.
+   * @param data - Data to be matched against the signature.
+   * @param key - Key used to verify the signature.
+   */
+  public abstract verify(signature: string, data: Buffer, key: JsonWebKey): void
 }
 
-export function checkKey (key: JsonWebKey, alg: string, kty: string): void {
+/**
+ * Checks if a key can be used by the requesting algorithm.
+ *
+ * @param key - Key to be checked.
+ * @param alg - Algorithm requesting the usage of the key.
+ * @param kty - Type of the key.
+ */
+export function checkKey(key: JsonWebKey, alg: string, kty: string): void {
   if (!(key instanceof JsonWebKey)) throw new InvalidKey()
 
-  if (key.alg && key.alg !== alg) {
-    throw new InvalidKey(`This key is intended to be used by the algorithm "${key.alg}".`)
-  }
+  if (key.alg && key.alg !== alg)
+    throw new InvalidKey(
+      `This key is intended to be used by the algorithm "${key.alg}".`
+    )
 
-  if (key.kty !== kty) {
+  if (key.kty !== kty)
     throw new InvalidKey(`This algorithm only accepts "${kty}" keys.`)
-  }
 }

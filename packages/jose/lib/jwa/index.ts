@@ -1,2 +1,8 @@
-export * as JWKA from './jwk'
-export * as JWSA from './jws'
+/**
+ * Implements the RFC 7518.
+ *
+ * @module JWA
+ */
+
+export * from './jwk'
+export * from './jws'

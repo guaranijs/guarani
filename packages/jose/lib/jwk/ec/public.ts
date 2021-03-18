@@ -77,23 +77,11 @@ export class ECPublicKey extends JsonWebKey implements PublicKey {
     if (!(key.crv in CURVES))
       throw new InvalidKey(`Unsupported curve "${key.crv}".`)
 
-    const curve = CURVES[key.crv]
-
     if (typeof key.x !== 'string')
       throw new InvalidKey('Invalid parameter "x".')
 
-    if (Base64Url.bufferLength(key.x) < curve.length)
-      throw new InvalidKey(
-        `The X coordinate MUST have AT LEAST ${curve.length} bytes.`
-      )
-
     if (typeof key.y !== 'string')
       throw new InvalidKey('Invalid parameter "y".')
-
-    if (Base64Url.bufferLength(key.y) < curve.length)
-      throw new InvalidKey(
-        `The Y coordinate MUST have AT LEAST ${curve.length} bytes.`
-      )
 
     this.kty = 'EC'
     this.crv = key.crv

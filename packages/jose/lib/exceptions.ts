@@ -47,11 +47,11 @@ export class InvalidKeySet extends JoseError {
 }
 
 /**
- * Raised when the provided signature does not match the provided data.
+ * Raised when the provided signature does not match the provided message.
  */
 export class InvalidSignature extends JoseError {
   public constructor(
-    message = 'The provided signature does not match the provided data.'
+    message = 'The provided signature does not match the provided message.'
   ) {
     super(message)
   }

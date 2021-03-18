@@ -19,10 +19,6 @@ describe('ECPrivateKey constructor', () => {
     expect(() => new ECPrivateKey({ d: undefined, ...params })).toThrow(
       'Invalid parameter "d".'
     )
-
-    expect(() => new ECPrivateKey({ d: 'small', ...params })).toThrow(
-      'The Private Value MUST have AT LEAST 32 bytes.'
-    )
   })
 
   it('should create an Elliptic Curve Private Key.', () => {

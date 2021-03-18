@@ -27,20 +27,24 @@ export abstract class JWSAlgorithm {
   /**
    * Signs a message with the given key.
    *
-   * @param data - Data to be signed.
-   * @param key - JWK used to sign the data.
+   * @param message - Message to be signed.
+   * @param key - JWK used to sign the message.
    * @returns Base64Url string representation of the signed message.
    */
-  public abstract sign(data: Buffer, key: JsonWebKey): string
+  public abstract sign(message: Buffer, key: JsonWebKey): string
 
   /**
    * Matches a signature against a message with the given key.
    *
    * @param signature - Signature to be matched against the message.
-   * @param data - Data to be matched against the signature.
+   * @param message - Message to be matched against the signature.
    * @param key - Key used to verify the signature.
    */
-  public abstract verify(signature: string, data: Buffer, key: JsonWebKey): void
+  public abstract verify(
+    signature: string,
+    message: Buffer,
+    key: JsonWebKey
+  ): void
 }
 
 /**

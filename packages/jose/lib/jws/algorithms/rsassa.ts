@@ -3,21 +3,20 @@ import { sign, verify, constants } from 'crypto'
 import { Base64Url } from '@guarani/utils'
 
 import { InvalidSignature } from '../../exceptions'
-import { JsonWebKey } from '../../jwk'
-import { RSAParams } from '../jwk'
-import { checkKey, JWSAlgorithm, SupportedHashes } from './algorithm'
+import { RSAPrivateKey, RSAPublicKey } from '../../jwk'
+import { checkKey, JWSAlgorithm, SupportedHashes } from './base'
 
 /**
- * Implementation of an RSA Signature Algorithm.
+ * Implementation of an RSASSA Signature Algorithm.
  */
-class Algorithm extends JWSAlgorithm {
+class RSASSAAlgorithm extends JWSAlgorithm {
   /**
    * Accepted key type.
    */
   private keyType = 'RSA'
 
   /**
-   * Instantiates a new RSA Algorithm to sign and verify the messages.
+   * Instantiates a new RSASSA Algorithm to sign and verify the messages.
    *
    * @param hash - Hash algorithm used to sign and verify the messages.
    * @param algorithm - Name of the algorithm.
@@ -26,43 +25,40 @@ class Algorithm extends JWSAlgorithm {
   public constructor(
     protected hash: SupportedHashes,
     protected algorithm: string,
-    private padding: number
+    protected padding: number
   ) {
     super(hash, algorithm)
   }
 
   /**
-   * Signs the provided message using RSA.
+   * Signs the provided message using RSASSA.
    *
-   * @param data - Data to be signed.
+   * @param message - Message to be signed.
    * @param key - Key used to sign the message.
    * @returns Base64Url encoded signature.
    */
-  public sign(data: Buffer, key: JsonWebKey<RSAParams>): string {
+  public sign(message: Buffer, key: RSAPrivateKey): string {
     checkKey(key, this.algorithm, this.keyType)
 
     return Base64Url.encode(
-      sign(this.hash, data, { key: key.privateKey, padding: this.padding })
+      sign(this.hash, message, { key: key.privateKey, padding: this.padding })
     )
   }
 
   /**
-   * Verifies the signature against a message using RSA.
+   * Verifies the signature against a message using RSASSA.
    *
    * @param signature - Signature to be matched against the message.
-   * @param data - Message to be matched against the signature.
+   * @param message - Message to be matched against the signature.
    * @param key - Key used to verify the signature.
+   * @throws {InvalidSignature} The signature does not match the message.
    */
-  public verify(
-    signature: string,
-    data: Buffer,
-    key: JsonWebKey<RSAParams>
-  ): void {
+  public verify(signature: string, message: Buffer, key: RSAPublicKey): void {
     checkKey(key, this.algorithm, this.keyType)
 
     const verified = verify(
       this.hash,
-      data,
+      message,
       { key: key.publicKey, padding: this.padding },
       Base64Url.decode(signature)
     )
@@ -76,8 +72,8 @@ class Algorithm extends JWSAlgorithm {
  *
  * @returns RSASSA-PKCS1-v1_5 using SHA256.
  */
-export function RS256(): Algorithm {
-  return new Algorithm('sha256', 'RS256', constants.RSA_PKCS1_PADDING)
+export function RS256(): RSASSAAlgorithm {
+  return new RSASSAAlgorithm('sha256', 'RS256', constants.RSA_PKCS1_PADDING)
 }
 
 /**
@@ -85,8 +81,8 @@ export function RS256(): Algorithm {
  *
  * @returns RSASSA-PKCS1-v1_5 using SHA384.
  */
-export function RS384(): Algorithm {
-  return new Algorithm('sha384', 'RS384', constants.RSA_PKCS1_PADDING)
+export function RS384(): RSASSAAlgorithm {
+  return new RSASSAAlgorithm('sha384', 'RS384', constants.RSA_PKCS1_PADDING)
 }
 
 /**
@@ -94,8 +90,8 @@ export function RS384(): Algorithm {
  *
  * @returns RSASSA-PKCS1-v1_5 using SHA512.
  */
-export function RS512(): Algorithm {
-  return new Algorithm('sha512', 'RS512', constants.RSA_PKCS1_PADDING)
+export function RS512(): RSASSAAlgorithm {
+  return new RSASSAAlgorithm('sha512', 'RS512', constants.RSA_PKCS1_PADDING)
 }
 
 /**
@@ -103,8 +99,8 @@ export function RS512(): Algorithm {
  *
  * @returns RSASSA-PSS using SHA256.
  */
-export function PS256(): Algorithm {
-  return new Algorithm('sha256', 'PS256', constants.RSA_PKCS1_PSS_PADDING)
+export function PS256(): RSASSAAlgorithm {
+  return new RSASSAAlgorithm('sha256', 'PS256', constants.RSA_PKCS1_PSS_PADDING)
 }
 
 /**
@@ -112,8 +108,8 @@ export function PS256(): Algorithm {
  *
  * @returns RSASSA-PSS using SHA384.
  */
-export function PS384(): Algorithm {
-  return new Algorithm('sha384', 'PS384', constants.RSA_PKCS1_PSS_PADDING)
+export function PS384(): RSASSAAlgorithm {
+  return new RSASSAAlgorithm('sha384', 'PS384', constants.RSA_PKCS1_PSS_PADDING)
 }
 
 /**
@@ -121,6 +117,6 @@ export function PS384(): Algorithm {
  *
  * @returns RSASSA-PSS using SHA512.
  */
-export function PS512(): Algorithm {
-  return new Algorithm('sha512', 'PS512', constants.RSA_PKCS1_PSS_PADDING)
+export function PS512(): RSASSAAlgorithm {
+  return new RSASSAAlgorithm('sha512', 'PS512', constants.RSA_PKCS1_PSS_PADDING)
 }

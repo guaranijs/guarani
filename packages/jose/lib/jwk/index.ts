@@ -2,11 +2,8 @@ export {
   JsonWebKey,
   KeyOptions,
   PrivateKey,
-  PrivateKeyLike,
   PublicKey,
-  PublicKeyLike,
-  SecretKey,
-  SecretKeyLike
+  SecretKey
 } from './base'
 
 export {

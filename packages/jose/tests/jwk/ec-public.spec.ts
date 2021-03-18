@@ -39,10 +39,6 @@ describe('ECPublicKey constructor', () => {
     expect(() => new ECPublicKey({ x: undefined, ...params })).toThrow(
       'Invalid parameter "x".'
     )
-
-    expect(() => new ECPublicKey({ x: 'small', ...params })).toThrow(
-      'The X coordinate MUST have AT LEAST 32 bytes.'
-    )
   })
 
   it('should reject an invalid Y coordinate.', () => {
@@ -50,10 +46,6 @@ describe('ECPublicKey constructor', () => {
 
     expect(() => new ECPublicKey({ y: undefined, ...params })).toThrow(
       'Invalid parameter "y".'
-    )
-
-    expect(() => new ECPublicKey({ y: 'small', ...params })).toThrow(
-      'The Y coordinate MUST have AT LEAST 32 bytes.'
     )
   })
 

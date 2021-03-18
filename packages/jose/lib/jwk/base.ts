@@ -108,7 +108,3 @@ export interface PublicKey {
 export interface PrivateKey {
   privateKey: KeyObject
 }
-
-export type SecretKeyLike = JsonWebKey & SecretKey
-export type PublicKeyLike = JsonWebKey & PublicKey
-export type PrivateKeyLike = JsonWebKey & PrivateKey

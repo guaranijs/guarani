@@ -1,5 +1,5 @@
 import type { JsonWebKey } from '../../jwk'
-import { JWSAlgorithm } from './algorithm'
+import { JWSAlgorithm } from './base'
 
 /**
  * Implementation of the `none` algorithm.
@@ -9,7 +9,7 @@ import { JWSAlgorithm } from './algorithm'
  *
  * It is **NOT RECOMMENDED** to use this algorithm in production.
  */
-class Algorithm extends JWSAlgorithm {
+class NoneAlgorithm extends JWSAlgorithm {
   public constructor() {
     super(undefined, 'none')
   }
@@ -17,11 +17,11 @@ class Algorithm extends JWSAlgorithm {
   /**
    * Returns an empty string as a signature.
    *
-   * @param data - Data to be signed.
+   * @param message - Message to be signed.
    * @param key - Key used to sign the message.
    * @returns Empty string.
    */
-  public sign(data: Buffer, key?: JsonWebKey): string {
+  public sign(message: Buffer, key?: JsonWebKey): string {
     return ''
   }
 
@@ -29,10 +29,10 @@ class Algorithm extends JWSAlgorithm {
    * Always successfully verifies the signature.
    *
    * @param signature - Signature to be matched against the message.
-   * @param data - Message to be matched against the signature.
+   * @param message - Message to be matched against the signature.
    * @param key - Key used to verify the signature.
    */
-  public verify(signature: string, data: Buffer, key?: JsonWebKey): void {}
+  public verify(signature: string, message: Buffer, key?: JsonWebKey): void {}
 }
 
 /**
@@ -40,6 +40,6 @@ class Algorithm extends JWSAlgorithm {
  *
  * @returns Instance of the `none` algorithm.
  */
-export function none(): Algorithm {
-  return new Algorithm()
+export function none(): NoneAlgorithm {
+  return new NoneAlgorithm()
 }

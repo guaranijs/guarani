@@ -47,13 +47,6 @@ export class ECPrivateKey extends ECPublicKey implements PrivateKey {
     if (typeof key.d !== 'string')
       throw new InvalidKey('Invalid parameter "d".')
 
-    const curve = CURVES[this.crv]
-
-    if (Base64Url.bufferLength(key.d) < curve.length)
-      throw new InvalidKey(
-        `The Private Value MUST have AT LEAST ${curve.length} bytes.`
-      )
-
     this.d = key.d
   }
 
@@ -121,8 +114,10 @@ interface ECKeyPair {
 export function createEcKeyPair(curve: SupportedCurves): ECKeyPair {
   if (!(curve in CURVES)) throw new TypeError(`Unsupported curve "${curve}".`)
 
+  const curveMeta = CURVES[curve]
+
   const { privateKey } = generateKeyPairSync('ec', {
-    namedCurve: CURVES[curve].name
+    namedCurve: curveMeta.name
   })
   const der = privateKey.export({ format: 'der', type: 'sec1' })
   const decoder = Decoders.DER(der).sequence()
@@ -142,16 +137,13 @@ export function createEcKeyPair(curve: SupportedCurves): ECKeyPair {
 
   const x = Base64Url.encodeInt(
     Primitives.fromBuffer(
-      publicKey.data.subarray(0, publicKey.data.length / 2),
+      publicKey.data.subarray(0, curveMeta.length),
       'integer'
     )
   )
 
   const y = Base64Url.encodeInt(
-    Primitives.fromBuffer(
-      publicKey.data.subarray(publicKey.data.length / 2),
-      'integer'
-    )
+    Primitives.fromBuffer(publicKey.data.subarray(curveMeta.length), 'integer')
   )
 
   const d = Base64Url.encodeInt(

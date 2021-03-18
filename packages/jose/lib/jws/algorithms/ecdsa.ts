@@ -3,17 +3,17 @@ import { sign, verify } from 'crypto'
 import { Base64Url } from '@guarani/utils'
 
 import { InvalidKey, InvalidSignature } from '../../exceptions'
-import { JsonWebKey } from '../../jwk'
-import { ECParams, SupportedCurves } from '../jwk'
-
 import {
-  checkKey as baseCheckKey,
-  JWSAlgorithm,
-  SupportedHashes
-} from './algorithm'
+  ECPrivateKey,
+  ECPublicKey,
+  JsonWebKey,
+  SupportedCurves
+} from '../../jwk'
+
+import { checkKey as baseCheckKey, JWSAlgorithm, SupportedHashes } from './base'
 
 /**
- * Checks if a key can be used by the requesting Elliptic Curve algorithm.
+ * Checks if a key can be used by the requesting ECDSA Algorithm.
  *
  * @param key - Key to be checked.
  * @param alg - Algorithm requesting the usage of the key.
@@ -36,7 +36,7 @@ function checkKey(
 /**
  * Implementation of an ECDSA Signature Algorithm.
  */
-class Algorithm extends JWSAlgorithm {
+class ECDSAAlgorithm extends JWSAlgorithm {
   /**
    * Accepted key type.
    */
@@ -60,31 +60,28 @@ class Algorithm extends JWSAlgorithm {
   /**
    * Signs the provided message using ECDSA.
    *
-   * @param data - Data to be signed.
+   * @param message - Message to be signed.
    * @param key - Key used to sign the message.
    * @returns Base64Url encoded signature.
    */
-  public sign(data: Buffer, key: JsonWebKey<ECParams>): string {
+  public sign(message: Buffer, key: ECPrivateKey): string {
     checkKey(key, this.algorithm, this.keyType, this.curve)
 
-    return Base64Url.encode(sign(this.hash, data, key.privateKey))
+    return Base64Url.encode(sign(this.hash, message, key.privateKey))
   }
 
   /**
    * Verifies the signature against a message using ECDSA.
    *
    * @param signature - Signature to be matched against the message.
-   * @param data - Message to be matched against the signature.
+   * @param message - Message to be matched against the signature.
    * @param key - Key used to verify the signature.
+   * @throws {InvalidSignature} The signature does not match the message.
    */
-  public verify(
-    signature: string,
-    data: Buffer,
-    key: JsonWebKey<ECParams>
-  ): void {
+  public verify(signature: string, message: Buffer, key: ECPublicKey): void {
     checkKey(key, this.algorithm, this.keyType, this.curve)
 
-    if (!verify(this.hash, data, key.publicKey, Base64Url.decode(signature)))
+    if (!verify(this.hash, message, key.publicKey, Base64Url.decode(signature)))
       throw new InvalidSignature()
   }
 }
@@ -94,8 +91,8 @@ class Algorithm extends JWSAlgorithm {
  *
  * @returns ECDSA using SHA256.
  */
-export function ES256(): Algorithm {
-  return new Algorithm('sha256', 'ES256', 'P-256')
+export function ES256(): ECDSAAlgorithm {
+  return new ECDSAAlgorithm('sha256', 'ES256', 'P-256')
 }
 
 /**
@@ -103,8 +100,8 @@ export function ES256(): Algorithm {
  *
  * @returns ECDSA using SHA384.
  */
-export function ES384(): Algorithm {
-  return new Algorithm('sha384', 'ES384', 'P-384')
+export function ES384(): ECDSAAlgorithm {
+  return new ECDSAAlgorithm('sha384', 'ES384', 'P-384')
 }
 
 /**
@@ -112,6 +109,6 @@ export function ES384(): Algorithm {
  *
  * @returns ECDSA using SHA512.
  */
-export function ES512(): Algorithm {
-  return new Algorithm('sha512', 'ES512', 'P-521')
+export function ES512(): ECDSAAlgorithm {
+  return new ECDSAAlgorithm('sha512', 'ES512', 'P-521')
 }

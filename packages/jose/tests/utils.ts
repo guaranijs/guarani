@@ -3,14 +3,14 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-import { JWKAParams } from '../lib/jwa'
+import { KeyOptions } from '../lib/jwk'
 
-export function loadSymmetricKey<T extends JWKAParams>(
+export function loadSymmetricKey<T extends KeyOptions>(
   kty: string,
   ext: 'json'
 ): T
 export function loadSymmetricKey(kty: string, ext: 'pem'): string
-export function loadSymmetricKey<T extends JWKAParams>(
+export function loadSymmetricKey<T extends KeyOptions>(
   kty: string,
   ext: 'json' | 'pem'
 ): T | string {
@@ -22,12 +22,12 @@ export function loadSymmetricKey<T extends JWKAParams>(
   return ext === 'json' ? JSON.parse(secretKey) : secretKey
 }
 
-export function loadAsymmetricKey<T extends JWKAParams>(
+export function loadAsymmetricKey<T extends KeyOptions>(
   kty: string,
   ext: 'json',
   keyType: 'public'
 ): T
-export function loadAsymmetricKey<T extends JWKAParams>(
+export function loadAsymmetricKey<T extends KeyOptions>(
   kty: string,
   ext: 'json',
   keyType: 'private'
@@ -42,7 +42,7 @@ export function loadAsymmetricKey(
   ext: 'pem',
   keyType: 'private'
 ): string
-export function loadAsymmetricKey<T extends JWKAParams>(
+export function loadAsymmetricKey<T extends KeyOptions>(
   kty: string,
   ext: 'json' | 'pem',
   keyType: 'public' | 'private'

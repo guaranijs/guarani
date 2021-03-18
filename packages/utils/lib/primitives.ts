@@ -58,19 +58,28 @@ function intToBuffer(integer: bigint | number): Buffer {
 }
 
 /**
- * Reverses a Buffer object back to a primitive type.
+ * Reverses a Buffer object back to a string.
  *
- * @param buffer - Buffer to be reversed back to a primitive type.
- * @param format - Defines the output format of the reversed data.
+ * @param buffer - Buffer to be reversed back to a string.
+ * @param format - Defines the output format to a string.
  * @param encoding - Optional encoding format for the string output.
- * @returns Primitive data converted from the provided Buffer object.
+ * @returns String converted from the provided Buffer object.
  */
 export function fromBuffer(
   buffer: Buffer,
   format: 'string',
   encoding?: BufferEncoding
 ): string
+
+/**
+ * Reverses a Buffer object back to an integer.
+ *
+ * @param buffer - Buffer to be reversed back to an integer.
+ * @param format - Defines the output format to an integer.
+ * @returns Integer converted from the provided Buffer object.
+ */
 export function fromBuffer(buffer: Buffer, format: 'integer'): bigint
+
 export function fromBuffer(
   buffer: Buffer,
   format: 'string' | 'integer',

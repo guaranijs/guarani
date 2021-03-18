@@ -50,28 +50,12 @@ export class JsonWebKeySet {
   }
 
   /**
-   * Parses a raw JWK Set into an instance of a JsonWebKeySet.
-   *
-   * @param keyset - Raw JWK Set in object format.
-   * @returns Instance of a JWK Set.
-   */
-  public static load(keyset: any): JsonWebKeySet {
-    try {
-      return new JsonWebKeySet(
-        keyset?.keys?.map((key: any) => new JsonWebKey(key))
-      )
-    } catch (error) {
-      throw new InvalidKeySet(error.message)
-    }
-  }
-
-  /**
    * Returns a Key based on the requested ID.
    *
    * @param keyId - ID of the Key to be retrieved.
    * @returns Key that matches the requested ID.
    */
-  public getKey<KeyType>(keyId: string): JsonWebKey<KeyType> {
-    return this.keys.find(key => key.kid === keyId)
+  public getKey<KeyType extends JsonWebKey>(keyId: string): KeyType {
+    return this.keys.find(key => key.kid === keyId) as KeyType
   }
 }

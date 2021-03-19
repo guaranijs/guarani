@@ -2,7 +2,7 @@ import { Objects } from '@guarani/utils'
 
 import { InvalidJoseHeader } from '../exceptions'
 import { KeyOptions } from '../jwk'
-import Algorithms, { JWSAlgorithm } from './algorithms'
+import { Algorithms, JWSAlgorithm } from './algorithms'
 
 /**
  * Defines the parameters supported by the JOSE Header.
@@ -71,9 +71,9 @@ export interface JoseHeaderParams {
  * Implementation of RFC 7515.
  *
  * This is the implementation of the Header of the Json Web Signature.
- * It provides validation for the default parameters of the JWS header.
+ * It provides validation for the default parameters of the JOSE header.
  *
- * The JWS Header is a JSON object that provides information on how to
+ * The JOSE Header is a JSON object that provides information on how to
  * manipulate the payload of the message, such as permitted algorithms
  * and the keys to be used in signing and verifying the payload.
  */

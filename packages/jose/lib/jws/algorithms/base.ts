@@ -54,6 +54,7 @@ export abstract class JWSAlgorithm {
  * @param key - Key to be checked.
  * @param alg - Algorithm requesting the usage of the key.
  * @param kty - Type of the key.
+ * @throws {InvalidKey} The provided JSON Web Key is invalid.
  */
 export function checkKey(key: JsonWebKey, alg: string, kty: string): void {
   if (!(key instanceof JsonWebKey)) throw new InvalidKey()

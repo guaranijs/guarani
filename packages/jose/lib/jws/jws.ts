@@ -5,31 +5,6 @@ import { JsonWebKey } from '../jwk'
 import { JoseHeader, JoseHeaderParams } from './header'
 
 /**
- * Implementation of RFC 7515.
- *
- * The JWS is used for transporting data on the network, providing a signature
- * that guarantees the integrity of the information received.
- *
- * This implementation provides a set of attributes (described below) to represent
- * the state of the information, as well as segregating the header from the payload,
- * which in turn facilitates the use of any of them.
- *
- * It provides an algorithm attribute as well. The algorithm is used to sign
- * and verify the data of the JWS.
- */
-interface JsonWebSignature {
-  /**
-   * JOSE Header containing the meta information of the token.
-   */
-  header: JoseHeaderParams
-
-  /**
-   * Buffer representation of the payload of the token.
-   */
-  payload: Buffer
-}
-
-/**
  * Options regarding the decoding of a JWS Token.
  */
 interface DecodeOptions {
@@ -75,6 +50,31 @@ interface EncodeOptions {
 }
 
 /**
+ * Implementation of RFC 7515.
+ *
+ * The JWS is used for transporting data on the network, providing a signature
+ * that guarantees the integrity of the information received.
+ *
+ * This implementation provides a set of attributes (described below) to represent
+ * the state of the information, as well as segregating the header from the payload,
+ * which in turn facilitates the use of any of them.
+ *
+ * It provides an algorithm attribute as well. The algorithm is used to sign
+ * and verify the data of the JWS.
+ */
+export interface JsonWebSignature {
+  /**
+   * JOSE Header containing the meta information of the token.
+   */
+  header: JoseHeaderParams
+
+  /**
+   * Buffer representation of the payload of the token.
+   */
+  payload: Buffer
+}
+
+/**
  * Decodes a JWS Token checking if its signature matches its content.
  *
  * Despite being optional, it is recommended to provide an algorithm
@@ -86,7 +86,7 @@ interface EncodeOptions {
  * @param options - Object defining the decoding flow.
  * @returns JsonWebSignature object containing the decoded header and payload.
  */
-export function decode(options: DecodeOptions): JsonWebSignature {
+export function parseJWS(options: DecodeOptions): JsonWebSignature {
   options.validate ??= true
 
   if (typeof options.token !== 'string')
@@ -160,7 +160,7 @@ export function decode(options: DecodeOptions): JsonWebSignature {
  * @param options - Object defining the encoding flow.
  * @returns Signed JSON Web Signature Token.
  */
-export function encode(options: EncodeOptions): string {
+export function createJWS(options: EncodeOptions): string {
   if (options.header == null) throw new TypeError('Invalid parameter "header".')
 
   if (!Buffer.isBuffer(options.payload))

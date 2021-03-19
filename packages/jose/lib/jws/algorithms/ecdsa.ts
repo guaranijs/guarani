@@ -1,6 +1,6 @@
-import { sign, verify } from 'crypto'
-
 import { Base64Url } from '@guarani/utils'
+
+import { sign, verify } from 'crypto'
 
 import { InvalidKey, InvalidSignature } from '../../exceptions'
 import {
@@ -19,6 +19,7 @@ import { checkKey as baseCheckKey, JWSAlgorithm, SupportedHashes } from './base'
  * @param alg - Algorithm requesting the usage of the key.
  * @param kty - Type of the key.
  * @param curve - Curve of the algorithm.
+ * @throws {InvalidKey} The provided JSON Web Key is invalid.
  */
 function checkKey(
   key: JsonWebKey,

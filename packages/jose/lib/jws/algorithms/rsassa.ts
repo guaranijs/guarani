@@ -1,6 +1,6 @@
-import { sign, verify, constants } from 'crypto'
-
 import { Base64Url } from '@guarani/utils'
+
+import { sign, verify, constants } from 'crypto'
 
 import { InvalidSignature } from '../../exceptions'
 import { RSAPrivateKey, RSAPublicKey } from '../../jwk'

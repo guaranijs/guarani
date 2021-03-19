@@ -1,6 +1,6 @@
-import { createHmac } from 'crypto'
-
 import { Base64Url } from '@guarani/utils'
+
+import { createHmac } from 'crypto'
 
 import { InvalidKey, InvalidSignature } from '../../exceptions'
 import { OCTSecretKey } from '../../jwk'
@@ -13,6 +13,7 @@ import { checkKey as baseCheckKey, JWSAlgorithm, SupportedHashes } from './base'
  * @param alg - Algorithm requesting the usage of the key.
  * @param kty - Type of the key.
  * @param keySize - Size of the secret in bytes.
+ * @throws {InvalidKey} The provided JSON Web Key is invalid.
  */
 function checkKey(
   key: OCTSecretKey,

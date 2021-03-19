@@ -4,7 +4,7 @@ import { HS256, HS384, HS512 } from './hmac'
 import { none } from './none'
 import { PS256, PS384, PS512, RS256, RS384, RS512 } from './rsassa'
 
-const Algorithms: { [key: string]: () => JWSAlgorithm } = {
+export const Algorithms: { [key: string]: () => JWSAlgorithm } = {
   none,
   ES256,
   ES384,
@@ -19,7 +19,5 @@ const Algorithms: { [key: string]: () => JWSAlgorithm } = {
   RS384,
   RS512
 }
-
-export default Algorithms
 
 export { JWSAlgorithm }

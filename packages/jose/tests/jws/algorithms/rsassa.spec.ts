@@ -1,18 +1,11 @@
 import { createRsaKeyPair } from '../../../lib/jwk'
-import {
-  PS256,
-  PS384,
-  PS512,
-  RS256,
-  RS384,
-  RS512
-} from '../../../lib/jws/algorithms'
+import { Algorithms } from '../../../lib/jws'
 
 const { publicKey, privateKey } = createRsaKeyPair(2048)
 
 describe('JWS RSASSA-PSS Algorithm PS256', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = PS256()
+  const algorithm = Algorithms.PS256()
 
   it('should sign a message.', () => {
     expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
@@ -27,7 +20,7 @@ describe('JWS RSASSA-PSS Algorithm PS256', () => {
 
 describe('JWS RSASSA-PSS Algorithm PS384', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = PS384()
+  const algorithm = Algorithms.PS384()
 
   it('should sign a message.', () => {
     expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
@@ -42,7 +35,7 @@ describe('JWS RSASSA-PSS Algorithm PS384', () => {
 
 describe('JWS RSASSA-PSS Algorithm PS512', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = PS512()
+  const algorithm = Algorithms.PS512()
 
   it('should sign a message.', () => {
     expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
@@ -57,7 +50,7 @@ describe('JWS RSASSA-PSS Algorithm PS512', () => {
 
 describe('JWS RSASSA-PKCS1-v1_5 Algorithm RS256', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = RS256()
+  const algorithm = Algorithms.RS256()
 
   it('should sign a message.', () => {
     expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
@@ -72,7 +65,7 @@ describe('JWS RSASSA-PKCS1-v1_5 Algorithm RS256', () => {
 
 describe('JWS RSASSA-PKCS1-v1_5 Algorithm RS384', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = RS384()
+  const algorithm = Algorithms.RS384()
 
   it('should sign a message.', () => {
     expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
@@ -87,7 +80,7 @@ describe('JWS RSASSA-PKCS1-v1_5 Algorithm RS384', () => {
 
 describe('JWS RSASSA-PKCS1-v1_5 Algorithm RS512', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = RS512()
+  const algorithm = Algorithms.RS512()
 
   it('should sign a message.', () => {
     expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))

@@ -9,7 +9,7 @@
  */
 export class JoseError extends Error {
   /**
-   * Default error message.
+   * Error message.
    */
   public message: string
 
@@ -21,6 +21,24 @@ export class JoseError extends Error {
   constructor(message?: string) {
     super(message)
     this.name = this.constructor.name
+  }
+}
+
+/**
+ * Raised when the provided JOSE Header is invalid.
+ */
+export class InvalidJoseHeader extends JoseError {
+  public constructor(message = 'The provided JOSE Header is invalid.') {
+    super(message)
+  }
+}
+
+/**
+ * Raised when the provided JSON Web Signature is invalid.
+ */
+export class InvalidJsonWebSignature extends JoseError {
+  public constructor(message = 'The provided JSON Web Signature is invalid.') {
+    super(message)
   }
 }
 

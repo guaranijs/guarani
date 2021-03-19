@@ -31,7 +31,7 @@ export abstract class JWSAlgorithm {
    * @param key - JWK used to sign the message.
    * @returns Base64Url string representation of the signed message.
    */
-  public abstract sign(message: Buffer, key: JsonWebKey): string
+  public abstract sign(message: Buffer, key?: JsonWebKey): string
 
   /**
    * Matches a signature against a message with the given key.
@@ -39,11 +39,12 @@ export abstract class JWSAlgorithm {
    * @param signature - Signature to be matched against the message.
    * @param message - Message to be matched against the signature.
    * @param key - Key used to verify the signature.
+   * @throws {InvalidSignature} The signature does not match the message.
    */
   public abstract verify(
     signature: string,
     message: Buffer,
-    key: JsonWebKey
+    key?: JsonWebKey
   ): void
 }
 

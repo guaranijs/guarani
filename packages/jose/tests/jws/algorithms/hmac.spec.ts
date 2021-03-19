@@ -1,10 +1,10 @@
 import { InvalidKey } from '../../../lib/exceptions'
 import { createOctSecretKey } from '../../../lib/jwk'
-import { HS256, HS384, HS512 } from '../../../lib/jws/algorithms'
+import { Algorithms } from '../../../lib/jws'
 
 describe('JWS HMAC Algorithm HS256', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = HS256()
+  const algorithm = Algorithms.HS256()
   const secretKey = createOctSecretKey(32)
 
   it('should reject a secret too small.', () => {
@@ -26,7 +26,7 @@ describe('JWS HMAC Algorithm HS256', () => {
 
 describe('JWS HMAC Algorithm HS384', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = HS384()
+  const algorithm = Algorithms.HS384()
   const secretKey = createOctSecretKey(48)
 
   it('should reject a secret too small.', () => {
@@ -48,7 +48,7 @@ describe('JWS HMAC Algorithm HS384', () => {
 
 describe('JWS HMAC Algorithm HS512', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = HS512()
+  const algorithm = Algorithms.HS512()
   const secretKey = createOctSecretKey(64)
 
   it('should reject a secret too small.', () => {

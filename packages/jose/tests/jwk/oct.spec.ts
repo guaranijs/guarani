@@ -33,7 +33,7 @@ describe("OCTSecretKey's constructor", () => {
     )
   })
 
-  it('should create a key from an object.', () => {
+  it('should create an OCTSecretKey.', () => {
     const secretKey = loadSymmetricKey<OCTSecretParams>('oct', 'json')
 
     expect(new OCTSecretKey(secretKey)).toMatchObject({

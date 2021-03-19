@@ -1,10 +1,10 @@
 import { InvalidKey } from '../../../lib/exceptions'
 import { createEcKeyPair } from '../../../lib/jwk'
-import { ES256, ES384, ES512 } from '../../../lib/jws/algorithms'
+import { Algorithms } from '../../../lib/jws'
 
 describe('JWS ECDSA Algorithm ES256', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = ES256()
+  const algorithm = Algorithms.ES256()
   const { publicKey, privateKey } = createEcKeyPair('P-256')
 
   it('should reject a different curve.', () => {
@@ -26,7 +26,7 @@ describe('JWS ECDSA Algorithm ES256', () => {
 
 describe('JWS ECDSA Algorithm ES384', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = ES384()
+  const algorithm = Algorithms.ES384()
   const { publicKey, privateKey } = createEcKeyPair('P-384')
 
   it('should reject a different curve.', () => {
@@ -48,7 +48,7 @@ describe('JWS ECDSA Algorithm ES384', () => {
 
 describe('JWS ECDSA Algorithm ES512', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = ES512()
+  const algorithm = Algorithms.ES512()
   const { publicKey, privateKey } = createEcKeyPair('P-521')
 
   it('should reject a different curve.', () => {

@@ -5,9 +5,9 @@ import { JsonWebKey } from '../jwk'
 import { JoseHeader, JoseHeaderParams } from './header'
 
 /**
- * Options regarding the decoding of a JWS Token.
+ * Parameters regarding the decoding of a JSON Web Signature Token.
  */
-interface DecodeOptions {
+interface DecodeParams {
   /**
    * JSON Web Signature Token to be decoded.
    */
@@ -30,9 +30,9 @@ interface DecodeOptions {
 }
 
 /**
- * Options regarding the encoding of a JWS Token.
+ * Parameters regarding the encoding of a JSON Web Signature Token.
  */
-interface EncodeOptions {
+interface EncodeParams {
   /**
    * JOSE Header containing the meta information of the token.
    */
@@ -52,15 +52,15 @@ interface EncodeOptions {
 /**
  * Implementation of RFC 7515.
  *
- * The JWS is used for transporting data on the network, providing a signature
- * that guarantees the integrity of the information received.
+ * The **JSON Web Signature** is used for transporting data on the network,
+ * providing a signature that guarantees the integrity of the information.
  *
- * This implementation provides a set of attributes (described below) to represent
- * the state of the information, as well as segregating the header from the payload,
+ * This implementation provides a set of attributes to represent the state
+ * of the information, as well as segregating the header from the payload,
  * which in turn facilitates the use of any of them.
  *
  * It provides an algorithm attribute as well. The algorithm is used to sign
- * and verify the data of the JWS.
+ * and verify the data of the **JSON Web Signature**.
  */
 export interface JsonWebSignature {
   /**
@@ -75,7 +75,49 @@ export interface JsonWebSignature {
 }
 
 /**
- * Decodes a JWS Token checking if its signature matches its content.
+ * Encodes the contents of a JsonWebSignature.
+ *
+ * It encodes the header into a Base64Url version of its JSON representation,
+ * and encodes the payload into a Base64Url format, allowing the compatibility
+ * of the payload in different systems.
+ *
+ * It creates a string message of the following format:
+ *
+ * `Base64Url(UTF-8(header)).Base64Url(payload)`
+ *
+ * It then signs the message using the provided key, and imbues the signature
+ * into the message, resulting in the following token:
+ *
+ * `Base64Url(UTF-8(header)).Base64Url(payload).Base64Url(signature)`
+ *
+ * The resulting token is then returned to the application.
+ *
+ * @param params - Object defining the encoding flow.
+ * @returns Signed JSON Web Signature Token.
+ */
+export function createJWS(params: EncodeParams): string {
+  if (params.header == null) throw new TypeError('Invalid parameter "header".')
+
+  if (!Buffer.isBuffer(params.payload))
+    throw new TypeError('Invalid parameter "payload".')
+
+  if (!(params.key instanceof JsonWebKey))
+    throw new TypeError('Invalid parameter "key".')
+
+  const joseHeader = new JoseHeader(params.header)
+
+  const b64Header = Base64Url.encode(Buffer.from(JSON.stringify(joseHeader)))
+  const b64Payload = Base64Url.encode(params.payload)
+
+  const message = `${b64Header}.${b64Payload}`
+  const signature = joseHeader.algorithm.sign(Buffer.from(message), params.key)
+
+  return `${message}.${signature}`
+}
+
+/**
+ * Decodes a JSON Web Signature Token checking
+ * if its signature matches its content.
  *
  * Despite being optional, it is recommended to provide an algorithm
  * to prevent the `none attack` and the misuse of a public key as secret key.
@@ -83,20 +125,20 @@ export interface JsonWebSignature {
  * The algorithm specified at the header of the token
  * **MUST** match the provided algorithm, if any.
  *
- * @param options - Object defining the decoding flow.
+ * @param params - Object defining the decoding flow.
  * @returns JsonWebSignature object containing the decoded header and payload.
  */
-export function parseJWS(options: DecodeOptions): JsonWebSignature {
-  options.validate ??= true
+export function parseJWS(params: DecodeParams): JsonWebSignature {
+  params.validate ??= true
 
-  if (typeof options.token !== 'string')
+  if (typeof params.token !== 'string')
     throw new TypeError('Invalid parameter "token".')
 
-  if (!(options.key instanceof JsonWebKey))
+  if (!(params.key instanceof JsonWebKey))
     throw new TypeError('Invalid parameter "key".')
 
   try {
-    const splittedToken = options.token.split('.')
+    const splittedToken = params.token.split('.')
 
     if (
       splittedToken.length !== 3 ||
@@ -112,17 +154,17 @@ export function parseJWS(options: DecodeOptions): JsonWebSignature {
 
     const joseHeader = new JoseHeader(headerParams)
 
-    if (options.algorithm && options.algorithm !== joseHeader.alg)
+    if (params.algorithm && params.algorithm !== joseHeader.alg)
       throw new InvalidJsonWebSignature(
         'The algorithm used to sign this token is invalid. ' +
-          `Expected "${options.algorithm}", got "${joseHeader.alg}".`
+          `Expected "${params.algorithm}", got "${joseHeader.alg}".`
       )
 
-    if (options.validate)
+    if (params.validate)
       joseHeader.algorithm.verify(
         signature,
         Buffer.from(`${b64header}.${b64payload}`),
-        options.key
+        params.key
       )
 
     return {
@@ -137,45 +179,4 @@ export function parseJWS(options: DecodeOptions): JsonWebSignature {
 
     throw new InvalidJsonWebSignature()
   }
-}
-
-/**
- * Encodes the content of the current JsonWebSignature.
- *
- * It encodes the header into a Base64Url version of its JSON representation,
- * and encodes the payload into a Base64Url format, allowing the compatibility
- * of the payload in different systems.
- *
- * It creates a byte string message of the following format:
- *
- * `Base64Url(UTF-8(header)).Base64Url(payload)`
- *
- * It then signs the message using the provided key, and imbues the signature
- * into the message, resulting in the following token:
- *
- * `Base64Url(UTF-8(header)).Base64Url(payload).Base64Url(signature)`
- *
- * The resulting token is then returned to the application.
- *
- * @param options - Object defining the encoding flow.
- * @returns Signed JSON Web Signature Token.
- */
-export function createJWS(options: EncodeOptions): string {
-  if (options.header == null) throw new TypeError('Invalid parameter "header".')
-
-  if (!Buffer.isBuffer(options.payload))
-    throw new TypeError('Invalid parameter "payload".')
-
-  if (!(options.key instanceof JsonWebKey))
-    throw new TypeError('Invalid parameter "key".')
-
-  const joseHeader = new JoseHeader(options.header)
-
-  const b64Header = Base64Url.encode(Buffer.from(JSON.stringify(joseHeader)))
-  const b64Payload = Base64Url.encode(options.payload)
-
-  const message = `${b64Header}.${b64Payload}`
-  const signature = joseHeader.algorithm.sign(Buffer.from(message), options.key)
-
-  return `${message}.${signature}`
 }

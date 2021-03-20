@@ -62,9 +62,6 @@ export interface JoseHeaderParams {
    * Defines the parameters that MUST be present in the header.
    */
   crit?: string[]
-
-  // Custom keys not supported out-of-the-box.
-  [key: string]: any
 }
 
 /**
@@ -77,7 +74,7 @@ export interface JoseHeaderParams {
  * manipulate the payload of the message, such as permitted algorithms
  * and the keys to be used in signing and verifying the payload.
  */
-export class JoseHeader {
+export class JoseHeader implements JoseHeaderParams {
   /**
    * JWS Algorithm used to sign and verify the token.
    */
@@ -171,22 +168,7 @@ export class JoseHeader {
       })
     }
 
-    Object.assign(
-      this,
-      Objects.removeNullishValues({
-        alg: header.alg,
-        jku: header.jku,
-        jwk: header.jwk,
-        kid: header.kid,
-        x5u: header.x5u,
-        x5c: header.x5c,
-        x5t: header.x5t,
-        'x5t#S256': header['x5t#S256'],
-        typ: header.typ,
-        cty: header.cty,
-        crit: header.crit
-      })
-    )
+    Object.assign(this, Objects.removeNullishValues(header))
   }
 
   /**

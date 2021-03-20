@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/guaranijs/guarani/compare/v0.2.0...v0.3.0) (2021-03-20)
+
+
+### Features
+
+* Added the JSON Web Token functionalities. ([cec1ecd](https://github.com/guaranijs/guarani/commit/cec1ecd08e0d4271a5c9a9f2a08c0dac7dc985e7))
+
+
+
+
+
 # [0.2.0](https://github.com/guaranijs/guarani/compare/v0.1.0...v0.2.0) (2021-03-19)
 
 

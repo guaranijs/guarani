@@ -1,9 +1,9 @@
-import { Objects } from '../lib'
+import { equals, removeNullishValues } from '../lib/objects'
 
-describe('Objects functionalities and tools', () => {
+describe('removeNullishValues()', () => {
   it('should remove all nullish values from an object', () => {
     expect(
-      Objects.removeNullishValues({
+      removeNullishValues({
         name: 'John Doe',
         occupation: null,
         age: 23,
@@ -28,5 +28,17 @@ describe('Objects functionalities and tools', () => {
         { name: 'Gambling', skills: ['Poker', 'Black Jack'] }
       ]
     })
+  })
+})
+
+describe('equals()', () => {
+  it('should succed when comparing two objects with sortArrays true.', () => {
+    expect(
+      equals(
+        { id: 1, name: ['John', 'Doe', { test: true }] },
+        { name: ['Doe', 'John', { test: true }], id: 1 },
+        { sortArrays: true }
+      )
+    ).toBe(true)
   })
 })

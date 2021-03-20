@@ -26,7 +26,9 @@ export interface RSAPublicParams extends KeyOptions {
  *
  * This class wraps the RSA Public Key.
  */
-export class RSAPublicKey extends JsonWebKey implements PublicKey {
+export class RSAPublicKey
+  extends JsonWebKey
+  implements RSAPublicParams, PublicKey {
   /**
    * The type of the key.
    */
@@ -94,17 +96,17 @@ export class RSAPublicKey extends JsonWebKey implements PublicKey {
 /**
  * Parses a PEM encoded RSA Public Key.
  *
- * @param data - PEM representation of the RSA Public Key.
+ * @param pem - PEM representation of the RSA Public Key.
  * @param options - Defines the parameters of the JWK.
  * @returns Instance of an RSAPublicKey.
  */
 export function parseRsaPublicKey(
-  data: string,
+  pem: string,
   options?: KeyOptions
 ): RSAPublicKey {
-  if (typeof data !== 'string') throw new TypeError('Invalid parameter "data".')
+  if (typeof pem !== 'string') throw new TypeError('Invalid parameter "pem".')
 
-  const key = createPublicKey(data)
+  const key = createPublicKey(pem)
   const decoder = Decoders.DER(
     key.export({ format: 'der', type: 'pkcs1' })
   ).sequence()

@@ -25,6 +25,15 @@ export class JoseError extends Error {
 }
 
 /**
+ * Raised when the JSON Web Token is expired.
+ */
+export class ExpiredToken extends JoseError {
+  public constructor(message = 'The provided JSON Web Token is expired.') {
+    super(message)
+  }
+}
+
+/**
  * Raised when the provided JOSE Header is invalid.
  */
 export class InvalidJoseHeader extends JoseError {
@@ -38,6 +47,26 @@ export class InvalidJoseHeader extends JoseError {
  */
 export class InvalidJsonWebSignature extends JoseError {
   public constructor(message = 'The provided JSON Web Signature is invalid.') {
+    super(message)
+  }
+}
+
+/**
+ * Raised when the provided JSON Web Token is invalid.
+ */
+export class InvalidJsonWebToken extends JoseError {
+  public constructor(message = 'The provided JSON Web Token is invalid.') {
+    super(message)
+  }
+}
+
+/**
+ * Raised when the provided JSON Web Token Claim is invalid.
+ */
+export class InvalidJsonWebTokenClaim extends JoseError {
+  public constructor(
+    message = 'The provided JSON Web Token Claim is invalid.'
+  ) {
     super(message)
   }
 }
@@ -70,6 +99,17 @@ export class InvalidKeySet extends JoseError {
 export class InvalidSignature extends JoseError {
   public constructor(
     message = 'The provided signature does not match the provided message.'
+  ) {
+    super(message)
+  }
+}
+
+/**
+ * Raised when the provided JSON Web Token is not valid yet.
+ */
+export class TokenNotValidYet extends JoseError {
+  public constructor(
+    message = 'The provided JSON Web Token is not valid yet.'
   ) {
     super(message)
   }

@@ -37,7 +37,9 @@ export interface ECPublicParams extends KeyOptions {
  * It is possible to add different curves, but they should be implemented
  * by the application for a good support.
  */
-export class ECPublicKey extends JsonWebKey implements PublicKey {
+export class ECPublicKey
+  extends JsonWebKey
+  implements ECPublicParams, PublicKey {
   /**
    * The type of the key.
    */
@@ -116,17 +118,17 @@ export class ECPublicKey extends JsonWebKey implements PublicKey {
 /**
  * Parses a PEM encoded Elliptic Curve Public Key.
  *
- * @param data - PEM representation of the Elliptic Curve Public Key.
+ * @param pem - PEM representation of the Elliptic Curve Public Key.
  * @param options - Defines the parameters of the JWK.
  * @returns Instance of an ECPublicKey.
  */
 export function parseEcPublicKey(
-  data: string,
+  pem: string,
   options?: KeyOptions
 ): ECPublicKey {
-  if (typeof data !== 'string') throw new TypeError('Invalid parameter "data".')
+  if (typeof pem !== 'string') throw new TypeError('Invalid parameter "pem".')
 
-  const key = createPublicKey(data)
+  const key = createPublicKey(pem)
   const decoder = Decoders.DER(
     key.export({ format: 'der', type: 'spki' })
   ).sequence()
@@ -165,12 +167,11 @@ export function parseEcPublicKey(
  * Parameters of the Key.
  *
  * @param key - Elliptic Curve Public Key to be exported.
- * @param format - ASN.1 Syntax Tree representation of the Public Key.
  * @returns PEM encoded SPKI Elliptic Curve Public Key.
  *
  * @example
  * ```
- * > const pkcs1 = exportEcPublicKey(ecPublicKey, 'spki')
+ * > const pkcs1 = exportEcPublicKey(ecPublicKey)
  * > pkcs1
  * '-----BEGIN PUBLIC KEY-----\n' +
  * '<Base64 representation...>\n' +

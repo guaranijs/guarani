@@ -24,7 +24,9 @@ export interface OCTSecretParams extends KeyOptions {
  * It is **NOT RECOMMENDED** to disclose this type of key in a
  * Json Web Key Set (JWKS), since it **COULD** lead to security issues.
  */
-export class OCTSecretKey extends JsonWebKey implements SecretKey {
+export class OCTSecretKey
+  extends JsonWebKey
+  implements OCTSecretParams, SecretKey {
   /**
    * The type of the key.
    */
@@ -38,7 +40,7 @@ export class OCTSecretKey extends JsonWebKey implements SecretKey {
   /**
    * Instantiates an OCTSecretKey based on the provided secret.
    *
-   * @param data - Parameters of the key.
+   * @param key - Parameters of the key.
    * @param options - Defines the parameters of the JWK.
    */
   public constructor(key: OCTSecretParams, options: KeyOptions = {}) {
@@ -93,20 +95,20 @@ export function createOctSecretKey(
 }
 
 /**
- * Parses a Base64 string and returns an OCTSecretKey.
+ * Parses a Base64 secret and returns an OCTSecretKey.
  *
- * @param data - Base64 string to be parsed.
+ * @param secret - Base64 secret to be parsed.
  * @param options - Defines the parameters of the JWK.
  * @returns Instance of an OCTSecretKey based on the provided secret.
  */
 export function parseOctSecretKey(
-  data: string,
+  secret: string,
   options?: KeyOptions
 ): OCTSecretKey {
-  if (typeof data !== 'string')
-    throw new TypeError('The secret MUST be a Base64 string.')
+  if (typeof secret !== 'string')
+    throw new TypeError('Invalid parameter "secret".')
 
-  return new OCTSecretKey({ k: Base64Url.fromBase64(data) }, options)
+  return new OCTSecretKey({ k: Base64Url.fromBase64(secret) }, options)
 }
 
 /**

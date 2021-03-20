@@ -29,7 +29,9 @@ export interface ECPrivateParams extends ECPublicParams {
  * It is possible to add different curves, but they should be implemented
  * by the application for a good support.
  */
-export class ECPrivateKey extends ECPublicKey implements PrivateKey {
+export class ECPrivateKey
+  extends ECPublicKey
+  implements ECPrivateParams, PrivateKey {
   /**
    * Base64Url representation of the Private Value.
    */
@@ -101,7 +103,14 @@ export class ECPrivateKey extends ECPublicKey implements PrivateKey {
  * Interface describing the return of the Elliptic Curve Key Generation.
  */
 interface ECKeyPair {
+  /**
+   * Elliptic Curve Public Key.
+   */
   publicKey: ECPublicKey
+
+  /**
+   * Elliptic Curve Private Key.
+   */
   privateKey: ECPrivateKey
 }
 
@@ -109,9 +118,13 @@ interface ECKeyPair {
  * Creates a new Elliptic Curve Private Key.
  *
  * @param curve - Name of the Curve.
+ * @param options - Defines the parameters of the JWK.
  * @returns Elliptic Curve Key Pair.
  */
-export function createEcKeyPair(curve: SupportedCurves): ECKeyPair {
+export function createEcKeyPair(
+  curve: SupportedCurves,
+  options?: KeyOptions
+): ECKeyPair {
   if (!(curve in CURVES)) throw new TypeError(`Unsupported curve "${curve}".`)
 
   const curveMeta = CURVES[curve]
@@ -132,7 +145,7 @@ export function createEcKeyPair(curve: SupportedCurves): ECKeyPair {
 
   const publicKey = decoder.contextSpecific(0x01).bitstring()
 
-  // Since we are using Node's built-in generator, we trust that it works correctly.
+  // Since we are using Node's built-in generator, we trust that it just works.
   publicKey.displace(1)
 
   const x = Base64Url.encodeInt(
@@ -151,25 +164,25 @@ export function createEcKeyPair(curve: SupportedCurves): ECKeyPair {
   )
 
   return {
-    publicKey: new ECPublicKey({ crv: curve, x, y }),
-    privateKey: new ECPrivateKey({ crv: curve, x, y, d })
+    publicKey: new ECPublicKey({ crv: curve, x, y }, options),
+    privateKey: new ECPrivateKey({ crv: curve, x, y, d }, options)
   }
 }
 
 /**
  * Parses a PEM encoded Elliptic Curve Private Key.
  *
- * @param data - PEM representation of the Elliptic Curve Private Key.
+ * @param pem - PEM representation of the Elliptic Curve Private Key.
  * @param options - Defines the parameters of the JWK.
  * @returns Instance of an ECPrivateKey.
  */
 export function parseEcPrivateKey(
-  data: string,
+  pem: string,
   options?: KeyOptions
 ): ECPrivateKey {
-  if (typeof data !== 'string') throw new TypeError('Invalid parameter "data".')
+  if (typeof pem !== 'string') throw new TypeError('Invalid parameter "pem".')
 
-  const key = createPrivateKey(data)
+  const key = createPrivateKey(pem)
   const decoder = Decoders.DER(
     key.export({ format: 'der', type: 'sec1' })
   ).sequence()

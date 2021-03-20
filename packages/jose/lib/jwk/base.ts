@@ -57,8 +57,6 @@ export interface KeyOptions {
    * Defines the SHA-256 Thumbprint of the X.509 certificate of the key.
    */
   'x5t#S256'?: string
-
-  [key: string]: any
 }
 
 /**
@@ -71,7 +69,7 @@ export interface KeyOptions {
  * one of the `SecretKey`, `PublicKey` or `PrivateKey` interfaces. Doing so
  * guarantees that the algorithm will be compatible and understood by `Guarani`.
  */
-export abstract class JsonWebKey {
+export abstract class JsonWebKey implements KeyOptions {
   /**
    * Key type representing the algorithm of the key.
    */
@@ -172,19 +170,7 @@ export abstract class JsonWebKey {
     if (params['x5t#256'])
       throw new InvalidKey('Unsupported parameter "x5t#256".')
 
-    Object.assign(
-      this,
-      Objects.removeNullishValues({
-        use: params.use,
-        key_ops: params.key_ops,
-        alg: params.alg,
-        kid: params.kid,
-        x5u: params.x5u,
-        x5c: params.x5c,
-        x5t: params.x5t,
-        'x5t#S256': params['x5t#S256']
-      })
-    )
+    Object.assign(this, Objects.removeNullishValues(params))
   }
 }
 

@@ -53,7 +53,9 @@ export interface RSAPrivateParams extends RSAPublicParams {
  * This class wraps the RSA Private Key and extends
  * the functionality of the RSA Public Key.
  */
-export class RSAPrivateKey extends RSAPublicKey implements PrivateKey {
+export class RSAPrivateKey
+  extends RSAPublicKey
+  implements RSAPrivateParams, PrivateKey {
   /**
    * Base64Url representation of the Private Exponent.
    */
@@ -149,7 +151,14 @@ export class RSAPrivateKey extends RSAPublicKey implements PrivateKey {
  * Interface describing the return of the RSA Key Generation.
  */
 interface RSAKeyPair {
+  /**
+   * RSA Public Key.
+   */
   publicKey: RSAPublicKey
+
+  /**
+   * RSA Private Key.
+   */
   privateKey: RSAPrivateKey
 }
 
@@ -157,9 +166,13 @@ interface RSAKeyPair {
  * Creates a new RSA Private Key.
  *
  * @param modulusLength - Length of the Modulus of the Key in bits.
+ * @param options - Defines the parameters of the JWK.
  * @returns RSA Key Pair.
  */
-export function createRsaKeyPair(modulusLength: number): RSAKeyPair {
+export function createRsaKeyPair(
+  modulusLength: number,
+  options?: KeyOptions
+): RSAKeyPair {
   if (!Number.isInteger(modulusLength))
     throw new InvalidKey('Invalid modulus length.')
 
@@ -186,25 +199,25 @@ export function createRsaKeyPair(modulusLength: number): RSAKeyPair {
   const qi = Base64Url.encodeInt(decoder.integer())
 
   return {
-    publicKey: new RSAPublicKey({ n, e }),
-    privateKey: new RSAPrivateKey({ n, e, d, p, q, dp, dq, qi })
+    publicKey: new RSAPublicKey({ n, e }, options),
+    privateKey: new RSAPrivateKey({ n, e, d, p, q, dp, dq, qi }, options)
   }
 }
 
 /**
  * Parses a PEM encoded RSA Private Key.
  *
- * @param data - PEM representation of the RSA Private Key.
+ * @param pem - PEM representation of the RSA Private Key.
  * @param options - Defines the parameters of the JWK.
  * @returns Instance of an RSAPrivateKey.
  */
 export function parseRsaPrivateKey(
-  data: string,
+  pem: string,
   options?: KeyOptions
 ): RSAPrivateKey {
-  if (typeof data !== 'string') throw new TypeError('Invalid parameter "data".')
+  if (typeof pem !== 'string') throw new TypeError('Invalid parameter "pem".')
 
-  const key = createPrivateKey(data)
+  const key = createPrivateKey(pem)
   const decoder = Decoders.DER(
     key.export({ format: 'der', type: 'pkcs1' })
   ).sequence()

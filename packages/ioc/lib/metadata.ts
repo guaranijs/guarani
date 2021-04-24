@@ -107,13 +107,81 @@ export function setParamTokens(
  * @param token - Token to be injected.
  * @param multiple - Injects the last provider or all the providers.
  */
-export function defineParamInjectableType<T>(
+export function defineParamInjectableType(
   target: Function,
   parameterIndex: number,
-  token: InjectableToken<T>,
+  token: InjectableToken<any>,
   multiple: boolean
 ): void {
   const tokens: Dict<InjectableType<any>> = getParamTokens(target) ?? {}
   tokens[parameterIndex] = { multiple, token }
   setParamTokens(target, tokens)
+}
+
+/**
+ * Returns the type of the requested property.
+ *
+ * @param target - Constructor to be inspected.
+ * @param propertyKey - Name of the property.
+ * @returns Type of the property.
+ */
+export function getDesignPropType(
+  target: Function,
+  propertyKey: string | symbol
+): any {
+  return Reflect.getMetadata(Constants.DESIGN_PROP_TYPE, target, propertyKey)
+}
+
+/**
+ * Returns the dictionary of the tokens injected in the target's properties
+ * by the decorators `@Inject()` and `@InjectAll()`.
+ *
+ * If no items have been set, it returns an empty dictionary.
+ * Otherwise, it returns a dictionary with the name of the decorated
+ * properties as its keys.
+ *
+ * @param target - Constructor to be inspected.
+ * @returns Dictionary of the target properties' tokens.
+ */
+export function getPropTokens(target: Function): Dict<InjectableType<any>> {
+  return Reflect.getMetadata(Constants.PROP_TOKENS, target)
+}
+
+/**
+ * Defines a dictionary of Injectable types indexed by the name of the
+ * properties of the target that the token described will be injected into.
+ *
+ * @param target - Constructor to be inspected.
+ * @param tokens - Dictionary of injectable types to be registered.
+ */
+export function setPropTokens(
+  target: Function,
+  tokens: Dict<InjectableType<any>>
+): void {
+  Reflect.defineMetadata(Constants.PROP_TOKENS, tokens, target)
+}
+
+/**
+ * Defines an entry at the Property Tokens dictionary containing the Injectable
+ * type representing the provided token.
+ *
+ * This entry is indexed by the name of the property at the instance
+ * it is supposed to be injected into, and it contains a descriptor
+ * of whether it was injected with `@Inject()` or `@InjectAll()`,
+ * as well as the token that will be used in the resolution.
+ *
+ * @param target - Constructor to be inspected.
+ * @param propertyKey - Name of the property at the instance.
+ * @param token - Token to be injected.
+ * @param multiple - Injects the last provider or all the providers.
+ */
+export function definePropertyInjectableType<T>(
+  target: Function,
+  propertyKey: string | symbol,
+  token: InjectableToken<T>,
+  multiple: boolean
+): void {
+  const tokens: Dict<InjectableType<any>> = getPropTokens(target) ?? {}
+  tokens[String(propertyKey)] = { multiple, token }
+  setPropTokens(target, tokens)
 }

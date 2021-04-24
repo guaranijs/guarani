@@ -1,4 +1,8 @@
-import { defineParamInjectableType } from '../metadata'
+import {
+  defineParamInjectableType,
+  definePropertyInjectableType,
+  getDesignPropType
+} from '../metadata'
 import { InjectableToken } from '../tokens'
 import { Constructor } from '../types'
 
@@ -10,15 +14,26 @@ import { Constructor } from '../types'
  */
 export function InjectAll<T = any>(
   token: InjectableToken<T>
-): ParameterDecorator {
+): ParameterDecorator & PropertyDecorator {
   return function (
     target: Constructor<T>,
     propertyKey: string | symbol,
-    parameterIndex: number
+    parameterIndex?: number
   ): void {
     // Injecting into the parameters of the constructor.
     if (propertyKey == null) {
       defineParamInjectableType(target, parameterIndex, token, true)
+    }
+
+    if (parameterIndex == null) {
+      const type = getDesignPropType(target, propertyKey)
+
+      definePropertyInjectableType(
+        target.constructor,
+        propertyKey,
+        token ?? type,
+        true
+      )
     }
   }
 }

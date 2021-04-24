@@ -125,11 +125,20 @@ describe('@Inject() decorator', () => {
 
   @Injectable()
   class AuthService {
+    @Inject()
+    public readonly userService: UserService
+
     public constructor(@Inject('issuer') public readonly issuer: string) {}
   }
 
+  const authService = Container.resolve(AuthService)
+
   it('should inject an `issuer` string into `AuthService`.', () => {
-    expect(Container.resolve(AuthService).issuer).toEqual(issuer)
+    expect(authService.issuer).toEqual(issuer)
+  })
+
+  it('should inject a `UserService` into a property of `AuthService`.', () => {
+    expect(authService.userService).toBeInstanceOf(UserService)
   })
 })
 
@@ -154,14 +163,17 @@ describe('@InjectAll() decorator', () => {
 
   @Injectable()
   class Controller {
+    @InjectAll('IRunner')
+    public readonly propRunners: IRunner[]
+
     public constructor(
       @InjectAll('IRunner') public readonly runners: IRunner[]
     ) {}
   }
 
-  it('should inject all instances of IRunner.', () => {
-    const controller = Container.resolve(Controller)
+  const controller = Container.resolve(Controller)
 
+  it('should inject all instances of IRunner into the constructor.', () => {
     expect(Array.isArray(controller.runners)).toBeTruthy()
 
     expect(controller.runners[0]).toBeInstanceOf(StandardRunner)
@@ -169,5 +181,15 @@ describe('@InjectAll() decorator', () => {
 
     expect(controller.runners[0].run()).toEqual('Standard Runner')
     expect(controller.runners[1].run()).toEqual('Secondary Runner')
+  })
+
+  it('should inject all instances of IRunner into the property.', () => {
+    expect(Array.isArray(controller.propRunners)).toBeTruthy()
+
+    expect(controller.propRunners[0]).toBeInstanceOf(StandardRunner)
+    expect(controller.propRunners[1]).toBeInstanceOf(SecondaryRunner)
+
+    expect(controller.propRunners[0].run()).toEqual('Standard Runner')
+    expect(controller.propRunners[1].run()).toEqual('Secondary Runner')
   })
 })

@@ -4,3 +4,4 @@ if (Reflect == null || !('getMetadata' in Reflect))
 export { Container } from './container'
 export { Inject, InjectAll, Injectable } from './decorators'
 export { IoCError, TokenNotRegistered } from './exceptions'
+export { Constructor, Factory } from './types'

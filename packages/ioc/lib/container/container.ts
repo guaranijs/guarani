@@ -1,6 +1,6 @@
 import { Binding, ProviderBinding } from '../bindings'
 import { TokenNotRegistered } from '../exceptions'
-import { getParamTypes } from '../metadata'
+import { getParamTypes, getPropTokens } from '../metadata'
 import {
   isClassProvider,
   isFactoryProvider,
@@ -93,7 +93,8 @@ class IoCContainer {
 
   /**
    * Creates a new instance of the requested Constructor with all its
-   * dependencies resolved and injected at the correct place.
+   * dependencies resolved and injected at the correct place, as well
+   * as all the resolved property injections.
    *
    * @param constructor - Constructor to be instantiated.
    * @returns Instantiated Constructor.
@@ -105,7 +106,17 @@ class IoCContainer {
       token.multiple ? this.resolveAll(token.token) : this.resolve(token.token)
     )
 
-    return Reflect.construct(constructor, resolvedTokens)
+    const instance = Reflect.construct(constructor, resolvedTokens)
+    const propTokens = getPropTokens(constructor)
+
+    if (propTokens)
+      Object.entries(propTokens).forEach(([prop, token]) => {
+        instance[prop] = token.multiple
+          ? this.resolveAll(token.token)
+          : this.resolve(token.token)
+      })
+
+    return instance
   }
 
   /**

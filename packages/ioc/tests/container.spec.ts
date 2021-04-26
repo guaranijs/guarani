@@ -3,193 +3,230 @@ import 'reflect-metadata'
 import { Container } from '../lib/container'
 import { Inject, Injectable, InjectAll } from '../lib/decorators'
 
+beforeEach(() => Container.clear())
+
 describe('Container', () => {
   it('should be defined.', () => {
     expect(Container).toBeDefined()
   })
-})
-
-describe('@Injectable() decorator', () => {
-  @Injectable()
-  class Foo {}
 
   it('should resolve Foo to itself.', () => {
+    @Injectable()
+    class Foo {}
+
+    Container.bindToken(Foo).toSelf()
+
     expect(Container.resolve(Foo)).toBeInstanceOf(Foo)
   })
 
-  @Injectable({ token: 'Bar' })
-  class Bar {}
-
   it('should throw on an unbound token.', () => {
-    expect(() => Container.resolve(Bar)).toThrow()
+    @Injectable()
+    class Foo {}
+
+    Container.bindToken<string>('Foo').toClass(Foo)
+
+    expect(() => Container.resolve(Foo)).toThrow()
   })
 
   it('should resolve a string token.', () => {
-    expect(Container.resolve<Bar>('Bar')).toBeInstanceOf(Bar)
+    @Injectable()
+    class Foo {}
+
+    Container.bindToken<string>('Foo').toClass(Foo)
+
+    expect(Container.resolve<Foo>('Foo')).toBeInstanceOf(Foo)
   })
 
-  @Injectable({ useFactory: () => new Foo() })
-  class FooFactory {}
+  it('should resolve a factory.', () => {
+    @Injectable()
+    class Foo {}
 
-  it('should resolve a factory token.', () => {
-    expect(Container.resolve(FooFactory)).toBeInstanceOf(Foo)
+    Container.bindToken(Foo).toFactory(() => new Foo())
+
+    expect(Container.resolve(Foo)).toBeInstanceOf(Foo)
   })
-
-  @Injectable({ useToken: 'Bar' })
-  class BarAlias {}
 
   it('should resolve an aliased token.', () => {
-    expect(Container.resolve(BarAlias)).toBeInstanceOf(Bar)
-  })
+    @Injectable()
+    class Foo {}
 
-  @Injectable({ useValue: new Bar() })
-  class BarSingleton {}
+    @Injectable()
+    class Bar {}
+
+    Container.bindToken(Foo).toSelf()
+    Container.bindToken(Bar).toToken(Foo)
+
+    expect(Container.resolve(Bar)).toBeInstanceOf(Foo)
+  })
 
   it('should resolve a value token to the same registered value.', () => {
-    expect(Container.resolve(BarSingleton)).toBeInstanceOf(Bar)
+    @Injectable()
+    class Foo {}
 
-    const bar1 = Container.resolve(BarSingleton)
-    const bar2 = Container.resolve(BarSingleton)
+    Container.bindToken(Foo).toValue(new Foo())
 
-    expect(bar1).toEqual(bar2)
+    expect(Container.resolve(Foo)).toBeInstanceOf(Foo)
+
+    const foo1 = Container.resolve(Foo)
+    const foo2 = Container.resolve(Foo)
+
+    expect(foo1).toEqual(foo2)
   })
 
-  interface IBaz {
-    baz(): string
-  }
-
-  @Injectable({ token: 'IBaz' })
-  class Baz1 implements IBaz {
-    public baz(): string {
-      return 'baz1'
-    }
-  }
-
-  @Injectable({ token: 'IBaz' })
-  class Baz2 implements IBaz {
-    public baz(): string {
-      return 'baz2'
-    }
-  }
-
   it('should resolve multiple assignments to the last one.', () => {
-    expect(Container.resolve<IBaz>('IBaz').baz()).toEqual('baz2')
+    interface IFoo {}
+
+    @Injectable()
+    class Foo1 implements IFoo {}
+
+    @Injectable()
+    class Foo2 implements IFoo {}
+
+    Container.bindToken<IFoo>('IFoo').toClass(Foo1)
+    Container.bindToken<IFoo>('IFoo').toClass(Foo2)
+
+    expect(Container.resolve<IFoo>('IFoo')).toBeInstanceOf(Foo2)
   })
 
   it('should resolve all the assignments to an array.', () => {
-    const bazArray = Container.resolveAll<IBaz>('IBaz')
+    interface IFoo {}
 
-    expect(bazArray).toHaveLength(2)
+    @Injectable()
+    class Foo1 implements IFoo {}
 
-    expect(bazArray[0].baz()).toEqual('baz1')
-    expect(bazArray[1].baz()).toEqual('baz2')
+    @Injectable()
+    class Foo2 implements IFoo {}
+
+    Container.bindToken<IFoo>('IFoo').toClass(Foo1)
+    Container.bindToken<IFoo>('IFoo').toClass(Foo2)
+
+    const fooArray = Container.resolveAll<IFoo>('IFoo')
+
+    expect(Array.isArray(fooArray)).toBeTruthy()
+
+    expect(fooArray[0]).toBeInstanceOf(Foo1)
+    expect(fooArray[1]).toBeInstanceOf(Foo2)
   })
 
-  @Injectable({ autoInject: false })
-  class Baz {}
+  it('should throw on an unregistered injectable.', () => {
+    @Injectable()
+    class Foo {}
 
-  it('should throw on an unresolved `not auto-injected` injectable.', () => {
-    expect(() => Container.resolve(Baz)).toThrow()
+    expect(() => Container.resolve(Foo)).toThrow()
   })
 
-  @Injectable()
-  class Service {
-    public constructor(public readonly foo: Foo) {}
-  }
+  it('should inject class dependencies into the constructor.', () => {
+    @Injectable()
+    class Foo {}
 
-  it('should inject dependencies into the constructor.', () => {
-    expect(Container.resolve(Service).foo).toBeInstanceOf(Foo)
+    @Injectable()
+    class Bar {
+      public constructor(public readonly foo: Foo) {}
+    }
+
+    Container.bindToken(Foo).toSelf()
+    Container.bindToken(Bar).toSelf()
+
+    expect(Container.resolve(Bar).foo).toBeInstanceOf(Foo)
   })
 })
 
 describe('@Inject() decorator', () => {
-  @Injectable()
-  class Repository {
-    public findOne(): string {
-      return 'Finding one instance from the repository...'
+  it('should inject a dependency based on the provided token.', () => {
+    @Injectable()
+    class Foo {}
+
+    @Injectable()
+    class Bar {
+      public constructor(@Inject(Foo) public readonly foo) {}
     }
-  }
 
-  @Injectable()
-  class UserService {
-    public constructor(@Inject(Repository) public readonly repository) {}
-  }
+    Container.bindToken(Foo).toSelf()
+    Container.bindToken(Bar).toSelf()
 
-  it('should inject a `Repository` instance into `UserService`.', () => {
-    expect(Container.resolve(UserService).repository).toBeInstanceOf(Repository)
+    expect(Container.resolve(Bar).foo).toBeInstanceOf(Foo)
   })
 
-  const issuer = 'http://localhost:3333'
+  it('should inject from a string based token.', () => {
+    @Injectable()
+    class Foo {
+      public constructor(@Inject('text') public readonly text: string) {}
+    }
 
-  Container.bindToken<string>('issuer').toValue(issuer)
+    Container.bindToken(Foo).toSelf()
+    Container.bindToken<string>('text').toValue('Lorem ipsum...')
 
-  @Injectable()
-  class AuthService {
-    @Inject()
-    public readonly userService: UserService
-
-    public constructor(@Inject('issuer') public readonly issuer: string) {}
-  }
-
-  const authService = Container.resolve(AuthService)
-
-  it('should inject an `issuer` string into `AuthService`.', () => {
-    expect(authService.issuer).toEqual(issuer)
+    expect(Container.resolve(Foo).text).toEqual('Lorem ipsum...')
   })
 
-  it('should inject a `UserService` into a property of `AuthService`.', () => {
-    expect(authService.userService).toBeInstanceOf(UserService)
+  it('should inject the dependeny into a property.', () => {
+    @Injectable()
+    class Foo {}
+
+    @Injectable()
+    class Bar {
+      @Inject() public readonly foo: Foo
+    }
+
+    Container.bindToken(Foo).toSelf()
+    Container.bindToken(Bar).toSelf()
+
+    expect(Container.resolve(Bar).foo).toBeInstanceOf(Foo)
   })
 })
 
 describe('@InjectAll() decorator', () => {
-  interface IRunner {
-    run(): string
-  }
+  it('should inject all providers into the constructor.', () => {
+    interface IFoo {}
 
-  @Injectable({ token: 'IRunner' })
-  class StandardRunner implements IRunner {
-    public run(): string {
-      return 'Standard Runner'
+    @Injectable()
+    class Foo1 implements IFoo {}
+
+    @Injectable()
+    class Foo2 implements IFoo {}
+
+    @Injectable()
+    class Bar {
+      public constructor(@InjectAll('IFoo') public readonly fooArray: IFoo[]) {}
     }
-  }
 
-  @Injectable({ token: 'IRunner' })
-  class SecondaryRunner implements IRunner {
-    public run(): string {
-      return 'Secondary Runner'
-    }
-  }
+    Container.bindToken<IFoo>('IFoo').toClass(Foo1)
+    Container.bindToken<IFoo>('IFoo').toClass(Foo2)
 
-  @Injectable()
-  class Controller {
-    @InjectAll('IRunner')
-    public readonly propRunners: IRunner[]
+    Container.bindToken(Bar).toSelf()
 
-    public constructor(
-      @InjectAll('IRunner') public readonly runners: IRunner[]
-    ) {}
-  }
+    const bar = Container.resolve(Bar)
 
-  const controller = Container.resolve(Controller)
+    expect(Array.isArray(bar.fooArray)).toBeTruthy()
 
-  it('should inject all instances of IRunner into the constructor.', () => {
-    expect(Array.isArray(controller.runners)).toBeTruthy()
-
-    expect(controller.runners[0]).toBeInstanceOf(StandardRunner)
-    expect(controller.runners[1]).toBeInstanceOf(SecondaryRunner)
-
-    expect(controller.runners[0].run()).toEqual('Standard Runner')
-    expect(controller.runners[1].run()).toEqual('Secondary Runner')
+    expect(bar.fooArray[0]).toBeInstanceOf(Foo1)
+    expect(bar.fooArray[1]).toBeInstanceOf(Foo2)
   })
 
   it('should inject all instances of IRunner into the property.', () => {
-    expect(Array.isArray(controller.propRunners)).toBeTruthy()
+    interface IFoo {}
 
-    expect(controller.propRunners[0]).toBeInstanceOf(StandardRunner)
-    expect(controller.propRunners[1]).toBeInstanceOf(SecondaryRunner)
+    @Injectable()
+    class Foo1 implements IFoo {}
 
-    expect(controller.propRunners[0].run()).toEqual('Standard Runner')
-    expect(controller.propRunners[1].run()).toEqual('Secondary Runner')
+    @Injectable()
+    class Foo2 implements IFoo {}
+
+    @Injectable()
+    class Bar {
+      @InjectAll('IFoo') public readonly fooArray: IFoo[]
+    }
+
+    Container.bindToken<IFoo>('IFoo').toClass(Foo1)
+    Container.bindToken<IFoo>('IFoo').toClass(Foo2)
+
+    Container.bindToken(Bar).toSelf()
+
+    const bar = Container.resolve(Bar)
+
+    expect(Array.isArray(bar.fooArray)).toBeTruthy()
+
+    expect(bar.fooArray[0]).toBeInstanceOf(Foo1)
+    expect(bar.fooArray[1]).toBeInstanceOf(Foo2)
   })
 })

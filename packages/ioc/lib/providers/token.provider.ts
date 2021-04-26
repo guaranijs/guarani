@@ -8,7 +8,7 @@ export interface TokenProvider<T> {
   /**
    * Token to be aliased when resolving the original bound token.
    */
-  readonly useToken: InjectableToken<T>
+  readonly token: InjectableToken<T>
 }
 
 /**
@@ -20,5 +20,5 @@ export interface TokenProvider<T> {
 export function isTokenProvider<T>(
   provider: Provider<T>
 ): provider is TokenProvider<T> {
-  return (provider as TokenProvider<T>).useToken !== undefined
+  return (provider as TokenProvider<T>).token !== undefined
 }

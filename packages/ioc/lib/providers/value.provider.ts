@@ -7,7 +7,7 @@ export interface ValueProvider<T> {
   /**
    * Value to be used when resolving the bound token.
    */
-  readonly useValue: T
+  readonly value: T
 }
 
 /**
@@ -19,5 +19,5 @@ export interface ValueProvider<T> {
 export function isValueProvider<T>(
   provider: Provider<T>
 ): provider is ValueProvider<T> {
-  return (provider as ValueProvider<T>).useValue !== undefined
+  return (provider as ValueProvider<T>).value !== undefined
 }

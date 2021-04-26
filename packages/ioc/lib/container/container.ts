@@ -16,7 +16,7 @@ import { Registry } from './registry'
 /**
  * Implementation of the internal IoC Container.
  */
-class IoCContainer {
+export class IoCContainer {
   /**
    * Registry containing the mapping of the Tokens to its bindings,
    * where each binding contains a provider specifying the resolution
@@ -48,7 +48,7 @@ class IoCContainer {
    * @returns Resolved instance or value based on the Token.
    */
   public resolve<T>(token: InjectableToken<T>): T {
-    if (!this.isBound(token)) throw new TokenNotRegistered(String(token))
+    if (!this.isBound(token)) throw new TokenNotRegistered(token)
     const { provider } = this.registry.get(token)
     return this.resolveProvider(provider)
   }
@@ -85,10 +85,10 @@ class IoCContainer {
     if (!isProvider<T>(provider))
       throw new TypeError(`The object ${provider} is not a provider.`)
 
-    if (isClassProvider<T>(provider)) return this.construct(provider.useClass)
-    if (isFactoryProvider<T>(provider)) return provider.useFactory()
-    if (isTokenProvider<T>(provider)) return this.resolve(provider.useToken)
-    if (isValueProvider<T>(provider)) return provider.useValue
+    if (isClassProvider<T>(provider)) return this.construct(provider.target)
+    if (isFactoryProvider<T>(provider)) return provider.factory()
+    if (isTokenProvider<T>(provider)) return this.resolve(provider.token)
+    if (isValueProvider<T>(provider)) return provider.value
   }
 
   /**
@@ -100,7 +100,7 @@ class IoCContainer {
    * @returns Instantiated Constructor.
    */
   private construct<T>(constructor: Constructor<T>): T {
-    const tokens = getParamTypes(constructor)
+    const tokens = getParamTypes(constructor) ?? []
 
     const resolvedTokens = tokens.map(token =>
       token.multiple ? this.resolveAll(token.token) : this.resolve(token.token)

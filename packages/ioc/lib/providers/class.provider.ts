@@ -8,7 +8,7 @@ export interface ClassProvider<T> {
   /**
    * Class to be used when resolving the bound token.
    */
-  readonly useClass: Constructor<T>
+  readonly target: Constructor<T>
 }
 
 /**
@@ -20,5 +20,5 @@ export interface ClassProvider<T> {
 export function isClassProvider<T>(
   provider: Provider<T>
 ): provider is ClassProvider<T> {
-  return (provider as ClassProvider<T>).useClass != null
+  return (provider as ClassProvider<T>).target != null
 }

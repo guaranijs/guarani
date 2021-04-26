@@ -27,19 +27,19 @@ export class ProviderBinding<T> {
     }
 
     if (isClassProvider<U>(provider)) {
-      return this.toClass(provider.useClass)
+      return this.toClass(provider.target)
     }
 
     if (isFactoryProvider<U>(provider)) {
-      return this.toFactory(provider.useFactory)
+      return this.toFactory(provider.factory)
     }
 
     if (isTokenProvider<U>(provider)) {
-      return this.toToken(provider.useToken)
+      return this.toToken(provider.token)
     }
 
     if (isValueProvider<U>(provider)) {
-      return this.toValue(provider.useValue)
+      return this.toValue(provider.value)
     }
   }
 
@@ -49,7 +49,7 @@ export class ProviderBinding<T> {
    * @param target - Class to be bound to the Token.
    */
   public toClass<U>(target: Constructor<U>): void {
-    this.binding.provider = { useClass: target as any }
+    this.binding.provider = { target: target as any }
   }
 
   /**
@@ -58,7 +58,7 @@ export class ProviderBinding<T> {
    * @param factory - Factory to be bound to the Token.
    */
   public toFactory<U>(factory: Factory<U>): void {
-    this.binding.provider = { useFactory: factory as any }
+    this.binding.provider = { factory: factory as any }
   }
 
   /**
@@ -67,7 +67,7 @@ export class ProviderBinding<T> {
    * @param token - Token to be aliased.
    */
   public toToken<U>(token: InjectableToken<U>): void {
-    this.binding.provider = { useToken: token as any }
+    this.binding.provider = { token: token as any }
   }
 
   /**
@@ -76,7 +76,7 @@ export class ProviderBinding<T> {
    * @param value - Value to be bound to the Token.
    */
   public toValue<U>(value: U): void {
-    this.binding.provider = { useValue: value as any }
+    this.binding.provider = { value: value as any }
   }
 
   /**

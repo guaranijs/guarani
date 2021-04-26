@@ -8,7 +8,7 @@ export interface FactoryProvider<T> {
   /**
    * Factory to be used when resolving the bound token.
    */
-  readonly useFactory: Factory<T>
+  readonly factory: Factory<T>
 }
 
 /**
@@ -20,5 +20,5 @@ export interface FactoryProvider<T> {
 export function isFactoryProvider<T>(
   provider: Provider<T>
 ): provider is FactoryProvider<T> {
-  return typeof (provider as FactoryProvider<T>).useFactory === 'function'
+  return typeof (provider as FactoryProvider<T>).factory === 'function'
 }

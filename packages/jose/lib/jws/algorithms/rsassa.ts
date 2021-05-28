@@ -13,7 +13,7 @@ class RSASSAAlgorithm extends JWSAlgorithm {
   /**
    * Accepted key type.
    */
-  private keyType = 'RSA'
+  private readonly keyType = 'RSA'
 
   /**
    * Instantiates a new RSASSA Algorithm to sign and verify the messages.
@@ -23,9 +23,9 @@ class RSASSAAlgorithm extends JWSAlgorithm {
    * @param padding - Padding to be used by the algorithm.
    */
   public constructor(
-    protected hash: SupportedHashes,
-    protected algorithm: string,
-    protected padding: number
+    protected readonly hash: SupportedHashes,
+    protected readonly algorithm: string,
+    protected readonly padding: number
   ) {
     super(hash, algorithm)
   }

@@ -20,8 +20,8 @@ export abstract class JWSAlgorithm {
    * @param algorithm - Name of the algorithm.
    */
   public constructor(
-    protected hash: SupportedHashes,
-    protected algorithm: string
+    protected readonly hash: SupportedHashes,
+    protected readonly algorithm: string
   ) {}
 
   /**

@@ -14,17 +14,17 @@ export interface ECPublicParams extends KeyOptions {
   /**
    * Name of the curve.
    */
-  crv: SupportedCurves
+  readonly crv: SupportedCurves
 
   /**
    * Base64Url representation of the X value.
    */
-  x: string
+  readonly x: string
 
   /**
    * Base64Url representation of the Y value.
    */
-  y: string
+  readonly y: string
 }
 
 /**

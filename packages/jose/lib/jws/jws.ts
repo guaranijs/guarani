@@ -11,22 +11,22 @@ interface DecodeParams {
   /**
    * JSON Web Signature Token to be decoded.
    */
-  token: string
+  readonly token: string
 
   /**
    * JSON Web Key used to decode the token.
    */
-  key?: JsonWebKey
+  readonly key?: JsonWebKey
 
   /**
    * Expected algorithm of the token.
    */
-  algorithm?: string
+  readonly algorithm?: string
 
   /**
    * Validates the signature of the token.
    */
-  validate?: boolean
+  readonly validate?: boolean
 }
 
 /**
@@ -36,17 +36,17 @@ interface EncodeParams {
   /**
    * JOSE Header containing the meta information of the token.
    */
-  header: JoseHeaderParams
+  readonly header: JoseHeaderParams
 
   /**
    * Buffer representation of the payload of the token.
    */
-  payload: Buffer
+  readonly payload: Buffer
 
   /**
    * JSON Web Key used to encode the token.
    */
-  key?: JsonWebKey
+  readonly key?: JsonWebKey
 }
 
 /**
@@ -66,12 +66,12 @@ export interface JsonWebSignature {
   /**
    * JOSE Header containing the meta information of the token.
    */
-  header: JoseHeaderParams
+  readonly header: JoseHeaderParams
 
   /**
    * Buffer representation of the payload of the token.
    */
-  payload: Buffer
+  readonly payload: Buffer
 }
 
 /**
@@ -129,12 +129,12 @@ export function createJWS(params: EncodeParams): string {
  * @returns JsonWebSignature object containing the decoded header and payload.
  */
 export function parseJWS(params: DecodeParams): JsonWebSignature {
-  params.validate ??= true
+  const validate = params.validate ?? true
 
   if (typeof params.token !== 'string')
     throw new TypeError('Invalid parameter "token".')
 
-  if (!(params.key instanceof JsonWebKey))
+  if (params.key && !(params.key instanceof JsonWebKey))
     throw new TypeError('Invalid parameter "key".')
 
   try {
@@ -160,7 +160,7 @@ export function parseJWS(params: DecodeParams): JsonWebSignature {
           `Expected "${params.algorithm}", got "${joseHeader.alg}".`
       )
 
-    if (params.validate)
+    if (validate)
       joseHeader.algorithm.verify(
         signature,
         Buffer.from(`${b64header}.${b64payload}`),

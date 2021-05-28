@@ -16,7 +16,7 @@ export interface ClaimOptions {
    * An essential claim **MUST** be present in the claims object,
    * otherwise it will fail.
    */
-  essential?: boolean
+  readonly essential?: boolean
 
   /**
    * Defines the specific value that a claim is required to have.
@@ -27,7 +27,7 @@ export interface ClaimOptions {
    * @param value - Defines the required value of the claim.
    * @returns Boolean informing if the claim matches the value.
    */
-  value?: unknown
+  readonly value?: unknown
 
   /**
    * Defines the set of values required for the claim to match.
@@ -36,7 +36,7 @@ export interface ClaimOptions {
    * @param values - Defines the list of required values of the claim.
    * @returns Boolean informing if the claim matches one of the values.
    */
-  values?: unknown[]
+  readonly values?: unknown[]
 }
 
 /**
@@ -46,47 +46,52 @@ export interface ClaimsOptions {
   /**
    * Defines the options used to validate the claim.
    */
-  [claim: string]: ClaimOptions
+  readonly [claim: string]: ClaimOptions
 }
 
 /**
  * Interface defining the supported claims.
  */
-export interface JsonWebTokenClaims {
+export interface Claims {
   /**
    * Identifier of the issuer of the token.
    */
-  iss?: string
+  readonly iss?: string
 
   /**
    * Subject represented by the token.
    */
-  sub?: string
+  readonly sub?: string
 
   /**
    * Identifier of the audience the token is intended to.
    */
-  aud?: string | string[]
+  readonly aud?: string | string[]
 
   /**
    * UTC time denoting the expiration of the token.
    */
-  exp?: number
+  readonly exp?: number
 
   /**
    * UTC time denoting when the token will become valid.
    */
-  nbf?: number
+  readonly nbf?: number
 
   /**
    * UTC time denoting the moment when the token was created.
    */
-  iat?: number
+  readonly iat?: number
 
   /**
    * ID of the token. Used to prevent replay attacks.
    */
-  jti?: string
+  readonly jti?: string
+
+  /**
+   * Custom claim.
+   */
+  readonly [claim: string]: any
 }
 
 /**
@@ -97,7 +102,7 @@ export interface JsonWebTokenClaims {
  * The **JSON Web Token Claims** is a JSON object that contains information
  * about an application, system or user.
  */
-export class Claims implements JsonWebTokenClaims {
+export class JsonWebTokenClaims implements Claims {
   /**
    * Identifier of the issuer of the token.
    */
@@ -139,9 +144,9 @@ export class Claims implements JsonWebTokenClaims {
    * @param claims - Defines the claims of the JSON Web Token.
    * @param options - Validation options for the claims.
    */
-  public constructor(claims: JsonWebTokenClaims, options: ClaimsOptions = {}) {
-    Claims.validateClaimsTypes(claims)
-    Claims.validateClaimsOptions(claims, options)
+  public constructor(claims: Claims, options: ClaimsOptions = {}) {
+    JsonWebTokenClaims.validateClaimsTypes(claims)
+    JsonWebTokenClaims.validateClaimsOptions(claims, options)
 
     Object.assign(this, Objects.removeNullishValues(claims))
   }
@@ -155,7 +160,7 @@ export class Claims implements JsonWebTokenClaims {
    * @throws {ExpiredToken} The JSON Web Token is expired.
    * @throws {TokenNotValidYet} The token is not valid yet.
    */
-  protected static validateClaimsTypes(claims: JsonWebTokenClaims): void {
+  protected static validateClaimsTypes(claims: Claims): void {
     if ('iss' in claims && (typeof claims.iss !== 'string' || !claims.iss))
       throw new InvalidJsonWebTokenClaim('Invalid claim "iss".')
 
@@ -205,7 +210,7 @@ export class Claims implements JsonWebTokenClaims {
    * @throws {InvalidJsonWebTokenClaim} A claim does not conform to its options.
    */
   private static validateClaimsOptions(
-    claims: JsonWebTokenClaims,
+    claims: Claims,
     options: ClaimsOptions
   ): void {
     Object.entries(options).forEach(([claim, option]) => {

@@ -13,12 +13,12 @@ export interface RSAPublicParams extends KeyOptions {
   /**
    * Base64Url representation of the Modulus.
    */
-  n: string
+  readonly n: string
 
   /**
    * Base64Url representation of the Public Exponent.
    */
-  e: string
+  readonly e: string
 }
 
 /**

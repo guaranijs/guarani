@@ -16,47 +16,47 @@ export interface KeyOptions {
   /**
    * Key type representing the algorithm of the key.
    */
-  kty?: string
+  readonly kty?: string
 
   /**
    * Defines the usage of the key.
    */
-  use?: string
+  readonly use?: string
 
   /**
    * Defines the allowed operations to be performed with the key
    */
-  key_ops?: string[]
+  readonly key_ops?: string[]
 
   /**
    * Defines the signature or encryption algorithm allowed to use this key.
    */
-  alg?: string
+  readonly alg?: string
 
   /**
    * Defines the ID of the key.
    */
-  kid?: string
+  readonly kid?: string
 
   /**
    * Defines the URL of the X.509 certificate of the key.
    */
-  x5u?: string
+  readonly x5u?: string
 
   /**
    * Defines a chain of X.509 certificates of the key.
    */
-  x5c?: string[]
+  readonly x5c?: string[]
 
   /**
    * Defines the SHA-1 Thumbprint of the X.509 certificate of the key.
    */
-  x5t?: string
+  readonly x5t?: string
 
   /**
    * Defines the SHA-256 Thumbprint of the X.509 certificate of the key.
    */
-  'x5t#S256'?: string
+  readonly 'x5t#S256'?: string
 }
 
 /**
@@ -181,7 +181,7 @@ export interface SecretKey {
   /**
    * Native key used by the other algorithms such as JWS and JWE.
    */
-  secretKey: KeyObject
+  readonly secretKey: KeyObject
 }
 
 /**
@@ -191,7 +191,7 @@ export interface PublicKey {
   /**
    * Native key used by the other algorithms such as JWS and JWE.
    */
-  publicKey: KeyObject
+  readonly publicKey: KeyObject
 }
 
 /**
@@ -201,5 +201,5 @@ export interface PrivateKey {
   /**
    * Native key used by the other algorithms such as JWS and JWE.
    */
-  privateKey: KeyObject
+  readonly privateKey: KeyObject
 }

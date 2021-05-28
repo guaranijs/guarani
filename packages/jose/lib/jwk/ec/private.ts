@@ -15,7 +15,7 @@ export interface ECPrivateParams extends ECPublicParams {
   /**
    * Base64Url representation of the Private Value.
    */
-  d: string
+  readonly d: string
 }
 
 /**
@@ -106,12 +106,12 @@ interface ECKeyPair {
   /**
    * Elliptic Curve Public Key.
    */
-  publicKey: ECPublicKey
+  readonly publicKey: ECPublicKey
 
   /**
    * Elliptic Curve Private Key.
    */
-  privateKey: ECPrivateKey
+  readonly privateKey: ECPrivateKey
 }
 
 /**

@@ -23,33 +23,38 @@ interface CurveParams {
   /**
    * Identifier of the Elliptic Curve.
    */
-  id: SupportedCurves
+  readonly id: SupportedCurves
 
   /**
    * Name of the curve as registered with NodeJS' `crypto` module.
    */
-  name: string
+  readonly name: string
 
   /**
    * String representation of the ObjectId of the Curve.
    */
-  oid: string
+  readonly oid: string
 
   /**
    * Length of the Private Value and parameters of the key's Coordinate.
    */
-  length: number
+  readonly length: number
 
   /**
    * Buffer representation of the Curve's ObjectId.
    */
-  buffer: Buffer
+  readonly buffer: Buffer
 }
+
+/**
+ * Defines the type of the Curves Store.
+ */
+type Curves = Record<string, CurveParams>
 
 /**
  * Supported Curves.
  */
-export const CURVES: { [key: string]: CurveParams } = {
+export const CURVES: Curves = {
   'P-256': {
     id: 'P-256',
     name: 'prime256v1',

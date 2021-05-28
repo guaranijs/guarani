@@ -41,7 +41,7 @@ class ECDSAAlgorithm extends JWSAlgorithm {
   /**
    * Accepted key type.
    */
-  private keyType = 'EC'
+  private readonly keyType = 'EC'
 
   /**
    * Instantiates a new ECDSA Algorithm to sign and verify the messages.
@@ -51,9 +51,9 @@ class ECDSAAlgorithm extends JWSAlgorithm {
    * @param curve - Curve to be used by the algorithm.
    */
   public constructor(
-    protected hash: SupportedHashes,
-    protected algorithm: string,
-    protected curve: SupportedCurves
+    protected readonly hash: SupportedHashes,
+    protected readonly algorithm: string,
+    protected readonly curve: SupportedCurves
   ) {
     super(hash, algorithm)
   }

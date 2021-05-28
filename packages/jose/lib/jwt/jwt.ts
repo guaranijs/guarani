@@ -12,22 +12,22 @@ interface DecodeParams {
   /**
    * JSON Web Token to be decoded.
    */
-  token: string
+  readonly token: string
 
   /**
    * JSON Web Key used to decode the token.
    */
-  key?: JsonWebKey
+  readonly key?: JsonWebKey
 
   /**
    * Expected algorithm of the token.
    */
-  algorithm?: string
+  readonly algorithm?: string
 
   /**
    * Validates the signature of the token.
    */
-  validate?: boolean
+  readonly validate?: boolean
 }
 
 /**
@@ -37,17 +37,17 @@ interface EncodeParams {
   /**
    * JOSE Header containing the meta information of the token.
    */
-  header: JoseHeaderParams
+  readonly header: JoseHeaderParams
 
   /**
    * Object containing the claims of the token.
    */
-  claims: JsonWebTokenClaims
+  readonly claims: Claims
 
   /**
    * JSON Web Key used to encode the token.
    */
-  key?: JsonWebKey
+  readonly key?: JsonWebKey
 }
 
 /**
@@ -74,12 +74,12 @@ export interface JsonWebToken {
   /**
    * JOSE Header containing the meta information of the token.
    */
-  header: JoseHeaderParams
+  readonly header: JoseHeaderParams
 
   /**
    * Object representing the claims of the token.
    */
-  claims: JsonWebTokenClaims
+  readonly claims: Claims
 }
 
 /**
@@ -136,7 +136,7 @@ export function parseJWT(
 
     // Validation of the claims.
     // eslint-disable-next-line no-new
-    new Claims(claims, options)
+    new JsonWebTokenClaims(claims, options)
 
     return { header, claims }
   } catch (error) {

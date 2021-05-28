@@ -11,57 +11,57 @@ export interface JoseHeaderParams {
   /**
    * JWS Algorithm used to sign and verify the token.
    */
-  alg: string
+  readonly alg: string
 
   /**
    * URI of a JWK Set that contains the key used to sign the token.
    */
-  jku?: string
+  readonly jku?: string
 
   /**
    * JSON Web Key used to sign the token.
    */
-  jwk?: KeyOptions
+  readonly jwk?: KeyOptions
 
   /**
    * ID of the key used to sign the token.
    */
-  kid?: string
+  readonly kid?: string
 
   /**
    * URI of the X.509 certificate of the key.
    */
-  x5u?: string
+  readonly x5u?: string
 
   /**
    * Chain of X.509 certificates of the key.
    */
-  x5c?: string[]
+  readonly x5c?: string[]
 
   /**
    * SHA-1 Thumbprint of the X.509 certificate of the key.
    */
-  x5t?: string
+  readonly x5t?: string
 
   /**
    * SHA-256 Thumbprint of the X.509 certificate of the key.
    */
-  'x5t#S256'?: string
+  readonly 'x5t#S256'?: string
 
   /**
    * Defines the type of the entire token.
    */
-  typ?: string
+  readonly typ?: string
 
   /**
    * Defines the type of the payload.
    */
-  cty?: string
+  readonly cty?: string
 
   /**
    * Defines the parameters that MUST be present in the header.
    */
-  crit?: string[]
+  readonly crit?: string[]
 }
 
 /**

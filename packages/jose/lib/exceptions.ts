@@ -11,7 +11,7 @@ export class JoseError extends Error {
   /**
    * Error message.
    */
-  public message: string
+  public readonly message: string
 
   /**
    * Instantiates a new JoseError and correctly sets the name of the Error.

@@ -14,37 +14,37 @@ export interface RSAPrivateParams extends RSAPublicParams {
   /**
    * Base64Url representation of the Private Exponent.
    */
-  d: string
+  readonly d: string
 
   /**
    * Base64Url representation of the First Prime.
    */
-  p?: string
+  readonly p?: string
 
   /**
    * Base64Url representation of the Second Prime.
    */
-  q?: string
+  readonly q?: string
 
   /**
    * Base64Url representation of the CRT's First Exponent.
    */
-  dp?: string
+  readonly dp?: string
 
   /**
    * Base64Url representation of the CRT's Second Exponent.
    */
-  dq?: string
+  readonly dq?: string
 
   /**
    * Base64Url representation of the CRT's Coefficient.
    */
-  qi?: string
+  readonly qi?: string
 
   /**
    * Base64Url representation of the Other Primes.
    */
-  oth?: [string?, string?, string?]
+  readonly oth?: [Readonly<string>?, Readonly<string>?, Readonly<string>?]
 }
 
 /**
@@ -154,12 +154,12 @@ interface RSAKeyPair {
   /**
    * RSA Public Key.
    */
-  publicKey: RSAPublicKey
+  readonly publicKey: RSAPublicKey
 
   /**
    * RSA Private Key.
    */
-  privateKey: RSAPrivateKey
+  readonly privateKey: RSAPrivateKey
 }
 
 /**

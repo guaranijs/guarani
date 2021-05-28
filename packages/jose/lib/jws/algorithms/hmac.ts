@@ -34,7 +34,7 @@ class HMACAlgorithm extends JWSAlgorithm {
   /**
    * Accepted key type.
    */
-  private keyType = 'oct'
+  private readonly keyType = 'oct'
 
   /**
    * Instantiates a new HMAC Algorithm to sign and verify the messages.
@@ -45,9 +45,9 @@ class HMACAlgorithm extends JWSAlgorithm {
    * accepted by the algorithm.
    */
   public constructor(
-    protected hash: SupportedHashes,
-    protected algorithm: string,
-    protected keySize: number
+    protected readonly hash: SupportedHashes,
+    protected readonly algorithm: string,
+    protected readonly keySize: number
   ) {
     super(hash, algorithm)
   }

@@ -12,7 +12,7 @@ export interface OCTSecretParams extends KeyOptions {
   /**
    * Base64Url representation of the secret.
    */
-  k: string
+  readonly k: string
 }
 
 /**

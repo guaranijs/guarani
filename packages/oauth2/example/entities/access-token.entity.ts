@@ -9,7 +9,7 @@ import {
   PrimaryColumn
 } from 'typeorm'
 
-import { OAuth2AccessToken } from '../../lib/models'
+import { OAuth2AccessToken } from '../../lib'
 import { Client } from './client.entity'
 import { User } from './user.entity'
 

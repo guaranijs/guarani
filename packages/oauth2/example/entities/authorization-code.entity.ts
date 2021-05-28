@@ -1,4 +1,4 @@
-import { OAuth2AuthorizationCode } from '../../lib/models'
+import { OAuth2AuthorizationCode } from '../../lib'
 import { redis } from '../redis'
 
 interface ICode {

@@ -3,7 +3,7 @@ import { Exclude, Expose } from 'class-transformer'
 import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm'
 import { v4 as uuid4 } from 'uuid'
 
-import { OAuth2User } from '../../lib/models'
+import { OAuth2User } from '../../lib'
 
 export interface IAddress {
   street_address: string

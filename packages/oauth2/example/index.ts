@@ -12,7 +12,7 @@ import { ormconfig } from './ormconfig'
 import { redis } from './redis'
 import { router } from './router'
 import { initialize } from './strategy'
-import { ProviderFactory } from '../lib/bootstrap'
+import { ProviderFactory } from '../lib'
 import { AppProvider } from './oauth2/provider'
 
 async function configure(app: express.Express) {

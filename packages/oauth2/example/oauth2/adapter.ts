@@ -3,8 +3,7 @@ import { Dict, Objects } from '@guarani/utils'
 import { getConnection } from 'typeorm'
 import { v4 as uuid4 } from 'uuid'
 
-import { Adapter } from '../../lib/adapter'
-import { TokenMetadata } from '../../lib/models'
+import { Adapter, TokenMetadata } from '../../lib'
 import {
   AccessToken,
   AuthorizationCode,

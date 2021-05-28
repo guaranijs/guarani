@@ -1,6 +1,6 @@
 import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm'
 
-import { OAuth2Client } from '../../lib/models'
+import { OAuth2Client } from '../../lib'
 
 const transformer = {
   from: (value: any) => JSON.parse(value),

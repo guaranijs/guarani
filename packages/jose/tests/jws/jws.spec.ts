@@ -50,7 +50,8 @@ describe('JSON Web Signature parseJWS()', () => {
 
   it('should reject an invalid JSON Web Key.', () => {
     expect(() =>
-      parseJWS({ token: 'b64header.b64payload.signature', key: undefined })
+      // @ts-expect-error
+      parseJWS({ token: 'b64header.b64payload.signature', key: 123 })
     ).toThrow('Invalid parameter "key".')
   })
 

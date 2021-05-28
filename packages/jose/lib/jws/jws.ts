@@ -134,7 +134,7 @@ export function parseJWS(params: DecodeParams): JsonWebSignature {
   if (typeof params.token !== 'string')
     throw new TypeError('Invalid parameter "token".')
 
-  if (params.key && !(params.key instanceof JsonWebKey))
+  if (params.key != null && !(params.key instanceof JsonWebKey))
     throw new TypeError('Invalid parameter "key".')
 
   try {

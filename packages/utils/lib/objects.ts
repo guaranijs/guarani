@@ -11,7 +11,7 @@
  * @param data - Object or array of objects to be cleansed.
  * @returns Object or array of objects without nullish values.
  */
-export function removeNullishValues(data: unknown): unknown {
+export function removeNullishValues<T>(data: T): T {
   if (data == null || typeof data !== 'object') return data
 
   return Object.entries(data).reduce((r, [k, v]) => {
@@ -23,7 +23,7 @@ export function removeNullishValues(data: unknown): unknown {
     else r[k] = v
 
     return r
-  }, {})
+  }, {} as T)
 }
 
 /**
@@ -93,4 +93,26 @@ export function equals(
   }
 
   return true
+}
+
+/**
+ * Recursively freezes the properties or items of the provided object.
+ *
+ * @param obj - Object to be frozen.
+ * @returns Frozen object.
+ */
+export function deepFreeze<T>(obj: T): Readonly<T> {
+  Object.freeze(obj)
+
+  Object.entries(obj).forEach(([key, value]) => {
+    if (
+      (typeof value === 'object' || typeof value === 'function') &&
+      !Object.isFrozen(value)
+    ) {
+      if (Array.isArray(value)) value.forEach(elm => deepFreeze(elm))
+      deepFreeze(value)
+    }
+  })
+
+  return obj
 }

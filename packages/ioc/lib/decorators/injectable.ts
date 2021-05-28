@@ -9,7 +9,6 @@ import {
  * Decorates a class enabling it to be resolved by the IoC Container,
  * should it be registered at said Container.
  *
- * @param options - Optional arguments to customize the injectable class.
  * @returns Decorated class as an Injectable.
  */
 export function Injectable(): ClassDecorator {

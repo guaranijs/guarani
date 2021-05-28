@@ -13,6 +13,8 @@
   "plugins": ["@typescript-eslint", "prettier"],
   "rules": {
     "prettier/prettier": "error",
+    "camelcase": "off",
+    "new-cap": "off",
     "no-dupe-class-members": "off",
     "no-redeclare": "off",
     "no-useless-constructor": "off",

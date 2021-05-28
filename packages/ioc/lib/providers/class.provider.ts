@@ -1,5 +1,6 @@
+import { Constructor } from '@guarani/utils'
+
 import { Provider } from './provider'
-import { Constructor } from '../types'
 
 /**
  * Defines the format of a Class Provider.

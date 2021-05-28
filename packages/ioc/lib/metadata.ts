@@ -1,6 +1,7 @@
+import { Dict } from '@guarani/utils'
+
 import { Constants } from './constants'
 import { InjectableToken } from './tokens'
-import { Dict } from './types'
 
 /**
  * Describes the format of the object stored at the Injectable's

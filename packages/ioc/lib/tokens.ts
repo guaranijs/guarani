@@ -1,4 +1,4 @@
-import { Constructor } from './types'
+import { Constructor } from '@guarani/utils'
 
 /**
  * Describes the acceptable formats for an Injectable token.

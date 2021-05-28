@@ -119,3 +119,7 @@ dist
 # IDE files
 .vscode/*
 .idea/*
+
+# SQLite3
+*.sqlite*
+*.db

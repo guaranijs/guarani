@@ -1,3 +1,5 @@
+import { Constructor } from '@guarani/utils'
+
 import { Binding, ProviderBinding } from '../bindings'
 import { TokenNotRegistered } from '../exceptions'
 import { getParamTypes, getPropTokens } from '../metadata'
@@ -10,7 +12,6 @@ import {
   Provider
 } from '../providers'
 import { InjectableToken } from '../tokens'
-import { Constructor } from '../types'
 import { Registry } from './registry'
 
 /**

@@ -1,3 +1,5 @@
+import { Constructor, Factory } from '@guarani/utils'
+
 import {
   isClassProvider,
   isFactoryProvider,
@@ -7,7 +9,6 @@ import {
   Provider
 } from '../providers'
 import { InjectableToken, isConstructorToken } from '../tokens'
-import { Constructor, Factory } from '../types'
 import { Binding } from './binding'
 
 /**

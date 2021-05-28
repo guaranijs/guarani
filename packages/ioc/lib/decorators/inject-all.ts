@@ -1,10 +1,11 @@
+import { Constructor } from '@guarani/utils'
+
 import {
   defineParamInjectableType,
   definePropertyInjectableType,
   getDesignPropType
 } from '../metadata'
 import { InjectableToken } from '../tokens'
-import { Constructor } from '../types'
 
 /**
  * Injects all registered instances of a token into the Injectable class'

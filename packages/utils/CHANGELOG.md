@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/guaranijs/guarani/compare/v0.3.0...v0.4.0) (2021-05-28)
+
+
+### Features
+
+* **utils:** Added custom types, random string generator and a HTML sanitizer. ([08adf1d](https://github.com/guaranijs/guarani/commit/08adf1d47f927f60f9cb9dc2ef208e67a9569396))
+
+
+
+
+
 # [0.3.0](https://github.com/guaranijs/guarani/compare/v0.2.0...v0.3.0) (2021-03-20)
 
 

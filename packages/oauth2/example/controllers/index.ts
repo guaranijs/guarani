@@ -1,0 +1,5 @@
+export { CallbackController } from './callback.controller'
+export { HomeController } from './home.controller'
+export { LoginController } from './login.controller'
+export { LogoutController } from './logout.controller'
+export { RegisterController } from './register.controller'

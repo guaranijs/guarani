@@ -14,7 +14,10 @@ import { Node } from './node'
  * TAG Number: 0x06
  */
 export class ObjectId extends Node {
-  private values: number[]
+  /**
+   * Array of numbers representing the ObjectId.
+   */
+  private readonly values: number[]
 
   /**
    * Parses an integer string separated by dots into an ObjectId.
@@ -41,29 +44,46 @@ export class ObjectId extends Node {
   public constructor(value: string | number[]) {
     super()
 
-    if (typeof value !== 'string' && !Array.isArray(value))
+    if (typeof value !== 'string' && !Array.isArray(value)) {
       throw new TypeError('Invalid parameter "value".')
+    }
 
-    if (Array.isArray(value) && value.some(e => typeof e !== 'number'))
+    if (Array.isArray(value) && value.some(e => typeof e !== 'number')) {
       throw new TypeError('Invalid parameter "value".')
+    }
 
     const values =
       typeof value === 'string'
         ? value.split(/[\s.]+/g).map(e => Number.parseInt(e))
         : value
 
-    if (values.length < 2) throw new Error('There MUST be AT LEAST two values.')
+    if (values.length < 2) {
+      throw new Error('There MUST be AT LEAST two values.')
+    }
 
-    if (values.some(e => e < 0))
+    if (values.some(e => e < 0)) {
       throw new Error('The OID CANNOT have negative integers.')
+    }
 
-    if (![0, 1, 2].includes(values[0]))
+    if (![0, 1, 2].includes(values[0])) {
       throw new Error('The first value MUST be between 0 and 2.')
+    }
 
-    if (values[0] < 2 && values[1] >= 40)
+    if (values[0] < 2 && values[1] >= 40) {
       throw new Error('The second value is outside of range.')
+    }
 
     this.values = values
+  }
+
+  /**
+   * Checks whether the provided buffer is an ObjectId.
+   *
+   * @param buffer - Buffer to be checked.
+   * @returns Whether or not the buffer is an ObjectId.
+   */
+  public static isObjectId(buffer: Buffer): boolean {
+    return buffer[0] === 0x06
   }
 
   /**
@@ -84,8 +104,9 @@ export class ObjectId extends Node {
 
       bytes.push(Primitives.toBuffer(element & 0x7f))
 
-      while ((element >>>= 7) > 0)
+      while ((element >>>= 7) > 0) {
         bytes.push(Primitives.toBuffer(0x80 | (element & 0x7f)))
+      }
     }
 
     const buffer = Buffer.concat([firstByte, ...bytes.reverse()])

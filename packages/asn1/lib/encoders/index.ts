@@ -4,4 +4,5 @@
  * @module Encoders
  */
 
-export { PEM } from './pem'
+export { DEREncoder } from './der.encoder'
+export { PEMEncoder } from './pem.encoder'

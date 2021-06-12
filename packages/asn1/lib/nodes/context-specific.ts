@@ -16,10 +16,28 @@ import { Node } from './node'
  * ctx.encode() // <Buffer a0 07 06 05 2b 81 04 00 23>
  */
 export class ContextSpecific extends Node {
-  private tagNumber: number
-  private encoding: 'primitive' | 'constructed'
-  private value: Buffer
+  /**
+   * Denotes the tag number represented by the context.
+   */
+  private readonly tagNumber: number
 
+  /**
+   * Denotes whether the type is primitive or constructed.
+   */
+  private readonly encoding: 'primitive' | 'constructed'
+
+  /**
+   * Value representing the context-specific type.
+   */
+  private readonly value: Buffer
+
+  /**
+   * Instantiates a new ContextSpecific object.
+   *
+   * @param tagNumber - Denotes the tag represented in the context.
+   * @param encoding - Denotes whether the type is primitive or constructed.
+   * @param value - Buffer representation of the type.
+   */
   public constructor(
     tagNumber: number,
     encoding: 'primitive' | 'constructed',
@@ -27,14 +45,17 @@ export class ContextSpecific extends Node {
   ) {
     super()
 
-    if (typeof tagNumber !== 'number')
+    if (typeof tagNumber !== 'number') {
       throw new TypeError('Invalid parameter "tagNumber".')
+    }
 
-    if (!['primitive', 'constructed'].includes(encoding))
+    if (!['primitive', 'constructed'].includes(encoding)) {
       throw new TypeError('Invalid parameter "encoding".')
+    }
 
-    if (!Buffer.isBuffer(value))
+    if (!Buffer.isBuffer(value)) {
       throw new TypeError('Invalid parameter "value".')
+    }
 
     this.tagNumber = tagNumber
     this.encoding = encoding

@@ -10,15 +10,34 @@ import { Node } from './node'
  * TAG Number: 0x04
  */
 export class OctetString extends Node {
-  private value: Buffer
+  /**
+   * Value representing the octetstring.
+   */
+  private readonly value: Buffer
 
+  /**
+   * Instantiates a new OctetString object based on the provided value.
+   *
+   * @param value - Buffer representation of the OctetString.
+   */
   public constructor(value: Buffer) {
     super()
 
-    if (!Buffer.isBuffer(value))
+    if (!Buffer.isBuffer(value)) {
       throw new TypeError('Invalid parameter "value".')
+    }
 
     this.value = value
+  }
+
+  /**
+   * Checks whether the provided buffer is an OctetString.
+   *
+   * @param buffer - Buffer to be checked.
+   * @returns Whether or not the buffer is an OctetString.
+   */
+  public static isOctetString(buffer: Buffer): boolean {
+    return buffer[0] === 0x04
   }
 
   /**

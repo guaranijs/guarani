@@ -4,5 +4,6 @@
  * @module Decoders
  */
 
-export { DER } from './der'
-export { PEM } from './pem'
+export { Decoder } from './decoder'
+export { DERDecoder } from './der.decoder'
+export { PEMDecoder } from './pem.decoder'

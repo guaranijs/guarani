@@ -9,7 +9,10 @@ import { Node } from './node'
  * TAG Number: 0x30
  */
 export class Sequence extends Node {
-  private nodes: Node[]
+  /**
+   * List of Nodes that compose the sequence.
+   */
+  private readonly nodes: Node[]
 
   /**
    * Initializes a Sequence type containing the provided nodes as its elements.
@@ -27,10 +30,21 @@ export class Sequence extends Node {
   public constructor(...nodes: Node[]) {
     super()
 
-    if (nodes.some(node => !(node instanceof Node)))
+    if (nodes.some(node => !(node instanceof Node))) {
       throw new TypeError('One or more parameters are not instances of Node.')
+    }
 
     this.nodes = nodes
+  }
+
+  /**
+   * Checks whether the provided buffer is a Sequence.
+   *
+   * @param buffer - Buffer to be checked.
+   * @returns Whether or not the buffer is a Sequence.
+   */
+  public static isSequence(buffer: Buffer): boolean {
+    return buffer[0] === 0x30
   }
 
   /**

@@ -26,14 +26,19 @@ import { Primitives } from '@guarani/utils'
  * @returns Buffer object representing the encoded length.
  */
 export function encodeLength(length: number): Buffer {
-  if (typeof length !== 'number')
+  if (typeof length !== 'number') {
     throw new TypeError('Invalid parameter "length".')
+  }
 
-  if (length < 0x80) return Primitives.toBuffer(length)
+  if (length < 0x80) {
+    return Primitives.toBuffer(length)
+  }
 
   const asBuffer = Primitives.toBuffer(length)
 
-  if (asBuffer.length > 127) throw new RangeError('Unsupported large number.')
+  if (asBuffer.length > 127) {
+    throw new RangeError('Unsupported large number.')
+  }
 
   return Buffer.from([0x80 + asBuffer.length, ...asBuffer])
 }
@@ -53,7 +58,9 @@ export function encodeLength(length: number): Buffer {
  * @returns Integer representing the actual length.
  */
 export function decodeLength(data: Buffer): number {
-  if (!Buffer.isBuffer(data)) throw new TypeError('Invalid parameter "data".')
+  if (!Buffer.isBuffer(data)) {
+    throw new TypeError('Invalid parameter "data".')
+  }
 
   let offset = 0
   let length = data[offset++]
@@ -61,8 +68,12 @@ export function decodeLength(data: Buffer): number {
   // Long form
   if (length & 0x80) {
     const bytes = length & 0x7f
+
     length = 0
-    for (let i = 0; i < bytes; i++) length = (length << 8) | data[offset + i]
+
+    for (let i = 0; i < bytes; i++) {
+      length = (length << 8) | data[offset + i]
+    }
   }
 
   return length

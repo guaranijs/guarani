@@ -9,6 +9,16 @@ import { Node } from './node'
  */
 export class Null extends Node {
   /**
+   * Checks whether the provided buffer is a Null.
+   *
+   * @param buffer - Buffer to be checked.
+   * @returns Whether or not the buffer is a Null.
+   */
+  public static isNull(buffer: Buffer): boolean {
+    return buffer[0] === 0x05
+  }
+
+  /**
    * Encodes the Null type Buffer.
    *
    * @returns Encoded data enveloped in an Integer type.

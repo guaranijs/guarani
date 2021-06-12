@@ -13,12 +13,30 @@ import { Node } from './node'
  * required signaling of the integer is left to the application.
  */
 export class Integer extends Node {
-  private value: bigint
+  /**
+   * Value representing the integer.
+   */
+  private readonly value: bigint
 
+  /**
+   * Instantiates a new Integer object based on the provided value.
+   *
+   * @param value - Integer value.
+   */
   public constructor(value: number | bigint) {
     super()
 
     this.value = BigInt(value)
+  }
+
+  /**
+   * Checks whether the provided buffer is an Integer.
+   *
+   * @param buffer - Buffer to be checked.
+   * @returns Whether or not the buffer is an Integer.
+   */
+  public static isInteger(buffer: Buffer): boolean {
+    return buffer[0] === 0x02
   }
 
   /**

@@ -5,7 +5,7 @@
  */
 
 export { BitString } from './bit-string'
-export { Boolean } from './boolean'
+export { Bool } from './bool'
 export { ContextSpecific } from './context-specific'
 export { Integer } from './integer'
 export { Node } from './node'

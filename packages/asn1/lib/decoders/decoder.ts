@@ -1,5 +1,13 @@
 import { Primitives } from '@guarani/utils'
 
+import {
+  BitString,
+  Integer,
+  Null,
+  ObjectId,
+  OctetString,
+  Sequence
+} from '../nodes'
 import { decodeLength } from '../_utils'
 
 const Tags = {
@@ -26,8 +34,9 @@ export class Decoder {
   private offset: number = 0
 
   public constructor(value: Buffer) {
-    if (!Buffer.isBuffer(value))
+    if (!Buffer.isBuffer(value)) {
       throw new TypeError('Invalid parameter "value".')
+    }
 
     this.value = value
   }
@@ -47,7 +56,10 @@ export class Decoder {
    * @returns Reference to the new position of the Buffer.
    */
   private static trim(data: Buffer): Buffer {
-    while (data[0] === 0) data = data.slice(1)
+    while (data[0] === 0) {
+      data = data.slice(1)
+    }
+
     return data
   }
 
@@ -59,16 +71,19 @@ export class Decoder {
    * @returns Sliced section represented by the current tag.
    */
   private slice(tag: number, type: string): Buffer {
-    if (this.value[this.offset++] !== tag)
+    if (this.value[this.offset++] !== tag) {
       throw new Error(`Node type is not ${type}.`)
+    }
 
     // Gets the length of the type.
     const length = decodeLength(this.value.subarray(this.offset))
 
     // Displaces the offset if the length is in Long Form.
-    if (this.value[this.offset] & 0x80)
+    if (this.value[this.offset] & 0x80) {
       this.offset += 1 + (this.value[this.offset] & 0x7f)
-    else this.offset++
+    } else {
+      this.offset++
+    }
 
     // Retrieves the section of the data that represents the requested type.
     const buffer = Decoder.trim(
@@ -101,8 +116,9 @@ export class Decoder {
    * @param bytes - Number of bytes to be displaced.
    */
   public displace(bytes: number): void {
-    if (!Number.isInteger(bytes))
+    if (!Number.isInteger(bytes)) {
       throw new TypeError('Invalid parameter "bytes".')
+    }
 
     this.value = this.data.subarray(bytes)
     this.offset = 0
@@ -115,16 +131,21 @@ export class Decoder {
    * we only care about the last 5 bits.
    */
   public contextSpecific(typpedTag: number, optional: boolean = true): Decoder {
-    if (!Number.isInteger(typpedTag))
+    if (!Number.isInteger(typpedTag)) {
       throw new TypeError('Invalid parameter "typpedTag".')
+    }
 
-    if (typeof optional !== 'boolean')
+    if (typeof optional !== 'boolean') {
       throw new TypeError('Invalid parameter "optional".')
+    }
 
     const tag = this.data[0] & 0x1f
 
     if (tag !== typpedTag) {
-      if (optional) return undefined
+      if (optional) {
+        return undefined
+      }
+
       throw new Error(`Malformed data. Expected ${typpedTag}, got ${tag}.`)
     }
 
@@ -135,7 +156,12 @@ export class Decoder {
    * Parses an integer.
    */
   public integer(): bigint {
+    if (!Integer.isInteger(this.value)) {
+      throw new TypeError('Node is not an Integer.')
+    }
+
     const buffer = this.slice(Tags.INTEGER, 'Integer')
+
     return Primitives.fromBuffer(buffer, 'integer')
   }
 
@@ -144,6 +170,10 @@ export class Decoder {
    */
   // TODO: It always adds a zero padding. Verify if it does not conflict with anything.
   public bitstring(): Decoder {
+    if (!BitString.isBitString(this.value)) {
+      throw new TypeError('Node is not a BitString.')
+    }
+
     return this.wrapped(Tags.BITSTRING, 'BitString')
   }
 
@@ -151,6 +181,10 @@ export class Decoder {
    * Parses the data inside an OctetString.
    */
   public octetstring(): Decoder {
+    if (!OctetString.isOctetString(this.value)) {
+      throw new TypeError('Node is not an OctetString.')
+    }
+
     return this.wrapped(Tags.OCTETSTRING, 'OctetString')
   }
 
@@ -158,8 +192,13 @@ export class Decoder {
    * Parses a NULL tag.
    */
   public null(): null {
-    if (this.value[this.offset++] !== Tags.NULL)
+    if (!Null.isNull(this.value)) {
+      throw new TypeError('Node is not a Null.')
+    }
+
+    if (this.value[this.offset++] !== Tags.NULL) {
       throw new Error('Node type is not Null.')
+    }
 
     this.value = this.value.slice(++this.offset)
 
@@ -170,6 +209,10 @@ export class Decoder {
    * Parses the data of an ObjectId.
    */
   public objectid(): Buffer {
+    if (!ObjectId.isObjectId(this.value)) {
+      throw new TypeError('Node is not an ObjectId.')
+    }
+
     return this.slice(Tags.OBJECTID, 'ObjectId')
   }
 
@@ -177,6 +220,10 @@ export class Decoder {
    * Parses the data inside a Sequence.
    */
   public sequence(): Decoder {
+    if (!Sequence.isSequence(this.data)) {
+      throw new TypeError('Node is not an Sequence.')
+    }
+
     return this.wrapped(Tags.SEQUENCE, 'Sequence')
   }
 }

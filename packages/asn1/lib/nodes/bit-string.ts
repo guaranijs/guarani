@@ -27,15 +27,34 @@ import { Node } from './node'
  * MSBs of the data with zeros until its length reaches a multiple of 8.
  */
 export class BitString extends Node {
-  private value: Buffer
+  /**
+   * Value representing the bitstring.
+   */
+  private readonly value: Buffer
 
+  /**
+   * Instantiates a new BitString object based on the provided value.
+   *
+   * @param value - Buffer representation of the BitString.
+   */
   public constructor(value: Buffer) {
     super()
 
-    if (!Buffer.isBuffer(value))
+    if (!Buffer.isBuffer(value)) {
       throw new TypeError('Invalid parameter "value".')
+    }
 
     this.value = value
+  }
+
+  /**
+   * Checks whether the provided buffer is a BitString.
+   *
+   * @param buffer - Buffer to be checked.
+   * @returns Whether or not the buffer is a BitString.
+   */
+  public static isBitString(buffer: Buffer): boolean {
+    return buffer[0] === 0x03
   }
 
   /**

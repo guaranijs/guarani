@@ -1,10 +1,4 @@
 /**
- * Defines the errors used throughout the JOSE package.
- *
- * @module JoseErrors
- */
-
-/**
  * Base error class for the exceptions of the JOSE implementation.
  */
 export class JoseError extends Error {
@@ -38,6 +32,15 @@ export class ExpiredToken extends JoseError {
  */
 export class InvalidJoseHeader extends JoseError {
   public constructor(message = 'The provided JOSE Header is invalid.') {
+    super(message)
+  }
+}
+
+/**
+ * Raised when the provided JSON Web Encryption is invalid.
+ */
+export class InvalidJsonWebEncryption extends JoseError {
+  public constructor(message = 'The provided JSON Web Encryption is invalid.') {
     super(message)
   }
 }

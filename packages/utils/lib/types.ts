@@ -12,3 +12,8 @@ export type Factory<T> = () => T
  * Describes the format of a dictionary.
  */
 export type Dict<T> = { [key: string]: T }
+
+/**
+ * Describes the format of either an element or a list of it.
+ */
+export type OneOrMany<T> = T | T[]

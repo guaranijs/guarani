@@ -1,10 +1,11 @@
 import { Base64Url } from '@guarani/utils'
 
-import { sign, verify, constants } from 'crypto'
+import { createPrivateKey, createPublicKey, sign, verify } from 'crypto'
 
 import { InvalidSignature } from '../../exceptions'
-import { RSAPrivateKey, RSAPublicKey } from '../../jwk'
-import { checkKey, JWSAlgorithm, SupportedHashes } from './base'
+import { RsaKey, RsaPadding, SupportedJWKAlgorithm } from '../../jwk'
+import { SupportedHash } from '../../types'
+import { JWSAlgorithm } from './jws-algorithm'
 
 /**
  * Implementation of an RSASSA Signature Algorithm.
@@ -13,7 +14,7 @@ class RSASSAAlgorithm extends JWSAlgorithm {
   /**
    * Accepted key type.
    */
-  private readonly keyType = 'RSA'
+  public readonly kty: SupportedJWKAlgorithm = 'RSA'
 
   /**
    * Instantiates a new RSASSA Algorithm to sign and verify the messages.
@@ -23,9 +24,9 @@ class RSASSAAlgorithm extends JWSAlgorithm {
    * @param padding - Padding to be used by the algorithm.
    */
   public constructor(
-    protected readonly hash: SupportedHashes,
+    protected readonly hash: SupportedHash,
     protected readonly algorithm: string,
-    protected readonly padding: number
+    protected readonly padding: RsaPadding
   ) {
     super(hash, algorithm)
   }
@@ -37,11 +38,13 @@ class RSASSAAlgorithm extends JWSAlgorithm {
    * @param key - Key used to sign the message.
    * @returns Base64Url encoded signature.
    */
-  public sign(message: Buffer, key: RSAPrivateKey): string {
-    checkKey(key, this.algorithm, this.keyType)
+  public async sign(message: Buffer, key: RsaKey): Promise<string> {
+    this.checkKey(key)
+
+    const privateKey = createPrivateKey(key.export('private', 'pem', 'pkcs1'))
 
     return Base64Url.encode(
-      sign(this.hash, message, { key: key.privateKey, padding: this.padding })
+      sign(this.hash, message, { key: privateKey, padding: this.padding })
     )
   }
 
@@ -53,70 +56,65 @@ class RSASSAAlgorithm extends JWSAlgorithm {
    * @param key - Key used to verify the signature.
    * @throws {InvalidSignature} The signature does not match the message.
    */
-  public verify(signature: string, message: Buffer, key: RSAPublicKey): void {
-    checkKey(key, this.algorithm, this.keyType)
+  public async verify(
+    signature: string,
+    message: Buffer,
+    key: RsaKey
+  ): Promise<void> {
+    this.checkKey(key)
 
+    const publicKey = createPublicKey(key.export('public', 'pem', 'pkcs1'))
     const verified = verify(
       this.hash,
       message,
-      { key: key.publicKey, padding: this.padding },
+      { key: publicKey, padding: this.padding },
       Base64Url.decode(signature)
     )
 
-    if (!verified) throw new InvalidSignature()
+    if (!verified) {
+      throw new InvalidSignature()
+    }
   }
 }
 
 /**
- * Instantiates an RSASSA-PKCS1-v1_5 with SHA256.
+ * RSASSA-PKCS1-v1_5 with SHA256.
  *
  * @returns RSASSA-PKCS1-v1_5 using SHA256.
  */
-export function RS256(): RSASSAAlgorithm {
-  return new RSASSAAlgorithm('sha256', 'RS256', constants.RSA_PKCS1_PADDING)
-}
+export const RS256 = new RSASSAAlgorithm('SHA256', 'RS256', RsaPadding.PKCS1)
 
 /**
- * Instantiates an RSASSA-PKCS1-v1_5 with SHA384.
+ * RSASSA-PKCS1-v1_5 with SHA384.
  *
  * @returns RSASSA-PKCS1-v1_5 using SHA384.
  */
-export function RS384(): RSASSAAlgorithm {
-  return new RSASSAAlgorithm('sha384', 'RS384', constants.RSA_PKCS1_PADDING)
-}
+export const RS384 = new RSASSAAlgorithm('SHA384', 'RS384', RsaPadding.PKCS1)
 
 /**
- * Instantiates an RSASSA-PKCS1-v1_5 with SHA512.
+ * RSASSA-PKCS1-v1_5 with SHA512.
  *
  * @returns RSASSA-PKCS1-v1_5 using SHA512.
  */
-export function RS512(): RSASSAAlgorithm {
-  return new RSASSAAlgorithm('sha512', 'RS512', constants.RSA_PKCS1_PADDING)
-}
+export const RS512 = new RSASSAAlgorithm('SHA512', 'RS512', RsaPadding.PKCS1)
 
 /**
- * Instantiates an RSASSA-PSS with SHA256.
+ * RSASSA-PSS with SHA256.
  *
  * @returns RSASSA-PSS using SHA256.
  */
-export function PS256(): RSASSAAlgorithm {
-  return new RSASSAAlgorithm('sha256', 'PS256', constants.RSA_PKCS1_PSS_PADDING)
-}
+export const PS256 = new RSASSAAlgorithm('SHA256', 'PS256', RsaPadding.PSS)
 
 /**
- * Instantiates an RSASSA-PSS with SHA384.
+ * RSASSA-PSS with SHA384.
  *
  * @returns RSASSA-PSS using SHA384.
  */
-export function PS384(): RSASSAAlgorithm {
-  return new RSASSAAlgorithm('sha384', 'PS384', constants.RSA_PKCS1_PSS_PADDING)
-}
+export const PS384 = new RSASSAAlgorithm('SHA384', 'PS384', RsaPadding.PSS)
 
 /**
- * Instantiates an RSASSA-PSS with SHA512.
+ * RSASSA-PSS with SHA512.
  *
  * @returns RSASSA-PSS using SHA512.
  */
-export function PS512(): RSASSAAlgorithm {
-  return new RSASSAAlgorithm('sha512', 'PS512', constants.RSA_PKCS1_PSS_PADDING)
-}
+export const PS512 = new RSASSAAlgorithm('SHA512', 'PS512', RsaPadding.PSS)

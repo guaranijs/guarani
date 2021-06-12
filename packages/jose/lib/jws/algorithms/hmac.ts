@@ -1,31 +1,11 @@
 import { Base64Url } from '@guarani/utils'
 
-import { createHmac } from 'crypto'
+import { createHmac, createSecretKey } from 'crypto'
 
 import { InvalidKey, InvalidSignature } from '../../exceptions'
-import { OCTSecretKey } from '../../jwk'
-import { checkKey as baseCheckKey, JWSAlgorithm, SupportedHashes } from './base'
-
-/**
- * Checks if a key can be used by the requesting HMAC Algorithm.
- *
- * @param key - Key to be checked.
- * @param alg - Algorithm requesting the usage of the key.
- * @param kty - Type of the key.
- * @param keySize - Size of the secret in bytes.
- * @throws {InvalidKey} The provided JSON Web Key is invalid.
- */
-function checkKey(
-  key: OCTSecretKey,
-  alg: string,
-  kty: string,
-  keySize: number
-): void {
-  baseCheckKey(key, alg, kty)
-
-  if (Base64Url.bufferLength(key.k) < keySize)
-    throw new InvalidKey(`The secret MUST be AT LEAST ${keySize} bytes.`)
-}
+import { OctKey, SupportedJWKAlgorithm } from '../../jwk'
+import { SupportedHash } from '../../types'
+import { JWSAlgorithm } from './jws-algorithm'
 
 /**
  * Implementation of an HMAC Signature Algorithm.
@@ -34,7 +14,7 @@ class HMACAlgorithm extends JWSAlgorithm {
   /**
    * Accepted key type.
    */
-  private readonly keyType = 'oct'
+  public readonly kty: SupportedJWKAlgorithm = 'oct'
 
   /**
    * Instantiates a new HMAC Algorithm to sign and verify the messages.
@@ -45,7 +25,7 @@ class HMACAlgorithm extends JWSAlgorithm {
    * accepted by the algorithm.
    */
   public constructor(
-    protected readonly hash: SupportedHashes,
+    protected readonly hash: SupportedHash,
     protected readonly algorithm: string,
     protected readonly keySize: number
   ) {
@@ -59,14 +39,13 @@ class HMACAlgorithm extends JWSAlgorithm {
    * @param key - Key used to sign the message.
    * @returns Base64Url encoded signature.
    */
-  public sign(message: Buffer, key: OCTSecretKey): string {
-    checkKey(key, this.algorithm, this.keyType, this.keySize)
+  public async sign(message: Buffer, key: OctKey): Promise<string> {
+    this.checkKey(key)
 
-    const signature = createHmac(this.hash, key.secretKey)
+    const secretKey = createSecretKey(key.export('binary'))
+    const signature = createHmac(this.hash, secretKey).update(message).digest()
 
-    signature.update(message)
-
-    return Base64Url.encode(signature.digest())
+    return Base64Url.encode(signature)
   }
 
   /**
@@ -77,36 +56,50 @@ class HMACAlgorithm extends JWSAlgorithm {
    * @param key - Key used to verify the signature.
    * @throws {InvalidSignature} The signature does not match the message.
    */
-  public verify(signature: string, message: Buffer, key: OCTSecretKey): void {
-    checkKey(key, this.algorithm, this.keyType, this.keySize)
+  public async verify(
+    signature: string,
+    message: Buffer,
+    key: OctKey
+  ): Promise<void> {
+    this.checkKey(key)
 
-    if (this.sign(message, key) !== signature) throw new InvalidSignature()
+    if ((await this.sign(message, key)) !== signature) {
+      throw new InvalidSignature()
+    }
+  }
+
+  /**
+   * Checks if a key can be used by the requesting algorithm.
+   *
+   * @param key - Key to be checked.
+   * @throws {InvalidKey} The provided JSON Web Key is invalid.
+   */
+  protected checkKey(key: OctKey): void {
+    super.checkKey(key)
+
+    if (Base64Url.bufferLength(key.k) < this.keySize) {
+      throw new InvalidKey(`The secret MUST be AT LEAST ${this.keySize} bytes.`)
+    }
   }
 }
 
 /**
- * Instantiates an HMAC with SHA256.
+ * HMAC with SHA256.
  *
  * @returns HMAC using SHA256.
  */
-export function HS256(): HMACAlgorithm {
-  return new HMACAlgorithm('sha256', 'HS256', 32)
-}
+export const HS256 = new HMACAlgorithm('SHA256', 'HS256', 32)
 
 /**
- * Instantiates an HMAC with SHA384.
+ * HMAC with SHA384.
  *
  * @returns HMAC using SHA384.
  */
-export function HS384(): HMACAlgorithm {
-  return new HMACAlgorithm('sha384', 'HS384', 48)
-}
+export const HS384 = new HMACAlgorithm('SHA384', 'HS384', 48)
 
 /**
- * Instantiates an HMAC with SHA512.
+ * HMAC with SHA512.
  *
  * @returns HMAC using SHA512.
  */
-export function HS512(): HMACAlgorithm {
-  return new HMACAlgorithm('sha512', 'HS512', 64)
-}
+export const HS512 = new HMACAlgorithm('SHA512', 'HS512', 64)

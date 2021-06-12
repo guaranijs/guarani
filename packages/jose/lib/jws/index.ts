@@ -1,3 +1,6 @@
-export { Algorithms, JWSAlgorithm } from './algorithms'
-export { JoseHeader, JoseHeaderParams } from './header'
-export { JsonWebSignature, createJWS, parseJWS } from './jws'
+export { JWSAlgorithm } from './algorithms'
+export {
+  JsonWebSignatureHeader,
+  JWSHeaderParams
+} from './jsonwebsignature.header'
+export { JsonWebSignature } from './jsonwebsignature'

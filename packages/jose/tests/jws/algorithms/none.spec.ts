@@ -1,11 +1,11 @@
-import { Algorithms } from '../../../lib/jws'
+import { none } from '../../../lib/jws/algorithms/none'
 
 describe('JWS none Algorithm', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = Algorithms.none()
 
-  it('should sign and verify a message.', () => {
-    expect(algorithm.sign(message)).toEqual('')
-    expect(() => algorithm.verify('', message)).not.toThrow()
+  it('should sign and verify a message.', async () => {
+    await expect(none.sign(message)).resolves.toEqual('')
+
+    await expect(none.verify('', message)).resolves.not.toThrow()
   })
 })

@@ -1,20 +1,11 @@
-import { createSecretKey } from 'crypto'
-
-import {
-  createOctSecretKey,
-  exportOctSecretKey,
-  OCTSecretKey,
-  OCTSecretParams,
-  parseOctSecretKey
-} from '../../lib/jwk'
-
+import { OctKey, OctKeyParams } from '../../lib/jwk/algorithms'
 import { loadSymmetricKey } from '../utils'
 
-describe("OCTSecretKey's constructor", () => {
+describe('OctKey constructor', () => {
   it('should reject a wrong "kty".', () => {
     expect(
       () =>
-        new OCTSecretKey({
+        new OctKey({
           kty: 'wrong',
           k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ'
         })
@@ -22,89 +13,78 @@ describe("OCTSecretKey's constructor", () => {
   })
 
   it('should reject a secret that is not a string.', () => {
-    expect(() => new OCTSecretKey({ k: undefined })).toThrow(
-      'Invalid parameter "k".'
-    )
+    expect(() => new OctKey({ k: undefined })).toThrow('Invalid parameter "k".')
+
+    // @ts-expect-error
+    expect(() => new OctKey({ k: 123 })).toThrow('Invalid parameter "k".')
   })
 
-  it('should reject a decoded secret that is shorter than 32 bytes.', () => {
-    expect(() => new OCTSecretKey({ k: 'shortkey' })).toThrow(
-      'The key size MUST be AT LEAST 32 bytes.'
-    )
-  })
+  it('should create an OctKey.', () => {
+    const secretKey = loadSymmetricKey<OctKeyParams>('oct', 'json')
 
-  it('should create an OCTSecretKey.', () => {
-    const secretKey = loadSymmetricKey<OCTSecretParams>('oct', 'json')
-
-    expect(new OCTSecretKey(secretKey)).toMatchObject({
+    expect(new OctKey(secretKey)).toMatchObject({
       kty: 'oct',
       k: secretKey.k
     })
   })
 })
 
-describe("OCTSecretKey's secretKey", () => {
-  it('should return a valid secretKey.', () => {
-    const jsonKey = loadSymmetricKey<OCTSecretParams>('oct', 'json')
-    const pemKey = loadSymmetricKey('oct', 'pem')
-
-    expect(new OCTSecretKey(jsonKey).secretKey).toEqual(
-      createSecretKey(Buffer.from(pemKey, 'base64'))
-    )
-  })
-})
-
-describe('createOctSecretKey()', () => {
-  it('should reject an invalid key size.', () => {
-    expect(() => createOctSecretKey(undefined)).toThrow(
+describe('OctKey generate()', () => {
+  it('should reject an invalid key size.', async () => {
+    await expect(OctKey.generate(undefined)).rejects.toThrow(
       'The key size MUST be a valid integer.'
     )
 
-    expect(() => createOctSecretKey(32.5)).toThrow(
+    await expect(OctKey.generate(32.5)).rejects.toThrow(
       'The key size MUST be a valid integer.'
     )
   })
 
-  it('should reject a key size smaller than 32 bytes.', () => {
-    expect(() => createOctSecretKey(31)).toThrow(
-      'The key size MUST be AT LEAST 32 bytes.'
-    )
-  })
+  it('should create a new OctKey.', async () => {
+    const key = await OctKey.generate(32)
 
-  it('should create a new OCTSecretKey.', () => {
-    const key = createOctSecretKey(32)
-
-    expect(key).toBeInstanceOf(OCTSecretKey)
-    expect(key).toEqual(expect.objectContaining({ k: expect.any(String) }))
+    expect(key).toBeInstanceOf(OctKey)
+    expect(key).toMatchObject({ k: expect.any(String) })
   })
 })
 
-describe('parseOctSecretKey()', () => {
+describe('OctKey parse()', () => {
   it('should reject data that is not a valid string.', () => {
-    expect(() => parseOctSecretKey(undefined)).toThrow(TypeError)
+    expect(() => OctKey.parse(undefined)).toThrow(TypeError)
   })
 
-  it('should create an OCTSecretKey object.', () => {
-    const json = loadSymmetricKey<OCTSecretParams>('oct', 'json')
+  it('should create an OctKey object based on a Buffer secret.', () => {
+    const json = loadSymmetricKey<OctKeyParams>('oct', 'json')
+    const der = Buffer.from(loadSymmetricKey('oct', 'pem'), 'base64')
+
+    expect(OctKey.parse(der)).toMatchObject({
+      kty: 'oct',
+      k: json.k
+    })
+  })
+
+  it('should create an OctKey object based on a string secret.', () => {
+    const json = loadSymmetricKey<OctKeyParams>('oct', 'json')
     const pem = loadSymmetricKey('oct', 'pem')
 
-    expect(parseOctSecretKey(pem)).toMatchObject({
+    expect(OctKey.parse(pem)).toMatchObject({
       kty: 'oct',
       k: json.k
     })
   })
 })
 
-describe('exportOctSecretKey()', () => {
+describe('OctKey export()', () => {
+  const jsonKey = loadSymmetricKey<OctKeyParams>('oct', 'json')
+  const pemKey = loadSymmetricKey('oct', 'pem')
+  const derKey = Buffer.from(pemKey, 'base64')
+  const secretKey = new OctKey(jsonKey)
+
   it('should export a Base64 representation of the secret.', () => {
-    const jsonKey = loadSymmetricKey<OCTSecretParams>('oct', 'json')
-    const pemKey = loadSymmetricKey('oct', 'pem')
-    const secretKey = new OCTSecretKey(jsonKey)
+    expect(secretKey.export('base64')).toEqual(pemKey)
+  })
 
-    expect(() => exportOctSecretKey(undefined)).toThrow(
-      'Invalid parameter "key".'
-    )
-
-    expect(exportOctSecretKey(secretKey)).toEqual(pemKey)
+  it('should export a Binary representation of the secret.', () => {
+    expect(secretKey.export('binary')).toEqual(derKey)
   })
 })

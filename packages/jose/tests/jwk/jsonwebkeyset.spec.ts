@@ -1,17 +1,10 @@
-import { InvalidKeySet } from '../lib/exceptions'
-import {
-  ECPublicKey,
-  ECPublicParams,
-  RSAPublicKey,
-  RSAPublicParams
-} from '../lib/jwk'
+import { InvalidKeySet } from '../../lib/exceptions'
+import { EcKey, JsonWebKeySet, RsaKey } from '../../lib/jwk'
+import { loadAsymmetricKey } from '../utils'
 
-import { JsonWebKeySet } from '../lib/jwks'
-import { loadAsymmetricKey } from './utils'
-
-describe('JsonWebKeySet constructor', () => {
-  const ecKey = loadAsymmetricKey<ECPublicParams>('EC', 'json', 'public')
-  const rsaKey = loadAsymmetricKey<RSAPublicParams>('RSA', 'json', 'public')
+describe('JSON Web Keyset constructor', () => {
+  const ecKey = loadAsymmetricKey<any>('EC', 'json', 'public')
+  const rsaKey = loadAsymmetricKey<any>('RSA', 'json', 'public')
 
   it('should reject invalid keysets.', () => {
     expect(() => new JsonWebKeySet(undefined)).toThrow(TypeError)
@@ -27,16 +20,16 @@ describe('JsonWebKeySet constructor', () => {
     expect(
       () =>
         new JsonWebKeySet([
-          new ECPublicKey(ecKey, { kid: 'keyid' }),
-          new RSAPublicKey(rsaKey)
+          new EcKey(ecKey, { kid: 'keyid' }),
+          new RsaKey(rsaKey)
         ])
     ).toThrow('One or more keys do not have an ID.')
 
     expect(
       () =>
         new JsonWebKeySet([
-          new ECPublicKey(ecKey, { kid: 'keyid' }),
-          new RSAPublicKey(rsaKey, { kid: 'keyid' })
+          new EcKey(ecKey, { kid: 'keyid' }),
+          new RsaKey(rsaKey, { kid: 'keyid' })
         ])
     ).toThrow(
       'The usage of the same ID for multiple keys in a JWKS is forbidden.'
@@ -46,8 +39,8 @@ describe('JsonWebKeySet constructor', () => {
   it('should create a JsonWebKeySet object.', () => {
     expect(
       new JsonWebKeySet([
-        new ECPublicKey(ecKey, { kid: 'ec-key' }),
-        new RSAPublicKey(rsaKey, { kid: 'rsa-key' })
+        new EcKey(ecKey, { kid: 'ec-key' }),
+        new RsaKey(rsaKey, { kid: 'rsa-key' })
       ])
     ).toEqual(
       expect.objectContaining({
@@ -71,18 +64,22 @@ describe('JsonWebKeySet constructor', () => {
   })
 })
 
-describe('JsonWebKeySet getKey()', () => {
-  const ecKey = loadAsymmetricKey<ECPublicParams>('EC', 'json', 'public')
-  const rsaKey = loadAsymmetricKey<RSAPublicParams>('RSA', 'json', 'public')
+describe('JSON Web Keyset getKey()', () => {
+  const ecKey = loadAsymmetricKey<any>('EC', 'json', 'public')
+  const rsaKey = loadAsymmetricKey<any>('RSA', 'json', 'public')
   const keyset = new JsonWebKeySet([
-    new ECPublicKey(ecKey, { kid: 'ec-key' }),
-    new RSAPublicKey(rsaKey, { kid: 'rsa-key' })
+    new EcKey(ecKey, { kid: 'ec-key' }),
+    new RsaKey(rsaKey, { kid: 'rsa-key' })
   ])
 
   it('should find a key based on the provided ID.', () => {
-    const key = keyset.getKey<ECPublicKey>('ec-key')
+    const key = keyset.getKey<EcKey>('ec-key')
 
-    expect(key).toBeInstanceOf(ECPublicKey)
+    expect(key).toBeInstanceOf(EcKey)
     expect(key).toMatchObject(ecKey)
+
+    const noKey = keyset.getKey('no-key')
+
+    expect(noKey).toBeUndefined()
   })
 })

@@ -1,4 +1,31 @@
-import { MockKey } from './key.mock'
+import { Dict } from '@guarani/utils'
+import { JsonWebKey } from '../../lib/jwk'
+import { SupportedHash } from '../../lib/types'
+
+class MockKey extends JsonWebKey {
+  public readonly kty: string
+
+  public export(...params: any[]): string | Buffer {
+    throw new Error('Method not implemented.')
+  }
+
+  public sign(
+    message: Buffer,
+    hash: SupportedHash,
+    options?: Dict<any>
+  ): Buffer {
+    throw new Error('Method not implemented.')
+  }
+
+  public verify(
+    signature: Buffer,
+    message: Buffer,
+    hash: SupportedHash,
+    options?: Dict<any>
+  ): void {
+    throw new Error('Method not implemented.')
+  }
+}
 
 describe('JsonWebKey constructor', () => {
   it('should reject an invalid "use".', () => {

@@ -1,94 +1,84 @@
-import { createRsaKeyPair } from '../../../lib/jwk'
-import { Algorithms } from '../../../lib/jws'
+import { RsaKey } from '../../../lib/jwk'
+import {
+  PS256,
+  PS384,
+  PS512,
+  RS256,
+  RS384,
+  RS512
+} from '../../../lib/jws/algorithms/rsassa'
+import { loadAsymmetricKey } from '../../utils'
 
-const { publicKey, privateKey } = createRsaKeyPair(2048)
+const key = new RsaKey(loadAsymmetricKey('rsa', 'json', 'private'))
 
 describe('JWS RSASSA-PSS Algorithm PS256', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = Algorithms.PS256()
 
-  it('should sign a message.', () => {
-    expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
-  })
+  it('should sign and verify a message.', async () => {
+    const signature = await PS256.sign(message, key)
 
-  it('should verify a message.', () => {
-    const signature = algorithm.sign(message, privateKey)
+    expect(signature).toEqual(expect.any(String))
 
-    expect(() => algorithm.verify(signature, message, publicKey)).not.toThrow()
+    await expect(PS256.verify(signature, message, key)).resolves.not.toThrow()
   })
 })
 
 describe('JWS RSASSA-PSS Algorithm PS384', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = Algorithms.PS384()
 
-  it('should sign a message.', () => {
-    expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
-  })
+  it('should sign and verify a message.', async () => {
+    const signature = await PS384.sign(message, key)
 
-  it('should verify a message.', () => {
-    const signature = algorithm.sign(message, privateKey)
+    expect(signature).toEqual(expect.any(String))
 
-    expect(() => algorithm.verify(signature, message, publicKey)).not.toThrow()
+    await expect(PS384.verify(signature, message, key)).resolves.not.toThrow()
   })
 })
 
 describe('JWS RSASSA-PSS Algorithm PS512', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = Algorithms.PS512()
 
-  it('should sign a message.', () => {
-    expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
-  })
+  it('should sign and verify a message.', async () => {
+    const signature = await PS512.sign(message, key)
 
-  it('should verify a message.', () => {
-    const signature = algorithm.sign(message, privateKey)
+    expect(signature).toEqual(expect.any(String))
 
-    expect(() => algorithm.verify(signature, message, publicKey)).not.toThrow()
+    await expect(PS512.verify(signature, message, key)).resolves.not.toThrow()
   })
 })
 
 describe('JWS RSASSA-PKCS1-v1_5 Algorithm RS256', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = Algorithms.RS256()
 
-  it('should sign a message.', () => {
-    expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
-  })
+  it('should sign and verify a message.', async () => {
+    const signature = await RS256.sign(message, key)
 
-  it('should verify a message.', () => {
-    const signature = algorithm.sign(message, privateKey)
+    expect(signature).toEqual(expect.any(String))
 
-    expect(() => algorithm.verify(signature, message, publicKey)).not.toThrow()
+    await expect(RS256.verify(signature, message, key)).resolves.not.toThrow()
   })
 })
 
 describe('JWS RSASSA-PKCS1-v1_5 Algorithm RS384', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = Algorithms.RS384()
 
-  it('should sign a message.', () => {
-    expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
-  })
+  it('should sign and verify a message.', async () => {
+    const signature = await RS384.sign(message, key)
 
-  it('should verify a message.', () => {
-    const signature = algorithm.sign(message, privateKey)
+    expect(signature).toEqual(expect.any(String))
 
-    expect(() => algorithm.verify(signature, message, publicKey)).not.toThrow()
+    await expect(RS384.verify(signature, message, key)).resolves.not.toThrow()
   })
 })
 
 describe('JWS RSASSA-PKCS1-v1_5 Algorithm RS512', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = Algorithms.RS512()
 
-  it('should sign a message.', () => {
-    expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
-  })
+  it('should sign and verify a message.', async () => {
+    const signature = await RS512.sign(message, key)
 
-  it('should verify a message.', () => {
-    const signature = algorithm.sign(message, privateKey)
+    expect(signature).toEqual(expect.any(String))
 
-    expect(() => algorithm.verify(signature, message, publicKey)).not.toThrow()
+    await expect(RS512.verify(signature, message, key)).resolves.not.toThrow()
   })
 })

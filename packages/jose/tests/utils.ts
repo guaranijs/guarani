@@ -1,16 +1,14 @@
-/* eslint-disable no-redeclare */
-
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-import { KeyOptions } from '../lib/jwk'
+import { JsonWebKeyParams } from '../lib/jwk'
 
-export function loadSymmetricKey<T extends KeyOptions>(
+export function loadSymmetricKey<T extends JsonWebKeyParams>(
   kty: string,
   ext: 'json'
 ): T
 export function loadSymmetricKey(kty: string, ext: 'pem'): string
-export function loadSymmetricKey<T extends KeyOptions>(
+export function loadSymmetricKey<T extends JsonWebKeyParams>(
   kty: string,
   ext: 'json' | 'pem'
 ): T | string {
@@ -22,12 +20,12 @@ export function loadSymmetricKey<T extends KeyOptions>(
   return ext === 'json' ? JSON.parse(secretKey) : secretKey
 }
 
-export function loadAsymmetricKey<T extends KeyOptions>(
+export function loadAsymmetricKey<T extends JsonWebKeyParams>(
   kty: string,
   ext: 'json',
   keyType: 'public'
 ): T
-export function loadAsymmetricKey<T extends KeyOptions>(
+export function loadAsymmetricKey<T extends JsonWebKeyParams>(
   kty: string,
   ext: 'json',
   keyType: 'private'
@@ -42,7 +40,7 @@ export function loadAsymmetricKey(
   ext: 'pem',
   keyType: 'private'
 ): string
-export function loadAsymmetricKey<T extends KeyOptions>(
+export function loadAsymmetricKey<T extends JsonWebKeyParams>(
   kty: string,
   ext: 'json' | 'pem',
   keyType: 'public' | 'private'

@@ -1,69 +1,60 @@
 import { InvalidKey } from '../../../lib/exceptions'
-import { createEcKeyPair } from '../../../lib/jwk'
-import { Algorithms } from '../../../lib/jws'
+import { EcKey } from '../../../lib/jwk'
+import { ES256, ES384, ES512 } from '../../../lib/jws/algorithms/ecdsa'
 
 describe('JWS ECDSA Algorithm ES256', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = Algorithms.ES256()
-  const { publicKey, privateKey } = createEcKeyPair('P-256')
 
-  it('should reject a different curve.', () => {
-    expect(() =>
-      algorithm.sign(message, createEcKeyPair('P-384').privateKey)
-    ).toThrow(InvalidKey)
+  it('should reject a different curve.', async () => {
+    await expect(
+      async () => await ES256.sign(message, await EcKey.generate('P-384'))
+    ).rejects.toThrow(InvalidKey)
   })
 
-  it('should sign a message.', () => {
-    expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
-  })
+  it('should sign and verify a message.', async () => {
+    const key = await EcKey.generate('P-256')
+    const signature = await ES256.sign(message, key)
 
-  it('should verify a message.', () => {
-    const signature = algorithm.sign(message, privateKey)
+    expect(signature).toEqual(expect.any(String))
 
-    expect(() => algorithm.verify(signature, message, publicKey)).not.toThrow()
+    await expect(ES256.verify(signature, message, key)).resolves.not.toThrow()
   })
 })
 
 describe('JWS ECDSA Algorithm ES384', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = Algorithms.ES384()
-  const { publicKey, privateKey } = createEcKeyPair('P-384')
 
-  it('should reject a different curve.', () => {
-    expect(() =>
-      algorithm.sign(message, createEcKeyPair('P-521').privateKey)
-    ).toThrow(InvalidKey)
+  it('should reject a different curve.', async () => {
+    await expect(
+      async () => await ES384.sign(message, await EcKey.generate('P-521'))
+    ).rejects.toThrow(InvalidKey)
   })
 
-  it('should sign a message.', () => {
-    expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
-  })
+  it('should sign and verify a message.', async () => {
+    const key = await EcKey.generate('P-384')
+    const signature = await ES384.sign(message, key)
 
-  it('should verify a message.', () => {
-    const signature = algorithm.sign(message, privateKey)
+    expect(signature).toEqual(expect.any(String))
 
-    expect(() => algorithm.verify(signature, message, publicKey)).not.toThrow()
+    await expect(ES384.verify(signature, message, key)).resolves.not.toThrow()
   })
 })
 
 describe('JWS ECDSA Algorithm ES512', () => {
   const message = Buffer.from('Super secret message.')
-  const algorithm = Algorithms.ES512()
-  const { publicKey, privateKey } = createEcKeyPair('P-521')
 
-  it('should reject a different curve.', () => {
-    expect(() =>
-      algorithm.sign(message, createEcKeyPair('P-256').privateKey)
-    ).toThrow(InvalidKey)
+  it('should reject a different curve.', async () => {
+    await expect(
+      async () => await ES512.sign(message, await EcKey.generate('P-256'))
+    ).rejects.toThrow(InvalidKey)
   })
 
-  it('should sign a message.', () => {
-    expect(algorithm.sign(message, privateKey)).toEqual(expect.any(String))
-  })
+  it('should sign a message.', async () => {
+    const key = await EcKey.generate('P-521')
+    const signature = await ES512.sign(message, key)
 
-  it('should verify a message.', () => {
-    const signature = algorithm.sign(message, privateKey)
+    expect(signature).toEqual(expect.any(String))
 
-    expect(() => algorithm.verify(signature, message, publicKey)).not.toThrow()
+    await expect(ES512.verify(signature, message, key)).resolves.not.toThrow()
   })
 })

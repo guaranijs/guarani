@@ -1,10 +1,11 @@
-/* eslint-disable camelcase */
-
 import { Objects } from '@guarani/utils'
 
-import { KeyObject } from 'crypto'
-
 import { InvalidKey } from '../exceptions'
+
+/**
+ * Supported JSON Web Key Algorithms.
+ */
+export type SupportedJWKAlgorithm = 'EC' | 'oct' | 'RSA'
 
 /**
  * Interface defining the supported parameters of a JsonWebKey.
@@ -12,7 +13,7 @@ import { InvalidKey } from '../exceptions'
  * The parameters defined here are the default ones defined by
  * {@link https://tools.ietf.org/html/rfc7517|RFC 7517}.
  */
-export interface KeyOptions {
+export interface JsonWebKeyParams {
   /**
    * Key type representing the algorithm of the key.
    */
@@ -57,19 +58,14 @@ export interface KeyOptions {
    * Defines the SHA-256 Thumbprint of the X.509 certificate of the key.
    */
   readonly 'x5t#S256'?: string
+
+  /**
+   * Additional custom parameters.
+   */
+  readonly [parameter: string]: any
 }
 
-/**
- * Base class for the implementation of JWK Algorithms.
- *
- * This base class provides validation for the common parameters defined by
- * {@link https://tools.ietf.org/html/rfc7517|RFC 7517}.
- *
- * Any custom key algorithm **MUST** subclass this base class **AND** implement
- * one of the `SecretKey`, `PublicKey` or `PrivateKey` interfaces. Doing so
- * guarantees that the algorithm will be compatible and understood by `Guarani`.
- */
-export abstract class JsonWebKey implements KeyOptions {
+export abstract class JsonWebKey implements JsonWebKeyParams {
   /**
    * Key type representing the algorithm of the key.
    */
@@ -116,25 +112,28 @@ export abstract class JsonWebKey implements KeyOptions {
   public readonly 'x5t#S256'?: string
 
   /**
-   * Validates the common parameters of the JWK Algorithms.
+   * Signature of the Constructor of a JSON Web Key.
    *
-   * @param params - Defines the parameters of the JWK.
+   * @param params - Parameters of the key.
    */
-  public constructor(params?: KeyOptions) {
-    if (params.use && typeof params.use !== 'string')
+  public constructor(params: JsonWebKeyParams = {}) {
+    if (params.use && typeof params.use !== 'string') {
       throw new InvalidKey('Invalid parameter "use".')
+    }
 
     if (params.key_ops) {
       if (
         !Array.isArray(params.key_ops) ||
         params.key_ops.some(p => typeof p !== 'string')
-      )
+      ) {
         throw new InvalidKey('Invalid parameter "key_ops".')
+      }
 
-      if (new Set(params.key_ops).size !== params.key_ops.length)
+      if (new Set(params.key_ops).size !== params.key_ops.length) {
         throw new InvalidKey(
           'Parameter "key_ops" cannot have repeated operations.'
         )
+      }
     }
 
     if (params.use && params.key_ops) {
@@ -151,55 +150,71 @@ export abstract class JsonWebKey implements KeyOptions {
       if (
         (params.use === 'sig' && params.key_ops.some(p => !sig.includes(p))) ||
         (params.use === 'enc' && params.key_ops.some(p => !enc.includes(p)))
-      )
+      ) {
         throw new InvalidKey('Invalid combination of "use" and "key_ops".')
+      }
     }
 
-    if (params.alg && typeof params.alg !== 'string')
+    if (params.alg && typeof params.alg !== 'string') {
       throw new InvalidKey('Invalid parameter "alg".')
+    }
 
-    if (params.kid && typeof params.kid !== 'string')
+    if (params.kid && typeof params.kid !== 'string') {
       throw new InvalidKey('Invalid parameter "kid".')
+    }
 
-    if (params.x5u) throw new InvalidKey('Unsupported parameter "x5u".')
+    if (params.x5u) {
+      throw new InvalidKey('Unsupported parameter "x5u".')
+    }
 
-    if (params.x5c) throw new InvalidKey('Unsupported parameter "x5c".')
+    if (params.x5c) {
+      throw new InvalidKey('Unsupported parameter "x5c".')
+    }
 
-    if (params.x5t) throw new InvalidKey('Unsupported parameter "x5t".')
+    if (params.x5t) {
+      throw new InvalidKey('Unsupported parameter "x5t".')
+    }
 
-    if (params['x5t#256'])
+    if (params['x5t#256']) {
       throw new InvalidKey('Unsupported parameter "x5t#256".')
+    }
 
-    Object.assign(this, Objects.removeNullishValues(params))
+    Object.assign(this, Objects.removeNullishValues<JsonWebKeyParams>(params))
   }
-}
 
-/**
- * Signatures of Symmetric Secret Keys.
- */
-export interface SecretKey {
   /**
-   * Native key used by the other algorithms such as JWS and JWE.
+   * Generates a new JSON Web Key.
+   *
+   * @param param - Parameter used to generate the JSON Web Key.
+   * @param options - Optional JSON Web Key Parameters.
+   * @returns - Generated JSON Web Key.
    */
-  readonly secretKey: KeyObject
-}
+  public static generate(
+    param: any,
+    options?: JsonWebKeyParams
+  ): Promise<JsonWebKey> {
+    throw new Error('Cannot call abstract static method "generate".')
+  }
 
-/**
- * Signatures of Asymmetric Public Keys.
- */
-export interface PublicKey {
   /**
-   * Native key used by the other algorithms such as JWS and JWE.
+   * Parses a raw key into a JSON Web Key.
+   *
+   * @param data - Data to be parsed.
+   * @param options - Optional JSON Web Key Parameters.
+   * @returns Parsed JSON Web Key.
    */
-  readonly publicKey: KeyObject
-}
+  public static parse(
+    data: Buffer | string,
+    options?: JsonWebKeyParams
+  ): JsonWebKey {
+    throw new Error('Cannot call abstract static method "parse".')
+  }
 
-/**
- * Signatures of Asymmetric Private Keys.
- */
-export interface PrivateKey {
   /**
-   * Native key used by the other algorithms such as JWS and JWE.
+   * Exports the data of the key into an encoded string or bytes array.
+   *
+   * @param params - Parameters specifying the exportation of the key.
+   * @returns Encoded key parameters.
    */
-  readonly privateKey: KeyObject
+  public abstract export(...params: any[]): Buffer | string
 }

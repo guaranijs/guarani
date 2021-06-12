@@ -1,8 +1,2 @@
-export {
-  ClaimOptions,
-  Claims,
-  ClaimsOptions,
-  JsonWebTokenClaims
-} from './claims'
-
-export { JsonWebToken, createJWT, parseJWT } from './jwt'
+export { JsonWebToken } from './jsonwebtoken'
+export { JsonWebTokenClaims } from './jsonwebtoken.claims'

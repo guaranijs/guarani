@@ -1,5 +1,18 @@
-export * from './exceptions'
-export * from './jwk'
-export * from './jwks'
-export * from './jws'
-export * from './jwt'
+export {
+  ExpiredToken,
+  InvalidJoseHeader,
+  InvalidJsonWebEncryption,
+  InvalidJsonWebSignature,
+  InvalidJsonWebToken,
+  InvalidJsonWebTokenClaim,
+  InvalidKey,
+  InvalidKeySet,
+  InvalidSignature,
+  JoseError,
+  TokenNotValidYet,
+  UnsupportedAlgorithm
+} from './exceptions'
+export { JsonWebEncryption, JsonWebEncryptionHeader } from './jwe'
+export { EcKey, JsonWebKey, JsonWebKeySet, OctKey, RsaKey } from './jwk'
+export { JsonWebSignature, JsonWebSignatureHeader } from './jws'
+export { JsonWebToken, JsonWebTokenClaims } from './jwt'

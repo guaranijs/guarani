@@ -10,6 +10,9 @@ import {
   RSA_OAEP_512
 } from './rsa'
 
+/**
+ * Supported JSON Web Encryption Key Wrapping Algorithms.
+ */
 export type SupportedJWEAlgorithm =
   | 'RSA1_5'
   | 'RSA-OAEP'
@@ -31,6 +34,9 @@ export type SupportedJWEAlgorithm =
 // | 'PBES2-HS384+A192KW'
 // | 'PBES2-HS512+A256KW'
 
+/**
+ * Store of the supported JWE Key Wrap Algorithms.
+ */
 export const JWE_ALGORITHMS: Record<SupportedJWEAlgorithm, JWEAlgorithm> = {
   RSA1_5: RSA1_5,
   'RSA-OAEP': RSA_OAEP,

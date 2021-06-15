@@ -82,6 +82,16 @@ export interface JWEHeaderParams extends JoseHeaderParams {
   readonly crit?: string[]
 }
 
+/**
+ * Implementation of RFC 7516.
+ *
+ * This is the implementation of the Header of the Json Web Encryption.
+ * It provides validation for the default parameters of the JOSE header.
+ *
+ * The JOSE Header is a JSON object that provides information on how to
+ * manipulate the plaintext of the message, such as permitted algorithms
+ * and the keys to be used in encrypting and decrypting the plaintext.
+ */
 export class JsonWebEncryptionHeader
   extends JoseHeader
   implements JWEHeaderParams {

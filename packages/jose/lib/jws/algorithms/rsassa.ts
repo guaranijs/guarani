@@ -79,42 +79,30 @@ class RSASSAAlgorithm extends JWSAlgorithm {
 
 /**
  * RSASSA-PKCS1-v1_5 with SHA256.
- *
- * @returns RSASSA-PKCS1-v1_5 using SHA256.
  */
 export const RS256 = new RSASSAAlgorithm('SHA256', 'RS256', RsaPadding.PKCS1)
 
 /**
  * RSASSA-PKCS1-v1_5 with SHA384.
- *
- * @returns RSASSA-PKCS1-v1_5 using SHA384.
  */
 export const RS384 = new RSASSAAlgorithm('SHA384', 'RS384', RsaPadding.PKCS1)
 
 /**
  * RSASSA-PKCS1-v1_5 with SHA512.
- *
- * @returns RSASSA-PKCS1-v1_5 using SHA512.
  */
 export const RS512 = new RSASSAAlgorithm('SHA512', 'RS512', RsaPadding.PKCS1)
 
 /**
  * RSASSA-PSS with SHA256.
- *
- * @returns RSASSA-PSS using SHA256.
  */
 export const PS256 = new RSASSAAlgorithm('SHA256', 'PS256', RsaPadding.PSS)
 
 /**
  * RSASSA-PSS with SHA384.
- *
- * @returns RSASSA-PSS using SHA384.
  */
 export const PS384 = new RSASSAAlgorithm('SHA384', 'PS384', RsaPadding.PSS)
 
 /**
  * RSASSA-PSS with SHA512.
- *
- * @returns RSASSA-PSS using SHA512.
  */
 export const PS512 = new RSASSAAlgorithm('SHA512', 'PS512', RsaPadding.PSS)

@@ -43,7 +43,5 @@ class NoneAlgorithm extends JWSAlgorithm {
 
 /**
  * `none` algorithm.
- *
- * @returns Instance of the `none` algorithm.
  */
 export const none = new NoneAlgorithm()

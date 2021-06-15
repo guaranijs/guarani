@@ -200,7 +200,7 @@ export class JsonWebSignatureHeader
       return header
     }
 
-    if (isJWSProtectedAndUnprotectedHeaders(header)) {
+    if (JsonWebSignatureHeader.isJWSProtectedAndUnprotectedHeaders(header)) {
       const { protectedHeader, unprotectedHeader } = header
 
       if (protectedHeader == null && unprotectedHeader == null) {
@@ -259,24 +259,24 @@ export class JsonWebSignatureHeader
       throw new InvalidJoseHeader('Invalid JSON Web Signature Algorithm.')
     }
   }
-}
 
-/**
- * Checks if a JOSE Header is a JWS JSON Serialization ready header.
- *
- * @param header - JOSE Header to be checked.
- * @returns Header is a JWS JSON Serialization ready header.
- */
-export function isJWSProtectedAndUnprotectedHeaders(
-  header: any
-): header is JWSProtectedAndUnprotectedHeaders {
-  const params = new Set(Object.keys(header))
+  /**
+   * Checks if a JOSE Header is a JWS JSON Serialization ready header.
+   *
+   * @param header - JOSE Header to be checked.
+   * @returns Header is a JWS JSON Serialization ready header.
+   */
+  private static isJWSProtectedAndUnprotectedHeaders(
+    header: any
+  ): header is JWSProtectedAndUnprotectedHeaders {
+    const params = new Set(Object.keys(header))
 
-  return (
-    (params.size === 1 &&
-      (params.has('protectedHeader') || params.has('unprotectedHeader'))) ||
-    (params.size === 2 &&
-      params.has('protectedHeader') &&
-      params.has('unprotectedHeader'))
-  )
+    return (
+      (params.size === 1 &&
+        (params.has('protectedHeader') || params.has('unprotectedHeader'))) ||
+      (params.size === 2 &&
+        params.has('protectedHeader') &&
+        params.has('unprotectedHeader'))
+    )
+  }
 }

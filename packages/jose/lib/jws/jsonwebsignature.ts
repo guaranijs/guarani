@@ -200,7 +200,7 @@ export class JsonWebSignature {
           : jwkOrKeyLoader
 
       if (key != null && !(key instanceof JsonWebKey)) {
-        throw new InvalidJsonWebSignature('Invalid parameter "key".')
+        throw new InvalidJsonWebSignature('Invalid key.')
       }
 
       if (options.algorithm && options.algorithm !== header.alg) {
@@ -301,7 +301,7 @@ export class JsonWebSignature {
 
     try {
       const payload = Base64Url.decode(b64Payload)
-      const header = await this.getJWSJSONHeader(
+      const header = await JsonWebSignature.getJWSJSONHeader(
         b64Payload,
         token,
         jwkOrKeyLoader,
@@ -398,7 +398,7 @@ export class JsonWebSignature {
             ? jwkOrKeyLoader
             : jwkOrKeyLoader[i]
 
-        return await this.getJWSJSONHeader(
+        return await JsonWebSignature.getJWSJSONHeader(
           b64Payload,
           signature,
           key,
@@ -566,7 +566,7 @@ export class JsonWebSignature {
     }
 
     const b64Payload = Base64Url.encode(this.payload ?? Buffer.alloc(0))
-    const signature = await this.serializeJSONSignature(
+    const signature = await JsonWebSignature.serializeJSONSignature(
       this.header,
       b64Payload,
       key
@@ -671,7 +671,12 @@ export class JsonWebSignature {
     const signatures = await Promise.all(
       this.header.map<Promise<JWSJSONSignature>>(async (header, i) => {
         const key = Array.isArray(jwk) ? jwk[i] : jwk
-        return await this.serializeJSONSignature(header, b64payload, key)
+
+        return await JsonWebSignature.serializeJSONSignature(
+          header,
+          b64payload,
+          key
+        )
       })
     )
 
@@ -689,7 +694,7 @@ export class JsonWebSignature {
    * @param key - JSON Web Key used to sign the JWS JSON Signature.
    * @returns Serialized JWS JSON Signature.
    */
-  private async serializeJSONSignature(
+  private static async serializeJSONSignature(
     header: JsonWebSignatureHeader,
     b64Payload: string,
     key?: JsonWebKey

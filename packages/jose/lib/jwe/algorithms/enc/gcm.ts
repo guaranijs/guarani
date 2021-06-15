@@ -6,25 +6,52 @@ import { InvalidJsonWebEncryption } from '../../../exceptions'
 import { AuthenticatedEncryption } from '../../_types'
 import { JWEEncryption } from './jwe-encryption'
 
+/**
+ * Implementation of the AES Galois/Counter Mode Content Encryption Algorithm.
+ */
 class AESGCMEncryption extends JWEEncryption {
+  /**
+   * Size of the Content Encryption Key in bits.
+   */
   public readonly CEK_SIZE: number
 
+  /**
+   * Size of the Initialization Vector in bits.
+   */
   public readonly IV_SIZE: number = 96
 
+  /**
+   * Size of the Authentication Tag in bytes.
+   */
   private readonly TAG_LENGTH: number = 16
 
+  /**
+   * Instantiates a new AES Galois/Counter Mode Encryption
+   * to encrypt and decrypt a Plaintext.
+   *
+   * @param algorithm - Name of the algorithm.
+   */
   public constructor(protected readonly algorithm: string) {
     super(algorithm)
 
     this.CEK_SIZE = parseInt(this.algorithm.substr(1, 3))
   }
 
-  public encrypt(
+  /**
+   * Encrypts the provided plaintext.
+   *
+   * @param plaintext - Plaintext to be encrypted.
+   * @param aad - Additional Authenticated Data.
+   * @param iv - Initialization Vector.
+   * @param key - Content Encryption Key used to encrypt the plaintext.
+   * @returns Resulting Ciphertext and Authentication Tag.
+   */
+  public async encrypt(
     plaintext: Buffer,
     aad: Buffer,
     iv: Buffer,
     key: Buffer
-  ): AuthenticatedEncryption {
+  ): Promise<AuthenticatedEncryption> {
     this.checkIV(iv)
     this.checkKey(key)
 
@@ -44,13 +71,24 @@ class AESGCMEncryption extends JWEEncryption {
     }
   }
 
-  public decrypt(
+  /**
+   * Decrypts the provided ciphertext back to its original Buffer representaion.
+   *
+   * @param ciphertext - Ciphertext to be decrypted.
+   * @param aad - Additional Authenticated Data.
+   * @param iv - Initialization Vector.
+   * @param tag - Authentication Tag.
+   * @param key - Content Encryption Key used to decrypt the plaintext.
+   * @throws {InvalidJsonWebEncryption} Could not decrypt the ciphertext.
+   * @returns Buffer representation of the decrypted plaintext.
+   */
+  public async decrypt(
     ciphertext: Buffer,
     aad: Buffer,
     iv: Buffer,
     tag: Buffer,
     key: Buffer
-  ): Buffer {
+  ): Promise<Buffer> {
     this.checkIV(iv)
     this.checkKey(key)
 
@@ -75,8 +113,17 @@ class AESGCMEncryption extends JWEEncryption {
   }
 }
 
+/**
+ * AES GCM using 128-bit key.
+ */
 export const A128GCM = new AESGCMEncryption('A128GCM')
 
+/**
+ * AES GCM using 192-bit key.
+ */
 export const A192GCM = new AESGCMEncryption('A192GCM')
 
+/**
+ * AES GCM using 256-bit key.
+ */
 export const A256GCM = new AESGCMEncryption('A256GCM')

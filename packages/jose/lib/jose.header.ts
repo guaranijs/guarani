@@ -81,6 +81,10 @@ export interface JoseProtectedAndUnprotectedHeaders {
   readonly unprotectedHeader?: Partial<JoseHeaderParams>
 }
 
+/**
+ * Base class representing the JOSE Header used by both the
+ * **JSON Web Signature** and **JSON Web Encryption** implementations.
+ */
 export abstract class JoseHeader implements JoseHeaderParams {
   /**
    * Algorithm of the header.

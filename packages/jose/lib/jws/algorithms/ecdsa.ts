@@ -87,21 +87,15 @@ class ECDSAAlgorithm extends JWSAlgorithm {
 
 /**
  * ECDSA with SHA256.
- *
- * @returns ECDSA using SHA256.
  */
 export const ES256 = new ECDSAAlgorithm('SHA256', 'ES256', 'P-256')
 
 /**
  * ECDSA with SHA384.
- *
- * @returns ECDSA using SHA384.
  */
 export const ES384 = new ECDSAAlgorithm('SHA384', 'ES384', 'P-384')
 
 /**
  * ECDSA with SHA512.
- *
- * @returns ECDSA using SHA512.
  */
 export const ES512 = new ECDSAAlgorithm('SHA512', 'ES512', 'P-521')

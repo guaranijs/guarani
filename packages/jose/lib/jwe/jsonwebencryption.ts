@@ -15,6 +15,16 @@ import {
 
 type JWEJoseHeader = JsonWebEncryptionHeader | JWEHeaderParams
 
+/**
+ * Implementation of RFC 7516.
+ *
+ * The **JSON Web Encryption** is used for transporting encrypted data
+ * on the network, providing confidentiality of the information.
+ *
+ * This implementation provides a set of attributes to represent the state
+ * of the information, as well as segregating the header from the payload,
+ * which in turn facilitates the use of any of them.
+ */
 export class JsonWebEncryption {
   /**
    * JOSE Header containing the meta information of the token.
@@ -57,14 +67,28 @@ export class JsonWebEncryption {
     this.plaintext = plaintext
   }
 
+  /**
+   * Decodes a **JSON Web Encryption Compact Token**.
+   *
+   * @param token - JSON Web Encryption Compact Token to be decoded.
+   * @param wrapKey - JSON Web Key used to unwrap the Encrypted Key.
+   * @returns JSON Web Encryption containing the decoded JOSE Header and Plaintext.
+   */
   public static async deserializeCompact(
     token: string,
     wrapKey: JsonWebKey
   ): Promise<JsonWebEncryption>
 
+  /**
+   * Decodes a **JSON Web Encryption Compact Token**.
+   *
+   * @param token - JSON Web Encryption Compact Token to be decoded.
+   * @param keyLoader - Function used to load a JWK based on the JOSE Header.
+   * @returns JSON Web Encryption containing the decoded JOSE Header and Plaintext.
+   */
   public static async deserializeCompact(
     token: string,
-    wrapKey: KeyLoader
+    keyLoader: KeyLoader
   ): Promise<JsonWebEncryption>
 
   public static async deserializeCompact(
@@ -98,12 +122,16 @@ export class JsonWebEncryption {
       const enc = JWE_ENCRYPTIONS[header.enc]
 
       const wrapKey =
-        jwkOrKeyLoader instanceof JsonWebKey
-          ? jwkOrKeyLoader
-          : jwkOrKeyLoader(header)
+        typeof jwkOrKeyLoader === 'function'
+          ? jwkOrKeyLoader(header)
+          : jwkOrKeyLoader
+
+      if (wrapKey != null && !(wrapKey instanceof JsonWebKey)) {
+        throw new InvalidJsonWebEncryption('Invalid key.')
+      }
 
       const cek = await alg.unwrap(enc, ek, wrapKey, header)
-      const plaintext = enc.decrypt(ciphertext, aad, iv, tag, cek)
+      const plaintext = await enc.decrypt(ciphertext, aad, iv, tag, cek)
 
       return new JsonWebEncryption(header, plaintext)
     } catch (error) {
@@ -119,6 +147,30 @@ export class JsonWebEncryption {
     }
   }
 
+  /**
+   * Serializes the contents of a JsonWebEncryption into a JWE Compact Token.
+   *
+   * It encodes the Header into a Base64Url version of its JSON representation,
+   * and encodes the Encrypted Key, Initialization Vector, Ciphertext and
+   * Authentication Tag into a Base64Url format, allowing the compatibility
+   * in different systems.
+   *
+   * It creates a string message of the following format
+   * (with break lines for display purposes only):
+   *
+   * `
+   * Base64Url(UTF-8(header)).
+   * Base64Url(Encrypted Key).
+   * Base64Url(Initialization Vector).
+   * Base64Url(Ciphertext).
+   * Base64Url(Authentication Tag)
+   * `
+   *
+   * The resulting token is then returned to the application.
+   *
+   * @param wrapKey - JSON Web Key used to wrap the Content Encryption Key.
+   * @returns JSON Web Encryption Compact Token.
+   */
   public async serializeCompact(wrapKey?: JsonWebKey): Promise<string> {
     if (this.header == null) {
       throw new InvalidJoseHeader(
@@ -146,7 +198,7 @@ export class JsonWebEncryption {
     const b64Header = Base64Url.encode(Buffer.from(JSON.stringify(this.header)))
     const aad = Buffer.from(b64Header, 'ascii')
 
-    const { ciphertext, tag } = enc.encrypt(this.plaintext, aad, iv, cek)
+    const { ciphertext, tag } = await enc.encrypt(this.plaintext, aad, iv, cek)
     const b64IV = Base64Url.encode(iv)
 
     return `${b64Header}.${ek}.${b64IV}.${ciphertext}.${tag}`

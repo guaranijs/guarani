@@ -85,21 +85,15 @@ class HMACAlgorithm extends JWSAlgorithm {
 
 /**
  * HMAC with SHA256.
- *
- * @returns HMAC using SHA256.
  */
 export const HS256 = new HMACAlgorithm('SHA256', 'HS256', 32)
 
 /**
  * HMAC with SHA384.
- *
- * @returns HMAC using SHA384.
  */
 export const HS384 = new HMACAlgorithm('SHA384', 'HS384', 48)
 
 /**
  * HMAC with SHA512.
- *
- * @returns HMAC using SHA512.
  */
 export const HS512 = new HMACAlgorithm('SHA512', 'HS512', 64)

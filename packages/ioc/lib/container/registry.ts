@@ -17,7 +17,10 @@ export class Registry {
    * @param binding - Binding to be set at the requested token.
    */
   public add<T>(token: InjectableToken<T>, binding: Binding<T>): void {
-    if (!this.has(token)) this.bindings.set(token, [])
+    if (!this.has(token)) {
+      this.bindings.set(token, [])
+    }
+
     this.bindings.get(token).push(binding)
   }
 
@@ -28,8 +31,12 @@ export class Registry {
    * @returns Last registered binding of the token.
    */
   public get<T>(token: InjectableToken<T>): Binding<T> {
-    if (!this.has(token)) return null
+    if (!this.has(token)) {
+      return null
+    }
+
     const bindings = this.bindings.get(token)
+
     return bindings[bindings.length - 1]
   }
 
@@ -40,7 +47,10 @@ export class Registry {
    * @returns Registered bindings of the token.
    */
   public getAll<T>(token: InjectableToken<T>): Binding<T>[] {
-    if (!this.has(token)) return null
+    if (!this.has(token)) {
+      return null
+    }
+
     return this.bindings.get(token)
   }
 

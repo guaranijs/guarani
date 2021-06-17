@@ -1,5 +1,6 @@
-if (Reflect == null || !('getMetadata' in Reflect))
+if (Reflect == null || !('getMetadata' in Reflect)) {
   throw new Error(`@guarani/ioc requires a Reflect Metadata polyfill.`)
+}
 
 export { Container } from './container'
 export { Inject, InjectAll, Injectable } from './decorators'

@@ -38,6 +38,7 @@ export class IoCContainer {
   public bindToken<T>(token: InjectableToken<T>): ProviderBinding<T> {
     const binding = new Binding<T>(token)
     this.registry.add(token, binding)
+
     return new ProviderBinding(binding)
   }
 
@@ -49,8 +50,12 @@ export class IoCContainer {
    * @returns Resolved instance or value based on the Token.
    */
   public resolve<T>(token: InjectableToken<T>): T {
-    if (!this.isBound(token)) throw new TokenNotRegistered(token)
+    if (!this.isBound(token)) {
+      throw new TokenNotRegistered(token)
+    }
+
     const { provider } = this.registry.get(token)
+
     return this.resolveProvider(provider)
   }
 
@@ -64,8 +69,12 @@ export class IoCContainer {
    * @returns Ordered array of the resolved providers bound to the Token.
    */
   public resolveAll<T>(token: InjectableToken<T>): T[] {
-    if (!this.isBound(token)) throw new TokenNotRegistered(token)
+    if (!this.isBound(token)) {
+      throw new TokenNotRegistered(token)
+    }
+
     const bindings = this.registry.getAll(token)
+
     return bindings.map(binding => this.resolveProvider(binding.provider))
   }
 
@@ -83,13 +92,25 @@ export class IoCContainer {
    * @returns Resolved provider.
    */
   private resolveProvider<T>(provider: Provider<T>): T {
-    if (!isProvider<T>(provider))
+    if (!isProvider<T>(provider)) {
       throw new TypeError(`The object ${provider} is not a provider.`)
+    }
 
-    if (isClassProvider<T>(provider)) return this.construct(provider.target)
-    if (isFactoryProvider<T>(provider)) return provider.factory()
-    if (isTokenProvider<T>(provider)) return this.resolve(provider.token)
-    if (isValueProvider<T>(provider)) return provider.value
+    if (isClassProvider<T>(provider)) {
+      return this.construct(provider.target)
+    }
+
+    if (isFactoryProvider<T>(provider)) {
+      return provider.factory()
+    }
+
+    if (isTokenProvider<T>(provider)) {
+      return this.resolve(provider.token)
+    }
+
+    if (isValueProvider<T>(provider)) {
+      return provider.value
+    }
   }
 
   /**
@@ -110,12 +131,13 @@ export class IoCContainer {
     const instance = Reflect.construct(constructor, resolvedTokens)
     const propTokens = getPropTokens(constructor)
 
-    if (propTokens)
+    if (propTokens) {
       Object.entries(propTokens).forEach(([prop, token]) => {
         instance[prop] = token.multiple
           ? this.resolveAll(token.token)
           : this.resolve(token.token)
       })
+    }
 
     return instance
   }

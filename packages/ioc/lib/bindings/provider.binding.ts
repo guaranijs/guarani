@@ -84,10 +84,11 @@ export class ProviderBinding<T> {
    * Binds a `Constructor` Injectable Token to itself.
    */
   public toSelf(): void {
-    if (!isConstructorToken<T>(this.binding.token))
+    if (!isConstructorToken<T>(this.binding.token)) {
       throw new TypeError(
         `The token "${String(this.binding.token)}" is not a valid constructor.`
       )
+    }
 
     this.toClass(this.binding.token)
   }

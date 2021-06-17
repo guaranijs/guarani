@@ -17,7 +17,9 @@ export function Injectable(): ClassDecorator {
     const tokens = getParamTokens(target)
 
     const types = paramTypes.map<InjectableType<any>>((paramType, index) => {
-      if (!tokens) return { multiple: false, token: paramType }
+      if (!tokens) {
+        return { multiple: false, token: paramType }
+      }
 
       return tokens[index]
         ? tokens[index]

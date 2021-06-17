@@ -12,15 +12,22 @@
  * @returns Object or array of objects without nullish values.
  */
 export function removeNullishValues<T>(data: T): T {
-  if (data == null || typeof data !== 'object') return data
+  if (data == null || typeof data !== 'object') {
+    return data
+  }
 
   return Object.entries(data).reduce((r, [k, v]) => {
-    if (v == null) return r
+    if (v == null) {
+      return r
+    }
 
-    if (Array.isArray(v))
+    if (Array.isArray(v)) {
       r[k] = v.filter(e => !(e == null)).map(e => removeNullishValues(e))
-    else if (typeof v === 'object') r[k] = removeNullishValues(v)
-    else r[k] = v
+    } else if (typeof v === 'object') {
+      r[k] = removeNullishValues(v)
+    } else {
+      r[k] = v
+    }
 
     return r
   }, {} as T)
@@ -49,23 +56,31 @@ export function equals(
   last: unknown,
   options: EqualsOptions = {}
 ): boolean {
-  if (first === undefined && last === undefined) return true
+  if (first === undefined && last === undefined) {
+    return true
+  }
 
-  if (first === null && last === null) return true
+  if (first === null && last === null) {
+    return true
+  }
 
   if (
     (typeof first === 'bigint' && typeof last === 'bigint') ||
     (typeof first === 'boolean' && typeof last === 'boolean') ||
     (typeof first === 'number' && typeof last === 'number') ||
     (typeof first === 'string' && typeof last === 'string')
-  )
+  ) {
     return first === last
+  }
 
-  if (Buffer.isBuffer(first) && Buffer.isBuffer(last))
+  if (Buffer.isBuffer(first) && Buffer.isBuffer(last)) {
     return Buffer.compare(first, last) === 0
+  }
 
   if (Array.isArray(first) && Array.isArray(last)) {
-    if (first.length !== last.length) return false
+    if (first.length !== last.length) {
+      return false
+    }
 
     if (options.sortArrays) {
       first.sort()
@@ -84,7 +99,9 @@ export function equals(
   const firstKeys = Object.keys(first).sort()
   const lastKeys = Object.keys(last)
 
-  if (firstKeys.length !== lastKeys.length) return false
+  if (firstKeys.length !== lastKeys.length) {
+    return false
+  }
 
   for (const key of firstKeys) {
     if (!equals(first[key], last[key], options)) {

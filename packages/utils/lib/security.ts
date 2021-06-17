@@ -11,7 +11,9 @@ export function secretToken(length: number = 32): string {
   const alphabet =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
 
-  for (let i = 0; i < length; i++) token += alphabet[randomInt(alphabet.length)]
+  for (let i = 0; i < length; i++) {
+    token += alphabet[randomInt(alphabet.length)]
+  }
 
   return token
 }

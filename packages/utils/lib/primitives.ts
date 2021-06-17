@@ -24,11 +24,17 @@ type BufferEncoding =
  * @returns Integer represented by the provided Buffer.
  */
 function bufferToInt(data: Buffer): bigint {
-  if (!Buffer.isBuffer(data)) throw new TypeError('Invalid parameter "data".')
+  if (!Buffer.isBuffer(data)) {
+    throw new TypeError('Invalid parameter "data".')
+  }
 
   const strRepr = data.reduce((res, item) => {
     let n = item.toString(16)
-    if (n.length === 1) n = `0${n}`
+
+    if (n.length === 1) {
+      n = `0${n}`
+    }
+
     return res.concat(n)
   }, '')
 
@@ -49,10 +55,13 @@ function intToBuffer(integer: bigint | number): Buffer {
 
   let hexRepr = integer.toString(16)
 
-  if (hexRepr.length % 2 === 1) hexRepr = `0${hexRepr}`
+  if (hexRepr.length % 2 === 1) {
+    hexRepr = `0${hexRepr}`
+  }
 
-  for (let i = 0; i < len; i++)
+  for (let i = 0; i < len; i++) {
     arr[i] = Number.parseInt(hexRepr.slice(2 * i, 2 * (i + 1)), 16)
+  }
 
   return Buffer.from(arr)
 }
@@ -85,11 +94,17 @@ export function fromBuffer(
   format: 'string' | 'integer',
   encoding?: BufferEncoding
 ) {
-  if (!Buffer.isBuffer(buffer))
+  if (!Buffer.isBuffer(buffer)) {
     throw new TypeError('Invalid parameter "buffer".')
+  }
 
-  if (format === 'string') return buffer.toString(encoding)
-  if (format === 'integer') return bufferToInt(buffer)
+  if (format === 'string') {
+    return buffer.toString(encoding)
+  }
+
+  if (format === 'integer') {
+    return bufferToInt(buffer)
+  }
 
   throw new TypeError('Invalid parameter "format".')
 }
@@ -105,12 +120,17 @@ export function toBuffer(data: Buffer): Buffer
 export function toBuffer(data: string): Buffer
 export function toBuffer(data: bigint | number): Buffer
 export function toBuffer(data: Buffer | string | bigint | number): Buffer {
-  if (Buffer.isBuffer(data)) return data
+  if (Buffer.isBuffer(data)) {
+    return data
+  }
 
-  if (typeof data === 'string') return Buffer.from(data, 'utf8')
+  if (typeof data === 'string') {
+    return Buffer.from(data, 'utf8')
+  }
 
-  if (typeof data === 'bigint' || typeof data === 'number')
+  if (typeof data === 'bigint' || typeof data === 'number') {
     return intToBuffer(data)
+  }
 
   throw new TypeError('The provided data is in an unsupported format.')
 }

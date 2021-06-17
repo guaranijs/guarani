@@ -5,7 +5,9 @@
  * @returns Sanitized HTML string.
  */
 export function sanitizeHTML(html: string): string {
-  if (html == null) return ''
+  if (html == null) {
+    return ''
+  }
 
   const replacements = {
     '&': '&amp;',

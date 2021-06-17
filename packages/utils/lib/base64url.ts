@@ -13,7 +13,9 @@ import { fromBuffer, toBuffer } from './primitives'
  * @returns Encoded Base64Url string.
  */
 export function encode(data: Buffer): string {
-  if (!Buffer.isBuffer(data)) throw new TypeError('Invalid parameter "data".')
+  if (!Buffer.isBuffer(data)) {
+    throw new TypeError('Invalid parameter "data".')
+  }
 
   return data
     .toString('base64')
@@ -29,7 +31,9 @@ export function encode(data: Buffer): string {
  * @returns Decoded buffer object.
  */
 export function decode(data: string): Buffer {
-  if (typeof data !== 'string') throw new TypeError('Invalid parameter "data".')
+  if (typeof data !== 'string') {
+    throw new TypeError('Invalid parameter "data".')
+  }
 
   const newData = data
     .concat('='.repeat(data.length % 4))

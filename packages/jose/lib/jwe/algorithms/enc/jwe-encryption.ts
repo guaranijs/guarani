@@ -65,7 +65,7 @@ export abstract class JWEEncryption {
    * @param key - Key to be checked.
    * @throws {InvalidJsonWebEncryption} The provided key is invalid.
    */
-  public checkKey(key: Buffer): void {
+  protected checkKey(key: Buffer): void {
     if (!Buffer.isBuffer(key) || key.length * 8 !== this.CEK_SIZE) {
       throw new InvalidJsonWebEncryption('Invalid key.')
     }

@@ -20,11 +20,6 @@ export interface AuthenticatedEncryption {
  */
 export interface WrappedKey<AdditionalJoseHeaderParams = Dict<any>> {
   /**
-   * Generated Content Encryption Key.
-   */
-  readonly cek: Buffer
-
-  /**
    * Encrypted CEK.
    */
   readonly ek: string

@@ -11,7 +11,6 @@ import { InvalidJsonWebEncryption, JoseError } from '../../../exceptions'
 import { RsaKey, RsaPadding } from '../../../jwk'
 import { SupportedHash } from '../../../types'
 import { WrappedKey } from '../../_types'
-import { JWEEncryption } from '../enc'
 import { JWEAlgorithm } from './jwe-algorithm'
 
 /**
@@ -38,43 +37,35 @@ class RSAAlgorithm extends JWEAlgorithm {
    * Generates a new CEK based on the provided JWE Content Encryption Algorithm
    * and wraps it using the provided JSON Web Key.
    *
-   * @param enc - JWE Content Encryption of the JSON Web Encryption Token.
+   * @param cek - Content Encryption Key used to encrypt the Plaintext.
    * @param key - JWK used to wrap the generated CEK.
    * @returns CEK generated and Encrypted CEK.
    */
-  public async wrap(enc: JWEEncryption, key: RsaKey): Promise<WrappedKey> {
-    const cek = enc.generateCEK()
+  public async wrap(cek: Buffer, key: RsaKey): Promise<WrappedKey> {
     const publicKey = createPublicKey(key.export('public', 'pem', 'pkcs1'))
     const ek = publicEncrypt(
       { key: publicKey, oaepHash: this.hash, padding: this.padding },
       cek
     )
 
-    return { cek, ek: Base64Url.encode(ek) }
+    return { ek: Base64Url.encode(ek) }
   }
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param enc - JWE Content Encryption of the JSON Web Encryption Token.
    * @param ek - Encrypted CEK of the JSON Web Encryption Token.
    * @param key - JSON Web Key used to unwrap the Encrypted CEK.
    * @throws {InvalidJsonWebEncryption} Could not unwrap the Encrypted CEK.
    * @returns Unwrapped Content Encryption Key.
    */
-  public async unwrap(
-    enc: JWEEncryption,
-    ek: Buffer,
-    key: RsaKey
-  ): Promise<Buffer> {
+  public async unwrap(ek: Buffer, key: RsaKey): Promise<Buffer> {
     try {
       const privateKey = createPrivateKey(key.export('private', 'pem', 'pkcs1'))
       const cek = privateDecrypt(
         { key: privateKey, oaepHash: this.hash, padding: this.padding },
         ek
       )
-
-      enc.checkKey(cek)
 
       return cek
     } catch (error) {

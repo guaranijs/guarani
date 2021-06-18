@@ -4,7 +4,6 @@ import { InvalidJsonWebEncryption, JoseError } from '../../../exceptions'
 import { OctKey } from '../../../jwk'
 import { unwrap, wrap } from '../../utils/aeskw'
 import { WrappedKey } from '../../_types'
-import { JWEEncryption } from '../enc'
 import { JWEAlgorithm } from './jwe-algorithm'
 
 /**
@@ -31,16 +30,18 @@ class AESAlgorithm extends JWEAlgorithm {
    * Generates a new CEK based on the provided JWE Content Encryption Algorithm
    * and wraps it using the provided JSON Web Key.
    *
-   * @param enc - JWE Content Encryption of the JSON Web Encryption Token.
+   * @param cek - Content Encryption Key used to encrypt the Plaintext.
    * @param key - JWK used to wrap the generated CEK.
    * @returns CEK generated and Encrypted CEK.
    */
-  public async wrap(enc: JWEEncryption, key: OctKey): Promise<WrappedKey> {
-    const secretKey = key.export('binary')
-    const cek = enc.generateCEK()
-    const ek = wrap(this.KEY_SIZE, cek, secretKey)
+  public async wrap(cek: Buffer, key: OctKey): Promise<WrappedKey> {
+    const exportedKey = key.export('binary')
 
-    return { cek, ek: Base64Url.encode(ek) }
+    if (exportedKey.length * 8 !== this.KEY_SIZE) {
+      throw new JoseError('Invalid key size.')
+    }
+
+    return { ek: Base64Url.encode(wrap(cek, key)) }
   }
 
   /**
@@ -52,18 +53,15 @@ class AESAlgorithm extends JWEAlgorithm {
    * @throws {InvalidJsonWebEncryption} Could not unwrap the Encrypted CEK.
    * @returns Unwrapped Content Encryption Key.
    */
-  public async unwrap(
-    enc: JWEEncryption,
-    ek: Buffer,
-    key: OctKey
-  ): Promise<Buffer> {
+  public async unwrap(ek: Buffer, key: OctKey): Promise<Buffer> {
     try {
-      const secretKey = key.export('binary')
-      const cek = unwrap(this.KEY_SIZE, ek, secretKey)
+      const exportedKey = key.export('binary')
 
-      enc.checkKey(cek)
+      if (exportedKey.length * 8 !== this.KEY_SIZE) {
+        throw new JoseError('Invalid key size.')
+      }
 
-      return cek
+      return unwrap(ek, key)
     } catch (error) {
       if (error instanceof JoseError) {
         throw new InvalidJsonWebEncryption(error.message)

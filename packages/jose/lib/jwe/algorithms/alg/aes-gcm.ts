@@ -11,7 +11,6 @@ import {
 import { InvalidJsonWebEncryption, JoseError } from '../../../exceptions'
 import { OctKey } from '../../../jwk'
 import { WrappedKey } from '../../_types'
-import { JWEEncryption } from '../enc'
 import { JWEAlgorithm } from './jwe-algorithm'
 import { AESGMCWrappedKey } from './_types'
 
@@ -50,17 +49,21 @@ class AESGCMAlgorithm extends JWEAlgorithm {
    * Generates a new CEK based on the provided JWE Content Encryption Algorithm
    * and wraps it using the provided JSON Web Key.
    *
-   * @param enc - JWE Content Encryption of the JSON Web Encryption Token.
+   * @param cek - Content Encryption Key used to encrypt the Plaintext.
    * @param key - JWK used to wrap the generated CEK.
    * @returns CEK generated, Encrypted CEK and additional headers.
    */
   public async wrap(
-    enc: JWEEncryption,
+    cek: Buffer,
     key: OctKey
   ): Promise<WrappedKey<AESGMCWrappedKey>> {
-    const cek = enc.generateCEK()
-    const secretKey = createSecretKey(key.export('binary'))
+    const exportedKey = key.export('binary')
 
+    if (exportedKey.length * 8 !== this.KEY_SIZE) {
+      throw new JoseError('Invalid key size.')
+    }
+
+    const secretKey = createSecretKey(exportedKey)
     const iv = this.generateIV()
 
     const algorithm = <CipherGCMTypes>`aes-${this.KEY_SIZE}-gcm`
@@ -74,7 +77,6 @@ class AESGCMAlgorithm extends JWEAlgorithm {
     const tag = cipher.getAuthTag()
 
     return {
-      cek,
       ek: Base64Url.encode(ek),
       header: { iv: Base64Url.encode(iv), tag: Base64Url.encode(tag) }
     }
@@ -91,13 +93,18 @@ class AESGCMAlgorithm extends JWEAlgorithm {
    * @returns Unwrapped Content Encryption Key.
    */
   public async unwrap(
-    enc: JWEEncryption,
     ek: Buffer,
     key: OctKey,
     header: AESGMCWrappedKey
   ): Promise<Buffer> {
     try {
-      const secretKey = createSecretKey(key.export('binary'))
+      const exportedKey = key.export('binary')
+
+      if (exportedKey.length * 8 !== this.KEY_SIZE) {
+        throw new JoseError('Invalid key size.')
+      }
+
+      const secretKey = createSecretKey(exportedKey)
       const tag = Base64Url.decode(header.tag)
       const iv = Base64Url.decode(header.iv)
 
@@ -109,11 +116,7 @@ class AESGCMAlgorithm extends JWEAlgorithm {
       decipher.setAAD(Buffer.alloc(0))
       decipher.setAuthTag(tag)
 
-      const cek = Buffer.concat([decipher.update(ek), decipher.final()])
-
-      enc.checkKey(cek)
-
-      return cek
+      return Buffer.concat([decipher.update(ek), decipher.final()])
     } catch (error) {
       if (error instanceof JoseError) {
         throw new InvalidJsonWebEncryption(error.message)

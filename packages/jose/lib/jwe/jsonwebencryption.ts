@@ -130,7 +130,7 @@ export class JsonWebEncryption {
         throw new InvalidJsonWebEncryption('Invalid key.')
       }
 
-      const cek = await alg.unwrap(enc, ek, wrapKey, header)
+      const cek = await alg.unwrap(ek, wrapKey, header)
       const plaintext = await enc.decrypt(ciphertext, aad, iv, tag, cek)
 
       return new JsonWebEncryption(header, plaintext)
@@ -188,8 +188,10 @@ export class JsonWebEncryption {
     const alg = JWE_ALGORITHMS[this.header.alg]
     const enc = JWE_ENCRYPTIONS[this.header.enc]
 
-    const { cek, ek, header } = await alg.wrap(enc, wrapKey)
+    const cek = enc.generateCEK()
     const iv = enc.generateIV()
+
+    const { ek, header } = await alg.wrap(cek, wrapKey)
 
     if (header) {
       Object.assign(this.header, header)

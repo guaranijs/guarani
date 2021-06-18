@@ -219,7 +219,7 @@ export class JsonWebSignatureHeader
         Object.assign(joseHeader, unprotectedHeader)
       }
 
-      if (!joseHeader.alg) {
+      if (joseHeader.alg == null) {
         throw new InvalidJoseHeader('Missing required parameter "alg".')
       }
 
@@ -233,7 +233,7 @@ export class JsonWebSignatureHeader
 
       Object.assign(this, Objects.removeNullishValues(joseHeader))
     } else {
-      if (!header.alg) {
+      if (header.alg == null) {
         throw new InvalidJoseHeader('Missing required parameter "alg".')
       }
 
@@ -255,7 +255,7 @@ export class JsonWebSignatureHeader
   protected checkHeader(header: Partial<JWSHeaderParams>): void {
     super.checkHeader(header)
 
-    if (header.alg && !(header.alg in JWS_ALGORITHMS)) {
+    if ('alg' in header && !(header.alg in JWS_ALGORITHMS)) {
       throw new InvalidJoseHeader('Invalid JSON Web Signature Algorithm.')
     }
   }

@@ -10,7 +10,7 @@ describe('JSON Web Signature JOSE Header', () => {
 
     // @ts-expect-error
     expect(() => new JsonWebSignatureHeader({ alg: '' })).toThrow(
-      'Missing required parameter "alg".'
+      'Invalid JSON Web Signature Algorithm.'
     )
 
     // @ts-expect-error
@@ -77,12 +77,12 @@ describe('JSON Web Signature JOSE Headers', () => {
   it('should reject an invalid algorithm.', () => {
     expect(
       () => new JsonWebSignatureHeader({ protectedHeader: { alg: undefined } })
-    ).toThrow('Missing required parameter "alg".')
+    ).toThrow('Invalid parameter "alg".')
 
     expect(
       // @ts-expect-error
       () => new JsonWebSignatureHeader({ unprotectedHeader: { alg: '' } })
-    ).toThrow('Missing required parameter "alg".')
+    ).toThrow('Invalid JSON Web Signature Algorithm.')
 
     expect(
       // @ts-expect-error

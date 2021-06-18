@@ -5,8 +5,10 @@ import { JoseHeader, JoseHeaderParams } from '../jose.header'
 import { JsonWebKeyParams } from '../jwk'
 import {
   JWE_ALGORITHMS,
+  JWE_COMPRESSIONS,
   JWE_ENCRYPTIONS,
   SupportedJWEAlgorithm,
+  SupportedJWECompression,
   SupportedJWEEncryption
 } from './algorithms'
 
@@ -27,7 +29,7 @@ export interface JWEHeaderParams extends JoseHeaderParams {
   /**
    * Compression algorithm of the JSON Web Encryption.
    */
-  readonly zip?: string
+  readonly zip?: SupportedJWECompression
 
   /**
    * URI of a JWK Set that contains the key used to encrypt the token.
@@ -108,7 +110,7 @@ export class JsonWebEncryptionHeader
   /**
    * Compression algorithm of the JSON Web Encryption.
    */
-  public readonly zip?: string
+  public readonly zip?: SupportedJWECompression
 
   /**
    * URI of a JWK Set that contains the key used to encrypt the token.
@@ -183,11 +185,11 @@ export class JsonWebEncryptionHeader
       return header
     }
 
-    if (!header.alg) {
+    if (header.alg == null) {
       throw new InvalidJoseHeader('Missing required parameter "alg".')
     }
 
-    if (!header.enc) {
+    if (header.enc == null) {
       throw new InvalidJoseHeader('Missing required parameter "enc".')
     }
 
@@ -202,22 +204,32 @@ export class JsonWebEncryptionHeader
    * @param header - JWE JOSE Header to be validated.
    */
   protected checkHeader(header: Partial<JWEHeaderParams>): void {
+    if ('enc' in header && typeof header.enc !== 'string') {
+      throw new InvalidJoseHeader('Invalid parameter "enc".')
+    }
+
+    if ('zip' in header && typeof header.zip !== 'string') {
+      throw new InvalidJoseHeader('Invalid parameter "zip".')
+    }
+
     super.checkHeader(header)
 
-    if (header.alg && !(header.alg in JWE_ALGORITHMS)) {
+    if (header.alg != null && !(header.alg in JWE_ALGORITHMS)) {
       throw new InvalidJoseHeader(
         'Invalid JSON Web Encryption Key Wrapping Algorithm.'
       )
     }
 
-    if (header.enc && !(header.enc in JWE_ENCRYPTIONS)) {
+    if (header.enc != null && !(header.enc in JWE_ENCRYPTIONS)) {
       throw new InvalidJoseHeader(
         'Invalid JSON Web Encryption Content Encryption Algorithm.'
       )
     }
 
-    if (header.zip && typeof header.zip !== 'string') {
-      throw new InvalidJoseHeader('Invalid parameter "zip".')
+    if (header.zip != null && !(header.zip in JWE_COMPRESSIONS)) {
+      throw new InvalidJoseHeader(
+        'Invalid JSON Web Encryption Plaintext Compression Algorithm.'
+      )
     }
   }
 }

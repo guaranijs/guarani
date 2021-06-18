@@ -7,7 +7,12 @@ import {
 } from '../exceptions'
 import { JsonWebKey } from '../jwk'
 import { KeyLoader } from '../types'
-import { JWE_ALGORITHMS, JWE_ENCRYPTIONS } from './algorithms'
+import {
+  JWECompression,
+  JWE_ALGORITHMS,
+  JWE_COMPRESSIONS,
+  JWE_ENCRYPTIONS
+} from './algorithms'
 import {
   JsonWebEncryptionHeader,
   JWEHeaderParams
@@ -120,6 +125,7 @@ export class JsonWebEncryption {
 
       const alg = JWE_ALGORITHMS[header.alg]
       const enc = JWE_ENCRYPTIONS[header.enc]
+      const zip = <JWECompression>JWE_COMPRESSIONS[header.zip]
 
       const wrapKey =
         typeof jwkOrKeyLoader === 'function'
@@ -131,7 +137,11 @@ export class JsonWebEncryption {
       }
 
       const cek = await alg.unwrap(ek, wrapKey, header)
-      const plaintext = await enc.decrypt(ciphertext, aad, iv, tag, cek)
+      let plaintext = await enc.decrypt(ciphertext, aad, iv, tag, cek)
+
+      if (zip != null) {
+        plaintext = await zip.decompress(plaintext)
+      }
 
       return new JsonWebEncryption(header, plaintext)
     } catch (error) {
@@ -187,6 +197,7 @@ export class JsonWebEncryption {
 
     const alg = JWE_ALGORITHMS[this.header.alg]
     const enc = JWE_ENCRYPTIONS[this.header.enc]
+    const zip = <JWECompression>JWE_COMPRESSIONS[this.header.zip]
 
     const cek = enc.generateCEK()
     const iv = enc.generateIV()
@@ -200,7 +211,10 @@ export class JsonWebEncryption {
     const b64Header = Base64Url.encode(Buffer.from(JSON.stringify(this.header)))
     const aad = Buffer.from(b64Header, 'ascii')
 
-    const { ciphertext, tag } = await enc.encrypt(this.plaintext, aad, iv, cek)
+    const plaintext =
+      zip != null ? await zip.compress(this.plaintext) : this.plaintext
+
+    const { ciphertext, tag } = await enc.encrypt(plaintext, aad, iv, cek)
     const b64IV = Base64Url.encode(iv)
 
     return `${b64Header}.${ek}.${b64IV}.${ciphertext}.${tag}`

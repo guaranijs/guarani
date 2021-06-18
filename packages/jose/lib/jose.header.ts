@@ -147,39 +147,39 @@ export abstract class JoseHeader implements JoseHeaderParams {
    * @param header - JOSE Header to be validated.
    */
   protected checkHeader(header: Partial<JoseHeaderParams>): void {
-    if (header.alg && typeof header.alg !== 'string') {
+    if ('alg' in header && typeof header.alg !== 'string') {
       throw new InvalidJoseHeader('Invalid parameter "alg".')
     }
 
-    if (header.jku) {
+    if ('jku' in header) {
       throw new InvalidJoseHeader('Unsupported parameter "jku".')
     }
 
-    if (header.jwk) {
+    if ('jwk' in header) {
       throw new InvalidJoseHeader('Unsupported parameter "jwk".')
     }
 
-    if (header.kid && typeof header.kid !== 'string') {
+    if ('kid' in header && typeof header.kid !== 'string') {
       throw new InvalidJoseHeader('Invalid parameter "kid".')
     }
 
-    if (header.x5u) {
+    if ('x5u' in header) {
       throw new InvalidJoseHeader('Unsupported parameter "x5u".')
     }
 
-    if (header.x5c) {
+    if ('x5c' in header) {
       throw new InvalidJoseHeader('Unsupported parameter "x5c".')
     }
 
-    if (header.x5t) {
+    if ('x5t' in header) {
       throw new InvalidJoseHeader('Unsupported parameter "x5t".')
     }
 
-    if (header['x5t#S256']) {
+    if ('x5t#S256' in header) {
       throw new InvalidJoseHeader('Unsupported parameter "x5t#S256".')
     }
 
-    if (header.crit) {
+    if ('crit' in header) {
       if (!Array.isArray(header.crit) || header.crit.length === 0) {
         throw new InvalidJoseHeader('Invalid parameter "crit".')
       }

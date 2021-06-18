@@ -1,5 +1,9 @@
 import { JsonWebEncryptionHeader } from '../../lib/jwe'
-import { JWE_ALGORITHMS, JWE_ENCRYPTIONS } from '../../lib/jwe/algorithms'
+import {
+  JWE_ALGORITHMS,
+  JWE_COMPRESSIONS,
+  JWE_ENCRYPTIONS
+} from '../../lib/jwe/algorithms'
 
 describe('JSON Web Encryption JOSE Header', () => {
   it('should reject an invalid Key Wrapping Algorithm.', () => {
@@ -10,7 +14,7 @@ describe('JSON Web Encryption JOSE Header', () => {
     expect(
       // @ts-expect-error
       () => new JsonWebEncryptionHeader({ alg: '', enc: 'A128GCM' })
-    ).toThrow('Missing required parameter "alg".')
+    ).toThrow('Invalid JSON Web Encryption Key Wrapping Algorithm.')
 
     expect(
       // @ts-expect-error
@@ -26,12 +30,26 @@ describe('JSON Web Encryption JOSE Header', () => {
     expect(
       // @ts-expect-error
       () => new JsonWebEncryptionHeader({ alg: 'A128KW', enc: '' })
-    ).toThrow('Missing required parameter "enc".')
+    ).toThrow('Invalid JSON Web Encryption Content Encryption Algorithm.')
 
     expect(
       // @ts-expect-error
       () => new JsonWebEncryptionHeader({ alg: 'A128KW', enc: 123 })
     ).toThrow('Invalid parameter "enc".')
+  })
+
+  it('should reject an invalid Compression Algorithm.', () => {
+    expect(
+      () =>
+        // @ts-expect-error
+        new JsonWebEncryptionHeader({ alg: 'A128KW', enc: 'A256GCM', zip: '' })
+    ).toThrow('Invalid JSON Web Encryption Plaintext Compression Algorithm.')
+
+    expect(
+      () =>
+        // @ts-expect-error
+        new JsonWebEncryptionHeader({ alg: 'A128KW', enc: 'A256GCM', zip: 123 })
+    ).toThrow('Invalid parameter "zip".')
   })
 
   it('should reject an unsupported algorithm.', () => {
@@ -42,17 +60,27 @@ describe('JSON Web Encryption JOSE Header', () => {
           alg: 'unsupported-algorithm',
           enc: 'A128GCM'
         })
-    ).toThrow('Invalid JSON Web Signature Algorithm.')
-  })
+    ).toThrow('Invalid JSON Web Encryption Key Wrapping Algorithm.')
 
-  expect(
-    () =>
-      new JsonWebEncryptionHeader({
-        alg: 'A128KW',
-        // @ts-expect-error
-        enc: 'unsupported-algorithm'
-      })
-  ).toThrow('Invalid JSON Web Signature Algorithm.')
+    expect(
+      () =>
+        new JsonWebEncryptionHeader({
+          alg: 'A128KW',
+          // @ts-expect-error
+          enc: 'unsupported-algorithm'
+        })
+    ).toThrow('Invalid JSON Web Encryption Content Encryption Algorithm.')
+
+    expect(
+      () =>
+        new JsonWebEncryptionHeader({
+          alg: 'A128KW',
+          enc: 'A256GCM',
+          // @ts-expect-error
+          zip: 'unsupported-algorithm'
+        })
+    ).toThrow('Invalid JSON Web Encryption Plaintext Compression Algorithm.')
+  })
 
   it('should reject an invalid "kid".', () => {
     expect(
@@ -64,8 +92,9 @@ describe('JSON Web Encryption JOSE Header', () => {
 
   it('should reject an invalid "crit".', () => {
     expect(
-      // @ts-expect-error
-      () => new JsonWebEncryptionHeader({ alg: 'none', crit: 123 })
+      () =>
+        // @ts-expect-error
+        new JsonWebEncryptionHeader({ alg: 'dir', enc: 'A128GCM', crit: 123 })
     ).toThrow('Invalid parameter "crit".')
 
     expect(
@@ -112,10 +141,15 @@ describe('JSON Web Encryption JOSE Header', () => {
     ).toMatchObject({ alg: 'A256KW', enc: 'A256GCM', kid: 'key-id' })
   })
 
-  it('should return a JWSAlgorithm.', () => {
-    const header = new JsonWebEncryptionHeader({ alg: 'dir', enc: 'A128GCM' })
+  it('should return valid algorithms.', () => {
+    const header = new JsonWebEncryptionHeader({
+      alg: 'dir',
+      enc: 'A128GCM',
+      zip: 'DEF'
+    })
 
     expect(JWE_ALGORITHMS[header.alg]).toBe(JWE_ALGORITHMS.dir)
     expect(JWE_ENCRYPTIONS[header.enc]).toBe(JWE_ENCRYPTIONS.A128GCM)
+    expect(JWE_COMPRESSIONS[header.zip]).toBe(JWE_COMPRESSIONS.DEF)
   })
 })

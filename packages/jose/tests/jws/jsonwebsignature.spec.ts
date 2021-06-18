@@ -97,7 +97,7 @@ describe('JSON Web Signature deserializeCompact()', () => {
     await expect(
       // @ts-expect-error
       JsonWebSignature.deserializeCompact(token, 123)
-    ).rejects.toThrow('Invalid parameter "key".')
+    ).rejects.toThrow('Invalid key.')
   })
 
   it('should reject conflicting algorithms.', async () => {

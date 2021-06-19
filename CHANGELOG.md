@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/guaranijs/guarani/compare/v0.4.0...v0.5.0) (2021-06-19)
+
+
+### Features
+
+* **jose:** Added JWE Compression Algorithms. ([20952ea](https://github.com/guaranijs/guarani/commit/20952ea9d3676b2ab9146b6233b83dda9ceb21af))
+* **jose:** Added JWE Features. ([e9bde78](https://github.com/guaranijs/guarani/commit/e9bde786b3e4d27580d3f95a6d8c0fe5651b10b7))
+* **jose:** Added JWT Features. ([63657b1](https://github.com/guaranijs/guarani/commit/63657b16e32aa5d7863488785a48ed80904cafdc))
+* **utils:** Added OneOrMany type. ([7b15245](https://github.com/guaranijs/guarani/commit/7b152454d9925de80763beb655b8830ed216f5d4))
+
+
+
+
+
 # [0.4.0](https://github.com/guaranijs/guarani/compare/v0.3.0...v0.4.0) (2021-05-28)
 
 

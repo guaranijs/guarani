@@ -1,6 +1,6 @@
 {
   "name": "@guarani/jose",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Implementation of the RFCs of the JOSE Working Group.",
   "keywords": [
     "JOSE",
@@ -51,7 +51,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@guarani/asn1": "0.4.0",
-    "@guarani/utils": "0.4.0"
+    "@guarani/asn1": "0.5.0",
+    "@guarani/utils": "0.5.0"
   }
 }

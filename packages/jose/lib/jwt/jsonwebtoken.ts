@@ -63,20 +63,6 @@ export class JsonWebToken {
    * Instantiates a new JSON Web Token based on the provided
    * JOSE Header and Claims.
    *
-   * @param header - JWS JOSE Header containing the token's meta information.
-   * @param claims - Claims represented by the JSON Web Token.
-   * @param options - Validation options for the JWT Claims.
-   */
-  public constructor(
-    header: JsonWebSignatureHeader,
-    claims: JWTClaims,
-    options?: Dict<JWTClaimOptions>
-  )
-
-  /**
-   * Instantiates a new JSON Web Token based on the provided
-   * JOSE Header and Claims.
-   *
    * @param header - JWE JOSE Header containing the token's meta information.
    * @param claims - Claims represented by the JSON Web Token.
    */
@@ -85,25 +71,7 @@ export class JsonWebToken {
     claims: JsonWebTokenClaims
   )
 
-  /**
-   * Instantiates a new JSON Web Token based on the provided
-   * JOSE Header and Claims.
-   *
-   * @param header - JWE JOSE Header containing the token's meta information.
-   * @param claims - Claims represented by the JSON Web Token.
-   * @param options - Validation options for the JWT Claims.
-   */
-  public constructor(
-    header: JsonWebEncryptionHeader,
-    claims: JWTClaims,
-    options?: Dict<JWTClaimOptions>
-  )
-
-  public constructor(
-    header: JoseHeader,
-    claims: JsonWebTokenClaims | JWTClaims,
-    options?: Dict<JWTClaimOptions>
-  ) {
+  public constructor(header: JoseHeader, claims: JsonWebTokenClaims) {
     if (!header) {
       throw new InvalidJoseHeader()
     }
@@ -113,7 +81,7 @@ export class JsonWebToken {
     }
 
     this.header = header
-    this.claims = new JsonWebTokenClaims(claims, options)
+    this.claims = claims
   }
 
   /**

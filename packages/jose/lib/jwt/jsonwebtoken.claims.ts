@@ -90,6 +90,8 @@ export class JsonWebTokenClaims implements JWTClaims {
    * @throws {TokenNotValidYet} The token is not valid yet.
    */
   protected validateClaimsTypes(claims: JWTClaims): void {
+    const now = Math.floor(Date.now() / 1000)
+
     if ('iss' in claims && (typeof claims.iss !== 'string' || !claims.iss)) {
       throw new InvalidJsonWebTokenClaim('Invalid claim "iss".')
     }
@@ -120,7 +122,7 @@ export class JsonWebTokenClaims implements JWTClaims {
         throw new InvalidJsonWebTokenClaim('Invalid claim "exp".')
       }
 
-      if (new Date() > new Date(claims.exp)) {
+      if (now > claims.exp) {
         throw new ExpiredToken()
       }
     }
@@ -130,7 +132,7 @@ export class JsonWebTokenClaims implements JWTClaims {
         throw new InvalidJsonWebTokenClaim('Invalid claim "nbf".')
       }
 
-      if (new Date() < new Date(claims.nbf)) {
+      if (now < claims.nbf) {
         throw new TokenNotValidYet()
       }
     }

@@ -2,10 +2,14 @@ import {
   InvalidJoseHeader,
   InvalidJsonWebEncryption
 } from '../../lib/exceptions'
-import { JsonWebEncryption, JWEHeaderParams } from '../../lib/jwe'
+import { JsonWebEncryption, JsonWebEncryptionHeader } from '../../lib/jwe'
 import { OctKey } from '../../lib/jwk'
 
-const protectedHeader = <JWEHeaderParams>{ alg: 'A128KW', enc: 'A128CBC-HS256' }
+const protectedHeader = new JsonWebEncryptionHeader({
+  alg: 'A128KW',
+  enc: 'A128CBC-HS256'
+})
+
 const plaintext = Buffer.from('Live long and prosper.')
 const wrapKey = new OctKey({ k: 'GawgguFyGrWKav7AX4VKUg' })
 

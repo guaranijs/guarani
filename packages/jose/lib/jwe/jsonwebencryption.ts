@@ -13,12 +13,7 @@ import {
   JWE_COMPRESSIONS,
   JWE_ENCRYPTIONS
 } from './algorithms'
-import {
-  JsonWebEncryptionHeader,
-  JWEHeaderParams
-} from './jsonwebencryption.header'
-
-type JWEJoseHeader = JsonWebEncryptionHeader | JWEHeaderParams
+import { JsonWebEncryptionHeader } from './jsonwebencryption.header'
 
 /**
  * Implementation of RFC 7516.
@@ -48,18 +43,7 @@ export class JsonWebEncryption {
    * @param header - JWE JOSE Header containing the token's meta information.
    * @param plaintext - Buffer representation of the plaintext to be encrypted.
    */
-  public constructor(header: JsonWebEncryptionHeader, plaintext: Buffer)
-
-  /**
-   * Instantiates a new JSON Web Encryption based on the provided
-   * JWE JOSE Header and plaintext.
-   *
-   * @param header - JWE JOSE Header containing the token's meta information.
-   * @param plaintext - Buffer representation of the plaintext to be encrypted.
-   */
-  public constructor(header: JWEHeaderParams, plaintext: Buffer)
-
-  public constructor(header: JWEJoseHeader, plaintext: Buffer) {
+  public constructor(header: JsonWebEncryptionHeader, plaintext: Buffer) {
     if (!header) {
       throw new InvalidJoseHeader()
     }
@@ -68,7 +52,7 @@ export class JsonWebEncryption {
       throw new TypeError('The provided plaintext is invalid.')
     }
 
-    this.header = new JsonWebEncryptionHeader(header)
+    this.header = header
     this.plaintext = plaintext
   }
 

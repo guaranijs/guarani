@@ -11,8 +11,7 @@ import { KeyLoader } from '../types'
 import { JWS_ALGORITHMS } from './algorithms'
 import {
   JsonWebSignatureHeader,
-  JWSHeaderParams,
-  JWSProtectedAndUnprotectedHeaders
+  JWSHeaderParams
 } from './jsonwebsignature.header'
 import {
   DecodeOptions,
@@ -20,12 +19,6 @@ import {
   JWSJSONSerialization,
   JWSJSONSignature
 } from './_types'
-
-type JWSJoseHeader =
-  | JsonWebSignatureHeader
-  | JWSHeaderParams
-  | JWSProtectedAndUnprotectedHeaders
-  | (JsonWebSignatureHeader | JWSProtectedAndUnprotectedHeaders)[]
 
 /**
  * Implementation of RFC 7515.
@@ -59,38 +52,17 @@ export class JsonWebSignature {
 
   /**
    * Instantiates a new JSON Web Signature based on the provided
-   * JWS JOSE Header and payload.
-   *
-   * @param header - JWS JOSE Header containing the token's meta information.
-   * @param payload - Buffer representation of the payload of the token.
-   */
-  public constructor(header: JWSHeaderParams, payload?: Buffer)
-
-  /**
-   * Instantiates a new JSON Web Signature based on the provided
-   * JWS JOSE Header and payload.
-   *
-   * @param header - JWS JOSE Header containing the token's meta information.
-   * @param payload - Buffer representation of the payload of the token.
-   */
-  public constructor(
-    header: JWSProtectedAndUnprotectedHeaders,
-    payload?: Buffer
-  )
-
-  /**
-   * Instantiates a new JSON Web Signature based on the provided
    * JWS JOSE Headers and payload.
    *
    * @param headers - JWS JOSE Headers containing the token's meta information.
    * @param payload - Buffer representation of the payload of the token.
    */
-  public constructor(
-    headers: (JsonWebSignatureHeader | JWSProtectedAndUnprotectedHeaders)[],
-    payload?: Buffer
-  )
+  public constructor(headers: JsonWebSignatureHeader[], payload?: Buffer)
 
-  public constructor(header: JWSJoseHeader, payload?: Buffer) {
+  public constructor(
+    header: OneOrMany<JsonWebSignatureHeader>,
+    payload?: Buffer
+  ) {
     if (!header) {
       throw new InvalidJoseHeader()
     }
@@ -99,21 +71,7 @@ export class JsonWebSignature {
       throw new TypeError('The provided payload is invalid.')
     }
 
-    /*
-     * JsonWebSignatureHeader accepts all of <JsonWebSignature>,
-     * <JWSHeaderParams> and <JWSHeaders> types; but, for some unknown reason,
-     * it does not accept <JsonWebSignature | JWSHeaderParams | JWSHeaders>.
-     *
-     * It MIGHT have something to do with the constructor's overloads, where <A>
-     * would support <A & B & C> but not <A | B | C>.
-     */
-    if (Array.isArray(header)) {
-      this.header = header.map(header => new JsonWebSignatureHeader(header))
-    } else {
-      // @ts-ignore See note above.
-      this.header = new JsonWebSignatureHeader(header)
-    }
-
+    this.header = header
     this.payload = payload
   }
 

@@ -1,16 +1,20 @@
 import { Base64Url } from '@guarani/utils'
+
 import {
   InvalidJoseHeader,
   InvalidJsonWebSignature
 } from '../../lib/exceptions'
 import { OctKey } from '../../lib/jwk'
-import { JsonWebSignature, JWSHeaderParams } from '../../lib/jws'
+import { JsonWebSignature, JsonWebSignatureHeader } from '../../lib/jws'
 import { JWSFlattenedSerialization } from '../../lib/jws/_types'
 import { loadSymmetricKey } from '../utils'
 
 const key = new OctKey(loadSymmetricKey('oct', 'json'))
-const protectedHeader = <JWSHeaderParams>{ alg: 'HS256' }
-const unprotectedHeader = <JWSHeaderParams>{ typ: 'JWT' }
+const header = new JsonWebSignatureHeader({ alg: 'HS256' })
+const jsonHeader = new JsonWebSignatureHeader({
+  protectedHeader: header,
+  unprotectedHeader: { typ: 'JWT' }
+})
 const payload = Buffer.from('{"iat": 1723010455, "sub": "078BWDDXasdcg8"}')
 
 const token =
@@ -29,22 +33,19 @@ describe('JSON Web Signature constructor', () => {
   it('should reject an invalid payload.', () => {
     expect(
       // @ts-expect-error
-      () => new JsonWebSignature(protectedHeader, { sub: 'user-id' })
+      () => new JsonWebSignature(header, { sub: 'user-id' })
     ).toThrow('The provided payload is invalid.')
   })
 
   it('should create an instance of a JSON Web Signature.', () => {
-    expect(() => new JsonWebSignature(protectedHeader, payload)).not.toThrow()
+    expect(() => new JsonWebSignature(header, payload)).not.toThrow()
 
-    expect(
-      () =>
-        new JsonWebSignature({ protectedHeader, unprotectedHeader }, payload)
-    ).not.toThrow()
+    expect(() => new JsonWebSignature(jsonHeader, payload)).not.toThrow()
   })
 })
 
 describe('JSON Web Signature serializeCompact()', () => {
-  const jws = new JsonWebSignature(protectedHeader, payload)
+  const jws = new JsonWebSignature(header, payload)
 
   it('should reject an invalid header.', async () => {
     await expect(
@@ -117,24 +118,21 @@ describe('JSON Web Signature deserializeCompact()', () => {
         key,
         { validate: false }
       )
-    ).resolves.toMatchObject({ header: protectedHeader, payload })
+    ).resolves.toMatchObject({ header, payload })
   })
 
   it('should validate and decode the JSON Web Signature Token.', async () => {
     await expect(
       JsonWebSignature.deserializeCompact(token, key, { algorithm: 'HS256' })
     ).resolves.toMatchObject({
-      header: protectedHeader,
+      header,
       payload
     })
   })
 })
 
 describe('JSON Web Signature serializeFlattened()', () => {
-  const jws = new JsonWebSignature(
-    { protectedHeader, unprotectedHeader },
-    payload
-  )
+  const jws = new JsonWebSignature(jsonHeader, payload)
 
   it('should reject an invalid header.', async () => {
     await expect(
@@ -158,8 +156,10 @@ describe('JSON Web Signature serializeFlattened()', () => {
     ).resolves.toMatchObject<JWSFlattenedSerialization>({
       payload: Base64Url.encode(payload),
       signature: expect.any(String),
-      header: unprotectedHeader,
-      protected: Base64Url.encode(Buffer.from(JSON.stringify(protectedHeader)))
+      header: jsonHeader.unprotectedHeader,
+      protected: Base64Url.encode(
+        Buffer.from(JSON.stringify(jsonHeader.protectedHeader))
+      )
     })
   })
 })

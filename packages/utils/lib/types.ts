@@ -17,3 +17,8 @@ export type Dict<T> = { [key: string]: T }
  * Describes the format of either an element or a list of it.
  */
 export type OneOrMany<T> = T | T[]
+
+/**
+ * Describes a nullable type.
+ */
+export type Nullable<T> = T | null | undefined

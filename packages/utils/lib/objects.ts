@@ -30,7 +30,7 @@ export function removeNullishValues<T>(data: T): T {
     }
 
     return r
-  }, {} as T)
+  }, <T>{})
 }
 
 /**
@@ -126,7 +126,10 @@ export function deepFreeze<T>(obj: T): Readonly<T> {
       (typeof value === 'object' || typeof value === 'function') &&
       !Object.isFrozen(value)
     ) {
-      if (Array.isArray(value)) value.forEach(elm => deepFreeze(elm))
+      if (Array.isArray(value)) {
+        value.forEach(elm => deepFreeze(elm))
+      }
+
       deepFreeze(value)
     }
   })

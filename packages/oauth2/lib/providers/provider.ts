@@ -1,39 +1,23 @@
-import { Injectable, InjectAll } from '@guarani/ioc'
+import { Inject, Injectable } from '@guarani/ioc'
 
-import { OAuth2Request, OAuth2Response } from '../context'
-import { Endpoint } from '../endpoints'
+import { Request, Response } from '../context'
+import { AuthorizationEndpoint, TokenEndpoint } from '../endpoints'
 
 @Injectable()
-export class Provider {
-  @InjectAll('Endpoint')
-  private readonly endpoints: Endpoint[]
+export abstract class Provider {
+  @Inject()
+  private readonly authorizationEndpoint: AuthorizationEndpoint
 
-  private async endpoint(
-    name: string,
-    request: OAuth2Request
-  ): Promise<OAuth2Response> {
-    const endpoint = this.endpoints.find(endpoint => endpoint.name === name)
+  @Inject()
+  private readonly tokenEndpoint: TokenEndpoint
 
-    if (!endpoint) {
-      throw new Error(`Endpoint "${name}" not registered.`)
-    }
-
-    return await endpoint.handle(request)
+  public async authorize(request: Request): Promise<Response> {
+    return await this.authorizationEndpoint.handle(request)
   }
 
-  public async authorize(request: OAuth2Request): Promise<OAuth2Response> {
-    return await this.endpoint('authorization', request)
+  public async token(request: Request): Promise<Response> {
+    return await this.tokenEndpoint.handle(request)
   }
 
-  public async token(request: OAuth2Request): Promise<OAuth2Response> {
-    return await this.endpoint('token', request)
-  }
-
-  public async revoke(request: OAuth2Request): Promise<OAuth2Response> {
-    return await this.endpoint('revocation', request)
-  }
-
-  public async introspect(request: OAuth2Request): Promise<OAuth2Response> {
-    return await this.endpoint('introspection', request)
-  }
+  public abstract createOAuth2Request(request: unknown): Request
 }

@@ -49,11 +49,12 @@
   "dependencies": {
     "@guarani/ioc": "0.5.0",
     "@guarani/jose": "0.5.0",
-    "@guarani/utils": "0.5.0"
+    "@guarani/utils": "0.5.0",
+    "express": "^4.17.1"
   },
   "devDependencies": {
     "@types/connect-redis": "^0.0.16",
-    "@types/express": "^4.17.11",
+    "@types/express": "^4.17.13",
     "@types/express-flash": "^0.0.2",
     "@types/express-session": "^1.17.3",
     "@types/hbs": "^4.0.1",
@@ -61,11 +62,9 @@
     "@types/morgan": "^1.9.2",
     "@types/passport": "^1.0.6",
     "@types/passport-local": "^1.0.33",
-    "@types/uuid": "^8.3.0",
     "argon2": "^0.27.2",
     "class-transformer": "^0.4.0",
     "connect-redis": "^5.2.0",
-    "express": "^4.17.1",
     "express-flash": "^0.0.2",
     "express-session": "^1.17.1",
     "handlebars-layouts": "^3.1.4",
@@ -77,7 +76,6 @@
     "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.0.2",
     "ts-node-dev": "^1.1.6",
-    "typeorm": "^0.2.32",
-    "uuid": "^8.3.2"
+    "typeorm": "^0.2.32"
   }
 }

@@ -1,13 +1,10 @@
-import { OAuth2Response } from './response'
+import { Response } from './response'
 
-interface RedirectResponseParams {
-  readonly url: string
-}
+export class RedirectResponse extends Response {
+  public constructor(url: string) {
+    super()
 
-export class OAuth2RedirectResponse extends OAuth2Response {
-  public constructor(response?: RedirectResponseParams) {
-    super({ statusCode: 303 })
-
-    this.headers.Location = response?.url
+    this._statusCode = 303
+    this._headers.Location = url
   }
 }

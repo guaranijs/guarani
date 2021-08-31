@@ -1,90 +1,99 @@
 import { Injectable, InjectAll } from '@guarani/ioc'
+import { removeNullishValues } from '@guarani/utils'
 
-import { ClientAuthentication } from '../authentication'
-import { OAuth2JSONResponse, OAuth2Request, OAuth2Response } from '../context'
+import { OutgoingHttpHeaders } from 'http'
+
+import { ClientAuthenticator } from '../client-authentication'
+import { SupportedEndpoint, SupportedGrantType } from '../constants'
+import { JsonResponse, Request, Response } from '../context'
+import { Client } from '../entities'
 import {
-  InvalidClient,
-  InvalidRequest,
   OAuth2Error,
   ServerError,
   UnauthorizedClient,
   UnsupportedGrantType
 } from '../exceptions'
-import { TokenGrant } from '../grants'
-import { OAuth2Client } from '../models'
+import { GrantType, TokenParameters } from '../grants'
 import { Endpoint } from './endpoint'
 
-export interface TokenRequest {
-  readonly grant_type: string
-}
-
+/**
+ * Endpoint used by the client to exchange an authorization grant,
+ * or its own credentials for an access token that will be used by
+ * the client to act on behalf of the Resource Owner.
+ */
 @Injectable()
 export class TokenEndpoint implements Endpoint {
-  public readonly name: string = 'token'
+  /**
+   * Name of the Endpoint.
+   */
+  public readonly name: SupportedEndpoint = 'token'
 
-  private readonly headers = { 'Cache-Control': 'no-store', Pragma: 'no-cache' }
+  /**
+   * Default HTTP headers to be included in the Response.
+   */
+  private readonly headers: OutgoingHttpHeaders = {
+    'Cache-Control': 'no-store',
+    Pragma: 'no-cache'
+  }
 
   public constructor(
-    @InjectAll('Grant') private readonly grants: TokenGrant[],
-    @InjectAll('ClientAuthentication')
-    private readonly methods: ClientAuthentication[]
+    @InjectAll('Grant') private readonly grants: GrantType[],
+    private readonly clientAuthenticator: ClientAuthenticator
   ) {}
 
-  public async handle(
-    request: OAuth2Request<TokenRequest>
-  ): Promise<OAuth2Response> {
+  /**
+   * Creates a Token Response via a JSON Response.
+   *
+   * This endpoint is responsible for issuing Tokens to Clients
+   * that succeed to authenticate within the Authorization Server
+   * and have the necessary consent of the Resource Owner.
+   *
+   * If the Client fails to authenticate within the Authorization Server,
+   * does not have the consent of the Resource Owner or provides invalid
+   * or insufficient request parameters, it will receive a `400 Bad Request`
+   * Error Response with a JSON object describing the error.
+   *
+   * If the flow succeeds, the Client will then receive its Token
+   * in a JSON object containing the Access Token, the Token Type,
+   * the Lifespan of the Access Token, the scopes of the Access Token,
+   * and an optional Refresh Token, as well as any optional parameters
+   * defined by supplementar specifications
+   *
+   * @param request Current request.
+   * @returns Token Response.
+   */
+  public async handle(request: Request): Promise<Response> {
+    const data = <TokenParameters>request.data
+
     try {
-      const { data } = request
-
-      this.checkRequest(data)
-
-      const client = await this.authenticate(request)
+      const client = await this.clientAuthenticator.authenticate(request)
       const grant = this.getGrant(data.grant_type)
 
-      this.checkClientGrant(client, grant)
+      this.checkClientGrantType(client, data.grant_type)
 
-      const token = await grant.token(data, client)
+      const token = await grant.token(request, client)
 
-      return new OAuth2JSONResponse({ body: token })
+      return new JsonResponse(token).setHeaders(this.headers)
     } catch (error) {
       const err =
         error instanceof OAuth2Error
           ? error
           : new ServerError({ description: error.message })
 
-      return new OAuth2JSONResponse({
-        body: err.data,
-        headers: { ...err.headers, ...this.headers },
-        statusCode: err.status_code
-      })
+      return new JsonResponse(removeNullishValues(err))
+        .status(err.status_code)
+        .setHeaders({ ...err.headers, ...this.headers })
     }
   }
 
-  private checkRequest(data: TokenRequest): void {
-    const { grant_type } = data
-
-    if (!grant_type || typeof grant_type !== 'string') {
-      throw new InvalidRequest({
-        description: 'Invalid parameter "grant_type".'
-      })
-    }
-  }
-
-  private async authenticate(request: OAuth2Request): Promise<OAuth2Client> {
-    for (const method of this.methods) {
-      const client = await method.authenticate(request)
-
-      if (!client) {
-        continue
-      }
-
-      return client
-    }
-
-    throw new InvalidClient({ description: 'Invalid Client.' })
-  }
-
-  private getGrant(grantType: string): TokenGrant {
+  /**
+   * Retrieves the requested Grant based on the **grant_type** parameter.
+   *
+   * @param grantType Requested Grant Type.
+   * @throws {UnsupportedGrantType} The requested grant is unsupported.
+   * @returns Grant based on the requested **grant_type**.
+   */
+  private getGrant(grantType: SupportedGrantType): GrantType {
     const grant = this.grants.find(grant => grant.grantType === grantType)
 
     if (!grant) {
@@ -96,12 +105,23 @@ export class TokenEndpoint implements Endpoint {
     return grant
   }
 
-  private checkClientGrant(client: OAuth2Client, grant: TokenGrant): void {
-    if (!client.checkGrantType(grant.grantType)) {
+  /**
+   * Checks if the Client is allowed to use the requested Grant Type.
+   *
+   * @param client Client requesting authorization.
+   * @param grantType Grant Type requested by the Client.
+   * @throws {UnauthorizedClient} The Client is not allowed to use
+   *   the requested Grant Type.
+   */
+  private checkClientGrantType(
+    client: Client,
+    grantType: SupportedGrantType
+  ): void {
+    if (!client.checkGrantType(grantType)) {
       throw new UnauthorizedClient({
         description:
-          'This Client is not allowed to use ' +
-          `the grant_type "${grant.grantType}".`
+          'This Client is not allowed to request ' +
+          `the grant_type "${grantType}".`
       })
     }
   }

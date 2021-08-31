@@ -1,13 +1,10 @@
-import { OAuth2Response, ResponseParams } from './response'
+import { Response } from './response'
 
-export class OAuth2JSONResponse extends OAuth2Response {
-  public constructor(response?: ResponseParams) {
-    super(response)
+export class JsonResponse extends Response {
+  public constructor(data: unknown) {
+    super()
 
-    this.headers['Content-Type'] = 'application/json'
-  }
-
-  protected parseBody(body: any): Buffer {
-    return Buffer.from(JSON.stringify(body ?? null))
+    this._headers['Content-Type'] = 'application/json'
+    this._body = Buffer.from(JSON.stringify(data ?? null))
   }
 }

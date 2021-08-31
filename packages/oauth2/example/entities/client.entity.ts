@@ -1,14 +1,34 @@
+import { secretToken, UUID } from '@guarani/utils'
+
 import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm'
 
-import { OAuth2Client } from '../../lib'
+import {
+  SupportedApplicationType,
+  SupportedClientAuthentication,
+  SupportedGrantType,
+  SupportedResponseType
+} from '../../lib/constants'
+import { Client as ClientEntity } from '../../lib/entities'
 
 const transformer = {
   from: (value: any) => JSON.parse(value),
   to: (value: any) => JSON.stringify(value)
 }
 
+interface IClient {
+  readonly id?: string
+  readonly secret?: string
+  readonly name: string
+  readonly redirectUris: string[]
+  readonly scopes: string[]
+  readonly authenticationMethod?: SupportedClientAuthentication
+  readonly grantTypes?: SupportedGrantType[]
+  readonly responseTypes?: SupportedResponseType[]
+  readonly applicationType?: SupportedApplicationType
+}
+
 @Entity({ name: 'clients' })
-export class Client extends BaseEntity implements OAuth2Client {
+export class Client extends BaseEntity implements ClientEntity {
   @PrimaryColumn({ name: 'id', type: 'uuid' })
   public readonly id: string
 
@@ -19,21 +39,41 @@ export class Client extends BaseEntity implements OAuth2Client {
   public name: string
 
   @Column({ name: 'redirect_uris', type: 'text', transformer })
-  public redirect_uris: string[]
+  public redirectUris: string[]
 
   @Column({ name: 'scopes', type: 'text', transformer })
   public scopes: string[]
 
-  @Column({ name: 'token_endpoint_auth_method', type: 'varchar', length: 80 })
-  public token_endpoint_auth_method: string
+  @Column({ name: 'authentication_method', type: 'varchar', length: 80 })
+  public authenticationMethod: SupportedClientAuthentication
 
   @Column({ name: 'grant_types', type: 'text', transformer })
-  public grant_types: string[]
+  public grantTypes: SupportedGrantType[]
 
   @Column({ name: 'response_types', type: 'text', transformer })
-  public response_types: string[]
+  public responseTypes: SupportedResponseType[]
 
-  public getId(): string {
+  @Column({ name: 'application_type', type: 'varchar', length: 32 })
+  public applicationType: SupportedApplicationType
+
+  public constructor(data?: IClient) {
+    super()
+
+    if (data) {
+      this.id = data.id ?? String(new UUID())
+      this.secret = data.secret ?? secretToken(64)
+      this.name = data.name
+      this.redirectUris = data.redirectUris
+      this.scopes = data.scopes
+      this.authenticationMethod =
+        data.authenticationMethod ?? 'client_secret_basic'
+      this.grantTypes = data.grantTypes ?? ['authorization_code', 'implicit']
+      this.responseTypes = data.responseTypes ?? ['code']
+      this.applicationType = data.applicationType ?? 'web'
+    }
+  }
+
+  public getClientId(): string {
     return this.id
   }
 
@@ -41,28 +81,29 @@ export class Client extends BaseEntity implements OAuth2Client {
     return this.secret === secret
   }
 
-  public getName(): string {
-    return this.name
+  public getDefaultRedirectUri(): string {
+    return this.redirectUris[0]
   }
 
   public checkRedirectUri(redirectUri: string): boolean {
-    return this.redirect_uris.includes(redirectUri)
+    return this.redirectUris.includes(redirectUri)
   }
 
-  public checkScope(scope: string): string[] {
-    const scopes = scope.split(' ')
-    return scopes.every(scope => this.scopes.includes(scope)) ? scopes : null
+  public checkScopes(scopes: string[]): boolean {
+    return scopes.every(scope => this.scopes.includes(scope))
   }
 
-  public checkTokenEndpointAuthMethod(method: string): boolean {
-    return this.token_endpoint_auth_method === method
+  public checkAuthenticationMethod(
+    method: SupportedClientAuthentication
+  ): boolean {
+    return this.authenticationMethod === method
   }
 
-  public checkGrantType(grantType: string): boolean {
-    return this.grant_types.includes(grantType)
+  public checkGrantType(grantType: SupportedGrantType): boolean {
+    return this.grantTypes.includes(grantType)
   }
 
-  public checkResponseType(responseType: string): boolean {
-    return this.response_types.includes(responseType)
+  public checkResponseType(responseType: SupportedResponseType): boolean {
+    return this.responseTypes.includes(responseType)
   }
 }

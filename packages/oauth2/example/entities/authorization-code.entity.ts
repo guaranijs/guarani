@@ -1,52 +1,95 @@
-import { OAuth2AuthorizationCode } from '../../lib'
-import { redis } from '../redis'
+import { secretToken } from '@guarani/utils'
 
-interface ICode {
-  readonly code: string
-  readonly redirect_uri: string
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn
+} from 'typeorm'
+
+import { SupportedPkceMethod } from '../../lib/constants'
+import { AuthorizationCode as AuthorizationCodeEntity } from '../../lib/entities'
+import { Client } from './client.entity'
+import { User } from './user.entity'
+
+interface IAuthorizationCode {
+  readonly redirectUri: string
   readonly scopes: string[]
-  readonly code_challenge: string
-  readonly code_challenge_method: string
-  readonly client_id: string
-  readonly user_id: string
+  readonly codeChallenge: string
+  readonly codeChallengeMethod?: SupportedPkceMethod
+  readonly client: Client
+  readonly user: User
 }
 
-export class AuthorizationCode implements OAuth2AuthorizationCode {
+const transformer = {
+  from: (value: string): string[] => JSON.parse(value),
+  to: (value: string[]): string => JSON.stringify(value)
+}
+
+@Entity({ name: 'authorization_codes' })
+export class AuthorizationCode
+  extends BaseEntity
+  implements AuthorizationCodeEntity {
+  @PrimaryColumn({ name: 'code', type: 'varchar', length: 64 })
   public readonly code: string
 
-  public readonly redirect_uri: string
+  @Column({ name: 'redirect_uri', type: 'text', nullable: true })
+  public readonly redirectUri?: string
 
+  @Column({ name: 'scopes', type: 'text', transformer })
   public readonly scopes: string[]
 
-  public readonly code_challenge: string
+  @Column({ name: 'code_challenge', type: 'varchar', length: 128 })
+  public readonly codeChallenge: string
 
-  public readonly code_challenge_method: string
+  @Column({
+    name: 'code_challenge_method',
+    type: 'varchar',
+    length: 8,
+    nullable: true
+  })
+  public readonly codeChallengeMethod?: SupportedPkceMethod
 
-  public readonly client_id: string
+  @Column({ name: 'expires_at', type: 'datetime' })
+  public readonly expiresAt: Date
 
-  public readonly user_id: string
+  @ManyToOne(() => Client, {
+    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+  })
+  @JoinColumn({ name: 'client_id' })
+  public readonly client: Client
 
-  public constructor(data: ICode) {
-    this.code = data.code
-    this.client_id = data.client_id
-    this.code_challenge = data.code_challenge
-    this.code_challenge_method = data.code_challenge_method
-    this.redirect_uri = data.redirect_uri
-    this.scopes = data.scopes
-    this.user_id = data.user_id
-  }
+  @ManyToOne(() => User, {
+    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+  })
+  @JoinColumn({ name: 'user_id' })
+  public readonly user: User
 
-  public static async findOne(code: string): Promise<AuthorizationCode> {
-    const data = await redis.get(`code:${code}`)
-    return data ? new AuthorizationCode(JSON.parse(data)) : null
-  }
+  public constructor(data?: IAuthorizationCode) {
+    super()
 
-  public async save(): Promise<void> {
-    await redis.setex(`code:${this.code}`, 300, JSON.stringify(this))
-  }
+    if (data) {
+      const expiration = new Date()
 
-  public static async remove(code: string): Promise<void> {
-    await redis.del(`code:${code}`)
+      expiration.setUTCSeconds(expiration.getUTCSeconds() + 43200)
+
+      this.code = secretToken(64)
+      this.redirectUri = data.redirectUri
+      this.scopes = data.scopes
+      this.codeChallenge = data.codeChallenge
+      this.codeChallengeMethod = data.codeChallengeMethod
+      this.expiresAt = expiration
+      this.client = data.client
+      this.user = data.user
+    }
   }
 
   public getCode(): string {
@@ -54,7 +97,7 @@ export class AuthorizationCode implements OAuth2AuthorizationCode {
   }
 
   public getRedirectUri(): string {
-    return this.redirect_uri
+    return this.redirectUri
   }
 
   public getScopes(): string[] {
@@ -62,22 +105,22 @@ export class AuthorizationCode implements OAuth2AuthorizationCode {
   }
 
   public getCodeChallenge(): string {
-    return this.code_challenge
+    return this.codeChallenge
   }
 
-  public getCodeChallengeMethod(): string {
-    return this.code_challenge_method
+  public getCodeChallengeMethod(): SupportedPkceMethod {
+    return this.codeChallengeMethod
   }
 
-  public isExpired(): boolean {
-    return false
+  public getExpiresAt(): Date {
+    return this.expiresAt
   }
 
-  public getClientId(): string {
-    return this.client_id
+  public getClient(): Client {
+    return this.client
   }
 
-  public getUserId(): string {
-    return this.user_id
+  public getUser(): User {
+    return this.user
   }
 }

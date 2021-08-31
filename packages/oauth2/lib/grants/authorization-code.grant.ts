@@ -1,166 +1,195 @@
-import { Inject, Injectable } from '@guarani/ioc'
-import { Objects } from '@guarani/utils'
+import { Inject, Injectable, InjectAll } from '@guarani/ioc'
+import { removeNullishValues } from '@guarani/utils'
 
 import { Adapter } from '../adapter'
 import {
-  AuthorizationRequest as BaseAuthorizationRequest,
-  TokenRequest as BaseTokenRequest
-} from '../endpoints'
-import { InvalidGrant, InvalidRequest } from '../exceptions'
+  SupportedGrantType,
+  SupportedPkceMethod,
+  SupportedResponseMode,
+  SupportedResponseType
+} from '../constants'
+import { Request } from '../context'
+import { AuthorizationCode, Client, OAuth2Token, User } from '../entities'
+import { AccessDenied, InvalidGrant, InvalidRequest } from '../exceptions'
+import { PkceMethod } from '../pkce'
+import { Settings } from '../settings'
+import { Grant } from './grant'
+import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
 import {
-  OAuth2AuthorizationCode,
-  OAuth2Client,
-  OAuth2Token,
-  OAuth2User
-} from '../models'
-import { PKCEMethods } from '../pkce'
-import { generateToken } from '../utils/token'
-import { AuthorizationGrant } from './authorization-grant'
-import { TokenGrant } from './token-grant'
+  AuthorizationParameters as BaseAuthorizationParameters,
+  ResponseType
+} from './response-type'
 
-interface AuthorizationRequest extends BaseAuthorizationRequest {
+interface AuthorizationParameters extends BaseAuthorizationParameters {
   readonly code_challenge: string
-  readonly code_challenge_method?: string
+  readonly code_challenge_method?: SupportedPkceMethod
 }
 
 interface AuthorizationResponse {
   readonly code: string
   readonly state?: string
+  readonly [parameter: string]: any
 }
 
-interface TokenRequest extends BaseTokenRequest {
+interface TokenParameters extends BaseTokenParameters {
   readonly code: string
-  readonly redirect_uri: string
+  readonly redirect_uri?: string
   readonly code_verifier: string
 }
 
 @Injectable()
-export class AuthorizationCodeGrant implements AuthorizationGrant, TokenGrant {
-  public readonly grantType: string = 'authorization_code'
-  public readonly responseType: string = 'code'
-  public readonly responseMode: string = 'query'
+export class AuthorizationCodeGrant
+  extends Grant
+  implements ResponseType, GrantType {
+  public readonly name: SupportedGrantType = 'authorization_code'
 
-  public constructor(@Inject('Adapter') protected readonly adapter: Adapter) {}
+  public readonly responseTypes: SupportedResponseType[] = ['code']
+
+  public readonly defaultResponseMode: SupportedResponseMode = 'query'
+
+  public readonly grantType: SupportedGrantType = 'authorization_code'
+
+  public constructor(
+    @Inject('Adapter') protected readonly adapter: Adapter,
+    protected readonly settings: Settings,
+    @InjectAll('PkceMethod') protected readonly pkceMethods: PkceMethod[]
+  ) {
+    super(adapter, settings)
+  }
 
   public async authorize(
-    data: AuthorizationRequest,
-    scopes: string[],
-    client: OAuth2Client,
-    user: OAuth2User
+    request: Request,
+    client: Client,
+    user: User
   ): Promise<AuthorizationResponse> {
-    this.checkAuthorizationRequest(data)
+    const data = <AuthorizationParameters>request.data
 
+    this.checkCodeChallenge(data.code_challenge, data.code_challenge_method)
+
+    const scopes = await this.adapter.checkClientScope(client, data.scope)
     const code = await this.adapter.createAuthorizationCode(
-      scopes,
       data,
+      scopes,
       client,
       user
     )
 
-    return Objects.removeNullishValues<AuthorizationResponse>({
+    return removeNullishValues<AuthorizationResponse>({
       code: code.getCode(),
       state: data.state
     })
   }
 
-  protected checkAuthorizationRequest(data: AuthorizationRequest): void {
-    const { code_challenge, code_challenge_method } = data
-
-    if (!code_challenge || typeof code_challenge !== 'string') {
+  private checkCodeChallenge(
+    challenge: string,
+    method?: SupportedPkceMethod
+  ): void {
+    if (!challenge) {
       throw new InvalidRequest({
-        description: 'Invalid parameter "code_challenge".',
-        state: data.state
+        description: 'Invalid parameter "code_challenge".'
       })
     }
 
-    if (!code_challenge_method || typeof code_challenge_method !== 'string') {
+    if (method && !this.pkceMethods.find(pkce => pkce.name === method)) {
       throw new InvalidRequest({
-        description: 'Invalid parameter "code_challenge_method".',
-        state: data.state
+        description: `Unsupported code_challenge_method "${method}".`
       })
     }
   }
 
-  public async token(
-    data: TokenRequest,
-    client: OAuth2Client
-  ): Promise<OAuth2Token> {
+  public async token(request: Request, client: Client): Promise<OAuth2Token> {
+    const data = <TokenParameters>request.data
+
     try {
       this.checkTokenRequest(data)
 
-      const code = await this.adapter.findAuthorizationCode(data.code)
+      const code = await this.getAuthorizationCode(data.code)
 
-      if (!code) {
-        throw new InvalidGrant({
-          description: 'Invalid or Expired Authorization Code.'
-        })
-      }
+      this.checkAuthorizationCode(code, data, client)
 
-      this.checkCode(code, data, client)
-
-      const user = await this.adapter.findUser(code.getUserId())
-
-      if (!user) {
-        throw new InvalidGrant({ description: 'No User found for this code.' })
-      }
-
-      const accessToken = await this.adapter.createAccessToken(
+      const [accessToken, refreshToken] = await this.issueOAuth2Token(
+        code.getScopes(),
         client,
-        user,
-        code.getScopes()
+        code.getUser(),
+        true
       )
 
-      const refreshToken = client.checkGrantType('refresh_token')
-        ? await this.adapter.createRefreshToken(client, user, code.getScopes())
-        : null
-
-      return generateToken(accessToken, refreshToken)
+      return this.createTokenResponse(accessToken, refreshToken)
     } finally {
-      await this.adapter.deleteAuthorizationCode(data.code)
+      await this.adapter.revokeAuthorizationCode(data.code)
     }
   }
 
-  protected checkTokenRequest(data: TokenRequest): void {
-    const { code, code_verifier, redirect_uri } = data
+  private checkTokenRequest(data: TokenParameters): void {
+    const { code, code_verifier } = data
 
-    if (!code || typeof code !== 'string') {
+    if (!code) {
       throw new InvalidRequest({ description: 'Invalid parameter "code".' })
     }
 
-    if (!code_verifier || typeof code_verifier !== 'string') {
+    if (!code_verifier) {
       throw new InvalidRequest({
         description: 'Invalid parameter "code_verifier".'
       })
     }
-
-    if (!redirect_uri || typeof redirect_uri !== 'string') {
-      throw new InvalidRequest({
-        description: 'Invalid parameter "redirect_uri".'
-      })
-    }
   }
 
-  private checkCode(
-    code: OAuth2AuthorizationCode,
-    data: TokenRequest,
-    client: OAuth2Client
+  private async getAuthorizationCode(code: string): Promise<AuthorizationCode> {
+    const authorizationCode = await this.adapter.findAuthorizationCode(code)
+
+    if (!authorizationCode) {
+      throw new InvalidGrant({ description: 'Invalid Authorization Code.' })
+    }
+
+    return authorizationCode
+  }
+
+  private checkAuthorizationCode(
+    code: AuthorizationCode,
+    data: TokenParameters,
+    client: Client
   ): void {
-    if (client.getId() !== code.getClientId()) {
+    if (new Date() > code.getExpiresAt()) {
+      throw new InvalidGrant({ description: 'Expired Authorization Code.' })
+    }
+
+    if (client.getClientId() !== code.getClient().getClientId()) {
       throw new InvalidGrant({ description: 'Mismatching Client ID.' })
     }
 
-    if (!client.checkRedirectUri(data.redirect_uri)) {
-      throw new InvalidGrant({ description: 'Invalid Redirect URI.' })
+    if (data.redirect_uri && !client.checkRedirectUri(data.redirect_uri)) {
+      throw new AccessDenied({ description: 'Invalid Redirect URI.' })
     }
 
-    if (code.getRedirectUri() !== data.redirect_uri) {
+    /*
+    This monstruosity only exists due to a possible comparison between
+    null and undefined. If you want to see it in action, remove the second
+    statement and don't send a Redirect URI in both the Authorization and
+    the Token Requests.
+     */
+    if (
+      code.getRedirectUri() !== data.redirect_uri &&
+      !(data.redirect_uri == null && code.getRedirectUri() == null)
+    ) {
       throw new InvalidGrant({ description: 'Mismatching Redirect URI.' })
     }
 
-    const method = PKCEMethods[code.getCodeChallengeMethod() ?? 'plain']
+    const method = this.getPkceMethod(code.getCodeChallengeMethod() ?? 'plain')
 
-    if (!method(code.getCodeChallenge(), data.code_verifier)) {
+    if (!method.compare(code.getCodeChallenge(), data.code_verifier)) {
       throw new InvalidGrant({ description: 'Invalid Authorization Code.' })
     }
+  }
+
+  private getPkceMethod(pkceMethod: SupportedPkceMethod): PkceMethod {
+    const method = this.pkceMethods.find(method => method.name === pkceMethod)
+
+    if (!method) {
+      throw new InvalidRequest({
+        description: `Unsupported PKCE Method "${pkceMethod}".`
+      })
+    }
+
+    return method
   }
 }

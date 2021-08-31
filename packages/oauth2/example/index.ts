@@ -8,12 +8,13 @@ import morgan from 'morgan'
 import path from 'path'
 import { createConnection } from 'typeorm'
 
+import { ProviderFactory } from '../lib/bootstrap'
+import { AppProvider } from './oauth2'
 import { ormconfig } from './ormconfig'
 import { redis } from './redis'
 import { router } from './router'
 import { initialize } from './strategy'
-import { ProviderFactory } from '../lib'
-import { AppProvider } from './oauth2/provider'
+import { User } from './entities'
 
 async function configure(app: express.Express) {
   const connection = await createConnection(ormconfig)
@@ -52,10 +53,39 @@ async function main() {
 
   await configure(app)
 
-  app.use(router)
-  app.use(provider.router)
+  app.get('/oauth2/authorize', async (req, res) => {
+    const request = provider.createOAuth2Request(req)
 
-  app.listen(3333)
+    // The User accepted the requested scopes.
+    request.user = <User>req.user
+
+    const response = await provider.authorize(request)
+
+    Object.entries(response.headers).forEach(([name, value]) =>
+      res.setHeader(name, value)
+    )
+
+    return res.status(response.statusCode).send(response.body)
+  })
+
+  app.post('/oauth2/token', async (req, res) => {
+    const request = provider.createOAuth2Request(req)
+    const response = await provider.token(request)
+
+    Object.entries(response.headers).forEach(([name, value]) =>
+      res.setHeader(name, value)
+    )
+
+    return res.status(response.statusCode).send(response.body)
+  })
+
+  app.get('/oauth2/error', async (req, res) => {
+    return res.json(req.query)
+  })
+
+  app.use(router)
+
+  app.listen(3333, () => console.log('Listening on port 3333.'))
 }
 
 main()

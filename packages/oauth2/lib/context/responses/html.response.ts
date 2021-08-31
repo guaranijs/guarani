@@ -1,16 +1,14 @@
-import { OAuth2Response, ResponseParams } from './response'
+import { Response } from './response'
 
-interface HTMLResponseParams extends ResponseParams {
-  readonly body: string
-}
-
-export class OAuth2HTMLResponse extends OAuth2Response {
-  public constructor(response?: HTMLResponseParams) {
-    if (typeof response?.body !== 'string')
+export class HtmlResponse extends Response {
+  public constructor(body: string) {
+    if (typeof body !== 'string') {
       throw new TypeError('The HTML Response REQUIRES an HTML string body.')
+    }
 
-    super(response)
+    super()
 
-    this.headers['Content-Type'] = 'text/html; charset=UTF-8'
+    this._headers['Content-Type'] = 'text/html; charset=UTF-8'
+    this._body = Buffer.from(body)
   }
 }

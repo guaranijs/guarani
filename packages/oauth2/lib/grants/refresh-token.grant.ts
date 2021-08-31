@@ -1,66 +1,63 @@
-import { Inject, Injectable } from '@guarani/ioc'
+import { Injectable } from '@guarani/ioc'
 
-import { Adapter } from '../adapter'
-import { TokenRequest as BaseTokenRequest } from '../endpoints'
+import { SupportedGrantType } from '../constants'
+import { Request } from '../context'
+import { Client, OAuth2Token, RefreshToken } from '../entities'
 import { InvalidGrant, InvalidRequest, InvalidScope } from '../exceptions'
-import { OAuth2Client, OAuth2RefreshToken, OAuth2Token } from '../models'
-import { generateToken } from '../utils/token'
-import { TokenGrant } from './token-grant'
+import { Grant } from './grant'
+import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
 
-interface TokenRequest extends BaseTokenRequest {
+/**
+ * Defines the parameters of the **Refresh Token Grant's** Token Request.
+ */
+interface TokenParameters extends BaseTokenParameters {
+  /**
+   * Refresh Token provided by the Client.
+   */
   readonly refresh_token: string
+
+  /**
+   * Scope requested by the Client.
+   */
   readonly scope?: string
 }
 
 @Injectable()
-export class RefreshTokenGrant implements TokenGrant {
-  public readonly grantType: string = 'refresh_token'
+export class RefreshTokenGrant extends Grant implements GrantType {
+  public readonly name: SupportedGrantType = 'refresh_token'
 
-  public constructor(@Inject('Adapter') protected readonly adapter: Adapter) {}
+  public readonly grantType: SupportedGrantType = 'refresh_token'
 
-  public async token(
-    data: TokenRequest,
-    client: OAuth2Client
-  ): Promise<OAuth2Token> {
-    this.checkTokenRequest(data)
+  public async token(request: Request, client: Client): Promise<OAuth2Token> {
+    const data = <TokenParameters>request.data
 
-    const token = await this.findRefreshToken(data.refresh_token)
+    const oldRefreshToken = await this.getRefreshToken(data.refresh_token)
 
-    this.checkRefreshToken(token, client)
+    this.checkRefreshToken(oldRefreshToken, client)
 
-    const scopes = this.getRefreshTokenScopes(token, data, client)
-    const user = await this.adapter.findUser(token.getUserId())
+    const scopes = await this.getScopes(oldRefreshToken, data.scope)
 
     const accessToken = await this.adapter.createAccessToken(
+      oldRefreshToken.getAccessToken().getGrant(),
+      scopes,
       client,
-      user,
-      scopes
+      oldRefreshToken.getUser()
     )
 
-    const refreshToken = client.checkGrantType(this.grantType)
-      ? await this.adapter.createRefreshToken(client, user, scopes)
-      : null
+    const refreshToken = await this.adapter.createRefreshToken(accessToken)
 
-    return generateToken(accessToken, refreshToken)
+    await this.revokeRefreshToken(oldRefreshToken)
+
+    return this.createTokenResponse(accessToken, refreshToken)
   }
 
-  protected checkTokenRequest(data: TokenRequest): void {
-    const { refresh_token, scope } = data
-
-    if (!refresh_token || typeof refresh_token !== 'string') {
+  private async getRefreshToken(refreshToken: string): Promise<RefreshToken> {
+    if (!refreshToken) {
       throw new InvalidRequest({
         description: 'Invalid parameter "refresh_token".'
       })
     }
 
-    if (scope && typeof scope !== 'string') {
-      throw new InvalidRequest({ description: 'Invalid parameter "scope".' })
-    }
-  }
-
-  private async findRefreshToken(
-    refreshToken: string
-  ): Promise<OAuth2RefreshToken> {
     const token = await this.adapter.findRefreshToken(refreshToken)
 
     if (!token) {
@@ -70,51 +67,48 @@ export class RefreshTokenGrant implements TokenGrant {
     return token
   }
 
-  protected checkRefreshToken(
-    token: OAuth2RefreshToken,
-    client: OAuth2Client
-  ): void {
-    if (client.getId() !== token.getClientId()) {
+  private checkRefreshToken(refreshToken: RefreshToken, client: Client): void {
+    // TODO: Security breach.
+    if (refreshToken.getClient().getClientId() !== client.getClientId()) {
       throw new InvalidGrant({ description: 'Invalid Refresh Token.' })
     }
 
-    if (token.isExpired()) {
-      throw new InvalidGrant({ description: 'Refresh Token Expired.' })
+    if (new Date() > refreshToken.getExpiresAt() || refreshToken.isRevoked()) {
+      throw new InvalidGrant({ description: 'Invalid Refresh Token.' })
     }
   }
 
-  private getRefreshTokenScopes(
-    refreshToken: OAuth2RefreshToken,
-    data: TokenRequest,
-    client: OAuth2Client
-  ): string[] {
-    if (!data.scope) {
+  private async getScopes(
+    refreshToken: RefreshToken,
+    scope: string
+  ): Promise<string[]> {
+    if (!scope) {
       return refreshToken.getScopes()
     }
 
-    const scopes = client.checkScope(data.scope)
+    const scopes = await this.adapter.checkClientScope(
+      refreshToken.getClient(),
+      scope
+    )
 
-    if (!scopes) {
-      throw new InvalidScope({
-        description: 'This Client is not allowed to request this scope.'
-      })
-    }
-
-    const requestedScopes = new Set(scopes)
-    const grantedScopes = new Set(refreshToken.getScopes())
-
-    if (requestedScopes.size > grantedScopes.size) {
+    if (scopes.length > refreshToken.getScopes().length) {
       throw new InvalidScope({ description: 'Invalid broader scope.' })
     }
 
-    requestedScopes.forEach(scope => {
-      if (!grantedScopes.has(scope)) {
-        throw new InvalidScope({
-          description: `The scope "${scope}" was not previously granted.`
-        })
-      }
-    })
+    if (scopes.some(scope => !refreshToken.getScopes().includes(scope))) {
+      throw new InvalidScope({
+        description: 'One or more requested scopes were not previously granted.'
+      })
+    }
 
     return scopes
+  }
+
+  private async revokeRefreshToken(refreshToken: RefreshToken): Promise<void> {
+    await this.adapter.revokeRefreshToken(refreshToken.getToken())
+
+    await this.adapter.revokeAccessToken(
+      refreshToken.getAccessToken().getToken()
+    )
   }
 }

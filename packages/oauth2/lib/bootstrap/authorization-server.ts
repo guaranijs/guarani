@@ -1,19 +1,7 @@
-import { Constructor } from '@guarani/utils'
+import { Settings } from '../settings'
+import { ProviderOptions } from './provider.options'
 
-import { Adapter } from '../adapter'
-import { ClientAuthentication } from '../authentication'
-import { Endpoint } from '../endpoints'
-import { Grant } from '../grants'
-import { Settings, SettingsParams } from '../settings'
-
-interface Options extends SettingsParams {
-  readonly adapter: Adapter
-  readonly clientAuthentication?: Constructor<ClientAuthentication>[]
-  readonly endpoints?: Constructor<Endpoint>[]
-  readonly grants?: Constructor<Grant>[]
-}
-
-export function AuthorizationServer(options: Options): ClassDecorator {
+export function AuthorizationServer(options: ProviderOptions): ClassDecorator {
   return function (target) {
     defineMetadata('adapter', options.adapter, target)
 
@@ -25,12 +13,14 @@ export function AuthorizationServer(options: Options): ClassDecorator {
       target
     )
 
-    defineMetadata('endpoints', options.endpoints, target)
+    defineMetadata('response-modes', options.responseModes, target)
 
     defineMetadata('grants', options.grants, target)
+
+    defineMetadata('pkce-methods', options.pkceMethods, target)
   }
 }
 
 function defineMetadata(key: string, value: any, target: Function): void {
-  Reflect.defineMetadata(`guarani:oidc:${key}`, value, target)
+  Reflect.defineMetadata(`guarani:oauth2:${key}`, value, target)
 }

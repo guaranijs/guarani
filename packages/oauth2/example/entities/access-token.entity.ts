@@ -1,19 +1,24 @@
-import { Security } from '@guarani/utils'
+import { secretToken } from '@guarani/utils'
 
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryColumn
 } from 'typeorm'
 
-import { OAuth2AccessToken } from '../../lib'
+import { SupportedGrantType } from '../../lib/constants'
+import { AccessToken as AccessTokenEntity } from '../../lib/entities'
 import { Client } from './client.entity'
 import { User } from './user.entity'
 
 interface IAccessToken {
+  readonly grant: SupportedGrantType
+  readonly expiresIn: number
   readonly scopes: string[]
   readonly client: Client
   readonly user: User
@@ -25,18 +30,20 @@ const transformer = {
 }
 
 @Entity({ name: 'access_tokens' })
-export class AccessToken extends BaseEntity implements OAuth2AccessToken {
-  @PrimaryColumn({ name: 'access_token', type: 'varchar', length: 32 })
-  public readonly accessToken: string
+export class AccessToken extends BaseEntity implements AccessTokenEntity {
+  @PrimaryColumn({ name: 'token', type: 'varchar', length: 32 })
+  public readonly token: string
 
   @Column({ name: 'expiration', type: 'datetime' })
-  public expiration: Date
+  public readonly expiresAt: Date
 
   @Column({ name: 'scopes', type: 'text', transformer })
-  public scopes: string[]
+  public readonly scopes: string[]
+
+  @Column({ name: 'grant', type: 'varchar', length: 256 })
+  public readonly grant: SupportedGrantType
 
   @ManyToOne(() => Client, {
-    cascade: true,
     eager: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'
@@ -45,7 +52,6 @@ export class AccessToken extends BaseEntity implements OAuth2AccessToken {
   public readonly client: Client
 
   @ManyToOne(() => User, {
-    cascade: true,
     eager: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
@@ -54,43 +60,58 @@ export class AccessToken extends BaseEntity implements OAuth2AccessToken {
   @JoinColumn({ name: 'user_id' })
   public readonly user?: User
 
+  @CreateDateColumn({ name: 'created_at', type: 'datetime' })
+  public readonly createdAt: Date
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'datetime' })
+  public deletedAt?: Date
+
   public constructor(data?: IAccessToken) {
     super()
 
     if (data) {
       const expiration = new Date()
 
-      expiration.setUTCSeconds(expiration.getUTCSeconds() + 3600)
+      expiration.setUTCSeconds(expiration.getUTCSeconds() + data.expiresIn)
 
-      this.accessToken = Security.secretToken(32)
-      this.expiration = expiration
+      this.token = secretToken(32)
+      this.expiresAt = expiration
       this.scopes = data.scopes
+      this.grant = data.grant
       this.client = data.client
       this.user = data.user
     }
   }
 
-  public getAccessToken(): string {
-    return this.accessToken
-  }
-
-  public getTokenType(): string {
-    return 'Bearer'
-  }
-
-  public isExpired(): boolean {
-    return new Date() > this.expiration
+  public getToken(): string {
+    return this.token
   }
 
   public getScopes(): string[] {
     return this.scopes
   }
 
-  public getClientId(): string {
-    return this.client.id
+  public getExpiresAt(): Date {
+    return this.expiresAt
   }
 
-  public getUserId(): string {
-    return this.user?.id
+  public getIssuedAt(): Date {
+    return this.createdAt
+  }
+
+  public getGrant(): SupportedGrantType {
+    return this.grant
+  }
+
+  public getClient(): Client {
+    return this.client
+  }
+
+  public getUser(): User {
+    return this.user
+  }
+
+  public isRevoked(): boolean {
+    return this.deletedAt != null
   }
 }

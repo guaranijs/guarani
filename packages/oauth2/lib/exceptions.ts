@@ -1,15 +1,13 @@
-/* eslint-disable camelcase */
-
-import { Objects } from '@guarani/utils'
+import { OutgoingHttpHeaders } from 'http'
 
 /**
  * Parameters accepted by the Error Response.
  */
-export interface ErrorParams {
+interface ErrorParams {
   /**
    * Optional headers of the Error Response.
    */
-  readonly headers?: Record<string, any>
+  readonly headers?: OutgoingHttpHeaders
 
   /**
    * Defines the status code of the Error Response.
@@ -38,31 +36,6 @@ export interface ErrorParams {
 }
 
 /**
- * Parameters of the formatted Error Response.
- */
-export interface ErrorResponse {
-  /**
-   * Code of the error.
-   */
-  readonly error?: string
-
-  /**
-   * Description of the error.
-   */
-  readonly error_description?: string
-
-  /**
-   * URI that describes the error.
-   */
-  readonly error_uri?: string
-
-  /**
-   * State of the Client provided in the Request.
-   */
-  readonly state?: string
-}
-
-/**
  * Representation of the errors that can occur during the authorization process.
  *
  * This is a base class that provides the main attributes defined by
@@ -77,7 +50,7 @@ export class OAuth2Error extends Error {
   /**
    * Optional headers of the Error Response.
    */
-  public readonly headers?: Record<string, any>
+  public readonly headers?: OutgoingHttpHeaders
 
   /**
    * Defines the status code of the Error Response.
@@ -97,49 +70,63 @@ export class OAuth2Error extends Error {
   /**
    * Description of the error.
    */
-  protected readonly description?: string
+  public readonly error_description?: string
 
   /**
    * URI that describes the error.
    */
-  protected readonly uri?: string
+  public readonly error_uri?: string
 
   /**
    * State of the Client provided in the Request.
    */
-  protected readonly state?: string
+  public state?: string
+
+  /**
+   * Instantiates a new Error Response based on the provided description.
+   *
+   * @param description Description of the Error.
+   */
+  public constructor(description: string)
 
   /**
    * Instantiates a new Error Response based on the provided parameters.
    *
-   * @param params - Parameters of the Error Response.
+   * @param params Parameters of the Error Response.
    */
-  public constructor(params: ErrorParams = {}) {
-    super(params.description)
+  public constructor(params?: ErrorParams)
 
-    this.name = this.constructor.name
+  public constructor(descriptionOrParams?: string | ErrorParams) {
+    super()
 
-    this.headers = params.headers ?? {}
+    Object.defineProperty(this, 'name', { value: this.constructor.name })
+    Object.defineProperty(this, 'status_code', { value: 400 })
 
-    if (params.status_code) this.status_code = params.status_code
+    if (typeof descriptionOrParams === 'string') {
+      Object.defineProperty(this, 'message', { value: descriptionOrParams })
 
-    this.description = params.description
+      this.error_description = descriptionOrParams
+    } else {
+      Object.defineProperty(this, 'message', {
+        value: descriptionOrParams?.description
+      })
 
-    this.uri = params.uri
+      Object.defineProperty(this, 'headers', {
+        value: descriptionOrParams?.headers ?? {}
+      })
 
-    this.state = params.state
-  }
+      if (descriptionOrParams?.status_code) {
+        Object.defineProperty(this, 'status_code', {
+          value: descriptionOrParams?.status_code ?? 400
+        })
+      }
 
-  /**
-   * Formatted data of the Error Response.
-   */
-  public get data(): ErrorResponse {
-    return Objects.removeNullishValues<ErrorResponse>({
-      error: this.error,
-      error_description: this.description,
-      error_uri: this.uri,
-      state: this.state
-    })
+      this.error_description = descriptionOrParams?.description
+
+      this.error_uri = descriptionOrParams?.uri
+
+      this.state = descriptionOrParams?.state
+    }
   }
 }
 

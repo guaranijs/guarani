@@ -1,24 +1,4 @@
-import { OutgoingHttpHeaders } from 'http'
-
-/**
- * Parameters used to populate the Guarani Response.
- */
-export interface ResponseParams {
-  /**
-   * Status Code of the Response.
-   */
-  readonly statusCode?: number
-
-  /**
-   * Headers of the Response.
-   */
-  readonly headers?: OutgoingHttpHeaders
-
-  /**
-   * Body of the Response.
-   */
-  readonly body?: any
-}
+import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http'
 
 /**
  * Implementation of the OAuth 2.0 Response.
@@ -28,40 +8,55 @@ export interface ResponseParams {
  * It is provided as a framework-agnostic version of the response to allow
  * for multiple integrations without breaking functionality.
  */
-export abstract class OAuth2Response {
+export abstract class Response {
   /**
    * Status Code of the Response.
    */
-  public statusCode: number
+  protected _statusCode: number = 200
 
   /**
    * Headers of the Response.
    */
-  public headers: OutgoingHttpHeaders
+  protected _headers: OutgoingHttpHeaders = {}
 
   /**
    * Body of the Response.
    */
-  public body: Buffer
+  protected _body: Buffer = Buffer.from([])
 
   /**
-   * Instantiates a new Guarani Response based on the provided parameters.
-   *
-   * @param response - Parameters of the new Response.
+   * Status Code of the Response.
    */
-  public constructor(response?: ResponseParams) {
-    this.statusCode = response?.statusCode ?? 200
-    this.headers = response?.headers ?? {}
-    this.body = this.parseBody(response?.body)
+  public get statusCode(): number {
+    return this._statusCode
   }
 
   /**
-   * Parses the body of the Response into a Buffer object.
-   *
-   * @param body - Object representing the body of the response.
-   * @returns Buffer object representing the parsed body.
+   * Headers of the Response.
    */
-  protected parseBody(body: any): Buffer {
-    return body ? Buffer.from(body) : null
+  public get headers(): OutgoingHttpHeaders {
+    return this._headers
+  }
+
+  /**
+   * Body of the Response.
+   */
+  public get body(): Buffer {
+    return this._body
+  }
+
+  public status(statusCode: number): Response {
+    this._statusCode = statusCode
+    return this
+  }
+
+  public setHeader(name: string, value: OutgoingHttpHeader): Response {
+    this._headers[name] = value
+    return this
+  }
+
+  public setHeaders(values: OutgoingHttpHeaders): Response {
+    Object.assign(this._headers, values)
+    return this
   }
 }

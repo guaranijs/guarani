@@ -1,13 +1,7 @@
 import path from 'path'
+import { ConnectionOptions } from 'typeorm'
 
-interface ORMConfig {
-  readonly type: 'sqlite'
-  readonly database: string
-  readonly entities: string[]
-  readonly synchronize: boolean
-}
-
-export const ormconfig: ORMConfig = {
+export const ormconfig: ConnectionOptions = {
   type: 'sqlite',
   database: path.join(__dirname, 'guarani.db'),
   entities: [path.join(__dirname, 'entities', '**', '*.entity.ts')],

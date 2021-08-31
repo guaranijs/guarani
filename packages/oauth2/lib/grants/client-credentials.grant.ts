@@ -1,51 +1,38 @@
-import { Inject, Injectable } from '@guarani/ioc'
+import { Injectable } from '@guarani/ioc'
 
-import { Adapter } from '../adapter'
-import { TokenRequest as BaseTokenRequest } from '../endpoints'
-import { AccessDenied, InvalidRequest } from '../exceptions'
-import { OAuth2Client, OAuth2Token } from '../models'
-import { generateToken } from '../utils/token'
-import { TokenGrant } from './token-grant'
+import { SupportedGrantType } from '../constants'
+import { Request } from '../context'
+import { Client, OAuth2Token } from '../entities'
+import { Grant } from './grant'
+import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
 
-interface TokenRequest extends BaseTokenRequest {
-  readonly scope: string
+/**
+ * Defines the parameters of the **Client Credentials Grant's** Token Request.
+ */
+interface TokenParameters extends BaseTokenParameters {
+  /**
+   * Scope requested by the Client.
+   */
+  readonly scope?: string
 }
 
 @Injectable()
-export class ClientCredentialsGrant implements TokenGrant {
-  public readonly grantType: string = 'client_credentials'
+export class ClientCredentialsGrant extends Grant implements GrantType {
+  public readonly name: SupportedGrantType = 'client_credentials'
 
-  public constructor(@Inject('Adapter') protected readonly adapter: Adapter) {}
+  public readonly grantType: SupportedGrantType = 'client_credentials'
 
-  public async token(
-    data: TokenRequest,
-    client: OAuth2Client
-  ): Promise<OAuth2Token> {
-    this.checkTokenRequest(data)
+  public async token(request: Request, client: Client): Promise<OAuth2Token> {
+    const data = <TokenParameters>request.data
+    const scopes = await this.adapter.checkClientScope(client, data.scope)
 
-    const scopes = this.checkScope(client, data)
-    const token = await this.adapter.createAccessToken(client, null, scopes)
+    const [accessToken] = await this.issueOAuth2Token(
+      scopes,
+      client,
+      null,
+      false
+    )
 
-    return generateToken(token)
-  }
-
-  protected checkTokenRequest(data: TokenRequest): void {
-    const { scope } = data
-
-    if (!scope || typeof scope !== 'string') {
-      throw new InvalidRequest({ description: 'Invalid parameter "scope".' })
-    }
-  }
-
-  private checkScope(client: OAuth2Client, data: TokenRequest): string[] {
-    const scopes = client.checkScope(data.scope)
-
-    if (!scopes) {
-      throw new AccessDenied({
-        description: 'This Client is not allowed to request this scope.'
-      })
-    }
-
-    return scopes
+    return this.createTokenResponse(accessToken)
   }
 }

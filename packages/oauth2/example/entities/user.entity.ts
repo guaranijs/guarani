@@ -1,9 +1,10 @@
+import { UUID } from '@guarani/utils'
+
 import argon2 from 'argon2'
 import { Exclude, Expose } from 'class-transformer'
 import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm'
-import { v4 as uuid4 } from 'uuid'
 
-import { OAuth2User } from '../../lib'
+import { User as UserEntity } from '../../lib/entities'
 
 export interface IAddress {
   street_address: string
@@ -25,7 +26,7 @@ export interface IUser {
 }
 
 @Entity({ name: 'users' })
-export class User extends BaseEntity implements OAuth2User {
+export class User extends BaseEntity implements UserEntity {
   @Expose({ name: 'id' })
   @PrimaryColumn({ name: 'id', type: 'uuid' })
   public readonly id: string
@@ -74,7 +75,7 @@ export class User extends BaseEntity implements OAuth2User {
     super()
 
     if (user) {
-      this.id = uuid4()
+      this.id = String(new UUID())
       this.givenName = user.givenName
       this.middleName = user.middleName
       this.familyName = user.familyName
@@ -95,7 +96,7 @@ export class User extends BaseEntity implements OAuth2User {
     this.password = await argon2.hash(password, { type: argon2.argon2id })
   }
 
-  public getId(): string {
+  public getUserId(): string {
     return this.id
   }
 

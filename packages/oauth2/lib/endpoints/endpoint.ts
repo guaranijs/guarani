@@ -1,4 +1,5 @@
-import { OAuth2Request, OAuth2Response } from '../context'
+import { SupportedEndpoint } from '../constants'
+import { Request, Response } from '../context'
 
 /**
  * Interface for the endpoints of the OAuth 2.0 framework and its extensions.
@@ -14,7 +15,7 @@ export interface Endpoint {
   /**
    * Name of the Endpoint.
    */
-  readonly name: string
+  readonly name: SupportedEndpoint
 
   /**
    * All endpoints are required to implement this method,
@@ -37,8 +38,8 @@ export interface Endpoint {
    * It is recommended to split the logic of the endpoint into small
    * single-responsibility methods for better maintenance.
    *
-   * @param request - Current Request.
+   * @param request Current Request.
    * @returns Response of the Endpoint.
    */
-  handle(request: OAuth2Request): Promise<OAuth2Response>
+  handle(request: Request): Promise<Response>
 }

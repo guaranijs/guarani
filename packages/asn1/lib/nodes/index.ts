@@ -1,9 +1,3 @@
-/**
- * Defines the ASN.1 Types supported by the ASN1 package.
- *
- * @module Nodes
- */
-
 export { BitString } from './bit-string'
 export { Bool } from './bool'
 export { ContextSpecific } from './context-specific'

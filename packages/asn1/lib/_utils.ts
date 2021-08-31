@@ -1,8 +1,4 @@
-/**
- * Utility functionalities used by the ASN1 package.
- */
-
-import { Primitives } from '@guarani/utils'
+import { toBuffer } from '@guarani/utils'
 
 /**
  * This function encodes the length of a primitive type using either
@@ -31,10 +27,10 @@ export function encodeLength(length: number): Buffer {
   }
 
   if (length < 0x80) {
-    return Primitives.toBuffer(length)
+    return toBuffer(length)
   }
 
-  const asBuffer = Primitives.toBuffer(length)
+  const asBuffer = toBuffer(length)
 
   if (asBuffer.length > 127) {
     throw new RangeError('Unsupported large number.')

@@ -1,4 +1,4 @@
-import { Primitives } from '@guarani/utils'
+import { toBuffer } from '@guarani/utils'
 
 import { encodeLength } from '../_utils'
 import { Node } from './node'
@@ -82,7 +82,7 @@ export class ContextSpecific extends Node {
       (this.tagNumber & 0x1f)
 
     return Buffer.concat([
-      Primitives.toBuffer(tag),
+      toBuffer(tag),
       encodeLength(this.value.length),
       this.value
     ])

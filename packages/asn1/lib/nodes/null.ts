@@ -1,4 +1,4 @@
-import { Primitives } from '@guarani/utils'
+import { toBuffer } from '@guarani/utils'
 
 import { Node } from './node'
 
@@ -28,6 +28,6 @@ export class Null extends Node {
    * nullValue.encode() // <Buffer 05 00>
    */
   public encode(): Buffer {
-    return Buffer.concat([Primitives.toBuffer(0x05), Primitives.toBuffer(0x00)])
+    return Buffer.concat([toBuffer(0x05), toBuffer(0x00)])
   }
 }

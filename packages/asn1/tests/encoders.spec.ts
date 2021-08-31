@@ -1,15 +1,15 @@
-import { Base64Url, Primitives } from '@guarani/utils'
+import { base64UrlDecodeInt, toBuffer } from '@guarani/utils'
 
 import { BitString, ObjectId, PEMEncoder, Sequence } from '../lib'
 
 describe('PEM Encoder', () => {
   it('should encode an ASN.1 Node into a PEM string.', () => {
-    const x = Primitives.toBuffer(
-      Base64Url.decodeInt('4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og')
+    const x = toBuffer(
+      base64UrlDecodeInt('4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og')
     )
 
-    const y = Primitives.toBuffer(
-      Base64Url.decodeInt('mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8')
+    const y = toBuffer(
+      base64UrlDecodeInt('mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8')
     )
 
     const ecKey = new Sequence(
@@ -17,7 +17,7 @@ describe('PEM Encoder', () => {
         new ObjectId('1.2.840.10045.2.1'),
         new ObjectId('1.2.840.10045.3.1.7')
       ),
-      new BitString(Buffer.concat([Primitives.toBuffer(0x04), x, y]))
+      new BitString(Buffer.concat([toBuffer(0x04), x, y]))
     )
 
     expect(PEMEncoder(ecKey, 'PUBLIC KEY')).toEqual(

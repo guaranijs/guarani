@@ -1,4 +1,4 @@
-import { Primitives } from '@guarani/utils'
+import { toBuffer } from '@guarani/utils'
 
 import { encodeLength } from '../_utils'
 import { Node } from './node'
@@ -51,7 +51,7 @@ export class OctetString extends Node {
    */
   public encode(): Buffer {
     return Buffer.concat([
-      Primitives.toBuffer(0x04),
+      toBuffer(0x04),
       encodeLength(this.value.length),
       this.value
     ])

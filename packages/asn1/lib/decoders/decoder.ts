@@ -1,4 +1,4 @@
-import { Primitives } from '@guarani/utils'
+import { fromBuffer } from '@guarani/utils'
 
 import {
   BitString,
@@ -162,7 +162,7 @@ export class Decoder {
 
     const buffer = this.slice(Tags.INTEGER, 'Integer')
 
-    return Primitives.fromBuffer(buffer, 'integer')
+    return fromBuffer(buffer, 'integer')
   }
 
   /**

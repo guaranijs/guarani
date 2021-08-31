@@ -1,4 +1,4 @@
-import { Primitives } from '@guarani/utils'
+import { toBuffer } from '@guarani/utils'
 
 import { Node } from './node'
 
@@ -52,9 +52,9 @@ export class Bool extends Node {
    */
   public encode(): Buffer {
     return Buffer.concat([
-      Primitives.toBuffer(0x01),
-      Primitives.toBuffer(0x01),
-      this.value ? Primitives.toBuffer(0x01) : Primitives.toBuffer(0x00)
+      toBuffer(0x01),
+      toBuffer(0x01),
+      this.value ? toBuffer(0x01) : toBuffer(0x00)
     ])
   }
 }

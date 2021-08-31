@@ -1,4 +1,4 @@
-import { Primitives } from '@guarani/utils'
+import { toBuffer } from '@guarani/utils'
 
 import { encodeLength } from '../_utils'
 import { Node } from './node'
@@ -96,22 +96,22 @@ export class ObjectId extends Node {
    * oid.encode() // <Buffer 06 09 2a 86 48 86 f7 0d 01 01 01>
    */
   public encode(): Buffer {
-    const firstByte = Primitives.toBuffer(40 * this.values[0] + this.values[1])
+    const firstByte = toBuffer(40 * this.values[0] + this.values[1])
     const bytes: Buffer[] = []
 
     for (let i = this.values.length - 1; i > 1; i--) {
       let element = this.values[i]
 
-      bytes.push(Primitives.toBuffer(element & 0x7f))
+      bytes.push(toBuffer(element & 0x7f))
 
       while ((element >>>= 7) > 0) {
-        bytes.push(Primitives.toBuffer(0x80 | (element & 0x7f)))
+        bytes.push(toBuffer(0x80 | (element & 0x7f)))
       }
     }
 
     const buffer = Buffer.concat([firstByte, ...bytes.reverse()])
     const length = encodeLength(buffer.length)
 
-    return Buffer.concat([Primitives.toBuffer(0x06), length, buffer])
+    return Buffer.concat([toBuffer(0x06), length, buffer])
   }
 }

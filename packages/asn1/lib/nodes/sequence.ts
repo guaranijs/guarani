@@ -1,4 +1,4 @@
-import { Primitives } from '@guarani/utils'
+import { toBuffer } from '@guarani/utils'
 
 import { encodeLength } from '../_utils'
 import { Node } from './node'
@@ -58,7 +58,7 @@ export class Sequence extends Node {
    */
   public encode(): Buffer {
     return Buffer.concat([
-      Primitives.toBuffer(0x30),
+      toBuffer(0x30),
       encodeLength(
         this.nodes.reduce<number>(
           (length, node) => (length += node.encode().length),

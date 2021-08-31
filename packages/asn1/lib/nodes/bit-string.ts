@@ -1,4 +1,4 @@
-import { Primitives } from '@guarani/utils'
+import { toBuffer } from '@guarani/utils'
 
 import { encodeLength } from '../_utils'
 import { Node } from './node'
@@ -69,9 +69,9 @@ export class BitString extends Node {
   public encode(): Buffer {
     // TODO: Check if, when the value of bin(value) % 8 is 0, we need to add the padding.
     return Buffer.concat([
-      Primitives.toBuffer(0x03),
+      toBuffer(0x03),
       encodeLength(this.value.length + 1),
-      Primitives.toBuffer(0x00),
+      toBuffer(0x00),
       this.value
     ])
   }

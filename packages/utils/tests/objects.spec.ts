@@ -1,9 +1,9 @@
-import { Objects } from '../lib'
+import { deepEquals, deepFreeze, removeNullishValues } from '../lib/objects'
 
 describe('removeNullishValues()', () => {
   it('should remove all nullish values from an object', () => {
     expect(
-      Objects.removeNullishValues({
+      removeNullishValues({
         name: 'John Doe',
         occupation: null,
         age: 23,
@@ -31,10 +31,10 @@ describe('removeNullishValues()', () => {
   })
 })
 
-describe('equals()', () => {
+describe('deepEquals()', () => {
   it('should succed when comparing two objects with sortArrays true.', () => {
     expect(
-      Objects.equals(
+      deepEquals(
         { id: 1, name: ['John', 'Doe', { test: true }] },
         { name: ['Doe', 'John', { test: true }], id: 1 },
         { sortArrays: true }
@@ -53,7 +53,7 @@ describe('deepFreeze()', () => {
 
     frozenData.bar.name = 'newBar'
 
-    expect(Objects.deepFreeze(frozenData)).toEqual(data)
+    expect(deepFreeze(frozenData)).toEqual(data)
   })
 
   it('should freeze the elements of an array of objects.', () => {
@@ -69,6 +69,6 @@ describe('deepFreeze()', () => {
     // @ts-expect-error
     expect(() => (frozenData[3] = { id: 3, name: 'obj3' })).toThrow()
 
-    expect(Objects.deepFreeze(frozenData)).toEqual(data)
+    expect(deepFreeze(frozenData)).toEqual(data)
   })
 })

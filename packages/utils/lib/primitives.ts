@@ -1,9 +1,3 @@
-/**
- * Tools to work with primitive types of NodeJS.
- *
- * @module Primitives
- */
-
 type BufferEncoding =
   | 'ascii'
   | 'utf8'
@@ -20,7 +14,7 @@ type BufferEncoding =
  * Decodes a Buffer back to its original integer.
  * Note: It assumes that the Buffer represents an integer.
  *
- * @param data - Buffer representation of an integer.
+ * @param data Buffer representation of an integer.
  * @returns Integer represented by the provided Buffer.
  */
 function bufferToInt(data: Buffer): bigint {
@@ -44,7 +38,7 @@ function bufferToInt(data: Buffer): bigint {
 /**
  * Encodes an integer as a Buffer.
  *
- * @param integer - Integer to be encoded.
+ * @param integer Integer to be encoded.
  * @returns Buffer representation of the integer.
  */
 function intToBuffer(integer: bigint | number): Buffer {
@@ -69,9 +63,9 @@ function intToBuffer(integer: bigint | number): Buffer {
 /**
  * Reverses a Buffer object back to a string.
  *
- * @param buffer - Buffer to be reversed back to a string.
- * @param format - Defines the output format to a string.
- * @param encoding - Optional encoding format for the string output.
+ * @param buffer Buffer to be reversed back to a string.
+ * @param format Defines the output format to a string.
+ * @param encoding Optional encoding format for the string output.
  * @returns String converted from the provided Buffer object.
  */
 export function fromBuffer(
@@ -83,8 +77,8 @@ export function fromBuffer(
 /**
  * Reverses a Buffer object back to an integer.
  *
- * @param buffer - Buffer to be reversed back to an integer.
- * @param format - Defines the output format to an integer.
+ * @param buffer Buffer to be reversed back to an integer.
+ * @param format Defines the output format to an integer.
  * @returns Integer converted from the provided Buffer object.
  */
 export function fromBuffer(buffer: Buffer, format: 'integer'): bigint
@@ -112,8 +106,8 @@ export function fromBuffer(
 /**
  * Converts the provided data into a Buffer object.
  *
- * @param data - Data to be converted.
- * @throws TypeError: The data provided is not supported.
+ * @param data Data to be converted.
+ * @throws {TypeError} The data provided is not supported.
  * @returns Resulting Buffer object.
  */
 export function toBuffer(data: Buffer): Buffer

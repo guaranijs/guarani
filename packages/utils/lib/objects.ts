@@ -1,14 +1,10 @@
-/**
- * Provides tools to work with objects and their properties.
- *
- * @module Objects
- */
+import { Constructor } from './types'
 
 /**
  * Removes nullish values from the properties
  * of an object or an array of objects.
  *
- * @param data - Object or array of objects to be cleansed.
+ * @param data Object or array of objects to be cleansed.
  * @returns Object or array of objects without nullish values.
  */
 export function removeNullishValues<T>(data: T): T {
@@ -46,12 +42,12 @@ interface EqualsOptions {
 /**
  * Perfoms a deep comparison between the properties of two objects.
  *
- * @param first - First object.
- * @param last - Last object.
- * @param options - Defines the options to enhance the comparison.
+ * @param first First object.
+ * @param last Last object.
+ * @param options Defines the options to enhance the comparison.
  * @returns Boolean informing whether or not the two objects are equal.
  */
-export function equals(
+export function deepEquals(
   first: unknown,
   last: unknown,
   options: EqualsOptions = {}
@@ -88,7 +84,7 @@ export function equals(
     }
 
     for (let i = 0; i < first.length; i++) {
-      if (!equals(first[i], last[i], options)) {
+      if (!deepEquals(first[i], last[i], options)) {
         return false
       }
     }
@@ -104,7 +100,7 @@ export function equals(
   }
 
   for (const key of firstKeys) {
-    if (!equals(first[key], last[key], options)) {
+    if (!deepEquals(first[key], last[key], options)) {
       return false
     }
   }
@@ -115,13 +111,13 @@ export function equals(
 /**
  * Recursively freezes the properties or items of the provided object.
  *
- * @param obj - Object to be frozen.
+ * @param obj Object to be frozen.
  * @returns Frozen object.
  */
 export function deepFreeze<T>(obj: T): Readonly<T> {
   Object.freeze(obj)
 
-  Object.entries(obj).forEach(([key, value]) => {
+  Object.values(obj).forEach(value => {
     if (
       (typeof value === 'object' || typeof value === 'function') &&
       !Object.isFrozen(value)
@@ -135,4 +131,35 @@ export function deepFreeze<T>(obj: T): Readonly<T> {
   })
 
   return obj
+}
+
+/**
+ * Merges the provided mixin classes into a single one and returns it.
+ *
+ * @param mixins List of mixins to be merged into a single class.
+ * @returns Constructor of the resulting class.
+ */
+export function applyMixins(mixins: Constructor[]): Constructor {
+  if (!Array.isArray(mixins) || mixins.length === 0) {
+    throw new Error('Invalid parameter "mixins".')
+  }
+
+  if (mixins.length === 1) {
+    return mixins[0]
+  }
+
+  const BaseMixin = mixins.shift()
+
+  mixins.forEach(Mixin => {
+    Object.getOwnPropertyNames(Mixin.prototype).forEach(name => {
+      Object.defineProperty(
+        BaseMixin.prototype,
+        name,
+        Object.getOwnPropertyDescriptor(Mixin.prototype, name) ||
+          Object.create(null)
+      )
+    })
+  })
+
+  return BaseMixin
 }

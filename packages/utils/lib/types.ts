@@ -6,12 +6,12 @@ export type Constructor<T = any> = Function | { new (...args: any[]): T }
 /**
  * Describes the format of a factory function.
  */
-export type Factory<T> = () => T
+export type Factory<T> = (...args: any[]) => T
 
 /**
  * Describes the format of a dictionary.
  */
-export type Dict<T> = { [key: string]: T }
+export type Dict<T = any> = { [key: string]: T }
 
 /**
  * Describes the format of either an element or a list of it.

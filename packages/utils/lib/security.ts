@@ -3,7 +3,7 @@ import { randomInt } from 'crypto'
 /**
  * Generates a cryptographically secure, urlsafe, random secret token.
  *
- * @param length - Length of the token.
+ * @param length Length of the token.
  * @returns Secret Token.
  */
 export function secretToken(length: number = 32): string {

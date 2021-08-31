@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { createPrivateKey, createPublicKey } from 'crypto'
 
 import { EcKey, EcKeyParams } from '../../lib/jwk/algorithms'

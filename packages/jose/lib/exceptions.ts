@@ -10,7 +10,7 @@ export class JoseError extends Error {
   /**
    * Instantiates a new JoseError and correctly sets the name of the Error.
    *
-   * @param message - Error message to be displayed.
+   * @param message Error message to be displayed.
    */
   constructor(message?: string) {
     super(message)

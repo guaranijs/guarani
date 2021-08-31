@@ -21,7 +21,7 @@ export class JsonWebKeySet {
   /**
    * Instantiates a new JWK Set based on the provided JWKs.
    *
-   * @param keys - JWKs to be added to the Key Set.
+   * @param keys JWKs to be added to the Key Set.
    */
   public constructor(keys: JsonWebKey[]) {
     if (!Array.isArray(keys) || keys.length === 0) {
@@ -50,7 +50,7 @@ export class JsonWebKeySet {
   /**
    * Returns a Key based on the requested ID.
    *
-   * @param keyId - ID of the Key to be retrieved.
+   * @param keyId ID of the Key to be retrieved.
    * @returns Key that matches the requested ID.
    */
   public getKey<KeyType extends JsonWebKey>(keyId: string): KeyType {

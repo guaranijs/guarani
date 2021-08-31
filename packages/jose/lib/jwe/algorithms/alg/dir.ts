@@ -10,10 +10,11 @@ class DIRAlgorithm extends JWEAlgorithm {
   /**
    * Uses the provided JSON Web Key as the Content Encryption Key.
    *
-   * @param cek - Content Encryption Key used to encrypt the Plaintext.
-   * @param key - JWK used as Content Encryption Key.
+   * @param cek Content Encryption Key used to encrypt the Plaintext.
+   * @param key JWK used as Content Encryption Key.
    * @returns WrapKey as the CEK and an empty string as the EK.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async wrap(cek: Buffer, key: OctKey): Promise<WrappedKey> {
     return { ek: '' }
   }
@@ -21,8 +22,8 @@ class DIRAlgorithm extends JWEAlgorithm {
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param ek - ~Ignored Parameter~.
-   * @param key - JSON Web Key used as the Content Encryption Key.
+   * @param ek ~Ignored Parameter~.
+   * @param key JSON Web Key used as the Content Encryption Key.
    * @throws {InvalidJsonWebEncryption} Could not unwrap the Encrypted CEK.
    * @returns Unwrapped Content Encryption Key.
    */

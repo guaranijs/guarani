@@ -1,4 +1,4 @@
-import { Objects } from '@guarani/utils'
+import { removeNullishValues } from '@guarani/utils'
 
 import { InvalidJoseHeader } from '../exceptions'
 import { JoseHeader, JoseHeaderParams } from '../jose.header'
@@ -167,14 +167,14 @@ export class JsonWebEncryptionHeader
   /**
    * Returns the provided JWE JOSE Header unmodified.
    *
-   * @param header - Instance of a JsonWebEncryptionHeader
+   * @param header Instance of a JsonWebEncryptionHeader
    */
   public constructor(header: JsonWebEncryptionHeader)
 
   /**
    * Instantiates a new JWE JOSE Header for JWE Compact Serialization.
    *
-   * @param header - Parameters of the JWE JOSE Header.
+   * @param header Parameters of the JWE JOSE Header.
    */
   public constructor(header: JWEHeaderParams)
 
@@ -195,13 +195,13 @@ export class JsonWebEncryptionHeader
 
     this.checkHeader(header)
 
-    Object.assign(this, Objects.removeNullishValues(header))
+    Object.assign(this, removeNullishValues(header))
   }
 
   /**
    * Validates the parameters of the provided JWE JOSE Header.
    *
-   * @param header - JWE JOSE Header to be validated.
+   * @param header JWE JOSE Header to be validated.
    */
   protected checkHeader(header: Partial<JWEHeaderParams>): void {
     if ('enc' in header && typeof header.enc !== 'string') {

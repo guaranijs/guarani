@@ -1,4 +1,4 @@
-import { Base64Url } from '@guarani/utils'
+import { base64UrlDecode } from '@guarani/utils'
 
 import { JWE_ALGORITHMS } from '../../../../lib/jwe/algorithms/alg'
 import { RsaKey } from '../../../../lib/jwk'
@@ -15,9 +15,9 @@ describe('JWE RSA1_5 Key Wrapping Algorithm', () => {
 
     expect(ek).toEqual(expect.any(String))
 
-    await expect(
-      alg.unwrap(Base64Url.decode(ek), key, header)
-    ).resolves.toEqual(cek)
+    await expect(alg.unwrap(base64UrlDecode(ek), key, header)).resolves.toEqual(
+      cek
+    )
   })
 })
 
@@ -28,9 +28,9 @@ describe('JWE RSA-OAEP Key Wrapping Algorithm', () => {
 
     expect(ek).toEqual(expect.any(String))
 
-    await expect(
-      alg.unwrap(Base64Url.decode(ek), key, header)
-    ).resolves.toEqual(cek)
+    await expect(alg.unwrap(base64UrlDecode(ek), key, header)).resolves.toEqual(
+      cek
+    )
   })
 })
 
@@ -41,9 +41,9 @@ describe('JWE RSA-OAEP-256 Key Wrapping Algorithm', () => {
 
     expect(ek).toEqual(expect.any(String))
 
-    await expect(
-      alg.unwrap(Base64Url.decode(ek), key, header)
-    ).resolves.toEqual(cek)
+    await expect(alg.unwrap(base64UrlDecode(ek), key, header)).resolves.toEqual(
+      cek
+    )
   })
 })
 
@@ -54,9 +54,9 @@ describe('JWE RSA-OAEP-384 Key Wrapping Algorithm', () => {
 
     expect(ek).toEqual(expect.any(String))
 
-    await expect(
-      alg.unwrap(Base64Url.decode(ek), key, header)
-    ).resolves.toEqual(cek)
+    await expect(alg.unwrap(base64UrlDecode(ek), key, header)).resolves.toEqual(
+      cek
+    )
   })
 })
 
@@ -67,8 +67,8 @@ describe('JWE RSA-OAEP-512 Key Wrapping Algorithm', () => {
 
     expect(ek).toEqual(expect.any(String))
 
-    await expect(
-      alg.unwrap(Base64Url.decode(ek), key, header)
-    ).resolves.toEqual(cek)
+    await expect(alg.unwrap(base64UrlDecode(ek), key, header)).resolves.toEqual(
+      cek
+    )
   })
 })

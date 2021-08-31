@@ -1,4 +1,9 @@
-import { Dict, Objects, OneOrMany } from '@guarani/utils'
+import {
+  deepEquals,
+  Dict,
+  OneOrMany,
+  removeNullishValues
+} from '@guarani/utils'
 
 import {
   ExpiredToken,
@@ -51,19 +56,25 @@ export class JsonWebTokenClaims implements JWTClaims {
    */
   public readonly jti?: string
 
+  /**
+   * Instantiates a new JSON Web Token Claims for usage with JSON Web Tokens.
+   *
+   * @param claims Defines the claims of the JSON Web Token.
+   * @param options Validation options for the claims.
+   */
   public constructor(
     claims: JsonWebTokenClaims,
     options?: Dict<JWTClaimOptions>
   )
 
-  public constructor(claims: JWTClaims, options?: Dict<JWTClaimOptions>)
-
   /**
    * Instantiates a new JSON Web Token Claims for usage with JSON Web Tokens.
    *
-   * @param claims - Defines the claims of the JSON Web Token.
-   * @param options - Validation options for the claims.
+   * @param claims Defines the claims of the JSON Web Token.
+   * @param options Validation options for the claims.
    */
+  public constructor(claims: JWTClaims, options?: Dict<JWTClaimOptions>)
+
   public constructor(
     claims: JsonWebTokenClaims | JWTClaims,
     options?: Dict<JWTClaimOptions>
@@ -77,14 +88,14 @@ export class JsonWebTokenClaims implements JWTClaims {
     this.validateClaimsTypes(claims)
     this.validateClaimsOptions(claims, options)
 
-    Object.assign(this, Objects.removeNullishValues(claims))
+    Object.assign(this, removeNullishValues(claims))
   }
 
   /**
    * Validates the type of each present claim and their semantic values
-   * according to the {@link https://tools.ietf.org/html/rfc7519|RFC 7519}.
+   * according to {@link https://tools.ietf.org/html/rfc7519 RFC 7519}.
    *
-   * @param claims - Claims of the JSON Web Token.
+   * @param claims Claims of the JSON Web Token.
    * @throws {InvalidJsonWebTokenClaim} The received claim is invalid.
    * @throws {ExpiredToken} The JSON Web Token is expired.
    * @throws {TokenNotValidYet} The token is not valid yet.
@@ -149,8 +160,8 @@ export class JsonWebTokenClaims implements JWTClaims {
   /**
    * Validates the value of each present claims based on the provided options.
    *
-   * @param claims - Claims of the JSON Web Token.
-   * @param options - Validation options for the claims.
+   * @param claims Claims of the JSON Web Token.
+   * @param options Validation options for the claims.
    * @throws {InvalidJsonWebTokenClaim} A claim does not conform to its options.
    */
   private validateClaimsOptions(
@@ -166,7 +177,7 @@ export class JsonWebTokenClaims implements JWTClaims {
 
       if (
         'value' in option &&
-        !Objects.equals(value, option.value, { sortArrays: true })
+        !deepEquals(value, option.value, { sortArrays: true })
       ) {
         throw new InvalidJsonWebTokenClaim(
           `Mismatching expected value for claim "${claim}".`

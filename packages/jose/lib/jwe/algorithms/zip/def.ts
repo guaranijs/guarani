@@ -18,7 +18,7 @@ class DEFCompression extends JWECompression {
   /**
    * Compresses the plaintext before encryption.
    *
-   * @param plaintext - Plaintext to be compressed.
+   * @param plaintext Plaintext to be compressed.
    * @returns Compressed plaintext.
    */
   public async compress(plaintext: Buffer): Promise<Buffer> {
@@ -28,7 +28,7 @@ class DEFCompression extends JWECompression {
   /**
    * Decompresses a compressed plaintext after decryption.
    *
-   * @param plaintext - Compressed plaintext to be decompressed.
+   * @param plaintext Compressed plaintext to be decompressed.
    * @returns Decompressed plaintext.
    */
   public async decompress(plaintext: Buffer): Promise<Buffer> {

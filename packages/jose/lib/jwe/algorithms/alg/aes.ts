@@ -1,4 +1,4 @@
-import { Base64Url } from '@guarani/utils'
+import { base64UrlEncode } from '@guarani/utils'
 
 import { InvalidJsonWebEncryption, JoseError } from '../../../exceptions'
 import { OctKey } from '../../../jwk'
@@ -18,7 +18,7 @@ class AESAlgorithm extends JWEAlgorithm {
   /**
    * Instantiates a new AES Algorithm to wrap and unwrap a Content Encryption Key.
    *
-   * @param algorithm - Name of the algorithm.
+   * @param algorithm Name of the algorithm.
    */
   public constructor(protected readonly algorithm: string) {
     super(algorithm)
@@ -30,8 +30,8 @@ class AESAlgorithm extends JWEAlgorithm {
    * Generates a new CEK based on the provided JWE Content Encryption Algorithm
    * and wraps it using the provided JSON Web Key.
    *
-   * @param cek - Content Encryption Key used to encrypt the Plaintext.
-   * @param key - JWK used to wrap the generated CEK.
+   * @param cek Content Encryption Key used to encrypt the Plaintext.
+   * @param key JWK used to wrap the generated CEK.
    * @returns CEK generated and Encrypted CEK.
    */
   public async wrap(cek: Buffer, key: OctKey): Promise<WrappedKey> {
@@ -41,15 +41,15 @@ class AESAlgorithm extends JWEAlgorithm {
       throw new JoseError('Invalid key size.')
     }
 
-    return { ek: Base64Url.encode(wrap(cek, key)) }
+    return { ek: base64UrlEncode(wrap(cek, key)) }
   }
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param enc - JWE Content Encryption of the JSON Web Encryption Token.
-   * @param ek - Encrypted CEK of the JSON Web Encryption Token.
-   * @param key - JSON Web Key used to unwrap the Encrypted CEK.
+   * @param enc JWE Content Encryption of the JSON Web Encryption Token.
+   * @param ek Encrypted CEK of the JSON Web Encryption Token.
+   * @param key JSON Web Key used to unwrap the Encrypted CEK.
    * @throws {InvalidJsonWebEncryption} Could not unwrap the Encrypted CEK.
    * @returns Unwrapped Content Encryption Key.
    */

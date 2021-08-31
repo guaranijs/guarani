@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { Dict } from '@guarani/utils'
+
 import { JsonWebKey } from '../../lib/jwk'
 import { SupportedHash } from '../../lib/types'
 

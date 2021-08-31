@@ -1,4 +1,4 @@
-import { Base64Url } from '@guarani/utils'
+import { base64UrlDecode, base64UrlEncode } from '@guarani/utils'
 
 import { createPrivateKey, createPublicKey, sign, verify } from 'crypto'
 
@@ -19,9 +19,9 @@ class ECDSAAlgorithm extends JWSAlgorithm {
   /**
    * Instantiates a new ECDSA Algorithm to sign and verify the messages.
    *
-   * @param hash - Hash algorithm used to sign and verify the messages.
-   * @param algorithm - Name of the algorithm.
-   * @param curve - Curve to be used by the algorithm.
+   * @param hash Hash algorithm used to sign and verify the messages.
+   * @param algorithm  Name of the algorithm.
+   * @param curve Curve to be used by the algorithm.
    */
   public constructor(
     protected readonly hash: SupportedHash,
@@ -34,8 +34,8 @@ class ECDSAAlgorithm extends JWSAlgorithm {
   /**
    * Signs the provided message using ECDSA.
    *
-   * @param message - Message to be signed.
-   * @param key - Key used to sign the message.
+   * @param message Message to be signed.
+   * @param key Key used to sign the message.
    * @returns Base64Url encoded signature.
    */
   public async sign(message: Buffer, key: EcKey): Promise<string> {
@@ -43,15 +43,15 @@ class ECDSAAlgorithm extends JWSAlgorithm {
 
     const privateKey = createPrivateKey(key.export('private', 'pem', 'sec1'))
 
-    return Base64Url.encode(sign(this.hash, message, privateKey))
+    return base64UrlEncode(sign(this.hash, message, privateKey))
   }
 
   /**
    * Verifies the signature against a message using ECDSA.
    *
-   * @param signature - Signature to be matched against the message.
-   * @param message - Message to be matched against the signature.
-   * @param key - Key used to verify the signature.
+   * @param signature Signature to be matched against the message.
+   * @param message Message to be matched against the signature.
+   * @param key Key used to verify the signature.
    * @throws {InvalidSignature} The signature does not match the message.
    */
   public async verify(
@@ -63,7 +63,7 @@ class ECDSAAlgorithm extends JWSAlgorithm {
 
     const publicKey = createPublicKey(key.export('public', 'pem'))
 
-    if (!verify(this.hash, message, publicKey, Base64Url.decode(signature))) {
+    if (!verify(this.hash, message, publicKey, base64UrlDecode(signature))) {
       throw new InvalidSignature()
     }
   }
@@ -71,7 +71,7 @@ class ECDSAAlgorithm extends JWSAlgorithm {
   /**
    * Checks if a key can be used by the requesting algorithm.
    *
-   * @param key - Key to be checked.
+   * @param key Key to be checked.
    * @throws {InvalidKey} The provided JSON Web Key is invalid.
    */
   protected checkKey(key: EcKey): void {

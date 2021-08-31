@@ -1,4 +1,4 @@
-import { Base64Url } from '@guarani/utils'
+import { base64UrlBufferLength, base64UrlEncode } from '@guarani/utils'
 
 import { createHmac, createSecretKey } from 'crypto'
 
@@ -19,9 +19,9 @@ class HMACAlgorithm extends JWSAlgorithm {
   /**
    * Instantiates a new HMAC Algorithm to sign and verify the messages.
    *
-   * @param hash - Hash algorithm used to sign and verify the messages.
-   * @param algorithm - Name of the algorithm.
-   * @param keySize - Minimum buffer size in bytes of the secret
+   * @param hash Hash algorithm used to sign and verify the messages.
+   * @param algorithm Name of the algorithm.
+   * @param keySize Minimum buffer size in bytes of the secret
    * accepted by the algorithm.
    */
   public constructor(
@@ -35,8 +35,8 @@ class HMACAlgorithm extends JWSAlgorithm {
   /**
    * Signs the provided message using HMAC.
    *
-   * @param message - Message to be signed.
-   * @param key - Key used to sign the message.
+   * @param message Message to be signed.
+   * @param key Key used to sign the message.
    * @returns Base64Url encoded signature.
    */
   public async sign(message: Buffer, key: OctKey): Promise<string> {
@@ -45,15 +45,15 @@ class HMACAlgorithm extends JWSAlgorithm {
     const secretKey = createSecretKey(key.export('binary'))
     const signature = createHmac(this.hash, secretKey).update(message).digest()
 
-    return Base64Url.encode(signature)
+    return base64UrlEncode(signature)
   }
 
   /**
    * Verifies the signature against a message using HMAC.
    *
-   * @param signature - Signature to be matched against the message.
-   * @param message - Message to be matched against the signature.
-   * @param key - Key used to verify the signature.
+   * @param signature Signature to be matched against the message.
+   * @param message Message to be matched against the signature.
+   * @param key Key used to verify the signature.
    * @throws {InvalidSignature} The signature does not match the message.
    */
   public async verify(
@@ -71,13 +71,13 @@ class HMACAlgorithm extends JWSAlgorithm {
   /**
    * Checks if a key can be used by the requesting algorithm.
    *
-   * @param key - Key to be checked.
+   * @param key Key to be checked.
    * @throws {InvalidKey} The provided JSON Web Key is invalid.
    */
   protected checkKey(key: OctKey): void {
     super.checkKey(key)
 
-    if (Base64Url.bufferLength(key.k) < this.keySize) {
+    if (base64UrlBufferLength(key.k) < this.keySize) {
       throw new InvalidKey(`The secret MUST be AT LEAST ${this.keySize} bytes.`)
     }
   }

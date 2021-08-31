@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { createPrivateKey, createPublicKey } from 'crypto'
 
 import { RsaKey, RsaKeyParams } from '../../lib/jwk/algorithms'

@@ -1,4 +1,4 @@
-import { Base64Url } from '@guarani/utils'
+import { base64UrlEncode } from '@guarani/utils'
 
 import {
   InvalidJoseHeader,
@@ -154,10 +154,10 @@ describe('JSON Web Signature serializeFlattened()', () => {
     await expect(
       jws.serializeFlattened(key)
     ).resolves.toMatchObject<JWSFlattenedSerialization>({
-      payload: Base64Url.encode(payload),
+      payload: base64UrlEncode(payload),
       signature: expect.any(String),
       header: jsonHeader.unprotectedHeader,
-      protected: Base64Url.encode(
+      protected: base64UrlEncode(
         Buffer.from(JSON.stringify(jsonHeader.protectedHeader))
       )
     })

@@ -7,7 +7,7 @@ import {
   ObjectId,
   Sequence
 } from '@guarani/asn1'
-import { Base64Url } from '@guarani/utils'
+import { base64UrlDecodeInt, base64UrlEncodeInt } from '@guarani/utils'
 
 import { InvalidKey } from '../../../exceptions'
 import { JsonWebKeyParams } from '../../jsonwebkey'
@@ -16,16 +16,16 @@ import { RsaKey } from './rsa.key'
 /**
  * Parses a PKCS#1 encoded RSA Public Key.
  *
- * @param decoder - Decoder of the raw key.
- * @param options - Optional JSON Web Key Parameters.
+ * @param decoder Decoder of the raw key.
+ * @param options Optional JSON Web Key Parameters.
  * @returns Instance of an RsaKey.
  */
 export function decodePublicPkcs1(
   decoder: Decoder,
   options?: JsonWebKeyParams
 ): RsaKey {
-  const n = Base64Url.encodeInt(decoder.integer())
-  const e = Base64Url.encodeInt(decoder.integer())
+  const n = base64UrlEncodeInt(decoder.integer())
+  const e = base64UrlEncodeInt(decoder.integer())
 
   return new RsaKey({ n, e }, options)
 }
@@ -33,8 +33,8 @@ export function decodePublicPkcs1(
 /**
  * Parses a X.509 SubjectPublicKeyInfo encoded RSA Public Key.
  *
- * @param decoder - Decoder of the raw key.
- * @param options - Optional JSON Web Key Parameters.
+ * @param decoder Decoder of the raw key.
+ * @param options Optional JSON Web Key Parameters.
  * @returns Instance of an RsaKey.
  */
 export function decodePublicX509(
@@ -59,13 +59,13 @@ export function decodePublicX509(
 /**
  * Encodes the provided key into a PKCS#1 ASN.1 Abstract Syntax Tree.
  *
- * @param key - Key to be encoded.
+ * @param key Key to be encoded.
  * @returns PKCS#1 ASN.1 Abstract Syntax Tree
  */
 export function encodePublicPkcs1(key: RsaKey): Node {
   return new Sequence(
-    new Integer(Base64Url.decodeInt(key.n)),
-    new Integer(Base64Url.decodeInt(key.e))
+    new Integer(base64UrlDecodeInt(key.n)),
+    new Integer(base64UrlDecodeInt(key.e))
   )
 }
 
@@ -73,7 +73,7 @@ export function encodePublicPkcs1(key: RsaKey): Node {
  * Encodes the provided key into a X.509 SubjectPublicKeyInfo
  * ASN.1 Abstract Syntax Tree.
  *
- * @param key - Key to be encoded.
+ * @param key Key to be encoded.
  * @returns X.509 SubjectPublicKeyInfo ASN.1 Abstract Syntax Tree
  */
 export function encodePublicX509(key: RsaKey): Node {

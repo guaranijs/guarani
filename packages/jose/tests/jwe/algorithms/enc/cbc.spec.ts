@@ -1,4 +1,4 @@
-import { Base64Url } from '@guarani/utils'
+import { base64UrlDecode } from '@guarani/utils'
 
 import { JWE_ENCRYPTIONS } from '../../../../lib/jwe/algorithms/enc'
 
@@ -17,10 +17,10 @@ describe('JWE A128CBC-HS256 Content Encryption Algorithm', () => {
 
     await expect(
       alg.decrypt(
-        Base64Url.decode(ciphertext),
+        base64UrlDecode(ciphertext),
         aad,
         iv,
-        Base64Url.decode(tag),
+        base64UrlDecode(tag),
         key
       )
     ).resolves.toEqual(plaintext)
@@ -39,10 +39,10 @@ describe('JWE A192CBC-HS384 Content Encryption Algorithm', () => {
 
     await expect(
       alg.decrypt(
-        Base64Url.decode(ciphertext),
+        base64UrlDecode(ciphertext),
         aad,
         iv,
-        Base64Url.decode(tag),
+        base64UrlDecode(tag),
         key
       )
     ).resolves.toEqual(plaintext)
@@ -61,10 +61,10 @@ describe('JWE A256CBC-HS512 Content Encryption Algorithm', () => {
 
     await expect(
       alg.decrypt(
-        Base64Url.decode(ciphertext),
+        base64UrlDecode(ciphertext),
         aad,
         iv,
-        Base64Url.decode(tag),
+        base64UrlDecode(tag),
         key
       )
     ).resolves.toEqual(plaintext)

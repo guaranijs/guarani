@@ -1,4 +1,4 @@
-import { Objects } from '@guarani/utils'
+import { removeNullishValues } from '@guarani/utils'
 
 import { InvalidKey } from '../exceptions'
 
@@ -114,7 +114,7 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
   /**
    * Signature of the Constructor of a JSON Web Key.
    *
-   * @param params - Parameters of the key.
+   * @param params Parameters of the key.
    */
   public constructor(params: JsonWebKeyParams = {}) {
     if (params.use && typeof params.use !== 'string') {
@@ -179,19 +179,19 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
       throw new InvalidKey('Unsupported parameter "x5t#256".')
     }
 
-    Object.assign(this, Objects.removeNullishValues<JsonWebKeyParams>(params))
+    Object.assign(this, removeNullishValues<JsonWebKeyParams>(params))
   }
 
   /**
    * Generates a new JSON Web Key.
    *
-   * @param param - Parameter used to generate the JSON Web Key.
-   * @param options - Optional JSON Web Key Parameters.
-   * @returns - Generated JSON Web Key.
+   * @param param Parameter used to generate the JSON Web Key.
+   * @param options Optional JSON Web Key Parameters.
+   * @returns Generated JSON Web Key.
    */
   public static generate(
-    param: any,
-    options?: JsonWebKeyParams
+    param: any, // eslint-disable-line
+    options?: JsonWebKeyParams // eslint-disable-line
   ): Promise<JsonWebKey> {
     throw new Error('Cannot call abstract static method "generate".')
   }
@@ -199,13 +199,13 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
   /**
    * Parses a raw key into a JSON Web Key.
    *
-   * @param data - Data to be parsed.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param data Data to be parsed.
+   * @param options Optional JSON Web Key Parameters.
    * @returns Parsed JSON Web Key.
    */
   public static parse(
-    data: Buffer | string,
-    options?: JsonWebKeyParams
+    data: Buffer | string, // eslint-disable-line
+    options?: JsonWebKeyParams // eslint-disable-line
   ): JsonWebKey {
     throw new Error('Cannot call abstract static method "parse".')
   }
@@ -213,7 +213,7 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
   /**
    * Exports the data of the key into an encoded string or bytes array.
    *
-   * @param params - Parameters specifying the exportation of the key.
+   * @param params Parameters specifying the exportation of the key.
    * @returns Encoded key parameters.
    */
   public abstract export(...params: any[]): Buffer | string

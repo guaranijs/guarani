@@ -1,6 +1,11 @@
-import { Base64Url } from '@guarani/utils'
+import {
+  base64toBase64Url,
+  base64UrlDecode,
+  base64UrlEncode,
+  base64UrltoBase64
+} from '@guarani/utils'
 
-import { createSecretKey, randomBytes, KeyObject } from 'crypto'
+import { randomBytes } from 'crypto'
 import { promisify } from 'util'
 
 import { InvalidKey } from '../../exceptions'
@@ -41,8 +46,8 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
   /**
    * Instantiates an OctKey based on the provided parameters.
    *
-   * @param key - Parameters of the key.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param key Parameters of the key.
+   * @param options Optional JSON Web Key Parameters.
    */
   public constructor(key: OctKeyParams, options: JsonWebKeyParams = {}) {
     const params: OctKeyParams = { ...key, ...options }
@@ -64,19 +69,10 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
   }
 
   /**
-   * Returns an instance of the native NodeJS Secret Key.
-   *
-   * @returns Native Secret Key Object.
-   */
-  private get secretKey(): KeyObject {
-    return createSecretKey(Base64Url.decode(this.k))
-  }
-
-  /**
    * Creates a new OctKey.
    *
-   * @param size - Size of the secret in bytes.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param size Size of the secret in bytes.
+   * @param options Optional JSON Web Key Parameters.
    * @returns Instance of an OctKey.
    */
   public static async generate(
@@ -91,7 +87,7 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
       throw new InvalidKey('Invalid key size.')
     }
 
-    const secret = Base64Url.encode(await randomBytesAsync(size))
+    const secret = base64UrlEncode(await randomBytesAsync(size))
 
     return new OctKey({ k: secret }, options)
   }
@@ -99,8 +95,8 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
   /**
    * Parses a Binary encoded Secret.
    *
-   * @param secret - Binary representation of the Secret.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param secret Binary representation of the Secret.
+   * @param options Optional JSON Web Key Parameters.
    * @returns Instance of an OctKey.
    */
   public static parse(secret: Buffer, options?: JsonWebKeyParams): OctKey
@@ -108,8 +104,8 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
   /**
    * Parses a Base64 encoded Secret.
    *
-   * @param secret - Base64 representation of the Secret.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param secret Base64 representation of the Secret.
+   * @param options Optional JSON Web Key Parameters.
    * @returns Instance of an OctKey.
    */
   public static parse(secret: string, options?: JsonWebKeyParams): OctKey
@@ -123,8 +119,8 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
     }
 
     const parsedSecret = Buffer.isBuffer(secret)
-      ? Base64Url.encode(secret)
-      : Base64Url.fromBase64(secret)
+      ? base64UrlEncode(secret)
+      : base64toBase64Url(secret)
 
     return new OctKey({ k: parsedSecret }, options)
   }
@@ -132,7 +128,7 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
   /**
    * Returns a Buffer object of the secret.
    *
-   * @param format - Format of the exported secret.
+   * @param format Format of the exported secret.
    * @returns Binary encoded secret.
    */
   public export(format: 'binary'): Buffer
@@ -140,7 +136,7 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
   /**
    * Returns a Base64 encoded string of the secret.
    *
-   * @param format - Format of the exported secret.
+   * @param format Format of the exported secret.
    * @returns Base64 encoded secret.
    */
   public export(format: 'base64'): string
@@ -151,7 +147,7 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
     }
 
     return format === 'binary'
-      ? Base64Url.decode(this.k)
-      : Base64Url.toBase64(this.k)
+      ? base64UrlDecode(this.k)
+      : base64UrltoBase64(this.k)
   }
 }

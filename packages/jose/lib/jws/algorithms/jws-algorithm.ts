@@ -20,8 +20,8 @@ export abstract class JWSAlgorithm {
   /**
    * Instantiates a new JWS Algorithm to sign and verify the messages.
    *
-   * @param hash - Hash algorithm used to sign and verify the messages.
-   * @param algorithm - Name of the algorithm.
+   * @param hash Hash algorithm used to sign and verify the messages.
+   * @param algorithm Name of the algorithm.
    */
   public constructor(
     protected readonly hash: SupportedHash,
@@ -38,8 +38,8 @@ export abstract class JWSAlgorithm {
   /**
    * Signs a message with the given key.
    *
-   * @param message - Message to be signed.
-   * @param key - JWK used to sign the message.
+   * @param message Message to be signed.
+   * @param key JWK used to sign the message.
    * @returns Base64Url string representation of the signed message.
    */
   public abstract sign(message: Buffer, key?: JsonWebKey): Promise<string>
@@ -47,9 +47,9 @@ export abstract class JWSAlgorithm {
   /**
    * Matches a signature against a message with the given key.
    *
-   * @param signature - Signature to be matched against the message.
-   * @param message - Message to be matched against the signature.
-   * @param key - Key used to verify the signature.
+   * @param signature Signature to be matched against the message.
+   * @param message Message to be matched against the signature.
+   * @param key Key used to verify the signature.
    * @throws {InvalidSignature} The signature does not match the message.
    */
   public abstract verify(
@@ -61,7 +61,7 @@ export abstract class JWSAlgorithm {
   /**
    * Checks if a key can be used by the requesting algorithm.
    *
-   * @param key - Key to be checked.
+   * @param key Key to be checked.
    * @throws {InvalidKey} The provided JSON Web Key is invalid.
    */
   protected checkKey(key: JsonWebKey): void {

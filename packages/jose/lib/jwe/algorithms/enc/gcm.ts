@@ -1,4 +1,4 @@
-import { Base64Url } from '@guarani/utils'
+import { base64UrlEncode } from '@guarani/utils'
 
 import { createCipheriv, createDecipheriv, CipherGCMTypes } from 'crypto'
 
@@ -29,7 +29,7 @@ class AESGCMEncryption extends JWEEncryption {
    * Instantiates a new AES Galois/Counter Mode Encryption
    * to encrypt and decrypt a Plaintext.
    *
-   * @param algorithm - Name of the algorithm.
+   * @param algorithm Name of the algorithm.
    */
   public constructor(protected readonly algorithm: string) {
     super(algorithm)
@@ -40,10 +40,10 @@ class AESGCMEncryption extends JWEEncryption {
   /**
    * Encrypts the provided plaintext.
    *
-   * @param plaintext - Plaintext to be encrypted.
-   * @param aad - Additional Authenticated Data.
-   * @param iv - Initialization Vector.
-   * @param key - Content Encryption Key used to encrypt the plaintext.
+   * @param plaintext Plaintext to be encrypted.
+   * @param aad Additional Authenticated Data.
+   * @param iv Initialization Vector.
+   * @param key Content Encryption Key used to encrypt the plaintext.
    * @returns Resulting Ciphertext and Authentication Tag.
    */
   public async encrypt(
@@ -66,19 +66,19 @@ class AESGCMEncryption extends JWEEncryption {
     const tag = cipher.getAuthTag()
 
     return {
-      ciphertext: Base64Url.encode(ciphertext),
-      tag: Base64Url.encode(tag)
+      ciphertext: base64UrlEncode(ciphertext),
+      tag: base64UrlEncode(tag)
     }
   }
 
   /**
    * Decrypts the provided ciphertext back to its original Buffer representaion.
    *
-   * @param ciphertext - Ciphertext to be decrypted.
-   * @param aad - Additional Authenticated Data.
-   * @param iv - Initialization Vector.
-   * @param tag - Authentication Tag.
-   * @param key - Content Encryption Key used to decrypt the plaintext.
+   * @param ciphertext Ciphertext to be decrypted.
+   * @param aad Additional Authenticated Data.
+   * @param iv Initialization Vector.
+   * @param tag Authentication Tag.
+   * @param key Content Encryption Key used to decrypt the plaintext.
    * @throws {InvalidJsonWebEncryption} Could not decrypt the ciphertext.
    * @returns Buffer representation of the decrypted plaintext.
    */

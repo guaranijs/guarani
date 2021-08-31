@@ -8,7 +8,12 @@ import {
   OctetString,
   Sequence
 } from '@guarani/asn1'
-import { Base64Url, Primitives } from '@guarani/utils'
+import {
+  base64UrlDecodeInt,
+  base64UrlEncodeInt,
+  fromBuffer,
+  toBuffer
+} from '@guarani/utils'
 
 import { InvalidKey } from '../../../exceptions'
 import { JsonWebKeyParams } from '../../jsonwebkey'
@@ -23,10 +28,10 @@ import { ELLIPTIC_CURVES, ID_EC_PUBLIC_KEY } from './_types'
  */
 export function getPaddedPrivateValue(key: EcKey): Buffer {
   const curve = ELLIPTIC_CURVES[key.crv]
-  let privateValue = Primitives.toBuffer(Base64Url.decodeInt(key.d))
+  let privateValue = toBuffer(base64UrlDecodeInt(key.d))
 
   while (privateValue.length < curve.length) {
-    privateValue = Buffer.concat([Primitives.toBuffer(0x00), privateValue])
+    privateValue = Buffer.concat([toBuffer(0x00), privateValue])
   }
 
   return privateValue
@@ -35,8 +40,8 @@ export function getPaddedPrivateValue(key: EcKey): Buffer {
 /**
  * Parses a SEC.1 encoded Elliptic Curve Private Key.
  *
- * @param decoder - Decoder of the raw key.
- * @param options - Optional JSON Web Key Parameters.
+ * @param decoder Decoder of the raw key.
+ * @param options Optional JSON Web Key Parameters.
  * @returns Instance of an EcKey.
  */
 export function decodePrivateSec1(
@@ -64,11 +69,9 @@ export function decodePrivateSec1(
   const left = publicKey.data.subarray(0, curve.length)
   const right = publicKey.data.subarray(curve.length)
 
-  const x = Base64Url.encodeInt(Primitives.fromBuffer(left, 'integer'))
-  const y = Base64Url.encodeInt(Primitives.fromBuffer(right, 'integer'))
-  const d = Base64Url.encodeInt(
-    Primitives.fromBuffer(privateKey.data, 'integer')
-  )
+  const x = base64UrlEncodeInt(fromBuffer(left, 'integer'))
+  const y = base64UrlEncodeInt(fromBuffer(right, 'integer'))
+  const d = base64UrlEncodeInt(fromBuffer(privateKey.data, 'integer'))
 
   return new EcKey({ crv: curve.id, x, y, d }, options)
 }
@@ -76,8 +79,8 @@ export function decodePrivateSec1(
 /**
  * Parses a PKCS#8 encoded Elliptic Curve Private Key.
  *
- * @param decoder - Decoder of the raw key.
- * @param options - Optional JSON Web Key Parameters.
+ * @param decoder Decoder of the raw key.
+ * @param options Optional JSON Web Key Parameters.
  * @returns Instance of an EcKey.
  */
 export function decodePrivatePkcs8(
@@ -120,11 +123,9 @@ export function decodePrivatePkcs8(
   const left = publicKey.data.subarray(0, curve.length)
   const right = publicKey.data.subarray(curve.length)
 
-  const x = Base64Url.encodeInt(Primitives.fromBuffer(left, 'integer'))
-  const y = Base64Url.encodeInt(Primitives.fromBuffer(right, 'integer'))
-  const d = Base64Url.encodeInt(
-    Primitives.fromBuffer(privateValue.data, 'integer')
-  )
+  const x = base64UrlEncodeInt(fromBuffer(left, 'integer'))
+  const y = base64UrlEncodeInt(fromBuffer(right, 'integer'))
+  const d = base64UrlEncodeInt(fromBuffer(privateValue.data, 'integer'))
 
   return new EcKey({ crv: curve.id, x, y, d }, options)
 }
@@ -132,7 +133,7 @@ export function decodePrivatePkcs8(
 /**
  * Encodes the provided key into a SEC.1 ASN.1 Abstract Syntax Tree.
  *
- * @param key - Key to be encoded.
+ * @param key Key to be encoded.
  * @returns SEC.1 ASN.1 Abstract Syntax Tree
  */
 export function encodePrivateSec1(key: EcKey): Node {
@@ -151,7 +152,7 @@ export function encodePrivateSec1(key: EcKey): Node {
 /**
  * Encodes the provided key into a PKCS#8 ASN.1 Abstract Syntax Tree.
  *
- * @param key - Key to be encoded.
+ * @param key Key to be encoded.
  * @returns PKCS#8 ASN.1 Abstract Syntax Tree
  */
 export function encodePrivatePkcs8(key: EcKey): Node {

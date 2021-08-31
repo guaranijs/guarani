@@ -7,14 +7,9 @@ import {
   PEMDecoder,
   PEMEncoder
 } from '@guarani/asn1'
-import { Base64Url } from '@guarani/utils'
+import { base64UrlBufferLength } from '@guarani/utils'
 
-import {
-  createPrivateKey,
-  createPublicKey,
-  generateKeyPair,
-  KeyObject
-} from 'crypto'
+import { generateKeyPair } from 'crypto'
 import { promisify } from 'util'
 
 import { InvalidKey } from '../../../exceptions'
@@ -141,8 +136,8 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
   /**
    * Instantiantes a new RSA Key based on the provided parameters.
    *
-   * @param key - Parameters of the key.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param key Parameters of the key.
+   * @param options Optional JSON Web Key Parameters.
    */
   public constructor(key: RsaKeyParams, options: JsonWebKeyParams = {}) {
     const params: RsaKeyParams = { ...key, ...options }
@@ -159,7 +154,7 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
       throw new InvalidKey('Invalid parameter "n".')
     }
 
-    if (Base64Url.bufferLength(params.n) < 256) {
+    if (base64UrlBufferLength(params.n) < 256) {
       throw new InvalidKey('The modulus MUST have AT LEAST 2048 bits.')
     }
 
@@ -206,28 +201,10 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
   }
 
   /**
-   * Returns an instance of the NodeJS native Public Key.
-   *
-   * @returns Native Public Key Object.
-   */
-  private get publicKey(): KeyObject {
-    return createPublicKey(this.export('public', 'pem', 'pkcs1'))
-  }
-
-  /**
-   * Returns an instance of the NodeJS native private key.
-   *
-   * @returns Native Private Key Object.
-   */
-  private get privateKey(): KeyObject {
-    return createPrivateKey(this.export('private', 'pem', 'pkcs1'))
-  }
-
-  /**
    * Creates a new RSA Key.
    *
-   * @param modulus - Length of the Modulus of the Key in bits.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param modulus Length of the Modulus of the Key in bits.
+   * @param options Optional JSON Web Key Parameters.
    * @returns Instance of an RsaKey.
    */
   public static async generate(
@@ -259,8 +236,8 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
   /**
    * Parses a DER encoded RSA Key.
    *
-   * @param der - DER representation of the RSA Key.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param der DER representation of the RSA Key.
+   * @param options Optional JSON Web Key Parameters.
    * @returns Instance of an RsaKey.
    */
   public static parse(der: Buffer, options?: JsonWebKeyParams): RsaKey
@@ -268,8 +245,8 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
   /**
    * Parses a PEM encoded RSA Key.
    *
-   * @param pem - PEM representation of the RSA Key.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param pem PEM representation of the RSA Key.
+   * @param options Optional JSON Web Key Parameters.
    * @returns Instance of an RsaKey.
    */
   public static parse(pem: string, options?: JsonWebKeyParams): RsaKey
@@ -325,9 +302,9 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
    * Returns a DER representation of the Public Key
    * that only contains the parameters of the Key.
    *
-   * @param key - Defines the encoding of the Public Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Public Key.
+   * @param key Defines the encoding of the Public Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Public Key.
    * @returns DER encoded PKCS#1 RSA Public Key.
    *
    * @example
@@ -344,9 +321,9 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
    * in an X.509 SubjectPublicKeyInfo containing the Modulus
    * and the Public Exponent of the Key.
    *
-   * @param key - Defines the encoding of the Public Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Public Key.
+   * @param key Defines the encoding of the Public Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Public Key.
    * @returns DER encoded SPKI RSA Public Key.
    *
    * @example
@@ -362,9 +339,9 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
    * Returns a PEM representation of the Public Key
    * that only contains the parameters of the Key.
    *
-   * @param key - Defines the encoding of the Public Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Public Key.
+   * @param key Defines the encoding of the Public Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Public Key.
    * @returns PEM encoded PKCS#1 RSA Public Key.
    *
    * @example
@@ -383,9 +360,9 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
    * in an X.509 SubjectPublicKeyInfo containing the Modulus
    * and the Public Exponent of the Key.
    *
-   * @param key - Defines the encoding of the Public Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Public Key.
+   * @param key Defines the encoding of the Public Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Public Key.
    * @returns PEM encoded SPKI RSA Public Key.
    *
    * @example
@@ -403,9 +380,9 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
    * Returns a DER representation of the Private Key
    * that only contains the parameters of the Key.
    *
-   * @param key - Defines the encoding of the Private Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Private Key.
+   * @param key Defines the encoding of the Private Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Private Key.
    * @returns DER encoded PKCS#1 RSA Private Key.
    *
    * @example
@@ -421,9 +398,9 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
    * Returns a DER representation of the Private Key enveloped
    * in a PKCS#8 object containing all the parameters of the key.
    *
-   * @param key - Defines the encoding of the Private Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Private Key.
+   * @param key Defines the encoding of the Private Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Private Key.
    * @returns DER encoded PKCS#8 RSA Private Key.
    *
    * @example
@@ -439,9 +416,9 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
    * Returns a PEM representation of the Private Key
    * that only contains the parameters of the Key.
    *
-   * @param key - Defines the encoding of the Private Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Private Key.
+   * @param key Defines the encoding of the Private Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Private Key.
    * @returns PEM encoded PKCS#1 RSA Private Key.
    *
    * @example
@@ -459,9 +436,9 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
    * Returns a PEM representation of the Private Key enveloped
    * in a PKCS#8 object containing all the parameters of the key.
    *
-   * @param key - Defines the encoding of the Private Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Private Key.
+   * @param key Defines the encoding of the Private Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Private Key.
    * @returns PEM encoded PKCS#8 RSA Private Key.
    *
    * @example

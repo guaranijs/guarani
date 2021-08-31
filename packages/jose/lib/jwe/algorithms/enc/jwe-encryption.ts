@@ -26,7 +26,7 @@ export abstract class JWEEncryption {
   /**
    * Instantiates a new JWE Encryption to encrypt and decrypt a Plaintext.
    *
-   * @param algorithm - Name of the algorithm.
+   * @param algorithm Name of the algorithm.
    */
   public constructor(protected readonly algorithm: string) {}
 
@@ -51,7 +51,7 @@ export abstract class JWEEncryption {
   /**
    * Validates if the provided Initialization Vector is valid to the algorithm.
    *
-   * @param iv - Initialization Vector to be validated.
+   * @param iv Initialization Vector to be validated.
    */
   protected checkIV(iv: Buffer): void {
     if (iv.length * 8 !== this.IV_SIZE) {
@@ -62,7 +62,7 @@ export abstract class JWEEncryption {
   /**
    * Checks if a key can be used by the requesting algorithm.
    *
-   * @param key - Key to be checked.
+   * @param key Key to be checked.
    * @throws {InvalidJsonWebEncryption} The provided key is invalid.
    */
   protected checkKey(key: Buffer): void {
@@ -74,10 +74,10 @@ export abstract class JWEEncryption {
   /**
    * Encrypts the provided plaintext.
    *
-   * @param plaintext - Plaintext to be encrypted.
-   * @param aad - Additional Authenticated Data.
-   * @param iv - Initialization Vector.
-   * @param key - Content Encryption Key used to encrypt the plaintext.
+   * @param plaintext Plaintext to be encrypted.
+   * @param aad Additional Authenticated Data.
+   * @param iv Initialization Vector.
+   * @param key Content Encryption Key used to encrypt the plaintext.
    * @returns Resulting Ciphertext and Authentication Tag.
    */
   public abstract encrypt(
@@ -90,11 +90,11 @@ export abstract class JWEEncryption {
   /**
    * Decrypts the provided ciphertext back to its original Buffer representaion.
    *
-   * @param ciphertext - Ciphertext to be decrypted.
-   * @param aad - Additional Authenticated Data.
-   * @param iv - Initialization Vector.
-   * @param tag - Authentication Tag.
-   * @param key - Content Encryption Key used to decrypt the plaintext.
+   * @param ciphertext Ciphertext to be decrypted.
+   * @param aad Additional Authenticated Data.
+   * @param iv Initialization Vector.
+   * @param tag Authentication Tag.
+   * @param key Content Encryption Key used to decrypt the plaintext.
    * @throws {InvalidJsonWebEncryption} Could not decrypt the ciphertext.
    * @returns Buffer representation of the decrypted plaintext.
    */

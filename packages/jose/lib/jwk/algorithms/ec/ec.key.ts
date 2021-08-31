@@ -7,12 +7,7 @@ import {
   PEMEncoder
 } from '@guarani/asn1'
 
-import {
-  createPrivateKey,
-  createPublicKey,
-  generateKeyPair,
-  KeyObject
-} from 'crypto'
+import { generateKeyPair } from 'crypto'
 import { promisify } from 'util'
 
 import { InvalidKey } from '../../../exceptions'
@@ -85,8 +80,8 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
   /**
    * Instantiantes a new Elliptic Curve Key based on the provided parameters.
    *
-   * @param key - Parameters of the key.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param key Parameters of the key.
+   * @param options Optional JSON Web Key Parameters.
    */
   public constructor(key: EcKeyParams, options: JsonWebKeyParams = {}) {
     const params: EcKeyParams = { ...key, ...options }
@@ -126,28 +121,10 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
   }
 
   /**
-   * Returns an instance of the NodeJS native Public Key.
-   *
-   * @returns Native Public Key Object.
-   */
-  private get publicKey(): KeyObject {
-    return createPublicKey(this.export('public', 'pem'))
-  }
-
-  /**
-   * Returns an instance of the NodeJS native private key.
-   *
-   * @returns Native Private Key Object.
-   */
-  private get privateKey(): KeyObject {
-    return createPrivateKey(this.export('private', 'pem', 'sec1'))
-  }
-
-  /**
    * Creates a new Elliptic Curve Key.
    *
-   * @param curve - Name of the Elliptic Curve.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param curve Name of the Elliptic Curve.
+   * @param options Optional JSON Web Key Parameters.
    * @returns Instance of an EcKey.
    */
   public static async generate(
@@ -176,8 +153,8 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
   /**
    * Parses a DER encoded Elliptic Curve Key.
    *
-   * @param der - DER representation of the Elliptic Curve Key.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param der DER representation of the Elliptic Curve Key.
+   * @param options Optional JSON Web Key Parameters.
    * @returns Instance of an EcKey.
    */
   public static parse(der: Buffer, options?: JsonWebKeyParams): EcKey
@@ -185,8 +162,8 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
   /**
    * Parses a PEM encoded Elliptic Curve Key.
    *
-   * @param pem - PEM representation of the Elliptic Curve Key.
-   * @param options - Optional JSON Web Key Parameters.
+   * @param pem PEM representation of the Elliptic Curve Key.
+   * @param options Optional JSON Web Key Parameters.
    * @returns Instance of an EcKey.
    */
   public static parse(pem: string, options?: JsonWebKeyParams): EcKey
@@ -235,8 +212,8 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
    * in an X.509 SubjectPublicKeyInfo containing the Modulus
    * and the Public Exponent of the Key.
    *
-   * @param key - Defines the encoding of the Public Key.
-   * @param format - Format of the exported key.
+   * @param key Defines the encoding of the Public Key.
+   * @param format Format of the exported key.
    * @returns DER encoded SPKI Elliptic Curve Public Key.
    *
    * @example
@@ -253,8 +230,8 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
    * in an X.509 SubjectPublicKeyInfo containing the Modulus
    * and the Public Exponent of the Key.
    *
-   * @param key - Defines the encoding of the Public Key.
-   * @param format - Format of the exported key.
+   * @param key Defines the encoding of the Public Key.
+   * @param format Format of the exported key.
    * @returns PEM encoded SPKI Elliptic Curve Public Key.
    *
    * @example
@@ -272,9 +249,9 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
    * Returns a DER representation of the Private Key
    * that only contains the parameters of the Key.
    *
-   * @param key - Defines the encoding of the Private Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Private Key.
+   * @param key Defines the encoding of the Private Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Private Key.
    * @returns DER encoded SEC.1 Elliptic Curve Private Key.
    *
    * @example
@@ -290,9 +267,9 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
    * Returns a DER representation of the Private Key enveloped
    * in a PKCS#8 object containing all the parameters of the key.
    *
-   * @param key - Defines the encoding of the Private Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Private Key.
+   * @param key Defines the encoding of the Private Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Private Key.
    * @returns DER encoded PKCS#8 Elliptic Curve Private Key.
    *
    * @example
@@ -308,9 +285,9 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
    * Returns a PEM representation of the Private Key
    * that only contains the parameters of the Key.
    *
-   * @param key - Defines the encoding of the Private Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Private Key.
+   * @param key Defines the encoding of the Private Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Private Key.
    * @returns PEM encoded SEC.1 Elliptic Curve Private Key.
    *
    * @example
@@ -328,9 +305,9 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
    * Returns a PEM representation of the Private Key enveloped
    * in a PKCS#8 object containing all the parameters of the key.
    *
-   * @param key - Defines the encoding of the Private Key.
-   * @param format - Format of the exported key.
-   * @param type - ASN.1 Syntax Tree representation of the Private Key.
+   * @param key Defines the encoding of the Private Key.
+   * @param format Format of the exported key.
+   * @param type ASN.1 Syntax Tree representation of the Private Key.
    * @returns PEM encoded PKCS#8 Elliptic Curve Private Key.
    *
    * @example

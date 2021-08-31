@@ -1,4 +1,9 @@
-import { Base64Url, Objects, OneOrMany } from '@guarani/utils'
+import {
+  base64UrlDecode,
+  base64UrlEncode,
+  OneOrMany,
+  removeNullishValues
+} from '@guarani/utils'
 
 import {
   InvalidJoseHeader,
@@ -45,8 +50,8 @@ export class JsonWebSignature {
    * Instantiates a new JSON Web Signature based on the provided
    * JWS JOSE Header and payload.
    *
-   * @param header - JWS JOSE Header containing the token's meta information.
-   * @param payload - Buffer representation of the payload of the token.
+   * @param header JWS JOSE Header containing the token's meta information.
+   * @param payload Buffer representation of the payload of the token.
    */
   public constructor(header: JsonWebSignatureHeader, payload?: Buffer)
 
@@ -54,8 +59,8 @@ export class JsonWebSignature {
    * Instantiates a new JSON Web Signature based on the provided
    * JWS JOSE Headers and payload.
    *
-   * @param headers - JWS JOSE Headers containing the token's meta information.
-   * @param payload - Buffer representation of the payload of the token.
+   * @param headers JWS JOSE Headers containing the token's meta information.
+   * @param payload Buffer representation of the payload of the token.
    */
   public constructor(headers: JsonWebSignatureHeader[], payload?: Buffer)
 
@@ -88,9 +93,9 @@ export class JsonWebSignature {
    * If the JWS Algorithm `none` is expected, the JSON Web Key
    * can be **null** or **undefined**.
    *
-   * @param token - JSON Web Signature Compact Token to be decoded.
-   * @param key - JSON Web Key used to validate the signature of the Token.
-   * @param options - Options regarding the decoding of the Token.
+   * @param token JSON Web Signature Compact Token to be decoded.
+   * @param key JSON Web Key used to validate the signature of the Token.
+   * @param options Options regarding the decoding of the Token.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeCompact(
@@ -109,9 +114,9 @@ export class JsonWebSignature {
    * The algorithm specified at the header of the token
    * **MUST** match the provided algorithm, if any.
    *
-   * @param token - JSON Web Signature Compact Token to be decoded.
-   * @param keyLoader - Function used to load a JWK based on the JOSE Header.
-   * @param options - Options regarding the decoding of the Token.
+   * @param token JSON Web Signature Compact Token to be decoded.
+   * @param keyLoader Function used to load a JWK based on the JOSE Header.
+   * @param options Options regarding the decoding of the Token.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeCompact(
@@ -143,7 +148,7 @@ export class JsonWebSignature {
       const [b64Header, b64Payload, b64Signature] = splitToken
 
       const parsedHeader = JSON.parse(
-        Base64Url.decode(b64Header).toString('utf8')
+        base64UrlDecode(b64Header).toString('utf8')
       )
 
       if (Array.isArray(parsedHeader)) {
@@ -178,7 +183,7 @@ export class JsonWebSignature {
         )
       }
 
-      const payload = Base64Url.decode(b64Payload)
+      const payload = base64UrlDecode(b64Payload)
 
       return new JsonWebSignature(header, payload)
     } catch (error) {
@@ -207,9 +212,9 @@ export class JsonWebSignature {
    * If the JWS Algorithm `none` is expected, the JSON Web Key
    * can be **null** or **undefined**.
    *
-   * @param token - JSON Web Signature Flattened Token to be decoded.
-   * @param key - JSON Web Key used to validate the signature of the Token.
-   * @param options - Options regarding the decoding of the Token.
+   * @param token JSON Web Signature Flattened Token to be decoded.
+   * @param key JSON Web Key used to validate the signature of the Token.
+   * @param options Options regarding the decoding of the Token.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeFlattened(
@@ -228,9 +233,9 @@ export class JsonWebSignature {
    * The algorithm specified at the header of the token
    * **MUST** match the provided algorithm, if any.
    *
-   * @param token - JSON Web Signature Flattened Token to be decoded.
-   * @param keyLoader - Function used to load a JWK based on the JOSE Header.
-   * @param options - Options regarding the decoding of the Token.
+   * @param token JSON Web Signature Flattened Token to be decoded.
+   * @param keyLoader Function used to load a JWK based on the JOSE Header.
+   * @param options Options regarding the decoding of the Token.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeFlattened(
@@ -258,7 +263,7 @@ export class JsonWebSignature {
     options.validate ??= true
 
     try {
-      const payload = Base64Url.decode(b64Payload)
+      const payload = base64UrlDecode(b64Payload)
       const header = await JsonWebSignature.getJWSJSONHeader(
         b64Payload,
         token,
@@ -294,9 +299,9 @@ export class JsonWebSignature {
    * If the JWS Algorithm `none` is expected in a JWS JOSE Header,
    * the JSON Web Key can be **null** or **undefined**.
    *
-   * @param token - JSON Web Signature JSON Token to be decoded.
-   * @param keys - JSON Web Keys used to validate the signatures of the Token.
-   * @param options - Options regarding the decoding of the Token.
+   * @param token JSON Web Signature JSON Token to be decoded.
+   * @param keys JSON Web Keys used to validate the signatures of the Token.
+   * @param options Options regarding the decoding of the Token.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeJSON(
@@ -316,9 +321,9 @@ export class JsonWebSignature {
    * The algorithm specified at the header of the token
    * **MUST** match the provided algorithm, if any.
    *
-   * @param token - JSON Web Signature JSON Token to be decoded.
-   * @param keyLoader - Function used to load a JWK based on the JOSE Header.
-   * @param options - Options regarding the decoding of the Token.
+   * @param token JSON Web Signature JSON Token to be decoded.
+   * @param keyLoader Function used to load a JWK based on the JOSE Header.
+   * @param options Options regarding the decoding of the Token.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeJSON(
@@ -349,7 +354,7 @@ export class JsonWebSignature {
     options ??= []
 
     try {
-      const payload = Base64Url.decode(b64Payload)
+      const payload = base64UrlDecode(b64Payload)
       const awaitableHeaders = signatures.map(async (signature, i) => {
         const key =
           typeof jwkOrKeyLoader === 'function'
@@ -383,10 +388,10 @@ export class JsonWebSignature {
   /**
    * Parses a JWS JSON Signature returning the corresponding JWS JOSE Header.
    *
-   * @param b64Payload - Payload of the Signature.
-   * @param signature - JWS JSON Signature to be parsed.
-   * @param jwkOrKeyLoader - JSON Web Key or JWK Loader Function.
-   * @param options - Options regarding the decoding of the Token.
+   * @param b64Payload Payload of the Signature.
+   * @param signature JWS JSON Signature to be parsed.
+   * @param jwkOrKeyLoader JSON Web Key or JWK Loader Function.
+   * @param options Options regarding the decoding of the Token.
    * @returns Instance of a JsonWebSignatureHeader.
    */
   private static async getJWSJSONHeader(
@@ -410,7 +415,7 @@ export class JsonWebSignature {
     }
 
     const protectedHeader: JWSHeaderParams = JSON.parse(
-      Base64Url.decode(b64ProtectedHeader).toString('utf8')
+      base64UrlDecode(b64ProtectedHeader).toString('utf8')
     )
 
     const header = new JsonWebSignatureHeader({
@@ -464,7 +469,7 @@ export class JsonWebSignature {
    *
    * The resulting token is then returned to the application.
    *
-   * @param key - JSON Web Key used to sign the token.
+   * @param key JSON Web Key used to sign the token.
    * @returns Signed JSON Web Signature Compact Token.
    */
   public async serializeCompact(key?: JsonWebKey): Promise<string> {
@@ -481,8 +486,8 @@ export class JsonWebSignature {
       )
     }
 
-    const b64Header = Base64Url.encode(Buffer.from(JSON.stringify(this.header)))
-    const b64Payload = Base64Url.encode(this.payload ?? Buffer.alloc(0))
+    const b64Header = base64UrlEncode(Buffer.from(JSON.stringify(this.header)))
+    const b64Payload = base64UrlEncode(this.payload ?? Buffer.alloc(0))
 
     const alg = JWS_ALGORITHMS[this.header.alg]
 
@@ -510,7 +515,7 @@ export class JsonWebSignature {
    * }
    * ```
    *
-   * @param key - JSON Web Key used to generate the signature.
+   * @param key JSON Web Key used to generate the signature.
    * @returns JSON Web Signature Flattened Token.
    */
   public async serializeFlattened(
@@ -523,14 +528,14 @@ export class JsonWebSignature {
       )
     }
 
-    const b64Payload = Base64Url.encode(this.payload ?? Buffer.alloc(0))
+    const b64Payload = base64UrlEncode(this.payload ?? Buffer.alloc(0))
     const signature = await JsonWebSignature.serializeJSONSignature(
       this.header,
       b64Payload,
       key
     )
 
-    return Objects.removeNullishValues<JWSFlattenedSerialization>({
+    return removeNullishValues<JWSFlattenedSerialization>({
       payload: b64Payload,
       ...signature
     })
@@ -565,7 +570,7 @@ export class JsonWebSignature {
    * }
    * ```
    *
-   * @param key - JSON Web Key used to generate the signature.
+   * @param key JSON Web Key used to generate the signature.
    * @returns JSON Web Signature JSON Token.
    */
   public async serializeJSON(key: JsonWebKey): Promise<JWSJSONSerialization>
@@ -599,7 +604,7 @@ export class JsonWebSignature {
    * }
    * ```
    *
-   * @param key - List of JSON Web Keys used to generate the signatures.
+   * @param key List of JSON Web Keys used to generate the signatures.
    * @returns JSON Web Signature JSON Token.
    */
   public async serializeJSON(keys: JsonWebKey[]): Promise<JWSJSONSerialization>
@@ -607,7 +612,7 @@ export class JsonWebSignature {
   public async serializeJSON(
     jwk: OneOrMany<JsonWebKey>
   ): Promise<JWSJSONSerialization> {
-    const b64payload = Base64Url.encode(this.payload ?? Buffer.alloc(0))
+    const b64payload = base64UrlEncode(this.payload ?? Buffer.alloc(0))
 
     if (jwk == null) {
       throw new InvalidKey('The JSON Web Key parameter MUST be defined.')
@@ -638,7 +643,7 @@ export class JsonWebSignature {
       })
     )
 
-    return Objects.removeNullishValues<JWSJSONSerialization>({
+    return removeNullishValues<JWSJSONSerialization>({
       payload: b64payload,
       signatures
     })
@@ -647,9 +652,9 @@ export class JsonWebSignature {
   /**
    * Creates a JWS JSON Signature object based on the provided parameters.
    *
-   * @param header - JWS JOSE Header of the JWS JSON Signature.
-   * @param b64Payload - Base64Url Payload of the JWS JSON Signature.
-   * @param key - JSON Web Key used to sign the JWS JSON Signature.
+   * @param header JWS JOSE Header of the JWS JSON Signature.
+   * @param b64Payload Base64Url Payload of the JWS JSON Signature.
+   * @param key JSON Web Key used to sign the JWS JSON Signature.
    * @returns Serialized JWS JSON Signature.
    */
   private static async serializeJSONSignature(
@@ -663,7 +668,7 @@ export class JsonWebSignature {
       )
     }
 
-    const b64Header = Base64Url.encode(
+    const b64Header = base64UrlEncode(
       Buffer.from(JSON.stringify(header.protectedHeader) ?? '')
     )
 

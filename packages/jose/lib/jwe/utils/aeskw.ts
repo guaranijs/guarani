@@ -4,8 +4,8 @@ import { OctKey } from '../../jwk'
 /**
  * Wraps the provided CEK with the provided JSON Web Key.
 
- * @param cek - Content Encryption Key.
- * @param key - Wrapping Key.
+ * @param cek Content Encryption Key.
+ * @param key Wrapping Key.
  * @returns Wrapped Content Encryption Key.
  */
 export function wrap(cek: Buffer, key: OctKey): Buffer {
@@ -21,8 +21,8 @@ export function wrap(cek: Buffer, key: OctKey): Buffer {
 /**
  * Unwraps the provided EK with the provided JSON Web key.
  *
- * @param ek - Encrypted Key.
- * @param key - Wrapping Key.
+ * @param ek Encrypted Key.
+ * @param key Wrapping Key.
  * @returns Unwrapped Content Encryption Key.
  */
 export function unwrap(ek: Buffer, key: OctKey): Buffer {

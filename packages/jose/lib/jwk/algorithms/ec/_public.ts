@@ -1,5 +1,10 @@
 import { BitString, Decoder, Node, ObjectId, Sequence } from '@guarani/asn1'
-import { Base64Url, Primitives } from '@guarani/utils'
+import {
+  base64UrlDecodeInt,
+  base64UrlEncodeInt,
+  fromBuffer,
+  toBuffer
+} from '@guarani/utils'
 
 import { InvalidKey } from '../../../exceptions'
 import { JsonWebKeyParams } from '../../jsonwebkey'
@@ -9,31 +14,31 @@ import { ELLIPTIC_CURVES, ID_EC_PUBLIC_KEY } from './_types'
 /**
  * Returns the Curve's uncompressed coordinate parameters.
  *
- * @param key - Key from where will be extracted the Public Params.
+ * @param key Key from where will be extracted the Public Params.
  * @returns Uncompressed coordinate parameters.
  */
 export function getEncodedPublicKey(key: EcKeyParams): Buffer {
   const length = ELLIPTIC_CURVES[key.crv].length
 
-  let x = Primitives.toBuffer(Base64Url.decodeInt(key.x))
-  let y = Primitives.toBuffer(Base64Url.decodeInt(key.y))
+  let x = toBuffer(base64UrlDecodeInt(key.x))
+  let y = toBuffer(base64UrlDecodeInt(key.y))
 
   while (x.length < length) {
-    x = Buffer.concat([Primitives.toBuffer(0x00), x])
+    x = Buffer.concat([toBuffer(0x00), x])
   }
 
   while (y.length < length) {
-    y = Buffer.concat([Primitives.toBuffer(0x00), y])
+    y = Buffer.concat([toBuffer(0x00), y])
   }
 
-  return Buffer.concat([Primitives.toBuffer(0x04), x, y])
+  return Buffer.concat([toBuffer(0x04), x, y])
 }
 
 /**
  * Parses a X.509 SubjectPublicKeyInfo encoded Elliptic Curve Public Key.
  *
- * @param decoder - Decoder of the raw key.
- * @param options - Optional JSON Web Key Parameters.
+ * @param decoder Decoder of the raw key.
+ * @param options Optional JSON Web Key Parameters.
  * @returns Instance of an EcKey.
  */
 export function decodePublicX509(
@@ -67,17 +72,17 @@ export function decodePublicX509(
   const left = publicKey.data.subarray(0, curve.length)
   const right = publicKey.data.subarray(curve.length)
 
-  const x = Base64Url.encodeInt(Primitives.fromBuffer(left, 'integer'))
-  const y = Base64Url.encodeInt(Primitives.fromBuffer(right, 'integer'))
+  const x = base64UrlEncodeInt(fromBuffer(left, 'integer'))
+  const y = base64UrlEncodeInt(fromBuffer(right, 'integer'))
 
-  return new EcKey({ crv: curve.id, x, y })
+  return new EcKey({ crv: curve.id, x, y }, options)
 }
 
 /**
  * Encodes the provided key into a X.509 SubjectPublicKeyInfo
  * ASN.1 Abstract Syntax Tree.
  *
- * @param key - Key to be encoded.
+ * @param key Key to be encoded.
  * @returns X.509 SubjectPublicKeyInfo ASN.1 Abstract Syntax Tree
  */
 export function encodePublicX509(key: EcKey): Node {

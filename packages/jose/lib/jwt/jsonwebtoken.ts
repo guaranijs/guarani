@@ -54,8 +54,8 @@ export class JsonWebToken {
    * Instantiates a new JSON Web Token based on the provided
    * JOSE Header and Claims.
    *
-   * @param header - JWS JOSE Header containing the token's meta information.
-   * @param claims - Claims represented by the JSON Web Token.
+   * @param header JWS JOSE Header containing the token's meta information.
+   * @param claims Claims represented by the JSON Web Token.
    */
   public constructor(header: JsonWebSignatureHeader, claims: JsonWebTokenClaims)
 
@@ -63,8 +63,8 @@ export class JsonWebToken {
    * Instantiates a new JSON Web Token based on the provided
    * JOSE Header and Claims.
    *
-   * @param header - JWE JOSE Header containing the token's meta information.
-   * @param claims - Claims represented by the JSON Web Token.
+   * @param header JWE JOSE Header containing the token's meta information.
+   * @param claims Claims represented by the JSON Web Token.
    */
   public constructor(
     header: JsonWebEncryptionHeader,
@@ -97,10 +97,10 @@ export class JsonWebToken {
    * If the JWS Algorithm `none` is expected, the JSON Web Key
    * can be **null** or **undefined**.
    *
-   * @param token - JSON Web Token to be decoded.
-   * @param key - JSON Web Key used to validate the signature of the Token.
-   * @param decodeOptions - Options regarding the decoding of the Token.
-   * @param claimsOptions - Validation options for the JWT Claims.
+   * @param token JSON Web Token to be decoded.
+   * @param key JSON Web Key used to validate the signature of the Token.
+   * @param decodeOptions Options regarding the decoding of the Token.
+   * @param claimsOptions Validation options for the JWT Claims.
    * @returns JSON Web Token containing the decoded JWS JOSE Header and Claims.
    */
   public static async verify(
@@ -143,9 +143,9 @@ export class JsonWebToken {
   /**
    * Decodes a **JWE based JSON Web Token**.
    *
-   * @param token - JSON Web Token to be decoded.
-   * @param wrapKey - JSON Web Key used to unwrap the Encrypted Key.
-   * @param claimsOptions - Validation options for the JWT Claims.
+   * @param token JSON Web Token to be decoded.
+   * @param wrapKey JSON Web Key used to unwrap the Encrypted Key.
+   * @param claimsOptions Validation options for the JWT Claims.
    * @returns JSON Web Token containing the decoded JWE JOSE Header and Claims.
    */
   public static async decrypt(
@@ -200,7 +200,7 @@ export class JsonWebToken {
    *
    * The resulting token is then returned to the application.
    *
-   * @param key - JSON Web Key used to sign the token.
+   * @param key JSON Web Key used to sign the token.
    * @returns Resulting JWS based JSON Web Token.
    */
   public async sign(key?: JsonWebKey): Promise<string> {
@@ -238,7 +238,7 @@ export class JsonWebToken {
    *
    * The resulting token is then returned to the application.
    *
-   * @param wrapKey - JSON Web Key used to wrap the Content Encryption Key.
+   * @param wrapKey JSON Web Key used to wrap the Content Encryption Key.
    * @returns Resulting JWE based JSON Web Token.
    */
   public async encrypt(wrapKey?: JsonWebKey): Promise<string> {

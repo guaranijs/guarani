@@ -1,4 +1,4 @@
-import { Base64Url } from '@guarani/utils'
+import { base64UrlEncode } from '@guarani/utils'
 
 import {
   createPrivateKey,
@@ -21,9 +21,9 @@ class RSAAlgorithm extends JWEAlgorithm {
    * Instantiates a new RSA Key Wrapping Algorithm
    * to wrap and unwrap a Content Encryption Key.
    *
-   * @param algorithm - Name of the algorithm.
-   * @param padding - Padding to be used by the algorithm.
-   * @param hash - Hash algorithm used to wrap and unwrap a CEK.
+   * @param algorithm Name of the algorithm.
+   * @param padding Padding to be used by the algorithm.
+   * @param hash Hash algorithm used to wrap and unwrap a CEK.
    */
   public constructor(
     protected readonly algorithm: string,
@@ -37,8 +37,8 @@ class RSAAlgorithm extends JWEAlgorithm {
    * Generates a new CEK based on the provided JWE Content Encryption Algorithm
    * and wraps it using the provided JSON Web Key.
    *
-   * @param cek - Content Encryption Key used to encrypt the Plaintext.
-   * @param key - JWK used to wrap the generated CEK.
+   * @param cek Content Encryption Key used to encrypt the Plaintext.
+   * @param key JWK used to wrap the generated CEK.
    * @returns CEK generated and Encrypted CEK.
    */
   public async wrap(cek: Buffer, key: RsaKey): Promise<WrappedKey> {
@@ -48,14 +48,14 @@ class RSAAlgorithm extends JWEAlgorithm {
       cek
     )
 
-    return { ek: Base64Url.encode(ek) }
+    return { ek: base64UrlEncode(ek) }
   }
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param ek - Encrypted CEK of the JSON Web Encryption Token.
-   * @param key - JSON Web Key used to unwrap the Encrypted CEK.
+   * @param ek Encrypted CEK of the JSON Web Encryption Token.
+   * @param key JSON Web Key used to unwrap the Encrypted CEK.
    * @throws {InvalidJsonWebEncryption} Could not unwrap the Encrypted CEK.
    * @returns Unwrapped Content Encryption Key.
    */

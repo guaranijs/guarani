@@ -14,7 +14,7 @@ export abstract class JWECompression {
   /**
    * Compresses the plaintext before encryption.
    *
-   * @param plaintext - Plaintext to be compressed.
+   * @param plaintext Plaintext to be compressed.
    * @returns Compressed plaintext.
    */
   public abstract compress(plaintext: Buffer): Promise<Buffer>
@@ -22,7 +22,7 @@ export abstract class JWECompression {
   /**
    * Decompresses a compressed plaintext after decryption.
    *
-   * @param plaintext - Compressed plaintext to be decompressed.
+   * @param plaintext Compressed plaintext to be decompressed.
    * @returns Decompressed plaintext.
    */
   public abstract decompress(plaintext: Buffer): Promise<Buffer>

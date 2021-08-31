@@ -1,4 +1,4 @@
-import { Base64Url } from '@guarani/utils'
+import { base64UrlDecode, base64UrlEncode } from '@guarani/utils'
 
 import {
   InvalidJoseHeader,
@@ -40,8 +40,8 @@ export class JsonWebEncryption {
    * Instantiates a new JSON Web Encryption based on the provided
    * JWE JOSE Header and plaintext.
    *
-   * @param header - JWE JOSE Header containing the token's meta information.
-   * @param plaintext - Buffer representation of the plaintext to be encrypted.
+   * @param header JWE JOSE Header containing the token's meta information.
+   * @param plaintext Buffer representation of the plaintext to be encrypted.
    */
   public constructor(header: JsonWebEncryptionHeader, plaintext: Buffer) {
     if (!header) {
@@ -59,8 +59,8 @@ export class JsonWebEncryption {
   /**
    * Decodes a **JSON Web Encryption Compact Token**.
    *
-   * @param token - JSON Web Encryption Compact Token to be decoded.
-   * @param wrapKey - JSON Web Key used to unwrap the Encrypted Key.
+   * @param token JSON Web Encryption Compact Token to be decoded.
+   * @param wrapKey JSON Web Key used to unwrap the Encrypted Key.
    * @returns JSON Web Encryption containing the decoded JOSE Header and Plaintext.
    */
   public static async deserializeCompact(
@@ -71,8 +71,8 @@ export class JsonWebEncryption {
   /**
    * Decodes a **JSON Web Encryption Compact Token**.
    *
-   * @param token - JSON Web Encryption Compact Token to be decoded.
-   * @param keyLoader - Function used to load a JWK based on the JOSE Header.
+   * @param token JSON Web Encryption Compact Token to be decoded.
+   * @param keyLoader Function used to load a JWK based on the JOSE Header.
    * @returns JSON Web Encryption containing the decoded JOSE Header and Plaintext.
    */
   public static async deserializeCompact(
@@ -97,14 +97,14 @@ export class JsonWebEncryption {
     try {
       const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = splitToken
 
-      const decodedHeader = Base64Url.decode(b64Header)
+      const decodedHeader = base64UrlDecode(b64Header)
       const parsedHeader = JSON.parse(decodedHeader.toString('utf8'))
 
       const header = new JsonWebEncryptionHeader(parsedHeader)
-      const ek = Base64Url.decode(b64Ek)
-      const iv = Base64Url.decode(b64Iv)
-      const ciphertext = Base64Url.decode(b64Ciphertext)
-      const tag = Base64Url.decode(b64Tag)
+      const ek = base64UrlDecode(b64Ek)
+      const iv = base64UrlDecode(b64Iv)
+      const ciphertext = base64UrlDecode(b64Ciphertext)
+      const tag = base64UrlDecode(b64Tag)
       const aad = Buffer.from(b64Header, 'ascii')
 
       const alg = JWE_ALGORITHMS[header.alg]
@@ -162,7 +162,7 @@ export class JsonWebEncryption {
    *
    * The resulting token is then returned to the application.
    *
-   * @param wrapKey - JSON Web Key used to wrap the Content Encryption Key.
+   * @param wrapKey JSON Web Key used to wrap the Content Encryption Key.
    * @returns JSON Web Encryption Compact Token.
    */
   public async serializeCompact(wrapKey?: JsonWebKey): Promise<string> {
@@ -192,14 +192,14 @@ export class JsonWebEncryption {
       Object.assign(this.header, header)
     }
 
-    const b64Header = Base64Url.encode(Buffer.from(JSON.stringify(this.header)))
+    const b64Header = base64UrlEncode(Buffer.from(JSON.stringify(this.header)))
     const aad = Buffer.from(b64Header, 'ascii')
 
     const plaintext =
       zip != null ? await zip.compress(this.plaintext) : this.plaintext
 
     const { ciphertext, tag } = await enc.encrypt(plaintext, aad, iv, cek)
-    const b64IV = Base64Url.encode(iv)
+    const b64IV = base64UrlEncode(iv)
 
     return `${b64Header}.${ek}.${b64IV}.${ciphertext}.${tag}`
   }

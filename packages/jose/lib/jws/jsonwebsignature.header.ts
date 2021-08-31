@@ -1,4 +1,4 @@
-import { Objects } from '@guarani/utils'
+import { removeNullishValues } from '@guarani/utils'
 
 import { InvalidJoseHeader } from '../exceptions'
 import {
@@ -170,21 +170,21 @@ export class JsonWebSignatureHeader
   /**
    * Returns the provided JWS JOSE Header unmodified.
    *
-   * @param header - Instance of a JsonWebSignatureHeader
+   * @param header Instance of a JsonWebSignatureHeader
    */
   public constructor(header: JsonWebSignatureHeader)
 
   /**
    * Instantiates a new JWS JOSE Header for JWS Compact Serialization.
    *
-   * @param header - Parameters of the JWS JOSE Header.
+   * @param header Parameters of the JWS JOSE Header.
    */
   public constructor(header: JWSHeaderParams)
 
   /**
    * Instantiates a new JWS JOSE Header for JWS JSON Serialization.
    *
-   * @param header - Protected and Unprotected Headers of the JWS JOSE Header.
+   * @param header Protected and Unprotected Headers of the JWS JOSE Header.
    */
   public constructor(header: JWSProtectedAndUnprotectedHeaders)
 
@@ -224,14 +224,14 @@ export class JsonWebSignatureHeader
       }
 
       Object.defineProperty(this, 'protectedHeader', {
-        value: Objects.removeNullishValues(protectedHeader)
+        value: removeNullishValues(protectedHeader)
       })
 
       Object.defineProperty(this, 'unprotectedHeader', {
-        value: Objects.removeNullishValues(unprotectedHeader)
+        value: removeNullishValues(unprotectedHeader)
       })
 
-      Object.assign(this, Objects.removeNullishValues(joseHeader))
+      Object.assign(this, removeNullishValues(joseHeader))
     } else {
       if (header.alg == null) {
         throw new InvalidJoseHeader('Missing required parameter "alg".')
@@ -243,14 +243,14 @@ export class JsonWebSignatureHeader
 
       this.checkHeader(header)
 
-      Object.assign(this, Objects.removeNullishValues(header))
+      Object.assign(this, removeNullishValues(header))
     }
   }
 
   /**
    * Validates the parameters of the provided JWS JOSE Header.
    *
-   * @param header - JWS JOSE Header to be validated.
+   * @param header JWS JOSE Header to be validated.
    */
   protected checkHeader(header: Partial<JWSHeaderParams>): void {
     super.checkHeader(header)
@@ -263,7 +263,7 @@ export class JsonWebSignatureHeader
   /**
    * Checks if a JOSE Header is a JWS JSON Serialization ready header.
    *
-   * @param header - JOSE Header to be checked.
+   * @param header JOSE Header to be checked.
    * @returns Header is a JWS JSON Serialization ready header.
    */
   private static isJWSProtectedAndUnprotectedHeaders(

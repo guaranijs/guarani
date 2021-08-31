@@ -7,7 +7,7 @@ import {
   OctetString,
   Sequence
 } from '@guarani/asn1'
-import { Base64Url } from '@guarani/utils'
+import { base64UrlDecodeInt, base64UrlEncodeInt } from '@guarani/utils'
 
 import { InvalidKey } from '../../../exceptions'
 import { JsonWebKeyParams } from '../../jsonwebkey'
@@ -16,22 +16,22 @@ import { RsaKey } from './rsa.key'
 /**
  * Parses a PKCS#1 encoded RSA Private Key.
  *
- * @param decoder - Decoder of the raw key.
- * @param options - Optional JSON Web Key Parameters.
+ * @param decoder Decoder of the raw key.
+ * @param options Optional JSON Web Key Parameters.
  * @returns Instance of an RsaKey.
  */
 export function decodePrivatePkcs1(
   decoder: Decoder,
   options?: JsonWebKeyParams
 ): RsaKey {
-  const n = Base64Url.encodeInt(decoder.integer())
-  const e = Base64Url.encodeInt(decoder.integer())
-  const d = Base64Url.encodeInt(decoder.integer())
-  const p = Base64Url.encodeInt(decoder.integer())
-  const q = Base64Url.encodeInt(decoder.integer())
-  const dp = Base64Url.encodeInt(decoder.integer())
-  const dq = Base64Url.encodeInt(decoder.integer())
-  const qi = Base64Url.encodeInt(decoder.integer())
+  const n = base64UrlEncodeInt(decoder.integer())
+  const e = base64UrlEncodeInt(decoder.integer())
+  const d = base64UrlEncodeInt(decoder.integer())
+  const p = base64UrlEncodeInt(decoder.integer())
+  const q = base64UrlEncodeInt(decoder.integer())
+  const dp = base64UrlEncodeInt(decoder.integer())
+  const dq = base64UrlEncodeInt(decoder.integer())
+  const qi = base64UrlEncodeInt(decoder.integer())
 
   return new RsaKey({ n, e, d, p, q, dp, dq, qi }, options)
 }
@@ -39,8 +39,8 @@ export function decodePrivatePkcs1(
 /**
  * Parses a PKCS#8 encoded RSA Private Key.
  *
- * @param decoder - Decoder of the raw key.
- * @param options - Optional JSON Web Key Parameters.
+ * @param decoder Decoder of the raw key.
+ * @param options Optional JSON Web Key Parameters.
  * @returns Instance of an RsaKey.
  */
 export function decodePrivatePkcs8(
@@ -68,20 +68,20 @@ export function decodePrivatePkcs8(
 /**
  * Encodes the provided key into a PKCS#1 ASN.1 Abstract Syntax Tree.
  *
- * @param key - Key to be encoded.
+ * @param key Key to be encoded.
  * @returns PKCS#1 ASN.1 Abstract Syntax Tree
  */
 export function encodePrivatePkcs1(key: RsaKey): Node {
   return new Sequence(
     new Integer(0x00),
-    new Integer(Base64Url.decodeInt(key.n)),
-    new Integer(Base64Url.decodeInt(key.e)),
-    new Integer(Base64Url.decodeInt(key.d)),
-    new Integer(Base64Url.decodeInt(key.p)),
-    new Integer(Base64Url.decodeInt(key.q)),
-    new Integer(Base64Url.decodeInt(key.dp)),
-    new Integer(Base64Url.decodeInt(key.dq)),
-    new Integer(Base64Url.decodeInt(key.qi))
+    new Integer(base64UrlDecodeInt(key.n)),
+    new Integer(base64UrlDecodeInt(key.e)),
+    new Integer(base64UrlDecodeInt(key.d)),
+    new Integer(base64UrlDecodeInt(key.p)),
+    new Integer(base64UrlDecodeInt(key.q)),
+    new Integer(base64UrlDecodeInt(key.dp)),
+    new Integer(base64UrlDecodeInt(key.dq)),
+    new Integer(base64UrlDecodeInt(key.qi))
   )
 }
 
@@ -89,7 +89,7 @@ export function encodePrivatePkcs1(key: RsaKey): Node {
  * Encodes the provided key into a X.509 SubjectPublicKeyInfo
  * ASN.1 Abstract Syntax Tree.
  *
- * @param key - Key to be encoded.
+ * @param key Key to be encoded.
  * @returns X.509 SubjectPublicKeyInfo ASN.1 Abstract Syntax Tree
  */
 export function encodePrivatePkcs8(key: RsaKey): Node {

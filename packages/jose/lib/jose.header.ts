@@ -144,7 +144,7 @@ export abstract class JoseHeader implements JoseHeaderParams {
   /**
    * Validates the parameters of the provided JOSE Header.
    *
-   * @param header - JOSE Header to be validated.
+   * @param header JOSE Header to be validated.
    */
   protected checkHeader(header: Partial<JoseHeaderParams>): void {
     if ('alg' in header && typeof header.alg !== 'string') {

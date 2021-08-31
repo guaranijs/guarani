@@ -1,4 +1,4 @@
-import { Base64Url } from '@guarani/utils'
+import { base64UrlDecode, base64UrlEncode } from '@guarani/utils'
 
 import { createPrivateKey, createPublicKey, sign, verify } from 'crypto'
 
@@ -19,9 +19,9 @@ class RSASSAAlgorithm extends JWSAlgorithm {
   /**
    * Instantiates a new RSASSA Algorithm to sign and verify the messages.
    *
-   * @param hash - Hash algorithm used to sign and verify the messages.
-   * @param algorithm - Name of the algorithm.
-   * @param padding - Padding to be used by the algorithm.
+   * @param hash Hash algorithm used to sign and verify the messages.
+   * @param algorithm Name of the algorithm.
+   * @param padding Padding to be used by the algorithm.
    */
   public constructor(
     protected readonly hash: SupportedHash,
@@ -34,8 +34,8 @@ class RSASSAAlgorithm extends JWSAlgorithm {
   /**
    * Signs the provided message using RSASSA.
    *
-   * @param message - Message to be signed.
-   * @param key - Key used to sign the message.
+   * @param message Message to be signed.
+   * @param key Key used to sign the message.
    * @returns Base64Url encoded signature.
    */
   public async sign(message: Buffer, key: RsaKey): Promise<string> {
@@ -43,7 +43,7 @@ class RSASSAAlgorithm extends JWSAlgorithm {
 
     const privateKey = createPrivateKey(key.export('private', 'pem', 'pkcs1'))
 
-    return Base64Url.encode(
+    return base64UrlEncode(
       sign(this.hash, message, { key: privateKey, padding: this.padding })
     )
   }
@@ -51,9 +51,9 @@ class RSASSAAlgorithm extends JWSAlgorithm {
   /**
    * Verifies the signature against a message using RSASSA.
    *
-   * @param signature - Signature to be matched against the message.
-   * @param message - Message to be matched against the signature.
-   * @param key - Key used to verify the signature.
+   * @param signature Signature to be matched against the message.
+   * @param message Message to be matched against the signature.
+   * @param key Key used to verify the signature.
    * @throws {InvalidSignature} The signature does not match the message.
    */
   public async verify(
@@ -68,7 +68,7 @@ class RSASSAAlgorithm extends JWSAlgorithm {
       this.hash,
       message,
       { key: publicKey, padding: this.padding },
-      Base64Url.decode(signature)
+      base64UrlDecode(signature)
     )
 
     if (!verified) {

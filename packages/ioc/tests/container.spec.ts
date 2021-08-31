@@ -1,7 +1,9 @@
 import 'reflect-metadata'
 
-import { Container } from '../lib/container'
+import { getContainer } from '../lib/container'
 import { Inject, Injectable, InjectAll } from '../lib/decorators'
+
+const Container = getContainer()
 
 beforeEach(() => Container.clear())
 

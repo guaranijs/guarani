@@ -15,7 +15,7 @@ export interface ClassProvider<T> {
 /**
  * Validates whether or not the provider is a Class Provider.
  *
- * @param provider - Provider to be validated.
+ * @param provider Provider to be validated.
  * @returns The provider is a Class Provider.
  */
 export function isClassProvider<T>(

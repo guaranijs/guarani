@@ -10,7 +10,7 @@ import { InjectableToken } from '../tokens'
 /**
  * Injects a token into the Injectable class' constructor or property.
  *
- * @param token - Token to be injected.
+ * @param token Token to be injected.
  */
 export function Inject<T = any>(
   token?: InjectableToken<T>

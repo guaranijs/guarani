@@ -14,7 +14,7 @@ export interface TokenProvider<T> {
 /**
  * Validates whether or not the provider is a Token Provider.
  *
- * @param provider - Provider to be validated.
+ * @param provider Provider to be validated.
  * @returns The provider is a Token Provider.
  */
 export function isTokenProvider<T>(

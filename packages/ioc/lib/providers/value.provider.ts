@@ -13,7 +13,7 @@ export interface ValueProvider<T> {
 /**
  * Validates whether or not the provider is a Value Provider.
  *
- * @param provider - Provider to be validated.
+ * @param provider Provider to be validated.
  * @returns The provider is a Value Provider.
  */
 export function isValueProvider<T>(

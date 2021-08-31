@@ -18,7 +18,7 @@ export class Binding<T> {
   /**
    * Creates a new Binding based on the provided Injectable Token.
    *
-   * @param token - Injectable Token to be defined.
+   * @param token Injectable Token to be defined.
    */
   public constructor(token: InjectableToken<T>) {
     this._token = token

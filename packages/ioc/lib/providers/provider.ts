@@ -14,7 +14,7 @@ export type Provider<T> = Partial<ClassProvider<T>> &
 /**
  * Validates whether or not the provided object is a Provider.
  *
- * @param provider - Object to be validated.
+ * @param provider Object to be validated.
  * @returns The object is a Provider.
  */
 export function isProvider<T>(provider: any): provider is Provider<T> {

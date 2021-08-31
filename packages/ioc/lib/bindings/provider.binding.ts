@@ -18,7 +18,7 @@ export class ProviderBinding<T> {
   /**
    * Instantiates a wrapper to define the Provider of the Binding.
    *
-   * @param binding - Binding to be configured.
+   * @param binding Binding to be configured.
    */
   public constructor(private readonly binding: Binding<T>) {}
 
@@ -47,7 +47,7 @@ export class ProviderBinding<T> {
   /**
    * Binds a class to the Token.
    *
-   * @param target - Class to be bound to the Token.
+   * @param target Class to be bound to the Token.
    */
   public toClass<U>(target: Constructor<U>): void {
     this.binding.provider = { target: target as any }
@@ -56,7 +56,7 @@ export class ProviderBinding<T> {
   /**
    * Binds a factory to the Token.
    *
-   * @param factory - Factory to be bound to the Token.
+   * @param factory Factory to be bound to the Token.
    */
   public toFactory<U>(factory: Factory<U>): void {
     this.binding.provider = { factory: factory as any }
@@ -65,7 +65,7 @@ export class ProviderBinding<T> {
   /**
    * Defines an alias to the Token.
    *
-   * @param token - Token to be aliased.
+   * @param token Token to be aliased.
    */
   public toToken<U>(token: InjectableToken<U>): void {
     this.binding.provider = { token: token as any }
@@ -74,7 +74,7 @@ export class ProviderBinding<T> {
   /**
    * Binds a value to the Token.
    *
-   * @param value - Value to be bound to the Token.
+   * @param value Value to be bound to the Token.
    */
   public toValue<U>(value: U): void {
     this.binding.provider = { value: value as any }
@@ -90,6 +90,6 @@ export class ProviderBinding<T> {
       )
     }
 
-    this.toClass(this.binding.token)
+    return this.toClass(this.binding.token)
   }
 }

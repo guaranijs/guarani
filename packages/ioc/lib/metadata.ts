@@ -31,7 +31,7 @@ export interface InjectableType<T> {
  * Returns a list containing the types of the parameters of the Constructor.
  * If no `constructor()` is defined, it will return an empty list.
  *
- * @param target - Constructor to be inspected.
+ * @param target Constructor to be inspected.
  * @returns List of the types of the parameters of the Constructor.
  */
 export function getDesignParamTypes(target: Function): any[] {
@@ -41,7 +41,7 @@ export function getDesignParamTypes(target: Function): any[] {
 /**
  * Returns the list of Injectable types metadata registered at the target.
  *
- * @param target - Constructor to be inspected.
+ * @param target Constructor to be inspected.
  * @returns Injectable types metadata.
  */
 export function getParamTypes(target: Function): InjectableType<any>[] {
@@ -55,8 +55,8 @@ export function getParamTypes(target: Function): InjectableType<any>[] {
  * the name of the injected token instead of the type, if provided, based on the
  * use of the decorators `@Inject()` and `@InjectAll()`.
  *
- * @param target - Constructor to be inspected.
- * @param types - Injectable types based on the target's constructor parameters.
+ * @param target Constructor to be inspected.
+ * @param types Injectable types based on the target's constructor parameters.
  */
 export function setParamTypes(
   target: Function,
@@ -73,7 +73,7 @@ export function setParamTypes(
  * it returns a dictionary with the indices of each token's position in
  * the constructor as its keys.
  *
- * @param target - Constructor to be inspected.
+ * @param target Constructor to be inspected.
  * @returns Dictionary of the target constructor's parameter tokens.
  */
 export function getParamTokens(target: Function): Dict<InjectableType<any>> {
@@ -84,8 +84,8 @@ export function getParamTokens(target: Function): Dict<InjectableType<any>> {
  * Defines a dictionary of Injectable types indexed by the position at the
  * constructor that the token described will be injected into.
  *
- * @param target - Constructor to be inspected.
- * @param tokens - Dictionary of injectable types to be registered.
+ * @param target Constructor to be inspected.
+ * @param tokens Dictionary of injectable types to be registered.
  */
 export function setParamTokens(
   target: Function,
@@ -103,10 +103,10 @@ export function setParamTokens(
  * of whether it was injected with `@Inject()` or `@InjectAll()`,
  * as well as the token that will be used in the resolution.
  *
- * @param target - Constructor to be inspected.
- * @param parameterIndex - Index of the parameter at the constructor.
- * @param token - Token to be injected.
- * @param multiple - Injects the last provider or all the providers.
+ * @param target Constructor to be inspected.
+ * @param parameterIndex Index of the parameter at the constructor.
+ * @param token Token to be injected.
+ * @param multiple Injects the last provider or all the providers.
  */
 export function defineParamInjectableType(
   target: Function,
@@ -122,8 +122,8 @@ export function defineParamInjectableType(
 /**
  * Returns the type of the requested property.
  *
- * @param target - Constructor to be inspected.
- * @param propertyKey - Name of the property.
+ * @param target Constructor to be inspected.
+ * @param propertyKey Name of the property.
  * @returns Type of the property.
  */
 export function getDesignPropType(
@@ -141,7 +141,7 @@ export function getDesignPropType(
  * Otherwise, it returns a dictionary with the name of the decorated
  * properties as its keys.
  *
- * @param target - Constructor to be inspected.
+ * @param target Constructor to be inspected.
  * @returns Dictionary of the target properties' tokens.
  */
 export function getPropTokens(target: Function): Dict<InjectableType<any>> {
@@ -152,8 +152,8 @@ export function getPropTokens(target: Function): Dict<InjectableType<any>> {
  * Defines a dictionary of Injectable types indexed by the name of the
  * properties of the target that the token described will be injected into.
  *
- * @param target - Constructor to be inspected.
- * @param tokens - Dictionary of injectable types to be registered.
+ * @param target Constructor to be inspected.
+ * @param tokens Dictionary of injectable types to be registered.
  */
 export function setPropTokens(
   target: Function,
@@ -171,10 +171,10 @@ export function setPropTokens(
  * of whether it was injected with `@Inject()` or `@InjectAll()`,
  * as well as the token that will be used in the resolution.
  *
- * @param target - Constructor to be inspected.
- * @param propertyKey - Name of the property at the instance.
- * @param token - Token to be injected.
- * @param multiple - Injects the last provider or all the providers.
+ * @param target Constructor to be inspected.
+ * @param propertyKey Name of the property at the instance.
+ * @param token Token to be injected.
+ * @param multiple Injects the last provider or all the providers.
  */
 export function definePropertyInjectableType<T>(
   target: Function,

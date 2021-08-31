@@ -1,4 +1,4 @@
-import { Constructor } from '@guarani/utils'
+import { Constructor, Dict } from '@guarani/utils'
 
 import { Binding, ProviderBinding } from '../bindings'
 import { TokenNotRegistered } from '../exceptions'
@@ -15,7 +15,7 @@ import { InjectableToken } from '../tokens'
 import { Registry } from './registry'
 
 /**
- * Implementation of the internal IoC Container.
+ * Implementation of the IoC Container.
  */
 export class IoCContainer {
   /**
@@ -32,7 +32,7 @@ export class IoCContainer {
    * The `ProviderBinding` object returned is used to set the provider
    * that defines the resolution method used when resolving the Token.
    *
-   * @param token - Injectable Token to be used as the binding key.
+   * @param token Injectable Token to be used as the binding key.
    * @returns Binding Provider configuration object.
    */
   public bindToken<T>(token: InjectableToken<T>): ProviderBinding<T> {
@@ -45,7 +45,7 @@ export class IoCContainer {
   /**
    * Resolves the requested Token. The token **MUST** be known by the Container.
    *
-   * @param token - Injectable Token to be resolved.
+   * @param token Injectable Token to be resolved.
    * @throws {TokenNotRegistered} The token is not registered at the Container.
    * @returns Resolved instance or value based on the Token.
    */
@@ -65,7 +65,7 @@ export class IoCContainer {
    *
    * The token **MUST** be known by the Container.
    *
-   * @param token - Injectable Token to be resolved.
+   * @param token Injectable Token to be resolved.
    * @returns Ordered array of the resolved providers bound to the Token.
    */
   public resolveAll<T>(token: InjectableToken<T>): T[] {
@@ -88,7 +88,7 @@ export class IoCContainer {
   /**
    * Resolves the requested Provider based on its type.
    *
-   * @param provider - Provider to be resolved.
+   * @param provider Provider to be resolved.
    * @returns Resolved provider.
    */
   private resolveProvider<T>(provider: Provider<T>): T {
@@ -118,7 +118,7 @@ export class IoCContainer {
    * dependencies resolved and injected at the correct place, as well
    * as all the resolved property injections.
    *
-   * @param constructor - Constructor to be instantiated.
+   * @param constructor Constructor to be instantiated.
    * @returns Instantiated Constructor.
    */
   private construct<T>(constructor: Constructor<T>): T {
@@ -145,13 +145,15 @@ export class IoCContainer {
   /**
    * Returns whether or not the requested token is registered at the Container.
    *
-   * @param token - Injectable Token to be inspected.
+   * @param token Injectable Token to be inspected.
    * @returns Whether or not the Token is registered.
    */
   private isBound<T>(token: InjectableToken<T>): boolean {
     return this.registry.has(token)
   }
 }
+
+const containers: Dict<IoCContainer> = {}
 
 /**
  * Implementation of the Inversion of Control Container.
@@ -164,42 +166,45 @@ export class IoCContainer {
  * own definition of a class, as a string or as a symbol.
  *
  * ```
- *   import { Container, Injectable } from "@guarani/ioc"
+ *   import { getContainer, Injectable } from "@guarani/ioc"
+ *
+ *   const Container = getContainer("test")
  *
  *   // Example of binding the token `Foo` to the class `Foo`.
  *  ⠀@Injectable()
  *   class Foo {}
+ *   Container.bindToken(Foo).toSelf()
  *
  *   // Example of binding the token "Bar" to the class `Bar`.
- *  ⠀@Injectable({ token: "Bar" })
+ *  ⠀@Injectable()
  *   class Bar {}
+ *   Container.bindToken<Bar>("Bar").toClass(Bar)
  *
  *   // Example of binding the token "issuer" to the value "http://example.com".
  *   Container.bindToken<string>("issuer").toValue<string>("http://example.com")
  * ```
  *
- * Every class decorated with the `@Injectable()` decorator is automatically
- * registered at the Container. This decorator can receive options to customize
- * the binding of the class at the Container. Please refer to its documentation
- * for more information.
- *
  * To inject a dependency into a class, simple decorate it as an `@Injectable()`
  * and define the parameters to be received at the class' constructor.
  *
  * Note that the dependencies **MUST** also be registered at the Container,
- * either by declaring it as an `@Injectable()`, or by manually registering it
+ * first by being declared as an `@Injectable()`, and then registering it
  * at the Container via the `Container.bindToken()` method.
  *
  * ```
- *   import { Container, Injectable } from "@guarani/ioc"
+ *   import { getContainer, Injectable } from "@guarani/ioc"
+ *
+ *   const Container = getContainer("test")
  *
  *  ⠀@Injectable()
  *   class Foo {}
+ *   Container.bindToken(Foo).toSelf()
  *
  *  ⠀@Injectable()
  *   class Bar {
  *     public constructor(private readonly foo: Foo) {}
  *   }
+ *   Container.bindToken(Bar).toSelf()
  * ```
  *
  * To inject values that cannot be registered as an `@Injectable()`,
@@ -210,28 +215,38 @@ export class IoCContainer {
  * registered at the Container.
  *
  * ```
- *   import { Container, Inject, InjectAll, Injectable } from "@guarani/ioc"
+ *   import {
+ *     getContainer,
+ *     Inject,
+ *     InjectAll,
+ *     Injectable
+ *   } from "@guarani/ioc"
+ *
+ *   const Container = getContainer("test")
  *
  *   interface Foo {
  *     echo(): string
  *   }
  *
- *  ⠀@Injectable({ token: "Foo" })
+ *  ⠀@Injectable()
  *   class Bar implements Foo {
  *     public echo(): string {
  *       return "foo"
  *     }
  *   }
+ *   Container.bindToken<Foo>("Foo").toClass(Bar)
  *
- *  ⠀@Injectable({ token: "Foo" })
+ *  ⠀@Injectable()
  *   class Baz implements Foo {
  *     public echo(): string {
  *       return "bar"
  *     }
  *   }
+ *   Container.bindToken<Foo>("Foo").toClass(Baz)
  *
  *  ⠀@Injectable()
  *   class Qux {}
+ *   Container.bindToken(Qux).toSelf()
  *
  *   Container.bindToken<string>("issuer").toValue<string>("http://example.com")
  *
@@ -243,6 +258,7 @@ export class IoCContainer {
  *      ⠀@InjectAll("Foo") private readonly fooArray: Foo[]
  *     ) {}
  *   }
+ *   Container.bindToken(Service).toSelf()
  * ```
  *
  * To resolve a single `@Injectable()` or a single value, use the method
@@ -254,4 +270,10 @@ export class IoCContainer {
  * providers bound to the requested Token and return an array containing
  * the resolved instances or values, ordered by the insertion precedence.
  */
-export const Container = new IoCContainer()
+export function getContainer(name: string = 'default'): IoCContainer {
+  if (containers[name] == null) {
+    containers[name] = new IoCContainer()
+  }
+
+  return containers[name]
+}

@@ -15,7 +15,7 @@ export interface FactoryProvider<T> {
 /**
  * Validates whether or not the provider is a Factory Provider.
  *
- * @param provider - Provider to be validated.
+ * @param provider Provider to be validated.
  * @returns The provider is a Factory Provider.
  */
 export function isFactoryProvider<T>(

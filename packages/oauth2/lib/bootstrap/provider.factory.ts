@@ -7,7 +7,7 @@ import {
   ClientAuthenticator,
   ClientSecretBasic
 } from '../client-authentication'
-import { AuthorizationEndpoint, TokenEndpoint } from '../endpoints'
+import { AuthorizationEndpoint, Endpoint, TokenEndpoint } from '../endpoints'
 import { Grant } from '../grants'
 import { PkceMethod, PlainPkceMethod, S256PkceMethod } from '../pkce'
 import {
@@ -39,7 +39,7 @@ class InternalProviderFactory {
     this.addGrants(application)
     this.addResponseModes(application)
     this.addPkceMethods(application)
-    this.addEndpoints()
+    this.addEndpoints(application)
 
     this.container.bindToken(application).toSelf()
 
@@ -149,9 +149,15 @@ class InternalProviderFactory {
    *
    * @param application Authorization Server.
    */
-  private addEndpoints(): void {
-    this.container.bindToken(AuthorizationEndpoint).toSelf()
-    this.container.bindToken(TokenEndpoint).toSelf()
+  private addEndpoints<T>(application: Constructor<T>): void {
+    const endpoints: Constructor<Endpoint>[] =
+      Reflect.getMetadata('guarani:oauth2:endpoints', application) ?? []
+
+    endpoints.push(AuthorizationEndpoint, TokenEndpoint)
+
+    endpoints.forEach(endpoint =>
+      this.container.bindToken<Endpoint>('Endpoint').toClass(endpoint)
+    )
   }
 }
 

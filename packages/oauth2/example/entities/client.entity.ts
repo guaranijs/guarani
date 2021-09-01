@@ -3,7 +3,6 @@ import { secretToken, UUID } from '@guarani/utils'
 import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm'
 
 import {
-  SupportedApplicationType,
   SupportedClientAuthentication,
   SupportedGrantType,
   SupportedResponseType
@@ -24,7 +23,6 @@ interface IClient {
   readonly authenticationMethod?: SupportedClientAuthentication
   readonly grantTypes?: SupportedGrantType[]
   readonly responseTypes?: SupportedResponseType[]
-  readonly applicationType?: SupportedApplicationType
 }
 
 @Entity({ name: 'clients' })
@@ -53,9 +51,6 @@ export class Client extends BaseEntity implements ClientEntity {
   @Column({ name: 'response_types', type: 'text', transformer })
   public responseTypes: SupportedResponseType[]
 
-  @Column({ name: 'application_type', type: 'varchar', length: 32 })
-  public applicationType: SupportedApplicationType
-
   public constructor(data?: IClient) {
     super()
 
@@ -69,7 +64,6 @@ export class Client extends BaseEntity implements ClientEntity {
         data.authenticationMethod ?? 'client_secret_basic'
       this.grantTypes = data.grantTypes ?? ['authorization_code', 'implicit']
       this.responseTypes = data.responseTypes ?? ['code']
-      this.applicationType = data.applicationType ?? 'web'
     }
   }
 

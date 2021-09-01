@@ -18,6 +18,8 @@ export function AuthorizationServer(options: ProviderOptions): ClassDecorator {
       target
     )
 
+    defineMetadata('endpoints', options.endpoints, target)
+
     defineMetadata('response-modes', options.responseModes, target)
 
     defineMetadata('grants', options.grants, target)

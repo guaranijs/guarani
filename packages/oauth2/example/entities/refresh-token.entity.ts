@@ -41,7 +41,6 @@ export class RefreshToken extends BaseEntity implements RefreshTokenEntity {
   public readonly scopes: string[]
 
   @OneToOne(() => AccessToken, {
-    cascade: true,
     eager: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'

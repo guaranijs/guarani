@@ -1,4 +1,5 @@
 import { AuthorizationServer } from '../../lib/bootstrap'
+import { RevocationEndpoint } from '../../lib/endpoints'
 import {
   AuthorizationCodeGrant,
   ClientCredentialsGrant,
@@ -18,6 +19,7 @@ import { AppAdapter } from './app-adapter'
     ImplicitGrant,
     PasswordGrant,
     RefreshTokenGrant
-  ]
+  ],
+  endpoints: [RevocationEndpoint]
 })
 export class AppProvider extends ExpressProvider {}

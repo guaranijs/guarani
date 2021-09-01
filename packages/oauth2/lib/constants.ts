@@ -15,6 +15,9 @@ export type SupportedClientAuthentication =
   | 'none'
   | 'private_key_jwt'
 
+/**
+ * Supported Endpoints.
+ */
 export type SupportedEndpoint =
   | 'authorization'
   | 'introspection'
@@ -55,3 +58,8 @@ export type SupportedResponseType =
   | 'code token'
   | 'id_token token'
   | 'code id_token token'
+
+/**
+ * Supported Token Type Hints.
+ */
+export type SupportedTokenTypeHint = 'access_token' | 'refresh_token'

@@ -56,7 +56,6 @@ export class AuthorizationCode
   public readonly expiresAt: Date
 
   @ManyToOne(() => Client, {
-    cascade: true,
     eager: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'
@@ -65,7 +64,6 @@ export class AuthorizationCode
   public readonly client: Client
 
   @ManyToOne(() => User, {
-    cascade: true,
     eager: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'

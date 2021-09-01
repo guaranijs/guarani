@@ -8,7 +8,7 @@ import {
   ClientSecretBasic
 } from '../client-authentication'
 import { AuthorizationEndpoint, Endpoint, TokenEndpoint } from '../endpoints'
-import { Grant } from '../grants'
+import { AuthorizationCodeGrant, Grant, ImplicitGrant } from '../grants'
 import { PkceMethod, PlainPkceMethod, S256PkceMethod } from '../pkce'
 import {
   FragmentResponseMode,
@@ -103,7 +103,7 @@ class InternalProviderFactory {
     const grant: Constructor<Grant>[] = Reflect.getMetadata(
       'guarani:oauth2:grants',
       application
-    )
+    ) ?? [AuthorizationCodeGrant, ImplicitGrant]
 
     grant.forEach(grant =>
       this.container.bindToken<Grant>('Grant').toClass(grant)

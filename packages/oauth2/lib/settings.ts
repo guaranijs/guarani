@@ -6,6 +6,11 @@ export interface SettingsParams {
    * Base URL of the Authorization Server.
    */
   readonly issuer: string
+
+  /**
+   * OAuth 2.0 Error page URL.
+   */
+  readonly errorUrl?: string
 }
 
 /**
@@ -18,11 +23,17 @@ export class Settings {
   public readonly issuer: string
 
   /**
+   * OAuth 2.0 Error page URL.
+   */
+  public readonly errorUrl?: string
+
+  /**
    * Instantiates the Settings of the Authorization Server.
    *
    * @param params Parameters of the Settings.
    */
   public constructor(params: SettingsParams) {
     this.issuer = params.issuer
+    this.errorUrl = params.errorUrl ?? '/oauth2/error'
   }
 }

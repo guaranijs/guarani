@@ -58,7 +58,7 @@ export class AuthorizationEndpoint implements Endpoint {
    * URL of the OAuth 2.0 Error Page.
    */
   private get errorUrl(): string {
-    return new URL('/oauth2/error', this.settings.issuer).href
+    return new URL(this.settings.errorUrl, this.settings.issuer).href
   }
 
   /**

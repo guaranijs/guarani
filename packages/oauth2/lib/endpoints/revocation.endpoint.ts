@@ -52,6 +52,14 @@ export class RevocationEndpoint implements Endpoint {
   public readonly name: SupportedEndpoint = 'revocation'
 
   /**
+   * List with the revocable token types.
+   */
+  protected readonly SUPPORTED_TOKEN_TYPE_HINTS: SupportedTokenTypeHint[] = [
+    'access_token',
+    'refresh_token'
+  ]
+
+  /**
    * Default HTTP headers to be included in the Response.
    */
   private readonly headers: OutgoingHttpHeaders = {
@@ -71,6 +79,7 @@ export class RevocationEndpoint implements Endpoint {
     @InjectAll('Grant') private readonly grants: Grant[],
     private readonly clientAuthenticator: ClientAuthenticator
   ) {
+    // The Spec mandates the support for revoking Refresh Tokens.
     if (!this.grants.find(grant => grant.name === 'refresh_token')) {
       throw new Error('The Provider does not support Refresh Tokens.')
     }
@@ -134,7 +143,7 @@ export class RevocationEndpoint implements Endpoint {
 
     if (
       token_type_hint &&
-      !['access_token', 'refresh_token'].includes(token_type_hint)
+      !this.SUPPORTED_TOKEN_TYPE_HINTS.includes(token_type_hint)
     ) {
       throw new UnsupportedTokenType({
         description: `Unsupported token_type_hint "${token_type_hint}".`
@@ -148,7 +157,7 @@ export class RevocationEndpoint implements Endpoint {
    * @param client Client of the Request.
    * @param token Token provided by the Client.
    */
-  private async revokeToken(client: Client, token: string): Promise<void> {
+  protected async revokeToken(client: Client, token: string): Promise<void> {
     let tokenClientId: Buffer
     const clientId = Buffer.from(client.getClientId())
 

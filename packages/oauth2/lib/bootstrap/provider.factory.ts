@@ -17,9 +17,21 @@ import {
 } from '../response-modes'
 import { Settings } from '../settings'
 
+/**
+ * Factory for configuring and instantiating a new OAuth 2.0 Provider.
+ */
 class InternalProviderFactory {
+  /**
+   * Dependency Injection Container.
+   */
   private readonly container = getContainer('oauth2')
 
+  /**
+   * Fabricates a new instance of the OAuth 2.0 Authorization Server.
+   *
+   * @param application Provider class decorated and configured.
+   * @returns Instantiated OAuth 2.0 Authorization Server.
+   */
   public create<T>(application: Constructor<T>): T {
     this.defineAdapter(application)
     this.defineSettings(application)
@@ -34,6 +46,11 @@ class InternalProviderFactory {
     return this.container.resolve(application)
   }
 
+  /**
+   * Defines the Adapter of the Authorization Server.
+   *
+   * @param application Authorization Server.
+   */
   private defineAdapter<T>(application: Constructor<T>): void {
     const adapter: Adapter = Reflect.getMetadata(
       'guarani:oauth2:adapter',
@@ -43,6 +60,11 @@ class InternalProviderFactory {
     this.container.bindToken<Adapter>('Adapter').toValue(adapter)
   }
 
+  /**
+   * Defines the Settings of the Authorization Server.
+   *
+   * @param application Authorization Server.
+   */
   private defineSettings<T>(application: Constructor<T>): void {
     const settings: Settings = Reflect.getMetadata(
       'guarani:oauth2:settings',
@@ -52,6 +74,11 @@ class InternalProviderFactory {
     this.container.bindToken(Settings).toValue(settings)
   }
 
+  /**
+   * Defines the Client Authentication Methods of the Authorization Server.
+   *
+   * @param application Authorization Server.
+   */
   private addClientAuthentication<T>(application: Constructor<T>): void {
     const methods: Constructor<ClientAuthentication>[] = Reflect.getMetadata(
       'guarani:oidc:client-authentication',
@@ -67,6 +94,11 @@ class InternalProviderFactory {
     this.container.bindToken(ClientAuthenticator).toSelf()
   }
 
+  /**
+   * Defines the OAuth 2.0 Grants of the Authorization Server.
+   *
+   * @param application Authorization Server.
+   */
   private addGrants<T>(application: Constructor<T>): void {
     const grant: Constructor<Grant>[] = Reflect.getMetadata(
       'guarani:oauth2:grants',
@@ -78,6 +110,11 @@ class InternalProviderFactory {
     )
   }
 
+  /**
+   * Defines the Response Modes of the Authorization Server.
+   *
+   * @param application Authorization Server.
+   */
   private addResponseModes<T>(application: Constructor<T>): void {
     const responseModes: Constructor<ResponseMode>[] = Reflect.getMetadata(
       'guarani:oauth2:response-modes',
@@ -91,6 +128,11 @@ class InternalProviderFactory {
     )
   }
 
+  /**
+   * Defines the PKCE Methods of the Authorization Server.
+   *
+   * @param application Authorization Server.
+   */
   private addPkceMethods<T>(application: Constructor<T>): void {
     const pkceMethods: Constructor<PkceMethod>[] = Reflect.getMetadata(
       'guarani:oauth2:pkce-methods',
@@ -102,6 +144,11 @@ class InternalProviderFactory {
     )
   }
 
+  /**
+   * Defines the Endpoints of the Authorization Server.
+   *
+   * @param application Authorization Server.
+   */
   private addEndpoints(): void {
     this.container.bindToken(AuthorizationEndpoint).toSelf()
     this.container.bindToken(TokenEndpoint).toSelf()

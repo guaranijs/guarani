@@ -22,12 +22,40 @@ interface TokenParameters extends BaseTokenParameters {
   readonly scope?: string
 }
 
+/**
+ * Implementation of the Authorization Code Grant as described in
+ * {@link https://www.rfc-editor.org/rfc/rfc6749.html#section-6 RFC 6749}.
+ *
+ * In this Grant the Client requests the Authorization Server for the issuance
+ * of a new Access Token without the need to repeat the User Consent process.
+ */
 @Injectable()
 export class RefreshTokenGrant extends Grant implements GrantType {
+  /**
+   * Name of the Grant.
+   */
   public readonly name: SupportedGrantType = 'refresh_token'
 
+  /**
+   * Name of the Grant's Grant Type.
+   */
   public readonly grantType: SupportedGrantType = 'refresh_token'
 
+  /**
+   * **Token Flow** of the Refresh Token Grant.
+   *
+   * In this flow the Client uses the Refresh Token received by the Provider as
+   * a grant to request a new Access Token without the need to trigger a new
+   * User Consent process.
+   *
+   * If the Refresh Token presented is valid, the Authorization Server issues
+   * a new Access Token and a new Refresh Token. It also invalidates the
+   * provided Refresh Token, in a process called **Refresh Token Rotation**.
+   *
+   * @param request Current Request.
+   * @param client Client of the Request.
+   * @returns OAuth 2.0 Token Response.
+   */
   public async token(request: Request, client: Client): Promise<OAuth2Token> {
     const data = <TokenParameters>request.data
 
@@ -44,13 +72,24 @@ export class RefreshTokenGrant extends Grant implements GrantType {
       oldRefreshToken.getUser()
     )
 
-    const refreshToken = await this.adapter.createRefreshToken(accessToken)
+    const refreshToken = await this.adapter.createRefreshToken(
+      oldRefreshToken.getScopes(),
+      oldRefreshToken.getClient(),
+      oldRefreshToken.getUser(),
+      accessToken
+    )
 
     await this.revokeRefreshToken(oldRefreshToken)
 
     return this.createTokenResponse(accessToken, refreshToken)
   }
 
+  /**
+   * Fetches the requested Refresh Token from the application's storage.
+   *
+   * @param refreshToken Token provided by the Client.
+   * @returns Refresh Token based on the provided token.
+   */
   private async getRefreshToken(refreshToken: string): Promise<RefreshToken> {
     if (!refreshToken) {
       throw new InvalidRequest({
@@ -67,6 +106,12 @@ export class RefreshTokenGrant extends Grant implements GrantType {
     return token
   }
 
+  /**
+   * Checks the fetched Refresh Token against the Client.
+   *
+   * @param refreshToken Refresh Token fetched to be checked.
+   * @param client Client of the Request.
+   */
   private checkRefreshToken(refreshToken: RefreshToken, client: Client): void {
     // TODO: Security breach.
     if (refreshToken.getClient().getClientId() !== client.getClientId()) {
@@ -78,6 +123,14 @@ export class RefreshTokenGrant extends Grant implements GrantType {
     }
   }
 
+  /**
+   * Returns the original scopes of the provided Refresh Token or a subset
+   * thereof, as requested by the Client.
+   *
+   * @param refreshToken Refresh Token provided by the Client.
+   * @param scope Subset of scopes requested by the Client.
+   * @returns Scopes of the new Access Token.
+   */
   private async getScopes(
     refreshToken: RefreshToken,
     scope: string
@@ -104,11 +157,14 @@ export class RefreshTokenGrant extends Grant implements GrantType {
     return scopes
   }
 
+  /**
+   * Revokes the provided Refresh Token and its associated Access Token
+   * to prevent misuse and Replay Attacks.
+   *
+   * @param refreshToken Refresh Token provided by the Client.
+   */
   private async revokeRefreshToken(refreshToken: RefreshToken): Promise<void> {
-    await this.adapter.revokeRefreshToken(refreshToken.getToken())
-
-    await this.adapter.revokeAccessToken(
-      refreshToken.getAccessToken().getToken()
-    )
+    await this.adapter.revokeRefreshToken(refreshToken)
+    await this.adapter.revokeAccessToken(refreshToken.getAccessToken())
   }
 }

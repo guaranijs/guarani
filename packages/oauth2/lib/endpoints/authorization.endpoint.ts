@@ -39,6 +39,14 @@ export class AuthorizationEndpoint implements Endpoint {
    */
   public readonly name: SupportedEndpoint = 'authorization'
 
+  /**
+   * Instantiates the Authorization Endpoint.
+   *
+   * @param adapter Adapter provided by the application.
+   * @param grants Response Type Grants provided by the application.
+   * @param responseModes Response Modes provided by the application.
+   * @param settings Settings of the Authorization Server.
+   */
   public constructor(
     @Inject('Adapter') private readonly adapter: Adapter,
     @InjectAll('Grant') private readonly grants: ResponseType[],

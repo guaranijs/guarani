@@ -88,23 +88,17 @@ export class AppAdapter implements Adapter {
     return await AccessToken.findOne({ where: { token } })
   }
 
-  public async revokeAccessToken(token: string): Promise<void> {
-    const accessToken = await this.findAccessToken(token)
-
-    if (accessToken) {
-      await accessToken.softRemove()
-    }
+  public async revokeAccessToken(accessToken: AccessToken): Promise<void> {
+    await accessToken.softRemove()
   }
 
   public async createRefreshToken(
+    scopes: string[],
+    client: Client,
+    user: User,
     accessToken: AccessToken
   ): Promise<RefreshToken> {
-    const refreshToken = new RefreshToken({
-      accessToken,
-      client: accessToken.client,
-      scopes: accessToken.scopes,
-      user: accessToken.user
-    })
+    const refreshToken = new RefreshToken({ accessToken, client, scopes, user })
 
     await refreshToken.save()
 
@@ -115,12 +109,8 @@ export class AppAdapter implements Adapter {
     return await RefreshToken.findOne({ where: { token } })
   }
 
-  public async revokeRefreshToken(token: string): Promise<void> {
-    const refreshToken = await this.findRefreshToken(token)
-
-    if (refreshToken) {
-      await refreshToken.softRemove()
-    }
+  public async revokeRefreshToken(refreshToken: RefreshToken): Promise<void> {
+    await refreshToken.softRemove()
   }
 
   public async createAuthorizationCode(
@@ -147,11 +137,7 @@ export class AppAdapter implements Adapter {
     return await AuthorizationCode.findOne({ where: { code } })
   }
 
-  public async revokeAuthorizationCode(code: string): Promise<void> {
-    const authorizationCode = await this.findAuthorizationCode(code)
-
-    if (authorizationCode) {
-      await authorizationCode.remove()
-    }
+  public async revokeAuthorizationCode(code: AuthorizationCode): Promise<void> {
+    await code.remove()
   }
 }

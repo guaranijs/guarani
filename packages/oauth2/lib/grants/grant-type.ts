@@ -25,8 +25,8 @@ export interface GrantType {
    * Implementation of the Grant's Token Flow.
    *
    * @param request Current Request.
-   * @param client Client requesting an OAuth 2.0 Token.
-   * @returns OAuth 2.0 Token.
+   * @param client Client of the Request.
+   * @returns OAuth 2.0 Token Response.
    */
   token(request: Request, client: Client): Promise<OAuth2Token>
 }

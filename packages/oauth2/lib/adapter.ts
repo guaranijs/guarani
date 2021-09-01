@@ -42,6 +42,8 @@ export interface Adapter {
    * Searches for a User in the application's storage and
    * returns it if it succeeds, otherwise returns **undefined**.
    *
+   * This method must be implemented **ONLY** if using the **Password Grant**.
+   *
    * @param username Username of the User to be fetched.
    * @returns User based on the provided Username.
    */
@@ -94,16 +96,18 @@ export interface Adapter {
   findAccessToken?(token: string): Promise<AccessToken>
 
   /**
-   * Revokes an Access Token from the application's storage
-   * based on the provided token.
+   * Revokes the provided Access Token from the application's storage.
    *
-   * @param token Token to be revoked.
+   * @param accessToken Access Token to be revoked.
    */
-  revokeAccessToken?(token: string): Promise<void>
+  revokeAccessToken?(accessToken: AccessToken): Promise<void>
 
   /**
    * Generates a **Refresh Token** that creates a tight coupling
    * between the Client, the User and the Scopes granted to the Client.
+   *
+   * **This method must be implemented **ONLY** if using
+   * the **Refresh Token Grant**.
    *
    * @param scopes Scopes granted to the Client.
    * @param client Client requesting the Refresh Token.
@@ -111,11 +115,19 @@ export interface Adapter {
    * @param accessToken Access Token associated with this Refresh Token.
    * @returns **Refresh Token** for use by the Client.
    */
-  createRefreshToken?(accessToken: AccessToken): Promise<RefreshToken>
+  createRefreshToken?(
+    scopes: string[],
+    client: Client,
+    user: User,
+    accessToken: AccessToken
+  ): Promise<RefreshToken>
 
   /**
    * Searches for an Refresh Token in the application's storage and
    * returns it if it succeeds, otherwise returns **undefined**.
+   *
+   * **This method must be implemented **ONLY** if using
+   * the **Refresh Token Grant**.
    *
    * @param token Token of the Refresh Token to be fetched.
    * @returns Refresh Token based on the provided token.
@@ -123,16 +135,21 @@ export interface Adapter {
   findRefreshToken?(token: string): Promise<RefreshToken>
 
   /**
-   * Revokes a Refresh Token from the application's storage
-   * based on the provided token.
+   * Revokes the provided Refresh Token from the application's storage.
    *
-   * @param token Token to be revoked.
+   * **This method must be implemented **ONLY** if using
+   * the **Refresh Token Grant**.
+   *
+   * @param refreshToken Refresh Token to be revoked.
    */
-  revokeRefreshToken?(token: string): Promise<void>
+  revokeRefreshToken?(refreshToken: RefreshToken): Promise<void>
 
   /**
    * Generates an **Authorization Code** as a temporary grant from the User
    * to the Client for usage at the Token Endpoint.
+   *
+   * This method must be implemented **ONLY** if using
+   * the **Authorization Code Grant**.
    *
    * @param data Authorization Parameters of the Authorization Code Grant.
    * @param scopes Scopes granted to the Client.
@@ -152,16 +169,21 @@ export interface Adapter {
    * Searches for an Authorization Code in the application's storage
    * and returns it if it succeeds, otherwise returns **undefined**.
    *
+   * This method must be implemented **ONLY** if using
+   * the **Authorization Code Grant**.
+   *
    * @param code Code of the Authorization Code to be fetched.
    * @returns Authorization Code based on the provided code.
    */
   findAuthorizationCode?(code: string): Promise<AuthorizationCode>
 
   /**
-   * Revokes an Authorization Code from the application's storage
-   * based on the provided code.
+   * Revokes the provided Authorization Code from the application's storage.
    *
-   * @param code Code to be deleted.
+   * This method must be implemented **ONLY** if using
+   * the **Authorization Code Grant**.
+   *
+   * @param authorizationCode Authorization Code to be deleted.
    */
-  revokeAuthorizationCode?(code: string): Promise<void>
+  revokeAuthorizationCode?(authorizationCode: AuthorizationCode): Promise<void>
 }

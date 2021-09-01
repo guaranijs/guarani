@@ -16,6 +16,8 @@ import { router } from './router'
 import { initialize } from './strategy'
 import { User } from './entities'
 
+const PORT = process.env.PORT || 3333
+
 async function configure(app: express.Express) {
   const connection = await createConnection(ormconfig)
   await connection.synchronize()
@@ -85,7 +87,7 @@ async function main() {
 
   app.use(router)
 
-  app.listen(3333, () => console.log('Listening on port 3333.'))
+  app.listen(PORT, () => console.log(`Listening on port ${PORT}.`))
 }
 
 main()

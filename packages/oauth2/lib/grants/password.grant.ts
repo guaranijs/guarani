@@ -27,12 +27,37 @@ interface TokenParameters extends BaseTokenParameters {
   readonly scope?: string
 }
 
+/**
+ * Implementation of the Authorization Code Grant as described in
+ * {@link https://www.rfc-editor.org/rfc/rfc6749.html#section-4.3 RFC 6749}.
+ *
+ * In this grant the Client must obtain the **username** and **password**
+ * of the User and present them as the User's grant to the Authorization Server.
+ */
 @Injectable()
 export class PasswordGrant extends Grant implements GrantType {
+  /**
+   * Name of the Grant.
+   */
   public readonly name: SupportedGrantType = 'password'
 
+  /**
+   * Name of the Grant's Grant Type.
+   */
   public readonly grantType: SupportedGrantType = 'password'
 
+  /**
+   * **Token Flow** of the Password Grant.
+   *
+   * In this flow the Authorization Server checks the `username` and `password`
+   * provided by the Client on behalf of the User, checks if the credentials
+   * are valid, and issues an Access Token and, if allowed to the Client,
+   * a Refresh Token.
+   *
+   * @param request Current Request.
+   * @param client Client of the Request.
+   * @returns OAuth 2.0 Token Response.
+   */
   public async token(request: Request, client: Client): Promise<OAuth2Token> {
     const data = <TokenParameters>request.data
 

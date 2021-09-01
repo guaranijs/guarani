@@ -44,7 +44,7 @@ export interface AuthorizationParameters {
  */
 export interface ResponseType {
   /**
-   * Name of the Grant's Response Types.
+   * Names of the Grant's Response Types.
    */
   readonly responseTypes: SupportedResponseType[]
 
@@ -57,7 +57,7 @@ export interface ResponseType {
    * Implementation of the Grant's Authorization Flow.
    *
    * @param request Current Request.
-   * @param client Client requesting authorization.
+   * @param client Client of the Request.
    * @param user User that granted authorization.
    * @returns Dictionary with the parameters of the Authorization Response.
    */

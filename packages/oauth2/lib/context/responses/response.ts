@@ -45,16 +45,32 @@ export abstract class Response {
     return this._body
   }
 
+  /**
+   * Sets a new HTTP Status Code for the Response.
+   *
+   * @param statusCode HTTP Status Code.
+   */
   public status(statusCode: number): Response {
     this._statusCode = statusCode
     return this
   }
 
+  /**
+   * Sets an HTTP Header on the Response.
+   *
+   * @param name Name of the HTTP Header.
+   * @param value Value of the HTTP Header.
+   */
   public setHeader(name: string, value: OutgoingHttpHeader): Response {
     this._headers[name] = value
     return this
   }
 
+  /**
+   * Sets multiple HTTP Headers on the Response.
+   *
+   * @param values Dictionary of the HTTP Headers.
+   */
   public setHeaders(values: OutgoingHttpHeaders): Response {
     Object.assign(this._headers, values)
     return this

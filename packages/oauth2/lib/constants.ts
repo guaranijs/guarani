@@ -1,5 +1,3 @@
-export type SupportedApplicationType = 'web' | 'native'
-
 /**
  * Supported Client Assertion Types.
  */

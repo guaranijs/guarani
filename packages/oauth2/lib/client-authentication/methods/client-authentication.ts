@@ -26,6 +26,12 @@ export abstract class ClientAuthentication {
    */
   public abstract readonly name: SupportedClientAuthentication
 
+  /**
+   * Instantiates a new Client Authentication Method.
+   *
+   * @param adapter Adapter provided by the application.
+   * @param settings Settings of the Authorization Server.
+   */
   public constructor(
     @Inject('Adapter') protected readonly adapter: Adapter,
     protected readonly settings: Settings

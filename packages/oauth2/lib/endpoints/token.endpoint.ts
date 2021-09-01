@@ -36,6 +36,12 @@ export class TokenEndpoint implements Endpoint {
     Pragma: 'no-cache'
   }
 
+  /**
+   * Instantiates the Token Endpoint.
+   *
+   * @param grants Grant Type Grants provided by the application.
+   * @param clientAuthenticator Client Authenticator instance.
+   */
   public constructor(
     @InjectAll('Grant') private readonly grants: GrantType[],
     private readonly clientAuthenticator: ClientAuthenticator

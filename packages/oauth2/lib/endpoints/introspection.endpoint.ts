@@ -6,7 +6,11 @@ import { OutgoingHttpHeaders } from 'http'
 
 import { Adapter } from '../adapter'
 import { ClientAuthenticator } from '../client-authentication'
-import { SupportedEndpoint, SupportedTokenTypeHint } from '../constants'
+import {
+  SupportedClientAuthentication,
+  SupportedEndpoint,
+  SupportedTokenTypeHint
+} from '../constants'
 import { JsonResponse, Request, Response } from '../context'
 import { Client } from '../entities'
 import {
@@ -123,6 +127,13 @@ export class IntrospectionEndpoint implements Endpoint {
   public readonly name: SupportedEndpoint = 'introspection'
 
   /**
+   * List of the Client Authentication Methods supported by the Endpoint.
+   */
+  protected readonly CLIENT_AUTHENTICATION_METHODS: SupportedClientAuthentication[] = [
+    'client_secret_basic'
+  ]
+
+  /**
    * List with the introspectable token types.
    */
   protected readonly SUPPORTED_TOKEN_TYPE_HINTS: SupportedTokenTypeHint[] = [
@@ -183,7 +194,11 @@ export class IntrospectionEndpoint implements Endpoint {
     try {
       this.checkParameters(data)
 
-      const client = await this.clientAuthenticator.authenticate(request)
+      const client = await this.clientAuthenticator.authenticate(
+        request,
+        this.CLIENT_AUTHENTICATION_METHODS
+      )
+
       const introspectionResponse = await this.introspectToken(client, data)
 
       return new JsonResponse(introspectionResponse).setHeaders(this.headers)

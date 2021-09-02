@@ -6,7 +6,11 @@ import { OutgoingHttpHeaders } from 'http'
 
 import { Adapter } from '../adapter'
 import { ClientAuthenticator } from '../client-authentication'
-import { SupportedEndpoint, SupportedTokenTypeHint } from '../constants'
+import {
+  SupportedClientAuthentication,
+  SupportedEndpoint,
+  SupportedTokenTypeHint
+} from '../constants'
 import { EmptyResponse, JsonResponse, Request, Response } from '../context'
 import { Client } from '../entities'
 import {
@@ -50,6 +54,13 @@ export class RevocationEndpoint implements Endpoint {
    * Name of the Endpoint.
    */
   public readonly name: SupportedEndpoint = 'revocation'
+
+  /**
+   * List of the Client Authentication Methods supported by the Endpoint.
+   */
+  protected readonly CLIENT_AUTHENTICATION_METHODS: SupportedClientAuthentication[] = [
+    'client_secret_basic'
+  ]
 
   /**
    * List with the revocable token types.
@@ -112,7 +123,10 @@ export class RevocationEndpoint implements Endpoint {
     try {
       this.checkParameters(data)
 
-      const client = await this.clientAuthenticator.authenticate(request)
+      const client = await this.clientAuthenticator.authenticate(
+        request,
+        this.CLIENT_AUTHENTICATION_METHODS
+      )
 
       await this.revokeToken(client, data.token)
 

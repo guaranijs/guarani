@@ -1,4 +1,5 @@
 import { Injectable, InjectAll } from '@guarani/ioc'
+import { SupportedClientAuthentication } from '../constants'
 
 import { Request } from '../context'
 import { Client } from '../entities'
@@ -23,8 +24,24 @@ export class ClientAuthenticator {
     private readonly methods: ClientAuthentication[]
   ) {}
 
-  public async authenticate(request: Request): Promise<Client> {
+  /**
+   * Authenticates the Client of the Request based on the Authentication Methods
+   * supported by the Authorization Server, as well as the Methods supported by
+   * the respective endpoint requesting the authentication.
+   *
+   * @param request Current request.
+   * @param methods Authentication Methods supported by the endpoint.
+   * @returns Authenticated Client.
+   */
+  public async authenticate(
+    request: Request,
+    methods?: SupportedClientAuthentication[]
+  ): Promise<Client> {
     for (const method of this.methods) {
+      if (methods != null && !methods.includes(method.name)) {
+        continue
+      }
+
       const client = await method.authenticate(request)
 
       if (!client) {

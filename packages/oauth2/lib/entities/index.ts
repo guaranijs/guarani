@@ -1,3 +1,4 @@
+export { AbstractToken } from './abstract-token'
 export { AccessToken } from './access-token'
 export { AuthorizationCode } from './authorization-code'
 export { Client } from './client'

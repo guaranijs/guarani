@@ -12,7 +12,7 @@ import {
   SupportedTokenTypeHint
 } from '../constants'
 import { JsonResponse, Request, Response } from '../context'
-import { Client } from '../entities'
+import { AbstractToken, Client } from '../entities'
 import {
   InvalidRequest,
   OAuth2Error,
@@ -149,6 +149,11 @@ export class IntrospectionEndpoint implements Endpoint {
   }
 
   /**
+   * Defines the default response for errors and inactive tokens.
+   */
+  private readonly inactiveToken: IntrospectionResponse = { active: false }
+
+  /**
    * Instantiates the Introspection Endpoint.
    *
    * @param adapter Adapter provided by the application.
@@ -247,76 +252,42 @@ export class IntrospectionEndpoint implements Endpoint {
     client: Client,
     data: IntrospectionParameters
   ): Promise<IntrospectionResponse> {
-    let tokenClientId: Buffer
+    const token: AbstractToken =
+      (await this.adapter.findRefreshToken(data.token)) ??
+      (await this.adapter.findAccessToken(data.token))
+
+    if (!token) {
+      return this.inactiveToken
+    }
+
     const clientId = Buffer.from(client.getClientId())
+    const tokenClientId = Buffer.from(token.getClient().getClientId())
 
-    const accessToken = await this.adapter.findAccessToken(data.token)
-
-    if (accessToken) {
-      tokenClientId = Buffer.from(accessToken.getClient().getClientId())
-
-      if (!timingSafeEqual(clientId, tokenClientId)) {
-        return
-      }
-
-      if (accessToken.isRevoked() || new Date() > accessToken.getExpiresAt()) {
-        return { active: false }
-      }
-
-      return removeNullishValues<IntrospectionResponse>({
-        active: true,
-        scope: accessToken.getScopes().join(' '),
-        client_id: accessToken.getClient().getClientId(),
-        username: null,
-        token_type: 'Bearer',
-        exp: Math.floor(accessToken.getExpiresAt().getTime() / 1000),
-        iat: Math.floor(accessToken.getIssuedAt().getTime() / 1000),
-        nbf: null,
-        sub:
-          accessToken.getUser()?.getUserId() ??
-          accessToken.getClient().getClientId(),
-        aud: null,
-        iss: this.settings.issuer,
-        jti: null
-      })
+    if (!timingSafeEqual(clientId, tokenClientId)) {
+      return this.inactiveToken
     }
 
-    if (!this.SUPPORTED_TOKEN_TYPE_HINTS.includes('refresh_token')) {
-      return { active: false }
+    if (
+      token.isRevoked() ||
+      new Date() > token.getExpiresAt() ||
+      new Date() < token.getValidAfter()
+    ) {
+      return this.inactiveToken
     }
 
-    const refreshToken = await this.adapter.findRefreshToken(data.token)
-
-    if (refreshToken) {
-      tokenClientId = Buffer.from(refreshToken.getClient().getClientId())
-
-      if (!timingSafeEqual(clientId, tokenClientId)) {
-        return
-      }
-
-      if (
-        refreshToken.isRevoked() ||
-        new Date() > refreshToken.getExpiresAt()
-      ) {
-        return { active: false }
-      }
-
-      return removeNullishValues<IntrospectionResponse>({
-        active: true,
-        scope: refreshToken.getScopes().join(' '),
-        client_id: refreshToken.getClient().getClientId(),
-        username: null,
-        token_type: 'Bearer',
-        exp: Math.floor(refreshToken.getExpiresAt().getTime() / 1000),
-        iat: Math.floor(refreshToken.getIssuedAt().getTime() / 1000),
-        nbf: null,
-        sub: refreshToken.getUser().getUserId(),
-        aud: null,
-        iss: this.settings.issuer,
-        jti: null
-      })
-    }
-
-    return { active: false }
+    return removeNullishValues<IntrospectionResponse>({
+      active: true,
+      scope: token.getScopes().join(' '),
+      client_id: token.getClient().getClientId(),
+      username: null,
+      token_type: 'Bearer',
+      exp: Math.floor(token.getExpiresAt().getTime() / 1000),
+      iat: Math.floor(token.getIssuedAt().getTime() / 1000),
+      nbf: null,
+      sub: token.getUser()?.getUserId() ?? token.getClient().getClientId(),
+      aud: token.getAudience(),
+      iss: this.settings.issuer,
+      jti: null
+    })
   }
 }

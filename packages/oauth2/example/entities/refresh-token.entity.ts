@@ -1,4 +1,4 @@
-import { secretToken } from '@guarani/utils'
+import { OneOrMany, secretToken } from '@guarani/utils'
 
 import {
   BaseEntity,
@@ -87,7 +87,7 @@ export class RefreshToken extends BaseEntity implements RefreshTokenEntity {
     }
   }
 
-  public getToken(): string {
+  public getIdentifier(): string {
     return this.token
   }
 
@@ -105,6 +105,14 @@ export class RefreshToken extends BaseEntity implements RefreshTokenEntity {
 
   public getIssuedAt(): Date {
     return this.createdAt
+  }
+
+  public getValidAfter(): Date {
+    return this.getIssuedAt()
+  }
+
+  public getAudience(): OneOrMany<string> {
+    return this.client.getClientId()
   }
 
   public getClient(): Client {

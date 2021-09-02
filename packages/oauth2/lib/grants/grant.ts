@@ -120,11 +120,11 @@ export abstract class Grant {
     )
 
     return removeNullishValues<OAuth2Token>({
-      access_token: accessToken.getToken(),
+      access_token: accessToken.getIdentifier(),
       token_type: 'Bearer',
       expires_in: expiresIn,
       scope: accessToken.getScopes().join(' '),
-      refresh_token: refreshToken?.getToken()
+      refresh_token: refreshToken?.getIdentifier()
     })
   }
 }

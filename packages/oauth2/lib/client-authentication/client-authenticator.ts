@@ -1,6 +1,6 @@
 import { Injectable, InjectAll } from '@guarani/ioc'
-import { SupportedClientAuthentication } from '../constants'
 
+import { SupportedClientAuthentication } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
 import { InvalidClient } from '../exceptions'

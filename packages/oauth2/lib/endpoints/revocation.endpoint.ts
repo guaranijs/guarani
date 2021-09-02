@@ -12,7 +12,7 @@ import {
   SupportedTokenTypeHint
 } from '../constants'
 import { EmptyResponse, JsonResponse, Request, Response } from '../context'
-import { Client } from '../entities'
+import { AbstractToken, AccessToken, Client, RefreshToken } from '../entities'
 import {
   InvalidRequest,
   OAuth2Error,
@@ -175,34 +175,38 @@ export class RevocationEndpoint implements Endpoint {
     client: Client,
     data: RevocationParameters
   ): Promise<void> {
-    let tokenClientId: Buffer
+    const token: AbstractToken =
+      (await this.adapter.findRefreshToken(data.token)) ??
+      (await this.adapter.findAccessToken(data.token))
+
+    if (!token) {
+      return
+    }
+
     const clientId = Buffer.from(client.getClientId())
+    const tokenClientId = Buffer.from(token.getClient().getClientId())
 
-    const refreshToken = await this.adapter.findRefreshToken(data.token)
+    if (!timingSafeEqual(clientId, tokenClientId)) {
+      return
+    }
 
-    if (refreshToken) {
-      tokenClientId = Buffer.from(refreshToken.getClient().getClientId())
+    if (
+      token.isRevoked() ||
+      new Date() > token.getExpiresAt() ||
+      new Date() < token.getValidAfter()
+    ) {
+      return
+    }
 
-      if (!timingSafeEqual(clientId, tokenClientId)) {
-        return
-      }
-
-      await this.adapter.revokeRefreshToken(refreshToken)
-      await this.adapter.revokeAccessToken(refreshToken.getAccessToken())
+    if (RefreshToken.isRefreshToken(token)) {
+      await this.adapter.revokeRefreshToken(token)
+      await this.adapter.revokeAccessToken(token.getAccessToken())
 
       return
     }
 
-    const accessToken = await this.adapter.findAccessToken(data.token)
-
-    if (accessToken) {
-      tokenClientId = Buffer.from(accessToken.getClient().getClientId())
-
-      if (!timingSafeEqual(clientId, tokenClientId)) {
-        return
-      }
-
-      return await this.adapter.revokeAccessToken(accessToken)
+    if (AccessToken.isAccessToken(token)) {
+      return await this.adapter.revokeAccessToken(token)
     }
   }
 }

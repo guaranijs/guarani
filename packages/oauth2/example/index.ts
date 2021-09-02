@@ -74,6 +74,17 @@ async function main() {
     return res.json(req.query)
   })
 
+  app.post('/oauth2/introspect', async (req, res) => {
+    const request = provider.createOAuth2Request(req)
+    const response = await provider.endpoint('introspection', request)
+
+    Object.entries(response.headers).forEach(([name, value]) =>
+      res.setHeader(name, value)
+    )
+
+    return res.status(response.statusCode).send(response.body)
+  })
+
   app.post('/oauth2/revoke', async (req, res) => {
     const request = provider.createOAuth2Request(req)
     const response = await provider.endpoint('revocation', request)

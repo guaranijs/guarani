@@ -128,7 +128,7 @@ export class RevocationEndpoint implements Endpoint {
         this.CLIENT_AUTHENTICATION_METHODS
       )
 
-      await this.revokeToken(client, data.token)
+      await this.revokeToken(client, data)
 
       return new EmptyResponse().setHeaders(this.headers)
     } catch (error) {
@@ -169,13 +169,16 @@ export class RevocationEndpoint implements Endpoint {
    * Revokes the provided token.
    *
    * @param client Client of the Request.
-   * @param token Token provided by the Client.
+   * @param data Parameters of the Revocation Request.
    */
-  protected async revokeToken(client: Client, token: string): Promise<void> {
+  protected async revokeToken(
+    client: Client,
+    data: RevocationParameters
+  ): Promise<void> {
     let tokenClientId: Buffer
     const clientId = Buffer.from(client.getClientId())
 
-    const refreshToken = await this.adapter.findRefreshToken(token)
+    const refreshToken = await this.adapter.findRefreshToken(data.token)
 
     if (refreshToken) {
       tokenClientId = Buffer.from(refreshToken.getClient().getClientId())
@@ -190,7 +193,7 @@ export class RevocationEndpoint implements Endpoint {
       return
     }
 
-    const accessToken = await this.adapter.findAccessToken(token)
+    const accessToken = await this.adapter.findAccessToken(data.token)
 
     if (accessToken) {
       tokenClientId = Buffer.from(accessToken.getClient().getClientId())

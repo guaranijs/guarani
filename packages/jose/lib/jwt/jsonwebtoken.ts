@@ -9,8 +9,11 @@ import {
 import { JoseHeader } from '../jose.header'
 import { JsonWebEncryption, JsonWebEncryptionHeader } from '../jwe'
 import { JsonWebKey } from '../jwk'
-import { JsonWebSignature, JsonWebSignatureHeader } from '../jws'
-import { DecodeOptions as JWSDecodeOptions } from '../jws/_types'
+import {
+  JsonWebSignature,
+  JsonWebSignatureHeader,
+  SupportedJWSAlgorithm
+} from '../jws'
 import { JsonWebTokenClaims } from './jsonwebtoken.claims'
 import { JWTClaimOptions, JWTClaims } from './jwt-claims'
 
@@ -85,6 +88,26 @@ export class JsonWebToken {
   }
 
   /**
+   * Decodes a **JWS bases JSON Web Token** and returns its parsed JWS Header
+   * and JWT Claims without checking the Token's signature.
+   *
+   * @param token JSON Web Token to be decoded.
+   * @param claimsOptions Validation options for the JWT Claims.
+   * @returns JWS Header and JWT Claims of the JSON Web Token.
+   */
+  public static decodeJWS(
+    token: string,
+    claimsOptions?: Dict<JWTClaimOptions>
+  ): [JsonWebSignatureHeader, JsonWebTokenClaims] {
+    const [header, payload] = JsonWebSignature.decodeCompact(token)
+
+    const parsedClaims = <JWTClaims>JSON.parse(payload.toString('utf8'))
+    const claims = new JsonWebTokenClaims(parsedClaims, claimsOptions)
+
+    return [header, claims]
+  }
+
+  /**
    * Decodes a **JWS based JSON Web Token** checking if its signature
    * matches its content.
    *
@@ -99,28 +122,27 @@ export class JsonWebToken {
    *
    * @param token JSON Web Token to be decoded.
    * @param key JSON Web Key used to validate the signature of the Token.
-   * @param decodeOptions Options regarding the decoding of the Token.
+   * @param algorithm Expected JWS Algorithm.
    * @param claimsOptions Validation options for the JWT Claims.
    * @returns JSON Web Token containing the decoded JWS JOSE Header and Claims.
    */
   public static async verify(
     token: string,
     key: JsonWebKey,
-    decodeOptions?: JWSDecodeOptions,
+    algorithm?: SupportedJWSAlgorithm,
     claimsOptions?: Dict<JWTClaimOptions>
   ): Promise<JsonWebToken> {
     if (token == null || typeof token !== 'string') {
       throw new InvalidJsonWebToken()
     }
 
-    decodeOptions ??= {}
     claimsOptions ??= {}
 
     try {
       const { header, payload } = await JsonWebSignature.deserializeCompact(
         token,
         key,
-        decodeOptions
+        algorithm
       )
 
       const parsedClaims = <JWTClaims>JSON.parse(payload.toString('utf8'))

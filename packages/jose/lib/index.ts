@@ -12,7 +12,7 @@ export {
   TokenNotValidYet,
   UnsupportedAlgorithm
 } from './exceptions'
-export { JoseHeaderParams } from './jose.header'
+export { JoseHeader, JoseHeaderParams } from './jose.header'
 export { JsonWebEncryption, JsonWebEncryptionHeader } from './jwe'
 export { EcKey, JsonWebKey, JsonWebKeySet, OctKey, RsaKey } from './jwk'
 export { JsonWebSignature, JsonWebSignatureHeader } from './jws'

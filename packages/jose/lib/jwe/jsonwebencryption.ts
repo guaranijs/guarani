@@ -13,7 +13,10 @@ import {
   JWE_COMPRESSIONS,
   JWE_ENCRYPTIONS
 } from './algorithms'
-import { JsonWebEncryptionHeader } from './jsonwebencryption.header'
+import {
+  JsonWebEncryptionHeader,
+  JWEHeaderParams
+} from './jsonwebencryption.header'
 
 /**
  * Implementation of RFC 7516.
@@ -57,6 +60,80 @@ export class JsonWebEncryption {
   }
 
   /**
+   * Checks if the provided token is a JSON Web Encryption Token.
+   *
+   * @param token JSON Web Encryption Token to be checked.
+   */
+  public static isJWE(token: unknown): boolean {
+    // Checks a Compact JWE token.
+    if (typeof token === 'string') {
+      const components = token.split('.')
+
+      if (components.length !== 5) {
+        return false
+      }
+
+      if (components.some(component => !component)) {
+        return false
+      }
+
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * Decodes the provided **JSON Web Encryption Compact Token** and returns its
+   * parsed JWE Header, Encryption Key, Initialization Vector, Ciphertext,
+   * Authentication Tag and Aditional Authenticated Data.
+   *
+   * @param token JSON Web Encryption Compact Token to be decoded.
+   * @returns Components of the JSON Web Encryption Compact Token.
+   */
+  public static decodeCompact(
+    token: string
+  ): [JsonWebEncryptionHeader, Buffer, Buffer, Buffer, Buffer, Buffer] {
+    if (token == null || typeof token !== 'string') {
+      throw new InvalidJsonWebEncryption()
+    }
+
+    const splitToken = token.split('.')
+
+    if (splitToken.length !== 5) {
+      throw new InvalidJsonWebEncryption()
+    }
+
+    try {
+      const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = splitToken
+
+      const decodedHeader = base64UrlDecode(b64Header)
+      const parsedHeader = <JWEHeaderParams>(
+        JSON.parse(decodedHeader.toString('utf8'))
+      )
+
+      const header = new JsonWebEncryptionHeader(parsedHeader)
+      const ek = base64UrlDecode(b64Ek)
+      const iv = base64UrlDecode(b64Iv)
+      const ciphertext = base64UrlDecode(b64Ciphertext)
+      const tag = base64UrlDecode(b64Tag)
+      const aad = Buffer.from(b64Header, 'ascii')
+
+      return [header, ek, iv, ciphertext, tag, aad]
+    } catch (error) {
+      if (error instanceof InvalidJsonWebEncryption) {
+        throw error
+      }
+
+      if (error instanceof JoseError) {
+        throw new InvalidJsonWebEncryption(error.message)
+      }
+
+      throw new InvalidJsonWebEncryption()
+    }
+  }
+
+  /**
    * Decodes a **JSON Web Encryption Compact Token**.
    *
    * @param token JSON Web Encryption Compact Token to be decoded.
@@ -84,28 +161,8 @@ export class JsonWebEncryption {
     token: string,
     jwkOrKeyLoader: JsonWebKey | KeyLoader
   ): Promise<JsonWebEncryption> {
-    if (token == null || typeof token !== 'string') {
-      throw new InvalidJsonWebEncryption()
-    }
-
-    const splitToken = token.split('.')
-
-    if (splitToken.length !== 5) {
-      throw new InvalidJsonWebEncryption()
-    }
-
     try {
-      const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = splitToken
-
-      const decodedHeader = base64UrlDecode(b64Header)
-      const parsedHeader = JSON.parse(decodedHeader.toString('utf8'))
-
-      const header = new JsonWebEncryptionHeader(parsedHeader)
-      const ek = base64UrlDecode(b64Ek)
-      const iv = base64UrlDecode(b64Iv)
-      const ciphertext = base64UrlDecode(b64Ciphertext)
-      const tag = base64UrlDecode(b64Tag)
-      const aad = Buffer.from(b64Header, 'ascii')
+      const [header, ek, iv, ciphertext, tag, aad] = this.decodeCompact(token)
 
       const alg = JWE_ALGORITHMS[header.alg]
       const enc = JWE_ENCRYPTIONS[header.enc]

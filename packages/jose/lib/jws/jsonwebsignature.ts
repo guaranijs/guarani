@@ -13,13 +13,12 @@ import {
 } from '../exceptions'
 import { JsonWebKey } from '../jwk'
 import { KeyLoader } from '../types'
-import { JWS_ALGORITHMS } from './algorithms'
+import { JWS_ALGORITHMS, SupportedJWSAlgorithm } from './algorithms'
 import {
   JsonWebSignatureHeader,
   JWSHeaderParams
 } from './jsonwebsignature.header'
 import {
-  DecodeOptions,
   JWSFlattenedSerialization,
   JWSJSONSerialization,
   JWSJSONSignature
@@ -81,6 +80,76 @@ export class JsonWebSignature {
   }
 
   /**
+   * Checks if the provided token is a JSON Web Signature Token.
+   *
+   * @param token JSON Web Signature Token to be checked.
+   */
+  public static isJWS(token: unknown): boolean {
+    // Checks a Compact JWS token.
+    if (typeof token === 'string') {
+      const components = token.split('.')
+
+      if (components.length !== 3) {
+        return false
+      }
+
+      if (components.some(component => !component)) {
+        return false
+      }
+
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * Decodes the provided **JSON Web Signature Compact Token** and returns its
+   * parsed header and Base64Url decoded payload without checking the signature.
+   *
+   * @param token JSON Web Signature Compact Token to be decoded.
+   * @returns Parsed JWS header and Base64Url decoded payload of the token.
+   */
+  public static decodeCompact(token: string): [JsonWebSignatureHeader, Buffer] {
+    if (token == null || typeof token !== 'string') {
+      throw new InvalidJsonWebSignature()
+    }
+
+    const splitToken = token.split('.')
+
+    if (splitToken.length !== 3) {
+      throw new InvalidJsonWebSignature()
+    }
+
+    try {
+      const [b64Header, b64Payload] = splitToken
+
+      const parsedHeader = <JWSHeaderParams>(
+        JSON.parse(base64UrlDecode(b64Header).toString('utf8'))
+      )
+
+      if (Array.isArray(parsedHeader)) {
+        throw new InvalidJsonWebSignature("The token's JOSE Header is invalid.")
+      }
+
+      const header = new JsonWebSignatureHeader(parsedHeader)
+      const payload = base64UrlDecode(b64Payload)
+
+      return [header, payload]
+    } catch (error) {
+      if (error instanceof InvalidJsonWebSignature) {
+        throw error
+      }
+
+      if (error instanceof JoseError) {
+        throw new InvalidJsonWebSignature(error.message)
+      }
+
+      throw new InvalidJsonWebSignature()
+    }
+  }
+
+  /**
    * Decodes a **JSON Web Signature Compact Token** checking
    * if its signature matches its content.
    *
@@ -95,13 +164,13 @@ export class JsonWebSignature {
    *
    * @param token JSON Web Signature Compact Token to be decoded.
    * @param key JSON Web Key used to validate the signature of the Token.
-   * @param options Options regarding the decoding of the Token.
+   * @param algorithm Expected JWS Algorithm.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeCompact(
     token: string,
     key: JsonWebKey,
-    options?: DecodeOptions
+    algorithm?: SupportedJWSAlgorithm
   ): Promise<JsonWebSignature>
 
   /**
@@ -116,46 +185,23 @@ export class JsonWebSignature {
    *
    * @param token JSON Web Signature Compact Token to be decoded.
    * @param keyLoader Function used to load a JWK based on the JOSE Header.
-   * @param options Options regarding the decoding of the Token.
+   * @param algorithm Expected JWS Algorithm.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeCompact(
     token: string,
     keyLoader: KeyLoader,
-    options?: DecodeOptions
+    algorithm?: SupportedJWSAlgorithm
   ): Promise<JsonWebSignature>
 
   public static async deserializeCompact(
     token: string,
     jwkOrKeyLoader: JsonWebKey | KeyLoader,
-    options?: DecodeOptions
+    algorithm?: SupportedJWSAlgorithm
   ): Promise<JsonWebSignature> {
-    if (token == null || typeof token !== 'string') {
-      throw new InvalidJsonWebSignature()
-    }
-
-    const splitToken = token.split('.')
-
-    if (splitToken.length !== 3) {
-      throw new InvalidJsonWebSignature()
-    }
-
-    options ??= {}
-
-    const validate = options.validate ?? true
-
     try {
-      const [b64Header, b64Payload, b64Signature] = splitToken
-
-      const parsedHeader = JSON.parse(
-        base64UrlDecode(b64Header).toString('utf8')
-      )
-
-      if (Array.isArray(parsedHeader)) {
-        throw new InvalidJsonWebSignature("The token's JOSE Header is invalid.")
-      }
-
-      const header = new JsonWebSignatureHeader(parsedHeader)
+      const [header, payload] = this.decodeCompact(token)
+      const [b64Header, b64Payload, b64Signature] = token.split('.')
 
       const key =
         typeof jwkOrKeyLoader === 'function'
@@ -166,24 +212,20 @@ export class JsonWebSignature {
         throw new InvalidJsonWebSignature('Invalid key.')
       }
 
-      if (options.algorithm && options.algorithm !== header.alg) {
+      if (algorithm && algorithm !== header.alg) {
         throw new InvalidJsonWebSignature(
           'The algorithm used to sign this token is invalid. ' +
-            `Expected "${options.algorithm}", got "${header.alg}".`
+            `Expected "${algorithm}", got "${header.alg}".`
         )
       }
 
       const alg = JWS_ALGORITHMS[header.alg]
 
-      if (validate) {
-        await alg.verify(
-          b64Signature,
-          Buffer.from(`${b64Header}.${b64Payload}`),
-          key
-        )
-      }
-
-      const payload = base64UrlDecode(b64Payload)
+      await alg.verify(
+        b64Signature,
+        Buffer.from(`${b64Header}.${b64Payload}`),
+        key
+      )
 
       return new JsonWebSignature(header, payload)
     } catch (error) {
@@ -214,13 +256,13 @@ export class JsonWebSignature {
    *
    * @param token JSON Web Signature Flattened Token to be decoded.
    * @param key JSON Web Key used to validate the signature of the Token.
-   * @param options Options regarding the decoding of the Token.
+   * @param algorithm Expected JWS Algorithm.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeFlattened(
     token: JWSFlattenedSerialization,
     key: JsonWebKey,
-    options?: DecodeOptions
+    algorithm?: SupportedJWSAlgorithm
   ): Promise<JsonWebSignature>
 
   /**
@@ -235,19 +277,19 @@ export class JsonWebSignature {
    *
    * @param token JSON Web Signature Flattened Token to be decoded.
    * @param keyLoader Function used to load a JWK based on the JOSE Header.
-   * @param options Options regarding the decoding of the Token.
+   * @param algorithm Expected JWS Algorithm.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeFlattened(
     token: JWSFlattenedSerialization,
     keyLoader: KeyLoader,
-    options?: DecodeOptions
+    algorithm?: SupportedJWSAlgorithm
   ): Promise<JsonWebSignature>
 
   public static async deserializeFlattened(
     token: JWSFlattenedSerialization,
     jwkOrKeyLoader: JsonWebKey | KeyLoader,
-    options: DecodeOptions = {}
+    algorithm?: SupportedJWSAlgorithm
   ): Promise<JsonWebSignature> {
     if (token == null) {
       throw new InvalidJsonWebSignature()
@@ -259,16 +301,13 @@ export class JsonWebSignature {
       throw new InvalidJsonWebSignature('Invalid attribute "payload".')
     }
 
-    options ??= {}
-    options.validate ??= true
-
     try {
       const payload = base64UrlDecode(b64Payload)
       const header = await JsonWebSignature.getJWSJSONHeader(
         b64Payload,
         token,
         jwkOrKeyLoader,
-        options
+        algorithm
       )
 
       return new JsonWebSignature(header, payload)
@@ -301,13 +340,13 @@ export class JsonWebSignature {
    *
    * @param token JSON Web Signature JSON Token to be decoded.
    * @param keys JSON Web Keys used to validate the signatures of the Token.
-   * @param options Options regarding the decoding of the Token.
+   * @param algorithms Expected JWS Algorithms.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeJSON(
     token: JWSJSONSerialization,
     keys: JsonWebKey[],
-    options?: DecodeOptions[]
+    algorithms?: SupportedJWSAlgorithm[]
   ): Promise<JsonWebSignature>
 
   /**
@@ -323,19 +362,19 @@ export class JsonWebSignature {
    *
    * @param token JSON Web Signature JSON Token to be decoded.
    * @param keyLoader Function used to load a JWK based on the JOSE Header.
-   * @param options Options regarding the decoding of the Token.
+   * @param algorithms Expected JWS Algorithms.
    * @returns JSON Web Signature containing the decoded JOSE Header and Payload.
    */
   public static async deserializeJSON(
     token: JWSJSONSerialization,
     keyLoader: KeyLoader,
-    options?: DecodeOptions[]
+    algorithms?: SupportedJWSAlgorithm[]
   ): Promise<JsonWebSignature>
 
   public static async deserializeJSON(
     token: JWSJSONSerialization,
     jwkOrKeyLoader: JsonWebKey[] | KeyLoader,
-    options?: DecodeOptions[]
+    algorithms?: SupportedJWSAlgorithm[]
   ): Promise<JsonWebSignature> {
     if (token == null) {
       throw new InvalidJsonWebSignature()
@@ -351,8 +390,6 @@ export class JsonWebSignature {
       throw new InvalidJsonWebSignature('Invalid attribute "signatures".')
     }
 
-    options ??= []
-
     try {
       const payload = base64UrlDecode(b64Payload)
       const awaitableHeaders = signatures.map(async (signature, i) => {
@@ -365,7 +402,7 @@ export class JsonWebSignature {
           b64Payload,
           signature,
           key,
-          options[i]
+          algorithms[i]
         )
       })
 
@@ -391,14 +428,14 @@ export class JsonWebSignature {
    * @param b64Payload Payload of the Signature.
    * @param signature JWS JSON Signature to be parsed.
    * @param jwkOrKeyLoader JSON Web Key or JWK Loader Function.
-   * @param options Options regarding the decoding of the Token.
+   * @param algorithm Expected JWS Algorithm.
    * @returns Instance of a JsonWebSignatureHeader.
    */
   private static async getJWSJSONHeader(
     b64Payload: string,
     signature: JWSJSONSignature,
     jwkOrKeyLoader: JsonWebKey | KeyLoader,
-    options?: DecodeOptions
+    algorithm?: SupportedJWSAlgorithm
   ): Promise<JsonWebSignatureHeader> {
     const {
       signature: b64Signature,
@@ -423,13 +460,10 @@ export class JsonWebSignature {
       unprotectedHeader
     })
 
-    options ??= {}
-    options.validate ??= true
-
-    if (options.algorithm && options.algorithm !== header.alg) {
+    if (algorithm && algorithm !== header.alg) {
       throw new InvalidJsonWebSignature(
         'The algorithm used to sign this token is invalid. ' +
-          `Expected "${options.algorithm}", got "${header.alg}".`
+          `Expected "${algorithm}", got "${header.alg}".`
       )
     }
 
@@ -440,13 +474,11 @@ export class JsonWebSignature {
         ? jwkOrKeyLoader(header)
         : jwkOrKeyLoader
 
-    if (options.validate) {
-      await alg.verify(
-        b64Signature,
-        Buffer.from(`${b64ProtectedHeader}.${b64Payload}`),
-        key
-      )
-    }
+    await alg.verify(
+      b64Signature,
+      Buffer.from(`${b64ProtectedHeader}.${b64Payload}`),
+      key
+    )
 
     return header
   }

@@ -1,4 +1,4 @@
-export { JWSAlgorithm } from './algorithms'
+export { JWSAlgorithm, SupportedJWSAlgorithm } from './algorithms'
 export {
   JsonWebSignatureHeader,
   JWSHeaderParams

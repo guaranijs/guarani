@@ -44,18 +44,3 @@ export interface JWSJSONSerialization {
    */
   readonly signatures: JWSJSONSignature[]
 }
-
-/**
- * Options regarding the decoding of a JSON Web Signature Token.
- */
-export interface DecodeOptions {
-  /**
-   * Expected algorithm of the token.
-   */
-  readonly algorithm?: string
-
-  /**
-   * Validates the signature of the token.
-   */
-  validate?: boolean
-}

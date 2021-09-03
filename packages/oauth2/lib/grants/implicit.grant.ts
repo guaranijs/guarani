@@ -6,8 +6,8 @@ import {
   SupportedResponseType
 } from '../constants'
 import { Request } from '../context'
-import { Client, OAuth2Token, User } from '../entities'
-import { Grant } from './grant'
+import { Client, User } from '../entities'
+import { Grant, OAuth2Token } from './grant'
 import { AuthorizationParameters, ResponseType } from './response-type'
 
 /**

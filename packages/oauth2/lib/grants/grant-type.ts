@@ -1,6 +1,7 @@
 import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
-import { Client, OAuth2Token } from '../entities'
+import { Client } from '../entities'
+import { OAuth2Token } from './grant'
 
 /**
  * Defines the default parameters of the Token Request.

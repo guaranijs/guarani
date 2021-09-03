@@ -2,9 +2,9 @@ import { Injectable } from '@guarani/ioc'
 
 import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
-import { Client, OAuth2Token, RefreshToken } from '../entities'
+import { Client, RefreshToken } from '../entities'
 import { InvalidGrant, InvalidRequest, InvalidScope } from '../exceptions'
-import { Grant } from './grant'
+import { Grant, OAuth2Token } from './grant'
 import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
 
 /**

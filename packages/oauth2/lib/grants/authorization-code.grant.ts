@@ -9,11 +9,11 @@ import {
   SupportedResponseType
 } from '../constants'
 import { Request } from '../context'
-import { AuthorizationCode, Client, OAuth2Token, User } from '../entities'
+import { AuthorizationCode, Client, User } from '../entities'
 import { AccessDenied, InvalidGrant, InvalidRequest } from '../exceptions'
 import { PkceMethod } from '../pkce'
 import { Settings } from '../settings'
-import { Grant } from './grant'
+import { Grant, OAuth2Token } from './grant'
 import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
 import {
   AuthorizationParameters as BaseAuthorizationParameters,

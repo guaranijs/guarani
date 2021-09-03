@@ -1,6 +1,6 @@
+export { AbstractToken } from './abstract-token'
 export { AccessToken } from './access-token'
 export { AuthorizationCode } from './authorization-code'
 export { Client } from './client'
-export { OAuth2Token } from './oauth2-token'
 export { RefreshToken } from './refresh-token'
 export { User } from './user'

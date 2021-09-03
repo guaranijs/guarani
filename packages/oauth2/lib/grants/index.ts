@@ -1,6 +1,6 @@
 export { AuthorizationCodeGrant } from './authorization-code.grant'
 export { ClientCredentialsGrant } from './client-credentials.grant'
-export { Grant } from './grant'
+export { Grant, OAuth2Token } from './grant'
 export { GrantType, TokenParameters } from './grant-type'
 export { HybridGrant } from './hybrid.grant'
 export { ImplicitGrant } from './implicit.grant'

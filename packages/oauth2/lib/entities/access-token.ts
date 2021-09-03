@@ -1,50 +1,25 @@
 import { SupportedGrantType } from '../constants'
-import { Client } from './client'
-import { User } from './user'
+import { AbstractToken } from './abstract-token'
 
 /**
  * Defines the model of the `OAuth 2.0 Access Token` used by Guarani.
  *
  * The application's Access Token **MUST** implement this interface.
  */
-export interface AccessToken {
-  /**
-   * Returns the String representation of the Access Token.
-   */
-  getToken(): string
-
-  /**
-   * Returns the Scopes of the Access Token.
-   */
-  getScopes(): string[]
-
+export interface AccessToken extends AbstractToken {
   /**
    * Returns the name of the Grant that generated this Access Token.
    */
   getGrant(): SupportedGrantType
+}
 
+export namespace AccessToken {
   /**
-   * Returns the Expiration Date of the Access Token.
+   * Checks if the provided token is an Access Token.
+   *
+   * @param token Token to be checked.
    */
-  getExpiresAt(): Date
-
-  /**
-   * Returns the Creation Date of the Access Token.
-   */
-  getIssuedAt(): Date
-
-  /**
-   * Returns the Client to whom the Access Token was issued to.
-   */
-  getClient(): Client
-
-  /**
-   * Returns the User represented by the Client through the Access Token.
-   */
-  getUser(): User
-
-  /**
-   * Checks if the Access Token is revoked.
-   */
-  isRevoked(): boolean
+  export function isAccessToken(token: unknown): token is AccessToken {
+    return (<AccessToken>token).getGrant != null
+  }
 }

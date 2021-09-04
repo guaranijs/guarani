@@ -1,3 +1,5 @@
+import { removeNullishValues } from '@guarani/utils'
+
 import { OutgoingHttpHeaders } from 'http'
 
 /**
@@ -55,12 +57,7 @@ export class OAuth2Error extends Error {
   /**
    * Defines the status code of the Error Response.
    */
-  public readonly status_code: number
-
-  /**
-   * URI used to redirect the User-Agent based on the error.
-   */
-  public readonly redirect_uri?: string
+  public readonly status_code: number = 400
 
   /**
    * Code of the error.
@@ -75,7 +72,7 @@ export class OAuth2Error extends Error {
   /**
    * URI that describes the error.
    */
-  public readonly error_uri?: string
+  public error_uri?: string
 
   /**
    * State of the Client provided in the Request.
@@ -83,50 +80,35 @@ export class OAuth2Error extends Error {
   public state?: string
 
   /**
-   * Instantiates a new Error Response based on the provided description.
-   *
-   * @param description Description of the Error.
-   */
-  public constructor(description: string)
-
-  /**
    * Instantiates a new Error Response based on the provided parameters.
    *
    * @param params Parameters of the Error Response.
    */
-  public constructor(params?: ErrorParams)
+  public constructor(params: ErrorParams = {}) {
+    super(params.description)
 
-  public constructor(descriptionOrParams?: string | ErrorParams) {
-    super()
+    this.name = this.constructor.name
 
-    Object.defineProperty(this, 'name', { value: this.constructor.name })
-    Object.defineProperty(this, 'status_code', { value: 400 })
+    this.headers = params.headers
 
-    if (typeof descriptionOrParams === 'string') {
-      Object.defineProperty(this, 'message', { value: descriptionOrParams })
-
-      this.error_description = descriptionOrParams
-    } else {
-      Object.defineProperty(this, 'message', {
-        value: descriptionOrParams?.description
-      })
-
-      Object.defineProperty(this, 'headers', {
-        value: descriptionOrParams?.headers ?? {}
-      })
-
-      if (descriptionOrParams?.status_code) {
-        Object.defineProperty(this, 'status_code', {
-          value: descriptionOrParams?.status_code ?? 400
-        })
-      }
-
-      this.error_description = descriptionOrParams?.description
-
-      this.error_uri = descriptionOrParams?.uri
-
-      this.state = descriptionOrParams?.state
+    if (params.status_code) {
+      this.status_code = params.status_code
     }
+
+    this.error_description = params.description
+
+    this.error_uri = params.uri
+
+    this.state = params.state
+  }
+
+  public toJSON() {
+    return removeNullishValues({
+      error: this.error,
+      error_description: this.error_description,
+      error_uri: this.error_uri,
+      state: this.state
+    })
   }
 }
 

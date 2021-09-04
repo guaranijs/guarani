@@ -29,8 +29,7 @@ class Controller {
         'code id_token token'
       ],
       scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-      authenticationMethod: 'client_secret_basic',
-      applicationType: 'web'
+      authenticationMethod: 'client_secret_basic'
     })
 
     await client.save()

@@ -5,5 +5,5 @@ export {
   IntrospectionParameters,
   IntrospectionResponse
 } from './introspection.endpoint'
-export { RevocationEndpoint } from './revocation.endpoint'
+export { RevocationEndpoint, RevocationParameters } from './revocation.endpoint'
 export { TokenEndpoint } from './token.endpoint'

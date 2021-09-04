@@ -34,13 +34,11 @@ export class RefreshToken extends BaseEntity implements RefreshTokenEntity {
   @PrimaryColumn({ name: 'token', type: 'varchar', length: 24 })
   public readonly token: string
 
-  @Column({ name: 'expiration', type: 'datetime' })
-  public readonly expiresAt: Date
-
   @Column({ name: 'scopes', type: 'text', transformer })
   public readonly scopes: string[]
 
   @OneToOne(() => AccessToken, {
+    cascade: true,
     eager: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'
@@ -63,6 +61,9 @@ export class RefreshToken extends BaseEntity implements RefreshTokenEntity {
   })
   @JoinColumn({ name: 'user_id' })
   public readonly user: User
+
+  @Column({ name: 'expires_at', type: 'datetime' })
+  public readonly expiresAt: Date
 
   @CreateDateColumn({ name: 'created_at', type: 'datetime' })
   public readonly createdAt: Date

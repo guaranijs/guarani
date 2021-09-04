@@ -1,13 +1,5 @@
-import { Dict } from '@guarani/utils'
-
 import { SupportedGrantType } from './constants'
-import {
-  AccessToken,
-  AuthorizationCode,
-  Client,
-  RefreshToken,
-  User
-} from './entities'
+import { AccessToken, Client, RefreshToken, User } from './entities'
 
 /**
  * Adapter interface that contains the common methods used throughout Guarani.
@@ -22,7 +14,7 @@ import {
 export interface Adapter {
   /**
    * Searches for a Client in the application's storage and
-   * returns it if it succeeds, otherwise returns **undefined**.
+   * returns it.
    *
    * @param clientId ID of the Client to be fetched.
    * @returns Client based on the provided ID.
@@ -31,23 +23,12 @@ export interface Adapter {
 
   /**
    * Searches for a User in the application's storage and
-   * returns it if it succeeds, otherwise returns **undefined**.
+   * returns it.
    *
    * @param userId ID of the User to be fetched.
    * @returns User based on the provided ID.
    */
   findUser(userId: string): Promise<User>
-
-  /**
-   * Searches for a User in the application's storage and
-   * returns it if it succeeds, otherwise returns **undefined**.
-   *
-   * This method must be implemented **ONLY** if using the **Password Grant**.
-   *
-   * @param username Username of the User to be fetched.
-   * @returns User based on the provided Username.
-   */
-  findUserByUsername?(username: string): Promise<User>
 
   /**
    * Checks if the Scope requested by the Client is valid and, if so,
@@ -87,22 +68,6 @@ export interface Adapter {
   ): Promise<AccessToken>
 
   /**
-   * Searches for an Access Token in the application's storage and
-   * returns it if it succeeds, otherwise returns **undefined**.
-   *
-   * @param token Token of the Access Token to be fetched.
-   * @returns Access Token based on the provided token.
-   */
-  findAccessToken?(token: string): Promise<AccessToken>
-
-  /**
-   * Revokes the provided Access Token from the application's storage.
-   *
-   * @param accessToken Access Token to be revoked.
-   */
-  revokeAccessToken?(accessToken: AccessToken): Promise<void>
-
-  /**
    * Generates a **Refresh Token** that creates a tight coupling
    * between the Client, the User and the Scopes granted to the Client.
    *
@@ -121,69 +86,4 @@ export interface Adapter {
     user: User,
     accessToken: AccessToken
   ): Promise<RefreshToken>
-
-  /**
-   * Searches for an Refresh Token in the application's storage and
-   * returns it if it succeeds, otherwise returns **undefined**.
-   *
-   * **This method must be implemented **ONLY** if using
-   * the **Refresh Token Grant**.
-   *
-   * @param token Token of the Refresh Token to be fetched.
-   * @returns Refresh Token based on the provided token.
-   */
-  findRefreshToken?(token: string): Promise<RefreshToken>
-
-  /**
-   * Revokes the provided Refresh Token from the application's storage.
-   *
-   * **This method must be implemented **ONLY** if using
-   * the **Refresh Token Grant**.
-   *
-   * @param refreshToken Refresh Token to be revoked.
-   */
-  revokeRefreshToken?(refreshToken: RefreshToken): Promise<void>
-
-  /**
-   * Generates an **Authorization Code** as a temporary grant from the User
-   * to the Client for usage at the Token Endpoint.
-   *
-   * This method must be implemented **ONLY** if using
-   * the **Authorization Code Grant**.
-   *
-   * @param data Authorization Parameters of the Authorization Code Grant.
-   * @param scopes Scopes granted to the Client.
-   *     **It `MAY` differ from the requested**.
-   * @param client Client requesting the Authorization Code.
-   * @param user User issuing the Authorization Code to the Client.
-   * @returns **Authorization Code** for use by the Client.
-   */
-  createAuthorizationCode?(
-    data: Dict,
-    scopes: string[],
-    client: Client,
-    user: User
-  ): Promise<AuthorizationCode>
-
-  /**
-   * Searches for an Authorization Code in the application's storage
-   * and returns it if it succeeds, otherwise returns **undefined**.
-   *
-   * This method must be implemented **ONLY** if using
-   * the **Authorization Code Grant**.
-   *
-   * @param code Code of the Authorization Code to be fetched.
-   * @returns Authorization Code based on the provided code.
-   */
-  findAuthorizationCode?(code: string): Promise<AuthorizationCode>
-
-  /**
-   * Revokes the provided Authorization Code from the application's storage.
-   *
-   * This method must be implemented **ONLY** if using
-   * the **Authorization Code Grant**.
-   *
-   * @param authorizationCode Authorization Code to be deleted.
-   */
-  revokeAuthorizationCode?(authorizationCode: AuthorizationCode): Promise<void>
 }

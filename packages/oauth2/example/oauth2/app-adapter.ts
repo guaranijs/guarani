@@ -1,15 +1,7 @@
-import { Dict } from '@guarani/utils'
-
 import { Adapter } from '../../lib/adapter'
 import { InvalidRequest, InvalidScope } from '../../lib/exceptions'
 import { SupportedGrantType } from '../../lib/constants'
-import {
-  AccessToken,
-  AuthorizationCode,
-  Client,
-  RefreshToken,
-  User
-} from '../entities'
+import { AccessToken, Client, RefreshToken, User } from '../entities'
 
 export class AppAdapter implements Adapter {
   private readonly scopes = ['openid', 'profile', 'email', 'phone', 'address']
@@ -26,10 +18,6 @@ export class AppAdapter implements Adapter {
 
   public async findUser(userId: string): Promise<User> {
     return await User.findOne({ where: { id: userId } })
-  }
-
-  public async findUserByUsername(username: string): Promise<User> {
-    return await User.findOne({ where: { email: username } })
   }
 
   public async checkClientScope(
@@ -84,14 +72,6 @@ export class AppAdapter implements Adapter {
     return accessToken
   }
 
-  public async findAccessToken(token: string): Promise<AccessToken> {
-    return await AccessToken.findOne({ where: { token } })
-  }
-
-  public async revokeAccessToken(accessToken: AccessToken): Promise<void> {
-    await accessToken.softRemove()
-  }
-
   public async createRefreshToken(
     scopes: string[],
     client: Client,
@@ -103,41 +83,5 @@ export class AppAdapter implements Adapter {
     await refreshToken.save()
 
     return refreshToken
-  }
-
-  public async findRefreshToken(token: string): Promise<RefreshToken> {
-    return await RefreshToken.findOne({ where: { token } })
-  }
-
-  public async revokeRefreshToken(refreshToken: RefreshToken): Promise<void> {
-    await refreshToken.softRemove()
-  }
-
-  public async createAuthorizationCode(
-    data: Dict,
-    scopes: string[],
-    client: Client,
-    user: User
-  ): Promise<AuthorizationCode> {
-    const code = new AuthorizationCode({
-      client,
-      codeChallenge: data.code_challenge,
-      codeChallengeMethod: data.code_challenge_method,
-      redirectUri: data.redirect_uri,
-      scopes,
-      user
-    })
-
-    await code.save()
-
-    return code
-  }
-
-  public async findAuthorizationCode(code: string): Promise<AuthorizationCode> {
-    return await AuthorizationCode.findOne({ where: { code } })
-  }
-
-  public async revokeAuthorizationCode(code: AuthorizationCode): Promise<void> {
-    await code.remove()
   }
 }

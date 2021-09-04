@@ -12,14 +12,3 @@ export interface AccessToken extends AbstractToken {
    */
   getGrant(): SupportedGrantType
 }
-
-export namespace AccessToken {
-  /**
-   * Checks if the provided token is an Access Token.
-   *
-   * @param token Token to be checked.
-   */
-  export function isAccessToken(token: unknown): token is AccessToken {
-    return (<AccessToken>token).getGrant != null
-  }
-}

@@ -7,44 +7,44 @@ import { User } from './user'
  *
  * The application's Authorization Code **MUST** implement this interface.
  */
-export abstract class AuthorizationCode {
+export interface AuthorizationCode {
   /**
    * Returns the String representation of the Authorization Code.
    */
-  public abstract getCode(): string
+  getCode(): string
 
   /**
    * Returns the Redirect URI provided by the Client.
    */
-  public abstract getRedirectUri(): string
+  getRedirectUri(): string
 
   /**
    * Returns the Scopes requested by the Client.
    */
-  public abstract getScopes(): string[]
+  getScopes(): string[]
 
   /**
    * Returns the Code Challenge provided by the Client.
    */
-  public abstract getCodeChallenge(): string
+  getCodeChallenge(): string
 
   /**
    * Returns the PKCE Method chosen by the Client.
    */
-  public abstract getCodeChallengeMethod(): SupportedPkceMethod
+  getCodeChallengeMethod(): SupportedPkceMethod
 
   /**
    * Returns the Expiration Date of the Authorization Code.
    */
-  public abstract getExpiresAt(): Date
+  getExpiresAt(): Date
 
   /**
    * Returns the Client to whom the Authorization Code was issued to.
    */
-  public abstract getClient(): Client
+  getClient(): Client
 
   /**
    * Returns the User that authorized the Client.
    */
-  public abstract getUser(): User
+  getUser(): User
 }

@@ -12,14 +12,3 @@ export interface RefreshToken extends AbstractToken {
    */
   getAccessToken(): AccessToken
 }
-
-export namespace RefreshToken {
-  /**
-   * Checks if the provided token is a Refresh Token.
-   *
-   * @param token Token to be checked.
-   */
-  export function isRefreshToken(token: unknown): token is RefreshToken {
-    return (<RefreshToken>token).getAccessToken != null
-  }
-}

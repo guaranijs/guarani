@@ -1,10 +1,8 @@
-import { Inject, Injectable, InjectAll } from '@guarani/ioc'
+import { Injectable, InjectAll } from '@guarani/ioc'
 import { removeNullishValues } from '@guarani/utils'
 
-import { timingSafeEqual } from 'crypto'
 import { OutgoingHttpHeaders } from 'http'
 
-import { Adapter } from '../adapter'
 import { ClientAuthenticator } from '../client-authentication'
 import {
   SupportedClientAuthentication,
@@ -12,7 +10,7 @@ import {
   SupportedTokenTypeHint
 } from '../constants'
 import { EmptyResponse, JsonResponse, Request, Response } from '../context'
-import { AbstractToken, AccessToken, Client, RefreshToken } from '../entities'
+import { Client } from '../entities'
 import {
   InvalidRequest,
   OAuth2Error,
@@ -25,7 +23,7 @@ import { Endpoint } from './endpoint'
 /**
  * Defines the default parameters of the Revocation Request.
  */
-interface RevocationParameters {
+export interface RevocationParameters {
   /**
    * Token to be revoked.
    */
@@ -47,9 +45,8 @@ interface RevocationParameters {
  * If the token is already invalid, does not exist within the Provider
  * or is otherwise unknown or invalid, it is already considered "revoked".
  */
-// TODO: Fix the foul fiends present at the _revoke() methods.
 @Injectable()
-export class RevocationEndpoint implements Endpoint {
+export abstract class RevocationEndpoint implements Endpoint {
   /**
    * Name of the Endpoint.
    */
@@ -73,7 +70,7 @@ export class RevocationEndpoint implements Endpoint {
   /**
    * Default HTTP headers to be included in the Response.
    */
-  private readonly headers: OutgoingHttpHeaders = {
+  protected readonly headers: OutgoingHttpHeaders = {
     'Cache-Control': 'no-store',
     Pragma: 'no-cache'
   }
@@ -81,12 +78,10 @@ export class RevocationEndpoint implements Endpoint {
   /**
    * Instantiates the Revocation Endpoint.
    *
-   * @param adapter Adapter provided by the application.
    * @param grants OAuth 2.0 Grants requested by the application.
    * @param clientAuthenticator Client Authenticator instance.
    */
   public constructor(
-    @Inject('Adapter') private readonly adapter: Adapter,
     @InjectAll('Grant') private readonly grants: Grant[],
     private readonly clientAuthenticator: ClientAuthenticator
   ) {
@@ -148,7 +143,7 @@ export class RevocationEndpoint implements Endpoint {
    *
    * @param data Parameters of the Revocation Request.
    */
-  private checkParameters(data: RevocationParameters): void {
+  protected checkParameters(data: RevocationParameters): void {
     const { token, token_type_hint } = data
 
     if (!token) {
@@ -171,42 +166,8 @@ export class RevocationEndpoint implements Endpoint {
    * @param client Client of the Request.
    * @param data Parameters of the Revocation Request.
    */
-  protected async revokeToken(
+  protected abstract revokeToken(
     client: Client,
     data: RevocationParameters
-  ): Promise<void> {
-    const token: AbstractToken =
-      (await this.adapter.findRefreshToken(data.token)) ??
-      (await this.adapter.findAccessToken(data.token))
-
-    if (!token) {
-      return
-    }
-
-    const clientId = Buffer.from(client.getClientId())
-    const tokenClientId = Buffer.from(token.getClient().getClientId())
-
-    if (!timingSafeEqual(clientId, tokenClientId)) {
-      return
-    }
-
-    if (
-      token.isRevoked() ||
-      new Date() > token.getExpiresAt() ||
-      new Date() < token.getValidAfter()
-    ) {
-      return
-    }
-
-    if (RefreshToken.isRefreshToken(token)) {
-      await this.adapter.revokeRefreshToken(token)
-      await this.adapter.revokeAccessToken(token.getAccessToken())
-
-      return
-    }
-
-    if (AccessToken.isAccessToken(token)) {
-      return await this.adapter.revokeAccessToken(token)
-    }
-  }
+  ): Promise<void>
 }

@@ -4,12 +4,12 @@ import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
 import { Grant, OAuth2Token } from './grant'
-import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
+import { GrantType, TokenParameters } from './grant-type'
 
 /**
  * Defines the parameters of the **Client Credentials Grant's** Token Request.
  */
-interface TokenParameters extends BaseTokenParameters {
+export interface ClientCredentialsTokenParameters extends TokenParameters {
   /**
    * Scope requested by the Client.
    */
@@ -50,7 +50,7 @@ export class ClientCredentialsGrant extends Grant implements GrantType {
    * @returns OAuth 2.0 Token Response.
    */
   public async token(request: Request, client: Client): Promise<OAuth2Token> {
-    const data = <TokenParameters>request.data
+    const data = <ClientCredentialsTokenParameters>request.data
     const scopes = await this.adapter.checkClientScope(client, data.scope)
 
     const [accessToken] = await this.issueOAuth2Token(

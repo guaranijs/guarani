@@ -8,13 +8,10 @@ import morgan from 'morgan'
 import path from 'path'
 import { createConnection } from 'typeorm'
 
-import { ProviderFactory } from '../lib/bootstrap'
-import { AppProvider } from './oauth2'
 import { ormconfig } from './ormconfig'
 import { redis } from './redis'
 import { router } from './router'
 import { initialize } from './strategy'
-import { User } from './entities'
 
 const PORT = process.env.PORT || 3333
 
@@ -51,61 +48,8 @@ async function configure(app: express.Express) {
 
 async function main() {
   const app = express()
-  const provider = ProviderFactory.create(AppProvider)
 
   await configure(app)
-
-  app.get('/oauth2/authorize', async (req, res) => {
-    const request = provider.createOAuth2Request(req)
-
-    // The User accepted the requested scopes.
-    request.user = <User>req.user
-
-    const response = await provider.authorize(request)
-
-    Object.entries(response.headers).forEach(([name, value]) =>
-      res.setHeader(name, value)
-    )
-
-    return res.status(response.statusCode).send(response.body)
-  })
-
-  app.get('/oauth2/error', async (req, res) => {
-    return res.json(req.query)
-  })
-
-  app.post('/oauth2/introspect', async (req, res) => {
-    const request = provider.createOAuth2Request(req)
-    const response = await provider.endpoint('introspection', request)
-
-    Object.entries(response.headers).forEach(([name, value]) =>
-      res.setHeader(name, value)
-    )
-
-    return res.status(response.statusCode).send(response.body)
-  })
-
-  app.post('/oauth2/revoke', async (req, res) => {
-    const request = provider.createOAuth2Request(req)
-    const response = await provider.endpoint('revocation', request)
-
-    Object.entries(response.headers).forEach(([name, value]) =>
-      res.setHeader(name, value)
-    )
-
-    return res.status(response.statusCode).send(response.body)
-  })
-
-  app.post('/oauth2/token', async (req, res) => {
-    const request = provider.createOAuth2Request(req)
-    const response = await provider.token(request)
-
-    Object.entries(response.headers).forEach(([name, value]) =>
-      res.setHeader(name, value)
-    )
-
-    return res.status(response.statusCode).send(response.body)
-  })
 
   app.use(router)
 

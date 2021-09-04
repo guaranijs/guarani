@@ -4,9 +4,8 @@ import { Request, Response } from '../context'
 /**
  * Interface for the endpoints of the OAuth 2.0 framework and its extensions.
  *
- * The type, status, headers and body of the response it returns,
- * as well as its meaning and formatting have to be documented
- * by the respective endpoint.
+ * The type, status, headers and body of the response it returns, as well as its
+ * meaning and formatting have to be documented by the respective endpoint.
  *
  * The method `handle` **MUST NOT** raise exceptions.
  * It **MUST** catch the exceptions and return a valid error response instead.

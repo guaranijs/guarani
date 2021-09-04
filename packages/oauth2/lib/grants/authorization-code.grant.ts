@@ -14,16 +14,13 @@ import { AccessDenied, InvalidGrant, InvalidRequest } from '../exceptions'
 import { PkceMethod } from '../pkce'
 import { Settings } from '../settings'
 import { Grant, OAuth2Token } from './grant'
-import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
-import {
-  AuthorizationParameters as BaseAuthorizationParameters,
-  ResponseType
-} from './response-type'
+import { GrantType, TokenParameters } from './grant-type'
+import { AuthorizationParameters, ResponseType } from './response-type'
 
 /**
  * Defines the parameters of the Authorization Request.
  */
-interface AuthorizationParameters extends BaseAuthorizationParameters {
+export interface CodeAuthorizationParameters extends AuthorizationParameters {
   /**
    * PKCE Code Challenge.
    */
@@ -38,7 +35,7 @@ interface AuthorizationParameters extends BaseAuthorizationParameters {
 /**
  * Defines the parameters of the Authorization Response.
  */
-interface AuthorizationResponse {
+export interface CodeAuthorizationResponse {
   /**
    * Authorization Code.
    */
@@ -53,7 +50,7 @@ interface AuthorizationResponse {
 /**
  * Defines the parameters of the Token Request.
  */
-interface TokenParameters extends BaseTokenParameters {
+export interface CodeTokenParameters extends TokenParameters {
   /**
    * Authorization Code issued by the Authorization Server.
    */
@@ -79,7 +76,7 @@ interface TokenParameters extends BaseTokenParameters {
  * PKCE by default, and enforces its use every time.
  */
 @Injectable()
-export class AuthorizationCodeGrant
+export abstract class AuthorizationCodeGrant
   extends Grant
   implements ResponseType, GrantType {
   /**
@@ -146,20 +143,15 @@ export class AuthorizationCodeGrant
     request: Request,
     client: Client,
     user: User
-  ): Promise<AuthorizationResponse> {
-    const data = <AuthorizationParameters>request.data
+  ): Promise<CodeAuthorizationResponse> {
+    const data = <CodeAuthorizationParameters>request.data
 
     this.checkCodeChallenge(data.code_challenge, data.code_challenge_method)
 
     const scopes = await this.adapter.checkClientScope(client, data.scope)
-    const code = await this.adapter.createAuthorizationCode(
-      data,
-      scopes,
-      client,
-      user
-    )
+    const code = await this.createAuthorizationCode(data, scopes, client, user)
 
-    return removeNullishValues<AuthorizationResponse>({
+    return removeNullishValues<CodeAuthorizationResponse>({
       code: code.getCode(),
       state: data.state
     })
@@ -189,6 +181,24 @@ export class AuthorizationCodeGrant
   }
 
   /**
+   * Generates an **Authorization Code** as a temporary grant from the User
+   * to the Client for usage at the Token Endpoint.
+   *
+   * @param data Authorization Parameters of the Authorization Code Grant.
+   * @param scopes Scopes granted to the Client.
+   *     **It `MAY` differ from the requested scopes**.
+   * @param client Client requesting the Authorization Code.
+   * @param user User issuing the Authorization Code to the Client.
+   * @returns **Authorization Code** for use by the Client.
+   */
+  protected abstract createAuthorizationCode(
+    data: CodeAuthorizationParameters,
+    scopes: string[],
+    client: Client,
+    user: User
+  ): Promise<AuthorizationCode>
+
+  /**
    * **Token Flow** of the Authorization Code Grant.
    *
    * In this part of the Authorization process the Authorization Server checks
@@ -205,7 +215,7 @@ export class AuthorizationCodeGrant
    * @returns OAuth 2.0 Token Response.
    */
   public async token(request: Request, client: Client): Promise<OAuth2Token> {
-    const data = <TokenParameters>request.data
+    const data = <CodeTokenParameters>request.data
 
     let code: AuthorizationCode
 
@@ -225,7 +235,9 @@ export class AuthorizationCodeGrant
 
       return this.createTokenResponse(accessToken, refreshToken)
     } finally {
-      await this.adapter.revokeAuthorizationCode(code)
+      if (code) {
+        await this.revokeAuthorizationCode(code)
+      }
     }
   }
 
@@ -234,7 +246,7 @@ export class AuthorizationCodeGrant
    *
    * @param data Parameters of the Token Request.
    */
-  private checkTokenRequest(data: TokenParameters): void {
+  private checkTokenRequest(data: CodeTokenParameters): void {
     const { code, code_verifier } = data
 
     if (!code) {
@@ -252,10 +264,11 @@ export class AuthorizationCodeGrant
    * Fetches the requested Authorization Code from the application's storage.
    *
    * @param code Code provided by the Client.
+   * @throws {InvalidGrant} No Authorization Code was found or it was invalid.
    * @returns Authorization Code based on the provided code.
    */
   private async getAuthorizationCode(code: string): Promise<AuthorizationCode> {
-    const authorizationCode = await this.adapter.findAuthorizationCode(code)
+    const authorizationCode = await this.findAuthorizationCode(code)
 
     if (!authorizationCode) {
       throw new InvalidGrant({ description: 'Invalid Authorization Code.' })
@@ -263,6 +276,17 @@ export class AuthorizationCodeGrant
 
     return authorizationCode
   }
+
+  /**
+   * Searches for an Authorization Code in the application's storage
+   * and returns it.
+   *
+   * @param code Code of the Authorization Code to be fetched.
+   * @returns Authorization Code based on the provided code.
+   */
+  protected abstract findAuthorizationCode(
+    code: string
+  ): Promise<AuthorizationCode>
 
   /**
    * Checks the Authorization Code against the provided data and against the
@@ -274,7 +298,7 @@ export class AuthorizationCodeGrant
    */
   private checkAuthorizationCode(
     code: AuthorizationCode,
-    data: TokenParameters,
+    data: CodeTokenParameters,
     client: Client
   ): void {
     if (new Date() > code.getExpiresAt()) {
@@ -326,4 +350,13 @@ export class AuthorizationCodeGrant
 
     return method
   }
+
+  /**
+   * Revokes the provided Authorization Code from the application's storage.
+   *
+   * @param authorizationCode Authorization Code to be deleted.
+   */
+  protected abstract revokeAuthorizationCode(
+    authorizationCode: AuthorizationCode
+  ): Promise<void>
 }

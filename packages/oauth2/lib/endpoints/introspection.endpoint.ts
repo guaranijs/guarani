@@ -1,10 +1,8 @@
-import { Inject, Injectable } from '@guarani/ioc'
-import { OneOrMany, removeNullishValues } from '@guarani/utils'
+import { Injectable } from '@guarani/ioc'
+import { OneOrMany } from '@guarani/utils'
 
-import { timingSafeEqual } from 'crypto'
 import { OutgoingHttpHeaders } from 'http'
 
-import { Adapter } from '../adapter'
 import { ClientAuthenticator } from '../client-authentication'
 import {
   SupportedClientAuthentication,
@@ -12,14 +10,13 @@ import {
   SupportedTokenTypeHint
 } from '../constants'
 import { JsonResponse, Request, Response } from '../context'
-import { AbstractToken, Client } from '../entities'
+import { Client } from '../entities'
 import {
   InvalidRequest,
   OAuth2Error,
   ServerError,
   UnsupportedTokenType
 } from '../exceptions'
-import { Settings } from '../settings'
 import { Endpoint } from './endpoint'
 
 /**
@@ -120,7 +117,7 @@ export interface IntrospectionResponse {
  * associated to the token back to the Client.
  */
 @Injectable()
-export class IntrospectionEndpoint implements Endpoint {
+export abstract class IntrospectionEndpoint implements Endpoint {
   /**
    * Name of the Endpoint.
    */
@@ -143,7 +140,7 @@ export class IntrospectionEndpoint implements Endpoint {
   /**
    * Default HTTP headers to be included in the Response.
    */
-  private readonly headers: OutgoingHttpHeaders = {
+  protected readonly headers: OutgoingHttpHeaders = {
     'Cache-Control': 'no-store',
     Pragma: 'no-cache'
   }
@@ -151,18 +148,14 @@ export class IntrospectionEndpoint implements Endpoint {
   /**
    * Defines the default response for errors and inactive tokens.
    */
-  private readonly inactiveToken: IntrospectionResponse = { active: false }
+  protected readonly inactiveToken: IntrospectionResponse = { active: false }
 
   /**
    * Instantiates the Introspection Endpoint.
    *
-   * @param adapter Adapter provided by the application.
-   * @param settings Settings of the Authorization Server.
    * @param clientAuthenticator Client Authenticator instance.
    */
   public constructor(
-    @Inject('Adapter') private readonly adapter: Adapter,
-    private readonly settings: Settings,
     private readonly clientAuthenticator: ClientAuthenticator
   ) {}
 
@@ -213,7 +206,7 @@ export class IntrospectionEndpoint implements Endpoint {
           ? error
           : new ServerError({ description: error.message })
 
-      return new JsonResponse(removeNullishValues(err))
+      return new JsonResponse(err)
         .status(err.status_code)
         .setHeaders({ ...this.headers, ...err.headers })
     }
@@ -224,7 +217,7 @@ export class IntrospectionEndpoint implements Endpoint {
    *
    * @param data Parameters of the Introspection Request.
    */
-  private checkParameters(data: IntrospectionParameters): void {
+  protected checkParameters(data: IntrospectionParameters): void {
     const { token, token_type_hint } = data
 
     if (!token) {
@@ -248,46 +241,8 @@ export class IntrospectionEndpoint implements Endpoint {
    * @param data Parameters of the Introspection Request.
    * @returns Introspection Response with the metadata of the token.
    */
-  protected async introspectToken(
+  protected abstract introspectToken(
     client: Client,
     data: IntrospectionParameters
-  ): Promise<IntrospectionResponse> {
-    const token: AbstractToken =
-      (await this.adapter.findRefreshToken(data.token)) ??
-      (await this.adapter.findAccessToken(data.token))
-
-    if (!token) {
-      return this.inactiveToken
-    }
-
-    const clientId = Buffer.from(client.getClientId())
-    const tokenClientId = Buffer.from(token.getClient().getClientId())
-
-    if (!timingSafeEqual(clientId, tokenClientId)) {
-      return this.inactiveToken
-    }
-
-    if (
-      token.isRevoked() ||
-      new Date() > token.getExpiresAt() ||
-      new Date() < token.getValidAfter()
-    ) {
-      return this.inactiveToken
-    }
-
-    return removeNullishValues<IntrospectionResponse>({
-      active: true,
-      scope: token.getScopes().join(' '),
-      client_id: token.getClient().getClientId(),
-      username: null,
-      token_type: 'Bearer',
-      exp: Math.floor(token.getExpiresAt().getTime() / 1000),
-      iat: Math.floor(token.getIssuedAt().getTime() / 1000),
-      nbf: null,
-      sub: token.getUser()?.getUserId() ?? token.getClient().getClientId(),
-      aud: token.getAudience(),
-      iss: this.settings.issuer,
-      jti: null
-    })
-  }
+  ): Promise<IntrospectionResponse>
 }

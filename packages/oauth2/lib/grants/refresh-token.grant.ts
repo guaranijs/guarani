@@ -5,12 +5,12 @@ import { Request } from '../context'
 import { Client, RefreshToken } from '../entities'
 import { InvalidGrant, InvalidRequest, InvalidScope } from '../exceptions'
 import { Grant, OAuth2Token } from './grant'
-import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
+import { GrantType, TokenParameters } from './grant-type'
 
 /**
  * Defines the parameters of the **Refresh Token Grant's** Token Request.
  */
-interface TokenParameters extends BaseTokenParameters {
+export interface RefreshTokenTokenParameters extends TokenParameters {
   /**
    * Refresh Token provided by the Client.
    */
@@ -30,7 +30,7 @@ interface TokenParameters extends BaseTokenParameters {
  * of a new Access Token without the need to repeat the User Consent process.
  */
 @Injectable()
-export class RefreshTokenGrant extends Grant implements GrantType {
+export abstract class RefreshTokenGrant extends Grant implements GrantType {
   /**
    * Name of the Grant.
    */
@@ -57,7 +57,7 @@ export class RefreshTokenGrant extends Grant implements GrantType {
    * @returns OAuth 2.0 Token Response.
    */
   public async token(request: Request, client: Client): Promise<OAuth2Token> {
-    const data = <TokenParameters>request.data
+    const data = <RefreshTokenTokenParameters>request.data
 
     const oldRefreshToken = await this.getRefreshToken(data.refresh_token)
 
@@ -87,24 +87,33 @@ export class RefreshTokenGrant extends Grant implements GrantType {
   /**
    * Fetches the requested Refresh Token from the application's storage.
    *
-   * @param refreshToken Token provided by the Client.
+   * @param token Token provided by the Client.
    * @returns Refresh Token based on the provided token.
    */
-  private async getRefreshToken(refreshToken: string): Promise<RefreshToken> {
-    if (!refreshToken) {
+  private async getRefreshToken(token: string): Promise<RefreshToken> {
+    if (!token) {
       throw new InvalidRequest({
         description: 'Invalid parameter "refresh_token".'
       })
     }
 
-    const token = await this.adapter.findRefreshToken(refreshToken)
+    const refreshToken = await this.findRefreshToken(token)
 
-    if (!token) {
+    if (!refreshToken) {
       throw new InvalidGrant({ description: 'Invalid Refresh Token.' })
     }
 
-    return token
+    return refreshToken
   }
+
+  /**
+   * Searches for an Refresh Token in the application's storage
+   * and returns it.
+   *
+   * @param token Token to be fetched.
+   * @returns Refresh Token based on the provided token.
+   */
+  protected abstract findRefreshToken(token: string): Promise<RefreshToken>
 
   /**
    * Checks the fetched Refresh Token against the Client.
@@ -113,7 +122,6 @@ export class RefreshTokenGrant extends Grant implements GrantType {
    * @param client Client of the Request.
    */
   private checkRefreshToken(refreshToken: RefreshToken, client: Client): void {
-    // TODO: Security breach.
     if (refreshToken.getClient().getClientId() !== client.getClientId()) {
       throw new InvalidGrant({ description: 'Invalid Refresh Token.' })
     }
@@ -163,8 +171,7 @@ export class RefreshTokenGrant extends Grant implements GrantType {
    *
    * @param refreshToken Refresh Token provided by the Client.
    */
-  private async revokeRefreshToken(refreshToken: RefreshToken): Promise<void> {
-    await this.adapter.revokeRefreshToken(refreshToken)
-    await this.adapter.revokeAccessToken(refreshToken.getAccessToken())
-  }
+  protected abstract revokeRefreshToken(
+    refreshToken: RefreshToken
+  ): Promise<void>
 }

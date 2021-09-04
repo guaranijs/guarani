@@ -1,5 +1,5 @@
 import { Injectable, InjectAll } from '@guarani/ioc'
-import { removeNullishValues } from '@guarani/utils'
+// import { removeNullishValues } from '@guarani/utils'
 
 import { OutgoingHttpHeaders } from 'http'
 
@@ -86,7 +86,7 @@ export class TokenEndpoint implements Endpoint {
           ? error
           : new ServerError({ description: error.message })
 
-      return new JsonResponse(removeNullishValues(err))
+      return new JsonResponse(err)
         .status(err.status_code)
         .setHeaders({ ...err.headers, ...this.headers })
     }

@@ -22,13 +22,5 @@ export abstract class Provider {
     return await endpoint.handle(request)
   }
 
-  public async authorize(request: Request): Promise<Response> {
-    return await this.endpoint('authorization', request)
-  }
-
-  public async token(request: Request): Promise<Response> {
-    return await this.endpoint('token', request)
-  }
-
   public abstract createOAuth2Request(request: unknown): Request
 }

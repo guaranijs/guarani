@@ -34,9 +34,6 @@ export class AccessToken extends BaseEntity implements AccessTokenEntity {
   @PrimaryColumn({ name: 'token', type: 'varchar', length: 32 })
   public readonly token: string
 
-  @Column({ name: 'expiration', type: 'datetime' })
-  public readonly expiresAt: Date
-
   @Column({ name: 'scopes', type: 'text', transformer })
   public readonly scopes: string[]
 
@@ -59,6 +56,9 @@ export class AccessToken extends BaseEntity implements AccessTokenEntity {
   })
   @JoinColumn({ name: 'user_id' })
   public readonly user?: User
+
+  @Column({ name: 'expires_at', type: 'datetime' })
+  public readonly expiresAt: Date
 
   @CreateDateColumn({ name: 'created_at', type: 'datetime' })
   public readonly createdAt: Date

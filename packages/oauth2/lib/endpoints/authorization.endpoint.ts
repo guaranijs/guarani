@@ -1,5 +1,5 @@
 import { Inject, Injectable, InjectAll } from '@guarani/ioc'
-import { removeNullishValues } from '@guarani/utils'
+// import { removeNullishValues } from '@guarani/utils'
 
 import { URL } from 'url'
 
@@ -272,7 +272,7 @@ export class AuthorizationEndpoint implements Endpoint {
       return this._createErrorResponse(err)
     }
 
-    return responseMode.createResponse(redirectUri, removeNullishValues(err))
+    return responseMode.createResponse(redirectUri, err.toJSON())
   }
 
   /**
@@ -285,7 +285,7 @@ export class AuthorizationEndpoint implements Endpoint {
   private _createErrorResponse(error: OAuth2Error): RedirectResponse {
     const url = new URL(this.errorUrl)
 
-    Object.entries(removeNullishValues(error)).forEach(([name, value]) =>
+    Object.entries(error.toJSON()).forEach(([name, value]) =>
       url.searchParams.set(name, value)
     )
 

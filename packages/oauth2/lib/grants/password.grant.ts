@@ -5,12 +5,12 @@ import { Request } from '../context'
 import { Client, User } from '../entities'
 import { InvalidGrant } from '../exceptions'
 import { Grant, OAuth2Token } from './grant'
-import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
+import { GrantType, TokenParameters } from './grant-type'
 
 /**
  * Defines the parameters of the **Password Grant's** Token Request.
  */
-interface TokenParameters extends BaseTokenParameters {
+export interface PasswordTokenParameters extends TokenParameters {
   /**
    * Username of the User represented by the Client.
    */
@@ -35,7 +35,7 @@ interface TokenParameters extends BaseTokenParameters {
  * of the User and present them as the User's grant to the Authorization Server.
  */
 @Injectable()
-export class PasswordGrant extends Grant implements GrantType {
+export abstract class PasswordGrant extends Grant implements GrantType {
   /**
    * Name of the Grant.
    */
@@ -59,10 +59,14 @@ export class PasswordGrant extends Grant implements GrantType {
    * @returns OAuth 2.0 Token Response.
    */
   public async token(request: Request, client: Client): Promise<OAuth2Token> {
-    const data = <TokenParameters>request.data
+    const data = <PasswordTokenParameters>request.data
 
     const scopes = await this.adapter.checkClientScope(client, data.scope)
     const user = await this.authenticate(data.username, data.password)
+
+    if (!user) {
+      throw new InvalidGrant({ description: 'Invalid Credentials.' })
+    }
 
     const [accessToken, refreshToken] = await this.issueOAuth2Token(
       scopes,
@@ -86,20 +90,8 @@ export class PasswordGrant extends Grant implements GrantType {
    * @param password Password of the User.
    * @returns User based on the provided Username.
    */
-  private async authenticate(
+  protected abstract authenticate(
     username: string,
     password: string
-  ): Promise<User> {
-    const user = await this.adapter.findUserByUsername(username)
-
-    if (!user) {
-      throw new InvalidGrant({ description: 'Invalid Credentials.' })
-    }
-
-    if (!(await user.checkPassword(password))) {
-      throw new InvalidGrant({ description: 'Invalid Credentials.' })
-    }
-
-    return user
-  }
+  ): Promise<User>
 }

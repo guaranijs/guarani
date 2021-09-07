@@ -2,7 +2,13 @@ import { Request, Response } from 'express'
 
 class Controller {
   public async form(request: Request, response: Response) {
-    return response.render('login', { title: 'Login', actionUrl: request.url })
+    const csrf = request.csrfToken()
+
+    return response.render('login', {
+      title: 'Login',
+      actionUrl: request.url,
+      csrf
+    })
   }
 
   public async login(request: Request, response: Response) {

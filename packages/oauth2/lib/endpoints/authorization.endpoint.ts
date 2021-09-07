@@ -1,5 +1,4 @@
 import { Inject, Injectable, InjectAll } from '@guarani/ioc'
-// import { removeNullishValues } from '@guarani/utils'
 
 import { URL } from 'url'
 
@@ -24,6 +23,11 @@ import { ResponseMode } from '../response-modes'
 import { AuthorizationParameters, ResponseType } from '../grants'
 import { Settings } from '../settings'
 import { Endpoint } from './endpoint'
+
+export interface UserConsent {
+  readonly client: Client
+  readonly scopes: string[]
+}
 
 /**
  * Endpoint used to provide an Authorization Grant for the requesting Client
@@ -62,6 +66,32 @@ export class AuthorizationEndpoint implements Endpoint {
   }
 
   /**
+   * Fetches the parameters of the User Consent from the Authorization Request.
+   *
+   * @param request Current Request.
+   * @returns User Consent parameters.
+   */
+  public async getUserConsent(request: Request): Promise<UserConsent> {
+    try {
+      const data = <AuthorizationParameters>request.data
+
+      const client = await this.getClient(data.client_id)
+
+      this.getGrant(data.response_type)
+      this.checkClientResponseType(client, data.response_type)
+      this.checkClientRedirectUri(client, data.redirect_uri)
+
+      const scopes = await this.adapter.checkClientScope(client, data.scope)
+
+      return { client, scopes }
+    } catch (error) {
+      throw error instanceof OAuth2Error
+        ? error
+        : new ServerError({ description: error.message })
+    }
+  }
+
+  /**
    * Creates an **Authorization Response** via a **User-Agent Redirection**.
    *
    * Any error is safely redirected to the **Redirect URI** provided by the
@@ -86,79 +116,32 @@ export class AuthorizationEndpoint implements Endpoint {
   public async handle(request: Request): Promise<Response> {
     const data = <AuthorizationParameters>request.data
 
-    let user: User,
-      grant: ResponseType,
-      client: Client,
-      redirectUri: string,
-      responseMode: ResponseMode
+    let client: Client, redirectUri: string, responseMode: ResponseMode
 
     try {
-      user = this.getUser(request)
-      grant = this.getGrant(data.response_type)
       client = await this.getClient(data.client_id)
 
       this.checkClientResponseType(client, data.response_type)
 
       redirectUri = this.checkClientRedirectUri(client, data.redirect_uri)
-      responseMode = this.getResponseMode(
-        data.response_mode || grant.defaultResponseMode
-      )
     } catch (error) {
       return this.handleError(this.errorUrl, error)
     }
 
     try {
+      const user = this.getUser(request)
+      const grant = this.getGrant(data.response_type)
+
+      responseMode = this.getResponseMode(
+        data.response_mode || grant.defaultResponseMode
+      )
+
       const response = await grant.authorize(request, client, user)
 
       return responseMode.createResponse(redirectUri, response)
     } catch (error) {
       return this.handleError(redirectUri, error, responseMode)
     }
-  }
-
-  /**
-   * Fetches the User from the Request if it has given consent, otherwise,
-   * denies access to the Client.
-   *
-   * @param request Current Request.
-   * @returns Object representing the User of the Request.
-   */
-  private getUser(request: Request): User {
-    const { user } = request
-
-    if (!user) {
-      throw new AccessDenied({
-        description: 'Authorization denied by the user.'
-      })
-    }
-
-    return user
-  }
-
-  /**
-   * Retrieves the requested Grant based on the **response_type** parameter.
-   *
-   * @param responseType Requested Response Type.
-   * @throws {UnsupportedResponseType} The requested grant is unsupported.
-   * @returns Grant based on the requested **response_type**.
-   */
-  private getGrant(responseType: SupportedResponseType): ResponseType {
-    // Alphabetic sorting of the Response Types.
-    responseType = <SupportedResponseType>(
-      responseType.split(' ').sort().join(' ')
-    )
-
-    const grant = this.grants.find(grant =>
-      grant.responseTypes.includes(responseType)
-    )
-
-    if (!grant) {
-      throw new UnsupportedResponseType({
-        description: `Unsupported response_type "${responseType}".`
-      })
-    }
-
-    return grant
   }
 
   /**
@@ -226,6 +209,51 @@ export class AuthorizationEndpoint implements Endpoint {
     }
 
     return redirectUri
+  }
+
+  /**
+   * Fetches the User from the Request if it has given consent, otherwise,
+   * denies access to the Client.
+   *
+   * @param request Current Request.
+   * @returns Object representing the User of the Request.
+   */
+  private getUser(request: Request): User {
+    const { user } = request
+
+    if (!user) {
+      throw new AccessDenied({
+        description: 'Authorization denied by the user.'
+      })
+    }
+
+    return user
+  }
+
+  /**
+   * Retrieves the requested Grant based on the **response_type** parameter.
+   *
+   * @param responseType Requested Response Type.
+   * @throws {UnsupportedResponseType} The requested grant is unsupported.
+   * @returns Grant based on the requested **response_type**.
+   */
+  private getGrant(responseType: SupportedResponseType): ResponseType {
+    // Alphabetic sorting of the Response Types.
+    responseType = <SupportedResponseType>(
+      responseType.split(' ').sort().join(' ')
+    )
+
+    const grant = this.grants.find(grant =>
+      (grant.responseTypes ?? []).includes(responseType)
+    )
+
+    if (!grant) {
+      throw new UnsupportedResponseType({
+        description: `Unsupported response_type "${responseType}".`
+      })
+    }
+
+    return grant
   }
 
   /**

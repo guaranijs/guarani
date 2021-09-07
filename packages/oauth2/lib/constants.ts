@@ -23,6 +23,7 @@ export type SupportedEndpoint =
   | 'introspection'
   | 'revocation'
   | 'token'
+  | 'user-consent'
 
 /**
  * Supported Grant Types.

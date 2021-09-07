@@ -79,7 +79,7 @@ export class Request {
    * Data of the Request. Obtained by combining the Request's Query and Body.
    */
   public get data(): Dict {
-    return this.method === 'get' ? this.query : this.body
+    return { ...this.query, ...this.body }
   }
 
   /**

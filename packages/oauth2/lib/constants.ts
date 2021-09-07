@@ -1,4 +1,9 @@
 /**
+ * Defines the environment of the application using Guarani.
+ */
+export const GUARANI_ENV = process.env.GUARANI_ENV || 'production'
+
+/**
  * Supported Client Assertion Types.
  */
 export type SupportedClientAssertionType =

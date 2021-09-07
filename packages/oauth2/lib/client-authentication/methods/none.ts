@@ -59,7 +59,7 @@ export class None extends ClientAuthentication {
     const client = await this.adapter.findClient(client_id)
 
     if (!client) {
-      throw new InvalidClient({ description: 'Client not found.' })
+      throw new InvalidClient({ description: 'Invalid Credentials.' })
     }
 
     if (client_secret) {

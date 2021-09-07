@@ -4,6 +4,7 @@ import { URL } from 'url'
 
 import { Adapter } from '../adapter'
 import {
+  GUARANI_ENV,
   SupportedEndpoint,
   SupportedResponseMode,
   SupportedResponseType
@@ -87,7 +88,7 @@ export class AuthorizationEndpoint implements Endpoint {
     } catch (error) {
       throw error instanceof OAuth2Error
         ? error
-        : new ServerError({ description: error.message })
+        : new ServerError({ description: GUARANI_ENV ? error.message : null })
     }
   }
 
@@ -292,7 +293,7 @@ export class AuthorizationEndpoint implements Endpoint {
     const err =
       error instanceof OAuth2Error
         ? error
-        : new ServerError({ description: error.message })
+        : new ServerError({ description: GUARANI_ENV ? error.message : null })
 
     try {
       responseMode ??= this.getResponseMode('query')

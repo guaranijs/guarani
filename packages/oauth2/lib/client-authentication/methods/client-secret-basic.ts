@@ -73,7 +73,7 @@ export class ClientSecretBasic extends ClientAuthentication {
 
     if (!client) {
       throw new InvalidClient({
-        description: 'Client not found.',
+        description: 'Invalid Credentials.',
         headers: this.headers,
         status_code: 401
       })
@@ -81,7 +81,7 @@ export class ClientSecretBasic extends ClientAuthentication {
 
     if (!(await client.checkSecret(client_secret))) {
       throw new InvalidClient({
-        description: 'Mismatching Client Secret.',
+        description: 'Invalid Credentials.',
         headers: this.headers,
         status_code: 401
       })

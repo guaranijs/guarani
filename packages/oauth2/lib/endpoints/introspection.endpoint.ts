@@ -5,6 +5,7 @@ import { OutgoingHttpHeaders } from 'http'
 
 import { ClientAuthenticator } from '../client-authentication'
 import {
+  GUARANI_ENV,
   SupportedClientAuthentication,
   SupportedEndpoint,
   SupportedTokenTypeHint
@@ -204,7 +205,7 @@ export abstract class IntrospectionEndpoint implements Endpoint {
       const err =
         error instanceof OAuth2Error
           ? error
-          : new ServerError({ description: error.message })
+          : new ServerError({ description: GUARANI_ENV ? error.message : null })
 
       return new JsonResponse(err)
         .status(err.status_code)

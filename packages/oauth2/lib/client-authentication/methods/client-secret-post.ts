@@ -61,12 +61,12 @@ export class ClientSecretPost extends ClientAuthentication {
     const client = await this.adapter.findClient(client_id)
 
     if (!client) {
-      throw new InvalidClient({ description: 'Client not found.' })
+      throw new InvalidClient({ description: 'Invalid Credentials.' })
     }
 
     if (!(await client.checkSecret(client_secret))) {
       throw new InvalidClient({
-        description: 'Mismatching Client Secret.'
+        description: 'Invalid Credentials.'
       })
     }
 

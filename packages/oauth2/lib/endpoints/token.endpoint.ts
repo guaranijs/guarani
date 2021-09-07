@@ -1,10 +1,13 @@
 import { Injectable, InjectAll } from '@guarani/ioc'
-// import { removeNullishValues } from '@guarani/utils'
 
 import { OutgoingHttpHeaders } from 'http'
 
 import { ClientAuthenticator } from '../client-authentication'
-import { SupportedEndpoint, SupportedGrantType } from '../constants'
+import {
+  GUARANI_ENV,
+  SupportedEndpoint,
+  SupportedGrantType
+} from '../constants'
 import { JsonResponse, Request, Response } from '../context'
 import { Client } from '../entities'
 import {
@@ -84,7 +87,7 @@ export class TokenEndpoint implements Endpoint {
       const err =
         error instanceof OAuth2Error
           ? error
-          : new ServerError({ description: error.message })
+          : new ServerError({ description: GUARANI_ENV ? error.message : null })
 
       return new JsonResponse(err)
         .status(err.status_code)

@@ -1,0 +1,18 @@
+{{#extend "layout"}}
+  {{#content "body"}}
+  <div class="container">
+    <form method="post" action="{{ actionUrl }}">
+      <p>The application <strong>{{ client.name }}</strong> is requesting the following scopes:</p>
+
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+
+      {{#each scopes}}
+      <input type="text" class="form-control-plaintext" value="{{ this }}" readonly>
+      {{/each}}
+
+      <button type="submit" name="confirm" class="btn btn-primary" value="yes">Authorize</button>
+      <button type="submit" name="confirm" class="btn btn-danger" value="no">Deny</button>
+    </form>
+  </div>
+  {{/content}}
+{{/extend}}

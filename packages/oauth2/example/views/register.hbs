@@ -2,6 +2,8 @@
   {{#content "body"}}
   <div class="container">
     <form method="post" action="{{ request.url }}">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+
       {{#if error}}
       <div class="alert alert-danger mb-3">
         <strong class="form-text text-danger">{{ error }}</strong>

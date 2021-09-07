@@ -4,7 +4,9 @@ import { IUser, User } from '../entities'
 
 class Controller {
   public async form(request: Request, response: Response) {
-    return response.render('register', { request, title: 'Register' })
+    const csrf = request.csrfToken()
+
+    return response.render('register', { request, title: 'Register', csrf })
   }
 
   public async register(request: Request, response: Response) {

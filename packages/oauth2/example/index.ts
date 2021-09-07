@@ -1,4 +1,5 @@
 import ConnectRedis from 'connect-redis'
+import cookieParser from 'cookie-parser'
 import express, { urlencoded } from 'express'
 import flash from 'express-flash'
 import session from 'express-session'
@@ -16,6 +17,8 @@ import { initialize } from './strategy'
 const PORT = process.env.PORT || 3333
 
 async function configure(app: express.Express) {
+  const secret = 'supersecretkeythatnoonewillbeabletoguess'
+
   const connection = await createConnection(ormconfig)
   await connection.synchronize()
 
@@ -31,9 +34,11 @@ async function configure(app: express.Express) {
   app.use(morgan('dev'))
   app.use(urlencoded({ extended: true }))
   app.use(flash())
+  app.use(cookieParser(secret))
   app.use(
     session({
-      secret: 'supersecretkeythatnoonewillbeabletoguess',
+      name: 'guarani',
+      secret,
       resave: false,
       saveUninitialized: false,
       // @ts-ignore

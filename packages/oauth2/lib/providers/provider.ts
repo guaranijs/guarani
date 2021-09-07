@@ -1,11 +1,22 @@
-import { Injectable, InjectAll } from '@guarani/ioc'
+import { Inject, Injectable, InjectAll } from '@guarani/ioc'
 
 import { SupportedEndpoint } from '../constants'
 import { Request, Response } from '../context'
-import { Endpoint } from '../endpoints'
+import {
+  AuthorizationEndpoint,
+  Endpoint,
+  TokenEndpoint,
+  UserConsent
+} from '../endpoints'
 
 @Injectable()
 export abstract class Provider {
+  @Inject()
+  private readonly authorizationEndpoint: AuthorizationEndpoint
+
+  @Inject()
+  private readonly tokenEndpoint: TokenEndpoint
+
   @InjectAll('Endpoint')
   private readonly endpoints: Endpoint[]
 
@@ -20,6 +31,18 @@ export abstract class Provider {
     }
 
     return await endpoint.handle(request)
+  }
+
+  public async authorize(request: Request): Promise<Response> {
+    return await this.authorizationEndpoint.handle(request)
+  }
+
+  public async consent(request: Request): Promise<UserConsent> {
+    return this.authorizationEndpoint.getUserConsent(request)
+  }
+
+  public async token(request: Request): Promise<Response> {
+    return this.tokenEndpoint.handle(request)
   }
 
   public abstract createOAuth2Request(request: unknown): Request

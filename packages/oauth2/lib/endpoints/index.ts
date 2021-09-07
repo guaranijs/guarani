@@ -1,4 +1,4 @@
-export { AuthorizationEndpoint } from './authorization.endpoint'
+export { AuthorizationEndpoint, UserConsent } from './authorization.endpoint'
 export { Endpoint } from './endpoint'
 export {
   IntrospectionEndpoint,

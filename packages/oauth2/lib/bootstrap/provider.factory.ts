@@ -153,7 +153,8 @@ class InternalProviderFactory {
     const endpoints: Constructor<Endpoint>[] =
       Reflect.getMetadata('guarani:oauth2:endpoints', application) ?? []
 
-    endpoints.push(AuthorizationEndpoint, TokenEndpoint)
+    this.container.bindToken(AuthorizationEndpoint).toSelf()
+    this.container.bindToken(TokenEndpoint).toSelf()
 
     endpoints.forEach(endpoint =>
       this.container.bindToken<Endpoint>('Endpoint').toClass(endpoint)

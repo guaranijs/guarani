@@ -1,3 +1,4 @@
+import csurf from 'csurf'
 import { Router } from 'express'
 import { authenticate } from 'passport'
 
@@ -11,6 +12,8 @@ import {
 } from './controllers'
 import { authenticated, unauthenticated } from './strategy'
 
+const csrf = csurf({ cookie: true, sessionKey: 'guarani' })
+
 const router = Router()
 
 router.route('/').get(authenticated, HomeController.home)
@@ -19,9 +22,10 @@ router.route('/callback').get(CallbackController.get)
 
 router
   .route('/auth/login')
-  .get(unauthenticated, LoginController.form)
+  .get(unauthenticated, csrf, LoginController.form)
   .post(
     unauthenticated,
+    csrf,
     authenticate('local', { failureRedirect: '/auth/login' }),
     LoginController.login
   )
@@ -33,11 +37,12 @@ router
 
 router
   .route('/auth/register')
-  .get(unauthenticated, RegisterController.form)
-  .post(unauthenticated, RegisterController.register)
+  .get(unauthenticated, csrf, RegisterController.form)
+  .post(unauthenticated, csrf, RegisterController.register)
 
 router
-  .get('/oauth2/authorize', OAuth2Controller.authorize)
+  .get('/oauth2/authorize', csrf, OAuth2Controller.consent)
+  .post('/oauth2/authorize', csrf, OAuth2Controller.authorize)
   .get('/oauth2/error', OAuth2Controller.error)
   .post('/oauth2/introspect', OAuth2Controller.introspect)
   .post('/oauth2/revoke', OAuth2Controller.revoke)

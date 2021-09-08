@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/guaranijs/guarani/compare/v0.6.0...v0.6.1) (2021-09-08)
+
+
+### Bug Fixes
+
+* **oauth2:** Fixed required Authorization Parameters. ([3c9ea0d](https://github.com/guaranijs/guarani/commit/3c9ea0dc7070dda194c77c930e5c11fc36d5ffa2))
+* **oauth2:** User Consent checks its request parameters. ([1c05fa7](https://github.com/guaranijs/guarani/commit/1c05fa705cb5cf797ec1055357e95fde6f6616e4))
+
+
+
+
+
 # [0.6.0](https://github.com/guaranijs/guarani/compare/v0.5.0...v0.6.0) (2021-09-08)
 
 

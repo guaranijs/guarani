@@ -1,6 +1,6 @@
 {
   "name": "@guarani/oauth2",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "OAuth 2.0, OpenID Connect and User-Managed Access 2.0 Authorization Server and Identity Provider implementation for Guarani.",
   "keywords": [
     "oauth",

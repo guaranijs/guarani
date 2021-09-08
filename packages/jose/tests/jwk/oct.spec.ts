@@ -6,6 +6,7 @@ describe('OctKey constructor', () => {
     expect(
       () =>
         new OctKey({
+          // @ts-expect-error
           kty: 'wrong',
           k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ'
         })

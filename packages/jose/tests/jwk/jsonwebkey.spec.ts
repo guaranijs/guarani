@@ -2,11 +2,11 @@
 
 import { Dict } from '@guarani/utils'
 
-import { JsonWebKey } from '../../lib/jwk'
+import { JsonWebKey, SupportedJWKAlgorithm } from '../../lib/jwk'
 import { SupportedHash } from '../../lib/types'
 
 class MockKey extends JsonWebKey {
-  public readonly kty: string
+  public readonly kty: SupportedJWKAlgorithm
 
   public export(...params: any[]): string | Buffer {
     throw new Error('Method not implemented.')

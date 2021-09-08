@@ -11,6 +11,7 @@ describe('RSA Public Key', () => {
   it('should reject a wrong "kty".', () => {
     const { kty, ...params } = key
 
+    // @ts-expect-error
     expect(() => new RsaKey({ kty: 'wrong', ...params })).toThrow(
       'Invalid parameter "kty". Expected "RSA", got "wrong".'
     )

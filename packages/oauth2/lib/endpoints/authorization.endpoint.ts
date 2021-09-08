@@ -88,6 +88,8 @@ export class AuthorizationEndpoint extends Endpoint {
     try {
       const data = <AuthorizationParameters>request.data
 
+      this.checkParameters(data)
+
       const client = await this.getClient(data.client_id)
 
       this.getGrant(data.response_type)

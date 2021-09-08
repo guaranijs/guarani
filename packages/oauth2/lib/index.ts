@@ -66,7 +66,6 @@ export {
   CodeTokenParameters,
   Grant,
   GrantType,
-  HybridGrant,
   ImplicitGrant,
   OAuth2Token,
   PasswordGrant,

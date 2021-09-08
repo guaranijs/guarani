@@ -14,8 +14,6 @@ export { Grant, OAuth2Token } from './grant'
 
 export { GrantType, TokenParameters } from './grant-type'
 
-export { HybridGrant } from './hybrid.grant'
-
 export { ImplicitGrant } from './implicit.grant'
 
 export { PasswordGrant, PasswordTokenParameters } from './password.grant'

@@ -45,4 +45,9 @@ export {
   JsonWebSignatureHeader,
   SupportedJWSAlgorithm
 } from './jws'
-export { JWTClaims, JsonWebToken, JsonWebTokenClaims } from './jwt'
+export {
+  JWTClaims,
+  JWTClaimOptions,
+  JsonWebToken,
+  JsonWebTokenClaims
+} from './jwt'

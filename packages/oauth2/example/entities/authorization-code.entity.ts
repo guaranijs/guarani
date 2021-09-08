@@ -1,8 +1,9 @@
-import { secretToken } from '@guarani/utils'
+import { OneOrMany, secretToken } from '@guarani/utils'
 
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -13,19 +14,16 @@ import { SupportedPkceMethod } from '../../lib/constants'
 import { AuthorizationCode as AuthorizationCodeEntity } from '../../lib/entities'
 import { Client } from './client.entity'
 import { User } from './user.entity'
+import { audienceTransformer, transformer } from './_transformer'
 
 interface IAuthorizationCode {
   readonly redirectUri: string
   readonly scopes: string[]
   readonly codeChallenge: string
   readonly codeChallengeMethod?: SupportedPkceMethod
+  readonly audience?: OneOrMany<string>
   readonly client: Client
   readonly user: User
-}
-
-const transformer = {
-  from: (value: string): string[] => JSON.parse(value),
-  to: (value: string[]): string => JSON.stringify(value)
 }
 
 @Entity({ name: 'authorization_codes' })
@@ -52,8 +50,19 @@ export class AuthorizationCode
   })
   public readonly codeChallengeMethod?: SupportedPkceMethod
 
+  @Column({
+    name: 'audience',
+    type: 'text',
+    nullable: true,
+    transformer: audienceTransformer
+  })
+  public readonly audience?: OneOrMany<string>
+
   @Column({ name: 'expires_at', type: 'datetime' })
   public readonly expiresAt: Date
+
+  @CreateDateColumn({ name: 'created_at', type: 'datetime' })
+  public readonly createdAt: Date
 
   @ManyToOne(() => Client, {
     eager: true,
@@ -82,6 +91,7 @@ export class AuthorizationCode
       this.code = secretToken(64)
       this.redirectUri = data.redirectUri
       this.scopes = data.scopes
+      this.audience = data.audience
       this.codeChallenge = data.codeChallenge
       this.codeChallengeMethod = data.codeChallengeMethod
       this.expiresAt = expiration
@@ -90,16 +100,32 @@ export class AuthorizationCode
     }
   }
 
-  public getCode(): string {
+  public getIdentifier(): string {
     return this.code
-  }
-
-  public getRedirectUri(): string {
-    return this.redirectUri
   }
 
   public getScopes(): string[] {
     return this.scopes
+  }
+
+  public getIssuedAt(): Date {
+    return this.createdAt
+  }
+
+  public getExpiresAt(): Date {
+    return this.expiresAt
+  }
+
+  public getValidAfter(): Date {
+    return this.getIssuedAt()
+  }
+
+  public getAudience(): OneOrMany<string> {
+    return this.audience
+  }
+
+  public getRedirectUri(): string {
+    return this.redirectUri
   }
 
   public getCodeChallenge(): string {
@@ -110,15 +136,15 @@ export class AuthorizationCode
     return this.codeChallengeMethod
   }
 
-  public getExpiresAt(): Date {
-    return this.expiresAt
-  }
-
   public getClient(): Client {
     return this.client
   }
 
   public getUser(): User {
     return this.user
+  }
+
+  public isRevoked(): boolean {
+    return new Date() > this.getExpiresAt()
   }
 }

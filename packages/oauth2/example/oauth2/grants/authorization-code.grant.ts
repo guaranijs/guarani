@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/ioc'
+import { OneOrMany } from '@guarani/utils'
 
 import {
   AuthorizationCodeGrant as BaseAuthorizationCodeGrant,
@@ -12,10 +13,12 @@ export class AuthorizationCodeGrant extends BaseAuthorizationCodeGrant {
   protected async createAuthorizationCode(
     data: CodeAuthorizationParameters,
     scopes: string[],
+    audience: OneOrMany<string>,
     client: Client,
     user: User
   ): Promise<AuthorizationCode> {
     const code = new AuthorizationCode({
+      audience,
       client,
       codeChallenge: data.code_challenge,
       codeChallengeMethod: data.code_challenge_method,

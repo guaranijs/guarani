@@ -16,17 +16,14 @@ import { RefreshToken as RefreshTokenEntity } from '../../lib/entities'
 import { AccessToken } from './access-token.entity'
 import { Client } from './client.entity'
 import { User } from './user.entity'
+import { audienceTransformer, transformer } from './_transformer'
 
 interface IRefreshToken {
   readonly scopes: string[]
+  readonly audience?: OneOrMany<string>
   readonly client: Client
   readonly user: User
   readonly accessToken: AccessToken
-}
-
-const transformer = {
-  from: (value: string): string[] => JSON.parse(value),
-  to: (value: string[]): string => JSON.stringify(value)
 }
 
 @Entity({ name: 'refresh_tokens' })
@@ -36,6 +33,14 @@ export class RefreshToken extends BaseEntity implements RefreshTokenEntity {
 
   @Column({ name: 'scopes', type: 'text', transformer })
   public readonly scopes: string[]
+
+  @Column({
+    name: 'audience',
+    type: 'text',
+    nullable: true,
+    transformer: audienceTransformer
+  })
+  public readonly audience?: OneOrMany<string>
 
   @OneToOne(() => AccessToken, {
     cascade: true,
@@ -82,6 +87,7 @@ export class RefreshToken extends BaseEntity implements RefreshTokenEntity {
       this.token = secretToken(24)
       this.expiresAt = expiration
       this.scopes = data.scopes
+      this.audience = data.audience
       this.accessToken = data.accessToken
       this.client = data.client
       this.user = data.user
@@ -113,7 +119,7 @@ export class RefreshToken extends BaseEntity implements RefreshTokenEntity {
   }
 
   public getAudience(): OneOrMany<string> {
-    return this.client.getClientId()
+    return this.audience
   }
 
   public getClient(): Client {

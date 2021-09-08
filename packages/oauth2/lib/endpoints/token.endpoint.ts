@@ -25,7 +25,7 @@ import { Endpoint } from './endpoint'
  * the client to act on behalf of the Resource Owner.
  */
 @Injectable()
-export class TokenEndpoint implements Endpoint {
+export class TokenEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
@@ -48,7 +48,9 @@ export class TokenEndpoint implements Endpoint {
   public constructor(
     @InjectAll('Grant') private readonly grants: GrantType[],
     private readonly clientAuthenticator: ClientAuthenticator
-  ) {}
+  ) {
+    super()
+  }
 
   /**
    * Creates a Token Response via a JSON Response.
@@ -80,6 +82,8 @@ export class TokenEndpoint implements Endpoint {
 
       this.checkClientGrantType(client, data.grant_type)
 
+      this.checkResource(data.resource)
+
       const token = await grant.token(request, client)
 
       return new JsonResponse(token).setHeaders(this.headers)
@@ -87,7 +91,9 @@ export class TokenEndpoint implements Endpoint {
       const err =
         error instanceof OAuth2Error
           ? error
-          : new ServerError({ description: GUARANI_ENV ? error.message : null })
+          : new ServerError({
+              description: GUARANI_ENV === 'development' ? error.message : null
+            })
 
       return new JsonResponse(err)
         .status(err.status_code)

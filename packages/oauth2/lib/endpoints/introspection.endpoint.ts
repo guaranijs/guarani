@@ -118,7 +118,7 @@ export interface IntrospectionResponse {
  * associated to the token back to the Client.
  */
 @Injectable()
-export abstract class IntrospectionEndpoint implements Endpoint {
+export abstract class IntrospectionEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
@@ -158,7 +158,9 @@ export abstract class IntrospectionEndpoint implements Endpoint {
    */
   public constructor(
     private readonly clientAuthenticator: ClientAuthenticator
-  ) {}
+  ) {
+    super()
+  }
 
   /**
    * Introspects the provided token about its metadata and state
@@ -205,7 +207,9 @@ export abstract class IntrospectionEndpoint implements Endpoint {
       const err =
         error instanceof OAuth2Error
           ? error
-          : new ServerError({ description: GUARANI_ENV ? error.message : null })
+          : new ServerError({
+              description: GUARANI_ENV === 'development' ? error.message : null
+            })
 
       return new JsonResponse(err)
         .status(err.status_code)

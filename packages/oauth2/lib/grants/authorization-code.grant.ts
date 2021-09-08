@@ -1,5 +1,5 @@
 import { Inject, Injectable, InjectAll } from '@guarani/ioc'
-import { removeNullishValues } from '@guarani/utils'
+import { OneOrMany, removeNullishValues } from '@guarani/utils'
 
 import { Adapter } from '../adapter'
 import {
@@ -149,10 +149,23 @@ export abstract class AuthorizationCodeGrant
     this.checkCodeChallenge(data.code_challenge, data.code_challenge_method)
 
     const scopes = await this.adapter.checkClientScope(client, data.scope)
-    const code = await this.createAuthorizationCode(data, scopes, client, user)
+    const [audience, grantedScopes] = await this.getAudienceScopes(
+      data.resource,
+      scopes,
+      client,
+      user
+    )
+
+    const code = await this.createAuthorizationCode(
+      data,
+      grantedScopes ?? scopes,
+      audience,
+      client,
+      user
+    )
 
     return removeNullishValues<CodeAuthorizationResponse>({
-      code: code.getCode(),
+      code: code.getIdentifier(),
       state: data.state
     })
   }
@@ -187,6 +200,7 @@ export abstract class AuthorizationCodeGrant
    * @param data Authorization Parameters of the Authorization Code Grant.
    * @param scopes Scopes granted to the Client.
    *     **It `MAY` differ from the requested scopes**.
+   * @param audience Intended Audience of the Authorization Code.
    * @param client Client requesting the Authorization Code.
    * @param user User issuing the Authorization Code to the Client.
    * @returns **Authorization Code** for use by the Client.
@@ -194,6 +208,7 @@ export abstract class AuthorizationCodeGrant
   protected abstract createAuthorizationCode(
     data: CodeAuthorizationParameters,
     scopes: string[],
+    audience: OneOrMany<string>,
     client: Client,
     user: User
   ): Promise<AuthorizationCode>
@@ -225,13 +240,34 @@ export abstract class AuthorizationCodeGrant
       code = await this.getAuthorizationCode(data.code)
 
       this.checkAuthorizationCode(code, data, client)
+      this.checkTokenResource(code, data.resource)
 
-      const [accessToken, refreshToken] = await this.issueOAuth2Token(
+      const [audience, accessTokenScopes] = await this.getAudienceScopes(
+        data.resource ?? code.getAudience(),
         code.getScopes(),
         client,
-        code.getUser(),
-        true
+        code.getUser()
       )
+
+      const accessToken = await this.adapter.createAccessToken(
+        this.name,
+        accessTokenScopes ?? code.getScopes(),
+        audience ?? code.getAudience(),
+        client,
+        code.getUser()
+      )
+
+      const refreshToken =
+        this.adapter.createRefreshToken &&
+        client.checkGrantType('refresh_token')
+          ? await this.adapter.createRefreshToken(
+              code.getScopes(),
+              code.getAudience(),
+              client,
+              code.getUser(),
+              accessToken
+            )
+          : null
 
       return this.createTokenResponse(accessToken, refreshToken)
     } finally {

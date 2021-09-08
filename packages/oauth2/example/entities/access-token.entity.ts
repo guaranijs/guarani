@@ -15,18 +15,15 @@ import { SupportedGrantType } from '../../lib/constants'
 import { AccessToken as AccessTokenEntity } from '../../lib/entities'
 import { Client } from './client.entity'
 import { User } from './user.entity'
+import { audienceTransformer, transformer } from './_transformer'
 
 interface IAccessToken {
   readonly grant: SupportedGrantType
   readonly expiresIn: number
   readonly scopes: string[]
+  readonly audience?: OneOrMany<string>
   readonly client: Client
   readonly user: User
-}
-
-const transformer = {
-  from: (value: string): string[] => JSON.parse(value),
-  to: (value: string[]): string => JSON.stringify(value)
 }
 
 @Entity({ name: 'access_tokens' })
@@ -39,6 +36,14 @@ export class AccessToken extends BaseEntity implements AccessTokenEntity {
 
   @Column({ name: 'grant', type: 'varchar', length: 256 })
   public readonly grant: SupportedGrantType
+
+  @Column({
+    name: 'audience',
+    type: 'text',
+    nullable: true,
+    transformer: audienceTransformer
+  })
+  public readonly audience?: OneOrMany<string>
 
   @ManyToOne(() => Client, {
     eager: true,
@@ -78,6 +83,7 @@ export class AccessToken extends BaseEntity implements AccessTokenEntity {
       this.expiresAt = expiration
       this.scopes = data.scopes
       this.grant = data.grant
+      this.audience = data.audience
       this.client = data.client
       this.user = data.user
     }
@@ -104,7 +110,7 @@ export class AccessToken extends BaseEntity implements AccessTokenEntity {
   }
 
   public getAudience(): OneOrMany<string> {
-    return this.client.getClientId()
+    return this.audience
   }
 
   public getGrant(): SupportedGrantType {

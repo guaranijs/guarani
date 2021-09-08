@@ -38,7 +38,7 @@ export interface UserConsent {
  * using this endpoint, it is left omitted.
  */
 @Injectable()
-export class AuthorizationEndpoint implements Endpoint {
+export class AuthorizationEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
@@ -57,7 +57,9 @@ export class AuthorizationEndpoint implements Endpoint {
     @InjectAll('Grant') private readonly grants: ResponseType[],
     @InjectAll('ResponseMode') private readonly responseModes: ResponseMode[],
     private readonly settings: Settings
-  ) {}
+  ) {
+    super()
+  }
 
   /**
    * URL of the OAuth 2.0 Error Page.
@@ -88,7 +90,9 @@ export class AuthorizationEndpoint implements Endpoint {
     } catch (error) {
       throw error instanceof OAuth2Error
         ? error
-        : new ServerError({ description: GUARANI_ENV ? error.message : null })
+        : new ServerError({
+            description: GUARANI_ENV === 'development' ? error.message : null
+          })
     }
   }
 
@@ -125,6 +129,8 @@ export class AuthorizationEndpoint implements Endpoint {
       this.checkClientResponseType(client, data.response_type)
 
       redirectUri = this.checkClientRedirectUri(client, data.redirect_uri)
+
+      this.checkResource(data.resource)
     } catch (error) {
       return this.handleError(this.errorUrl, error)
     }
@@ -293,7 +299,9 @@ export class AuthorizationEndpoint implements Endpoint {
     const err =
       error instanceof OAuth2Error
         ? error
-        : new ServerError({ description: GUARANI_ENV ? error.message : null })
+        : new ServerError({
+            description: GUARANI_ENV === 'development' ? error.message : null
+          })
 
     try {
       responseMode ??= this.getResponseMode('query')

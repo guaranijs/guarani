@@ -47,7 +47,7 @@ export interface RevocationParameters {
  * or is otherwise unknown or invalid, it is already considered "revoked".
  */
 @Injectable()
-export abstract class RevocationEndpoint implements Endpoint {
+export abstract class RevocationEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
@@ -86,6 +86,8 @@ export abstract class RevocationEndpoint implements Endpoint {
     @InjectAll('Grant') private readonly grants: Grant[],
     private readonly clientAuthenticator: ClientAuthenticator
   ) {
+    super()
+
     // The Spec mandates the support for revoking Refresh Tokens.
     if (!this.grants.find(grant => grant.name === 'refresh_token')) {
       throw new Error('The Provider does not support Refresh Tokens.')
@@ -131,7 +133,9 @@ export abstract class RevocationEndpoint implements Endpoint {
       const err =
         error instanceof OAuth2Error
           ? error
-          : new ServerError({ description: GUARANI_ENV ? error.message : null })
+          : new ServerError({
+              description: GUARANI_ENV === 'development' ? error.message : null
+            })
 
       return new JsonResponse(removeNullishValues(err))
         .status(err.status_code)

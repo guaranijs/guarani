@@ -1,3 +1,5 @@
+import { OneOrMany } from '@guarani/utils'
+
 import { Adapter } from '../../lib/adapter'
 import { InvalidRequest, InvalidScope } from '../../lib/exceptions'
 import { SupportedGrantType } from '../../lib/constants'
@@ -56,14 +58,16 @@ export class AppAdapter implements Adapter {
   public async createAccessToken(
     grant: SupportedGrantType,
     scopes: string[],
+    audience: OneOrMany<string>,
     client: Client,
-    user?: User
+    user: User
   ): Promise<AccessToken> {
     const accessToken = new AccessToken({
       grant,
       expiresIn: this.lifespans[grant],
       client,
       scopes,
+      audience,
       user
     })
 
@@ -74,11 +78,18 @@ export class AppAdapter implements Adapter {
 
   public async createRefreshToken(
     scopes: string[],
+    audience: OneOrMany<string>,
     client: Client,
     user: User,
     accessToken: AccessToken
   ): Promise<RefreshToken> {
-    const refreshToken = new RefreshToken({ accessToken, client, scopes, user })
+    const refreshToken = new RefreshToken({
+      accessToken,
+      client,
+      audience,
+      scopes,
+      user
+    })
 
     await refreshToken.save()
 

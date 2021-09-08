@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/guaranijs/guarani/compare/v0.5.0...v0.6.0) (2021-09-08)
+
+
+### Features
+
+* **utils:** Added Nullable type. ([ca6a644](https://github.com/guaranijs/guarani/commit/ca6a644e0ba6bf09f11559a79d4cf1a85a368760))
+
+
+
+
+
 # [0.5.0](https://github.com/guaranijs/guarani/compare/v0.4.0...v0.5.0) (2021-06-19)
 
 

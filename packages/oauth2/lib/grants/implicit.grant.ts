@@ -63,8 +63,16 @@ export class ImplicitGrant extends Grant implements ResponseType {
     const data = <AuthorizationParameters>request.data
 
     const scopes = await this.adapter.checkClientScope(client, data.scope)
-    const [accessToken] = await this.issueOAuth2Token(
+    const [audience, grantedScopes] = await this.getAudienceScopes(
+      data.resource,
       scopes,
+      client,
+      user
+    )
+
+    const [accessToken] = await this.issueOAuth2Token(
+      grantedScopes ?? scopes,
+      audience,
       client,
       user,
       false

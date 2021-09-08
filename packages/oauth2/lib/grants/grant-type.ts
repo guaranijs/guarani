@@ -1,3 +1,5 @@
+import { OneOrMany } from '@guarani/utils'
+
 import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
@@ -11,6 +13,11 @@ export interface TokenParameters {
    * Grant Type requested by the Client.
    */
   readonly grant_type: SupportedGrantType
+
+  /**
+   * Resource requested by the Client.
+   */
+  readonly resource?: OneOrMany<string>
 }
 
 /**

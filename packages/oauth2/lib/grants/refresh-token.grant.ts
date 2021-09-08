@@ -62,18 +62,27 @@ export abstract class RefreshTokenGrant extends Grant implements GrantType {
     const oldRefreshToken = await this.getRefreshToken(data.refresh_token)
 
     this.checkRefreshToken(oldRefreshToken, client)
+    this.checkTokenResource(oldRefreshToken, data.resource)
 
     const scopes = await this.getScopes(oldRefreshToken, data.scope)
+    const [audience, accessTokenScopes] = await this.getAudienceScopes(
+      data.resource ?? oldRefreshToken.getAudience(),
+      scopes,
+      client,
+      oldRefreshToken.getUser()
+    )
 
     const accessToken = await this.adapter.createAccessToken(
       oldRefreshToken.getAccessToken().getGrant(),
-      scopes,
+      accessTokenScopes ?? scopes,
+      audience ?? oldRefreshToken.getAudience(),
       client,
       oldRefreshToken.getUser()
     )
 
     const refreshToken = await this.adapter.createRefreshToken(
       oldRefreshToken.getScopes(),
+      oldRefreshToken.getAudience(),
       oldRefreshToken.getClient(),
       oldRefreshToken.getUser(),
       accessToken

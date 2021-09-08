@@ -68,8 +68,16 @@ export abstract class PasswordGrant extends Grant implements GrantType {
       throw new InvalidGrant({ description: 'Invalid Credentials.' })
     }
 
-    const [accessToken, refreshToken] = await this.issueOAuth2Token(
+    const [audience, grantedScopes] = await this.getAudienceScopes(
+      data.resource,
       scopes,
+      client,
+      user
+    )
+
+    const [accessToken, refreshToken] = await this.issueOAuth2Token(
+      grantedScopes ?? scopes,
+      audience,
       client,
       user,
       true

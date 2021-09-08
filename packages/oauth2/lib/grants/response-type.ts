@@ -1,4 +1,4 @@
-import { Dict } from '@guarani/utils'
+import { Dict, OneOrMany } from '@guarani/utils'
 
 import { SupportedResponseMode, SupportedResponseType } from '../constants'
 import { Request } from '../context'
@@ -37,6 +37,11 @@ export interface AuthorizationParameters {
    * Response Mode requested by the Client to return the Authorization Response.
    */
   readonly response_mode?: SupportedResponseMode
+
+  /**
+   * Resource requested by the Client.
+   */
+  readonly resource?: OneOrMany<string>
 }
 
 /**

@@ -133,6 +133,10 @@ export class InvalidScope extends OAuth2Error {
   public readonly error: string = 'invalid_scope'
 }
 
+export class InvalidTarget extends OAuth2Error {
+  public readonly error: string = 'invalid_target'
+}
+
 export class ServerError extends OAuth2Error {
   public readonly status_code: number = 500
   public readonly error: string = 'server_error'

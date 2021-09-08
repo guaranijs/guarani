@@ -51,10 +51,18 @@ export class ClientCredentialsGrant extends Grant implements GrantType {
    */
   public async token(request: Request, client: Client): Promise<OAuth2Token> {
     const data = <ClientCredentialsTokenParameters>request.data
+
     const scopes = await this.adapter.checkClientScope(client, data.scope)
+    const [audience, grantedScopes] = await this.getAudienceScopes(
+      data.resource,
+      scopes,
+      client,
+      null
+    )
 
     const [accessToken] = await this.issueOAuth2Token(
-      scopes,
+      grantedScopes ?? scopes,
+      audience,
       client,
       null,
       false

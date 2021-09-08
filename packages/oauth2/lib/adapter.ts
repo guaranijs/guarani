@@ -1,3 +1,5 @@
+import { OneOrMany } from '@guarani/utils'
+
 import { SupportedGrantType } from './constants'
 import { AccessToken, Client, RefreshToken, User } from './entities'
 
@@ -56,6 +58,7 @@ export interface Adapter {
    *
    * @param grant Name of the Grant that generated the Access Token.
    * @param scopes Scopes granted to the Client.
+   * @param audience Indicates the Audience of the Refresh Token.
    * @param client Client requesting the Access Token.
    * @param user User represented by the Client through the Access Token.
    * @returns **Access Token** for authorized use by the Client.
@@ -63,8 +66,9 @@ export interface Adapter {
   createAccessToken(
     grant: SupportedGrantType,
     scopes: string[],
+    audience: OneOrMany<string>,
     client: Client,
-    user?: User
+    user: User
   ): Promise<AccessToken>
 
   /**
@@ -75,6 +79,7 @@ export interface Adapter {
    * the **Refresh Token Grant**.
    *
    * @param scopes Scopes granted to the Client.
+   * @param audience Indicates the Audience of the Refresh Token.
    * @param client Client requesting the Refresh Token.
    * @param user User that authorized the issuance of the Refresh Token.
    * @param accessToken Access Token associated with this Refresh Token.
@@ -82,8 +87,32 @@ export interface Adapter {
    */
   createRefreshToken?(
     scopes: string[],
+    audience: OneOrMany<string>,
     client: Client,
     user: User,
     accessToken: AccessToken
   ): Promise<RefreshToken>
+
+  /**
+   * Checks the validity of the Resource URI(s) requested by the Client and,
+   * if valid, returns the Audience and Scopes of the Authorization Process.
+   *
+   * If the application decides that the requested resources are invalid,
+   * it **MUST** throw an `InvalidTarget` exception, and **SHOULD** describe
+   * the reason for which the resources were rejected.
+   *
+   * @param resource Resource URI(s) requested by the Client.
+   * @param scopes Scopes requested by the Client.
+   * @param client Client of the Request.
+   * @param user Authenticated User of the Request.
+   * @throws {InvalidTarget} The provided resource is invalid.
+   * @returns Audience to whom the token will be issued to, and the Scopes
+   *     granted to the requested Audience.
+   */
+  getAudienceScopes?(
+    resource: OneOrMany<string>,
+    scopes: string[],
+    client: Client,
+    user: User
+  ): Promise<[OneOrMany<string>, string[]]>
 }

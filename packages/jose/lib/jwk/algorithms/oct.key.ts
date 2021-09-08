@@ -9,7 +9,11 @@ import { randomBytes } from 'crypto'
 import { promisify } from 'util'
 
 import { InvalidKey } from '../../exceptions'
-import { JsonWebKey, JsonWebKeyParams } from '../jsonwebkey'
+import {
+  JsonWebKey,
+  JsonWebKeyParams,
+  SupportedJWKAlgorithm
+} from '../jsonwebkey'
 
 const randomBytesAsync = promisify(randomBytes)
 
@@ -36,7 +40,7 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
   /**
    * Key type representing the algorithm of the key.
    */
-  public readonly kty: string
+  public readonly kty: SupportedJWKAlgorithm
 
   /**
    * Base64Url string representation of the secret.

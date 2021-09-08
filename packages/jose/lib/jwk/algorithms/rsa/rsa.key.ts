@@ -13,7 +13,11 @@ import { generateKeyPair } from 'crypto'
 import { promisify } from 'util'
 
 import { InvalidKey } from '../../../exceptions'
-import { JsonWebKey, JsonWebKeyParams } from '../../jsonwebkey'
+import {
+  JsonWebKey,
+  JsonWebKeyParams,
+  SupportedJWKAlgorithm
+} from '../../jsonwebkey'
 import {
   decodePrivatePkcs1,
   decodePrivatePkcs8,
@@ -86,7 +90,7 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
   /**
    * Key type representing the algorithm of the key.
    */
-  public readonly kty: string
+  public readonly kty: SupportedJWKAlgorithm
 
   /**
    * Base64Url representation of the Modulus.

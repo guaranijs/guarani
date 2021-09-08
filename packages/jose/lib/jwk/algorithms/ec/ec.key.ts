@@ -11,7 +11,11 @@ import { generateKeyPair } from 'crypto'
 import { promisify } from 'util'
 
 import { InvalidKey } from '../../../exceptions'
-import { JsonWebKey, JsonWebKeyParams } from '../../jsonwebkey'
+import {
+  JsonWebKey,
+  JsonWebKeyParams,
+  SupportedJWKAlgorithm
+} from '../../jsonwebkey'
 import {
   decodePrivatePkcs8,
   decodePrivateSec1,
@@ -55,7 +59,7 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
   /**
    * Key type representing the algorithm of the key.
    */
-  public readonly kty: string
+  public readonly kty: SupportedJWKAlgorithm
 
   /**
    * Name of the elliptic curve.

@@ -11,13 +11,13 @@ export type SupportedJWKAlgorithm = 'EC' | 'oct' | 'RSA'
  * Interface defining the supported parameters of a JsonWebKey.
  *
  * The parameters defined here are the default ones defined by
- * {@link https://tools.ietf.org/html/rfc7517|RFC 7517}.
+ * {@link https://tools.ietf.org/html/rfc7517 RFC 7517}.
  */
 export interface JsonWebKeyParams {
   /**
    * Key type representing the algorithm of the key.
    */
-  readonly kty?: string
+  readonly kty?: SupportedJWKAlgorithm
 
   /**
    * Defines the usage of the key.
@@ -69,7 +69,7 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
   /**
    * Key type representing the algorithm of the key.
    */
-  public abstract readonly kty: string
+  public abstract readonly kty: SupportedJWKAlgorithm
 
   /**
    * Defines the usage of the key.

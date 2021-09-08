@@ -103,7 +103,7 @@ describe('JSON Web Signature deserializeCompact()', () => {
 
   it('should reject conflicting algorithms.', async () => {
     await expect(
-      JsonWebSignature.deserializeCompact(token, key, { algorithm: 'none' })
+      JsonWebSignature.deserializeCompact(token, key, 'none')
     ).rejects.toThrow(
       'The algorithm used to sign this token is invalid. ' +
         'Expected "none", got "HS256".'
@@ -111,19 +111,17 @@ describe('JSON Web Signature deserializeCompact()', () => {
   })
 
   it('should not verify the signature when asked so.', async () => {
-    await expect(
-      JsonWebSignature.deserializeCompact(
+    expect(
+      JsonWebSignature.decodeCompact(
         'eyJhbGciOiJIUzI1NiJ9.' +
-          'eyJpYXQiOiAxNzIzMDEwNDU1LCAic3ViIjogIjA3OEJXRERYYXNkY2c4In0.',
-        key,
-        { validate: false }
+          'eyJpYXQiOiAxNzIzMDEwNDU1LCAic3ViIjogIjA3OEJXRERYYXNkY2c4In0.'
       )
-    ).resolves.toMatchObject({ header, payload })
+    ).toEqual([header, payload])
   })
 
   it('should validate and decode the JSON Web Signature Token.', async () => {
     await expect(
-      JsonWebSignature.deserializeCompact(token, key, { algorithm: 'HS256' })
+      JsonWebSignature.deserializeCompact(token, key, 'HS256')
     ).resolves.toMatchObject({
       header,
       payload

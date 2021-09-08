@@ -25,8 +25,18 @@ import { AuthorizationParameters, ResponseType } from '../grants'
 import { Settings } from '../settings'
 import { Endpoint } from './endpoint'
 
+/**
+ * Defines the parameters to be displayed at the User Consent process.
+ */
 export interface UserConsent {
+  /**
+   * Client requesting authorization.
+   */
   readonly client: Client
+
+  /**
+   * Scopes requested by the Client.
+   */
   readonly scopes: string[]
 }
 
@@ -124,6 +134,8 @@ export class AuthorizationEndpoint extends Endpoint {
     let client: Client, redirectUri: string, responseMode: ResponseMode
 
     try {
+      this.checkParameters(data)
+
       client = await this.getClient(data.client_id)
 
       this.checkClientResponseType(client, data.response_type)
@@ -148,6 +160,37 @@ export class AuthorizationEndpoint extends Endpoint {
       return responseMode.createResponse(redirectUri, response)
     } catch (error) {
       return this.handleError(redirectUri, error, responseMode)
+    }
+  }
+
+  /**
+   * Checks the parameters of the Authorization Request.
+   *
+   * @param data Parameters of the Authorization Request.
+   */
+  private checkParameters(data: AuthorizationParameters): void {
+    const { response_type, client_id, redirect_uri, scope } = data
+
+    if (!response_type) {
+      throw new InvalidRequest({
+        description: 'Invalid parameter "response_type".'
+      })
+    }
+
+    if (!client_id) {
+      throw new InvalidRequest({
+        description: 'Invalid parameter "client_id".'
+      })
+    }
+
+    if (!redirect_uri) {
+      throw new InvalidRequest({
+        description: 'Invalid parameter "redirect_uri".'
+      })
+    }
+
+    if (!scope) {
+      throw new InvalidRequest({ description: 'Invalid parameter "scope".' })
     }
   }
 
@@ -199,18 +242,6 @@ export class AuthorizationEndpoint extends Endpoint {
    * @returns Redirect URI provided by the Client.
    */
   private checkClientRedirectUri(client: Client, redirectUri: string): string {
-    if (!redirectUri) {
-      const defaultRedirectUri = client.getDefaultRedirectUri()
-
-      if (!defaultRedirectUri) {
-        throw new InvalidRequest({
-          description: 'Invalid parameter "redirect_uri".'
-        })
-      }
-
-      return defaultRedirectUri
-    }
-
     if (!client.checkRedirectUri(redirectUri)) {
       throw new AccessDenied({ description: 'Invalid Redirect URI.' })
     }

@@ -23,11 +23,6 @@ export interface Client {
   checkSecret(secret: string): Promise<boolean>
 
   /**
-   * Returns the Default Redirect URI of the Client.
-   */
-  getDefaultRedirectUri(): string
-
-  /**
    * Checks if the Client is allowed to use the provided Redirect URI.
    *
    * @param redirectUri Redirect URI provided by the Client.

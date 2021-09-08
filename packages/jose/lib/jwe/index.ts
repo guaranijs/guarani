@@ -1,4 +1,11 @@
-export { JWEAlgorithm, JWEEncryption } from './algorithms'
+export {
+  JWEAlgorithm,
+  JWECompression,
+  JWEEncryption,
+  SupportedJWEAlgorithm,
+  SupportedJWECompression,
+  SupportedJWEEncryption
+} from './algorithms'
 export { JsonWebEncryption } from './jsonwebencryption'
 export {
   JsonWebEncryptionHeader,

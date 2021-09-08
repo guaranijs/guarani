@@ -12,8 +12,37 @@ export {
   TokenNotValidYet,
   UnsupportedAlgorithm
 } from './exceptions'
-export { JoseHeader, JoseHeaderParams } from './jose.header'
-export { JsonWebEncryption, JsonWebEncryptionHeader } from './jwe'
-export { EcKey, JsonWebKey, JsonWebKeySet, OctKey, RsaKey } from './jwk'
-export { JsonWebSignature, JsonWebSignatureHeader } from './jws'
-export { JsonWebToken, JsonWebTokenClaims } from './jwt'
+export {
+  JoseHeader,
+  JoseHeaderParams,
+  JoseProtectedAndUnprotectedHeaders
+} from './jose.header'
+export {
+  JWEAlgorithm,
+  JWECompression,
+  JWEEncryption,
+  JWEHeaderParams,
+  JsonWebEncryption,
+  JsonWebEncryptionHeader,
+  SupportedJWEAlgorithm,
+  SupportedJWECompression,
+  SupportedJWEEncryption
+} from './jwe'
+export {
+  EcKey,
+  JsonWebKey,
+  JsonWebKeyParams,
+  JsonWebKeySet,
+  OctKey,
+  RsaKey,
+  SupportedJWKAlgorithm
+} from './jwk'
+export {
+  JWSAlgorithm,
+  JWSHeaderParams,
+  JWSProtectedAndUnprotectedHeaders,
+  JsonWebSignature,
+  JsonWebSignatureHeader,
+  SupportedJWSAlgorithm
+} from './jws'
+export { JWTClaims, JsonWebToken, JsonWebTokenClaims } from './jwt'

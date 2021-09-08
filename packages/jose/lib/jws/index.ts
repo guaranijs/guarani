@@ -1,6 +1,7 @@
 export { JWSAlgorithm, SupportedJWSAlgorithm } from './algorithms'
 export {
   JsonWebSignatureHeader,
-  JWSHeaderParams
+  JWSHeaderParams,
+  JWSProtectedAndUnprotectedHeaders
 } from './jsonwebsignature.header'
 export { JsonWebSignature } from './jsonwebsignature'

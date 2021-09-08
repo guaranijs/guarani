@@ -21,12 +21,12 @@ export interface AuthorizationParameters {
   /**
    * Redirect URI of the Client.
    */
-  readonly redirect_uri?: string
+  readonly redirect_uri: string
 
   /**
    * Scope requested by the Client.
    */
-  readonly scope?: string
+  readonly scope: string
 
   /**
    * State of the Client Application prior to the Authorization Request.

@@ -75,10 +75,6 @@ export class Client extends BaseEntity implements ClientEntity {
     return this.secret === secret
   }
 
-  public getDefaultRedirectUri(): string {
-    return this.redirectUris[0]
-  }
-
   public checkRedirectUri(redirectUri: string): boolean {
     return this.redirectUris.includes(redirectUri)
   }

@@ -81,7 +81,7 @@ class InternalProviderFactory {
    */
   private addClientAuthentication<T>(application: Constructor<T>): void {
     const methods: Constructor<ClientAuthentication>[] = Reflect.getMetadata(
-      'guarani:oidc:client-authentication',
+      'guarani:oauth2:client-authentication',
       application
     ) ?? [ClientSecretBasic]
 

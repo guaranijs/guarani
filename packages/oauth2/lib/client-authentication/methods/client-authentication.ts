@@ -11,7 +11,7 @@ import { Settings } from '../../settings'
  *
  * Guarani implements the default authentication methods described by the
  * `token_endpoint_auth_method` metadata specified at
- * {@link https://tools.ietf.org/html/rfc7591#section-2|RFC 7591},
+ * {@link https://tools.ietf.org/html/rfc7591#section-2 RFC 7591},
  * and methods from the other extending specifications.
  *
  * This class defines the signature of the Client Authentication Methods
@@ -38,14 +38,19 @@ export abstract class ClientAuthentication {
   ) {}
 
   /**
+   * Checks if the current Client Authentication Method
+   * has been requested by the Client.
+   *
+   * @param request Current Request.
+   */
+  public abstract hasBeenRequested(request: Request): boolean
+
+  /**
    * Entry point of the Method's Client Authentication Flow.
    *
    * This method is invoked by the authentication manager.
    * It extracts the necessary data from the Request and tries to locate
    * a Client based on it.
-   *
-   * If it fails to extract the necessary data, it will return `undefined`,
-   * since it was not meant to be used.
    *
    * If it finds the necessary data to perform its flow, but fails to locate
    * a Client, or if the Client fails the validation of the Method, then it
@@ -53,7 +58,7 @@ export abstract class ClientAuthentication {
    *
    * If everything works as expected, it will return the authenticated Client.
    *
-   * @param request Current request.
+   * @param request Current Request.
    * @throws {InvalidClient} A Client was not found or it failed the validation.
    * @returns Authenticated Client.
    */

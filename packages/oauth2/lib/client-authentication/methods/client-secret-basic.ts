@@ -1,5 +1,7 @@
 import { Injectable } from '@guarani/ioc'
 
+import { timingSafeEqual } from 'crypto'
+
 import { SupportedClientAuthentication } from '../../constants'
 import { Request } from '../../context'
 import { Client } from '../../entities'
@@ -32,18 +34,32 @@ export class ClientSecretBasic extends ClientAuthentication {
    */
   private readonly headers = { 'WWW-Authenticate': 'Basic' }
 
-  public async authenticate(request: Request): Promise<Client> {
+  /**
+   * Checks if the current Client Authentication Method
+   * has been requested by the Client.
+   *
+   * @param request Current Request.
+   */
+  public hasBeenRequested(request: Request): boolean {
     const { authorization } = request.headers
 
     if (!authorization || !authorization.includes(' ')) {
-      return undefined
+      return false
     }
 
-    const [method, token] = authorization.split(' ', 2)
+    const [method] = authorization.split(' ', 2)
 
     if (method.toLowerCase() !== 'basic') {
-      return undefined
+      return false
     }
+
+    return true
+  }
+
+  public async authenticate(request: Request): Promise<Client> {
+    const { authorization } = request.headers
+
+    const [, token] = authorization.split(' ', 2)
 
     if (!token) {
       throw new InvalidClient({ description: 'Missing client credentials.' })
@@ -79,7 +95,10 @@ export class ClientSecretBasic extends ClientAuthentication {
       })
     }
 
-    if (!(await client.checkSecret(client_secret))) {
+    const clientSecret = Buffer.from(await client.getClientSecret())
+    const providedSecret = Buffer.from(client_secret)
+
+    if (!timingSafeEqual(clientSecret, providedSecret)) {
       throw new InvalidClient({
         description: 'Invalid Credentials.',
         headers: this.headers,

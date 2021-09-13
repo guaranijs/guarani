@@ -1,4 +1,6 @@
 export { ClientAuthentication } from './client-authentication'
 export { ClientSecretBasic } from './client-secret-basic'
+export { ClientSecretJWT } from './client-secret-jwt'
 export { ClientSecretPost } from './client-secret-post'
 export { None } from './none'
+export { PrivateKeyJWT } from './private-key-jwt'

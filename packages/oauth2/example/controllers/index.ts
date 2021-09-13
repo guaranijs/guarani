@@ -1,3 +1,4 @@
+export { AssertionController } from './assertion.controller'
 export { CallbackController } from './callback.controller'
 export { HomeController } from './home.controller'
 export { LoginController } from './login.controller'

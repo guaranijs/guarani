@@ -9,7 +9,6 @@ import {
 import { AccessToken, Client, RefreshToken } from '../../entities'
 
 @Injectable()
-// @ts-expect-error
 export class RevocationEndpoint extends BaseRevocationEndpoint {
   protected async revokeToken(
     client: Client,

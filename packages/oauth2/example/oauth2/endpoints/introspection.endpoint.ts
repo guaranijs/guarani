@@ -12,10 +12,8 @@ import { Settings } from '../../../lib/settings'
 import { AccessToken, Client, RefreshToken } from '../../entities'
 
 @Injectable()
-// @ts-expect-error
 export class IntrospectionEndpoint extends BaseIntrospectionEndpoint {
   @Inject()
-  // @ts-expect-error
   private readonly settings: Settings
 
   protected async introspectToken(

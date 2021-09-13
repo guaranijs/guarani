@@ -109,7 +109,7 @@ export class TokenEndpoint extends Endpoint {
    * @returns Grant based on the requested **grant_type**.
    */
   private getGrant(grantType: SupportedGrantType): GrantType {
-    const grant = this.grants.find(grant => grant.grantType === grantType)
+    const grant = this.grants.find(grant => grant.GRANT_TYPE === grantType)
 
     if (!grant) {
       throw new UnsupportedGrantType({

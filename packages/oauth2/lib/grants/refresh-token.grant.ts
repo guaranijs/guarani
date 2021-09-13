@@ -39,7 +39,7 @@ export abstract class RefreshTokenGrant extends Grant implements GrantType {
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly grantType: SupportedGrantType = 'refresh_token'
+  public readonly GRANT_TYPE: SupportedGrantType = 'refresh_token'
 
   /**
    * **Token Flow** of the Refresh Token Grant.

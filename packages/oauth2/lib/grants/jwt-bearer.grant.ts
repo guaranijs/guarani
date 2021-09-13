@@ -49,7 +49,7 @@ export abstract class JWTBearerGrant extends Grant implements GrantType {
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly grantType: SupportedGrantType =
+  public readonly GRANT_TYPE: SupportedGrantType =
     'urn:ietf:params:oauth:grant-type:jwt-bearer'
 
   /**

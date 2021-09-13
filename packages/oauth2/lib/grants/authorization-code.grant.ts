@@ -87,17 +87,17 @@ export abstract class AuthorizationCodeGrant
   /**
    * Names of the Grant's Response Types.
    */
-  public readonly responseTypes: SupportedResponseType[] = ['code']
+  public readonly RESPONSE_TYPES: SupportedResponseType[] = ['code']
 
   /**
    * Default Response Mode of the Grant.
    */
-  public readonly defaultResponseMode: SupportedResponseMode = 'query'
+  public readonly DEFAULT_RESPONSE_MODE: SupportedResponseMode = 'query'
 
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly grantType: SupportedGrantType = 'authorization_code'
+  public readonly GRANT_TYPE: SupportedGrantType = 'authorization_code'
 
   /**
    * Instantiates a new **Authorization Code Grant**

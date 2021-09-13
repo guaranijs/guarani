@@ -44,7 +44,7 @@ export abstract class PasswordGrant extends Grant implements GrantType {
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly grantType: SupportedGrantType = 'password'
+  public readonly GRANT_TYPE: SupportedGrantType = 'password'
 
   /**
    * **Token Flow** of the Password Grant.

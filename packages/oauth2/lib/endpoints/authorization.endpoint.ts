@@ -154,7 +154,7 @@ export class AuthorizationEndpoint extends Endpoint {
       const grant = this.getGrant(data.response_type)
 
       responseMode = this.getResponseMode(
-        data.response_mode || grant.defaultResponseMode
+        data.response_mode || grant.DEFAULT_RESPONSE_MODE
       )
 
       const response = await grant.authorize(request, client, user)
@@ -284,7 +284,7 @@ export class AuthorizationEndpoint extends Endpoint {
     )
 
     const grant = this.grants.find(grant =>
-      (grant.responseTypes ?? []).includes(responseType)
+      (grant.RESPONSE_TYPES ?? []).includes(responseType)
     )
 
     if (!grant) {

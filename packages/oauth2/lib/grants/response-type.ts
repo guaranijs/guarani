@@ -51,12 +51,12 @@ export interface ResponseType {
   /**
    * Names of the Grant's Response Types.
    */
-  readonly responseTypes: SupportedResponseType[]
+  readonly RESPONSE_TYPES: SupportedResponseType[]
 
   /**
    * Default Response Mode of the Grant.
    */
-  readonly defaultResponseMode: SupportedResponseMode
+  readonly DEFAULT_RESPONSE_MODE: SupportedResponseMode
 
   /**
    * Implementation of the Grant's Authorization Flow.

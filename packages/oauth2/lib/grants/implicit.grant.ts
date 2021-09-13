@@ -32,7 +32,7 @@ export class ImplicitGrant extends Grant implements ResponseType {
   /**
    * Names of the Grant's Response Types.
    */
-  public readonly responseTypes: SupportedResponseType[] = [
+  public readonly RESPONSE_TYPES: SupportedResponseType[] = [
     'id_token',
     'id_token token',
     'token'
@@ -41,7 +41,7 @@ export class ImplicitGrant extends Grant implements ResponseType {
   /**
    * Default Response Mode of the Grant.
    */
-  public readonly defaultResponseMode: SupportedResponseMode = 'fragment'
+  public readonly DEFAULT_RESPONSE_MODE: SupportedResponseMode = 'fragment'
 
   /**
    * **Authorization Flow** of the Implicit Grant.

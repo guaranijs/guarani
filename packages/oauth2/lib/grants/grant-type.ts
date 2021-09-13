@@ -27,7 +27,7 @@ export interface GrantType {
   /**
    * Name of the Grant's Grant Type.
    */
-  readonly grantType: SupportedGrantType
+  readonly GRANT_TYPE: SupportedGrantType
 
   /**
    * Implementation of the Grant's Token Flow.

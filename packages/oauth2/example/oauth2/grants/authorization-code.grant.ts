@@ -8,7 +8,6 @@ import {
 import { Client, User, AuthorizationCode } from '../../entities'
 
 @Injectable()
-// @ts-expect-error
 export class AuthorizationCodeGrant extends BaseAuthorizationCodeGrant {
   protected async createAuthorizationCode(
     data: CodeAuthorizationParameters,

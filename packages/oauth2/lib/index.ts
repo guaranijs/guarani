@@ -3,8 +3,10 @@ export { AuthorizationServer, ProviderFactory } from './bootstrap'
 export {
   ClientAuthentication,
   ClientSecretBasic,
+  ClientSecretJWT,
   ClientSecretPost,
-  None
+  None,
+  PrivateKeyJWT
 } from './client-authentication'
 export {
   GUARANI_ENV,
@@ -67,6 +69,8 @@ export {
   Grant,
   GrantType,
   ImplicitGrant,
+  JWTBearerGrant,
+  JWTBearerTokenParameters,
   OAuth2Token,
   PasswordGrant,
   PasswordTokenParameters,

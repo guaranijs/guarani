@@ -1,3 +1,4 @@
+import { JsonWebTokenClaims } from '@guarani/jose'
 import { OneOrMany } from '@guarani/utils'
 
 import { Adapter } from '../../lib/adapter'
@@ -11,7 +12,8 @@ export class AppAdapter implements Adapter {
     authorization_code: 43200,
     client_credentials: 300,
     implicit: 3600,
-    password: 43200
+    password: 43200,
+    'urn:ietf:params:oauth:grant-type:jwt-bearer': 3600
   }
 
   public async findClient(clientId: string): Promise<Client> {
@@ -94,5 +96,13 @@ export class AppAdapter implements Adapter {
     await refreshToken.save()
 
     return refreshToken
+  }
+
+  public async checkJWTAssertionClaims(
+    claims: JsonWebTokenClaims
+  ): Promise<void> {
+    if (!claims.jti) {
+      throw new Error('Missing JTI.')
+    }
   }
 }

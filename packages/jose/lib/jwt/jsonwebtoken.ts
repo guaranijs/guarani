@@ -88,6 +88,15 @@ export class JsonWebToken {
   }
 
   /**
+   * Checks if the provided token is a JSON Web Token.
+   *
+   * @param token JSON Web Token to be checked.
+   */
+  public static isJWT(token: string): boolean {
+    return JsonWebEncryption.isJWE(token) || JsonWebSignature.isJWS(token)
+  }
+
+  /**
    * Decodes a **JWS bases JSON Web Token** and returns its parsed JWS Header
    * and JWT Claims without checking the Token's signature.
    *

@@ -3,6 +3,7 @@ import { Router } from 'express'
 import { authenticate } from 'passport'
 
 import {
+  AssertionController,
   CallbackController,
   HomeController,
   LoginController,
@@ -47,5 +48,10 @@ router
   .post('/oauth2/introspect', OAuth2Controller.introspect)
   .post('/oauth2/revoke', OAuth2Controller.revoke)
   .post('/oauth2/token', OAuth2Controller.token)
+
+router
+  .route('/oauth2/jwt-assertion')
+  .get(csrf, AssertionController.get)
+  .post(csrf, AssertionController.post)
 
 export { router }

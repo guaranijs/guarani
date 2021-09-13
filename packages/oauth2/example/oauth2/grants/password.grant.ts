@@ -4,7 +4,6 @@ import { PasswordGrant as BasePasswordGrant } from '../../../lib/grants'
 import { User } from '../../entities'
 
 @Injectable()
-// @ts-expect-error
 export class PasswordGrant extends BasePasswordGrant {
   protected async authenticate(
     username: string,

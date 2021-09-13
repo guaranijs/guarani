@@ -1,3 +1,4 @@
+import { EcKey, JsonWebKey } from '@guarani/jose'
 import { secretToken, UUID } from '@guarani/utils'
 
 import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm'
@@ -71,8 +72,18 @@ export class Client extends BaseEntity implements ClientEntity {
     return this.id
   }
 
-  public async checkSecret(secret: string): Promise<boolean> {
-    return this.secret === secret
+  public async getClientSecret(): Promise<string> {
+    return this.secret
+  }
+
+  public async getPublicKey(keyId?: string): Promise<JsonWebKey> {
+    return new EcKey({
+      kty: 'EC',
+      crv: 'P-256',
+      x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
+      y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
+      d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo'
+    })
   }
 
   public checkRedirectUri(redirectUri: string): boolean {

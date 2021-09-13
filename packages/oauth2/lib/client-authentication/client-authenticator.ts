@@ -37,20 +37,47 @@ export class ClientAuthenticator {
     request: Request,
     methods?: SupportedClientAuthentication[]
   ): Promise<Client> {
+    const method = this.getRequestedMethod(request, methods)
+
+    return await method.authenticate(request)
+  }
+
+  /**
+   * Retrieves the requested Client Authentication Method
+   * based on the Request parameters.
+   *
+   * @param request Current Request.
+   * @param methods Authentication Methods supported by the endpoint.
+   * @returns Authentication Method used by the Client.
+   */
+  private getRequestedMethod(
+    request: Request,
+    methods?: SupportedClientAuthentication[]
+  ): ClientAuthentication {
+    let requestedMethod: ClientAuthentication
+
     for (const method of this.methods) {
       if (methods != null && !methods.includes(method.name)) {
         continue
       }
 
-      const client = await method.authenticate(request)
+      if (method.hasBeenRequested(request)) {
+        if (requestedMethod != null) {
+          throw new InvalidClient({
+            description: 'Multiple Client Authentication methods detected.'
+          })
+        }
 
-      if (!client) {
-        continue
+        requestedMethod = method
       }
-
-      return client
     }
 
-    throw new InvalidClient()
+    if (!requestedMethod) {
+      throw new InvalidClient({
+        description: 'No Authentication Method provided.'
+      })
+    }
+
+    return requestedMethod
   }
 }

@@ -4,7 +4,6 @@ import { RefreshTokenGrant as BaseRefreshTokenGrant } from '../../../lib/grants'
 import { RefreshToken } from '../../entities'
 
 @Injectable()
-// @ts-expect-error
 export class RefreshTokenGrant extends BaseRefreshTokenGrant {
   protected async findRefreshToken(token: string): Promise<RefreshToken> {
     return await RefreshToken.findOne({

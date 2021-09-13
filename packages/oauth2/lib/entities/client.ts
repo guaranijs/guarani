@@ -1,3 +1,5 @@
+import { JsonWebKey } from '@guarani/jose'
+
 import {
   SupportedClientAuthentication,
   SupportedGrantType,
@@ -16,11 +18,14 @@ export interface Client {
   getClientId(): string
 
   /**
-   * Checks the provided Secret against the Client's Secret.
-   *
-   * @param secret Secret provided by the Client.
+   * Returns the Secret of the Client.
    */
-  checkSecret(secret: string): Promise<boolean>
+  getClientSecret(): Promise<string>
+
+  /**
+   * Returns a Public Key of the Client.
+   */
+  getPublicKey(keyId?: string): Promise<JsonWebKey>
 
   /**
    * Checks if the Client is allowed to use the provided Redirect URI.

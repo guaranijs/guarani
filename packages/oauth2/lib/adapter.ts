@@ -1,3 +1,4 @@
+import { JsonWebTokenClaims } from '@guarani/jose'
 import { OneOrMany } from '@guarani/utils'
 
 import { SupportedGrantType } from './constants'
@@ -115,4 +116,13 @@ export interface Adapter {
     client: Client,
     user: User
   ): Promise<[OneOrMany<string>, string[]]>
+
+  /**
+   * Checks the parameters of the JWT Bearer Assertion presented by the Client.
+   *
+   * This method **MUST** be implemented if using **JWT Bearer Assertions**.
+   *
+   * @param claims JSON Web Token Claims of the Assertion.
+   */
+  checkJWTAssertionClaims?(claims: JsonWebTokenClaims): Promise<void>
 }

@@ -1,5 +1,7 @@
 import { Injectable } from '@guarani/ioc'
 
+import { timingSafeEqual } from 'crypto'
+
 import { SupportedClientAuthentication } from '../../constants'
 import { Request } from '../../context'
 import { InvalidClient } from '../../exceptions'
@@ -51,12 +53,20 @@ export class ClientSecretPost extends ClientAuthentication {
    */
   public readonly name: SupportedClientAuthentication = 'client_secret_post'
 
-  public async authenticate(request: Request): Promise<Client> {
+  /**
+   * Checks if the current Client Authentication Method
+   * has been requested by the Client.
+   *
+   * @param request Current Request.
+   */
+  public hasBeenRequested(request: Request): boolean {
     const { client_id, client_secret } = <ClientCredentials>request.data
 
-    if (!client_id || !client_secret) {
-      return undefined
-    }
+    return client_id != null && client_secret != null
+  }
+
+  public async authenticate(request: Request): Promise<Client> {
+    const { client_id, client_secret } = <ClientCredentials>request.data
 
     const client = await this.adapter.findClient(client_id)
 
@@ -64,7 +74,10 @@ export class ClientSecretPost extends ClientAuthentication {
       throw new InvalidClient({ description: 'Invalid Credentials.' })
     }
 
-    if (!(await client.checkSecret(client_secret))) {
+    const clientSecret = Buffer.from(await client.getClientSecret())
+    const providedSecret = Buffer.from(client_secret)
+
+    if (!timingSafeEqual(clientSecret, providedSecret)) {
       throw new InvalidClient({
         description: 'Invalid Credentials.'
       })

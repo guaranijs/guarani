@@ -84,7 +84,7 @@ export class JsonWebSignature {
    *
    * @param token JSON Web Signature Token to be checked.
    */
-  public static isJWS(token: unknown): boolean {
+  public static isJWS(token: string): boolean {
     // Checks a Compact JWS token.
     if (typeof token === 'string') {
       const components = token.split('.')

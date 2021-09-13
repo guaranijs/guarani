@@ -64,7 +64,7 @@ export class JsonWebEncryption {
    *
    * @param token JSON Web Encryption Token to be checked.
    */
-  public static isJWE(token: unknown): boolean {
+  public static isJWE(token: string): boolean {
     // Checks a Compact JWE token.
     if (typeof token === 'string') {
       const components = token.split('.')

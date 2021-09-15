@@ -133,9 +133,15 @@ export class IoCContainer {
 
     if (propTokens) {
       Object.entries(propTokens).forEach(([prop, token]) => {
-        instance[prop] = token.multiple
+        const resolvedToken = token.multiple
           ? this.resolveAll(token.token)
           : this.resolve(token.token)
+
+        if (token.isStatic) {
+          instance.constructor[prop] = resolvedToken
+        } else {
+          instance[prop] = resolvedToken
+        }
       })
     }
 

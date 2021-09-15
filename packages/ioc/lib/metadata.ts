@@ -25,6 +25,11 @@ export interface InjectableType<T> {
    * Token registered within the Container.
    */
   readonly token: InjectableToken<T>
+
+  /**
+   * Defines if the token will be injected into a static property.
+   */
+  readonly isStatic: boolean
 }
 
 /**
@@ -115,7 +120,7 @@ export function defineParamInjectableType(
   multiple: boolean
 ): void {
   const tokens: Dict<InjectableType<any>> = getParamTokens(target) ?? {}
-  tokens[parameterIndex] = { multiple, token }
+  tokens[parameterIndex] = { multiple, token, isStatic: false }
   setParamTokens(target, tokens)
 }
 
@@ -180,9 +185,10 @@ export function definePropertyInjectableType<T>(
   target: Function,
   propertyKey: string | symbol,
   token: InjectableToken<T>,
-  multiple: boolean
+  multiple: boolean,
+  isStatic: boolean
 ): void {
   const tokens: Dict<InjectableType<any>> = getPropTokens(target) ?? {}
-  tokens[String(propertyKey)] = { multiple, token }
+  tokens[String(propertyKey)] = { multiple, token, isStatic }
   setPropTokens(target, tokens)
 }

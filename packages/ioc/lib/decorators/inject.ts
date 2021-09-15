@@ -27,12 +27,14 @@ export function Inject<T = any>(
 
     if (parameterIndex == null) {
       const type = getDesignPropType(target, propertyKey)
+      const isStatic = target.prototype !== undefined
 
       definePropertyInjectableType(
-        target.constructor,
+        isStatic ? target : target.constructor,
         propertyKey,
         token ?? type,
-        false
+        false,
+        isStatic
       )
     }
   }

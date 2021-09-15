@@ -1,5 +1,5 @@
 import { Inject, Injectable, InjectAll } from '@guarani/ioc'
-import { OneOrMany, removeNullishValues } from '@guarani/utils'
+import { applyMixins, OneOrMany, removeNullishValues } from '@guarani/utils'
 
 import { Adapter } from '../adapter'
 import {
@@ -13,7 +13,7 @@ import { AuthorizationCode, Client, User } from '../entities'
 import { AccessDenied, InvalidGrant, InvalidRequest } from '../exceptions'
 import { PkceMethod } from '../pkce'
 import { Settings } from '../settings'
-import { Grant, OAuth2Token } from './grant'
+import { OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 import { AuthorizationParameters, ResponseType } from './response-type'
 
@@ -76,9 +76,10 @@ export interface CodeTokenParameters extends TokenParameters {
  * PKCE by default, and enforces its use every time.
  */
 @Injectable()
-export abstract class AuthorizationCodeGrant
-  extends Grant
-  implements ResponseType, GrantType {
+export abstract class AuthorizationCodeGrant extends applyMixins([
+  ResponseType,
+  GrantType
+]) {
   /**
    * Name of the Grant.
    */
@@ -139,14 +140,12 @@ export abstract class AuthorizationCodeGrant
    * @param user Authenticated User of the Request.
    * @returns Authorization Code Grant's Authorization Response.
    */
-  public async authorize(
+  protected async authorize(
     request: Request,
     client: Client,
     user: User
   ): Promise<CodeAuthorizationResponse> {
     const data = <CodeAuthorizationParameters>request.data
-
-    this.checkCodeChallenge(data.code_challenge, data.code_challenge_method)
 
     const scopes = await this.adapter.checkClientScope(client, data.scope)
     const [audience, grantedScopes] = await this.getAudienceScopes(
@@ -176,19 +175,25 @@ export abstract class AuthorizationCodeGrant
    * @param challenge Code Challenge provided by the Client.
    * @param method Optional PKCE Method provided by the Client.
    */
-  private checkCodeChallenge(
-    challenge: string,
-    method?: SupportedPkceMethod
+  protected checkAuthorizationParameters(
+    data: CodeAuthorizationParameters
   ): void {
-    if (!challenge) {
+    // super.checkAuthorizationParameters(data)
+
+    const { code_challenge, code_challenge_method } = data
+
+    if (!code_challenge) {
       throw new InvalidRequest({
         description: 'Invalid parameter "code_challenge".'
       })
     }
 
-    if (method && !this.pkceMethods.find(pkce => pkce.name === method)) {
+    if (
+      code_challenge_method &&
+      !this.pkceMethods.find(pkce => pkce.name === code_challenge_method)
+    ) {
       throw new InvalidRequest({
-        description: `Unsupported code_challenge_method "${method}".`
+        description: `Unsupported code_challenge_method "${code_challenge_method}".`
       })
     }
   }
@@ -229,13 +234,16 @@ export abstract class AuthorizationCodeGrant
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  public async token(request: Request, client: Client): Promise<OAuth2Token> {
+  protected async token(
+    request: Request,
+    client: Client
+  ): Promise<OAuth2Token> {
     const data = <CodeTokenParameters>request.data
 
     let code: AuthorizationCode
 
     try {
-      this.checkTokenRequest(data)
+      this.checkTokenParameters(data)
 
       code = await this.getAuthorizationCode(data.code)
 
@@ -282,7 +290,9 @@ export abstract class AuthorizationCodeGrant
    *
    * @param data Parameters of the Token Request.
    */
-  private checkTokenRequest(data: CodeTokenParameters): void {
+  protected checkTokenParameters(data: CodeTokenParameters): void {
+    // super.checkTokenParameters(data)
+
     const { code, code_verifier } = data
 
     if (!code) {
@@ -396,3 +406,5 @@ export abstract class AuthorizationCodeGrant
     authorizationCode: AuthorizationCode
   ): Promise<void>
 }
+
+export interface AuthorizationCodeGrant extends ResponseType, GrantType {}

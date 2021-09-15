@@ -4,7 +4,7 @@ import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, RefreshToken } from '../entities'
 import { InvalidGrant, InvalidRequest, InvalidScope } from '../exceptions'
-import { Grant, OAuth2Token } from './grant'
+import { OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 
 /**
@@ -30,7 +30,7 @@ export interface RefreshTokenTokenParameters extends TokenParameters {
  * of a new Access Token without the need to repeat the User Consent process.
  */
 @Injectable()
-export abstract class RefreshTokenGrant extends Grant implements GrantType {
+export abstract class RefreshTokenGrant extends GrantType {
   /**
    * Name of the Grant.
    */
@@ -56,7 +56,10 @@ export abstract class RefreshTokenGrant extends Grant implements GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  public async token(request: Request, client: Client): Promise<OAuth2Token> {
+  protected async token(
+    request: Request,
+    client: Client
+  ): Promise<OAuth2Token> {
     const data = <RefreshTokenTokenParameters>request.data
 
     const oldRefreshToken = await this.getRefreshToken(data.refresh_token)
@@ -94,18 +97,30 @@ export abstract class RefreshTokenGrant extends Grant implements GrantType {
   }
 
   /**
+   * Checks the parameters of the Token Request.
+   *
+   * @param data Parameters of the Token Request.
+   * @throws {InvalidRequest} One or more authorization parameters are invalid.
+   */
+  protected checkTokenParameters(data: RefreshTokenTokenParameters): void {
+    super.checkTokenParameters(data)
+
+    const { refresh_token } = data
+
+    if (!refresh_token) {
+      throw new InvalidRequest({
+        description: 'Invalid parameter "refresh_token".'
+      })
+    }
+  }
+
+  /**
    * Fetches the requested Refresh Token from the application's storage.
    *
    * @param token Token provided by the Client.
    * @returns Refresh Token based on the provided token.
    */
   private async getRefreshToken(token: string): Promise<RefreshToken> {
-    if (!token) {
-      throw new InvalidRequest({
-        description: 'Invalid parameter "refresh_token".'
-      })
-    }
-
     const refreshToken = await this.findRefreshToken(token)
 
     if (!refreshToken) {

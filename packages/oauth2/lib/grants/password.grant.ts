@@ -3,8 +3,8 @@ import { Injectable } from '@guarani/ioc'
 import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, User } from '../entities'
-import { InvalidGrant } from '../exceptions'
-import { Grant, OAuth2Token } from './grant'
+import { InvalidGrant, InvalidRequest } from '../exceptions'
+import { OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 
 /**
@@ -35,7 +35,7 @@ export interface PasswordTokenParameters extends TokenParameters {
  * of the User and present them as the User's grant to the Authorization Server.
  */
 @Injectable()
-export abstract class PasswordGrant extends Grant implements GrantType {
+export abstract class PasswordGrant extends GrantType {
   /**
    * Name of the Grant.
    */
@@ -58,7 +58,10 @@ export abstract class PasswordGrant extends Grant implements GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  public async token(request: Request, client: Client): Promise<OAuth2Token> {
+  protected async token(
+    request: Request,
+    client: Client
+  ): Promise<OAuth2Token> {
     const data = <PasswordTokenParameters>request.data
 
     const scopes = await this.adapter.checkClientScope(client, data.scope)
@@ -84,6 +87,26 @@ export abstract class PasswordGrant extends Grant implements GrantType {
     )
 
     return this.createTokenResponse(accessToken, refreshToken)
+  }
+
+  /**
+   * Checks the parameters of the Token Request.
+   *
+   * @param data Parameters of the Token Request.
+   * @throws {InvalidRequest} One or more authorization parameters are invalid.
+   */
+  protected checkTokenParameters(data: PasswordTokenParameters): void {
+    super.checkTokenParameters(data)
+
+    const { username, password } = data
+
+    if (!username) {
+      throw new InvalidRequest({ description: 'Invalid parameter "username".' })
+    }
+
+    if (!password) {
+      throw new InvalidRequest({ description: 'Invalid parameter "password".' })
+    }
   }
 
   /**

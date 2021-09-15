@@ -17,4 +17,8 @@ export {
   RefreshTokenGrant,
   RefreshTokenTokenParameters
 } from './refresh-token.grant'
-export { AuthorizationParameters, ResponseType } from './response-type'
+export {
+  AuthorizationParameters,
+  ResponseType,
+  UserConsent
+} from './response-type'

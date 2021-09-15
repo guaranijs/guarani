@@ -7,7 +7,7 @@ import {
   ClientAuthenticator,
   ClientSecretBasic
 } from '../client-authentication'
-import { AuthorizationEndpoint, Endpoint, TokenEndpoint } from '../endpoints'
+import { Endpoint } from '../endpoints'
 import { AuthorizationCodeGrant, Grant, ImplicitGrant } from '../grants'
 import { PkceMethod, PlainPkceMethod, S256PkceMethod } from '../pkce'
 import {
@@ -152,9 +152,6 @@ class InternalProviderFactory {
   private addEndpoints<T>(application: Constructor<T>): void {
     const endpoints: Constructor<Endpoint>[] =
       Reflect.getMetadata('guarani:oauth2:endpoints', application) ?? []
-
-    this.container.bindToken(AuthorizationEndpoint).toSelf()
-    this.container.bindToken(TokenEndpoint).toSelf()
 
     endpoints.forEach(endpoint =>
       this.container.bindToken<Endpoint>('Endpoint').toClass(endpoint)

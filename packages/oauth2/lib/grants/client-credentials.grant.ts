@@ -3,7 +3,7 @@ import { Injectable } from '@guarani/ioc'
 import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
-import { Grant, OAuth2Token } from './grant'
+import { OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 
 /**
@@ -25,7 +25,7 @@ export interface ClientCredentialsTokenParameters extends TokenParameters {
  * for the issuance of an Access Token. A Refresh Token is **NOT** issued.
  */
 @Injectable()
-export class ClientCredentialsGrant extends Grant implements GrantType {
+export class ClientCredentialsGrant extends GrantType {
   /**
    * Name of the Grant.
    */
@@ -49,7 +49,10 @@ export class ClientCredentialsGrant extends Grant implements GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  public async token(request: Request, client: Client): Promise<OAuth2Token> {
+  protected async token(
+    request: Request,
+    client: Client
+  ): Promise<OAuth2Token> {
     const data = <ClientCredentialsTokenParameters>request.data
 
     const scopes = await this.adapter.checkClientScope(client, data.scope)

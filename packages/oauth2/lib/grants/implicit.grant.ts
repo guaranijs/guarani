@@ -7,7 +7,8 @@ import {
 } from '../constants'
 import { Request } from '../context'
 import { Client, User } from '../entities'
-import { Grant, OAuth2Token } from './grant'
+import { InvalidRequest } from '../exceptions'
+import { OAuth2Token } from './grant'
 import { AuthorizationParameters, ResponseType } from './response-type'
 
 /**
@@ -23,7 +24,7 @@ import { AuthorizationParameters, ResponseType } from './response-type'
  * the Access Token from one of the Authorization Responses.
  */
 @Injectable()
-export class ImplicitGrant extends Grant implements ResponseType {
+export class ImplicitGrant extends ResponseType {
   /**
    * Name of the Grant.
    */
@@ -55,7 +56,7 @@ export class ImplicitGrant extends Grant implements ResponseType {
    * @param user Authenticated User of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  public async authorize(
+  protected async authorize(
     request: Request,
     client: Client,
     user: User
@@ -85,5 +86,25 @@ export class ImplicitGrant extends Grant implements ResponseType {
     }
 
     return token
+  }
+
+  /**
+   * Checks the parameters of the Authorization Request.
+   *
+   * @param data Parameters of the Authorization Request.
+   * @throws {InvalidRequest} One or more authorization parameters are invalid.
+   */
+  protected checkAuthorizationParameters(data: AuthorizationParameters): void {
+    super.checkAuthorizationParameters(data)
+
+    const { response_type, response_mode } = data
+
+    if (response_mode === 'query') {
+      throw new InvalidRequest({
+        description:
+          `Invalid response_mode "${response_mode}" ` +
+          `for response_type "${response_type}".`
+      })
+    }
   }
 }

@@ -3,9 +3,17 @@
   <div class="container">
     {{#if jwtAssertions}}
     <h1>Generated JWT Assertions:</h1>
-    <strong>client_secret_jwt:</strong> <p>{{ jwtAssertions.secretAssertion }}</p>
-    <strong>private_key_jwt:</strong> <p>{{ jwtAssertions.privateAssertion }}</p>
-    <strong>JWT Bearer Grant:</strong> <p>{{ jwtAssertions.grant }}</p>
+    <code>
+      <strong>client_secret_jwt:</strong> <p>{{ jwtAssertions.secretAssertion }}</p>
+    </code>
+
+    <code>
+      <strong>private_key_jwt:</strong> <p>{{ jwtAssertions.privateAssertion }}</p>
+    </code>
+
+    <code>
+      <strong>JWT Bearer Grant:</strong> <p>{{ jwtAssertions.grant }}</p>
+    </code>
     {{/if}}
 
     <form method="post">

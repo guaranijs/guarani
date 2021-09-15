@@ -12,7 +12,7 @@ import { GUARANI_ENV, SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, User } from '../entities'
 import { InvalidGrant, InvalidRequest } from '../exceptions'
-import { Grant, OAuth2Token } from './grant'
+import { OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 
 /**
@@ -39,7 +39,7 @@ export interface JWTBearerTokenParameters extends TokenParameters {
  * A Refresh Token is **NOT** issued.
  */
 @Injectable()
-export abstract class JWTBearerGrant extends Grant implements GrantType {
+export abstract class JWTBearerGrant extends GrantType {
   /**
    * Name of the Grant.
    */
@@ -62,7 +62,10 @@ export abstract class JWTBearerGrant extends Grant implements GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  public async token(request: Request, client: Client): Promise<OAuth2Token> {
+  protected async token(
+    request: Request,
+    client: Client
+  ): Promise<OAuth2Token> {
     const data = <JWTBearerTokenParameters>request.data
 
     try {
@@ -104,6 +107,24 @@ export abstract class JWTBearerGrant extends Grant implements GrantType {
   }
 
   /**
+   * Checks the parameters of the Token Request.
+   *
+   * @param data Parameters of the Token Request.
+   * @throws {InvalidRequest} One or more authorization parameters are invalid.
+   */
+  protected checkTokenParameters(data: JWTBearerTokenParameters): void {
+    super.checkTokenParameters(data)
+
+    const { assertion } = data
+
+    if (!assertion) {
+      throw new InvalidRequest({
+        description: 'Invalid parameter "assertion".'
+      })
+    }
+  }
+
+  /**
    * Parses the assertion without validating its signature and returns its
    * JOSE Header and JSON Web Token Claims.
    *
@@ -113,12 +134,6 @@ export abstract class JWTBearerGrant extends Grant implements GrantType {
   private async checkAssertion(
     assertion: string
   ): Promise<[JsonWebSignatureHeader, JsonWebTokenClaims]> {
-    if (!assertion) {
-      throw new InvalidRequest({
-        description: 'Invalid parameter "assertion".'
-      })
-    }
-
     const [header, claims] = JsonWebToken.decodeJWS(assertion, {
       iss: { essential: true },
       sub: { essential: true },

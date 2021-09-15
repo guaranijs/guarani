@@ -1,4 +1,3 @@
-export { AuthorizationEndpoint, UserConsent } from './authorization.endpoint'
 export { Endpoint } from './endpoint'
 export {
   IntrospectionEndpoint,
@@ -6,4 +5,3 @@ export {
   IntrospectionResponse
 } from './introspection.endpoint'
 export { RevocationEndpoint, RevocationParameters } from './revocation.endpoint'
-export { TokenEndpoint } from './token.endpoint'

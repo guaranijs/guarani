@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@guarani/ioc'
 import { OneOrMany, removeNullishValues } from '@guarani/utils'
+import EventEmitter from 'events'
 
 import { Adapter } from '../adapter'
 import { SupportedGrantType } from '../constants'
@@ -52,7 +53,7 @@ export interface OAuth2Token {
  * Base class for the OAuth 2.0 Grants defined by Guarani.
  */
 @Injectable()
-export abstract class Grant {
+export abstract class Grant extends EventEmitter {
   /**
    * Name of the Grant.
    */
@@ -67,7 +68,35 @@ export abstract class Grant {
   public constructor(
     @Inject('Adapter') protected readonly adapter: Adapter,
     protected readonly settings: Settings
-  ) {}
+  ) {
+    super()
+  }
+
+  /**
+   * Checks the syntax of the Resource requested by the Client.
+   *
+   * @param resource Resource presented by the Client.
+   */
+  protected async checkResource(resource: OneOrMany<string>): Promise<void> {
+    if (resource == null) {
+      return
+    }
+
+    if (typeof resource !== 'string' && !Array.isArray(resource)) {
+      throw new InvalidTarget({ description: 'Invalid parameter "resource".' })
+    }
+
+    if (typeof resource === 'string' && resource.length === 0) {
+      throw new InvalidTarget({ description: 'Invalid parameter "resource".' })
+    }
+
+    if (
+      Array.isArray(resource) &&
+      resource.some(res => typeof res !== 'string')
+    ) {
+      throw new InvalidTarget({ description: 'Invalid parameter "resource".' })
+    }
+  }
 
   /**
    * Checks if the requested Resource is a subset of the Resource previously
@@ -236,12 +265,16 @@ export abstract class Grant {
       (accessToken.getExpiresAt().getTime() - Date.now()) / 1000
     )
 
-    return removeNullishValues<OAuth2Token>({
+    const token = removeNullishValues<OAuth2Token>({
       access_token: accessToken.getIdentifier(),
       token_type: 'Bearer',
       expires_in: expiresIn,
       scope: accessToken.getScopes().join(' '),
       refresh_token: refreshToken?.getIdentifier()
     })
+
+    this.emit('process_token', token)
+
+    return token
   }
 }

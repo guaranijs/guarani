@@ -25,7 +25,7 @@ export class Settings {
   /**
    * OAuth 2.0 Error page URL.
    */
-  public readonly errorUrl?: string
+  public readonly errorUrl: string
 
   /**
    * Instantiates the Settings of the Authorization Server.

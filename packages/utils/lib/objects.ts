@@ -139,7 +139,7 @@ export function deepFreeze<T>(obj: T): Readonly<T> {
  * @param mixins List of mixins to be merged into a single class.
  * @returns Constructor of the resulting class.
  */
-export function applyMixins(mixins: Constructor[]): Constructor {
+export function applyMixins(mixins: Constructor[]): any {
   if (!Array.isArray(mixins) || mixins.length === 0) {
     throw new Error('Invalid parameter "mixins".')
   }

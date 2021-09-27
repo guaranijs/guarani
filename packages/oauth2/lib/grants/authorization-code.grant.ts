@@ -1,5 +1,5 @@
 import { Inject, Injectable, InjectAll } from '@guarani/ioc'
-import { applyMixins, OneOrMany, removeNullishValues } from '@guarani/utils'
+import { OneOrMany, removeNullishValues } from '@guarani/utils'
 
 import { Adapter } from '../adapter'
 import {
@@ -13,7 +13,7 @@ import { AuthorizationCode, Client, User } from '../entities'
 import { AccessDenied, InvalidGrant, InvalidRequest } from '../exceptions'
 import { PkceMethod } from '../pkce'
 import { Settings } from '../settings'
-import { OAuth2Token } from './grant'
+import { Grant, OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 import { AuthorizationParameters, ResponseType } from './response-type'
 
@@ -76,10 +76,9 @@ export interface CodeTokenParameters extends TokenParameters {
  * PKCE by default, and enforces its use every time.
  */
 @Injectable()
-export abstract class AuthorizationCodeGrant extends applyMixins([
-  ResponseType,
-  GrantType
-]) {
+export abstract class AuthorizationCodeGrant
+  extends Grant
+  implements ResponseType, GrantType {
   /**
    * Name of the Grant.
    */
@@ -140,12 +139,14 @@ export abstract class AuthorizationCodeGrant extends applyMixins([
    * @param user Authenticated User of the Request.
    * @returns Authorization Code Grant's Authorization Response.
    */
-  protected async authorize(
+  public async authorize(
     request: Request,
     client: Client,
     user: User
   ): Promise<CodeAuthorizationResponse> {
     const data = <CodeAuthorizationParameters>request.data
+
+    this.checkAuthorizationParameters(data)
 
     const scopes = await this.adapter.checkClientScope(client, data.scope)
     const [audience, grantedScopes] = await this.getAudienceScopes(
@@ -178,8 +179,6 @@ export abstract class AuthorizationCodeGrant extends applyMixins([
   protected checkAuthorizationParameters(
     data: CodeAuthorizationParameters
   ): void {
-    super.checkAuthorizationParameters(data)
-
     const { code_challenge, code_challenge_method } = data
 
     if (!code_challenge) {
@@ -234,10 +233,7 @@ export abstract class AuthorizationCodeGrant extends applyMixins([
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  protected async token(
-    request: Request,
-    client: Client
-  ): Promise<OAuth2Token> {
+  public async token(request: Request, client: Client): Promise<OAuth2Token> {
     const data = <CodeTokenParameters>request.data
 
     let code: AuthorizationCode
@@ -250,11 +246,13 @@ export abstract class AuthorizationCodeGrant extends applyMixins([
       this.checkAuthorizationCode(code, data, client)
       this.checkTokenResource(code, data.resource)
 
+      const user = code.getUser()
+
       const [audience, accessTokenScopes] = await this.getAudienceScopes(
         data.resource ?? code.getAudience(),
         code.getScopes(),
         client,
-        code.getUser()
+        user
       )
 
       const accessToken = await this.adapter.createAccessToken(
@@ -262,7 +260,7 @@ export abstract class AuthorizationCodeGrant extends applyMixins([
         accessTokenScopes ?? code.getScopes(),
         audience ?? code.getAudience(),
         client,
-        code.getUser()
+        user
       )
 
       const refreshToken =
@@ -272,12 +270,12 @@ export abstract class AuthorizationCodeGrant extends applyMixins([
               code.getScopes(),
               code.getAudience(),
               client,
-              code.getUser(),
+              user,
               accessToken
             )
           : null
 
-      return this.createTokenResponse(accessToken, refreshToken)
+      return this.createOAuth2Token(accessToken, refreshToken)
     } finally {
       if (code) {
         await this.revokeAuthorizationCode(code)
@@ -291,8 +289,6 @@ export abstract class AuthorizationCodeGrant extends applyMixins([
    * @param data Parameters of the Token Request.
    */
   protected checkTokenParameters(data: CodeTokenParameters): void {
-    super.checkTokenParameters(data)
-
     const { code, code_verifier } = data
 
     if (!code) {
@@ -406,5 +402,3 @@ export abstract class AuthorizationCodeGrant extends applyMixins([
     authorizationCode: AuthorizationCode
   ): Promise<void>
 }
-
-export interface AuthorizationCodeGrant extends ResponseType, GrantType {}

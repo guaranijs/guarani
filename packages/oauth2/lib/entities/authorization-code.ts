@@ -21,4 +21,14 @@ export interface AuthorizationCode extends AbstractToken {
    * Returns the PKCE Method chosen by the Client.
    */
   getCodeChallengeMethod(): SupportedPkceMethod
+
+  /**
+   * Returns the OpenID Connect Nonce provided by the Client.
+   */
+  getNonce(): string
+
+  /**
+   * Returns the Time of the End-User's Authentication.
+   */
+  getAuthTime(): Date
 }

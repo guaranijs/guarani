@@ -80,7 +80,7 @@ export {
   TokenParameters
 } from './grants'
 export { PkceMethod, PlainPkceMethod, S256PkceMethod } from './pkce'
-export { ExpressProvider, Provider } from './providers'
+export { Provider } from './provider'
 export {
   FormPostResponseMode,
   FragmentResponseMode,

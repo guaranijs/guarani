@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/ioc'
+import { OneOrMany } from '@guarani/utils'
 
 import {
   SupportedGrantType,
@@ -6,9 +7,9 @@ import {
   SupportedResponseType
 } from '../constants'
 import { Request } from '../context'
-import { Client, User } from '../entities'
+import { AccessToken, Client, User } from '../entities'
 import { InvalidRequest } from '../exceptions'
-import { OAuth2Token } from './grant'
+import { Grant, OAuth2Token } from './grant'
 import { AuthorizationParameters, ResponseType } from './response-type'
 
 /**
@@ -24,7 +25,7 @@ import { AuthorizationParameters, ResponseType } from './response-type'
  * the Access Token from one of the Authorization Responses.
  */
 @Injectable()
-export class ImplicitGrant extends ResponseType {
+export class ImplicitGrant extends Grant implements ResponseType {
   /**
    * Name of the Grant.
    */
@@ -33,11 +34,7 @@ export class ImplicitGrant extends ResponseType {
   /**
    * Names of the Grant's Response Types.
    */
-  public readonly RESPONSE_TYPES: SupportedResponseType[] = [
-    'id_token',
-    'id_token token',
-    'token'
-  ]
+  public readonly RESPONSE_TYPES: SupportedResponseType[] = ['token']
 
   /**
    * Default Response Mode of the Grant.
@@ -56,36 +53,33 @@ export class ImplicitGrant extends ResponseType {
    * @param user Authenticated User of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  protected async authorize(
+  public async authorize(
     request: Request,
     client: Client,
     user: User
   ): Promise<OAuth2Token> {
     const data = <AuthorizationParameters>request.data
 
+    this.checkAuthorizationParameters(data)
+
     const scopes = await this.adapter.checkClientScope(client, data.scope)
-    const [audience, grantedScopes] = await this.getAudienceScopes(
-      data.resource,
+
+    let token: Partial<OAuth2Token> = {}
+
+    const accessToken = await this.createAccessToken(
       scopes,
+      data.resource,
       client,
       user
     )
 
-    const [accessToken] = await this.issueOAuth2Token(
-      grantedScopes ?? scopes,
-      audience,
-      client,
-      user,
-      false
-    )
-
-    const token = this.createTokenResponse(accessToken)
+    token = this.createOAuth2Token(accessToken)
 
     if (data.state) {
       token.state = data.state
     }
 
-    return token
+    return <OAuth2Token>token
   }
 
   /**
@@ -95,8 +89,6 @@ export class ImplicitGrant extends ResponseType {
    * @throws {InvalidRequest} One or more authorization parameters are invalid.
    */
   protected checkAuthorizationParameters(data: AuthorizationParameters): void {
-    super.checkAuthorizationParameters(data)
-
     const { response_type, response_mode } = data
 
     if (response_mode === 'query') {
@@ -106,5 +98,39 @@ export class ImplicitGrant extends ResponseType {
           `for response_type "${response_type}".`
       })
     }
+  }
+
+  /**
+   * Generates the Access Token of the Authorization Request when
+   * when the **response_type** is `token` or `id_token token`.
+   *
+   * @param scopes Scopes requested by the Client.
+   * @param resource Resource URI(s) requested by the Client.
+   * @param client Client of the Request.
+   * @param user Authenticated User of the Request.
+   * @returns **Access Token** for use by the Client.
+   */
+  private async createAccessToken(
+    scopes: string[],
+    resource: OneOrMany<string>,
+    client: Client,
+    user: User
+  ): Promise<AccessToken> {
+    const [audience, grantedScopes] = await this.getAudienceScopes(
+      resource,
+      scopes,
+      client,
+      user
+    )
+
+    const [accessToken] = await this.issueOAuth2Tokens(
+      grantedScopes ?? scopes,
+      audience,
+      client,
+      user,
+      false
+    )
+
+    return accessToken
   }
 }

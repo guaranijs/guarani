@@ -50,7 +50,7 @@ export abstract class Endpoint {
    *
    * @param resource Resource presented by the Client.
    */
-  protected async checkResource(resource: OneOrMany<string>): Promise<void> {
+  public async checkResource(resource: OneOrMany<string>): Promise<void> {
     if (resource == null) {
       return
     }

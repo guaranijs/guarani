@@ -8,33 +8,38 @@ import { ProviderOptions } from './provider.options'
  */
 export function AuthorizationServer(options: ProviderOptions): ClassDecorator {
   return function (target) {
-    defineMetadata('adapter', options.adapter, target)
+    Reflect.defineMetadata('guarani:oauth2:adapter', options.adapter, target)
 
-    defineMetadata('settings', new Settings(options), target)
+    Reflect.defineMetadata(
+      'guarani:oauth2:settings',
+      new Settings(options),
+      target
+    )
 
-    defineMetadata(
-      'client-authentication',
+    Reflect.defineMetadata(
+      'guarani:oauth2:client-authentication',
       options.clientAuthentication,
       target
     )
 
-    defineMetadata('endpoints', options.endpoints, target)
+    Reflect.defineMetadata(
+      'guarani:oauth2:endpoints',
+      options.endpoints,
+      target
+    )
 
-    defineMetadata('response-modes', options.responseModes, target)
+    Reflect.defineMetadata(
+      'guarani:oauth2:response-modes',
+      options.responseModes,
+      target
+    )
 
-    defineMetadata('grants', options.grants, target)
+    Reflect.defineMetadata('guarani:oauth2:grants', options.grants, target)
 
-    defineMetadata('pkce-methods', options.pkceMethods, target)
+    Reflect.defineMetadata(
+      'guarani:oauth2:pkce-methods',
+      options.pkceMethods,
+      target
+    )
   }
-}
-
-/**
- * Defines the metadata of the Authorization Server.
- *
- * @param key Name of the metadata.
- * @param value Value of the metadata.
- * @param target Decorated Provider.
- */
-function defineMetadata(key: string, value: any, target: Function): void {
-  Reflect.defineMetadata(`guarani:oauth2:${key}`, value, target)
 }

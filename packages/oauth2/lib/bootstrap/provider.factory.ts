@@ -7,7 +7,7 @@ import {
   ClientAuthenticator,
   ClientSecretBasic
 } from '../client-authentication'
-import { Endpoint } from '../endpoints'
+import { AuthorizationEndpoint, Endpoint, TokenEndpoint } from '../endpoints'
 import { AuthorizationCodeGrant, Grant, ImplicitGrant } from '../grants'
 import { PkceMethod, PlainPkceMethod, S256PkceMethod } from '../pkce'
 import {
@@ -20,11 +20,11 @@ import { Settings } from '../settings'
 /**
  * Factory for configuring and instantiating a new OAuth 2.0 Provider.
  */
-class InternalProviderFactory {
+export class ProviderFactory {
   /**
-   * Dependency Injection Container.
+   * IoC Container of the Authorization Server.
    */
-  private readonly container = getContainer('oauth2')
+  private static readonly container = getContainer('oauth2')
 
   /**
    * Fabricates a new instance of the OAuth 2.0 Authorization Server.
@@ -32,14 +32,8 @@ class InternalProviderFactory {
    * @param application Provider class decorated and configured.
    * @returns Instantiated OAuth 2.0 Authorization Server.
    */
-  public create<T>(application: Constructor<T>): T {
-    this.defineAdapter(application)
-    this.defineSettings(application)
-    this.addClientAuthentication(application)
-    this.addGrants(application)
-    this.addResponseModes(application)
-    this.addPkceMethods(application)
-    this.addEndpoints(application)
+  public static create<T>(application: Constructor<T>): T {
+    this.configure(application)
 
     this.container.bindToken(application).toSelf()
 
@@ -47,11 +41,26 @@ class InternalProviderFactory {
   }
 
   /**
+   * Bootstraps the configuration of the OAuth 2.0 Authorization Server.
+   *
+   * @param application Provider class decorated and configured.
+   */
+  protected static configure<T>(application: Constructor<T>): void {
+    this.defineAdapter(application)
+    this.defineSettings(application)
+    this.addClientAuthentication(application)
+    this.addGrants(application)
+    this.addResponseModes(application)
+    this.addPkceMethods(application)
+    this.addEndpoints(application)
+  }
+
+  /**
    * Defines the Adapter of the Authorization Server.
    *
    * @param application Authorization Server.
    */
-  private defineAdapter<T>(application: Constructor<T>): void {
+  private static defineAdapter<T>(application: Constructor<T>): void {
     const adapter: Adapter = Reflect.getMetadata(
       'guarani:oauth2:adapter',
       application
@@ -65,7 +74,7 @@ class InternalProviderFactory {
    *
    * @param application Authorization Server.
    */
-  private defineSettings<T>(application: Constructor<T>): void {
+  private static defineSettings<T>(application: Constructor<T>): void {
     const settings: Settings = Reflect.getMetadata(
       'guarani:oauth2:settings',
       application
@@ -79,7 +88,7 @@ class InternalProviderFactory {
    *
    * @param application Authorization Server.
    */
-  private addClientAuthentication<T>(application: Constructor<T>): void {
+  private static addClientAuthentication<T>(application: Constructor<T>): void {
     const methods: Constructor<ClientAuthentication>[] = Reflect.getMetadata(
       'guarani:oauth2:client-authentication',
       application
@@ -99,7 +108,7 @@ class InternalProviderFactory {
    *
    * @param application Authorization Server.
    */
-  private addGrants<T>(application: Constructor<T>): void {
+  private static addGrants<T>(application: Constructor<T>): void {
     const grant: Constructor<Grant>[] = Reflect.getMetadata(
       'guarani:oauth2:grants',
       application
@@ -115,7 +124,7 @@ class InternalProviderFactory {
    *
    * @param application Authorization Server.
    */
-  private addResponseModes<T>(application: Constructor<T>): void {
+  private static addResponseModes<T>(application: Constructor<T>): void {
     const responseModes: Constructor<ResponseMode>[] = Reflect.getMetadata(
       'guarani:oauth2:response-modes',
       application
@@ -133,7 +142,7 @@ class InternalProviderFactory {
    *
    * @param application Authorization Server.
    */
-  private addPkceMethods<T>(application: Constructor<T>): void {
+  private static addPkceMethods<T>(application: Constructor<T>): void {
     const pkceMethods: Constructor<PkceMethod>[] = Reflect.getMetadata(
       'guarani:oauth2:pkce-methods',
       application
@@ -149,14 +158,16 @@ class InternalProviderFactory {
    *
    * @param application Authorization Server.
    */
-  private addEndpoints<T>(application: Constructor<T>): void {
-    const endpoints: Constructor<Endpoint>[] =
+  private static addEndpoints<T>(application: Constructor<T>): void {
+    const endpoints: Set<Constructor<Endpoint>> = new Set(
       Reflect.getMetadata('guarani:oauth2:endpoints', application) ?? []
+    )
+
+    endpoints.add(AuthorizationEndpoint)
+    endpoints.add(TokenEndpoint)
 
     endpoints.forEach(endpoint =>
       this.container.bindToken<Endpoint>('Endpoint').toClass(endpoint)
     )
   }
 }
-
-export const ProviderFactory = new InternalProviderFactory()

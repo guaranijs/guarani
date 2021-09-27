@@ -3,7 +3,7 @@ import { Injectable } from '@guarani/ioc'
 import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
-import { OAuth2Token } from './grant'
+import { Grant, OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 
 /**
@@ -25,7 +25,7 @@ export interface ClientCredentialsTokenParameters extends TokenParameters {
  * for the issuance of an Access Token. A Refresh Token is **NOT** issued.
  */
 @Injectable()
-export class ClientCredentialsGrant extends GrantType {
+export class ClientCredentialsGrant extends Grant implements GrantType {
   /**
    * Name of the Grant.
    */
@@ -49,10 +49,7 @@ export class ClientCredentialsGrant extends GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  protected async token(
-    request: Request,
-    client: Client
-  ): Promise<OAuth2Token> {
+  public async token(request: Request, client: Client): Promise<OAuth2Token> {
     const data = <ClientCredentialsTokenParameters>request.data
 
     const scopes = await this.adapter.checkClientScope(client, data.scope)
@@ -63,7 +60,7 @@ export class ClientCredentialsGrant extends GrantType {
       null
     )
 
-    const [accessToken] = await this.issueOAuth2Token(
+    const [accessToken] = await this.issueOAuth2Tokens(
       grantedScopes ?? scopes,
       audience,
       client,
@@ -71,6 +68,6 @@ export class ClientCredentialsGrant extends GrantType {
       false
     )
 
-    return this.createTokenResponse(accessToken)
+    return this.createOAuth2Token(accessToken)
   }
 }

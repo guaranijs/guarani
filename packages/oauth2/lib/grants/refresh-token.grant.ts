@@ -4,7 +4,7 @@ import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, RefreshToken } from '../entities'
 import { InvalidGrant, InvalidRequest, InvalidScope } from '../exceptions'
-import { OAuth2Token } from './grant'
+import { Grant, OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 
 /**
@@ -30,7 +30,7 @@ export interface RefreshTokenTokenParameters extends TokenParameters {
  * of a new Access Token without the need to repeat the User Consent process.
  */
 @Injectable()
-export abstract class RefreshTokenGrant extends GrantType {
+export abstract class RefreshTokenGrant extends Grant implements GrantType {
   /**
    * Name of the Grant.
    */
@@ -56,10 +56,7 @@ export abstract class RefreshTokenGrant extends GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  protected async token(
-    request: Request,
-    client: Client
-  ): Promise<OAuth2Token> {
+  public async token(request: Request, client: Client): Promise<OAuth2Token> {
     const data = <RefreshTokenTokenParameters>request.data
 
     const oldRefreshToken = await this.getRefreshToken(data.refresh_token)
@@ -67,12 +64,14 @@ export abstract class RefreshTokenGrant extends GrantType {
     this.checkRefreshToken(oldRefreshToken, client)
     this.checkTokenResource(oldRefreshToken, data.resource)
 
+    const user = oldRefreshToken.getUser()
+
     const scopes = await this.getScopes(oldRefreshToken, data.scope)
     const [audience, accessTokenScopes] = await this.getAudienceScopes(
       data.resource ?? oldRefreshToken.getAudience(),
       scopes,
       client,
-      oldRefreshToken.getUser()
+      user
     )
 
     const accessToken = await this.adapter.createAccessToken(
@@ -80,20 +79,20 @@ export abstract class RefreshTokenGrant extends GrantType {
       accessTokenScopes ?? scopes,
       audience ?? oldRefreshToken.getAudience(),
       client,
-      oldRefreshToken.getUser()
+      user
     )
 
     const refreshToken = await this.adapter.createRefreshToken(
       oldRefreshToken.getScopes(),
       oldRefreshToken.getAudience(),
       oldRefreshToken.getClient(),
-      oldRefreshToken.getUser(),
+      user,
       accessToken
     )
 
     await this.revokeRefreshToken(oldRefreshToken)
 
-    return this.createTokenResponse(accessToken, refreshToken)
+    return this.createOAuth2Token(accessToken, refreshToken)
   }
 
   /**
@@ -103,8 +102,6 @@ export abstract class RefreshTokenGrant extends GrantType {
    * @throws {InvalidRequest} One or more authorization parameters are invalid.
    */
   protected checkTokenParameters(data: RefreshTokenTokenParameters): void {
-    super.checkTokenParameters(data)
-
     const { refresh_token } = data
 
     if (!refresh_token) {

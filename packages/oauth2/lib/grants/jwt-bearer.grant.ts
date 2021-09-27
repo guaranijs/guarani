@@ -12,7 +12,7 @@ import { GUARANI_ENV, SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, User } from '../entities'
 import { InvalidGrant, InvalidRequest } from '../exceptions'
-import { OAuth2Token } from './grant'
+import { Grant, OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 
 /**
@@ -39,7 +39,7 @@ export interface JWTBearerTokenParameters extends TokenParameters {
  * A Refresh Token is **NOT** issued.
  */
 @Injectable()
-export abstract class JWTBearerGrant extends GrantType {
+export abstract class JWTBearerGrant extends Grant implements GrantType {
   /**
    * Name of the Grant.
    */
@@ -62,10 +62,7 @@ export abstract class JWTBearerGrant extends GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  protected async token(
-    request: Request,
-    client: Client
-  ): Promise<OAuth2Token> {
+  public async token(request: Request, client: Client): Promise<OAuth2Token> {
     const data = <JWTBearerTokenParameters>request.data
 
     try {
@@ -88,7 +85,7 @@ export abstract class JWTBearerGrant extends GrantType {
         throw new InvalidGrant({ description: 'Invalid User.' })
       }
 
-      const [accessToken] = await this.issueOAuth2Token(
+      const [accessToken] = await this.issueOAuth2Tokens(
         grantedScopes ?? scopes,
         audience,
         client,
@@ -96,7 +93,7 @@ export abstract class JWTBearerGrant extends GrantType {
         false
       )
 
-      return this.createTokenResponse(accessToken)
+      return this.createOAuth2Token(accessToken)
     } catch (error) {
       throw error instanceof JoseError
         ? new InvalidGrant({
@@ -113,8 +110,6 @@ export abstract class JWTBearerGrant extends GrantType {
    * @throws {InvalidRequest} One or more authorization parameters are invalid.
    */
   protected checkTokenParameters(data: JWTBearerTokenParameters): void {
-    super.checkTokenParameters(data)
-
     const { assertion } = data
 
     if (!assertion) {

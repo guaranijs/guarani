@@ -23,7 +23,11 @@ export type SupportedClientAuthentication =
 /**
  * Supported Endpoints.
  */
-export type SupportedEndpoint = 'introspection' | 'revocation'
+export type SupportedEndpoint =
+  | 'authorization'
+  | 'introspection'
+  | 'revocation'
+  | 'token'
 
 /**
  * Supported Grant Types.

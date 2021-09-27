@@ -1,8 +1,9 @@
 import { JsonWebTokenClaims } from '@guarani/jose'
 import { OneOrMany } from '@guarani/utils'
 
+import { UserinfoClaims } from './claims'
 import { SupportedGrantType } from './constants'
-import { AccessToken, Client, RefreshToken, User } from './entities'
+import { AccessToken, Client, IdToken, RefreshToken, User } from './entities'
 
 /**
  * Adapter interface that contains the common methods used throughout Guarani.
@@ -125,4 +126,24 @@ export interface Adapter {
    * @param claims JSON Web Token Claims of the Assertion.
    */
   checkJWTAssertionClaims?(claims: JsonWebTokenClaims): Promise<void>
+
+  /**
+   * Retrieves the information of the Authenticated User.
+   *
+   * @param user Authenticated User.
+   * @param scopes Scopes requested by the Client.
+   * @returns Claims containing the information about the User.
+   */
+  getUserinfo(user: User, scopes: string[]): Promise<UserinfoClaims>
+
+  /**
+   * Generates an **ID Token** that represents an Authenticated User
+   * and its authentication status with the Authorization Server.
+   *
+   * @param claims Claims of the ID Token.
+   * @param client Client of the Request.
+   * @param user Authenticated User.
+   * @returns **ID Token** for use by the Client.
+   */
+  generateIdToken(claims: IdToken, client: Client, user: User): Promise<string>
 }

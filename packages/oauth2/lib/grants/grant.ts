@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@guarani/ioc'
 import { OneOrMany, removeNullishValues } from '@guarani/utils'
-import EventEmitter from 'events'
 
 import { Adapter } from '../adapter'
 import { SupportedGrantType } from '../constants'
@@ -53,7 +52,7 @@ export interface OAuth2Token {
  * Base class for the OAuth 2.0 Grants defined by Guarani.
  */
 @Injectable()
-export abstract class Grant extends EventEmitter {
+export abstract class Grant {
   /**
    * Name of the Grant.
    */
@@ -68,35 +67,7 @@ export abstract class Grant extends EventEmitter {
   public constructor(
     @Inject('Adapter') protected readonly adapter: Adapter,
     protected readonly settings: Settings
-  ) {
-    super()
-  }
-
-  /**
-   * Checks the syntax of the Resource requested by the Client.
-   *
-   * @param resource Resource presented by the Client.
-   */
-  protected async checkResource(resource: OneOrMany<string>): Promise<void> {
-    if (resource == null) {
-      return
-    }
-
-    if (typeof resource !== 'string' && !Array.isArray(resource)) {
-      throw new InvalidTarget({ description: 'Invalid parameter "resource".' })
-    }
-
-    if (typeof resource === 'string' && resource.length === 0) {
-      throw new InvalidTarget({ description: 'Invalid parameter "resource".' })
-    }
-
-    if (
-      Array.isArray(resource) &&
-      resource.some(res => typeof res !== 'string')
-    ) {
-      throw new InvalidTarget({ description: 'Invalid parameter "resource".' })
-    }
-  }
+  ) {}
 
   /**
    * Checks if the requested Resource is a subset of the Resource previously
@@ -182,7 +153,7 @@ export abstract class Grant extends EventEmitter {
    * @param issueRefreshToken Informs that a Refresh Token is necessary.
    * @returns Access Token and Refresh Token 2-tuple.
    */
-  protected async issueOAuth2Token(
+  protected async issueOAuth2Tokens(
     scopes: string[],
     audience: OneOrMany<string>,
     client: Client,
@@ -200,7 +171,7 @@ export abstract class Grant extends EventEmitter {
    * @param issueRefreshToken Informs that a Refresh Token is not necessary.
    * @returns Access Token 1-tuple.
    */
-  protected async issueOAuth2Token(
+  protected async issueOAuth2Tokens(
     scopes: string[],
     audience: OneOrMany<string>,
     client: Client,
@@ -218,7 +189,7 @@ export abstract class Grant extends EventEmitter {
    * @param issueRefreshToken Informs whether or not to issue a Refresh Token.
    * @returns Tuple with an Access Token and an optional Refresh Token.
    */
-  protected async issueOAuth2Token(
+  protected async issueOAuth2Tokens(
     scopes: string[],
     audience: OneOrMany<string>,
     client: Client,
@@ -257,7 +228,7 @@ export abstract class Grant extends EventEmitter {
    * @param refreshToken Optional Refresh Token Entity.
    * @returns OAuth 2.0 Token Response.
    */
-  protected createTokenResponse(
+  protected createOAuth2Token(
     accessToken: AccessToken,
     refreshToken?: RefreshToken
   ): OAuth2Token {
@@ -272,8 +243,6 @@ export abstract class Grant extends EventEmitter {
       scope: accessToken.getScopes().join(' '),
       refresh_token: refreshToken?.getIdentifier()
     })
-
-    this.emit('process_token', token)
 
     return token
   }

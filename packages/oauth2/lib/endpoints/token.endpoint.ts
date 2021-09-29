@@ -30,7 +30,7 @@ export class TokenEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
-  public readonly name: SupportedEndpoint
+  public readonly name: SupportedEndpoint = 'token'
 
   /**
    * Default HTTP headers to be included in the Response.

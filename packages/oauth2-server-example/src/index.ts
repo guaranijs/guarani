@@ -7,6 +7,7 @@ import hbs from 'hbs'
 import layouts from 'handlebars-layouts'
 import morgan from 'morgan'
 import path from 'path'
+import favicon from 'serve-favicon'
 import { createConnection } from 'typeorm'
 
 import { ormconfig } from './ormconfig'
@@ -29,6 +30,17 @@ async function configure(app: express.Express) {
 
   // @ts-ignore
   hbs.registerHelper(layouts(hbs.handlebars))
+  hbs.registerHelper('json', data => JSON.stringify(data))
+  hbs.registerHelper('optional', data => data ?? '--')
+  hbs.registerHelper('date', (date: Date) =>
+    date.toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  )
+
   hbs.registerPartials(path.join(__dirname, 'views', 'partials'))
 
   app.use(morgan('dev'))
@@ -48,6 +60,7 @@ async function configure(app: express.Express) {
 
   initialize(app)
 
+  app.use(favicon(path.join(__dirname, 'static', 'favicon.ico')))
   app.use('/static', express.static(path.join(__dirname, 'static')))
 }
 

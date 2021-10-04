@@ -4,9 +4,9 @@ class Controller {
   public async form(request: Request, response: Response) {
     const csrf = request.csrfToken()
 
-    return response.render('login', {
+    return response.render('auth/login', {
       title: 'Login',
-      actionUrl: request.url,
+      actionUrl: request.originalUrl,
       csrf
     })
   }

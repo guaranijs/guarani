@@ -35,7 +35,7 @@ export class ProviderFactory {
   public static create<T>(application: Constructor<T>): T {
     this.configure(application)
 
-    this.container.bindToken(application).toSelf()
+    this.container.bindToken(application).toSelf().asSingleton()
 
     return this.container.resolve(application)
   }

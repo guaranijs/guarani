@@ -13,7 +13,7 @@ import { ClientAuthentication } from '../client-authentication/methods'
 import { GUARANI_ENV, SupportedClientAssertionType } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
-import { InvalidClient } from '../exceptions'
+import { OAuth2Error } from '../exception'
 
 /**
  * Interface of the parameters expected from the POST body.
@@ -70,17 +70,15 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
       const [header] = JsonWebToken.decodeJWS(client_assertion)
 
       if (header.alg === 'none') {
-        throw new InvalidClient({
-          description: 'Invalid JWT Client Assertion.'
-        })
+        throw OAuth2Error.InvalidClient('Invalid JWT Client Assertion.')
       }
 
       return this.SUPPORTED_JWS_ALGORITHMS.includes(header.alg)
     } catch (error) {
       throw error instanceof JoseError
-        ? new InvalidClient({
-            description: GUARANI_ENV === 'development' ? error.message : null
-          })
+        ? OAuth2Error.InvalidClient(
+            GUARANI_ENV === 'development' ? error.message : null
+          )
         : error
     }
   }
@@ -94,9 +92,9 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
       const client = await this.getClient(claims.iss)
 
       if (!client.checkAuthenticationMethod(this.name)) {
-        throw new InvalidClient({
-          description: `This Client is not allowed to use the method "${this.name}".`
-        })
+        throw OAuth2Error.InvalidClient(
+          `This Client is not allowed to use the method "${this.name}".`
+        )
       }
 
       const key = await this.getClientKey(client, header, claims)
@@ -106,9 +104,9 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
       return client
     } catch (error) {
       throw error instanceof JoseError
-        ? new InvalidClient({
-            description: GUARANI_ENV === 'development' ? error.message : null
-          })
+        ? OAuth2Error.InvalidClient(
+            GUARANI_ENV === 'development' ? error.message : null
+          )
         : error
     }
   }
@@ -132,9 +130,9 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
     })
 
     if (claims.iss !== claims.sub) {
-      throw new InvalidClient({
-        description: 'The value of "iss" and "sub" MUST be identical.'
-      })
+      throw OAuth2Error.InvalidClient(
+        'The value of "iss" and "sub" MUST be identical.'
+      )
     }
 
     await this.adapter.checkJWTAssertionClaims(claims)
@@ -152,7 +150,7 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
     const client = await this.adapter.findClient(clientId)
 
     if (!client) {
-      throw new InvalidClient({ description: 'Invalid Credentials.' })
+      throw OAuth2Error.InvalidClient('Invalid Credentials.')
     }
 
     return client

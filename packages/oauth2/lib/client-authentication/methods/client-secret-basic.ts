@@ -5,7 +5,7 @@ import { timingSafeEqual } from 'crypto'
 import { SupportedClientAuthentication } from '../../constants'
 import { Request } from '../../context'
 import { Client } from '../../entities'
-import { InvalidClient } from '../../exceptions'
+import { OAuth2Error } from '../../exception'
 import { ClientAuthentication } from './client-authentication'
 
 /**
@@ -62,56 +62,52 @@ export class ClientSecretBasic extends ClientAuthentication {
     const [, token] = authorization.split(' ', 2)
 
     if (!token) {
-      throw new InvalidClient({ description: 'Missing client credentials.' })
+      throw OAuth2Error.InvalidClient('Missing Client Credentials.')
     }
 
     const credentials = Buffer.from(token, 'base64').toString('utf8')
 
     if (!credentials || !credentials.includes(':')) {
-      throw new InvalidClient({
-        description: 'Invalid credentials at the Authorization header.',
-        headers: this.headers,
-        status_code: 401
-      })
+      throw OAuth2Error.InvalidClient(
+        'Invalid Credentials at the Authorization header.'
+      )
+        .status(401)
+        .setHeaders(this.headers)
     }
 
     const [client_id, client_secret] = credentials.split(':', 2)
 
     if (!client_id || !client_secret) {
-      throw new InvalidClient({
-        description: 'Invalid credentials at the Authorization header.',
-        headers: this.headers,
-        status_code: 401
-      })
+      throw OAuth2Error.InvalidClient(
+        'Invalid Credentials at the Authorization header.'
+      )
+        .status(401)
+        .setHeaders(this.headers)
     }
 
     const client = await this.adapter.findClient(client_id)
 
     if (!client) {
-      throw new InvalidClient({
-        description: 'Invalid Credentials.',
-        headers: this.headers,
-        status_code: 401
-      })
+      throw OAuth2Error.InvalidClient('Invalid Credentials.')
+        .status(401)
+        .setHeaders(this.headers)
     }
 
     const clientSecret = Buffer.from(await client.getClientSecret())
     const providedSecret = Buffer.from(client_secret)
 
     if (!timingSafeEqual(clientSecret, providedSecret)) {
-      throw new InvalidClient({
-        description: 'Invalid Credentials.',
-        headers: this.headers,
-        status_code: 401
-      })
+      throw OAuth2Error.InvalidClient('Invalid Credentials.')
+        .status(401)
+        .setHeaders(this.headers)
     }
 
     if (!client.checkAuthenticationMethod(this.name)) {
-      throw new InvalidClient({
-        description: `This Client is not allowed to use the method "${this.name}".`,
-        headers: this.headers,
-        status_code: 401
-      })
+      throw OAuth2Error.InvalidClient(
+        `This Client is not allowed to use the method "${this.name}".`
+      )
+        .status(401)
+        .setHeaders(this.headers)
     }
 
     return client

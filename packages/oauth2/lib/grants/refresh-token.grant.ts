@@ -3,7 +3,7 @@ import { Injectable } from '@guarani/ioc'
 import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, RefreshToken } from '../entities'
-import { InvalidGrant, InvalidRequest, InvalidScope } from '../exceptions'
+import { OAuth2Error } from '../exception'
 import { Grant, OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 
@@ -105,9 +105,7 @@ export abstract class RefreshTokenGrant extends Grant implements GrantType {
     const { refresh_token } = data
 
     if (!refresh_token) {
-      throw new InvalidRequest({
-        description: 'Invalid parameter "refresh_token".'
-      })
+      throw OAuth2Error.InvalidRequest('Invalid parameter "refresh_token".')
     }
   }
 
@@ -121,7 +119,7 @@ export abstract class RefreshTokenGrant extends Grant implements GrantType {
     const refreshToken = await this.findRefreshToken(token)
 
     if (!refreshToken) {
-      throw new InvalidGrant({ description: 'Invalid Refresh Token.' })
+      throw OAuth2Error.InvalidGrant('Invalid Refresh Token.')
     }
 
     return refreshToken
@@ -144,11 +142,11 @@ export abstract class RefreshTokenGrant extends Grant implements GrantType {
    */
   private checkRefreshToken(refreshToken: RefreshToken, client: Client): void {
     if (refreshToken.getClient().getClientId() !== client.getClientId()) {
-      throw new InvalidGrant({ description: 'Invalid Refresh Token.' })
+      throw OAuth2Error.InvalidGrant('Invalid Refresh Token.')
     }
 
     if (new Date() > refreshToken.getExpiresAt() || refreshToken.isRevoked()) {
-      throw new InvalidGrant({ description: 'Invalid Refresh Token.' })
+      throw OAuth2Error.InvalidGrant('Invalid Refresh Token.')
     }
   }
 
@@ -174,13 +172,13 @@ export abstract class RefreshTokenGrant extends Grant implements GrantType {
     )
 
     if (scopes.length > refreshToken.getScopes().length) {
-      throw new InvalidScope({ description: 'Invalid broader scope.' })
+      throw OAuth2Error.InvalidScope('Invalid broader scope.')
     }
 
     if (scopes.some(scope => !refreshToken.getScopes().includes(scope))) {
-      throw new InvalidScope({
-        description: 'One or more requested scopes were not previously granted.'
-      })
+      throw OAuth2Error.InvalidScope(
+        'One or more requested scopes were not previously granted.'
+      )
     }
 
     return scopes

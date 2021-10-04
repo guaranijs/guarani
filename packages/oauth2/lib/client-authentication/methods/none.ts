@@ -2,7 +2,7 @@ import { Injectable } from '@guarani/ioc'
 
 import { SupportedClientAuthentication } from '../../constants'
 import { Request } from '../../context'
-import { InvalidClient } from '../../exceptions'
+import { OAuth2Error } from '../../exception'
 import { Client } from '../../entities'
 import { ClientAuthentication } from './client-authentication'
 
@@ -67,19 +67,19 @@ export class None extends ClientAuthentication {
     const client = await this.adapter.findClient(client_id)
 
     if (!client) {
-      throw new InvalidClient({ description: 'Invalid Credentials.' })
+      throw OAuth2Error.InvalidClient('Invalid Credentials.')
     }
 
     if (client_secret) {
-      throw new InvalidClient({
-        description: `A Client with a secret cannot use the method "${this.name}".`
-      })
+      throw OAuth2Error.InvalidClient(
+        `A Client with a secret cannot use the method "${this.name}".`
+      )
     }
 
     if (!client.checkAuthenticationMethod(this.name)) {
-      throw new InvalidClient({
-        description: `This Client is not allowed to use the method "${this.name}".`
-      })
+      throw OAuth2Error.InvalidClient(
+        `This Client is not allowed to use the method "${this.name}".`
+      )
     }
 
     return client

@@ -10,7 +10,7 @@ import {
 } from '../constants'
 import { Request } from '../context'
 import { AuthorizationCode, Client, User } from '../entities'
-import { AccessDenied, InvalidGrant, InvalidRequest } from '../exceptions'
+import { OAuth2Error } from '../exception'
 import { PkceMethod } from '../pkce'
 import { Settings } from '../settings'
 import { Grant, OAuth2Token } from './grant'
@@ -182,18 +182,16 @@ export abstract class AuthorizationCodeGrant
     const { code_challenge, code_challenge_method } = data
 
     if (!code_challenge) {
-      throw new InvalidRequest({
-        description: 'Invalid parameter "code_challenge".'
-      })
+      throw OAuth2Error.InvalidRequest('Invalid parameter "code_challenge".')
     }
 
     if (
       code_challenge_method &&
       !this.pkceMethods.find(pkce => pkce.name === code_challenge_method)
     ) {
-      throw new InvalidRequest({
-        description: `Unsupported code_challenge_method "${code_challenge_method}".`
-      })
+      throw OAuth2Error.InvalidRequest(
+        `Unsupported code_challenge_method "${code_challenge_method}".`
+      )
     }
   }
 
@@ -292,13 +290,11 @@ export abstract class AuthorizationCodeGrant
     const { code, code_verifier } = data
 
     if (!code) {
-      throw new InvalidRequest({ description: 'Invalid parameter "code".' })
+      throw OAuth2Error.InvalidRequest('Invalid parameter "code".')
     }
 
     if (!code_verifier) {
-      throw new InvalidRequest({
-        description: 'Invalid parameter "code_verifier".'
-      })
+      throw OAuth2Error.InvalidRequest('Invalid parameter "code_verifier".')
     }
   }
 
@@ -313,7 +309,7 @@ export abstract class AuthorizationCodeGrant
     const authorizationCode = await this.findAuthorizationCode(code)
 
     if (!authorizationCode) {
-      throw new InvalidGrant({ description: 'Invalid Authorization Code.' })
+      throw OAuth2Error.InvalidGrant('Invalid Authorization Code.')
     }
 
     return authorizationCode
@@ -344,15 +340,15 @@ export abstract class AuthorizationCodeGrant
     client: Client
   ): void {
     if (new Date() > code.getExpiresAt()) {
-      throw new InvalidGrant({ description: 'Expired Authorization Code.' })
+      throw OAuth2Error.InvalidGrant('Expired Authorization Code.')
     }
 
     if (client.getClientId() !== code.getClient().getClientId()) {
-      throw new InvalidGrant({ description: 'Mismatching Client ID.' })
+      throw OAuth2Error.InvalidGrant('Mismatching Client ID.')
     }
 
     if (data.redirect_uri && !client.checkRedirectUri(data.redirect_uri)) {
-      throw new AccessDenied({ description: 'Invalid Redirect URI.' })
+      throw OAuth2Error.AccessDenied('Invalid Redirect URI.')
     }
 
     /*
@@ -365,13 +361,13 @@ export abstract class AuthorizationCodeGrant
       code.getRedirectUri() !== data.redirect_uri &&
       !(data.redirect_uri == null && code.getRedirectUri() == null)
     ) {
-      throw new InvalidGrant({ description: 'Mismatching Redirect URI.' })
+      throw OAuth2Error.InvalidGrant('Mismatching Redirect URI.')
     }
 
     const method = this.getPkceMethod(code.getCodeChallengeMethod() ?? 'plain')
 
     if (!method.compare(code.getCodeChallenge(), data.code_verifier)) {
-      throw new InvalidGrant({ description: 'Invalid Authorization Code.' })
+      throw OAuth2Error.InvalidGrant('Invalid Authorization Code.')
     }
   }
 
@@ -385,9 +381,9 @@ export abstract class AuthorizationCodeGrant
     const method = this.pkceMethods.find(method => method.name === pkceMethod)
 
     if (!method) {
-      throw new InvalidRequest({
-        description: `Unsupported PKCE Method "${pkceMethod}".`
-      })
+      throw OAuth2Error.InvalidRequest(
+        `Unsupported PKCE Method "${pkceMethod}".`
+      )
     }
 
     return method

@@ -3,7 +3,7 @@ import { Injectable } from '@guarani/ioc'
 import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, User } from '../entities'
-import { InvalidGrant, InvalidRequest } from '../exceptions'
+import { OAuth2Error } from '../exception'
 import { Grant, OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 
@@ -65,7 +65,7 @@ export abstract class PasswordGrant extends Grant implements GrantType {
     const user = await this.authenticate(data.username, data.password)
 
     if (!user) {
-      throw new InvalidGrant({ description: 'Invalid Credentials.' })
+      throw OAuth2Error.InvalidGrant('Invalid Credentials.')
     }
 
     const [audience, grantedScopes] = await this.getAudienceScopes(
@@ -96,11 +96,11 @@ export abstract class PasswordGrant extends Grant implements GrantType {
     const { username, password } = data
 
     if (!username) {
-      throw new InvalidRequest({ description: 'Invalid parameter "username".' })
+      throw OAuth2Error.InvalidRequest('Invalid parameter "username".')
     }
 
     if (!password) {
-      throw new InvalidRequest({ description: 'Invalid parameter "password".' })
+      throw OAuth2Error.InvalidRequest('Invalid parameter "password".')
     }
   }
 

@@ -4,7 +4,7 @@ import { timingSafeEqual } from 'crypto'
 
 import { SupportedClientAuthentication } from '../../constants'
 import { Request } from '../../context'
-import { InvalidClient } from '../../exceptions'
+import { OAuth2Error } from '../../exception'
 import { Client } from '../../entities'
 import { ClientAuthentication } from './client-authentication'
 
@@ -71,22 +71,20 @@ export class ClientSecretPost extends ClientAuthentication {
     const client = await this.adapter.findClient(client_id)
 
     if (!client) {
-      throw new InvalidClient({ description: 'Invalid Credentials.' })
+      throw OAuth2Error.InvalidClient('Invalid Credentials.')
     }
 
     const clientSecret = Buffer.from(await client.getClientSecret())
     const providedSecret = Buffer.from(client_secret)
 
     if (!timingSafeEqual(clientSecret, providedSecret)) {
-      throw new InvalidClient({
-        description: 'Invalid Credentials.'
-      })
+      throw OAuth2Error.InvalidClient('Invalid Credentials.')
     }
 
     if (!client.checkAuthenticationMethod(this.name)) {
-      throw new InvalidClient({
-        description: `This Client is not allowed to use the method "${this.name}".`
-      })
+      throw OAuth2Error.InvalidClient(
+        `This Client is not allowed to use the method "${this.name}".`
+      )
     }
 
     return client

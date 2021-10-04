@@ -10,13 +10,7 @@ import {
 } from '../constants'
 import { JsonResponse, Request, Response } from '../context'
 import { Client } from '../entities'
-import {
-  InvalidRequest,
-  OAuth2Error,
-  ServerError,
-  UnauthorizedClient,
-  UnsupportedGrantType
-} from '../exceptions'
+import { OAuth2Error } from '../exception'
 import { GrantType, TokenParameters } from '../grants'
 import { Endpoint } from './endpoint'
 
@@ -91,12 +85,12 @@ export class TokenEndpoint extends Endpoint {
       const err =
         error instanceof OAuth2Error
           ? error
-          : new ServerError({
-              description: GUARANI_ENV === 'development' ? error.message : null
-            })
+          : OAuth2Error.ServerError(
+              GUARANI_ENV === 'development' ? error.message : null
+            )
 
       return new JsonResponse(err)
-        .status(err.status_code)
+        .status(err.statusCode)
         .setHeaders({ ...err.headers, ...this.headers })
     }
   }
@@ -110,17 +104,15 @@ export class TokenEndpoint extends Endpoint {
    */
   private getGrant(grantType: string): GrantType {
     if (!grantType) {
-      throw new InvalidRequest({
-        description: 'Invalid parameter "grant_type".'
-      })
+      throw OAuth2Error.InvalidRequest('Invalid parameter "grant_type".')
     }
 
     const grant = this.grants.find(grant => grant.GRANT_TYPE === grantType)
 
     if (!grant) {
-      throw new UnsupportedGrantType({
-        description: `Unsupported grant_type "${grantType}".`
-      })
+      throw OAuth2Error.UnsupportedGrantType(
+        `Unsupported grant_type "${grantType}".`
+      )
     }
 
     return grant
@@ -139,11 +131,10 @@ export class TokenEndpoint extends Endpoint {
     grantType: SupportedGrantType
   ): void {
     if (!client.checkGrantType(grantType)) {
-      throw new UnauthorizedClient({
-        description:
-          'This Client is not allowed to request ' +
+      throw OAuth2Error.UnauthorizedClient(
+        'This Client is not allowed to request ' +
           `the grant_type "${grantType}".`
-      })
+      )
     }
   }
 }

@@ -12,12 +12,7 @@ import {
 } from '../constants'
 import { JsonResponse, Request, Response } from '../context'
 import { Client } from '../entities'
-import {
-  InvalidRequest,
-  OAuth2Error,
-  ServerError,
-  UnsupportedTokenType
-} from '../exceptions'
+import { OAuth2Error } from '../exception'
 import { Endpoint } from './endpoint'
 
 /**
@@ -207,12 +202,12 @@ export abstract class IntrospectionEndpoint extends Endpoint {
       const err =
         error instanceof OAuth2Error
           ? error
-          : new ServerError({
-              description: GUARANI_ENV === 'development' ? error.message : null
-            })
+          : OAuth2Error.ServerError(
+              GUARANI_ENV === 'development' ? error.message : null
+            )
 
       return new JsonResponse(err)
-        .status(err.status_code)
+        .status(err.statusCode)
         .setHeaders({ ...this.headers, ...err.headers })
     }
   }
@@ -226,16 +221,16 @@ export abstract class IntrospectionEndpoint extends Endpoint {
     const { token, token_type_hint } = data
 
     if (!token) {
-      throw new InvalidRequest({ description: 'Invalid parameter "token".' })
+      throw OAuth2Error.InvalidRequest('Invalid parameter "token".')
     }
 
     if (
       token_type_hint &&
       !this.SUPPORTED_TOKEN_TYPE_HINTS.includes(token_type_hint)
     ) {
-      throw new UnsupportedTokenType({
-        description: `Unsupported token_type_hint "${token_type_hint}".`
-      })
+      throw OAuth2Error.UnsupportedTokenType(
+        `Unsupported token_type_hint "${token_type_hint}".`
+      )
     }
   }
 

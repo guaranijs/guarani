@@ -8,7 +8,7 @@ import {
 } from '../constants'
 import { Request } from '../context'
 import { AccessToken, Client, User } from '../entities'
-import { InvalidRequest } from '../exceptions'
+import { OAuth2Error } from '../exception'
 import { Grant, OAuth2Token } from './grant'
 import { AuthorizationParameters, ResponseType } from './response-type'
 
@@ -92,11 +92,10 @@ export class ImplicitGrant extends Grant implements ResponseType {
     const { response_type, response_mode } = data
 
     if (response_mode === 'query') {
-      throw new InvalidRequest({
-        description:
-          `Invalid response_mode "${response_mode}" ` +
+      throw OAuth2Error.InvalidRequest(
+        `Invalid response_mode "${response_mode}" ` +
           `for response_type "${response_type}".`
-      })
+      )
     }
   }
 

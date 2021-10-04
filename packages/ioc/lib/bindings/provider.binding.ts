@@ -10,6 +10,7 @@ import {
 } from '../providers'
 import { InjectableToken, isConstructorToken } from '../tokens'
 import { Binding } from './binding'
+import { LifecycleBinding } from './lifecycle.binding'
 
 /**
  * Binding Configuration used to define the Provider bound to the Token.
@@ -22,7 +23,12 @@ export class ProviderBinding<T> {
    */
   public constructor(private readonly binding: Binding<T>) {}
 
-  public to<U>(provider: Provider<U>): void {
+  /**
+   * Generic binding function for the Provider.
+   *
+   * @param provider Current Provider.
+   */
+  public to<U>(provider: Provider<U>): LifecycleBinding<T> {
     if (!isProvider<U>(provider)) {
       throw new TypeError(`Invalid format for provider: ${provider}.`)
     }
@@ -49,8 +55,9 @@ export class ProviderBinding<T> {
    *
    * @param target Class to be bound to the Token.
    */
-  public toClass<U>(target: Constructor<U>): void {
+  public toClass<U>(target: Constructor<U>): LifecycleBinding<T> {
     this.binding.provider = { target: target as any }
+    return new LifecycleBinding(this.binding)
   }
 
   /**
@@ -58,8 +65,9 @@ export class ProviderBinding<T> {
    *
    * @param factory Factory to be bound to the Token.
    */
-  public toFactory<U>(factory: Factory<U>): void {
+  public toFactory<U>(factory: Factory<U>): LifecycleBinding<T> {
     this.binding.provider = { factory: factory as any }
+    return new LifecycleBinding(this.binding)
   }
 
   /**
@@ -67,8 +75,9 @@ export class ProviderBinding<T> {
    *
    * @param token Token to be aliased.
    */
-  public toToken<U>(token: InjectableToken<U>): void {
+  public toToken<U>(token: InjectableToken<U>): LifecycleBinding<T> {
     this.binding.provider = { token: token as any }
+    return new LifecycleBinding(this.binding)
   }
 
   /**
@@ -76,14 +85,15 @@ export class ProviderBinding<T> {
    *
    * @param value Value to be bound to the Token.
    */
-  public toValue<U>(value: U): void {
+  public toValue<U>(value: U): LifecycleBinding<T> {
     this.binding.provider = { value: value as any }
+    return new LifecycleBinding(this.binding)
   }
 
   /**
    * Binds a `Constructor` Injectable Token to itself.
    */
-  public toSelf(): void {
+  public toSelf(): LifecycleBinding<T> {
     if (!isConstructorToken<T>(this.binding.token)) {
       throw new TypeError(
         `The token "${String(this.binding.token)}" is not a valid constructor.`

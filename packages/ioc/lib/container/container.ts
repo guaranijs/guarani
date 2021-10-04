@@ -2,6 +2,7 @@ import { Constructor, Dict } from '@guarani/utils'
 
 import { Binding, ProviderBinding } from '../bindings'
 import { TokenNotRegistered } from '../exceptions'
+import { Lifecycle } from '../lifecycle'
 import { getParamTypes, getPropTokens } from '../metadata'
 import {
   isClassProvider,
@@ -54,9 +55,9 @@ export class IoCContainer {
       throw new TokenNotRegistered(token)
     }
 
-    const { provider } = this.registry.get(token)
+    const binding = this.registry.get(token)
 
-    return this.resolveProvider(provider)
+    return this.resolveBinding(binding)
   }
 
   /**
@@ -75,7 +76,7 @@ export class IoCContainer {
 
     const bindings = this.registry.getAll(token)
 
-    return bindings.map(binding => this.resolveProvider(binding.provider))
+    return bindings.map(binding => this.resolveBinding(binding))
   }
 
   /**
@@ -83,6 +84,30 @@ export class IoCContainer {
    */
   public clear(): void {
     this.registry.clear()
+  }
+
+  /**
+   * Resolves the requested Binding based on its type and lifecycle.
+   *
+   * @param binding Binding to be resolved.
+   * @returns Resolved token.
+   */
+  private resolveBinding<T>(binding: Binding<T>): T {
+    if (binding.lifecycle === Lifecycle.Singleton) {
+      if (binding.instance != null) {
+        return binding.instance
+      }
+
+      binding.instance = this.resolveProvider(binding.provider)
+
+      return binding.instance
+    }
+
+    if (binding.lifecycle === Lifecycle.Transient) {
+      return this.resolveProvider(binding.provider)
+    }
+
+    throw new Error(`Unsupported lifecycle "${binding.lifecycle}".`)
   }
 
   /**

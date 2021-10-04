@@ -90,6 +90,21 @@ describe('Container', () => {
     expect(Container.resolve<IFoo>('IFoo')).toBeInstanceOf(Foo2)
   })
 
+  it('should always resolve a Singleton into the same instance.', () => {
+    @Injectable()
+    class Foo {}
+
+    Container.bindToken(Foo).toSelf().asSingleton()
+
+    const foo1 = Container.resolve(Foo)
+    const foo2 = Container.resolve(Foo)
+    const foo3 = Container.resolve(Foo)
+
+    expect(foo1).toEqual(foo2)
+    expect(foo1).toEqual(foo3)
+    expect(foo2).toEqual(foo3)
+  })
+
   it('should resolve all the assignments to an array.', () => {
     interface IFoo {}
 

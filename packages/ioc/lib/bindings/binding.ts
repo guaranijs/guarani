@@ -1,3 +1,4 @@
+import { Lifecycle } from '../lifecycle'
 import { isProvider, Provider } from '../providers'
 import { InjectableToken } from '../tokens'
 
@@ -14,6 +15,16 @@ export class Binding<T> {
    * Provider indexed at the Binding, used to resolve the Token.
    */
   private _provider: Provider<T>
+
+  /**
+   * Singleton instance of the Binding.
+   */
+  public instance?: T
+
+  /**
+   * Lifecycle of the Binding.
+   */
+  public lifecycle: Lifecycle = Lifecycle.Transient
 
   /**
    * Creates a new Binding based on the provided Injectable Token.

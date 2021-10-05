@@ -10,7 +10,7 @@
   "repository": {
     "type": "git",
     "url": "git@github.com/guaranijs/guarani.git",
-    "directory": "packages/oauth2"
+    "directory": "packages/oauth2-server-example"
   },
   "author": {
     "name": "Eduardo Ribeiro Rezende",

@@ -159,50 +159,88 @@ export class OAuth2Error extends Error {
     return url.href
   }
 
+  /**
+   * The Resource Owner or Authorization Server denied the request.
+   */
   public static AccessDenied(description?: string): OAuth2Error {
     return new OAuth2Error('access_denied', description)
   }
 
+  /**
+   * The Client failed to authenticate with the Authorization Server.
+   */
   public static InvalidClient(description?: string): OAuth2Error {
     return new OAuth2Error('invalid_client', description).status(401)
   }
 
+  /**
+   * The provided grant is invalid or does not pertain to the Client.
+   */
   public static InvalidGrant(description?: string): OAuth2Error {
     return new OAuth2Error('invalid_grant', description)
   }
 
+  /**
+   * One or more parameters of the Request is invalid or otherwise malformed.
+   */
   public static InvalidRequest(description?: string): OAuth2Error {
     return new OAuth2Error('invalid_request', description)
   }
 
+  /**
+   * The requested Scope is invalid, unsupported or was not granted
+   * by the Resource Owner.
+   */
   public static InvalidScope(description?: string): OAuth2Error {
     return new OAuth2Error('invalid_scope', description)
   }
 
+  /**
+   * The requested resource is invalid, missing, unknown, or malformed.
+   */
   public static InvalidTarget(description?: string): OAuth2Error {
     return new OAuth2Error('invalid_target', description)
   }
 
+  /**
+   * An error not supported by OAuth 2.0 occurred at the Authorization Server.
+   */
   public static ServerError(description?: string): OAuth2Error {
     return new OAuth2Error('serverError', description).status(500)
   }
 
+  /**
+   * The Authorization Server is Temporarily Unavailable.
+   */
   public static TemporarilyUnavailable(description?: string): OAuth2Error {
     return new OAuth2Error('temporarily_unavailable', description).status(503)
   }
 
+  /**
+   * The Authenticated Client is not allowed to use the requested Grant.
+   */
   public static UnauthorizedClient(description?: string): OAuth2Error {
     return new OAuth2Error('unauthorized_client', description)
   }
 
+  /**
+   * The requested Grant Type is not supported by the Authorization Server.
+   */
   public static UnsupportedGrantType(description?: string): OAuth2Error {
     return new OAuth2Error('unsupported_grant_type', description)
   }
 
+  /**
+   * The requested Response Type is not supported by the Authorization Server.
+   */
   public static UnsupportedResponseType(description?: string): OAuth2Error {
     return new OAuth2Error('unsupported_response_type', description)
   }
 
+  /**
+   * The operation at the provided Token Type is not supported
+   * by the Authorization Server.
+   */
   public static UnsupportedTokenType(description?: string): OAuth2Error {
     return new OAuth2Error('unsupported_token_type', description)
   }

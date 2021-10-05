@@ -94,11 +94,9 @@ export class IoCContainer {
    */
   private resolveBinding<T>(binding: Binding<T>): T {
     if (binding.lifecycle === Lifecycle.Singleton) {
-      if (binding.instance != null) {
-        return binding.instance
+      if (binding.instance == null) {
+        binding.instance = this.resolveProvider(binding.provider)
       }
-
-      binding.instance = this.resolveProvider(binding.provider)
 
       return binding.instance
     }

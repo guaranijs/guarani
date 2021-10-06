@@ -135,8 +135,8 @@ export class User extends BaseEntity {
   public phoneNumber?: string
 
   @Expose({ name: 'phone_number_verified' })
-  @Column({ name: 'phone_number_verified', type: 'boolean', nullable: true })
-  public phoneNumberVerified?: boolean
+  @Column({ name: 'phone_number_verified', type: 'boolean' })
+  public phoneNumberVerified: boolean
 
   @Expose({ name: 'address' })
   @OneToOne(() => Address, {
@@ -182,7 +182,7 @@ export class User extends BaseEntity {
       this.gender = user.gender
       this.birthdate = user.birthdate
       this.phoneNumber = user.phoneNumber
-      this.phoneNumberVerified = user.phoneNumber ? false : null
+      this.phoneNumberVerified = false
       this.address = new Address(user.address)
     }
   }

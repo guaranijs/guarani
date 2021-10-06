@@ -31,6 +31,11 @@ router
 router.route('/profile').get(authenticated, ProfileController.index)
 
 router
+  .route('/profile/edit')
+  .get(authenticated, csrf, ProfileController.editProfile)
+  .post(authenticated, csrf, ProfileController.doEditProfile)
+
+router
   .route('/register')
   .get(unauthenticated, csrf, RegisterController.form)
   .post(unauthenticated, csrf, RegisterController.register)

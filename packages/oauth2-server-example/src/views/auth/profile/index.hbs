@@ -65,6 +65,11 @@
 
     {{!-- User Personal Info --}}
     <div class="col-lg-8">
+      <div class="rounded shadow-sm bg-light mb-3 p-3 d-flex justify-content-between">
+        <h3 class="flex-grow-1">Profile Page</h3>
+        <a href="/auth/profile/edit" class="btn btn-primary">Update</a>
+      </div>
+
       <div class="card shadow-sm" id="user-personal-info">
         <div class="card-body">
           <div class="row">
@@ -100,7 +105,7 @@
           <hr>
           <div class="row">
             <div class="col-sm-3"><strong>Birthdate</strong></div>
-            <div class="col-sm-9">{{ date user.birthdate }}</div>
+            <div class="col-sm-9">{{ localdate user.birthdate }}</div>
           </div>
           <hr>
           <div class="row">

@@ -2,6 +2,7 @@ import 'reflect-metadata'
 
 import { getContainer } from '../lib/container'
 import { Inject, Injectable, InjectAll } from '../lib/decorators'
+import { LazyClass01, LazyClass02 } from './fixtures'
 
 const Container = getContainer()
 
@@ -245,5 +246,18 @@ describe('@InjectAll() decorator', () => {
 
     expect(bar.fooArray[0]).toBeInstanceOf(Foo1)
     expect(bar.fooArray[1]).toBeInstanceOf(Foo2)
+  })
+})
+
+describe('@LazyInject() decorator', () => {
+  it('should delay the injection of wrapped constructors.', () => {
+    Container.bindToken(LazyClass01).toSelf()
+    Container.bindToken(LazyClass02).toSelf()
+
+    const l1 = Container.resolve(LazyClass01)
+    const l2 = Container.resolve(LazyClass02)
+
+    expect(l1.l2).toBeInstanceOf(LazyClass02)
+    expect(l2.l1).toBeInstanceOf(LazyClass01)
   })
 })

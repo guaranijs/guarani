@@ -1,1 +1,1 @@
-export { getContainer } from './container'
+export { Container, getContainer } from './container'

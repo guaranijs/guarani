@@ -190,7 +190,24 @@ export class IoCContainer {
   }
 }
 
+/**
+ * Registry of the containers requested through `getContainer()`.
+ */
 const containers: Dict<IoCContainer> = {}
+
+/**
+ * Returns a singleton instance of an IoC Container based on the requested name.
+ *
+ * @param name Name of the Container.
+ * @returns Instance of the requested Container.
+ */
+export function getContainer(name: string = 'default'): IoCContainer {
+  if (containers[name] == null) {
+    containers[name] = new IoCContainer()
+  }
+
+  return containers[name]
+}
 
 /**
  * Implementation of the Inversion of Control Container.
@@ -203,9 +220,7 @@ const containers: Dict<IoCContainer> = {}
  * own definition of a class, as a string or as a symbol.
  *
  * ```
- *   import { getContainer, Injectable } from "@guarani/ioc"
- *
- *   const Container = getContainer("test")
+ *   import { Container, Injectable } from "@guarani/ioc"
  *
  *   // Example of binding the token `Foo` to the class `Foo`.
  *  ⠀@Injectable()
@@ -229,9 +244,7 @@ const containers: Dict<IoCContainer> = {}
  * at the Container via the `Container.bindToken()` method.
  *
  * ```
- *   import { getContainer, Injectable } from "@guarani/ioc"
- *
- *   const Container = getContainer("test")
+ *   import { Container, Injectable } from "@guarani/ioc"
  *
  *  ⠀@Injectable()
  *   class Foo {}
@@ -253,13 +266,11 @@ const containers: Dict<IoCContainer> = {}
  *
  * ```
  *   import {
- *     getContainer,
+ *     Container,
  *     Inject,
  *     InjectAll,
  *     Injectable
  *   } from "@guarani/ioc"
- *
- *   const Container = getContainer("test")
  *
  *   interface Foo {
  *     echo(): string
@@ -307,10 +318,4 @@ const containers: Dict<IoCContainer> = {}
  * providers bound to the requested Token and return an array containing
  * the resolved instances or values, ordered by the insertion precedence.
  */
-export function getContainer(name: string = 'default'): IoCContainer {
-  if (containers[name] == null) {
-    containers[name] = new IoCContainer()
-  }
-
-  return containers[name]
-}
+export const Container = new IoCContainer()

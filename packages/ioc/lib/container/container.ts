@@ -12,7 +12,7 @@ import {
   isValueProvider,
   Provider
 } from '../providers'
-import { InjectableToken } from '../tokens'
+import { InjectableToken, LazyToken } from '../tokens'
 import { Registry } from './registry'
 
 /**
@@ -51,6 +51,10 @@ export class IoCContainer {
    * @returns Resolved instance or value based on the Token.
    */
   public resolve<T>(token: InjectableToken<T>): T {
+    if (token instanceof LazyToken) {
+      return token.resolve(lazyToken => this.resolve(lazyToken))
+    }
+
     if (!this.isBound(token)) {
       throw new TokenNotRegistered(token)
     }
@@ -70,6 +74,10 @@ export class IoCContainer {
    * @returns Ordered array of the resolved providers bound to the Token.
    */
   public resolveAll<T>(token: InjectableToken<T>): T[] {
+    if (token instanceof LazyToken) {
+      throw new Error('The resolution of multiple LazyTokens is unsupported.')
+    }
+
     if (!this.isBound(token)) {
       throw new TokenNotRegistered(token)
     }

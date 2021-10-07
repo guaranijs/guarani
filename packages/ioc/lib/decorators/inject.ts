@@ -3,6 +3,7 @@ import { Constructor } from '@guarani/utils'
 import {
   defineParamInjectableType,
   definePropertyInjectableType,
+  getDesignParamTypes,
   getDesignPropType
 } from '../metadata'
 import { InjectableToken } from '../tokens'
@@ -22,7 +23,8 @@ export function Inject<T = any>(
   ) => {
     // Injecting into the parameters of the constructor.
     if (propertyKey == null && typeof parameterIndex === 'number') {
-      defineParamInjectableType(target, parameterIndex, token ?? target, false)
+      const type = getDesignParamTypes(target)[parameterIndex]
+      defineParamInjectableType(target, parameterIndex, token ?? type, false)
     }
 
     if (parameterIndex == null) {

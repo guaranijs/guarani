@@ -65,6 +65,15 @@ export class Registry {
   }
 
   /**
+   * Deletes an Injectable Token from the Registry.
+   *
+   * @param token Injectable Token to be deleted.
+   */
+  public delete<T>(token: InjectableToken<T>): void {
+    this.bindings.delete(token)
+  }
+
+  /**
    * Clears all the Tokens and their respective Bindings from the mapping.
    */
   public clear(): void {

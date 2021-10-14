@@ -88,6 +88,15 @@ export class IoCContainer {
   }
 
   /**
+   * Deletes an Injectable Token from the Container's Registry.
+   *
+   * @param token Injectable Token to be deleted.
+   */
+  public delete<T>(token: InjectableToken<T>): void {
+    this.registry.delete(token)
+  }
+
+  /**
    * Clears the registry, removing all the bindings from it.
    */
   public clear(): void {
@@ -159,7 +168,7 @@ export class IoCContainer {
       token.multiple ? this.resolveAll(token.token) : this.resolve(token.token)
     )
 
-    const instance = Reflect.construct(constructor, resolvedTokens)
+    const instance = <T>Reflect.construct(constructor, resolvedTokens)
     const propTokens = getPropTokens(constructor)
 
     if (propTokens) {

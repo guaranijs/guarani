@@ -46,7 +46,7 @@ export class LazyToken<T = any> {
   /**
    * Reflect's Methods used to create the Proxy Handler.
    */
-  private readonly reflectMethods: (keyof ProxyHandler<any>)[] = [
+  private static readonly reflectMethods: (keyof ProxyHandler<any>)[] = [
     'apply',
     'construct',
     'defineProperty',
@@ -94,7 +94,7 @@ export class LazyToken<T = any> {
   private createHandler(resolvedCallback: Factory<T>): ProxyHandler<object> {
     const handler: ProxyHandler<object> = {}
 
-    for (const method of this.reflectMethods) {
+    for (const method of LazyToken.reflectMethods) {
       const handlerMethod = (...args: any[]): any => {
         return (Reflect[method] as any)(resolvedCallback(), ...args.slice(1))
       }

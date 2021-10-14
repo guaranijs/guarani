@@ -5,3 +5,4 @@ if (Reflect == null || !('getMetadata' in Reflect)) {
 export { Container, getContainer } from './container'
 export { Inject, InjectAll, Injectable, LazyInject } from './decorators'
 export { IoCError, TokenNotRegistered } from './exceptions'
+export { InjectableToken } from './tokens'

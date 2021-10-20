@@ -1,9 +1,3 @@
-import {
-  SupportedClientAuthentication,
-  SupportedGrantType,
-  SupportedResponseType
-} from '@guarani/oauth2'
-
 import { Request, Response } from 'express'
 import { getRepository } from 'typeorm'
 
@@ -18,27 +12,27 @@ class Controller {
       secret: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ',
       name: 'Guarani',
       grantTypes: [
-        SupportedGrantType.AuthorizationCode,
-        SupportedGrantType.ClientCredentials,
-        SupportedGrantType.Implicit,
-        SupportedGrantType.JwtBearer,
-        SupportedGrantType.Password,
-        SupportedGrantType.RefreshToken,
-        SupportedGrantType.Saml2Bearer
+        'authorization_code',
+        'client_credentials',
+        'implicit',
+        'password',
+        'refresh_token',
+        'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        'urn:ietf:params:oauth:grant-type:saml2-bearer'
       ],
       redirectUris: ['http://localhost:3333/callback'],
       responseTypes: [
-        SupportedResponseType.Code,
-        SupportedResponseType.CodeIdToken,
-        SupportedResponseType.CodeIdTokenToken,
-        SupportedResponseType.CodeToken,
-        SupportedResponseType.IdToken,
-        SupportedResponseType.IdTokenToken,
-        SupportedResponseType.None,
-        SupportedResponseType.Token
+        'code',
+        'code id_token',
+        'code id_token token',
+        'code token',
+        'id_token',
+        'id_token token',
+        'none',
+        'token'
       ],
       scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-      authenticationMethod: SupportedClientAuthentication.ClientSecretBasic
+      authenticationMethod: 'client_secret_basic'
     })
 
     await clientRepository.save(client)

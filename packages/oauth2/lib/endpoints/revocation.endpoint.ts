@@ -1,5 +1,4 @@
 import { Injectable, InjectAll } from '@guarani/ioc'
-import { removeNullishValues } from '@guarani/utils'
 
 import { OutgoingHttpHeaders } from 'http'
 
@@ -9,7 +8,7 @@ import {
   SupportedEndpoint,
   SupportedTokenTypeHint
 } from '../constants'
-import { EmptyResponse, JsonResponse, Request, Response } from '../context'
+import { Request, Response } from '../context'
 import { Client } from '../entities'
 import {
   InvalidRequest,
@@ -114,8 +113,10 @@ export abstract class RevocationEndpoint extends Endpoint {
    * @param request Current Request.
    * @returns Empty Body Response signaling the success of the Revocation.
    */
-  public async handle(request: Request): Promise<Response> {
-    const data = <RevocationParameters>request.body
+  public async handle(
+    request: Request<RevocationParameters>
+  ): Promise<Response> {
+    const { data } = request
 
     try {
       this.checkParameters(data)
@@ -127,14 +128,15 @@ export abstract class RevocationEndpoint extends Endpoint {
 
       await this.revokeToken(client, data)
 
-      return new EmptyResponse().setHeaders(this.headers)
+      return new Response().setHeaders(this.headers)
     } catch (error) {
       const err =
         error instanceof OAuth2Error ? error : new ServerError(error.message)
 
-      return new JsonResponse(removeNullishValues(err))
+      return new Response()
         .status(err.status)
         .setHeaders({ ...this.headers, ...err.headers })
+        .json(err.toJSON())
     }
   }
 

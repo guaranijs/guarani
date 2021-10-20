@@ -25,7 +25,9 @@ import { AuthorizationParameters, ResponseType } from './response-type'
  * the Access Token from one of the Authorization Responses.
  */
 @Injectable()
-export class ImplicitGrant extends Grant implements ResponseType {
+export class ImplicitGrant
+  extends Grant
+  implements ResponseType<AuthorizationParameters> {
   /**
    * Name of the Grant.
    */
@@ -58,11 +60,11 @@ export class ImplicitGrant extends Grant implements ResponseType {
    * @returns OAuth 2.0 Token Response.
    */
   public async authorize(
-    request: Request,
+    request: Request<AuthorizationParameters>,
     client: Client,
     user: User
   ): Promise<OAuth2Token> {
-    const data = <AuthorizationParameters>request.data
+    const { data } = request
 
     this.checkAuthorizationParameters(data)
 

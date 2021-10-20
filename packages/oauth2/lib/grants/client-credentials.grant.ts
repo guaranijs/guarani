@@ -4,12 +4,12 @@ import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
 import { Grant, OAuth2Token } from './grant'
-import { GrantType, TokenParameters } from './grant-type'
+import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
 
 /**
  * Defines the parameters of the **Client Credentials Grant's** Token Request.
  */
-export interface ClientCredentialsTokenParameters extends TokenParameters {
+export interface TokenParameters extends BaseTokenParameters {
   /**
    * Scope requested by the Client.
    */
@@ -25,7 +25,9 @@ export interface ClientCredentialsTokenParameters extends TokenParameters {
  * for the issuance of an Access Token. A Refresh Token is **NOT** issued.
  */
 @Injectable()
-export class ClientCredentialsGrant extends Grant implements GrantType {
+export class ClientCredentialsGrant
+  extends Grant
+  implements GrantType<TokenParameters> {
   /**
    * Name of the Grant.
    */
@@ -49,8 +51,11 @@ export class ClientCredentialsGrant extends Grant implements GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  public async token(request: Request, client: Client): Promise<OAuth2Token> {
-    const data = <ClientCredentialsTokenParameters>request.data
+  public async token(
+    request: Request<TokenParameters>,
+    client: Client
+  ): Promise<OAuth2Token> {
+    const { data } = request
 
     const scopes = await this.adapter.checkClientScope(client, data.scope)
     const [audience, grantedScopes] = await this.getAudienceScopes(

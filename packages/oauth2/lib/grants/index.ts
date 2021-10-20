@@ -1,20 +1,26 @@
 export {
   AuthorizationCodeGrant,
-  CodeAuthorizationParameters,
-  CodeAuthorizationResponse,
-  CodeTokenParameters
+  AuthorizationParameters as CodeAuthorizationParameters,
+  AuthorizationResponse as CodeAuthorizationResponse,
+  TokenParameters as CodeTokenParameters
 } from './authorization-code.grant'
 export {
   ClientCredentialsGrant,
-  ClientCredentialsTokenParameters
+  TokenParameters as ClientCredentialsTokenParameters
 } from './client-credentials.grant'
 export { Grant, OAuth2Token } from './grant'
 export { GrantType, TokenParameters } from './grant-type'
 export { ImplicitGrant } from './implicit.grant'
-export { JWTBearerGrant, JWTBearerTokenParameters } from './jwt-bearer.grant'
-export { PasswordGrant, PasswordTokenParameters } from './password.grant'
+export {
+  JWTBearerGrant,
+  TokenParameters as JWTBearerTokenParameters
+} from './jwt-bearer.grant'
+export {
+  PasswordGrant,
+  TokenParameters as PasswordTokenParameters
+} from './password.grant'
 export {
   RefreshTokenGrant,
-  RefreshTokenTokenParameters
+  TokenParameters as RefreshTokenTokenParameters
 } from './refresh-token.grant'
 export { AuthorizationParameters, ResponseType } from './response-type'

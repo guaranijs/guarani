@@ -2,12 +2,6 @@ import { Injectable } from '@guarani/ioc'
 import { OneOrMany } from '@guarani/utils'
 
 import { OutgoingHttpHeaders } from 'http'
-import {
-  InvalidRequest,
-  OAuth2Error,
-  ServerError,
-  UnsupportedTokenType
-} from '..'
 
 import { ClientAuthenticator } from '../client-authentication'
 import {
@@ -15,8 +9,14 @@ import {
   SupportedEndpoint,
   SupportedTokenTypeHint
 } from '../constants'
-import { JsonResponse, Request, Response } from '../context'
+import { Request, Response } from '../context'
 import { Client } from '../entities'
+import {
+  InvalidRequest,
+  OAuth2Error,
+  ServerError,
+  UnsupportedTokenType
+} from '../exceptions'
 import { Endpoint } from './endpoint'
 
 /**
@@ -188,8 +188,10 @@ export abstract class IntrospectionEndpoint extends Endpoint {
    * @param request Current Request.
    * @returns Introspection Response with the metadata of the token.
    */
-  public async handle(request: Request): Promise<Response> {
-    const data = <IntrospectionParameters>request.data
+  public async handle(
+    request: Request<IntrospectionParameters>
+  ): Promise<Response> {
+    const { data } = request
 
     try {
       this.checkParameters(data)
@@ -201,14 +203,15 @@ export abstract class IntrospectionEndpoint extends Endpoint {
 
       const introspectionResponse = await this.introspectToken(client, data)
 
-      return new JsonResponse(introspectionResponse).setHeaders(this.headers)
+      return new Response().setHeaders(this.headers).json(introspectionResponse)
     } catch (error) {
       const err =
         error instanceof OAuth2Error ? error : new ServerError(error.message)
 
-      return new JsonResponse(err)
+      return new Response()
         .status(err.status)
         .setHeaders({ ...this.headers, ...err.headers })
+        .json(err.toJSON())
     }
   }
 

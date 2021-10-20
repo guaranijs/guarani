@@ -7,16 +7,21 @@ import { User } from '../entities'
 /**
  * Parameters used to populate the Guarani Request.
  */
-interface RequestParams {
+interface RequestParams<T extends Dict> {
   /**
    * Method of the Request.
    */
   readonly method: string
 
   /**
+   * Path of the Request.
+   */
+  readonly path: string
+
+  /**
    * Parsed Query of the Request.
    */
-  readonly query: Dict
+  readonly query: T
 
   /**
    * Headers of the Request.
@@ -24,9 +29,19 @@ interface RequestParams {
   readonly headers: IncomingHttpHeaders
 
   /**
+   * Cookies of the Request.
+   */
+  readonly cookies: Dict
+
+  /**
    * Body of the Request.
    */
-  readonly body: Dict
+  readonly body: T
+
+  /**
+   * User of the Request.
+   */
+  readonly user: User
 }
 
 /**
@@ -37,7 +52,7 @@ interface RequestParams {
  * It is provided as a framework-agnostic version of the request to allow
  * for multiple integrations without breaking functionality.
  */
-export class Request {
+export class Request<T extends Dict = Dict> {
   /**
    * Method of the Request.
    */
@@ -46,7 +61,12 @@ export class Request {
   /**
    * URL of the Request.
    */
-  public readonly query: Dict
+  public readonly path: string
+
+  /**
+   * URL of the Request.
+   */
+  public readonly query: T
 
   /**
    * Headers of the Request.
@@ -54,49 +74,43 @@ export class Request {
   public readonly headers: IncomingHttpHeaders
 
   /**
+   * Cookies of the Request.
+   */
+  public readonly cookies: Dict
+
+  /**
    * Body of the Request.
    */
-  public readonly body: Dict
+  public readonly body: T
 
   /**
    * Authenticated User of the Request.
    */
-  private _user?: User
+  public readonly user?: User
 
   /**
    * Instantiates a new Guarani Request based on the provided parameters.
    *
    * @param params Parameters of the current Request.
    */
-  public constructor(params: RequestParams) {
+  public constructor(params: RequestParams<T>) {
     this.method = params.method.toLowerCase()
-    this.query = params.query ?? {}
+    this.path = params.path
+    this.query = <T>(params.query ?? {})
     this.headers = params.headers ?? {}
-    this.body = params.body ?? {}
+    this.cookies = params.cookies ?? {}
+    this.body = <T>(params.body ?? {})
+    this.user = params.user
   }
 
   /**
-   * Data of the Request. Obtained by combining the Request's Query and Body.
+   * Returns the Data of the Request from the **Query** and the **Body**
+   * based on the Request's Http Method.
    */
-  public get data(): Dict {
-    return { ...this.query, ...this.body }
-  }
-
-  /**
-   * Authenticated User of the Request.
-   */
-  public get user(): User {
-    return this._user
-  }
-
-  /**
-   * Authenticated User of the Request.
-   */
-  public set user(user: User) {
-    if (this._user != null) {
-      throw new Error('User already set on the Request.')
+  public get data(): T {
+    return <T>{
+      ...this.query,
+      ...(this.method === 'post' ? this.body : {})
     }
-
-    this._user = user
   }
 }

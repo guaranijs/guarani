@@ -4,7 +4,7 @@ import { OutgoingHttpHeaders } from 'http'
 
 import { ClientAuthenticator } from '../client-authentication'
 import { SupportedEndpoint, SupportedGrantType } from '../constants'
-import { JsonResponse, Request, Response } from '../context'
+import { Request, Response } from '../context'
 import { Client } from '../entities'
 import {
   InvalidRequest,
@@ -43,7 +43,7 @@ export class TokenEndpoint extends Endpoint {
    * @param clientAuthenticator Client Authenticator instance.
    */
   public constructor(
-    @InjectAll('Grant') private readonly grants: GrantType[],
+    @InjectAll('Grant') private readonly grants: GrantType<TokenParameters>[],
     private readonly clientAuthenticator: ClientAuthenticator
   ) {
     super()
@@ -70,8 +70,8 @@ export class TokenEndpoint extends Endpoint {
    * @param request Current Request.
    * @returns Token Response.
    */
-  public async handle(request: Request): Promise<Response> {
-    const data = <TokenParameters>request.data
+  public async handle(request: Request<TokenParameters>): Promise<Response> {
+    const { data } = request
 
     try {
       const grant = this.getGrant(data.grant_type)
@@ -82,14 +82,15 @@ export class TokenEndpoint extends Endpoint {
 
       const token = await grant.token(request, client)
 
-      return new JsonResponse(token).setHeaders(this.headers)
+      return new Response().setHeaders(this.headers).json(token)
     } catch (error) {
       const err =
         error instanceof OAuth2Error ? error : new ServerError(error.message)
 
-      return new JsonResponse(err)
+      return new Response()
         .status(err.status)
         .setHeaders({ ...err.headers, ...this.headers })
+        .json(err.toJSON())
     }
   }
 
@@ -100,7 +101,7 @@ export class TokenEndpoint extends Endpoint {
    * @throws {UnsupportedGrantType} The requested grant is unsupported.
    * @returns Grant based on the requested **grant_type**.
    */
-  private getGrant(grantType: string): GrantType {
+  private getGrant(grantType: string): GrantType<TokenParameters> {
     if (!grantType) {
       throw new InvalidRequest('Invalid parameter "grant_type".')
     }

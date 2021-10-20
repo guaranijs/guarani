@@ -1,4 +1,7 @@
+import { Dict } from '@guarani/utils'
+
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http'
+import { URL } from 'url'
 
 /**
  * Implementation of the OAuth 2.0 Response.
@@ -8,7 +11,7 @@ import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http'
  * It is provided as a framework-agnostic version of the response to allow
  * for multiple integrations without breaking functionality.
  */
-export abstract class Response {
+export class Response {
   /**
    * Status Code of the Response.
    */
@@ -52,6 +55,7 @@ export abstract class Response {
    */
   public status(statusCode: number): Response {
     this._statusCode = statusCode
+
     return this
   }
 
@@ -63,6 +67,7 @@ export abstract class Response {
    */
   public setHeader(name: string, value: OutgoingHttpHeader): Response {
     this._headers[name] = value
+
     return this
   }
 
@@ -73,6 +78,55 @@ export abstract class Response {
    */
   public setHeaders(values: OutgoingHttpHeaders): Response {
     Object.assign(this._headers, values)
+
+    return this
+  }
+
+  /**
+   * Sets the Body of the Response.
+   *
+   * @param body Buffer compiled Body.
+   */
+  protected setBody(body: Buffer): Response {
+    this._body = body
+
+    return this
+  }
+
+  /**
+   * Defines the body of the Response as an HTML document.
+   *
+   * @param html HTML to be used as the Body of the Response.
+   */
+  public html(html: string): Response {
+    this.setHeader('Content-Type', 'text/html; charset=UTF-8').setBody(
+      Buffer.from(html)
+    )
+
+    return this
+  }
+
+  /**
+   * Defines the body of the Response as a JSON payload.
+   *
+   * @param data JSON data to be used as the Body of the Response.
+   */
+  public json<T extends Dict>(data: T): Response {
+    this.setHeader('Content-Type', 'application/json').setBody(
+      Buffer.from(JSON.stringify(data ?? null))
+    )
+
+    return this
+  }
+
+  /**
+   * Defines the URL to where the User-Agent will be redirected to.
+   *
+   * @param url URL to where the User-Agent must be redirected to.
+   */
+  public redirect(url: URL): Response {
+    this.status(303).setHeader('Location', url.href)
+
     return this
   }
 }

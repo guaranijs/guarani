@@ -52,7 +52,7 @@ export interface AuthorizationParameters {
 /**
  * Interface of the Authorization Flow of the OAuth 2.0 Grants.
  */
-export interface ResponseType {
+export interface ResponseType<TParams extends AuthorizationParameters> {
   /**
    * Names of the Grant's Response Types.
    */
@@ -71,5 +71,9 @@ export interface ResponseType {
    * @param user User that granted authorization.
    * @returns Dictionary with the parameters of the Authorization Response.
    */
-  authorize(request: Request, client: Client, user: User): Promise<Dict>
+  authorize(
+    request: Request<TParams>,
+    client: Client,
+    user: User
+  ): Promise<Dict>
 }

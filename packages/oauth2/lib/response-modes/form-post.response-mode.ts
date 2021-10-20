@@ -2,7 +2,7 @@ import { Injectable } from '@guarani/ioc'
 import { Dict } from '@guarani/utils'
 
 import { SupportedResponseMode } from '../constants'
-import { HtmlResponse } from '../context'
+import { Response } from '../context'
 import { ResponseMode } from './response-mode'
 
 /**
@@ -25,7 +25,7 @@ export class FormPostResponseMode implements ResponseMode {
    * @param data Data to be included at the Redirect Response.
    * @returns Redirect Response.
    */
-  public createResponse(redirectUri: string, data: Dict): HtmlResponse {
+  public createResponse(redirectUri: string, data: Dict): Response {
     const params = Object.entries(data).reduce(
       (inputs, [name, value]) =>
         (inputs += `<input type="hidden" name="${name}" value="${value}">`),
@@ -46,6 +46,6 @@ export class FormPostResponseMode implements ResponseMode {
     </html>
     `
 
-    return new HtmlResponse(body)
+    return new Response().html(body)
   }
 }

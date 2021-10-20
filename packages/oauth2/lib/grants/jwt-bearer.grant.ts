@@ -13,12 +13,12 @@ import { Request } from '../context'
 import { Client, User } from '../entities'
 import { InvalidGrant, InvalidRequest } from '../exceptions'
 import { Grant, OAuth2Token } from './grant'
-import { GrantType, TokenParameters } from './grant-type'
+import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
 
 /**
  * Defines the parameters of the **JWT Bearer Grant's** Token Request.
  */
-export interface JWTBearerTokenParameters extends TokenParameters {
+export interface TokenParameters extends BaseTokenParameters {
   /**
    * Assertion containing the data about the User's Grant.
    */
@@ -39,7 +39,9 @@ export interface JWTBearerTokenParameters extends TokenParameters {
  * A Refresh Token is **NOT** issued.
  */
 @Injectable()
-export abstract class JWTBearerGrant extends Grant implements GrantType {
+export abstract class JWTBearerGrant
+  extends Grant
+  implements GrantType<TokenParameters> {
   /**
    * Name of the Grant.
    */
@@ -60,8 +62,11 @@ export abstract class JWTBearerGrant extends Grant implements GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  public async token(request: Request, client: Client): Promise<OAuth2Token> {
-    const data = <JWTBearerTokenParameters>request.data
+  public async token(
+    request: Request<TokenParameters>,
+    client: Client
+  ): Promise<OAuth2Token> {
+    const { data } = request
 
     try {
       const scopes = await this.adapter.checkClientScope(client, data.scope)
@@ -103,7 +108,7 @@ export abstract class JWTBearerGrant extends Grant implements GrantType {
    * @param data Parameters of the Token Request.
    * @throws {InvalidRequest} One or more authorization parameters are invalid.
    */
-  protected checkTokenParameters(data: JWTBearerTokenParameters): void {
+  protected checkTokenParameters(data: TokenParameters): void {
     const { assertion } = data
 
     if (!assertion) {

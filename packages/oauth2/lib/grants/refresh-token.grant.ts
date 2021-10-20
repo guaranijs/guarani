@@ -5,12 +5,12 @@ import { Request } from '../context'
 import { Client, RefreshToken } from '../entities'
 import { InvalidGrant, InvalidRequest, InvalidScope } from '../exceptions'
 import { Grant, OAuth2Token } from './grant'
-import { GrantType, TokenParameters } from './grant-type'
+import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
 
 /**
  * Defines the parameters of the **Refresh Token Grant's** Token Request.
  */
-export interface RefreshTokenTokenParameters extends TokenParameters {
+export interface TokenParameters extends BaseTokenParameters {
   /**
    * Refresh Token provided by the Client.
    */
@@ -30,7 +30,9 @@ export interface RefreshTokenTokenParameters extends TokenParameters {
  * of a new Access Token without the need to repeat the User Consent process.
  */
 @Injectable()
-export abstract class RefreshTokenGrant extends Grant implements GrantType {
+export abstract class RefreshTokenGrant
+  extends Grant
+  implements GrantType<TokenParameters> {
   /**
    * Name of the Grant.
    */
@@ -56,8 +58,11 @@ export abstract class RefreshTokenGrant extends Grant implements GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  public async token(request: Request, client: Client): Promise<OAuth2Token> {
-    const data = <RefreshTokenTokenParameters>request.data
+  public async token(
+    request: Request<TokenParameters>,
+    client: Client
+  ): Promise<OAuth2Token> {
+    const { data } = request
 
     const oldRefreshToken = await this.getRefreshToken(data.refresh_token)
 
@@ -101,7 +106,7 @@ export abstract class RefreshTokenGrant extends Grant implements GrantType {
    * @param data Parameters of the Token Request.
    * @throws {InvalidRequest} One or more authorization parameters are invalid.
    */
-  protected checkTokenParameters(data: RefreshTokenTokenParameters): void {
+  protected checkTokenParameters(data: TokenParameters): void {
     const { refresh_token } = data
 
     if (!refresh_token) {

@@ -14,13 +14,16 @@ import { AccessDenied, InvalidGrant, InvalidRequest } from '../exceptions'
 import { PkceMethod } from '../pkce'
 import { Settings } from '../settings'
 import { Grant, OAuth2Token } from './grant'
-import { GrantType, TokenParameters } from './grant-type'
-import { AuthorizationParameters, ResponseType } from './response-type'
+import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
+import {
+  AuthorizationParameters as BaseAuthorizationParameters,
+  ResponseType
+} from './response-type'
 
 /**
  * Defines the parameters of the Authorization Request.
  */
-export interface CodeAuthorizationParameters extends AuthorizationParameters {
+export interface AuthorizationParameters extends BaseAuthorizationParameters {
   /**
    * PKCE Code Challenge.
    */
@@ -35,7 +38,7 @@ export interface CodeAuthorizationParameters extends AuthorizationParameters {
 /**
  * Defines the parameters of the Authorization Response.
  */
-export interface CodeAuthorizationResponse {
+export interface AuthorizationResponse {
   /**
    * Authorization Code.
    */
@@ -50,7 +53,7 @@ export interface CodeAuthorizationResponse {
 /**
  * Defines the parameters of the Token Request.
  */
-export interface CodeTokenParameters extends TokenParameters {
+export interface TokenParameters extends BaseTokenParameters {
   /**
    * Authorization Code issued by the Authorization Server.
    */
@@ -78,7 +81,7 @@ export interface CodeTokenParameters extends TokenParameters {
 @Injectable()
 export abstract class AuthorizationCodeGrant
   extends Grant
-  implements ResponseType, GrantType {
+  implements ResponseType<AuthorizationParameters>, GrantType<TokenParameters> {
   /**
    * Name of the Grant.
    */
@@ -140,11 +143,11 @@ export abstract class AuthorizationCodeGrant
    * @returns Authorization Code Grant's Authorization Response.
    */
   public async authorize(
-    request: Request,
+    request: Request<AuthorizationParameters>,
     client: Client,
     user: User
-  ): Promise<CodeAuthorizationResponse> {
-    const data = <CodeAuthorizationParameters>request.data
+  ): Promise<AuthorizationResponse> {
+    const { data } = request
 
     this.checkAuthorizationParameters(data)
 
@@ -164,7 +167,7 @@ export abstract class AuthorizationCodeGrant
       user
     )
 
-    return removeNullishValues<CodeAuthorizationResponse>({
+    return removeNullishValues<AuthorizationResponse>({
       code: code.getIdentifier(),
       state: data.state
     })
@@ -176,9 +179,7 @@ export abstract class AuthorizationCodeGrant
    * @param challenge Code Challenge provided by the Client.
    * @param method Optional PKCE Method provided by the Client.
    */
-  protected checkAuthorizationParameters(
-    data: CodeAuthorizationParameters
-  ): void {
+  protected checkAuthorizationParameters(data: AuthorizationParameters): void {
     const { code_challenge, code_challenge_method } = data
 
     if (!code_challenge) {
@@ -208,7 +209,7 @@ export abstract class AuthorizationCodeGrant
    * @returns **Authorization Code** for use by the Client.
    */
   protected abstract createAuthorizationCode(
-    data: CodeAuthorizationParameters,
+    data: AuthorizationParameters,
     scopes: string[],
     audience: OneOrMany<string>,
     client: Client,
@@ -231,8 +232,11 @@ export abstract class AuthorizationCodeGrant
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  public async token(request: Request, client: Client): Promise<OAuth2Token> {
-    const data = <CodeTokenParameters>request.data
+  public async token(
+    request: Request<TokenParameters>,
+    client: Client
+  ): Promise<OAuth2Token> {
+    const { data } = request
 
     let code: AuthorizationCode
 
@@ -286,7 +290,7 @@ export abstract class AuthorizationCodeGrant
    *
    * @param data Parameters of the Token Request.
    */
-  protected checkTokenParameters(data: CodeTokenParameters): void {
+  protected checkTokenParameters(data: TokenParameters): void {
     const { code, code_verifier } = data
 
     if (!code) {
@@ -336,7 +340,7 @@ export abstract class AuthorizationCodeGrant
    */
   private checkAuthorizationCode(
     code: AuthorizationCode,
-    data: CodeTokenParameters,
+    data: TokenParameters,
     client: Client
   ): void {
     if (new Date() > code.getExpiresAt()) {

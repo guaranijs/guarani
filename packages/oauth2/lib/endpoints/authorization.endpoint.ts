@@ -8,7 +8,7 @@ import {
   SupportedResponseMode,
   SupportedResponseType
 } from '../constants'
-import { RedirectResponse, Request, Response } from '../context'
+import { Request, Response } from '../context'
 import { Client, User } from '../entities'
 import {
   AccessDenied,
@@ -48,7 +48,8 @@ export class AuthorizationEndpoint extends Endpoint {
    */
   public constructor(
     @Inject('Adapter') private readonly adapter: Adapter,
-    @InjectAll('Grant') private readonly grants: ResponseType[],
+    @InjectAll('Grant')
+    private readonly grants: ResponseType<AuthorizationParameters>[],
     @InjectAll('ResponseMode') private readonly responseModes: ResponseMode[],
     private readonly settings: Settings
   ) {
@@ -85,11 +86,13 @@ export class AuthorizationEndpoint extends Endpoint {
    * @param request Current Request.
    * @returns Authorization Response.
    */
-  public async handle(request: Request): Promise<Response> {
-    const data = <AuthorizationParameters>request.data
+  public async handle(
+    request: Request<AuthorizationParameters>
+  ): Promise<Response> {
+    const { data } = request
 
     let client: Client,
-      grant: ResponseType,
+      grant: ResponseType<AuthorizationParameters>,
       redirectUri: string,
       responseMode: ResponseMode
 
@@ -173,7 +176,9 @@ export class AuthorizationEndpoint extends Endpoint {
    * @throws {UnsupportedResponseType} The requested grant is unsupported.
    * @returns Grant based on the requested **response_type**.
    */
-  private getGrant(responseType: SupportedResponseType): ResponseType {
+  private getGrant(
+    responseType: SupportedResponseType
+  ): ResponseType<AuthorizationParameters> {
     // Alphabetic sorting of the Response Types.
     responseType = <SupportedResponseType>(
       responseType.split(' ').sort().join(' ')
@@ -303,13 +308,13 @@ export class AuthorizationEndpoint extends Endpoint {
    * @param error Error raised during the Authorization Flow.
    * @returns Redirect Response to the Provider's Error page.
    */
-  private defaultAuthorizationError(error: OAuth2Error): RedirectResponse {
+  private defaultAuthorizationError(error: OAuth2Error): Response {
     const url = new URL(this.errorUrl)
 
     Object.entries(error.toJSON()).forEach(([name, value]) =>
       url.searchParams.set(name, value)
     )
 
-    return new RedirectResponse(url.href)
+    return new Response().redirect(url)
   }
 }

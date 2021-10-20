@@ -5,12 +5,12 @@ import { Request } from '../context'
 import { Client, User } from '../entities'
 import { InvalidGrant, InvalidRequest } from '../exceptions'
 import { Grant, OAuth2Token } from './grant'
-import { GrantType, TokenParameters } from './grant-type'
+import { GrantType, TokenParameters as BaseTokenParameters } from './grant-type'
 
 /**
  * Defines the parameters of the **Password Grant's** Token Request.
  */
-export interface PasswordTokenParameters extends TokenParameters {
+export interface TokenParameters extends BaseTokenParameters {
   /**
    * Username of the User represented by the Client.
    */
@@ -35,7 +35,9 @@ export interface PasswordTokenParameters extends TokenParameters {
  * of the User and present them as the User's grant to the Authorization Server.
  */
 @Injectable()
-export abstract class PasswordGrant extends Grant implements GrantType {
+export abstract class PasswordGrant
+  extends Grant
+  implements GrantType<TokenParameters> {
   /**
    * Name of the Grant.
    */
@@ -58,8 +60,11 @@ export abstract class PasswordGrant extends Grant implements GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  public async token(request: Request, client: Client): Promise<OAuth2Token> {
-    const data = <PasswordTokenParameters>request.data
+  public async token(
+    request: Request<TokenParameters>,
+    client: Client
+  ): Promise<OAuth2Token> {
+    const { data } = request
 
     const scopes = await this.adapter.checkClientScope(client, data.scope)
     const user = await this.authenticate(data.username, data.password)
@@ -92,7 +97,7 @@ export abstract class PasswordGrant extends Grant implements GrantType {
    * @param data Parameters of the Token Request.
    * @throws {InvalidRequest} One or more authorization parameters are invalid.
    */
-  protected checkTokenParameters(data: PasswordTokenParameters): void {
+  protected checkTokenParameters(data: TokenParameters): void {
     const { username, password } = data
 
     if (!username) {

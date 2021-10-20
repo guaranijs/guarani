@@ -23,7 +23,7 @@ export interface TokenParameters {
 /**
  * Interface of the Token Flow of the OAuth 2.0 Grants.
  */
-export interface GrantType {
+export interface GrantType<TParams extends TokenParameters> {
   /**
    * Name of the Grant's Grant Type.
    */
@@ -36,5 +36,5 @@ export interface GrantType {
    * @param client Client of the Request.
    * @returns OAuth 2.0 Token Response.
    */
-  token(request: Request, client: Client): Promise<OAuth2Token>
+  token(request: Request<TParams>, client: Client): Promise<OAuth2Token>
 }

@@ -1,11 +1,5 @@
 import { JsonWebKey } from '@guarani/jose'
 
-import {
-  SupportedClientAuthentication,
-  SupportedGrantType,
-  SupportedResponseType
-} from '../constants'
-
 /**
  * Defines the model of the `OAuth 2.0 Client` used by Guarani.
  *
@@ -46,19 +40,19 @@ export interface Client {
    *
    * @param method Authentication Method used by the Client.
    */
-  checkAuthenticationMethod(method: SupportedClientAuthentication): boolean
+  checkAuthenticationMethod(method: string): boolean
 
   /**
    * Checks if the Client is allowed to use the provided Grant Type.
    *
    * @param grantType Grant Type used by the Client.
    */
-  checkGrantType(grantType: SupportedGrantType): boolean
+  checkGrantType(grantType: string): boolean
 
   /**
    * Checks if the Client is allowed to use the provided Response Type.
    *
    * @param responseType Response Type used by the Client.
    */
-  checkResponseType(responseType: SupportedResponseType): boolean
+  checkResponseType(responseType: string): boolean
 }

@@ -1,6 +1,5 @@
 import { OneOrMany } from '@guarani/utils'
 
-import { SupportedEndpoint } from '../constants'
 import { Request, Response } from '../context'
 import { InvalidTarget } from '../exceptions'
 
@@ -17,7 +16,7 @@ export abstract class Endpoint {
   /**
    * Name of the Endpoint.
    */
-  public abstract readonly name: SupportedEndpoint
+  public abstract readonly name: string
 
   /**
    * All endpoints are required to implement this method,

@@ -1,7 +1,4 @@
-import {
-  AccessToken as AccessTokenEntity,
-  SupportedGrantType
-} from '@guarani/oauth2'
+import { AccessToken as AccessTokenEntity } from '@guarani/oauth2'
 import { OneOrMany, secretToken } from '@guarani/utils'
 
 import {
@@ -20,7 +17,7 @@ import { User } from './user.entity'
 import { audienceTransformer, transformer } from './_transformer'
 
 interface IAccessToken {
-  readonly grant: SupportedGrantType
+  readonly grant: string
   readonly expiresIn: number
   readonly scopes: string[]
   readonly audience?: OneOrMany<string>
@@ -37,7 +34,7 @@ export class AccessToken extends BaseEntity implements AccessTokenEntity {
   public readonly scopes: string[]
 
   @Column({ name: 'grant', type: 'varchar', length: 256 })
-  public readonly grant: SupportedGrantType
+  public readonly grant: string
 
   @Column({
     name: 'audience',
@@ -115,7 +112,7 @@ export class AccessToken extends BaseEntity implements AccessTokenEntity {
     return this.audience
   }
 
-  public getGrant(): SupportedGrantType {
+  public getGrant(): string {
     return this.grant
   }
 

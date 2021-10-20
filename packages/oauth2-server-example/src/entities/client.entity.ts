@@ -1,10 +1,5 @@
 import { EcKey, JsonWebKey } from '@guarani/jose'
-import {
-  Client as ClientEntity,
-  SupportedClientAuthentication,
-  SupportedGrantType,
-  SupportedResponseType
-} from '@guarani/oauth2'
+import { Client as ClientEntity } from '@guarani/oauth2'
 import { secretToken, UUID } from '@guarani/utils'
 
 import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm'
@@ -20,9 +15,9 @@ interface IClient {
   readonly name: string
   readonly redirectUris: string[]
   readonly scopes: string[]
-  readonly authenticationMethod?: SupportedClientAuthentication
-  readonly grantTypes?: SupportedGrantType[]
-  readonly responseTypes?: SupportedResponseType[]
+  readonly authenticationMethod?: string
+  readonly grantTypes?: string[]
+  readonly responseTypes?: string[]
 }
 
 @Entity({ name: 'clients' })
@@ -43,13 +38,13 @@ export class Client extends BaseEntity implements ClientEntity {
   public scopes: string[]
 
   @Column({ name: 'authentication_method', type: 'varchar', length: 80 })
-  public authenticationMethod: SupportedClientAuthentication
+  public authenticationMethod: string
 
   @Column({ name: 'grant_types', type: 'text', transformer })
-  public grantTypes: SupportedGrantType[]
+  public grantTypes: string[]
 
   @Column({ name: 'response_types', type: 'text', transformer })
-  public responseTypes: SupportedResponseType[]
+  public responseTypes: string[]
 
   public constructor(data?: IClient) {
     super()
@@ -62,15 +57,10 @@ export class Client extends BaseEntity implements ClientEntity {
       this.scopes = data.scopes
 
       this.authenticationMethod =
-        data.authenticationMethod ??
-        SupportedClientAuthentication.ClientSecretBasic
+        data.authenticationMethod ?? 'client_secret_basic'
 
-      this.grantTypes = data.grantTypes ?? [
-        SupportedGrantType.AuthorizationCode,
-        SupportedGrantType.Implicit
-      ]
-
-      this.responseTypes = data.responseTypes ?? [SupportedResponseType.Code]
+      this.grantTypes = data.grantTypes ?? ['authorization_code', 'implicit']
+      this.responseTypes = data.responseTypes ?? ['code']
     }
   }
 
@@ -101,17 +91,15 @@ export class Client extends BaseEntity implements ClientEntity {
     return scopes.every(scope => this.scopes.includes(scope))
   }
 
-  public checkAuthenticationMethod(
-    method: SupportedClientAuthentication
-  ): boolean {
+  public checkAuthenticationMethod(method: string): boolean {
     return this.authenticationMethod === method
   }
 
-  public checkGrantType(grantType: SupportedGrantType): boolean {
+  public checkGrantType(grantType: string): boolean {
     return this.grantTypes.includes(grantType)
   }
 
-  public checkResponseType(responseType: SupportedResponseType): boolean {
+  public checkResponseType(responseType: string): boolean {
     return this.responseTypes.includes(responseType)
   }
 }

@@ -10,7 +10,6 @@ import {
 } from '@guarani/jose'
 
 import { ClientAuthentication } from '../client-authentication/methods'
-import { SupportedClientAssertionType } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
 import { InvalidClient } from '../exceptions'
@@ -27,7 +26,7 @@ export interface JWTClientParameters {
   /**
    * Client Assertion Type requested by the Client.
    */
-  readonly client_assertion_type: SupportedClientAssertionType
+  readonly client_assertion_type: string
 }
 
 /**
@@ -39,7 +38,8 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
   /**
    * JWT Bearer Client Assertion Type.
    */
-  public readonly CLIENT_ASSERTION_TYPE = SupportedClientAssertionType.JwtBearer
+  public readonly CLIENT_ASSERTION_TYPE: string =
+    'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
 
   /**
    * Supported JSON Web Signature Algorithms of the Client Assertion.

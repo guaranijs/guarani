@@ -2,12 +2,6 @@ import { Inject, Injectable, InjectAll } from '@guarani/ioc'
 import { OneOrMany, removeNullishValues } from '@guarani/utils'
 
 import { Adapter } from '../adapter'
-import {
-  SupportedGrantType,
-  SupportedPkceMethod,
-  SupportedResponseMode,
-  SupportedResponseType
-} from '../constants'
 import { Request } from '../context'
 import { AuthorizationCode, Client, User } from '../entities'
 import { AccessDenied, InvalidGrant, InvalidRequest } from '../exceptions'
@@ -32,7 +26,7 @@ export interface AuthorizationParameters extends BaseAuthorizationParameters {
   /**
    * PKCE Method.
    */
-  readonly code_challenge_method?: SupportedPkceMethod
+  readonly code_challenge_method?: string
 }
 
 /**
@@ -85,22 +79,22 @@ export abstract class AuthorizationCodeGrant
   /**
    * Name of the Grant.
    */
-  public readonly name = SupportedGrantType.AuthorizationCode
+  public readonly name: string = 'authorization_code'
 
   /**
    * Names of the Grant's Response Types.
    */
-  public readonly RESPONSE_TYPES = [SupportedResponseType.Code]
+  public readonly RESPONSE_TYPES: string[] = ['code']
 
   /**
    * Default Response Mode of the Grant.
    */
-  public readonly DEFAULT_RESPONSE_MODE = SupportedResponseMode.Query
+  public readonly DEFAULT_RESPONSE_MODE: string = 'query'
 
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly GRANT_TYPE = SupportedGrantType.AuthorizationCode
+  public readonly GRANT_TYPE: string = 'authorization_code'
 
   /**
    * Instantiates a new **Authorization Code Grant**
@@ -267,7 +261,7 @@ export abstract class AuthorizationCodeGrant
 
       const refreshToken =
         this.adapter.createRefreshToken &&
-        client.checkGrantType(SupportedGrantType.RefreshToken)
+        client.checkGrantType('refresh_token')
           ? await this.adapter.createRefreshToken(
               code.getScopes(),
               code.getAudience(),
@@ -368,9 +362,7 @@ export abstract class AuthorizationCodeGrant
       throw new InvalidGrant('Mismatching Redirect URI.')
     }
 
-    const method = this.getPkceMethod(
-      code.getCodeChallengeMethod() ?? SupportedPkceMethod.Plain
-    )
+    const method = this.getPkceMethod(code.getCodeChallengeMethod() ?? 'plain')
 
     if (!method.compare(code.getCodeChallenge(), data.code_verifier)) {
       throw new InvalidGrant('Invalid Authorization Code.')
@@ -383,7 +375,7 @@ export abstract class AuthorizationCodeGrant
    * @param pkceMethod Name of the requested PKCE Method.
    * @returns Requested PKCE Method.
    */
-  private getPkceMethod(pkceMethod: SupportedPkceMethod): PkceMethod {
+  private getPkceMethod(pkceMethod: string): PkceMethod {
     const method = this.pkceMethods.find(method => method.name === pkceMethod)
 
     if (!method) {

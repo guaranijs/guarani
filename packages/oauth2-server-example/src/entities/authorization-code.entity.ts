@@ -1,7 +1,4 @@
-import {
-  AuthorizationCode as AuthorizationCodeEntity,
-  SupportedPkceMethod
-} from '@guarani/oauth2'
+import { AuthorizationCode as AuthorizationCodeEntity } from '@guarani/oauth2'
 import { OneOrMany, secretToken } from '@guarani/utils'
 
 import {
@@ -22,7 +19,7 @@ interface IAuthorizationCode {
   readonly redirectUri: string
   readonly scopes: string[]
   readonly codeChallenge: string
-  readonly codeChallengeMethod?: SupportedPkceMethod
+  readonly codeChallengeMethod?: string
   readonly nonce?: string
   readonly audience?: OneOrMany<string>
   readonly client: Client
@@ -51,7 +48,7 @@ export class AuthorizationCode
     length: 8,
     nullable: true
   })
-  public readonly codeChallengeMethod?: SupportedPkceMethod
+  public readonly codeChallengeMethod?: string
 
   @Column({ name: 'nonce', type: 'text', nullable: true })
   public readonly nonce?: string
@@ -139,7 +136,7 @@ export class AuthorizationCode
     return this.codeChallenge
   }
 
-  public getCodeChallengeMethod(): SupportedPkceMethod {
+  public getCodeChallengeMethod(): string {
     return this.codeChallengeMethod
   }
 

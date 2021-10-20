@@ -8,7 +8,6 @@ import {
   SupportedJWSAlgorithm
 } from '@guarani/jose'
 
-import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, User } from '../entities'
 import { InvalidGrant, InvalidRequest } from '../exceptions'
@@ -45,12 +44,13 @@ export abstract class JWTBearerGrant
   /**
    * Name of the Grant.
    */
-  public readonly name = SupportedGrantType.JwtBearer
+  public readonly name: string = 'urn:ietf:params:oauth:grant-type:jwt-bearer'
 
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly GRANT_TYPE = SupportedGrantType.JwtBearer
+  public readonly GRANT_TYPE: string =
+    'urn:ietf:params:oauth:grant-type:jwt-bearer'
 
   /**
    * **Token Flow** of the JWT Bearer Grant.

@@ -1,7 +1,6 @@
 import { Injectable } from '@guarani/ioc'
 import { Dict } from '@guarani/utils'
 
-import { SupportedResponseMode } from '../constants'
 import { Response } from '../context'
 import { ResponseMode } from './response-mode'
 
@@ -13,7 +12,7 @@ export class FormPostResponseMode implements ResponseMode {
   /**
    * Name of the Response Mode.
    */
-  public readonly name = SupportedResponseMode.FormPost
+  public readonly name: string = 'form_post'
 
   /**
    * Creates an HTML form with it's action as the Redirect URI and the fields

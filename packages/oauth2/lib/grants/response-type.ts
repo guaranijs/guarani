@@ -1,6 +1,5 @@
 import { Dict, OneOrMany } from '@guarani/utils'
 
-import { SupportedResponseMode, SupportedResponseType } from '../constants'
 import { Request } from '../context'
 import { Client, User } from '../entities'
 
@@ -11,7 +10,7 @@ export interface AuthorizationParameters {
   /**
    * Response Type requested by the Client.
    */
-  readonly response_type: SupportedResponseType
+  readonly response_type: string
 
   /**
    * ID of the Client requesting authorization.
@@ -36,7 +35,7 @@ export interface AuthorizationParameters {
   /**
    * Response Mode requested by the Client to return the Authorization Response.
    */
-  readonly response_mode?: SupportedResponseMode
+  readonly response_mode?: string
 
   /**
    * Resource requested by the Client.
@@ -56,12 +55,12 @@ export interface ResponseType<TParams extends AuthorizationParameters> {
   /**
    * Names of the Grant's Response Types.
    */
-  readonly RESPONSE_TYPES: SupportedResponseType[]
+  readonly RESPONSE_TYPES: string[]
 
   /**
    * Default Response Mode of the Grant.
    */
-  readonly DEFAULT_RESPONSE_MODE: SupportedResponseMode
+  readonly DEFAULT_RESPONSE_MODE: string
 
   /**
    * Implementation of the Grant's Authorization Flow.

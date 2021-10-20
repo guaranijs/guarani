@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@guarani/ioc'
 import { OneOrMany, removeNullishValues } from '@guarani/utils'
 
 import { Adapter } from '../adapter'
-import { SupportedGrantType } from '../constants'
 import {
   AbstractToken,
   AccessToken,
@@ -56,7 +55,7 @@ export abstract class Grant {
   /**
    * Name of the Grant.
    */
-  public abstract readonly name: SupportedGrantType
+  public abstract readonly name: string
 
   /**
    * Instantiates a new OAuth 2.0 Grant.
@@ -203,7 +202,7 @@ export abstract class Grant {
     const refreshToken =
       issueRefreshToken &&
       this.adapter.createRefreshToken &&
-      client.checkGrantType(SupportedGrantType.RefreshToken)
+      client.checkGrantType('refresh_token')
         ? await this.adapter.createRefreshToken(
             scopes,
             audience,

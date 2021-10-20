@@ -3,7 +3,6 @@ import { Dict } from '@guarani/utils'
 
 import { URL } from 'url'
 
-import { SupportedResponseMode } from '../constants'
 import { Response } from '../context'
 import { ResponseMode } from './response-mode'
 
@@ -15,7 +14,7 @@ export class QueryResponseMode implements ResponseMode {
   /**
    * Name of the Response Mode.
    */
-  public readonly name = SupportedResponseMode.Query
+  public readonly name: string = 'query'
 
   /**
    * Creates a Redirect Response to the provided Redirect URI that includes

@@ -3,7 +3,6 @@ import { Injectable, InjectAll } from '@guarani/ioc'
 import { OutgoingHttpHeaders } from 'http'
 
 import { ClientAuthenticator } from '../client-authentication'
-import { SupportedEndpoint, SupportedGrantType } from '../constants'
 import { Request, Response } from '../context'
 import { Client } from '../entities'
 import {
@@ -26,7 +25,7 @@ export class TokenEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
-  public readonly name = SupportedEndpoint.Token
+  public readonly name: string = 'token'
 
   /**
    * Default HTTP headers to be included in the Response.
@@ -123,10 +122,7 @@ export class TokenEndpoint extends Endpoint {
    * @throws {UnauthorizedClient} The Client is not allowed to use
    *   the requested Grant Type.
    */
-  private checkClientGrantType(
-    client: Client,
-    grantType: SupportedGrantType
-  ): void {
+  private checkClientGrantType(client: Client, grantType: string): void {
     if (!client.checkGrantType(grantType)) {
       throw new UnauthorizedClient(
         'This Client is not allowed to request ' +

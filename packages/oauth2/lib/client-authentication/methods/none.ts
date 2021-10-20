@@ -1,6 +1,5 @@
 import { Injectable } from '@guarani/ioc'
 
-import { SupportedClientAuthentication } from '../../constants'
 import { Request } from '../../context'
 import { InvalidClient } from '../../exceptions'
 import { Client } from '../../entities'
@@ -47,7 +46,7 @@ export class None extends ClientAuthentication {
   /**
    * Name of the Authentication Method.
    */
-  public readonly name = SupportedClientAuthentication.None
+  public readonly name: string = 'none'
 
   /**
    * Checks if the current Client Authentication Method

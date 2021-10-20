@@ -1,17 +1,12 @@
 import { JsonWebTokenClaims } from '@guarani/jose'
-import {
-  Adapter,
-  InvalidRequest,
-  InvalidScope,
-  SupportedGrantType
-} from '@guarani/oauth2'
+import { Adapter, InvalidRequest, InvalidScope } from '@guarani/oauth2'
 import { OneOrMany } from '@guarani/utils'
 
 import { AccessToken, Client, RefreshToken, User } from '../entities'
 
 export class AppAdapter implements Adapter {
   private readonly scopes = ['openid', 'profile', 'email', 'phone', 'address']
-  private readonly lifespans: Partial<Record<SupportedGrantType, number>> = {
+  private readonly lifespans: Partial<Record<string, number>> = {
     authorization_code: 43200,
     client_credentials: 300,
     implicit: 3600,
@@ -59,7 +54,7 @@ export class AppAdapter implements Adapter {
   }
 
   public async createAccessToken(
-    grant: SupportedGrantType,
+    grant: string,
     scopes: string[],
     audience: OneOrMany<string>,
     client: Client,

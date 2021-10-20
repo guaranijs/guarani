@@ -3,11 +3,6 @@ import { Inject, Injectable, InjectAll } from '@guarani/ioc'
 import { URL } from 'url'
 
 import { Adapter } from '../adapter'
-import {
-  SupportedEndpoint,
-  SupportedResponseMode,
-  SupportedResponseType
-} from '../constants'
 import { Request, Response } from '../context'
 import { Client, User } from '../entities'
 import {
@@ -36,7 +31,7 @@ export class AuthorizationEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
-  public readonly name = SupportedEndpoint.Authorization
+  public readonly name: string = 'authorization'
 
   /**
    * Instantiates the Authorization Endpoint.
@@ -177,12 +172,10 @@ export class AuthorizationEndpoint extends Endpoint {
    * @returns Grant based on the requested **response_type**.
    */
   private getGrant(
-    responseType: SupportedResponseType
+    responseType: string
   ): ResponseType<AuthorizationParameters> {
     // Alphabetic sorting of the Response Types.
-    responseType = <SupportedResponseType>(
-      responseType.split(' ').sort().join(' ')
-    )
+    responseType = responseType.split(' ').sort().join(' ')
 
     const grant = this.grants.find(grant =>
       (grant.RESPONSE_TYPES ?? []).includes(responseType)
@@ -205,14 +198,9 @@ export class AuthorizationEndpoint extends Endpoint {
    * @throws {UnauthorizedClient} The Client is not allowed to use
    *   the requested Response Type.
    */
-  private checkClientResponseType(
-    client: Client,
-    responseType: SupportedResponseType
-  ): void {
+  private checkClientResponseType(client: Client, responseType: string): void {
     // Alphabetic sorting of the Response Types.
-    responseType = <SupportedResponseType>(
-      responseType.split(' ').sort().join(' ')
-    )
+    responseType = responseType.split(' ').sort().join(' ')
 
     if (!client.checkResponseType(responseType)) {
       throw new UnauthorizedClient(
@@ -265,7 +253,7 @@ export class AuthorizationEndpoint extends Endpoint {
    * @throws {InvalidRequest} The requested Response Mode is unsupported.
    * @returns Response Mode based on the requested **response_mode**.
    */
-  private getResponseMode(responseMode: SupportedResponseMode): ResponseMode {
+  private getResponseMode(responseMode: string): ResponseMode {
     const mode = this.responseModes.find(mode => mode.name === responseMode)
 
     if (!mode) {
@@ -293,7 +281,7 @@ export class AuthorizationEndpoint extends Endpoint {
       error instanceof OAuth2Error ? error : new ServerError(error.message)
 
     try {
-      responseMode ??= this.getResponseMode(SupportedResponseMode.Query)
+      responseMode ??= this.getResponseMode('query')
     } catch {
       return this.defaultAuthorizationError(err)
     }

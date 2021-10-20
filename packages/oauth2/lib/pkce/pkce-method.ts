@@ -1,5 +1,3 @@
-import { SupportedPkceMethod } from '../constants'
-
 /**
  * Definition of a PKCE Method.
  */
@@ -7,7 +5,7 @@ export interface PkceMethod {
   /**
    * Name of the PKCE Method.
    */
-  readonly name: SupportedPkceMethod
+  readonly name: string
 
   /**
    * Checks if the Code Verifier provided by the Client at the Token Endpoint

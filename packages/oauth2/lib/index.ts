@@ -8,16 +8,6 @@ export {
   None,
   PrivateKeyJWT
 } from './client-authentication'
-export {
-  SupportedClientAssertionType,
-  SupportedClientAuthentication,
-  SupportedEndpoint,
-  SupportedGrantType,
-  SupportedPkceMethod,
-  SupportedResponseMode,
-  SupportedResponseType,
-  SupportedTokenTypeHint
-} from './constants'
 export { Request, Response } from './context'
 export {
   Endpoint,

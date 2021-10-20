@@ -2,7 +2,6 @@ import { Injectable } from '@guarani/ioc'
 
 import { timingSafeEqual } from 'crypto'
 
-import { SupportedClientAuthentication } from '../../constants'
 import { Request } from '../../context'
 import { Client } from '../../entities'
 import { InvalidClient } from '../../exceptions'
@@ -27,7 +26,7 @@ export class ClientSecretBasic extends ClientAuthentication {
   /**
    * Name of the Authentication Method.
    */
-  public readonly name = SupportedClientAuthentication.ClientSecretBasic
+  public readonly name: string = 'client_secret_basic'
 
   /**
    * Defines the `WWW-Authenticate` header in case of authentication failure.

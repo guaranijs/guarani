@@ -3,7 +3,6 @@ import { base64UrlEncode } from '@guarani/utils'
 
 import { createHash } from 'crypto'
 
-import { SupportedPkceMethod } from '../constants'
 import { PkceMethod } from './pkce-method'
 
 /**
@@ -14,7 +13,7 @@ export class S256PkceMethod implements PkceMethod {
   /**
    * Name of the PKCE Method.
    */
-  public readonly name = SupportedPkceMethod.S256
+  public readonly name: string = 'S256'
 
   /**
    * Performs a comparison between the Code Challenge hash received at the

@@ -1,7 +1,6 @@
 import { JsonWebTokenClaims } from '@guarani/jose'
 import { OneOrMany } from '@guarani/utils'
 
-import { SupportedGrantType } from './constants'
 import { AccessToken, Client, RefreshToken, User } from './entities'
 
 /**
@@ -65,7 +64,7 @@ export interface Adapter {
    * @returns **Access Token** for authorized use by the Client.
    */
   createAccessToken(
-    grant: SupportedGrantType,
+    grant: string,
     scopes: string[],
     audience: OneOrMany<string>,
     client: Client,

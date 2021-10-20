@@ -1,6 +1,5 @@
 import { Injectable } from '@guarani/ioc'
 
-import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, User } from '../entities'
 import { InvalidGrant, InvalidRequest } from '../exceptions'
@@ -41,12 +40,12 @@ export abstract class PasswordGrant
   /**
    * Name of the Grant.
    */
-  public readonly name = SupportedGrantType.Password
+  public readonly name: string = 'password'
 
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly GRANT_TYPE = SupportedGrantType.Password
+  public readonly GRANT_TYPE: string = 'password'
 
   /**
    * **Token Flow** of the Password Grant.

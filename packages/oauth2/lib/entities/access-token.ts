@@ -1,4 +1,3 @@
-import { SupportedGrantType } from '../constants'
 import { AbstractToken } from './abstract-token'
 
 /**
@@ -10,5 +9,5 @@ export interface AccessToken extends AbstractToken {
   /**
    * Returns the name of the Grant that generated this Access Token.
    */
-  getGrant(): SupportedGrantType
+  getGrant(): string
 }

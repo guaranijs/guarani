@@ -1,6 +1,5 @@
 import { OneOrMany } from '@guarani/utils'
 
-import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
 import { OAuth2Token } from './grant'
@@ -12,7 +11,7 @@ export interface TokenParameters {
   /**
    * Grant Type requested by the Client.
    */
-  readonly grant_type: SupportedGrantType
+  readonly grant_type: string
 
   /**
    * Resource requested by the Client.
@@ -27,7 +26,7 @@ export interface GrantType<TParams extends TokenParameters> {
   /**
    * Name of the Grant's Grant Type.
    */
-  readonly GRANT_TYPE: SupportedGrantType
+  readonly GRANT_TYPE: string
 
   /**
    * Implementation of the Grant's Token Flow.

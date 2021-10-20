@@ -1,6 +1,5 @@
 import { Injectable, InjectAll } from '@guarani/ioc'
 
-import { SupportedClientAuthentication } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
 import { InvalidClient } from '../exceptions'
@@ -35,7 +34,7 @@ export class ClientAuthenticator {
    */
   public async authenticate(
     request: Request,
-    methods?: SupportedClientAuthentication[]
+    methods?: string[]
   ): Promise<Client> {
     const method = this.getRequestedMethod(request, methods)
 
@@ -52,7 +51,7 @@ export class ClientAuthenticator {
    */
   private getRequestedMethod(
     request: Request,
-    methods?: SupportedClientAuthentication[]
+    methods?: string[]
   ): ClientAuthentication {
     let requestedMethod: ClientAuthentication
 

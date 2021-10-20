@@ -2,7 +2,6 @@ import { Injectable } from '@guarani/ioc'
 
 import { timingSafeEqual } from 'crypto'
 
-import { SupportedClientAuthentication } from '../../constants'
 import { Request } from '../../context'
 import { InvalidClient } from '../../exceptions'
 import { Client } from '../../entities'
@@ -51,7 +50,7 @@ export class ClientSecretPost extends ClientAuthentication {
   /**
    * Name of the Authentication Method.
    */
-  public readonly name = SupportedClientAuthentication.ClientSecretPost
+  public readonly name: string = 'client_secret_post'
 
   /**
    * Checks if the current Client Authentication Method

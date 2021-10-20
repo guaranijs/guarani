@@ -4,11 +4,6 @@ import { OneOrMany } from '@guarani/utils'
 import { OutgoingHttpHeaders } from 'http'
 
 import { ClientAuthenticator } from '../client-authentication'
-import {
-  SupportedClientAuthentication,
-  SupportedEndpoint,
-  SupportedTokenTypeHint
-} from '../constants'
 import { Request, Response } from '../context'
 import { Client } from '../entities'
 import {
@@ -31,7 +26,7 @@ export interface IntrospectionParameters {
   /**
    * Optional hint about the type of the token.
    */
-  readonly token_type_hint?: SupportedTokenTypeHint
+  readonly token_type_hint?: string
 }
 
 /**
@@ -121,21 +116,19 @@ export abstract class IntrospectionEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
-  public readonly name = SupportedEndpoint.Introspection
+  public readonly name: string = 'introspection'
 
   /**
    * List of the Client Authentication Methods supported by the Endpoint.
    */
-  protected readonly CLIENT_AUTHENTICATION_METHODS: SupportedClientAuthentication[] = [
-    SupportedClientAuthentication.ClientSecretBasic
+  protected readonly CLIENT_AUTHENTICATION_METHODS: string[] = [
+    'client_secret_basic'
   ]
 
   /**
    * List with the introspectable token types.
    */
-  protected readonly SUPPORTED_TOKEN_TYPE_HINTS: SupportedTokenTypeHint[] = [
-    SupportedTokenTypeHint.AccessToken
-  ]
+  protected readonly SUPPORTED_TOKEN_TYPE_HINTS: string[] = ['access_token']
 
   /**
    * Default HTTP headers to be included in the Response.

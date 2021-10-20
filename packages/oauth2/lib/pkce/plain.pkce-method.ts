@@ -1,6 +1,5 @@
 import { Injectable } from '@guarani/ioc'
 
-import { SupportedPkceMethod } from '../constants'
 import { PkceMethod } from './pkce-method'
 
 /**
@@ -11,7 +10,7 @@ export class PlainPkceMethod implements PkceMethod {
   /**
    * Name of the PKCE Method.
    */
-  public readonly name = SupportedPkceMethod.Plain
+  public readonly name: string = 'plain'
 
   /**
    * Performs a simple string comparison between the Code Challenge

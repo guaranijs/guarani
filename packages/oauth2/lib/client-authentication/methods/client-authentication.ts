@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@guarani/ioc'
 
 import { Adapter } from '../../adapter'
-import { SupportedClientAuthentication } from '../../constants'
 import { Request } from '../../context'
 import { Client } from '../../entities'
 import { Settings } from '../../settings'
@@ -24,7 +23,7 @@ export abstract class ClientAuthentication {
   /**
    * Name of the Authentication Method.
    */
-  public abstract readonly name: SupportedClientAuthentication
+  public abstract readonly name: string
 
   /**
    * Instantiates a new Client Authentication Method.

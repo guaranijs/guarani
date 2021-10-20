@@ -1,6 +1,5 @@
 import { Injectable } from '@guarani/ioc'
 
-import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
 import { Grant, OAuth2Token } from './grant'
@@ -31,12 +30,12 @@ export class ClientCredentialsGrant
   /**
    * Name of the Grant.
    */
-  public readonly name = SupportedGrantType.ClientCredentials
+  public readonly name: string = 'client_credentials'
 
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly GRANT_TYPE = SupportedGrantType.ClientCredentials
+  public readonly GRANT_TYPE: string = 'client_credentials'
 
   /**
    * **Token Flow** of the Client Credentials Grant.

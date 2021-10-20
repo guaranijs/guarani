@@ -7,7 +7,6 @@ import {
 } from '@guarani/jose'
 
 import { JWTClientAssertion } from '../../client-assertions'
-import { SupportedClientAuthentication } from '../../constants'
 import { Client } from '../../entities'
 
 /**
@@ -32,7 +31,7 @@ export class ClientSecretJWT extends JWTClientAssertion {
   /**
    * Name of the Authentication Method.
    */
-  public readonly name = SupportedClientAuthentication.ClientSecretJwt
+  public readonly name: string = 'client_secret_jwt'
 
   /**
    * Supported JSON Web Signature Algorithms of the Client Assertion.

@@ -1,6 +1,5 @@
 import { Injectable } from '@guarani/ioc'
 
-import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, RefreshToken } from '../entities'
 import { InvalidGrant, InvalidRequest, InvalidScope } from '../exceptions'
@@ -36,12 +35,12 @@ export abstract class RefreshTokenGrant
   /**
    * Name of the Grant.
    */
-  public readonly name = SupportedGrantType.RefreshToken
+  public readonly name: string = 'refresh_token'
 
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly GRANT_TYPE = SupportedGrantType.RefreshToken
+  public readonly GRANT_TYPE: string = 'refresh_token'
 
   /**
    * **Token Flow** of the Refresh Token Grant.

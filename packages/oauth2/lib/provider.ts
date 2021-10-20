@@ -1,6 +1,5 @@
 import { Injectable, InjectAll } from '@guarani/ioc'
 
-import { SupportedEndpoint } from './constants'
 import { Request, Response } from './context'
 import { Endpoint } from './endpoints'
 
@@ -9,10 +8,7 @@ export abstract class Provider {
   @InjectAll('Endpoint')
   private readonly endpoints: Endpoint[]
 
-  public async endpoint(
-    name: SupportedEndpoint,
-    request: Request
-  ): Promise<Response> {
+  public async endpoint(name: string, request: Request): Promise<Response> {
     const endpoint = this.endpoints.find(endpoint => endpoint.name === name)
 
     if (!endpoint) {

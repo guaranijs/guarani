@@ -1,4 +1,3 @@
-import { SupportedPkceMethod } from '../constants'
 import { AbstractToken } from './abstract-token'
 
 /**
@@ -20,7 +19,7 @@ export interface AuthorizationCode extends AbstractToken {
   /**
    * Returns the PKCE Method chosen by the Client.
    */
-  getCodeChallengeMethod(): SupportedPkceMethod
+  getCodeChallengeMethod(): string
 
   /**
    * Returns the OpenID Connect Nonce provided by the Client.

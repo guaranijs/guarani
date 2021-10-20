@@ -1,11 +1,6 @@
 import { Injectable } from '@guarani/ioc'
 import { OneOrMany } from '@guarani/utils'
 
-import {
-  SupportedGrantType,
-  SupportedResponseMode,
-  SupportedResponseType
-} from '../constants'
 import { Request } from '../context'
 import { AccessToken, Client, User } from '../entities'
 import { InvalidRequest } from '../exceptions'
@@ -31,21 +26,21 @@ export class ImplicitGrant
   /**
    * Name of the Grant.
    */
-  public readonly name = SupportedGrantType.Implicit
+  public readonly name: string = 'implicit'
 
   /**
    * Names of the Grant's Response Types.
    */
-  public readonly RESPONSE_TYPES = [
-    SupportedResponseType.IdToken,
-    SupportedResponseType.IdTokenToken,
-    SupportedResponseType.Token
+  public readonly RESPONSE_TYPES: string[] = [
+    'id_token',
+    'id_token token',
+    'token'
   ]
 
   /**
    * Default Response Mode of the Grant.
    */
-  public readonly DEFAULT_RESPONSE_MODE = SupportedResponseMode.Fragment
+  public readonly DEFAULT_RESPONSE_MODE: string = 'fragment'
 
   /**
    * **Authorization Flow** of the Implicit Grant.
@@ -97,7 +92,7 @@ export class ImplicitGrant
   protected checkAuthorizationParameters(data: AuthorizationParameters): void {
     const { response_type, response_mode } = data
 
-    if (response_mode === SupportedResponseMode.Query) {
+    if (response_mode === 'query') {
       throw new InvalidRequest(
         `Invalid response_mode "${response_mode}" ` +
           `for response_type "${response_type}".`

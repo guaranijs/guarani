@@ -1,5 +1,10 @@
 import { JsonWebTokenClaims } from '@guarani/jose'
-import { Adapter, OAuth2Error, SupportedGrantType } from '@guarani/oauth2'
+import {
+  Adapter,
+  InvalidRequest,
+  InvalidScope,
+  SupportedGrantType
+} from '@guarani/oauth2'
 import { OneOrMany } from '@guarani/utils'
 
 import { AccessToken, Client, RefreshToken, User } from '../entities'
@@ -30,7 +35,7 @@ export class AppAdapter implements Adapter {
       const defaultScopes = client.scopes
 
       if (defaultScopes == null || defaultScopes.length === 0) {
-        throw OAuth2Error.InvalidRequest('Invalid parameter "scope".')
+        throw new InvalidRequest('Invalid parameter "scope".')
       }
 
       return defaultScopes
@@ -40,12 +45,12 @@ export class AppAdapter implements Adapter {
 
     requestedScopes.forEach(requestedScope => {
       if (!this.scopes.includes(requestedScope)) {
-        throw OAuth2Error.InvalidScope(`Unsupported scope "${requestedScope}".`)
+        throw new InvalidScope(`Unsupported scope "${requestedScope}".`)
       }
     })
 
     if (!client.checkScopes(requestedScopes)) {
-      throw OAuth2Error.InvalidScope(
+      throw new InvalidScope(
         'This Client is not allowed to request this scope.'
       )
     }

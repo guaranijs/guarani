@@ -10,7 +10,15 @@ import {
 } from '../constants'
 import { RedirectResponse, Request, Response } from '../context'
 import { Client, User } from '../entities'
-import { OAuth2Error } from '../exception'
+import {
+  AccessDenied,
+  InvalidClient,
+  InvalidRequest,
+  OAuth2Error,
+  ServerError,
+  UnauthorizedClient,
+  UnsupportedResponseType
+} from '../exceptions'
 import { AuthorizationParameters, ResponseType } from '../grants'
 import { ResponseMode } from '../response-modes'
 import { Settings } from '../settings'
@@ -125,19 +133,19 @@ export class AuthorizationEndpoint extends Endpoint {
     const { response_type, client_id, redirect_uri, scope } = data
 
     if (!response_type) {
-      throw OAuth2Error.InvalidRequest('Invalid parameter "response_type".')
+      throw new InvalidRequest('Invalid parameter "response_type".')
     }
 
     if (!client_id) {
-      throw OAuth2Error.InvalidRequest('Invalid parameter "client_id".')
+      throw new InvalidRequest('Invalid parameter "client_id".')
     }
 
     if (!redirect_uri) {
-      throw OAuth2Error.InvalidRequest('Invalid parameter "redirect_uri".')
+      throw new InvalidRequest('Invalid parameter "redirect_uri".')
     }
 
     if (!scope) {
-      throw OAuth2Error.InvalidRequest('Invalid parameter "scope".')
+      throw new InvalidRequest('Invalid parameter "scope".')
     }
   }
 
@@ -152,7 +160,7 @@ export class AuthorizationEndpoint extends Endpoint {
     const client = await this.adapter.findClient(clientId)
 
     if (!client) {
-      throw OAuth2Error.InvalidClient('Invalid Client.')
+      throw new InvalidClient('Invalid Client.')
     }
 
     return client
@@ -176,7 +184,7 @@ export class AuthorizationEndpoint extends Endpoint {
     )
 
     if (!grant) {
-      throw OAuth2Error.UnsupportedResponseType(
+      throw new UnsupportedResponseType(
         `Unsupported response_type "${responseType}".`
       )
     }
@@ -202,7 +210,7 @@ export class AuthorizationEndpoint extends Endpoint {
     )
 
     if (!client.checkResponseType(responseType)) {
-      throw OAuth2Error.UnauthorizedClient(
+      throw new UnauthorizedClient(
         'This Client is not allowed to request ' +
           `the response_type "${responseType}".`
       )
@@ -220,7 +228,7 @@ export class AuthorizationEndpoint extends Endpoint {
    */
   private checkClientRedirectUri(client: Client, redirectUri: string): string {
     if (!client.checkRedirectUri(redirectUri)) {
-      throw OAuth2Error.AccessDenied('Invalid Redirect URI.')
+      throw new AccessDenied('Invalid Redirect URI.')
     }
 
     return redirectUri
@@ -238,7 +246,7 @@ export class AuthorizationEndpoint extends Endpoint {
     const { user } = request
 
     if (!user) {
-      throw OAuth2Error.AccessDenied('Authorization denied by the user.')
+      throw new AccessDenied('Authorization denied by the user.')
     }
 
     return user
@@ -256,9 +264,7 @@ export class AuthorizationEndpoint extends Endpoint {
     const mode = this.responseModes.find(mode => mode.name === responseMode)
 
     if (!mode) {
-      throw OAuth2Error.InvalidRequest(
-        `Unsupported response_mode "${responseMode}".`
-      )
+      throw new InvalidRequest(`Unsupported response_mode "${responseMode}".`)
     }
 
     return mode
@@ -279,9 +285,7 @@ export class AuthorizationEndpoint extends Endpoint {
     responseMode?: ResponseMode
   ): Response {
     const err =
-      error instanceof OAuth2Error
-        ? error
-        : OAuth2Error.ServerError(error.message)
+      error instanceof OAuth2Error ? error : new ServerError(error.message)
 
     try {
       responseMode ??= this.getResponseMode(SupportedResponseMode.Query)

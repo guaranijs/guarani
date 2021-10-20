@@ -11,7 +11,12 @@ import {
 } from '../constants'
 import { EmptyResponse, JsonResponse, Request, Response } from '../context'
 import { Client } from '../entities'
-import { OAuth2Error } from '../exception'
+import {
+  InvalidRequest,
+  OAuth2Error,
+  ServerError,
+  UnsupportedTokenType
+} from '../exceptions'
 import { Grant } from '../grants'
 import { Endpoint } from './endpoint'
 
@@ -125,12 +130,10 @@ export abstract class RevocationEndpoint extends Endpoint {
       return new EmptyResponse().setHeaders(this.headers)
     } catch (error) {
       const err =
-        error instanceof OAuth2Error
-          ? error
-          : OAuth2Error.ServerError(error.message)
+        error instanceof OAuth2Error ? error : new ServerError(error.message)
 
       return new JsonResponse(removeNullishValues(err))
-        .status(err.statusCode)
+        .status(err.status)
         .setHeaders({ ...this.headers, ...err.headers })
     }
   }
@@ -144,14 +147,14 @@ export abstract class RevocationEndpoint extends Endpoint {
     const { token, token_type_hint } = data
 
     if (!token) {
-      throw OAuth2Error.InvalidRequest('Invalid parameter "token".')
+      throw new InvalidRequest('Invalid parameter "token".')
     }
 
     if (
       token_type_hint &&
       !this.SUPPORTED_TOKEN_TYPE_HINTS.includes(token_type_hint)
     ) {
-      throw OAuth2Error.UnsupportedTokenType(
+      throw new UnsupportedTokenType(
         `Unsupported token_type_hint "${token_type_hint}".`
       )
     }

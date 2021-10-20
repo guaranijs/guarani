@@ -3,7 +3,7 @@ import { Injectable, InjectAll } from '@guarani/ioc'
 import { SupportedClientAuthentication } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
-import { OAuth2Error } from '../exception'
+import { InvalidClient } from '../exceptions'
 import { ClientAuthentication } from './methods'
 
 /**
@@ -63,7 +63,7 @@ export class ClientAuthenticator {
 
       if (method.hasBeenRequested(request)) {
         if (requestedMethod != null) {
-          throw OAuth2Error.InvalidClient(
+          throw new InvalidClient(
             'Multiple Client Authentication methods detected.'
           )
         }
@@ -73,7 +73,7 @@ export class ClientAuthenticator {
     }
 
     if (!requestedMethod) {
-      throw OAuth2Error.InvalidClient('No Authentication Method provided.')
+      throw new InvalidClient('No Authentication Method provided.')
     }
 
     return requestedMethod

@@ -42,7 +42,21 @@ export {
   RefreshToken,
   User
 } from './entities'
-export { OAuth2Error } from './exception'
+export {
+  AccessDenied,
+  InvalidClient,
+  InvalidGrant,
+  InvalidRequest,
+  InvalidScope,
+  InvalidTarget,
+  OAuth2Error,
+  ServerError,
+  TemporarilyUnavailable,
+  UnauthorizedClient,
+  UnsupportedGrantType,
+  UnsupportedResponseType,
+  UnsupportedTokenType
+} from './exceptions'
 export {
   AuthorizationCodeGrant,
   AuthorizationParameters,

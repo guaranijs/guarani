@@ -10,7 +10,7 @@ import {
   RefreshToken,
   User
 } from '../entities'
-import { OAuth2Error } from '../exception'
+import { InvalidTarget } from '../exceptions'
 import { Settings } from '../settings'
 
 /**
@@ -87,7 +87,7 @@ export abstract class Grant {
     const audience = token.getAudience()
 
     if (audience == null) {
-      throw OAuth2Error.InvalidTarget('No resource was previously requested.')
+      throw new InvalidTarget('No resource was previously requested.')
     }
 
     if (typeof resource === 'string') {
@@ -95,7 +95,7 @@ export abstract class Grant {
         (typeof audience === 'string' && resource !== audience) ||
         (Array.isArray(audience) && !audience.includes(resource))
       ) {
-        throw OAuth2Error.InvalidTarget(
+        throw new InvalidTarget(
           'The requested resource was not previously granted.'
         )
       }
@@ -103,13 +103,11 @@ export abstract class Grant {
 
     if (Array.isArray(resource)) {
       if (typeof audience === 'string') {
-        throw OAuth2Error.InvalidTarget(
-          'Only one resource was previously requested.'
-        )
+        throw new InvalidTarget('Only one resource was previously requested.')
       }
 
       if (resource.some(res => !audience.includes(res))) {
-        throw OAuth2Error.InvalidTarget(
+        throw new InvalidTarget(
           'The requested resource was not previously granted.'
         )
       }

@@ -2,7 +2,7 @@ import { OneOrMany } from '@guarani/utils'
 
 import { SupportedEndpoint } from '../constants'
 import { Request, Response } from '../context'
-import { OAuth2Error } from '../exception'
+import { InvalidTarget } from '../exceptions'
 
 /**
  * Interface for the endpoints of the OAuth 2.0 framework and its extensions.
@@ -56,18 +56,18 @@ export abstract class Endpoint {
     }
 
     if (typeof resource !== 'string' && !Array.isArray(resource)) {
-      throw OAuth2Error.InvalidTarget('Invalid parameter "resource".')
+      throw new InvalidTarget('Invalid parameter "resource".')
     }
 
     if (typeof resource === 'string' && resource.length === 0) {
-      throw OAuth2Error.InvalidTarget('Invalid parameter "resource".')
+      throw new InvalidTarget('Invalid parameter "resource".')
     }
 
     if (
       Array.isArray(resource) &&
       resource.some(res => typeof res !== 'string')
     ) {
-      throw OAuth2Error.InvalidTarget('Invalid parameter "resource".')
+      throw new InvalidTarget('Invalid parameter "resource".')
     }
   }
 }

@@ -2,6 +2,12 @@ import { Injectable } from '@guarani/ioc'
 import { OneOrMany } from '@guarani/utils'
 
 import { OutgoingHttpHeaders } from 'http'
+import {
+  InvalidRequest,
+  OAuth2Error,
+  ServerError,
+  UnsupportedTokenType
+} from '..'
 
 import { ClientAuthenticator } from '../client-authentication'
 import {
@@ -11,7 +17,6 @@ import {
 } from '../constants'
 import { JsonResponse, Request, Response } from '../context'
 import { Client } from '../entities'
-import { OAuth2Error } from '../exception'
 import { Endpoint } from './endpoint'
 
 /**
@@ -199,12 +204,10 @@ export abstract class IntrospectionEndpoint extends Endpoint {
       return new JsonResponse(introspectionResponse).setHeaders(this.headers)
     } catch (error) {
       const err =
-        error instanceof OAuth2Error
-          ? error
-          : OAuth2Error.ServerError(error.message)
+        error instanceof OAuth2Error ? error : new ServerError(error.message)
 
       return new JsonResponse(err)
-        .status(err.statusCode)
+        .status(err.status)
         .setHeaders({ ...this.headers, ...err.headers })
     }
   }
@@ -218,14 +221,14 @@ export abstract class IntrospectionEndpoint extends Endpoint {
     const { token, token_type_hint } = data
 
     if (!token) {
-      throw OAuth2Error.InvalidRequest('Invalid parameter "token".')
+      throw new InvalidRequest('Invalid parameter "token".')
     }
 
     if (
       token_type_hint &&
       !this.SUPPORTED_TOKEN_TYPE_HINTS.includes(token_type_hint)
     ) {
-      throw OAuth2Error.UnsupportedTokenType(
+      throw new UnsupportedTokenType(
         `Unsupported token_type_hint "${token_type_hint}".`
       )
     }

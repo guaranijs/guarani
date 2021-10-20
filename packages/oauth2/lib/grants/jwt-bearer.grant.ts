@@ -11,7 +11,7 @@ import {
 import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, User } from '../entities'
-import { OAuth2Error } from '../exception'
+import { InvalidGrant, InvalidRequest } from '../exceptions'
 import { Grant, OAuth2Token } from './grant'
 import { GrantType, TokenParameters } from './grant-type'
 
@@ -80,7 +80,7 @@ export abstract class JWTBearerGrant extends Grant implements GrantType {
       const user = await this.authenticateUser(claims.sub)
 
       if (!user) {
-        throw OAuth2Error.InvalidGrant('Invalid User.')
+        throw new InvalidGrant('Invalid User.')
       }
 
       const [accessToken] = await this.issueOAuth2Tokens(
@@ -93,9 +93,7 @@ export abstract class JWTBearerGrant extends Grant implements GrantType {
 
       return this.createOAuth2Token(accessToken)
     } catch (error) {
-      throw error instanceof JoseError
-        ? OAuth2Error.InvalidGrant(error.message)
-        : error
+      throw error instanceof JoseError ? new InvalidGrant(error.message) : error
     }
   }
 
@@ -109,7 +107,7 @@ export abstract class JWTBearerGrant extends Grant implements GrantType {
     const { assertion } = data
 
     if (!assertion) {
-      throw OAuth2Error.InvalidRequest('Invalid parameter "assertion".')
+      throw new InvalidRequest('Invalid parameter "assertion".')
     }
   }
 

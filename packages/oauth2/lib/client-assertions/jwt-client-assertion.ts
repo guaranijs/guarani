@@ -13,7 +13,7 @@ import { ClientAuthentication } from '../client-authentication/methods'
 import { SupportedClientAssertionType } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
-import { OAuth2Error } from '../exception'
+import { InvalidClient } from '../exceptions'
 
 /**
  * Interface of the parameters expected from the POST body.
@@ -69,13 +69,13 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
       const [header] = JsonWebToken.decodeJWS(client_assertion)
 
       if (header.alg === 'none') {
-        throw OAuth2Error.InvalidClient('Invalid JWT Client Assertion.')
+        throw new InvalidClient('Invalid JWT Client Assertion.')
       }
 
       return this.SUPPORTED_JWS_ALGORITHMS.includes(header.alg)
     } catch (error) {
       throw error instanceof JoseError
-        ? OAuth2Error.InvalidClient(error.message)
+        ? new InvalidClient(error.message)
         : error
     }
   }
@@ -89,7 +89,7 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
       const client = await this.getClient(claims.iss)
 
       if (!client.checkAuthenticationMethod(this.name)) {
-        throw OAuth2Error.InvalidClient(
+        throw new InvalidClient(
           `This Client is not allowed to use the method "${this.name}".`
         )
       }
@@ -101,7 +101,7 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
       return client
     } catch (error) {
       throw error instanceof JoseError
-        ? OAuth2Error.InvalidClient(error.message)
+        ? new InvalidClient(error.message)
         : error
     }
   }
@@ -125,9 +125,7 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
     })
 
     if (claims.iss !== claims.sub) {
-      throw OAuth2Error.InvalidClient(
-        'The value of "iss" and "sub" MUST be identical.'
-      )
+      throw new InvalidClient('The value of "iss" and "sub" MUST be identical.')
     }
 
     await this.adapter.checkJWTAssertionClaims(claims)
@@ -145,7 +143,7 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
     const client = await this.adapter.findClient(clientId)
 
     if (!client) {
-      throw OAuth2Error.InvalidClient('Invalid Credentials.')
+      throw new InvalidClient('Invalid Credentials.')
     }
 
     return client

@@ -6,7 +6,13 @@ import { ClientAuthenticator } from '../client-authentication'
 import { SupportedEndpoint, SupportedGrantType } from '../constants'
 import { JsonResponse, Request, Response } from '../context'
 import { Client } from '../entities'
-import { OAuth2Error } from '../exception'
+import {
+  InvalidRequest,
+  OAuth2Error,
+  ServerError,
+  UnauthorizedClient,
+  UnsupportedGrantType
+} from '../exceptions'
 import { GrantType, TokenParameters } from '../grants'
 import { Endpoint } from './endpoint'
 
@@ -79,12 +85,10 @@ export class TokenEndpoint extends Endpoint {
       return new JsonResponse(token).setHeaders(this.headers)
     } catch (error) {
       const err =
-        error instanceof OAuth2Error
-          ? error
-          : OAuth2Error.ServerError(error.message)
+        error instanceof OAuth2Error ? error : new ServerError(error.message)
 
       return new JsonResponse(err)
-        .status(err.statusCode)
+        .status(err.status)
         .setHeaders({ ...err.headers, ...this.headers })
     }
   }
@@ -98,15 +102,13 @@ export class TokenEndpoint extends Endpoint {
    */
   private getGrant(grantType: string): GrantType {
     if (!grantType) {
-      throw OAuth2Error.InvalidRequest('Invalid parameter "grant_type".')
+      throw new InvalidRequest('Invalid parameter "grant_type".')
     }
 
     const grant = this.grants.find(grant => grant.GRANT_TYPE === grantType)
 
     if (!grant) {
-      throw OAuth2Error.UnsupportedGrantType(
-        `Unsupported grant_type "${grantType}".`
-      )
+      throw new UnsupportedGrantType(`Unsupported grant_type "${grantType}".`)
     }
 
     return grant
@@ -125,7 +127,7 @@ export class TokenEndpoint extends Endpoint {
     grantType: SupportedGrantType
   ): void {
     if (!client.checkGrantType(grantType)) {
-      throw OAuth2Error.UnauthorizedClient(
+      throw new UnauthorizedClient(
         'This Client is not allowed to request ' +
           `the grant_type "${grantType}".`
       )

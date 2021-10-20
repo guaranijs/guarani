@@ -29,12 +29,12 @@ export class ClientCredentialsGrant extends Grant implements GrantType {
   /**
    * Name of the Grant.
    */
-  public readonly name: SupportedGrantType = 'client_credentials'
+  public readonly name = SupportedGrantType.ClientCredentials
 
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly GRANT_TYPE: SupportedGrantType = 'client_credentials'
+  public readonly GRANT_TYPE = SupportedGrantType.ClientCredentials
 
   /**
    * **Token Flow** of the Client Credentials Grant.

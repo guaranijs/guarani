@@ -47,7 +47,7 @@ export class None extends ClientAuthentication {
   /**
    * Name of the Authentication Method.
    */
-  public readonly name: SupportedClientAuthentication = 'none'
+  public readonly name = SupportedClientAuthentication.None
 
   /**
    * Checks if the current Client Authentication Method

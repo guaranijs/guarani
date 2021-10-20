@@ -29,17 +29,21 @@ export class ImplicitGrant extends Grant implements ResponseType {
   /**
    * Name of the Grant.
    */
-  public readonly name: SupportedGrantType = 'implicit'
+  public readonly name = SupportedGrantType.Implicit
 
   /**
    * Names of the Grant's Response Types.
    */
-  public readonly RESPONSE_TYPES: SupportedResponseType[] = ['token']
+  public readonly RESPONSE_TYPES = [
+    SupportedResponseType.IdToken,
+    SupportedResponseType.IdTokenToken,
+    SupportedResponseType.Token
+  ]
 
   /**
    * Default Response Mode of the Grant.
    */
-  public readonly DEFAULT_RESPONSE_MODE: SupportedResponseMode = 'fragment'
+  public readonly DEFAULT_RESPONSE_MODE = SupportedResponseMode.Fragment
 
   /**
    * **Authorization Flow** of the Implicit Grant.

@@ -11,7 +11,7 @@ export class PlainPkceMethod implements PkceMethod {
   /**
    * Name of the PKCE Method.
    */
-  public readonly name: SupportedPkceMethod = 'plain'
+  public readonly name = SupportedPkceMethod.Plain
 
   /**
    * Performs a simple string comparison between the Code Challenge

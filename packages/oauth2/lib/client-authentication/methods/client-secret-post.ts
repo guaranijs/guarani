@@ -51,7 +51,7 @@ export class ClientSecretPost extends ClientAuthentication {
   /**
    * Name of the Authentication Method.
    */
-  public readonly name: SupportedClientAuthentication = 'client_secret_post'
+  public readonly name = SupportedClientAuthentication.ClientSecretPost
 
   /**
    * Checks if the current Client Authentication Method

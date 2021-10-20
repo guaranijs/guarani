@@ -1,70 +1,80 @@
 /**
- * Defines the environment of the application using Guarani.
- */
-export const GUARANI_ENV = process.env.GUARANI_ENV || 'development'
-
-/**
  * Supported Client Assertion Types.
  */
-export type SupportedClientAssertionType =
-  | 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
-  | 'urn:ietf:params:oauth:client-assertion-type:saml2-bearer'
+export enum SupportedClientAssertionType {
+  JwtBearer = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+  Saml2Bearer = 'urn:ietf:params:oauth:client-assertion-type:saml2-bearer'
+}
 
 /**
  * Supported Client Authentication Methods.
  */
-export type SupportedClientAuthentication =
-  | 'client_secret_basic'
-  | 'client_secret_jwt'
-  | 'client_secret_post'
-  | 'none'
-  | 'private_key_jwt'
+export enum SupportedClientAuthentication {
+  ClientSecretBasic = 'client_secret_basic',
+  ClientSecretJwt = 'client_secret_jwt',
+  ClientSecretPost = 'client_secret_post',
+  None = 'none',
+  PrivateKeyJwt = 'private_key_jwt'
+}
 
 /**
  * Supported Endpoints.
  */
-export type SupportedEndpoint =
-  | 'authorization'
-  | 'introspection'
-  | 'revocation'
-  | 'token'
+export enum SupportedEndpoint {
+  Authorization = 'authorization',
+  Introspection = 'introspection',
+  Revocation = 'revocation',
+  Token = 'token'
+}
 
 /**
  * Supported Grant Types.
  */
-export type SupportedGrantType =
-  | 'authorization_code'
-  | 'client_credentials'
-  | 'implicit'
-  | 'password'
-  | 'refresh_token'
-  | 'urn:ietf:params:oauth:grant-type:jwt-bearer'
-  | 'urn:ietf:params:oauth:grant-type:saml2-bearer'
+export enum SupportedGrantType {
+  AuthorizationCode = 'authorization_code',
+  ClientCredentials = 'client_credentials',
+  Implicit = 'implicit',
+  Password = 'password',
+  RefreshToken = 'refresh_token',
+  JwtBearer = 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+  Saml2Bearer = 'urn:ietf:params:oauth:grant-type:saml2-bearer'
+}
 
 /**
  * Supported PKCE Methods.
  */
-export type SupportedPkceMethod = 'plain' | 'S256'
+export enum SupportedPkceMethod {
+  Plain = 'plain',
+  S256 = 'S256'
+}
 
 /**
  * Supported Response Modes.
  */
-export type SupportedResponseMode = 'form_post' | 'fragment' | 'query'
+export enum SupportedResponseMode {
+  FormPost = 'form_post',
+  Fragment = 'fragment',
+  Query = 'query'
+}
 
 /**
  * Supported Response Types.
  */
-export type SupportedResponseType =
-  | 'code'
-  | 'id_token'
-  | 'none'
-  | 'token'
-  | 'code id_token'
-  | 'code token'
-  | 'id_token token'
-  | 'code id_token token'
+export enum SupportedResponseType {
+  Code = 'code',
+  CodeIdToken = 'code id_token',
+  CodeIdTokenToken = 'code id_token token',
+  CodeToken = 'code token',
+  IdToken = 'id_token',
+  IdTokenToken = 'id_token token',
+  None = 'none',
+  Token = 'token'
+}
 
 /**
  * Supported Token Type Hints.
  */
-export type SupportedTokenTypeHint = 'access_token' | 'refresh_token'
+export enum SupportedTokenTypeHint {
+  AccessToken = 'access_token',
+  RefreshToken = 'refresh_token'
+}

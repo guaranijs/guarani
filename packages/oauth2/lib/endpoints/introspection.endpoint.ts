@@ -5,7 +5,6 @@ import { OutgoingHttpHeaders } from 'http'
 
 import { ClientAuthenticator } from '../client-authentication'
 import {
-  GUARANI_ENV,
   SupportedClientAuthentication,
   SupportedEndpoint,
   SupportedTokenTypeHint
@@ -117,20 +116,20 @@ export abstract class IntrospectionEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
-  public readonly name: SupportedEndpoint = 'introspection'
+  public readonly name = SupportedEndpoint.Introspection
 
   /**
    * List of the Client Authentication Methods supported by the Endpoint.
    */
   protected readonly CLIENT_AUTHENTICATION_METHODS: SupportedClientAuthentication[] = [
-    'client_secret_basic'
+    SupportedClientAuthentication.ClientSecretBasic
   ]
 
   /**
    * List with the introspectable token types.
    */
   protected readonly SUPPORTED_TOKEN_TYPE_HINTS: SupportedTokenTypeHint[] = [
-    'access_token'
+    SupportedTokenTypeHint.AccessToken
   ]
 
   /**
@@ -202,9 +201,7 @@ export abstract class IntrospectionEndpoint extends Endpoint {
       const err =
         error instanceof OAuth2Error
           ? error
-          : OAuth2Error.ServerError(
-              GUARANI_ENV === 'development' ? error.message : null
-            )
+          : OAuth2Error.ServerError(error.message)
 
       return new JsonResponse(err)
         .status(err.statusCode)

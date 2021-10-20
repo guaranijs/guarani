@@ -13,7 +13,7 @@ export class FormPostResponseMode implements ResponseMode {
   /**
    * Name of the Response Mode.
    */
-  public readonly name: SupportedResponseMode = 'form_post'
+  public readonly name = SupportedResponseMode.FormPost
 
   /**
    * Creates an HTML form with it's action as the Redirect URI and the fields

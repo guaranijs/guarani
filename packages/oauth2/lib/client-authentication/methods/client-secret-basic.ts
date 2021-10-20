@@ -27,7 +27,7 @@ export class ClientSecretBasic extends ClientAuthentication {
   /**
    * Name of the Authentication Method.
    */
-  public readonly name: SupportedClientAuthentication = 'client_secret_basic'
+  public readonly name = SupportedClientAuthentication.ClientSecretBasic
 
   /**
    * Defines the `WWW-Authenticate` header in case of authentication failure.

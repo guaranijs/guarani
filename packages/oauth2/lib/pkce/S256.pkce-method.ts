@@ -14,7 +14,7 @@ export class S256PkceMethod implements PkceMethod {
   /**
    * Name of the PKCE Method.
    */
-  public readonly name: SupportedPkceMethod = 'S256'
+  public readonly name = SupportedPkceMethod.S256
 
   /**
    * Performs a comparison between the Code Challenge hash received at the

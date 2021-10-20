@@ -10,7 +10,7 @@ import {
 } from '@guarani/jose'
 
 import { ClientAuthentication } from '../client-authentication/methods'
-import { GUARANI_ENV, SupportedClientAssertionType } from '../constants'
+import { SupportedClientAssertionType } from '../constants'
 import { Request } from '../context'
 import { Client } from '../entities'
 import { OAuth2Error } from '../exception'
@@ -39,8 +39,7 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
   /**
    * JWT Bearer Client Assertion Type.
    */
-  public readonly CLIENT_ASSERTION_TYPE: SupportedClientAssertionType =
-    'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
+  public readonly CLIENT_ASSERTION_TYPE = SupportedClientAssertionType.JwtBearer
 
   /**
    * Supported JSON Web Signature Algorithms of the Client Assertion.
@@ -76,9 +75,7 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
       return this.SUPPORTED_JWS_ALGORITHMS.includes(header.alg)
     } catch (error) {
       throw error instanceof JoseError
-        ? OAuth2Error.InvalidClient(
-            GUARANI_ENV === 'development' ? error.message : null
-          )
+        ? OAuth2Error.InvalidClient(error.message)
         : error
     }
   }
@@ -104,9 +101,7 @@ export abstract class JWTClientAssertion extends ClientAuthentication {
       return client
     } catch (error) {
       throw error instanceof JoseError
-        ? OAuth2Error.InvalidClient(
-            GUARANI_ENV === 'development' ? error.message : null
-          )
+        ? OAuth2Error.InvalidClient(error.message)
         : error
     }
   }

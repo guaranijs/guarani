@@ -9,7 +9,6 @@ export {
   PrivateKeyJWT
 } from './client-authentication'
 export {
-  GUARANI_ENV,
   SupportedClientAssertionType,
   SupportedClientAuthentication,
   SupportedEndpoint,

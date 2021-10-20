@@ -15,7 +15,7 @@ export class QueryResponseMode implements ResponseMode {
   /**
    * Name of the Response Mode.
    */
-  public readonly name: SupportedResponseMode = 'query'
+  public readonly name = SupportedResponseMode.Query
 
   /**
    * Creates a Redirect Response to the provided Redirect URI that includes

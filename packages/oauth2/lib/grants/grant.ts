@@ -205,7 +205,7 @@ export abstract class Grant {
     const refreshToken =
       issueRefreshToken &&
       this.adapter.createRefreshToken &&
-      client.checkGrantType('refresh_token')
+      client.checkGrantType(SupportedGrantType.RefreshToken)
         ? await this.adapter.createRefreshToken(
             scopes,
             audience,

@@ -15,7 +15,7 @@ export class FragmentResponseMode implements ResponseMode {
   /**
    * Name of the Response Mode.
    */
-  public readonly name: SupportedResponseMode = 'fragment'
+  public readonly name = SupportedResponseMode.Fragment
 
   /**
    * Creates a Redirect Response to the provided Redirect URI that includes

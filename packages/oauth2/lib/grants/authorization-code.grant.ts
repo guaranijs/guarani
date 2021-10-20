@@ -82,22 +82,22 @@ export abstract class AuthorizationCodeGrant
   /**
    * Name of the Grant.
    */
-  public readonly name: SupportedGrantType = 'authorization_code'
+  public readonly name = SupportedGrantType.AuthorizationCode
 
   /**
    * Names of the Grant's Response Types.
    */
-  public readonly RESPONSE_TYPES: SupportedResponseType[] = ['code']
+  public readonly RESPONSE_TYPES = [SupportedResponseType.Code]
 
   /**
    * Default Response Mode of the Grant.
    */
-  public readonly DEFAULT_RESPONSE_MODE: SupportedResponseMode = 'query'
+  public readonly DEFAULT_RESPONSE_MODE = SupportedResponseMode.Query
 
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly GRANT_TYPE: SupportedGrantType = 'authorization_code'
+  public readonly GRANT_TYPE = SupportedGrantType.AuthorizationCode
 
   /**
    * Instantiates a new **Authorization Code Grant**
@@ -263,7 +263,7 @@ export abstract class AuthorizationCodeGrant
 
       const refreshToken =
         this.adapter.createRefreshToken &&
-        client.checkGrantType('refresh_token')
+        client.checkGrantType(SupportedGrantType.RefreshToken)
           ? await this.adapter.createRefreshToken(
               code.getScopes(),
               code.getAudience(),
@@ -364,7 +364,9 @@ export abstract class AuthorizationCodeGrant
       throw OAuth2Error.InvalidGrant('Mismatching Redirect URI.')
     }
 
-    const method = this.getPkceMethod(code.getCodeChallengeMethod() ?? 'plain')
+    const method = this.getPkceMethod(
+      code.getCodeChallengeMethod() ?? SupportedPkceMethod.Plain
+    )
 
     if (!method.compare(code.getCodeChallenge(), data.code_verifier)) {
       throw OAuth2Error.InvalidGrant('Invalid Authorization Code.')

@@ -3,11 +3,7 @@ import { Injectable, InjectAll } from '@guarani/ioc'
 import { OutgoingHttpHeaders } from 'http'
 
 import { ClientAuthenticator } from '../client-authentication'
-import {
-  GUARANI_ENV,
-  SupportedEndpoint,
-  SupportedGrantType
-} from '../constants'
+import { SupportedEndpoint, SupportedGrantType } from '../constants'
 import { JsonResponse, Request, Response } from '../context'
 import { Client } from '../entities'
 import { OAuth2Error } from '../exception'
@@ -24,7 +20,7 @@ export class TokenEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
-  public readonly name: SupportedEndpoint = 'token'
+  public readonly name = SupportedEndpoint.Token
 
   /**
    * Default HTTP headers to be included in the Response.
@@ -85,9 +81,7 @@ export class TokenEndpoint extends Endpoint {
       const err =
         error instanceof OAuth2Error
           ? error
-          : OAuth2Error.ServerError(
-              GUARANI_ENV === 'development' ? error.message : null
-            )
+          : OAuth2Error.ServerError(error.message)
 
       return new JsonResponse(err)
         .status(err.statusCode)

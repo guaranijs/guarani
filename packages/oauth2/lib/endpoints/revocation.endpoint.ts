@@ -5,7 +5,6 @@ import { OutgoingHttpHeaders } from 'http'
 
 import { ClientAuthenticator } from '../client-authentication'
 import {
-  GUARANI_ENV,
   SupportedClientAuthentication,
   SupportedEndpoint,
   SupportedTokenTypeHint
@@ -46,21 +45,21 @@ export abstract class RevocationEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
-  public readonly name: SupportedEndpoint = 'revocation'
+  public readonly name = SupportedEndpoint.Revocation
 
   /**
    * List of the Client Authentication Methods supported by the Endpoint.
    */
   protected readonly CLIENT_AUTHENTICATION_METHODS: SupportedClientAuthentication[] = [
-    'client_secret_basic'
+    SupportedClientAuthentication.ClientSecretBasic
   ]
 
   /**
    * List with the revocable token types.
    */
   protected readonly SUPPORTED_TOKEN_TYPE_HINTS: SupportedTokenTypeHint[] = [
-    'access_token',
-    'refresh_token'
+    SupportedTokenTypeHint.AccessToken,
+    SupportedTokenTypeHint.RefreshToken
   ]
 
   /**
@@ -128,9 +127,7 @@ export abstract class RevocationEndpoint extends Endpoint {
       const err =
         error instanceof OAuth2Error
           ? error
-          : OAuth2Error.ServerError(
-              GUARANI_ENV === 'development' ? error.message : null
-            )
+          : OAuth2Error.ServerError(error.message)
 
       return new JsonResponse(removeNullishValues(err))
         .status(err.statusCode)

@@ -4,7 +4,6 @@ import { URL } from 'url'
 
 import { Adapter } from '../adapter'
 import {
-  GUARANI_ENV,
   SupportedEndpoint,
   SupportedResponseMode,
   SupportedResponseType
@@ -29,7 +28,7 @@ export class AuthorizationEndpoint extends Endpoint {
   /**
    * Name of the Endpoint.
    */
-  public readonly name: SupportedEndpoint = 'authorization'
+  public readonly name = SupportedEndpoint.Authorization
 
   /**
    * Instantiates the Authorization Endpoint.
@@ -282,12 +281,10 @@ export class AuthorizationEndpoint extends Endpoint {
     const err =
       error instanceof OAuth2Error
         ? error
-        : OAuth2Error.ServerError(
-            GUARANI_ENV === 'development' ? error.message : null
-          )
+        : OAuth2Error.ServerError(error.message)
 
     try {
-      responseMode ??= this.getResponseMode('query')
+      responseMode ??= this.getResponseMode(SupportedResponseMode.Query)
     } catch {
       return this.defaultAuthorizationError(err)
     }

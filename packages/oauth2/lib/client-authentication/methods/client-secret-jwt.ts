@@ -32,7 +32,7 @@ export class ClientSecretJWT extends JWTClientAssertion {
   /**
    * Name of the Authentication Method.
    */
-  public readonly name: SupportedClientAuthentication = 'client_secret_jwt'
+  public readonly name = SupportedClientAuthentication.ClientSecretJwt
 
   /**
    * Supported JSON Web Signature Algorithms of the Client Assertion.

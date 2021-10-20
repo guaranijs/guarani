@@ -33,7 +33,7 @@ export class PrivateKeyJWT extends JWTClientAssertion {
   /**
    * Name of the Authentication Method.
    */
-  public readonly name: SupportedClientAuthentication = 'private_key_jwt'
+  public readonly name = SupportedClientAuthentication.PrivateKeyJwt
 
   /**
    * Supported JSON Web Signature Algorithms of the Client Assertion.

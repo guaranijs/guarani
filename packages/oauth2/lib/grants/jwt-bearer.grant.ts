@@ -8,7 +8,7 @@ import {
   SupportedJWSAlgorithm
 } from '@guarani/jose'
 
-import { GUARANI_ENV, SupportedGrantType } from '../constants'
+import { SupportedGrantType } from '../constants'
 import { Request } from '../context'
 import { Client, User } from '../entities'
 import { OAuth2Error } from '../exception'
@@ -43,14 +43,12 @@ export abstract class JWTBearerGrant extends Grant implements GrantType {
   /**
    * Name of the Grant.
    */
-  public readonly name: SupportedGrantType =
-    'urn:ietf:params:oauth:grant-type:jwt-bearer'
+  public readonly name = SupportedGrantType.JwtBearer
 
   /**
    * Name of the Grant's Grant Type.
    */
-  public readonly GRANT_TYPE: SupportedGrantType =
-    'urn:ietf:params:oauth:grant-type:jwt-bearer'
+  public readonly GRANT_TYPE = SupportedGrantType.JwtBearer
 
   /**
    * **Token Flow** of the JWT Bearer Grant.
@@ -96,9 +94,7 @@ export abstract class JWTBearerGrant extends Grant implements GrantType {
       return this.createOAuth2Token(accessToken)
     } catch (error) {
       throw error instanceof JoseError
-        ? OAuth2Error.InvalidGrant(
-            GUARANI_ENV === 'development' ? error.message : null
-          )
+        ? OAuth2Error.InvalidGrant(error.message)
         : error
     }
   }

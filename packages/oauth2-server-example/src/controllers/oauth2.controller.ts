@@ -1,6 +1,7 @@
 import {
   Request as GuaraniRequest,
-  Response as GuaraniResponse
+  Response as GuaraniResponse,
+  SupportedEndpoint
 } from '@guarani/oauth2'
 
 import { Request, Response } from 'express'
@@ -15,7 +16,7 @@ class Controller {
     guaraniRequest.user = <User>request.user
 
     const guaraniResponse = await OAuth2Provider.endpoint(
-      'authorization',
+      SupportedEndpoint.Authorization,
       guaraniRequest
     )
 
@@ -32,7 +33,7 @@ class Controller {
   public async introspect(request: Request, response: Response) {
     const guaraniRequest = Controller.createOAuth2Request(request)
     const guaraniResponse = await OAuth2Provider.endpoint(
-      'introspection',
+      SupportedEndpoint.Introspection,
       guaraniRequest
     )
 
@@ -42,7 +43,7 @@ class Controller {
   public async revoke(request: Request, response: Response) {
     const guaraniRequest = Controller.createOAuth2Request(request)
     const guaraniResponse = await OAuth2Provider.endpoint(
-      'revocation',
+      SupportedEndpoint.Revocation,
       guaraniRequest
     )
 
@@ -52,7 +53,7 @@ class Controller {
   public async token(request: Request, response: Response) {
     const guaraniRequest = Controller.createOAuth2Request(request)
     const guaraniResponse = await OAuth2Provider.endpoint(
-      'token',
+      SupportedEndpoint.Token,
       guaraniRequest
     )
 

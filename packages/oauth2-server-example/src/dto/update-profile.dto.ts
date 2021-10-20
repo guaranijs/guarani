@@ -29,46 +29,51 @@ interface IUpdateProfileDto {
 export class UpdateProfileDto {
   @MaxLength(16)
   @IsDefined()
-  readonly given_name: string
+  public readonly given_name: string
 
   @MaxLength(32)
-  readonly middle_name?: string
+  public readonly middle_name?: string
 
   @MaxLength(64)
   @IsDefined()
-  readonly family_name: string
+  public readonly family_name: string
 
   @MaxLength(32)
-  readonly nickname?: string
+  public readonly nickname?: string
 
   @MaxLength(32)
-  readonly preferred_username?: string
+  public readonly preferred_username?: string
 
   @IsDateString()
   @IsDefined()
-  readonly birthdate: Date
+  public readonly birthdate: Date
 
   @ValidateIf((_, value) => value !== '')
   @IsIn(['M', 'F'])
-  readonly gender?: string
+  public readonly gender?: string
 
   @IsEmail()
   @IsDefined()
-  readonly email: string
+  public readonly email: string
 
   @IsMobilePhone('pt-BR')
-  readonly phone_number?: string
+  public readonly phone_number?: string
 
-  readonly street_address?: string
+  @ValidateIf((_, value) => value !== '')
+  public readonly street_address?: string
 
-  readonly locality?: string
+  @ValidateIf((_, value) => value !== '')
+  public readonly locality?: string
 
-  readonly region?: string
+  @ValidateIf((_, value) => value !== '')
+  public readonly region?: string
 
+  @ValidateIf((_, value) => value !== '')
   @IsPostalCode('BR')
-  readonly postal_code?: string
+  public readonly postal_code?: string
 
-  readonly country?: string
+  @ValidateIf((_, value) => value !== '')
+  public readonly country?: string
 
   public constructor(data: IUpdateProfileDto) {
     Object.assign(this, data)

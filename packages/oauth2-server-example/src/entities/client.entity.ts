@@ -60,10 +60,17 @@ export class Client extends BaseEntity implements ClientEntity {
       this.name = data.name
       this.redirectUris = data.redirectUris
       this.scopes = data.scopes
+
       this.authenticationMethod =
-        data.authenticationMethod ?? 'client_secret_basic'
-      this.grantTypes = data.grantTypes ?? ['authorization_code', 'implicit']
-      this.responseTypes = data.responseTypes ?? ['code']
+        data.authenticationMethod ??
+        SupportedClientAuthentication.ClientSecretBasic
+
+      this.grantTypes = data.grantTypes ?? [
+        SupportedGrantType.AuthorizationCode,
+        SupportedGrantType.Implicit
+      ]
+
+      this.responseTypes = data.responseTypes ?? [SupportedResponseType.Code]
     }
   }
 

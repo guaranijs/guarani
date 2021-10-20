@@ -1,9 +1,10 @@
 import { Request, Response } from 'express'
+import { getRepository } from 'typeorm'
 
 import { IUser, User } from '../../entities'
 
 class Controller {
-  public async form(request: Request, response: Response) {
+  public async registerForm(request: Request, response: Response) {
     const csrf = request.csrfToken()
 
     return response.render('auth/register', {
@@ -15,8 +16,9 @@ class Controller {
 
   public async register(request: Request, response: Response) {
     const data: IUser = request.body
+    const userRepository = getRepository(User)
 
-    if (await User.findOne({ where: { email: data.email } })) {
+    if (await userRepository.findOne({ where: { email: data.email } })) {
       return response.render('auth/register', {
         request,
         title: 'Register',
@@ -24,7 +26,7 @@ class Controller {
       })
     }
 
-    const user = new User({
+    const user = userRepository.create({
       email: data.email,
       familyName: data.familyName,
       givenName: data.givenName,
@@ -33,7 +35,7 @@ class Controller {
     })
 
     await user.setPassword(data.password)
-    await user.save()
+    await userRepository.save(user)
 
     return response.redirect(303, '/auth/login')
   }

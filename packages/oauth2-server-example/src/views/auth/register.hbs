@@ -1,49 +1,87 @@
 {{#extend "_layout"}}
+
+{{#content "custom-css"}}
+<link rel="stylesheet" type="text/css" href="/static/css/auth/_forms.css" />
+{{/content}}
+
 {{#content "body"}}
-<div class="container mt-5">
-  <form method="post" action="{{ request.originalUrl }}">
-    <input type="hidden" name="_csrf" value="{{ csrf }}">
+<div class="container">
+  <div class="row d-flex justify-content-center align-items-center h-100">
+    <div class="col-12 col-md-10 col-lg-9 col-xl-8">
+      <div class="card border-0 shadow">
+        <div class="card-body p-5">
+          <div class="row mb-4">
+            <div class="col-12">
+              <h1 class="card-title text-center">CREATE AN ACCOUNT</h1>
+            </div>
+          </div>
 
-    {{#if error}}
-    <div class="alert alert-danger mb-3">
-      <strong class="form-text text-danger">{{ error }}</strong>
+          <form method="post" action="{{ request.originalUrl }}">
+            <input type="hidden" name="_csrf" value="{{ csrf }}">
+
+            {{#if error}}
+            <div class="alert alert-danger mb-3">
+              <strong class="form-text text-danger">{{ error }}</strong>
+            </div>
+            {{/if}}
+
+            <div class="row mb-4">
+              <div class="col-12 mb-4 mb-md-0 col-md-6">
+                <label for="given-name" class="form-label">
+                  <small class="text-muted">Given Name</small>
+                </label>
+                <input type="text" name="givenName" id="given-name" class="form-control border-0 border-bottom shadow-sm" placeholder="Enter your first name" required>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="family-name" class="form-label">
+                  <small class="text-muted">Family Name</small>
+                </label>
+                <input type="text" name="familyName" id="family-name" class="form-control border-0 border-bottom shadow-sm" placeholder="Enter your last name" required>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label for="email" class="form-label">
+                <small class="text-muted">Email</small>
+              </label>
+              <input type="email" name="email" id="email" class="form-control border-0 border-bottom shadow-sm" placeholder="Enter your email" required>
+            </div>
+
+            <div class="mb-4">
+              <label for="password" class="form-label">
+                <small class="text-muted">Password</small>
+              </label>
+              <input type="password" name="password" id="password" class="form-control border-0 border-bottom shadow-sm" placeholder="Enter your password" required>
+            </div>
+
+            <div class="mb-4">
+              <label for="birthdate" class="form-label">
+                <small class="text-muted">Birthdate</small>
+              </label>
+              <input type="date" name="birthdate" id="birthdate" class="form-control border-0 border-bottom shadow-sm">
+            </div>
+
+            <div class="mb-5">
+              <label for="phone-number" class="form-label">
+                <small class="text-muted">Phone Number</small>
+              </label>
+              <input type="tel" name="phoneNumber" id="phone-number" class="form-control border-0 border-bottom shadow-sm" placeholder="Enter your phone number">
+            </div>
+
+            <div class="mb-3">
+              <button type="submit" class="btn btn-primary w-100">Register</button>
+            </div>
+          </form>
+
+          <small class="mb-3">
+            <a href="/auth/login" class="link-primary text-muted">Already have an account? Login now!</a>
+          </small>
+        </div>
+      </div>
     </div>
-    {{/if}}
-
-    <div class="mb-3">
-      <label for="given-name" class="form-label">Given Name*</label>
-      <input type="text" name="givenName" id="given-name" class="form-control">
-    </div>
-
-    <div class="mb-3">
-      <label for="family-name" class="form-label">Family Name*</label>
-      <input type="text" name="familyName" id="family-name" class="form-control">
-    </div>
-
-    <div class="mb-3">
-      <label for="email" class="form-label">Email*</label>
-      <input type="email" name="email" id="email" class="form-control">
-    </div>
-
-    <div class="mb-3">
-      <label for="password" class="form-label">Password*</label>
-      <input type="password" name="password" id="password" class="form-control">
-    </div>
-
-    <div class="mb-3">
-      <label for="birthdate" class="form-label">Birthdate</label>
-      <input type="date" name="birthdate" id="birthdate" class="form-control">
-    </div>
-
-    <div class="mb-3">
-      <label for="phone-number" class="form-label">Phone Number</label>
-      <input type="text" name="phoneNumber" id="phone-number" class="form-control">
-    </div>
-
-    <button type="submit" class="btn btn-primary mb-3">Sign Up!</button>
-  </form>
-
-  <small class="text-center text-muted mb-3">Already registered? <a href="/auth/login" class="link-primary">Login!</a></small>
+  </div>
 </div>
 {{/content}}
+
 {{/extend}}

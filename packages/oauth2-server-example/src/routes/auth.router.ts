@@ -8,7 +8,7 @@ import {
   ProfileController,
   RegisterController
 } from '../controllers/auth'
-import { authenticated, unauthenticated } from '../strategy'
+import { authenticated, unauthenticated } from '../middlewares'
 
 const router = Router()
 const csrf = csurf({ cookie: true, sessionKey: 'guarani' })
@@ -37,7 +37,7 @@ router
 
 router
   .route('/register')
-  .get(unauthenticated, csrf, RegisterController.form)
+  .get(unauthenticated, csrf, RegisterController.registerForm)
   .post(unauthenticated, csrf, RegisterController.register)
 
 export { router as AuthRouter }

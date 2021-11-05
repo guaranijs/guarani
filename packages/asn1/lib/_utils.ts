@@ -1,4 +1,4 @@
-import { toBuffer } from '@guarani/utils'
+import { toBuffer } from '@guarani/utils/primitives'
 
 /**
  * This function encodes the length of a primitive type using either

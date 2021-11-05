@@ -1,4 +1,5 @@
-import { fromBuffer } from '@guarani/utils'
+import { fromBuffer } from '@guarani/utils/primitives'
+import { Nullable } from '@guarani/utils/types'
 
 import {
   BitString,
@@ -55,7 +56,7 @@ export class Decoder {
    * @param data - Data to be trimmed.
    * @returns Reference to the new position of the Buffer.
    */
-  private static trim(data: Buffer): Buffer {
+  private trim(data: Buffer): Buffer {
     while (data[0] === 0) {
       data = data.slice(1)
     }
@@ -86,12 +87,12 @@ export class Decoder {
     }
 
     // Retrieves the section of the data that represents the requested type.
-    const buffer = Decoder.trim(
+    const buffer = this.trim(
       this.value.subarray(this.offset, this.offset + length)
     )
 
     // Sets the data to be itself minus the selected data and resets the offset.
-    this.value = Decoder.trim(this.value.slice(this.offset + length))
+    this.value = this.trim(this.value.slice(this.offset + length))
     this.offset = 0
 
     return buffer
@@ -130,7 +131,10 @@ export class Decoder {
    * Since a Context-Specific tag is of the format `10XXXXXX`,
    * we only care about the last 5 bits.
    */
-  public contextSpecific(typpedTag: number, optional: boolean = true): Decoder {
+  public contextSpecific(
+    typpedTag: number,
+    optional: boolean = true
+  ): Nullable<Decoder> {
     if (!Number.isInteger(typpedTag)) {
       throw new TypeError('Invalid parameter "typpedTag".')
     }
@@ -162,7 +166,7 @@ export class Decoder {
 
     const buffer = this.slice(Tags.INTEGER, 'Integer')
 
-    return fromBuffer(buffer, 'integer')
+    return fromBuffer(buffer, BigInt)
   }
 
   /**

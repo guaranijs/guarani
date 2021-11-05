@@ -1,4 +1,4 @@
-import { toBuffer } from '@guarani/utils'
+import { toBuffer } from '@guarani/utils/primitives'
 
 import { Node } from './node'
 

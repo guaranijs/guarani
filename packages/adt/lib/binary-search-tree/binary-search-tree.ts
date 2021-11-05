@@ -3,7 +3,7 @@ import { Nullable } from '@guarani/utils/types'
 
 import util from 'util'
 
-import { constants } from '../constants'
+import { TRAVERSAL_MODE } from '../constants'
 import { BinarySearchTreeNode } from './binary-search-tree-node'
 
 util.inspect.defaultOptions = {
@@ -15,7 +15,7 @@ util.inspect.defaultOptions = {
  */
 export class BinarySearchTree<T> {
   /**
-   * Root Node of the Binary Tree.
+   * Root Node of the Binary Search Tree.
    */
   protected root?: Nullable<BinarySearchTreeNode<T>>
 
@@ -74,10 +74,7 @@ export class BinarySearchTree<T> {
    * @param mode Mode of the traversion of the Binary Tree.
    * @param callback Callback function to be executed in each value.
    */
-  public traverse(
-    mode: constants.TraversalMode,
-    callback: (item: T) => void
-  ): void {
+  public traverse(mode: TRAVERSAL_MODE, callback: (item: T) => void): void {
     if (this.root != null) {
       this.traverseNode(this.root, mode, callback)
     }
@@ -234,7 +231,7 @@ export class BinarySearchTree<T> {
    */
   protected traverseNode<T>(
     node: Nullable<BinarySearchTreeNode<T>>,
-    mode: constants.TraversalMode,
+    mode: TRAVERSAL_MODE,
     callback: (item: T) => void
   ): void {
     if (node == null) {
@@ -242,21 +239,21 @@ export class BinarySearchTree<T> {
     }
 
     switch (mode) {
-      case constants.TraversalMode.InOrder:
+      case TRAVERSAL_MODE.InOrder:
         this.traverseNode(node.left, mode, callback)
         callback(node.item)
         this.traverseNode(node.right, mode, callback)
 
         break
 
-      case constants.TraversalMode.PreOrder:
+      case TRAVERSAL_MODE.PreOrder:
         callback(node.item)
         this.traverseNode(node.left, mode, callback)
         this.traverseNode(node.right, mode, callback)
 
         break
 
-      case constants.TraversalMode.PostOrder:
+      case TRAVERSAL_MODE.PostOrder:
         this.traverseNode(node.left, mode, callback)
         this.traverseNode(node.right, mode, callback)
         callback(node.item)

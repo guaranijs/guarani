@@ -1,4 +1,4 @@
-import { deepEquals, deepFreeze, removeNullishValues } from '../lib/objects'
+import { deepEquals, deepFreeze, removeNullishValues } from '../objects'
 
 describe('removeNullishValues()', () => {
   it('should remove all nullish values from an object', () => {

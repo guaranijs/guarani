@@ -1,4 +1,4 @@
-import { fromBuffer, toBuffer } from '../lib/primitives'
+import { fromBuffer, toBuffer } from '../primitives'
 
 describe('Operations to and from primitive types', () => {
   it('should transform an integer into a Buffer.', () => {
@@ -6,9 +6,9 @@ describe('Operations to and from primitive types', () => {
   })
 
   it('should transform a Buffer into an integer.', () => {
-    expect(fromBuffer(Buffer.from([0x01, 0x00, 0x01]), 'integer')).toEqual(
-      BigInt(65537)
-    )
+    expect(fromBuffer(Buffer.from([0x01, 0x00, 0x01]), Number)).toEqual(65537)
+
+    expect(fromBuffer(Buffer.from([0x01, 0x00, 0x01]), BigInt)).toEqual(65537n)
   })
 
   it('should transform a string into a Buffer.', () => {
@@ -18,6 +18,6 @@ describe('Operations to and from primitive types', () => {
 
   it('should transform a Buffer into a string.', () => {
     const buffer = Buffer.from([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x21])
-    expect(fromBuffer(buffer, 'string')).toEqual('Hello!')
+    expect(fromBuffer(buffer, String)).toEqual('Hello!')
   })
 })

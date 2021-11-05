@@ -1,4 +1,4 @@
-import { sanitizeHTML } from '../lib/html'
+import { sanitizeHTML } from '../html'
 
 describe('HTML functionalities', () => {
   it('should sanitize HTML tags.', () => {

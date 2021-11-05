@@ -6,14 +6,22 @@ import { randomInt } from 'crypto'
  * @param length Length of the token.
  * @returns Secret Token.
  */
-export function secretToken(length: number = 32): string {
+export function secretToken(length: number = 32): Promise<string> {
+  if (!Number.isInteger(length)) {
+    return Promise.reject(new Error('The length MUST be an integer.'))
+  }
+
+  if (length < 1) {
+    return Promise.reject(new Error('The length MUST be greater than zero.'))
+  }
+
   let token = ''
-  const alphabet =
+  const alphabet: string =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
 
   for (let i = 0; i < length; i++) {
     token += alphabet[randomInt(alphabet.length)]
   }
 
-  return token
+  return Promise.resolve(token)
 }

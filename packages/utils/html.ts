@@ -1,3 +1,5 @@
+import { Dict } from './types'
+
 /**
  * Sanitizes an HTML string replacing the characteres used to perform XSS Attacks.
  *
@@ -5,11 +7,7 @@
  * @returns Sanitized HTML string.
  */
 export function sanitizeHTML(html: string): string {
-  if (html == null) {
-    return ''
-  }
-
-  const replacements = {
+  const replacements: Dict<string> = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',

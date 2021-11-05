@@ -1,7 +1,27 @@
 /**
  * Describes the format of a constructor function or class.
  */
-export type Constructor<T = any> = Function | { new (...args: any[]): T }
+export interface Constructor<T = any> {
+  /**
+   * Constructor signature.
+   */
+  new (...args: any[]): T
+
+  /**
+   * Prototype of the Constructor.
+   */
+  prototype: T
+}
+
+/**
+ * Describes the format of a constructor function or class.
+ */
+export interface AbstractConstructor<T = any> {
+  /**
+   * Prototype of the Abstract Constructor.
+   */
+  prototype: T
+}
 
 /**
  * Describes the format of a factory function.

@@ -1,5 +1,7 @@
 import { randomBytes } from 'crypto'
 
+// TODO: Add tests.
+
 /**
  * Implementation of {@link https://www.rfc-editor.org/rfc/rfc4122.html RFC 4122}.
  */
@@ -7,7 +9,7 @@ export class UUID {
   /**
    * Underlying bytes representation of the UUID.
    */
-  private readonly bytes: Buffer
+  private readonly bytes!: Buffer
 
   /**
    * Instantiates a new UUID v4 object.
@@ -28,21 +30,37 @@ export class UUID {
    */
   public constructor(buffer: Buffer)
 
-  public constructor(uuidOrBuffer?: string | Buffer) {
-    if (!uuidOrBuffer) {
+  /**
+   * Guard for passing a UUID object into the constructor.
+   *
+   * @param uuid UUID object.
+   */
+  public constructor(uuid: UUID)
+
+  /**
+   * Instantiates a new UUID object.
+   *
+   * @param uuidOrBuffer Data representing the UUID.
+   */
+  public constructor(uuidOrBuffer?: string | Buffer | UUID) {
+    if (uuidOrBuffer == null) {
       return UUID.v4()
-    } else {
-      if (!Buffer.isBuffer(uuidOrBuffer) && typeof uuidOrBuffer !== 'string') {
-        throw new Error('Invalid UUID.')
-      }
+    }
 
-      if (Buffer.isBuffer(uuidOrBuffer)) {
-        this.bytes = uuidOrBuffer
-      }
+    if (uuidOrBuffer instanceof UUID) {
+      return uuidOrBuffer
+    }
 
-      if (typeof uuidOrBuffer === 'string') {
-        this.bytes = Buffer.from(uuidOrBuffer.replace(/-/g, ''), 'hex')
-      }
+    if (!Buffer.isBuffer(uuidOrBuffer) && typeof uuidOrBuffer !== 'string') {
+      throw new Error('Invalid UUID.')
+    }
+
+    this.bytes = Buffer.isBuffer(uuidOrBuffer)
+      ? uuidOrBuffer
+      : Buffer.from(uuidOrBuffer.replace(/-/g, ''), 'hex')
+
+    if (this.bytes.length !== 16) {
+      throw new Error('Invalid UUID')
     }
   }
 
@@ -70,13 +88,18 @@ export class UUID {
     return new UUID(buffer)
   }
 
-  public toString(): string {
+  /**
+   * Returns the string representation of the UUID.
+   *
+   * @param separate Indicates whether or not to separate the data with dashes.
+   */
+  public toString(separate: boolean = true): string {
     return [
       this.bytes.subarray(0, 4).toString('hex'),
       this.bytes.subarray(4, 6).toString('hex'),
       this.bytes.subarray(6, 8).toString('hex'),
       this.bytes.subarray(8, 10).toString('hex'),
       this.bytes.subarray(10, 16).toString('hex')
-    ].join('-')
+    ].join(separate === true ? '-' : '')
   }
 }

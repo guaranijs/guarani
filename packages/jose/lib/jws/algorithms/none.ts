@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/utils'
+
 import type { JsonWebKey, SupportedJWKAlgorithm } from '../../jwk'
 import { JWSAlgorithm } from './jws-algorithm'
 
@@ -10,7 +12,7 @@ import { JWSAlgorithm } from './jws-algorithm'
  * It is **NOT RECOMMENDED** to use this algorithm in production.
  */
 class NoneAlgorithm extends JWSAlgorithm {
-  public readonly kty: SupportedJWKAlgorithm = null
+  public readonly kty: Nullable<SupportedJWKAlgorithm> = null
 
   public constructor() {
     super(null, 'none')

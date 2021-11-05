@@ -56,17 +56,21 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
   public constructor(key: OctKeyParams, options: JsonWebKeyParams = {}) {
     const params: OctKeyParams = { ...key, ...options }
 
-    super(params)
-
     if (params.kty != null && params.kty !== 'oct') {
       throw new InvalidKey(
         `Invalid parameter "kty". Expected "oct", got "${params.kty}".`
       )
     }
 
-    if (params.k == null || typeof params.k !== 'string') {
+    if (typeof params.k !== 'string') {
       throw new InvalidKey('Invalid parameter "k".')
     }
+
+    if (params.k.length < 1) {
+      throw new InvalidKey('Invalid secret size.')
+    }
+
+    super(params)
 
     this.kty = 'oct'
     this.k = params.k
@@ -84,26 +88,17 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
     options?: JsonWebKeyParams
   ): Promise<OctKey> {
     if (!Number.isInteger(size)) {
-      throw new TypeError('The key size MUST be a valid integer.')
+      throw new TypeError('The secret size MUST be a valid integer.')
     }
 
     if (size < 1) {
-      throw new InvalidKey('Invalid key size.')
+      throw new InvalidKey('Invalid secret size.')
     }
 
     const secret = base64UrlEncode(await randomBytesAsync(size))
 
     return new OctKey({ k: secret }, options)
   }
-
-  /**
-   * Parses a Binary encoded Secret.
-   *
-   * @param secret Binary representation of the Secret.
-   * @param options Optional JSON Web Key Parameters.
-   * @returns Instance of an OctKey.
-   */
-  public static parse(secret: Buffer, options?: JsonWebKeyParams): OctKey
 
   /**
    * Parses a Base64 encoded Secret.
@@ -114,11 +109,23 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
    */
   public static parse(secret: string, options?: JsonWebKeyParams): OctKey
 
+  /**
+   * Parses a Binary encoded Secret.
+   *
+   * @param secret Binary representation of the Secret.
+   * @param options Optional JSON Web Key Parameters.
+   * @returns Instance of an OctKey.
+   */
+  public static parse(secret: Buffer, options?: JsonWebKeyParams): OctKey
+
   public static parse(
-    secret: Buffer | string,
+    secret: string | Buffer,
     options?: JsonWebKeyParams
   ): OctKey {
-    if (!secret || (!Buffer.isBuffer(secret) && typeof secret !== 'string')) {
+    if (
+      secret == null ||
+      (!Buffer.isBuffer(secret) && typeof secret !== 'string')
+    ) {
       throw new TypeError('Invalid Secret.')
     }
 

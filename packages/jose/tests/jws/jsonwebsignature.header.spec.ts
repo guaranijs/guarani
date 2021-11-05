@@ -4,10 +4,6 @@ import { JWS_ALGORITHMS } from '../../lib/jws/algorithms'
 
 describe('JSON Web Signature JOSE Header', () => {
   it('should reject an invalid algorithm.', () => {
-    expect(() => new JsonWebSignatureHeader({ alg: undefined })).toThrow(
-      'Missing required parameter "alg".'
-    )
-
     // @ts-expect-error
     expect(() => new JsonWebSignatureHeader({ alg: '' })).toThrow(
       'Invalid JSON Web Signature Algorithm.'
@@ -44,10 +40,6 @@ describe('JSON Web Signature JOSE Header', () => {
     )
 
     expect(
-      () => new JsonWebSignatureHeader({ alg: 'none', crit: ['kid', null] })
-    ).toThrow('Invalid parameter "crit".')
-
-    expect(
       // @ts-expect-error
       () => new JsonWebSignatureHeader({ alg: 'none', crit: ['kid', 123] })
     ).toThrow('Invalid parameter "crit".')
@@ -75,10 +67,6 @@ describe('JSON Web Signature JOSE Headers', () => {
   })
 
   it('should reject an invalid algorithm.', () => {
-    expect(
-      () => new JsonWebSignatureHeader({ protectedHeader: { alg: undefined } })
-    ).toThrow('Invalid parameter "alg".')
-
     expect(
       // @ts-expect-error
       () => new JsonWebSignatureHeader({ unprotectedHeader: { alg: '' } })

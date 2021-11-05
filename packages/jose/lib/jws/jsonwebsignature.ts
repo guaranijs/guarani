@@ -67,7 +67,7 @@ export class JsonWebSignature {
     header: OneOrMany<JsonWebSignatureHeader>,
     payload?: Buffer
   ) {
-    if (!header) {
+    if (!Array.isArray(header) && !(header instanceof JsonWebSignatureHeader)) {
       throw new InvalidJoseHeader()
     }
 
@@ -402,7 +402,7 @@ export class JsonWebSignature {
           b64Payload,
           signature,
           key,
-          algorithms[i]
+          algorithms?.[i]
         )
       })
 
@@ -452,7 +452,7 @@ export class JsonWebSignature {
     }
 
     const protectedHeader: JWSHeaderParams = JSON.parse(
-      base64UrlDecode(b64ProtectedHeader).toString('utf8')
+      base64UrlDecode(b64ProtectedHeader!).toString('utf8')
     )
 
     const header = new JsonWebSignatureHeader({
@@ -712,7 +712,7 @@ export class JsonWebSignature {
     return {
       signature,
       header: header.unprotectedHeader,
-      protected: b64Header || null
+      protected: b64Header || undefined
     }
   }
 }

@@ -25,9 +25,8 @@ const token =
 // TODO: Add tests for multiple headers.
 describe('JSON Web Signature constructor', () => {
   it('should reject an invalid header.', () => {
-    expect(() => new JsonWebSignature(undefined, payload)).toThrow(
-      InvalidJoseHeader
-    )
+    // @ts-expect-error
+    expect(() => new JsonWebSignature({}, payload)).toThrow(InvalidJoseHeader)
   })
 
   it('should reject an invalid payload.', () => {
@@ -58,7 +57,7 @@ describe('JSON Web Signature serializeCompact()', () => {
 
   it('should reject an invalid key.', async () => {
     // Only works because the alg is not "none".
-    await expect(jws.serializeCompact(undefined)).rejects.toThrow(
+    await expect(jws.serializeCompact()).rejects.toThrow(
       'The algorithm "HS256" requires the use of a JSON Web Key.'
     )
   })
@@ -71,12 +70,8 @@ describe('JSON Web Signature serializeCompact()', () => {
 describe('JSON Web Signature deserializeCompact()', () => {
   it('should reject an invalid token.', async () => {
     await expect(
-      JsonWebSignature.deserializeCompact(null, null)
-    ).rejects.toThrow('The provided JSON Web Signature is invalid.')
-
-    await expect(
       // @ts-ignore
-      JsonWebSignature.deserializeCompact(123, null)
+      JsonWebSignature.deserializeCompact(123, key)
     ).rejects.toThrow('The provided JSON Web Signature is invalid.')
   })
 
@@ -143,7 +138,7 @@ describe('JSON Web Signature serializeFlattened()', () => {
 
   it('should reject an invalid key.', async () => {
     // Only works because the alg is not "none".
-    await expect(jws.serializeFlattened(undefined)).rejects.toThrow(
+    await expect(jws.serializeFlattened()).rejects.toThrow(
       'The algorithm "HS256" requires the use of a JSON Web Key.'
     )
   })

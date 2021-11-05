@@ -14,8 +14,6 @@ describe('OctKey constructor', () => {
   })
 
   it('should reject a secret that is not a string.', () => {
-    expect(() => new OctKey({ k: undefined })).toThrow('Invalid parameter "k".')
-
     // @ts-expect-error
     expect(() => new OctKey({ k: 123 })).toThrow('Invalid parameter "k".')
   })
@@ -32,10 +30,6 @@ describe('OctKey constructor', () => {
 
 describe('OctKey generate()', () => {
   it('should reject an invalid key size.', async () => {
-    await expect(OctKey.generate(undefined)).rejects.toThrow(
-      'The key size MUST be a valid integer.'
-    )
-
     await expect(OctKey.generate(32.5)).rejects.toThrow(
       'The key size MUST be a valid integer.'
     )
@@ -45,15 +39,11 @@ describe('OctKey generate()', () => {
     const key = await OctKey.generate(32)
 
     expect(key).toBeInstanceOf(OctKey)
-    expect(key).toMatchObject({ k: expect.any(String) })
+    expect(key).toMatchObject({ kty: 'oct', k: expect.any(String) })
   })
 })
 
 describe('OctKey parse()', () => {
-  it('should reject data that is not a valid string.', () => {
-    expect(() => OctKey.parse(undefined)).toThrow(TypeError)
-  })
-
   it('should create an OctKey object based on a Buffer secret.', () => {
     const json = loadSymmetricKey<OctKeyParams>('oct', 'json')
     const der = Buffer.from(loadSymmetricKey('oct', 'pem'), 'base64')

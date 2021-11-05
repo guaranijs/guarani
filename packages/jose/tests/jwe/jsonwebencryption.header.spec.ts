@@ -8,10 +8,6 @@ import {
 describe('JSON Web Encryption JOSE Header', () => {
   it('should reject an invalid Key Wrapping Algorithm.', () => {
     expect(
-      () => new JsonWebEncryptionHeader({ alg: undefined, enc: 'A128GCM' })
-    ).toThrow('Missing required parameter "alg".')
-
-    expect(
       // @ts-expect-error
       () => new JsonWebEncryptionHeader({ alg: '', enc: 'A128GCM' })
     ).toThrow('Invalid JSON Web Encryption Key Wrapping Algorithm.')
@@ -23,10 +19,6 @@ describe('JSON Web Encryption JOSE Header', () => {
   })
 
   it('should reject an invalid Content Encryption Algorithm.', () => {
-    expect(
-      () => new JsonWebEncryptionHeader({ alg: 'A128KW', enc: undefined })
-    ).toThrow('Missing required parameter "enc".')
-
     expect(
       // @ts-expect-error
       () => new JsonWebEncryptionHeader({ alg: 'A128KW', enc: '' })
@@ -107,15 +99,6 @@ describe('JSON Web Encryption JOSE Header', () => {
         new JsonWebEncryptionHeader({
           alg: 'dir',
           enc: 'A128GCM',
-          crit: ['kid', null]
-        })
-    ).toThrow('Invalid parameter "crit".')
-
-    expect(
-      () =>
-        new JsonWebEncryptionHeader({
-          alg: 'dir',
-          enc: 'A128GCM',
           // @ts-expect-error
           crit: ['kid', 123]
         })
@@ -150,6 +133,6 @@ describe('JSON Web Encryption JOSE Header', () => {
 
     expect(JWE_ALGORITHMS[header.alg]).toBe(JWE_ALGORITHMS.dir)
     expect(JWE_ENCRYPTIONS[header.enc]).toBe(JWE_ENCRYPTIONS.A128GCM)
-    expect(JWE_COMPRESSIONS[header.zip]).toBe(JWE_COMPRESSIONS.DEF)
+    expect(JWE_COMPRESSIONS[header.zip!]).toBe(JWE_COMPRESSIONS.DEF)
   })
 })

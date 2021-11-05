@@ -154,7 +154,7 @@ export class JsonWebToken {
         algorithm
       )
 
-      const parsedClaims = <JWTClaims>JSON.parse(payload.toString('utf8'))
+      const parsedClaims = <JWTClaims>JSON.parse(payload!.toString('utf8'))
       const claims = new JsonWebTokenClaims(parsedClaims, claimsOptions)
 
       return new JsonWebToken(<JsonWebSignatureHeader>header, claims)

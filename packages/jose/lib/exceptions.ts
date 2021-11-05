@@ -3,11 +3,6 @@
  */
 export class JoseError extends Error {
   /**
-   * Error message.
-   */
-  public readonly message: string
-
-  /**
    * Instantiates a new JoseError and correctly sets the name of the Error.
    *
    * @param message Error message to be displayed.
@@ -88,7 +83,7 @@ export class InvalidKey extends JoseError {
 /**
  * Raised when the provided JWK Set is invalid.
  */
-export class InvalidKeySet extends JoseError {
+export class InvalidKeyset extends JoseError {
   public constructor(
     message = 'The provided key set is invalid or contain invalid keys.'
   ) {

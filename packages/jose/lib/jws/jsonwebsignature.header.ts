@@ -103,7 +103,7 @@ export class JsonWebSignatureHeader
   /**
    * JWS Algorithm used to sign and verify the token.
    */
-  public readonly alg: SupportedJWSAlgorithm
+  public readonly alg!: SupportedJWSAlgorithm
 
   /**
    * URI of a JWK Set that contains the key used to sign the token.
@@ -255,7 +255,7 @@ export class JsonWebSignatureHeader
   protected checkHeader(header: Partial<JWSHeaderParams>): void {
     super.checkHeader(header)
 
-    if ('alg' in header && !(header.alg in JWS_ALGORITHMS)) {
+    if ('alg' in header && !(header.alg! in JWS_ALGORITHMS)) {
       throw new InvalidJoseHeader('Invalid JSON Web Signature Algorithm.')
     }
   }

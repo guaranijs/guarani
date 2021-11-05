@@ -28,7 +28,7 @@ import { ELLIPTIC_CURVES, ID_EC_PUBLIC_KEY } from './_types'
  */
 export function getPaddedPrivateValue(key: EcKey): Buffer {
   const curve = ELLIPTIC_CURVES[key.crv]
-  let privateValue = toBuffer(base64UrlDecodeInt(key.d))
+  let privateValue = toBuffer(base64UrlDecodeInt(key.d!))
 
   while (privateValue.length < curve.length) {
     privateValue = Buffer.concat([toBuffer(0x00), privateValue])

@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, createSecretKey } from 'crypto'
+
 import { OctKey } from '../../jwk'
 
 /**
@@ -10,7 +11,7 @@ import { OctKey } from '../../jwk'
  */
 export function wrap(cek: Buffer, key: OctKey): Buffer {
   const secretKey = createSecretKey(key.export('binary'))
-  const keySize = secretKey.symmetricKeySize * 8
+  const keySize = secretKey.symmetricKeySize! * 8
 
   const algorithm = `aes${keySize}-wrap`
   const cipher = createCipheriv(algorithm, secretKey, Buffer.alloc(8, 0xa6))
@@ -27,7 +28,7 @@ export function wrap(cek: Buffer, key: OctKey): Buffer {
  */
 export function unwrap(ek: Buffer, key: OctKey): Buffer {
   const secretKey = createSecretKey(key.export('binary'))
-  const keySize = secretKey.symmetricKeySize * 8
+  const keySize = secretKey.symmetricKeySize! * 8
 
   const algorithm = `aes${keySize}-wrap`
   const decipher = createDecipheriv(algorithm, secretKey, Buffer.alloc(8, 0xa6))

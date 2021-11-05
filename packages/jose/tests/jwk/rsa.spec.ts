@@ -20,10 +20,6 @@ describe('RSA Public Key', () => {
   it('should reject keys with a wrong parameter "n".', () => {
     const { n, ...params } = key
 
-    expect(() => new RsaKey({ n: undefined, ...params })).toThrow(
-      'Invalid parameter "n".'
-    )
-
     // @ts-expect-error
     expect(() => new RsaKey({ n: 123, ...params })).toThrow(
       'Invalid parameter "n".'
@@ -36,10 +32,6 @@ describe('RSA Public Key', () => {
 
   it('should reject keys with a wrong parameter "e".', () => {
     const { e, ...params } = key
-
-    expect(() => new RsaKey({ e: undefined, ...params })).toThrow(
-      'Invalid parameter "e".'
-    )
 
     // @ts-expect-error
     expect(() => new RsaKey({ e: 123, ...params })).toThrow(
@@ -71,10 +63,6 @@ describe('RSA Private Key', () => {
   it('should reject keys with a wrong parameter "p".', () => {
     const { p, ...params } = key
 
-    expect(() => new RsaKey({ p: undefined, ...params })).toThrow(
-      'Invalid parameter "p".'
-    )
-
     // @ts-expect-error
     expect(() => new RsaKey({ p: 123, ...params })).toThrow(
       'Invalid parameter "p".'
@@ -83,10 +71,6 @@ describe('RSA Private Key', () => {
 
   it('should reject keys with a wrong parameter "q".', () => {
     const { q, ...params } = key
-
-    expect(() => new RsaKey({ q: undefined, ...params })).toThrow(
-      'Invalid parameter "q".'
-    )
 
     // @ts-expect-error
     expect(() => new RsaKey({ q: 123, ...params })).toThrow(
@@ -97,10 +81,6 @@ describe('RSA Private Key', () => {
   it('should reject keys with a wrong parameter "dp".', () => {
     const { dp, ...params } = key
 
-    expect(() => new RsaKey({ dp: undefined, ...params })).toThrow(
-      'Invalid parameter "dp".'
-    )
-
     // @ts-expect-error
     expect(() => new RsaKey({ dp: 123, ...params })).toThrow(
       'Invalid parameter "dp".'
@@ -110,10 +90,6 @@ describe('RSA Private Key', () => {
   it('should reject keys with a wrong parameter "dq".', () => {
     const { dq, ...params } = key
 
-    expect(() => new RsaKey({ dq: undefined, ...params })).toThrow(
-      'Invalid parameter "dq".'
-    )
-
     // @ts-expect-error
     expect(() => new RsaKey({ dq: 123, ...params })).toThrow(
       'Invalid parameter "dq".'
@@ -122,10 +98,6 @@ describe('RSA Private Key', () => {
 
   it('should reject keys with a wrong parameter "qi".', () => {
     const { qi, ...params } = key
-
-    expect(() => new RsaKey({ qi: undefined, ...params })).toThrow(
-      'Invalid parameter "qi".'
-    )
 
     // @ts-expect-error
     expect(() => new RsaKey({ qi: 123, ...params })).toThrow(
@@ -150,10 +122,6 @@ describe('RSA Private Key', () => {
 
 describe('RsaKey generate()', () => {
   it('should reject an invalid modulus length.', async () => {
-    await expect(RsaKey.generate(undefined)).rejects.toThrow(
-      'Invalid modulus length.'
-    )
-
     await expect(RsaKey.generate(2048.16)).rejects.toThrow(
       'Invalid modulus length.'
     )
@@ -191,8 +159,6 @@ describe('RsaKey parse()', () => {
   const privatePem = loadAsymmetricKey('RSA', 'pem', 'private')
 
   it('should reject an invalid PEM key data.', () => {
-    expect(() => RsaKey.parse(undefined)).toThrow(TypeError)
-
     // @ts-expect-error
     expect(() => RsaKey.parse(123)).toThrow(TypeError)
 

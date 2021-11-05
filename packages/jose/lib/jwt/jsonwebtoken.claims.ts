@@ -193,7 +193,7 @@ export class JsonWebTokenClaims implements JWTClaims {
 
         if (
           Array.isArray(value) &&
-          value.some(item => !option.values.includes(item))
+          value.some(item => !option.values!.includes(item))
         ) {
           throw new InvalidJsonWebTokenClaim(
             'One or more received values are not present ' +

@@ -209,6 +209,8 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
         throw new InvalidKey('Could not parse the provided key.')
       }
     }
+
+    throw new InvalidKey('Could not parse the provided key.')
   }
 
   /**
@@ -361,6 +363,6 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
       }
     }
 
-    return format === 'der' ? DEREncoder(root) : PEMEncoder(root, label)
+    return format === 'der' ? DEREncoder(root!) : PEMEncoder(root!, label!)
   }
 }

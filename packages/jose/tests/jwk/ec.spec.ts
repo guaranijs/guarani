@@ -20,10 +20,6 @@ describe('Elliptic Curve Public Key', () => {
   it('should reject an unsupported curve.', () => {
     const { crv, ...params } = key
 
-    expect(() => new EcKey({ crv: undefined, ...params })).toThrow(
-      'Unsupported curve "undefined".'
-    )
-
     // @ts-expect-error
     expect(() => new EcKey({ crv: 'unknown-curve', ...params })).toThrow(
       'Unsupported curve "unknown-curve".'
@@ -33,10 +29,6 @@ describe('Elliptic Curve Public Key', () => {
   it('should reject an invalid X coordinate.', () => {
     const { x, ...params } = key
 
-    expect(() => new EcKey({ x: undefined, ...params })).toThrow(
-      'Invalid parameter "x".'
-    )
-
     // @ts-expect-error
     expect(() => new EcKey({ x: 123, ...params })).toThrow(
       'Invalid parameter "x".'
@@ -45,10 +37,6 @@ describe('Elliptic Curve Public Key', () => {
 
   it('should reject an invalid Y coordinate.', () => {
     const { y, ...params } = key
-
-    expect(() => new EcKey({ y: undefined, ...params })).toThrow(
-      'Invalid parameter "y".'
-    )
 
     // @ts-expect-error
     expect(() => new EcKey({ y: 123, ...params })).toThrow(
@@ -95,10 +83,6 @@ describe('Elliptic Curve Private Key', () => {
 
 describe('EcKey generate()', () => {
   it('should reject an invalid curve.', async () => {
-    await expect(EcKey.generate(undefined)).rejects.toThrow(
-      'Unsupported curve "undefined".'
-    )
-
     // @ts-expect-error
     await expect(EcKey.generate('unknown-curve')).rejects.toThrow(
       'Unsupported curve "unknown-curve".'
@@ -126,8 +110,6 @@ describe('EcKey parse()', () => {
   const privatePem = loadAsymmetricKey('EC', 'pem', 'private')
 
   it('should reject an invalid PEM key data.', () => {
-    expect(() => EcKey.parse(undefined)).toThrow(TypeError)
-
     // @ts-expect-error
     expect(() => EcKey.parse(123)).toThrow(TypeError)
 

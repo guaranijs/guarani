@@ -76,12 +76,12 @@ export function encodePrivatePkcs1(key: RsaKey): Node {
     new Integer(0x00),
     new Integer(base64UrlDecodeInt(key.n)),
     new Integer(base64UrlDecodeInt(key.e)),
-    new Integer(base64UrlDecodeInt(key.d)),
-    new Integer(base64UrlDecodeInt(key.p)),
-    new Integer(base64UrlDecodeInt(key.q)),
-    new Integer(base64UrlDecodeInt(key.dp)),
-    new Integer(base64UrlDecodeInt(key.dq)),
-    new Integer(base64UrlDecodeInt(key.qi))
+    new Integer(base64UrlDecodeInt(key.d!)),
+    new Integer(base64UrlDecodeInt(key.p!)),
+    new Integer(base64UrlDecodeInt(key.q!)),
+    new Integer(base64UrlDecodeInt(key.dp!)),
+    new Integer(base64UrlDecodeInt(key.dq!)),
+    new Integer(base64UrlDecodeInt(key.qi!))
   )
 }
 

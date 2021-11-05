@@ -22,7 +22,8 @@ const token =
 
 describe('JSON Web Encryption constructor', () => {
   it('should reject an invalid header.', () => {
-    expect(() => new JsonWebEncryption(undefined, plaintext)).toThrow(
+    // @ts-expect-error
+    expect(() => new JsonWebEncryption({}, plaintext)).toThrow(
       InvalidJoseHeader
     )
   })
@@ -60,12 +61,8 @@ describe('JSON Web Encryption serializeCompact()', () => {
 describe('JSON Web Encryption deserializeCompact()', () => {
   it('should reject an invalid token.', async () => {
     await expect(
-      JsonWebEncryption.deserializeCompact(null, null)
-    ).rejects.toThrow(InvalidJsonWebEncryption)
-
-    await expect(
       // @ts-ignore
-      JsonWebEncryption.deserializeCompact(123, null)
+      JsonWebEncryption.deserializeCompact(123, wrapKey)
     ).rejects.toThrow(InvalidJsonWebEncryption)
   })
 

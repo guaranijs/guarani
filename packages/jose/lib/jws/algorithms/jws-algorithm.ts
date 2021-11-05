@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/utils'
+
 import { InvalidKey } from '../../exceptions'
 import { JsonWebKey, SupportedJWKAlgorithm } from '../../jwk'
 import { SupportedHash } from '../../types'
@@ -15,7 +17,7 @@ export abstract class JWSAlgorithm {
   /**
    * Denotes the type of the JSON Web Key supported by this algorithm.
    */
-  public abstract readonly kty: SupportedJWKAlgorithm
+  public abstract readonly kty: Nullable<SupportedJWKAlgorithm>
 
   /**
    * Instantiates a new JWS Algorithm to sign and verify the messages.
@@ -24,7 +26,7 @@ export abstract class JWSAlgorithm {
    * @param algorithm Name of the algorithm.
    */
   public constructor(
-    protected readonly hash: SupportedHash,
+    protected readonly hash: Nullable<SupportedHash>,
     protected readonly algorithm: string
   ) {}
 

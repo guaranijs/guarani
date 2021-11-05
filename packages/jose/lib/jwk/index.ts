@@ -13,4 +13,4 @@ export {
   JsonWebKeyParams,
   SupportedJWKAlgorithm
 } from './jsonwebkey'
-export { JsonWebKeySet } from './jsonwebkeyset'
+export { JsonWebKeyset } from './jsonwebkeyset'

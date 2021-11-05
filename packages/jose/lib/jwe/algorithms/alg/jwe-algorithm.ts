@@ -28,7 +28,7 @@ export abstract class JWEAlgorithm {
    * @param key JWK used to wrap the generated CEK.
    * @returns CEK generated, Encrypted CEK and optional additional headers.
    */
-  public abstract wrap(cek: Buffer, key: JsonWebKey): Promise<WrappedKey>
+  public abstract wrap(cek: Buffer, key?: JsonWebKey): Promise<WrappedKey>
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.

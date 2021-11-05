@@ -7,7 +7,11 @@ import {
   publicEncrypt
 } from 'crypto'
 
-import { InvalidJsonWebEncryption, JoseError } from '../../../exceptions'
+import {
+  InvalidJsonWebEncryption,
+  InvalidKey,
+  JoseError
+} from '../../../exceptions'
 import { RsaKey, RsaPadding } from '../../../jwk'
 import { SupportedHash } from '../../../types'
 import { WrappedKey } from '../../_types'
@@ -41,7 +45,11 @@ class RSAAlgorithm extends JWEAlgorithm {
    * @param key JWK used to wrap the generated CEK.
    * @returns CEK generated and Encrypted CEK.
    */
-  public async wrap(cek: Buffer, key: RsaKey): Promise<WrappedKey> {
+  public async wrap(cek: Buffer, key?: RsaKey): Promise<WrappedKey> {
+    if (key == null) {
+      throw new InvalidKey('Missing required wrap key.')
+    }
+
     const publicKey = createPublicKey(key.export('public', 'pem', 'pkcs1'))
     const ek = publicEncrypt(
       { key: publicKey, oaepHash: this.hash, padding: this.padding },

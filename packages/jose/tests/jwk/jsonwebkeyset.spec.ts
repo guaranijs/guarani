@@ -1,5 +1,5 @@
-import { InvalidKeySet } from '../../lib/exceptions'
-import { EcKey, JsonWebKeySet, RsaKey } from '../../lib/jwk'
+import { InvalidKeyset } from '../../lib/exceptions'
+import { EcKey, JsonWebKeyset, RsaKey } from '../../lib/jwk'
 import { loadAsymmetricKey } from '../utils'
 
 describe('JSON Web Keyset constructor', () => {
@@ -7,19 +7,17 @@ describe('JSON Web Keyset constructor', () => {
   const rsaKey = loadAsymmetricKey<any>('RSA', 'json', 'public')
 
   it('should reject invalid keysets.', () => {
-    expect(() => new JsonWebKeySet(undefined)).toThrow(TypeError)
+    // @ts-expect-error
+    expect(() => new JsonWebKeyset(123)).toThrow(TypeError)
+
+    expect(() => new JsonWebKeyset([])).toThrow(TypeError)
 
     // @ts-expect-error
-    expect(() => new JsonWebKeySet(123)).toThrow(TypeError)
-
-    expect(() => new JsonWebKeySet([])).toThrow(TypeError)
-
-    // @ts-expect-error
-    expect(() => new JsonWebKeySet([123])).toThrow(InvalidKeySet)
+    expect(() => new JsonWebKeyset([123])).toThrow(InvalidKeyset)
 
     expect(
       () =>
-        new JsonWebKeySet([
+        new JsonWebKeyset([
           new EcKey(ecKey, { kid: 'keyid' }),
           new RsaKey(rsaKey)
         ])
@@ -27,7 +25,7 @@ describe('JSON Web Keyset constructor', () => {
 
     expect(
       () =>
-        new JsonWebKeySet([
+        new JsonWebKeyset([
           new EcKey(ecKey, { kid: 'keyid' }),
           new RsaKey(rsaKey, { kid: 'keyid' })
         ])
@@ -36,9 +34,9 @@ describe('JSON Web Keyset constructor', () => {
     )
   })
 
-  it('should create a JsonWebKeySet object.', () => {
+  it('should create a JsonWebKeyset object.', () => {
     expect(
-      new JsonWebKeySet([
+      new JsonWebKeyset([
         new EcKey(ecKey, { kid: 'ec-key' }),
         new RsaKey(rsaKey, { kid: 'rsa-key' })
       ])
@@ -62,12 +60,58 @@ describe('JSON Web Keyset constructor', () => {
       })
     )
   })
+
+  it('should parse a raw JSON Web Keyset object.', () => {
+    expect(() => JsonWebKeyset.parse(null)).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse(true)).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse(123)).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse('foo')).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse(() => {})).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse([])).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse({})).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse({ keys: null })).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse({ keys: true })).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse({ keys: 123 })).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse({ keys: 'foo' })).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse({ keys: () => {} })).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse({ keys: {} })).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse({ keys: [] })).toThrow(InvalidKeyset)
+
+    expect(() => JsonWebKeyset.parse({ keys: [{}] })).toThrow(InvalidKeyset)
+
+    const jwks = JsonWebKeyset.parse({
+      keys: [{ kty: 'oct', k: 'secret', kid: 'key-id' }]
+    })
+
+    expect(jwks).toBeInstanceOf(JsonWebKeyset)
+
+    expect(jwks.keys).toHaveLength(1)
+
+    expect(jwks.keys[0]).toMatchObject({
+      kty: 'oct',
+      k: 'secret',
+      kid: 'key-id'
+    })
+  })
 })
 
 describe('JSON Web Keyset getKey()', () => {
   const ecKey = loadAsymmetricKey<any>('EC', 'json', 'public')
   const rsaKey = loadAsymmetricKey<any>('RSA', 'json', 'public')
-  const keyset = new JsonWebKeySet([
+  const keyset = new JsonWebKeyset([
     new EcKey(ecKey, { kid: 'ec-key' }),
     new RsaKey(rsaKey, { kid: 'rsa-key' })
   ])

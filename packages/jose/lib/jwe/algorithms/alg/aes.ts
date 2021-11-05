@@ -1,6 +1,10 @@
 import { base64UrlEncode } from '@guarani/utils'
 
-import { InvalidJsonWebEncryption, JoseError } from '../../../exceptions'
+import {
+  InvalidJsonWebEncryption,
+  InvalidKey,
+  JoseError
+} from '../../../exceptions'
 import { OctKey } from '../../../jwk'
 import { unwrap, wrap } from '../../utils/aeskw'
 import { WrappedKey } from '../../_types'
@@ -34,7 +38,11 @@ class AESAlgorithm extends JWEAlgorithm {
    * @param key JWK used to wrap the generated CEK.
    * @returns CEK generated and Encrypted CEK.
    */
-  public async wrap(cek: Buffer, key: OctKey): Promise<WrappedKey> {
+  public async wrap(cek: Buffer, key?: OctKey): Promise<WrappedKey> {
+    if (key == null) {
+      throw new InvalidKey('Missing required wrap key.')
+    }
+
     const exportedKey = key.export('binary')
 
     if (exportedKey.length * 8 !== this.KEY_SIZE) {

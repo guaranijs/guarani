@@ -100,12 +100,12 @@ export class JsonWebEncryptionHeader
   /**
    * JWE CEK Algorithm used to encrypt and decrypt the Content Encryption Key.
    */
-  public readonly alg: SupportedJWEAlgorithm
+  public readonly alg!: SupportedJWEAlgorithm
 
   /**
    * JWE Authenticated Algorithm used to encrypt and decrypt the Plaintext.
    */
-  public readonly enc: SupportedJWEEncryption
+  public readonly enc!: SupportedJWEEncryption
 
   /**
    * Compression algorithm of the JSON Web Encryption.

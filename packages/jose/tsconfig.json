@@ -5,6 +5,7 @@
     "rootDir": "lib"
   },
   "include": [
-    "lib/**/*"
+    "lib/**/*",
+    "../tests/**/*"
   ]
 }

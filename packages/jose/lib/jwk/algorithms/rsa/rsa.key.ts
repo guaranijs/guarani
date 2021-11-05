@@ -502,6 +502,6 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
       }
     }
 
-    return format === 'der' ? DEREncoder(root) : PEMEncoder(root, label)
+    return format === 'der' ? DEREncoder(root!) : PEMEncoder(root!, label!)
   }
 }

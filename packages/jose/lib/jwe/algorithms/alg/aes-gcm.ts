@@ -8,7 +8,11 @@ import {
   randomBytes
 } from 'crypto'
 
-import { InvalidJsonWebEncryption, JoseError } from '../../../exceptions'
+import {
+  InvalidJsonWebEncryption,
+  InvalidKey,
+  JoseError
+} from '../../../exceptions'
 import { OctKey } from '../../../jwk'
 import { WrappedKey } from '../../_types'
 import { JWEAlgorithm } from './jwe-algorithm'
@@ -55,8 +59,12 @@ class AESGCMAlgorithm extends JWEAlgorithm {
    */
   public async wrap(
     cek: Buffer,
-    key: OctKey
+    key?: OctKey
   ): Promise<WrappedKey<AESGMCWrappedKey>> {
+    if (key == null) {
+      throw new InvalidKey('Missing required wrap key.')
+    }
+
     const exportedKey = key.export('binary')
 
     if (exportedKey.length * 8 !== this.KEY_SIZE) {

@@ -46,6 +46,12 @@ class CBCHS2Encryption extends JWEEncryption {
 
     const regex = this.algorithm.match(/A([0-9]{3})CBC-HS([0-9]{3})/)
 
+    if (regex == null) {
+      throw new InvalidJsonWebEncryption(
+        `Unsupported JWE Encryption "${algorithm}".`
+      )
+    }
+
     this.KEY_SIZE = parseInt(regex[1])
     this.HASH = <SupportedHash>`SHA${regex[2]}`
     this.CEK_SIZE = this.KEY_SIZE * 2

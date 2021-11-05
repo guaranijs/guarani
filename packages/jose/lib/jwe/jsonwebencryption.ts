@@ -47,7 +47,7 @@ export class JsonWebEncryption {
    * @param plaintext Buffer representation of the plaintext to be encrypted.
    */
   public constructor(header: JsonWebEncryptionHeader, plaintext: Buffer) {
-    if (!header) {
+    if (!(header instanceof JsonWebEncryptionHeader)) {
       throw new InvalidJoseHeader()
     }
 
@@ -166,7 +166,6 @@ export class JsonWebEncryption {
 
       const alg = JWE_ALGORITHMS[header.alg]
       const enc = JWE_ENCRYPTIONS[header.enc]
-      const zip = <JWECompression>JWE_COMPRESSIONS[header.zip]
 
       const wrapKey =
         typeof jwkOrKeyLoader === 'function'
@@ -180,7 +179,8 @@ export class JsonWebEncryption {
       const cek = await alg.unwrap(ek, wrapKey, header)
       let plaintext = await enc.decrypt(ciphertext, aad, iv, tag, cek)
 
-      if (zip != null) {
+      if (header.zip != null) {
+        const zip = <JWECompression>JWE_COMPRESSIONS[header.zip]
         plaintext = await zip.decompress(plaintext)
       }
 
@@ -238,7 +238,7 @@ export class JsonWebEncryption {
 
     const alg = JWE_ALGORITHMS[this.header.alg]
     const enc = JWE_ENCRYPTIONS[this.header.enc]
-    const zip = <JWECompression>JWE_COMPRESSIONS[this.header.zip]
+    const zip = <JWECompression>JWE_COMPRESSIONS[this.header.zip!]
 
     const cek = enc.generateCEK()
     const iv = enc.generateIV()

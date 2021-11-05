@@ -15,7 +15,7 @@ class DIRAlgorithm extends JWEAlgorithm {
    * @returns WrapKey as the CEK and an empty string as the EK.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async wrap(cek: Buffer, key: OctKey): Promise<WrappedKey> {
+  public async wrap(cek: Buffer, key?: OctKey): Promise<WrappedKey> {
     return { ek: '' }
   }
 

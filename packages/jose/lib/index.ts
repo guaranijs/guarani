@@ -6,7 +6,7 @@ export {
   InvalidJsonWebToken,
   InvalidJsonWebTokenClaim,
   InvalidKey,
-  InvalidKeySet,
+  InvalidKeyset,
   InvalidSignature,
   JoseError,
   TokenNotValidYet,
@@ -32,7 +32,7 @@ export {
   EcKey,
   JsonWebKey,
   JsonWebKeyParams,
-  JsonWebKeySet,
+  JsonWebKeyset,
   OctKey,
   RsaKey,
   SupportedJWKAlgorithm

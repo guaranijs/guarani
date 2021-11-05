@@ -17,7 +17,7 @@ export function Inject<T = any>(
   token?: InjectableToken<T>
 ): ParameterDecorator & PropertyDecorator {
   return (
-    target: Constructor<T>,
+    target: Object,
     propertyKey: string | symbol,
     parameterIndex?: number
   ) => {
@@ -29,7 +29,7 @@ export function Inject<T = any>(
 
     if (parameterIndex == null) {
       const type = getDesignPropType(target, propertyKey)
-      const isStatic = target.prototype !== undefined
+      const isStatic = (<Constructor<T>>target).prototype !== undefined
 
       definePropertyInjectableType(
         isStatic ? target : target.constructor,

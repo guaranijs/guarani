@@ -1,4 +1,5 @@
 import { Binding } from '../bindings'
+import { TokenNotRegistered } from '../exceptions'
 import { InjectableToken } from '../tokens'
 
 /**
@@ -18,10 +19,10 @@ export class Registry {
    */
   public add<T>(token: InjectableToken<T>, binding: Binding<T>): void {
     if (!this.has(token)) {
-      this.bindings.set(token, [])
+      this.set(token, [])
     }
 
-    this.bindings.get(token).push(binding)
+    this.bindings.get(token)!.push(binding)
   }
 
   /**
@@ -32,10 +33,10 @@ export class Registry {
    */
   public get<T>(token: InjectableToken<T>): Binding<T> {
     if (!this.has(token)) {
-      return null
+      throw new TokenNotRegistered(token)
     }
 
-    const bindings = this.bindings.get(token)
+    const bindings = this.bindings.get(token)!
 
     return bindings[bindings.length - 1]
   }
@@ -48,10 +49,10 @@ export class Registry {
    */
   public getAll<T>(token: InjectableToken<T>): Binding<T>[] {
     if (!this.has(token)) {
-      return null
+      throw new TokenNotRegistered(token)
     }
 
-    return this.bindings.get(token)
+    return this.bindings.get(token)!
   }
 
   /**
@@ -78,5 +79,9 @@ export class Registry {
    */
   public clear(): void {
     this.bindings.clear()
+  }
+
+  private set<T>(token: InjectableToken<T>, value: Binding<T>[]): void {
+    this.bindings.set(token, value)
   }
 }

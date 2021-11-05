@@ -19,7 +19,7 @@ export function LazyInject<T = any>(
   wrappedToken: Factory<InjectableToken<T>>
 ): PropertyDecorator & ParameterDecorator {
   return function (
-    target: Constructor<T>,
+    target: Object,
     propertyKey: string | symbol,
     parameterIndex?: number
   ) {
@@ -31,7 +31,7 @@ export function LazyInject<T = any>(
     }
 
     if (parameterIndex == null) {
-      const isStatic = target.prototype != null
+      const isStatic = (<Constructor<T>>target).prototype != null
 
       definePropertyInjectableType(
         isStatic ? target : target.constructor,

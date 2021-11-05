@@ -17,18 +17,18 @@ export function InjectAll<T = any>(
   token: InjectableToken<T>
 ): ParameterDecorator & PropertyDecorator {
   return function (
-    target: Constructor<T>,
+    target: Object,
     propertyKey: string | symbol,
     parameterIndex?: number
   ): void {
     // Injecting into the parameters of the constructor.
     if (propertyKey == null) {
-      defineParamInjectableType(target, parameterIndex, token, true)
+      defineParamInjectableType(target, parameterIndex!, token, true)
     }
 
     if (parameterIndex == null) {
       const type = getDesignPropType(target, propertyKey)
-      const isStatic = target.prototype !== undefined
+      const isStatic = (<Constructor<T>>target).prototype !== undefined
 
       definePropertyInjectableType(
         isStatic ? target : target.constructor,

@@ -1,4 +1,4 @@
-import { Factory } from '@guarani/utils'
+import { Factory } from '@guarani/utils/types'
 
 import { Provider } from './provider'
 

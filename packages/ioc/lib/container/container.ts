@@ -1,13 +1,11 @@
-import { Constructor, Dict } from '@guarani/utils'
+import { Constructor, Dict } from '@guarani/utils/types'
 
 import { Binding, ProviderBinding } from '../bindings'
-import { TokenNotRegistered } from '../exceptions'
 import { Lifecycle } from '../lifecycle'
 import { getParamTypes, getPropTokens } from '../metadata'
 import {
   isClassProvider,
   isFactoryProvider,
-  isProvider,
   isTokenProvider,
   isValueProvider,
   Provider
@@ -52,16 +50,12 @@ export class IoCContainer {
    */
   public resolve<T>(token: InjectableToken<T>): T {
     if (token instanceof LazyToken) {
-      return token.resolve(lazyToken => this.resolve(lazyToken))
+      return token.resolve(lazyToken => this.resolve<T>(lazyToken))
     }
 
-    if (!this.isBound(token)) {
-      throw new TokenNotRegistered(token)
-    }
+    const binding = this.registry.get<T>(token)
 
-    const binding = this.registry.get(token)
-
-    return this.resolveBinding(binding)
+    return this.resolveBinding<T>(binding)
   }
 
   /**
@@ -78,13 +72,9 @@ export class IoCContainer {
       throw new Error('The resolution of multiple LazyTokens is unsupported.')
     }
 
-    if (!this.isBound(token)) {
-      throw new TokenNotRegistered(token)
-    }
+    const bindings = this.registry.getAll<T>(token)
 
-    const bindings = this.registry.getAll(token)
-
-    return bindings.map(binding => this.resolveBinding(binding))
+    return bindings.map(binding => this.resolveBinding<T>(binding))
   }
 
   /**
@@ -132,10 +122,6 @@ export class IoCContainer {
    * @returns Resolved provider.
    */
   private resolveProvider<T>(provider: Provider<T>): T {
-    if (!isProvider<T>(provider)) {
-      throw new TypeError(`The object ${provider} is not a provider.`)
-    }
-
     if (isClassProvider<T>(provider)) {
       return this.construct(provider.target)
     }
@@ -151,6 +137,8 @@ export class IoCContainer {
     if (isValueProvider<T>(provider)) {
       return provider.value
     }
+
+    throw new TypeError(`The object ${provider} is not a provider.`)
   }
 
   /**
@@ -178,24 +166,16 @@ export class IoCContainer {
           : this.resolve(token.token)
 
         if (token.isStatic) {
+          // @ts-expect-error
           instance.constructor[prop] = resolvedToken
         } else {
+          // @ts-expect-error
           instance[prop] = resolvedToken
         }
       })
     }
 
     return instance
-  }
-
-  /**
-   * Returns whether or not the requested token is registered at the Container.
-   *
-   * @param token Injectable Token to be inspected.
-   * @returns Whether or not the Token is registered.
-   */
-  private isBound<T>(token: InjectableToken<T>): boolean {
-    return this.registry.has(token)
   }
 }
 

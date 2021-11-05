@@ -14,7 +14,7 @@ export class Binding<T> {
   /**
    * Provider indexed at the Binding, used to resolve the Token.
    */
-  private _provider: Provider<T>
+  private _provider!: Provider<T>
 
   /**
    * Singleton instance of the Binding.
@@ -33,7 +33,6 @@ export class Binding<T> {
    */
   public constructor(token: InjectableToken<T>) {
     this._token = token
-    this._provider = null
   }
 
   /**

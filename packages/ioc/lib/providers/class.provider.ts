@@ -1,4 +1,4 @@
-import { Constructor } from '@guarani/utils'
+import { Constructor } from '@guarani/utils/types'
 
 import { Provider } from './provider'
 

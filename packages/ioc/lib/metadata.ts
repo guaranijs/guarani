@@ -1,4 +1,4 @@
-import { Dict } from '@guarani/utils'
+import { Dict } from '@guarani/utils/types'
 
 import { Constants } from './constants'
 import { InjectableToken } from './tokens'
@@ -39,7 +39,7 @@ export interface InjectableType<T> {
  * @param target Constructor to be inspected.
  * @returns List of the types of the parameters of the Constructor.
  */
-export function getDesignParamTypes(target: Function): any[] {
+export function getDesignParamTypes(target: Object): any[] {
   return Reflect.getMetadata(Constants.DESIGN_PARAM_TYPES, target) ?? []
 }
 
@@ -49,7 +49,7 @@ export function getDesignParamTypes(target: Function): any[] {
  * @param target Constructor to be inspected.
  * @returns Injectable types metadata.
  */
-export function getParamTypes(target: Function): InjectableType<any>[] {
+export function getParamTypes(target: Object): InjectableType<any>[] {
   return Reflect.getMetadata(Constants.PARAM_TYPES, target)
 }
 
@@ -64,7 +64,7 @@ export function getParamTypes(target: Function): InjectableType<any>[] {
  * @param types Injectable types based on the target's constructor parameters.
  */
 export function setParamTypes(
-  target: Function,
+  target: Object,
   types: InjectableType<any>[]
 ): void {
   Reflect.defineMetadata(Constants.PARAM_TYPES, types, target)
@@ -81,7 +81,7 @@ export function setParamTypes(
  * @param target Constructor to be inspected.
  * @returns Dictionary of the target constructor's parameter tokens.
  */
-export function getParamTokens(target: Function): Dict<InjectableType<any>> {
+export function getParamTokens(target: Object): Dict<InjectableType<any>> {
   return Reflect.getMetadata(Constants.PARAM_TOKENS, target)
 }
 
@@ -93,7 +93,7 @@ export function getParamTokens(target: Function): Dict<InjectableType<any>> {
  * @param tokens Dictionary of injectable types to be registered.
  */
 export function setParamTokens(
-  target: Function,
+  target: Object,
   tokens: Dict<InjectableType<any>>
 ): void {
   Reflect.defineMetadata(Constants.PARAM_TOKENS, tokens, target)
@@ -114,7 +114,7 @@ export function setParamTokens(
  * @param multiple Injects the last provider or all the providers.
  */
 export function defineParamInjectableType(
-  target: Function,
+  target: Object,
   parameterIndex: number,
   token: InjectableToken<any>,
   multiple: boolean
@@ -132,7 +132,7 @@ export function defineParamInjectableType(
  * @returns Type of the property.
  */
 export function getDesignPropType(
-  target: Function,
+  target: Object,
   propertyKey: string | symbol
 ): any {
   return Reflect.getMetadata(Constants.DESIGN_PROP_TYPE, target, propertyKey)
@@ -149,7 +149,7 @@ export function getDesignPropType(
  * @param target Constructor to be inspected.
  * @returns Dictionary of the target properties' tokens.
  */
-export function getPropTokens(target: Function): Dict<InjectableType<any>> {
+export function getPropTokens(target: Object): Dict<InjectableType<any>> {
   return Reflect.getMetadata(Constants.PROP_TOKENS, target)
 }
 
@@ -161,7 +161,7 @@ export function getPropTokens(target: Function): Dict<InjectableType<any>> {
  * @param tokens Dictionary of injectable types to be registered.
  */
 export function setPropTokens(
-  target: Function,
+  target: Object,
   tokens: Dict<InjectableType<any>>
 ): void {
   Reflect.defineMetadata(Constants.PROP_TOKENS, tokens, target)
@@ -182,7 +182,7 @@ export function setPropTokens(
  * @param multiple Injects the last provider or all the providers.
  */
 export function definePropertyInjectableType<T>(
-  target: Function,
+  target: Object,
   propertyKey: string | symbol,
   token: InjectableToken<T>,
   multiple: boolean,

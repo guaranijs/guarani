@@ -1,9 +1,8 @@
-import { Constructor, Factory } from '@guarani/utils'
+import { Constructor, Factory } from '@guarani/utils/types'
 
 import {
   isClassProvider,
   isFactoryProvider,
-  isProvider,
   isTokenProvider,
   isValueProvider,
   Provider
@@ -29,10 +28,6 @@ export class ProviderBinding<T> {
    * @param provider Current Provider.
    */
   public to<U>(provider: Provider<U>): LifecycleBinding<T> {
-    if (!isProvider<U>(provider)) {
-      throw new TypeError(`Invalid format for provider: ${provider}.`)
-    }
-
     if (isClassProvider<U>(provider)) {
       return this.toClass(provider.target)
     }
@@ -48,6 +43,8 @@ export class ProviderBinding<T> {
     if (isValueProvider<U>(provider)) {
       return this.toValue(provider.value)
     }
+
+    throw new TypeError(`Invalid format for provider: ${provider}.`)
   }
 
   /**

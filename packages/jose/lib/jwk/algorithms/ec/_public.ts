@@ -1,12 +1,14 @@
-import { BitString, Decoder, Node, ObjectId, Sequence } from '@guarani/asn1'
 import {
-  base64UrlDecodeInt,
-  base64UrlEncodeInt,
-  fromBuffer,
-  toBuffer
-} from '@guarani/utils'
+  BitStringNode,
+  Decoder,
+  Node,
+  ObjectIdNode,
+  SequenceNode
+} from '@guarani/asn1'
+import b64Url from '@guarani/base64url'
+import { fromBuffer, toBuffer } from '@guarani/primitives'
 
-import { InvalidKey } from '../../../exceptions'
+import { InvalidJsonWebKeyException } from '../../../exceptions'
 import { JsonWebKeyParams } from '../../jsonwebkey'
 import { EcKey, EcKeyParams } from './ec.key'
 import { ELLIPTIC_CURVES, ID_EC_PUBLIC_KEY } from './_types'
@@ -20,8 +22,8 @@ import { ELLIPTIC_CURVES, ID_EC_PUBLIC_KEY } from './_types'
 export function getEncodedPublicKey(key: EcKeyParams): Buffer {
   const length = ELLIPTIC_CURVES[key.crv].length
 
-  let x = toBuffer(base64UrlDecodeInt(key.x))
-  let y = toBuffer(base64UrlDecodeInt(key.y))
+  let x = toBuffer(b64Url.decode(key.x, BigInt))
+  let y = toBuffer(b64Url.decode(key.y, BigInt))
 
   while (x.length < length) {
     x = Buffer.concat([toBuffer(0x00), x])
@@ -50,7 +52,7 @@ export function decodePublicX509(
   const curveOid = curveData.objectid()
 
   if (Buffer.compare(ecKeyOid, ID_EC_PUBLIC_KEY) !== 0) {
-    throw new InvalidKey('Malformed curve.')
+    throw new InvalidJsonWebKeyException('Malformed curve.')
   }
 
   const curve = Object.values(ELLIPTIC_CURVES).find(
@@ -58,13 +60,13 @@ export function decodePublicX509(
   )
 
   if (!curve) {
-    throw new InvalidKey('Malformed curve.')
+    throw new InvalidJsonWebKeyException('Malformed curve.')
   }
 
   const publicKey = decoder.bitstring()
 
   if (publicKey.data[0] !== 0x04) {
-    throw new InvalidKey('Invalid Public Key.')
+    throw new InvalidJsonWebKeyException('Invalid Public Key.')
   }
 
   publicKey.displace(1)
@@ -72,8 +74,8 @@ export function decodePublicX509(
   const left = publicKey.data.subarray(0, curve.length)
   const right = publicKey.data.subarray(curve.length)
 
-  const x = base64UrlEncodeInt(fromBuffer(left, 'integer'))
-  const y = base64UrlEncodeInt(fromBuffer(right, 'integer'))
+  const x = b64Url.encode(fromBuffer(left, BigInt))
+  const y = b64Url.encode(fromBuffer(right, BigInt))
 
   return new EcKey({ crv: curve.id, x, y }, options)
 }
@@ -85,12 +87,12 @@ export function decodePublicX509(
  * @param key Key to be encoded.
  * @returns X.509 SubjectPublicKeyInfo ASN.1 Abstract Syntax Tree
  */
-export function encodePublicX509(key: EcKey): Node {
-  return new Sequence(
-    new Sequence(
-      new ObjectId('1.2.840.10045.2.1'),
-      new ObjectId(ELLIPTIC_CURVES[key.crv].oid)
-    ),
-    new BitString(getEncodedPublicKey(key))
-  )
+export function encodePublicX509(key: EcKey): Node<any> {
+  return new SequenceNode([
+    new SequenceNode([
+      new ObjectIdNode('1.2.840.10045.2.1'),
+      new ObjectIdNode(ELLIPTIC_CURVES[key.crv].oid)
+    ]),
+    new BitStringNode(getEncodedPublicKey(key))
+  ])
 }

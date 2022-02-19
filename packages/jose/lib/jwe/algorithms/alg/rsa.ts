@@ -1,4 +1,5 @@
-import { base64UrlEncode } from '@guarani/utils'
+import b64Url from '@guarani/base64url'
+import { Optional } from '@guarani/types'
 
 import {
   createPrivateKey,
@@ -32,7 +33,7 @@ class RSAAlgorithm extends JWEAlgorithm {
   public constructor(
     protected readonly algorithm: string,
     protected readonly padding: RsaPadding,
-    protected readonly hash?: SupportedHash
+    protected readonly hash?: Optional<SupportedHash>
   ) {
     super(algorithm)
   }
@@ -45,7 +46,7 @@ class RSAAlgorithm extends JWEAlgorithm {
    * @param key JWK used to wrap the generated CEK.
    * @returns CEK generated and Encrypted CEK.
    */
-  public async wrap(cek: Buffer, key?: RsaKey): Promise<WrappedKey> {
+  public async wrap(cek: Buffer, key?: Optional<RsaKey>): Promise<WrappedKey> {
     if (key == null) {
       throw new InvalidKey('Missing required wrap key.')
     }
@@ -56,7 +57,7 @@ class RSAAlgorithm extends JWEAlgorithm {
       cek
     )
 
-    return { ek: base64UrlEncode(ek) }
+    return { ek: b64Url.encode(ek) }
   }
 
   /**

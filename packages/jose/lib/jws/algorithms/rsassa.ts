@@ -1,9 +1,9 @@
-import { base64UrlDecode, base64UrlEncode } from '@guarani/utils'
+import b64Url from '@guarani/base64url'
 
 import { createPrivateKey, createPublicKey, sign, verify } from 'crypto'
 
 import { InvalidSignature } from '../../exceptions'
-import { RsaKey, RsaPadding, SupportedJWKAlgorithm } from '../../jwk'
+import { RsaKey, RsaPadding } from '../../jwk'
 import { SupportedHash } from '../../types'
 import { JWSAlgorithm } from './jws-algorithm'
 
@@ -14,7 +14,7 @@ class RSASSAAlgorithm extends JWSAlgorithm {
   /**
    * Accepted key type.
    */
-  public readonly kty: SupportedJWKAlgorithm = 'RSA'
+  public readonly kty: string = 'RSA'
 
   /**
    * Instantiates a new RSASSA Algorithm to sign and verify the messages.
@@ -43,7 +43,7 @@ class RSASSAAlgorithm extends JWSAlgorithm {
 
     const privateKey = createPrivateKey(key.export('private', 'pem', 'pkcs1'))
 
-    return base64UrlEncode(
+    return b64Url.encode(
       sign(this.hash, message, { key: privateKey, padding: this.padding })
     )
   }
@@ -68,7 +68,7 @@ class RSASSAAlgorithm extends JWSAlgorithm {
       this.hash,
       message,
       { key: publicKey, padding: this.padding },
-      base64UrlDecode(signature)
+      b64Url.decode(signature, Buffer)
     )
 
     if (!verified) {

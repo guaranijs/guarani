@@ -8,9 +8,5 @@ export {
   RsaPadding,
   SupportedEllipticCurve
 } from './algorithms'
-export {
-  JsonWebKey,
-  JsonWebKeyParams,
-  SupportedJWKAlgorithm
-} from './jsonwebkey'
+export { JsonWebKey, JsonWebKeyParams } from './jsonwebkey'
 export { JsonWebKeyset } from './jsonwebkeyset'

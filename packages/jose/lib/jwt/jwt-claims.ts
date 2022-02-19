@@ -1,4 +1,4 @@
-import { OneOrMany } from '@guarani/utils'
+import { OneOrMany } from '@guarani/types'
 
 /**
  * Defines the options for the validation of a specific claim.

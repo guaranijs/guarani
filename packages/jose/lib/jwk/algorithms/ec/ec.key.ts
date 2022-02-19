@@ -6,16 +6,13 @@ import {
   PEMDecoder,
   PEMEncoder
 } from '@guarani/asn1'
+import { Optional } from '@guarani/types'
 
 import { generateKeyPair } from 'crypto'
 import { promisify } from 'util'
 
-import { InvalidKey } from '../../../exceptions'
-import {
-  JsonWebKey,
-  JsonWebKeyParams,
-  SupportedJWKAlgorithm
-} from '../../jsonwebkey'
+import { InvalidJsonWebKeyException } from '../../../exceptions'
+import { JsonWebKey, JsonWebKeyParams } from '../../jsonwebkey'
 import {
   decodePrivatePkcs8,
   decodePrivateSec1,
@@ -23,18 +20,18 @@ import {
   encodePrivateSec1
 } from './_private'
 import { decodePublicX509, encodePublicX509 } from './_public'
-import { ELLIPTIC_CURVES, SupportedEllipticCurve } from './_types'
+import { ELLIPTIC_CURVES, EllipticCurve } from './_types'
 
 const generateKeyPairAsync = promisify(generateKeyPair)
 
 /**
- * Representation of the parameters of an **Elliptic Curve Key**.
+ * Representation of the parameters of an **Elliptic Curve** Asymmetric Key.
  */
 export interface EcKeyParams extends JsonWebKeyParams {
   /**
    * Name of the elliptic curve.
    */
-  readonly crv: SupportedEllipticCurve
+  readonly crv: EllipticCurve
 
   /**
    * Base64Url representation of the X value.
@@ -49,37 +46,37 @@ export interface EcKeyParams extends JsonWebKeyParams {
   /**
    * Base64Url representation of the Private Value.
    */
-  readonly d?: string
+  readonly d?: Optional<string>
 }
 
 /**
- * Implementation of the Elliptic Curve Key.
+ * Implementation of the **Elliptic Curve** Asymmetric Key.
  */
 export class EcKey extends JsonWebKey implements EcKeyParams {
   /**
    * Key type representing the algorithm of the key.
    */
-  public readonly kty: SupportedJWKAlgorithm
+  public readonly kty: string
 
   /**
    * Name of the elliptic curve.
    */
-  public readonly crv: SupportedEllipticCurve
+  public readonly crv!: EllipticCurve
 
   /**
    * Base64Url representation of the X value.
    */
-  public readonly x: string
+  public readonly x!: string
 
   /**
    * Base64Url representation of the Y value.
    */
-  public readonly y: string
+  public readonly y!: string
 
   /**
    * Base64Url representation of the Private Value.
    */
-  public readonly d?: string
+  public readonly d?: Optional<string>
 
   /**
    * Instantiantes a new Elliptic Curve Key based on the provided parameters.
@@ -90,38 +87,33 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
   public constructor(key: EcKeyParams, options: JsonWebKeyParams = {}) {
     const params: EcKeyParams = { ...key, ...options }
 
-    super(params)
-
-    if (params.kty && params.kty !== 'EC') {
-      throw new InvalidKey(
-        `Invalid parameter "kty". Expected "EC", got "${params.kty}".`
+    if (typeof params.kty !== 'undefined' && params.kty !== 'EC') {
+      throw new InvalidJsonWebKeyException(
+        `Invalid ley parameter "kty". Expected "EC", got "${params.kty}".`
       )
     }
 
     if (!(params.crv in ELLIPTIC_CURVES)) {
-      throw new InvalidKey(`Unsupported curve "${params.crv}".`)
+      throw new InvalidJsonWebKeyException(`Unsupported curve "${params.crv}".`)
     }
 
-    if (!params.x || typeof params.x !== 'string') {
-      throw new InvalidKey('Invalid parameter "x".')
+    if (typeof params.x !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid key parameter "x".')
     }
 
-    if (!params.y || typeof params.y !== 'string') {
-      throw new InvalidKey('Invalid parameter "y".')
+    if (typeof params.y !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid key parameter "y".')
     }
+
+    if (typeof params.d !== 'undefined') {
+      if (typeof params.d !== 'string') {
+        throw new InvalidJsonWebKeyException('Invalid key parameter "d".')
+      }
+    }
+
+    super(params)
 
     this.kty = 'EC'
-    this.crv = params.crv
-    this.x = params.x
-    this.y = params.y
-
-    if (params.d != null) {
-      if (!params.d || typeof params.d !== 'string') {
-        throw new InvalidKey('Invalid parameter "d".')
-      }
-
-      this.d = params.d
-    }
   }
 
   /**
@@ -189,7 +181,7 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
         decoder = PEMDecoder(data).sequence()
       }
     } catch {
-      throw new InvalidKey('Could not parse the provided key.')
+      throw new InvalidJsonWebKeyException('Could not parse the provided key.')
     }
 
     try {
@@ -206,11 +198,13 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
           return decodePrivatePkcs8(decoder, options)
         }
       } catch {
-        throw new InvalidKey('Could not parse the provided key.')
+        throw new InvalidJsonWebKeyException(
+          'Could not parse the provided key.'
+        )
       }
     }
 
-    throw new InvalidKey('Could not parse the provided key.')
+    throw new InvalidJsonWebKeyException('Could not parse the provided key.')
   }
 
   /**

@@ -1,11 +1,9 @@
-import { sanitizeHTML } from '../html'
+import { sanitizeHtml } from '../lib/html';
 
-describe('HTML functionalities', () => {
+describe('sanitizeHtml()', () => {
   it('should sanitize HTML tags.', () => {
-    const html = `<script>window.alert('Hacked!!')</script>`
+    const html = `<script>window.alert('Hacked!!')</script>`;
 
-    expect(sanitizeHTML(html)).toBe(
-      `&lt;script&gt;window.alert(&#39;Hacked!!&#39;)&lt;&#x2F;script&gt;`
-    )
-  })
-})
+    expect(sanitizeHtml(html)).toBe(`&lt;script&gt;window.alert(&#39;Hacked!!&#39;)&lt;&#x2F;script&gt;`);
+  });
+});

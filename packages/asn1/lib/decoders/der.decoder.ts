@@ -1,15 +1,47 @@
-import { Decoder } from './decoder'
+import { Optional } from '@guarani/types';
 
-/**
- * Loads the data of a DER Buffer into a Decoder.
- *
- * @param data - DER Buffer to be decoded.
- * @returns Instance of Decoder wrapping the DER Buffer.
- */
-export function DERDecoder(data: Buffer): Decoder {
-  if (!Buffer.isBuffer(data)) {
-    throw new TypeError('Invalid parameter "data".')
+import { DecodingException } from '../exceptions/decoding.exception';
+import { Method } from '../method';
+import { NodeOptions } from '../nodes/node.options';
+import { Type } from '../type';
+import { BerDecoder } from './ber.decoder';
+
+export class DerDecoder<TModel> extends BerDecoder<TModel> {
+  /**
+   * Parses a BitString Type.
+   */
+  protected decodeBitString(options?: Optional<NodeOptions>): Buffer {
+    if (options?.method !== Method.Primitive) {
+      throw new DecodingException('Unsupported Constructed Method for BitString.');
+    }
+
+    let [type, buffer] = this.slice(Type.BitString, options);
+
+    if ((type & Method.Constructed) !== 0x00) {
+      throw new DecodingException('Unsupported Constructed Method for BitString.');
+    }
+
+    if (buffer.length > 1 && buffer[0] === 0x00) {
+      buffer = buffer.subarray(1);
+    }
+
+    return buffer;
   }
 
-  return new Decoder(data)
+  /**
+   * Parses an OctetString Type.
+   */
+  protected decodeOctetString(options?: NodeOptions): Buffer {
+    if (options?.method !== Method.Primitive) {
+      throw new DecodingException('Unsupported Constructed Method for OctetString.');
+    }
+
+    const [type, buffer] = this.slice(Type.OctetString, options);
+
+    if ((type & Method.Constructed) !== 0x00) {
+      throw new DecodingException('Unsupported Constructed Method for OctetString.');
+    }
+
+    return buffer;
+  }
 }

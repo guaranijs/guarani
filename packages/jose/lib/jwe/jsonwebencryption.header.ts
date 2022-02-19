@@ -1,4 +1,4 @@
-import { removeNullishValues } from '@guarani/utils'
+import { removeNullishValues } from '@guarani/objects'
 
 import { InvalidJoseHeader } from '../exceptions'
 import { JoseHeader, JoseHeaderParams } from '../jose.header'

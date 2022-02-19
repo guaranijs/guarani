@@ -1,4 +1,4 @@
-import { base64UrlEncode } from '@guarani/utils'
+import b64Url from '@guarani/base64url'
 
 import {
   createCipheriv,
@@ -84,8 +84,8 @@ class CBCHS2Encryption extends JWEEncryption {
     const tag = this.getAuthTag(ciphertext, iv, aad, macKey)
 
     return {
-      ciphertext: base64UrlEncode(ciphertext),
-      tag: base64UrlEncode(tag)
+      ciphertext: b64Url.encode(ciphertext),
+      tag: b64Url.encode(tag)
     }
   }
 

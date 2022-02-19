@@ -1,21 +1,17 @@
 import {
-  BitString,
+  BitStringNode,
   ContextSpecific,
   Decoder,
-  Integer,
+  IntegerNode,
   Node,
-  ObjectId,
-  OctetString,
-  Sequence
+  ObjectIdNode,
+  OctetStringNode,
+  SequenceNode
 } from '@guarani/asn1'
-import {
-  base64UrlDecodeInt,
-  base64UrlEncodeInt,
-  fromBuffer,
-  toBuffer
-} from '@guarani/utils'
+import b64Url from '@guarani/base64url'
+import { fromBuffer, toBuffer } from '@guarani/primitives'
 
-import { InvalidKey } from '../../../exceptions'
+import { InvalidJsonWebKeyException } from '../../../exceptions'
 import { JsonWebKeyParams } from '../../jsonwebkey'
 import { EcKey } from './ec.key'
 import { getEncodedPublicKey } from './_public'
@@ -28,7 +24,7 @@ import { ELLIPTIC_CURVES, ID_EC_PUBLIC_KEY } from './_types'
  */
 export function getPaddedPrivateValue(key: EcKey): Buffer {
   const curve = ELLIPTIC_CURVES[key.crv]
-  let privateValue = toBuffer(base64UrlDecodeInt(key.d!))
+  let privateValue = toBuffer(b64Url.decode(key.d!, BigInt))
 
   while (privateValue.length < curve.length) {
     privateValue = Buffer.concat([toBuffer(0x00), privateValue])
@@ -57,11 +53,11 @@ export function decodePrivateSec1(
   )
 
   if (!curve) {
-    throw new InvalidKey('Malformed Elliptic Curve.')
+    throw new InvalidJsonWebKeyException('Malformed Elliptic Curve.')
   }
 
   if (publicKey.data[0] !== 0x04) {
-    throw new InvalidKey('Invalid Public Key.')
+    throw new InvalidJsonWebKeyException('Invalid Public Key.')
   }
 
   publicKey.displace(1)
@@ -69,9 +65,9 @@ export function decodePrivateSec1(
   const left = publicKey.data.subarray(0, curve.length)
   const right = publicKey.data.subarray(curve.length)
 
-  const x = base64UrlEncodeInt(fromBuffer(left, 'integer'))
-  const y = base64UrlEncodeInt(fromBuffer(right, 'integer'))
-  const d = base64UrlEncodeInt(fromBuffer(privateKey.data, 'integer'))
+  const x = b64Url.encode(fromBuffer(left, BigInt))
+  const y = b64Url.encode(fromBuffer(right, BigInt))
+  const d = b64Url.encode(fromBuffer(privateKey.data, BigInt))
 
   return new EcKey({ crv: curve.id, x, y, d }, options)
 }
@@ -93,7 +89,7 @@ export function decodePrivatePkcs8(
   const curveOid = curveId.objectid()
 
   if (Buffer.compare(pkcs8Id, ID_EC_PUBLIC_KEY) !== 0) {
-    throw new InvalidKey('Malformed Elliptic Curve.')
+    throw new InvalidJsonWebKeyException('Malformed Elliptic Curve.')
   }
 
   const curve = Object.values(ELLIPTIC_CURVES).find(
@@ -101,21 +97,21 @@ export function decodePrivatePkcs8(
   )
 
   if (!curve) {
-    throw new InvalidKey('Malformed Elliptic Curve.')
+    throw new InvalidJsonWebKeyException('Malformed Elliptic Curve.')
   }
 
   const privateKey = decoder.octetstring().sequence()
   const version = privateKey.integer()
 
   if (version !== 1n) {
-    throw new InvalidKey()
+    throw new InvalidJsonWebKeyException()
   }
 
   const privateValue = privateKey.octetstring()
   const publicKey = privateKey.contextSpecific(0x01, false).bitstring()
 
   if (publicKey.data[0] !== 0x04) {
-    throw new InvalidKey('Invalid Public Key.')
+    throw new InvalidJsonWebKeyException('Invalid Public Key.')
   }
 
   publicKey.displace(1)
@@ -123,9 +119,9 @@ export function decodePrivatePkcs8(
   const left = publicKey.data.subarray(0, curve.length)
   const right = publicKey.data.subarray(curve.length)
 
-  const x = base64UrlEncodeInt(fromBuffer(left, 'integer'))
-  const y = base64UrlEncodeInt(fromBuffer(right, 'integer'))
-  const d = base64UrlEncodeInt(fromBuffer(privateValue.data, 'integer'))
+  const x = b64Url.encode(fromBuffer(left, BigInt))
+  const y = b64Url.encode(fromBuffer(right, BigInt))
+  const d = b64Url.encode(fromBuffer(privateValue.data, BigInt))
 
   return new EcKey({ crv: curve.id, x, y, d }, options)
 }
@@ -136,17 +132,25 @@ export function decodePrivatePkcs8(
  * @param key Key to be encoded.
  * @returns SEC.1 ASN.1 Abstract Syntax Tree
  */
-export function encodePrivateSec1(key: EcKey): Node {
+export function encodePrivateSec1(key: EcKey): Node<any> {
   const publicKey = getEncodedPublicKey(key)
   const curve = ELLIPTIC_CURVES[key.crv]
   const privateValue = getPaddedPrivateValue(key)
 
-  return new Sequence(
-    new Integer(0x01),
-    new OctetString(privateValue),
-    new ContextSpecific(0x00, 'constructed', new ObjectId(curve.oid).encode()),
-    new ContextSpecific(0x01, 'constructed', new BitString(publicKey).encode())
-  )
+  return new SequenceNode([
+    new IntegerNode(0x01),
+    new OctetStringNode(privateValue),
+    new ContextSpecific(
+      0x00,
+      'constructed',
+      new ObjectIdNode(curve.oid).encode()
+    ),
+    new ContextSpecific(
+      0x01,
+      'constructed',
+      new BitStringNode(publicKey).encode()
+    )
+  ])
 }
 
 /**
@@ -155,20 +159,27 @@ export function encodePrivateSec1(key: EcKey): Node {
  * @param key Key to be encoded.
  * @returns PKCS#8 ASN.1 Abstract Syntax Tree
  */
-export function encodePrivatePkcs8(key: EcKey): Node {
+export function encodePrivatePkcs8(key: EcKey): Node<any> {
   const publicKey = getEncodedPublicKey(key)
   const curve = ELLIPTIC_CURVES[key.crv]
   const privateValue = getPaddedPrivateValue(key)
 
-  const privateKey = new Sequence(
-    new Integer(0x01),
-    new OctetString(privateValue),
-    new ContextSpecific(0x01, 'constructed', new BitString(publicKey).encode())
-  )
+  const privateKey = new SequenceNode([
+    new IntegerNode(0x01),
+    new OctetStringNode(privateValue),
+    new ContextSpecific(
+      0x01,
+      'constructed',
+      new BitStringNode(publicKey).encode()
+    )
+  ])
 
-  return new Sequence(
-    new Integer(0x00),
-    new Sequence(new ObjectId('1.2.840.10045.2.1'), new ObjectId(curve.oid)),
-    new OctetString(privateKey.encode())
-  )
+  return new SequenceNode([
+    new IntegerNode(0x00),
+    new SequenceNode([
+      new ObjectIdNode('1.2.840.10045.2.1'),
+      new ObjectIdNode(curve.oid)
+    ]),
+    new OctetStringNode(privateKey.encode())
+  ])
 }

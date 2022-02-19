@@ -1,4 +1,4 @@
-import { Dict } from '@guarani/utils'
+import { Dict } from '@guarani/types'
 
 /**
  * Interface of the Content Encryption result.
@@ -18,7 +18,7 @@ export interface AuthenticatedEncryption {
 /**
  * Interface of the Key Wrapping result.
  */
-export interface WrappedKey<AdditionalJoseHeaderParams = Dict<any>> {
+export interface WrappedKey<AdditionalJoseHeaderParams = Dict> {
   /**
    * Encrypted CEK.
    */

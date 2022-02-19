@@ -1,4 +1,4 @@
-import { base64UrlDecode, base64UrlEncode } from '@guarani/utils'
+import b64Url from '@guarani/base64url'
 
 import {
   CipherGCMTypes,
@@ -85,8 +85,8 @@ class AESGCMAlgorithm extends JWEAlgorithm {
     const tag = cipher.getAuthTag()
 
     return {
-      ek: base64UrlEncode(ek),
-      header: { iv: base64UrlEncode(iv), tag: base64UrlEncode(tag) }
+      ek: b64Url.encode(ek),
+      header: { iv: b64Url.encode(iv), tag: b64Url.encode(tag) }
     }
   }
 
@@ -113,8 +113,8 @@ class AESGCMAlgorithm extends JWEAlgorithm {
       }
 
       const secretKey = createSecretKey(exportedKey)
-      const tag = base64UrlDecode(header.tag)
-      const iv = base64UrlDecode(header.iv)
+      const tag = b64Url.decode(header.tag, Buffer)
+      const iv = b64Url.decode(header.iv, Buffer)
 
       const algorithm = <CipherGCMTypes>`aes-${this.KEY_SIZE}-gcm`
       const decipher = createDecipheriv(algorithm, secretKey, iv, {

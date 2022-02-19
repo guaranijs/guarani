@@ -1,9 +1,9 @@
-import { base64UrlBufferLength, base64UrlEncode } from '@guarani/utils'
+import b64Url from '@guarani/base64url'
 
 import { createHmac, createSecretKey } from 'crypto'
 
 import { InvalidKey, InvalidSignature } from '../../exceptions'
-import { OctKey, SupportedJWKAlgorithm } from '../../jwk'
+import { OctKey } from '../../jwk'
 import { SupportedHash } from '../../types'
 import { JWSAlgorithm } from './jws-algorithm'
 
@@ -14,7 +14,7 @@ class HMACAlgorithm extends JWSAlgorithm {
   /**
    * Accepted key type.
    */
-  public readonly kty: SupportedJWKAlgorithm = 'oct'
+  public readonly kty: string = 'oct'
 
   /**
    * Instantiates a new HMAC Algorithm to sign and verify the messages.
@@ -45,7 +45,7 @@ class HMACAlgorithm extends JWSAlgorithm {
     const secretKey = createSecretKey(key.export('binary'))
     const signature = createHmac(this.hash, secretKey).update(message).digest()
 
-    return base64UrlEncode(signature)
+    return b64Url.encode(signature)
   }
 
   /**
@@ -77,7 +77,7 @@ class HMACAlgorithm extends JWSAlgorithm {
   protected checkKey(key: OctKey): void {
     super.checkKey(key)
 
-    if (base64UrlBufferLength(key.k) < this.keySize) {
+    if (b64Url.byteLength(key.k) < this.keySize) {
       throw new InvalidKey(`The secret MUST be AT LEAST ${this.keySize} bytes.`)
     }
   }

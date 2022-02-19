@@ -1,9 +1,9 @@
-import { base64UrlDecode, base64UrlEncode } from '@guarani/utils'
+import b64Url from '@guarani/base64url'
 
 import { createPrivateKey, createPublicKey, sign, verify } from 'crypto'
 
 import { InvalidKey, InvalidSignature } from '../../exceptions'
-import { EcKey, SupportedEllipticCurve, SupportedJWKAlgorithm } from '../../jwk'
+import { EcKey, SupportedEllipticCurve } from '../../jwk'
 import { SupportedHash } from '../../types'
 import { JWSAlgorithm } from './jws-algorithm'
 
@@ -14,7 +14,7 @@ class ECDSAAlgorithm extends JWSAlgorithm {
   /**
    * Accepted key type.
    */
-  public readonly kty: SupportedJWKAlgorithm = 'EC'
+  public readonly kty: string = 'EC'
 
   /**
    * Instantiates a new ECDSA Algorithm to sign and verify the messages.
@@ -43,7 +43,7 @@ class ECDSAAlgorithm extends JWSAlgorithm {
 
     const privateKey = createPrivateKey(key.export('private', 'pem', 'sec1'))
 
-    return base64UrlEncode(sign(this.hash, message, privateKey))
+    return b64Url.encode(sign(this.hash, message, privateKey))
   }
 
   /**
@@ -63,7 +63,9 @@ class ECDSAAlgorithm extends JWSAlgorithm {
 
     const publicKey = createPublicKey(key.export('public', 'pem'))
 
-    if (!verify(this.hash, message, publicKey, base64UrlDecode(signature))) {
+    if (
+      !verify(this.hash, message, publicKey, b64Url.decode(signature, Buffer))
+    ) {
       throw new InvalidSignature()
     }
   }

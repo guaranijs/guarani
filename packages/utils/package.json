@@ -3,6 +3,8 @@
   "version": "0.6.0",
   "description": "Utility functionalities for usage within Guarani.",
   "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "homepage": "https://github.com/guaranijs/guarani/tree/master/packages/utils#readme",
   "bugs": "https://github.com/guaranijs/guarani/issues",
   "repository": {
@@ -16,16 +18,22 @@
     "url": "https://github.com/revensky"
   },
   "directories": {
+    "lib": "lib",
     "test": "tests"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "tsc",
-    "prepublish": "cp package.json README.md dist",
+    "build": "tsc -p tsconfig.build.json",
     "test": "jest"
   },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "@guarani/types": "^0.6.0"
   }
 }

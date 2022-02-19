@@ -1,17 +1,8 @@
-export {
-  ExpiredToken,
-  InvalidJoseHeader,
-  InvalidJsonWebEncryption,
-  InvalidJsonWebSignature,
-  InvalidJsonWebToken,
-  InvalidJsonWebTokenClaim,
-  InvalidKey,
-  InvalidKeyset,
-  InvalidSignature,
-  JoseError,
-  TokenNotValidYet,
-  UnsupportedAlgorithm
-} from './exceptions'
+if (Reflect == null || !('getMetadata' in Reflect)) {
+  throw new Error(`@guarani/jose requires a Reflect Metadata polyfill.`)
+}
+
+export * from './exceptions'
 export {
   JoseHeader,
   JoseHeaderParams,
@@ -34,8 +25,7 @@ export {
   JsonWebKeyParams,
   JsonWebKeyset,
   OctKey,
-  RsaKey,
-  SupportedJWKAlgorithm
+  RsaKey
 } from './jwk'
 export {
   JWSAlgorithm,

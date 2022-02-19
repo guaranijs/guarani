@@ -1,0 +1,45 @@
+{
+  "name": "@guarani/asn.1",
+  "version": "0.6.0",
+  "description": "ASN.1 utilities and functionalities used throughout Guarani.",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "homepage": "https://github.com/guaranijs/guarani/tree/master/packages/asn1#readme",
+  "bugs": "https://github.com/guaranijs/guarani/issues",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/guaranijs/guarani.git",
+    "directory": "packages/asn1"
+  },
+  "author": {
+    "name": "Eduardo Ribeiro Rezende",
+    "email": "eduardorbr7@gmail.com",
+    "url": "https://github.com/revensky"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "jest"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "@guarani/primitives": "^0.6.0",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@guarani/base64url": "^0.6.0",
+    "@guarani/types": "^0.6.0",
+    "@guarani/utils": "^0.6.0"
+  }
+}

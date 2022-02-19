@@ -1,9 +1,7 @@
-import { Dict } from '@guarani/utils'
-
 /**
  * Names of the supported Elliptic Curves.
  */
-export type SupportedEllipticCurve = 'P-256' | 'P-384' | 'P-521'
+export type EllipticCurve = 'P-256' | 'P-384' | 'P-521'
 
 /**
  * Buffer representation of the `Unrestricted Algorithm Identifier` ObjectId.
@@ -25,7 +23,7 @@ interface EllipticCurveParams {
   /**
    * Identifier of the Elliptic Curve.
    */
-  readonly id: SupportedEllipticCurve
+  readonly id: EllipticCurve
 
   /**
    * Name of the elliptic curve as registered with NodeJS' `crypto` module.
@@ -51,12 +49,12 @@ interface EllipticCurveParams {
 /**
  * Defines the type of the Elliptic Curves Store.
  */
-type EllipticCurves = Dict<EllipticCurveParams>
+type EllipticCurvesRegistry = Record<EllipticCurve, EllipticCurveParams>
 
 /**
  * Supported Elliptic Curves.
  */
-export const ELLIPTIC_CURVES: EllipticCurves = {
+export const ELLIPTIC_CURVES: EllipticCurvesRegistry = {
   'P-256': {
     id: 'P-256',
     name: 'prime256v1',

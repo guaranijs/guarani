@@ -1,4 +1,4 @@
-import { InvalidJoseHeader } from './exceptions'
+import { InvalidJoseHeaderException } from './exceptions'
 import { JsonWebKeyParams } from './jwk'
 
 /**
@@ -148,49 +148,51 @@ export abstract class JoseHeader implements JoseHeaderParams {
    */
   protected checkHeader(header: Partial<JoseHeaderParams>): void {
     if ('alg' in header && typeof header.alg !== 'string') {
-      throw new InvalidJoseHeader('Invalid parameter "alg".')
+      throw new InvalidJoseHeaderException('Invalid parameter "alg".')
     }
 
     if ('jku' in header) {
-      throw new InvalidJoseHeader('Unsupported parameter "jku".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "jku".')
     }
 
     if ('jwk' in header) {
-      throw new InvalidJoseHeader('Unsupported parameter "jwk".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "jwk".')
     }
 
     if ('kid' in header && typeof header.kid !== 'string') {
-      throw new InvalidJoseHeader('Invalid parameter "kid".')
+      throw new InvalidJoseHeaderException('Invalid parameter "kid".')
     }
 
     if ('x5u' in header) {
-      throw new InvalidJoseHeader('Unsupported parameter "x5u".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5u".')
     }
 
     if ('x5c' in header) {
-      throw new InvalidJoseHeader('Unsupported parameter "x5c".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5c".')
     }
 
     if ('x5t' in header) {
-      throw new InvalidJoseHeader('Unsupported parameter "x5t".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5t".')
     }
 
     if ('x5t#S256' in header) {
-      throw new InvalidJoseHeader('Unsupported parameter "x5t#S256".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5t#S256".')
     }
 
     if ('crit' in header) {
       if (!Array.isArray(header.crit) || header.crit.length === 0) {
-        throw new InvalidJoseHeader('Invalid parameter "crit".')
+        throw new InvalidJoseHeaderException('Invalid parameter "crit".')
       }
 
       if (header.crit.some(item => typeof item !== 'string' || !item)) {
-        throw new InvalidJoseHeader('Invalid parameter "crit".')
+        throw new InvalidJoseHeaderException('Invalid parameter "crit".')
       }
 
       header.crit.forEach(item => {
         if (!(item in header)) {
-          throw new InvalidJoseHeader(`Missing required parameter "${item}".`)
+          throw new InvalidJoseHeaderException(
+            `Missing required parameter "${item}".`
+          )
         }
       })
     }

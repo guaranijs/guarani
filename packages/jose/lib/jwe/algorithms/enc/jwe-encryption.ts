@@ -1,7 +1,10 @@
 import { randomBytes } from 'crypto'
+import { promisify } from 'util'
 
 import { InvalidJsonWebEncryption } from '../../../exceptions'
 import { AuthenticatedEncryption } from '../../_types'
+
+const randomBytesAsync = promisify(randomBytes)
 
 /**
  * Implementation of the Section 5 of RFC 7518.
@@ -35,8 +38,8 @@ export abstract class JWEEncryption {
    *
    * @returns Generated Content Encryption Key.
    */
-  public generateCEK(): Buffer {
-    return randomBytes(Math.floor(this.CEK_SIZE / 8))
+  public async generateCEK(): Promise<Buffer> {
+    return await randomBytesAsync(Math.floor(this.CEK_SIZE / 8))
   }
 
   /**
@@ -44,8 +47,8 @@ export abstract class JWEEncryption {
    *
    * @returns Generated Initialization Vector.
    */
-  public generateIV(): Buffer {
-    return randomBytes(Math.floor(this.IV_SIZE / 8))
+  public async generateIV(): Promise<Buffer> {
+    return await randomBytesAsync(Math.floor(this.IV_SIZE / 8))
   }
 
   /**

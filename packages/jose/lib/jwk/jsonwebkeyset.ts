@@ -1,8 +1,8 @@
-import { Constructor, Nullable } from '@guarani/utils'
+import { Constructor, Dict, Nullable } from '@guarani/types'
 
-import { InvalidKeyset } from '../exceptions'
+import { InvalidJsonWebKeySetException } from '../exceptions'
 import { EcKey, OctKey, RsaKey } from './algorithms'
-import { JsonWebKey, SupportedJWKAlgorithm } from './jsonwebkey'
+import { JsonWebKey } from './jsonwebkey'
 
 /**
  * Implementation of RFC 7517.
@@ -32,19 +32,21 @@ export class JsonWebKeyset {
     }
 
     if (keys.some(key => !(key instanceof JsonWebKey))) {
-      throw new InvalidKeyset()
+      throw new InvalidJsonWebKeySetException()
     }
 
     const ids = keys.map(key => {
       if (key.kid == null) {
-        throw new InvalidKeyset('One or more keys do not have an ID.')
+        throw new InvalidJsonWebKeySetException(
+          'One or more keys do not have an ID.'
+        )
       }
 
       return key.kid
     })
 
     if (new Set(ids).size !== ids.length) {
-      throw new InvalidKeyset(
+      throw new InvalidJsonWebKeySetException(
         'The usage of the same ID for multiple keys in a JWKS is forbidden.'
       )
     }
@@ -60,34 +62,36 @@ export class JsonWebKeyset {
    */
   public static parse(data: any): JsonWebKeyset {
     if (typeof data !== 'object') {
-      throw new InvalidKeyset()
+      throw new InvalidJsonWebKeySetException()
     }
 
     if (data?.keys == null || !Array.isArray(data.keys)) {
-      throw new InvalidKeyset()
+      throw new InvalidJsonWebKeySetException()
     }
 
     const keys: any[] = data.keys
-    const algs: Record<SupportedJWKAlgorithm, Constructor<JsonWebKey>> = {
+    const algs: Dict<Constructor<JsonWebKey>> = {
       EC: EcKey,
       oct: OctKey,
       RSA: RsaKey
     }
 
     if (keys.length === 0) {
-      throw new InvalidKeyset()
+      throw new InvalidJsonWebKeySetException()
     }
 
     const jwks = keys.map(key => {
       if (typeof key !== 'object' || key?.kty == null) {
-        throw new InvalidKeyset()
+        throw new InvalidJsonWebKeySetException()
       }
 
       if (key.kid == null) {
-        throw new InvalidKeyset('One or more keys do not have an ID.')
+        throw new InvalidJsonWebKeySetException(
+          'One or more keys do not have an ID.'
+        )
       }
 
-      return new algs[<SupportedJWKAlgorithm>key.kty](key)
+      return new algs[key.kty](key)
     })
 
     return new JsonWebKeyset(jwks)

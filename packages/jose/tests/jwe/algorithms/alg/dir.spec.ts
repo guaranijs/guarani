@@ -1,4 +1,4 @@
-import { base64UrlDecode } from '@guarani/utils'
+import { decode } from '@guarani/base64url'
 
 import { JWE_ALGORITHMS } from '../../../../lib/jwe/algorithms/alg'
 import { OctKey } from '../../../../lib/jwk'
@@ -13,7 +13,7 @@ describe('JWE dir Key Wrapping Algorithm', () => {
 
     expect(ek).toEqual('')
 
-    await expect(alg.unwrap(base64UrlDecode(ek), key, header)).resolves.toEqual(
+    await expect(alg.unwrap(decode(ek, Buffer), key, header)).resolves.toEqual(
       key.export('binary')
     )
   })

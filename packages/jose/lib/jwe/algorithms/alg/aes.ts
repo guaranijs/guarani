@@ -1,4 +1,4 @@
-import { base64UrlEncode } from '@guarani/utils'
+import b64Url from '@guarani/base64url'
 
 import {
   InvalidJsonWebEncryption,
@@ -49,7 +49,7 @@ class AESAlgorithm extends JWEAlgorithm {
       throw new JoseError('Invalid key size.')
     }
 
-    return { ek: base64UrlEncode(wrap(cek, key)) }
+    return { ek: b64Url.encode(wrap(cek, key)) }
   }
 
   /**

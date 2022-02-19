@@ -1,4 +1,4 @@
-import { Dict } from '@guarani/utils'
+import { Dict } from '@guarani/types'
 
 import {
   InvalidJoseHeader,

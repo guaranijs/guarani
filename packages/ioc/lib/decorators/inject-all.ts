@@ -1,11 +1,7 @@
-import { Constructor } from '@guarani/utils'
+import { Constructor, Optional } from '@guarani/types';
 
-import {
-  defineParamInjectableType,
-  definePropertyInjectableType,
-  getDesignPropType
-} from '../metadata'
-import { InjectableToken } from '../tokens'
+import { defineParamInjectableType, definePropertyInjectableType, getDesignPropType } from '../metadata';
+import { InjectableToken } from '../tokens';
 
 /**
  * Injects all registered instances of a token into the Injectable class'
@@ -13,30 +9,18 @@ import { InjectableToken } from '../tokens'
  *
  * @param token Token to be injected.
  */
-export function InjectAll<T = any>(
-  token: InjectableToken<T>
-): ParameterDecorator & PropertyDecorator {
-  return function (
-    target: Object,
-    propertyKey: string | symbol,
-    parameterIndex?: number
-  ): void {
+export function InjectAll<T = any>(token: InjectableToken<T>): ParameterDecorator & PropertyDecorator {
+  return function (target: Object, propertyKey: string | symbol, parameterIndex?: Optional<number>): void {
     // Injecting into the parameters of the constructor.
-    if (propertyKey == null) {
-      defineParamInjectableType(target, parameterIndex!, token, true)
+    if (propertyKey === undefined) {
+      defineParamInjectableType(target, parameterIndex!, token, true);
     }
 
-    if (parameterIndex == null) {
-      const type = getDesignPropType(target, propertyKey)
-      const isStatic = (<Constructor<T>>target).prototype !== undefined
+    if (parameterIndex === undefined) {
+      const type = getDesignPropType(target, propertyKey);
+      const isStatic = (<Constructor<T>>target).prototype !== undefined;
 
-      definePropertyInjectableType(
-        isStatic ? target : target.constructor,
-        propertyKey,
-        token ?? type,
-        true,
-        isStatic
-      )
+      definePropertyInjectableType(isStatic ? target : target.constructor, propertyKey, token ?? type, true, isStatic);
     }
-  }
+  };
 }

@@ -1,11 +1,7 @@
-import { removeNullishValues } from '@guarani/utils'
+import { removeNullishValues } from '@guarani/objects'
+import { Optional } from '@guarani/types'
 
-import { InvalidKey } from '../exceptions'
-
-/**
- * Supported JSON Web Key Algorithms.
- */
-export type SupportedJWKAlgorithm = 'EC' | 'oct' | 'RSA'
+import { InvalidJsonWebKeyException } from '../exceptions'
 
 /**
  * Interface defining the supported parameters of a JsonWebKey.
@@ -17,47 +13,47 @@ export interface JsonWebKeyParams {
   /**
    * Key type representing the algorithm of the key.
    */
-  readonly kty?: SupportedJWKAlgorithm
+  readonly kty?: Optional<string>
 
   /**
    * Defines the usage of the key.
    */
-  readonly use?: string
+  readonly use?: Optional<string>
 
   /**
    * Defines the allowed operations to be performed with the key
    */
-  readonly key_ops?: string[]
+  readonly key_ops?: Optional<string[]>
 
   /**
    * Defines the signature or encryption algorithm allowed to use this key.
    */
-  readonly alg?: string
+  readonly alg?: Optional<string>
 
   /**
    * Defines the ID of the key.
    */
-  readonly kid?: string
+  readonly kid?: Optional<string>
 
   /**
    * Defines the URL of the X.509 certificate of the key.
    */
-  readonly x5u?: string
+  readonly x5u?: Optional<string>
 
   /**
    * Defines a chain of X.509 certificates of the key.
    */
-  readonly x5c?: string[]
+  readonly x5c?: Optional<string[]>
 
   /**
    * Defines the SHA-1 Thumbprint of the X.509 certificate of the key.
    */
-  readonly x5t?: string
+  readonly x5t?: Optional<string>
 
   /**
    * Defines the SHA-256 Thumbprint of the X.509 certificate of the key.
    */
-  readonly 'x5t#S256'?: string
+  readonly 'x5t#S256'?: Optional<string>
 
   /**
    * Additional custom parameters.
@@ -69,74 +65,77 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
   /**
    * Key type representing the algorithm of the key.
    */
-  public abstract readonly kty: SupportedJWKAlgorithm
+  public readonly kty!: string
 
   /**
    * Defines the usage of the key.
    */
-  public readonly use?: string
+  public readonly use?: Optional<string>
 
   /**
    * Defines the allowed operations to be performed with the key
    */
-  public readonly key_ops?: string[]
+  public readonly key_ops?: Optional<string[]>
 
   /**
    * Defines the signature or encryption algorithm allowed to use this key.
    */
-  public readonly alg?: string
+  public readonly alg?: Optional<string>
 
   /**
    * Defines the ID of the key.
    */
-  public readonly kid?: string
+  public readonly kid?: Optional<string>
 
   /**
    * Defines the URL of the X.509 certificate of the key.
    */
-  public readonly x5u?: string
+  public readonly x5u?: Optional<string>
 
   /**
    * Defines a chain of X.509 certificates of the key.
    */
-  public readonly x5c?: string[]
+  public readonly x5c?: Optional<string[]>
 
   /**
    * Defines the SHA-1 Thumbprint of the X.509 certificate of the key.
    */
-  public readonly x5t?: string
+  public readonly x5t?: Optional<string>
 
   /**
    * Defines the SHA-256 Thumbprint of the X.509 certificate of the key.
    */
-  public readonly 'x5t#S256'?: string
+  public readonly 'x5t#S256'?: Optional<string>
 
   /**
    * Signature of the Constructor of a JSON Web Key.
    *
    * @param params Parameters of the key.
    */
-  public constructor(params: JsonWebKeyParams = {}) {
-    if (params.use && typeof params.use !== 'string') {
-      throw new InvalidKey('Invalid parameter "use".')
+  public constructor(params: Optional<JsonWebKeyParams> = {}) {
+    if (typeof params.use !== 'undefined' && typeof params.use !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid parameter "use".')
     }
 
-    if (params.key_ops) {
+    if (typeof params.key_ops !== 'undefined') {
       if (
         !Array.isArray(params.key_ops) ||
         params.key_ops.some(p => typeof p !== 'string')
       ) {
-        throw new InvalidKey('Invalid parameter "key_ops".')
+        throw new InvalidJsonWebKeyException('Invalid parameter "key_ops".')
       }
 
       if (new Set(params.key_ops).size !== params.key_ops.length) {
-        throw new InvalidKey(
+        throw new InvalidJsonWebKeyException(
           'Parameter "key_ops" cannot have repeated operations.'
         )
       }
     }
 
-    if (params.use && params.key_ops) {
+    if (
+      typeof params.use !== 'undefined' &&
+      typeof params.key_ops !== 'undefined'
+    ) {
       const sig = ['sign', 'verify']
       const enc = [
         'encrypt',
@@ -151,35 +150,37 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
         (params.use === 'sig' && params.key_ops.some(p => !sig.includes(p))) ||
         (params.use === 'enc' && params.key_ops.some(p => !enc.includes(p)))
       ) {
-        throw new InvalidKey('Invalid combination of "use" and "key_ops".')
+        throw new InvalidJsonWebKeyException(
+          'Invalid combination of "use" and "key_ops".'
+        )
       }
     }
 
-    if (params.alg && typeof params.alg !== 'string') {
-      throw new InvalidKey('Invalid parameter "alg".')
+    if (typeof params.alg !== 'undefined' && typeof params.alg !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid parameter "alg".')
     }
 
-    if (params.kid && typeof params.kid !== 'string') {
-      throw new InvalidKey('Invalid parameter "kid".')
+    if (typeof params.kid !== 'undefined' && typeof params.kid !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid parameter "kid".')
     }
 
-    if (params.x5u) {
-      throw new InvalidKey('Unsupported parameter "x5u".')
+    if (typeof params.x5u !== 'undefined') {
+      throw new InvalidJsonWebKeyException('Unsupported parameter "x5u".')
     }
 
-    if (params.x5c) {
-      throw new InvalidKey('Unsupported parameter "x5c".')
+    if (typeof params.x5c !== 'undefined') {
+      throw new InvalidJsonWebKeyException('Unsupported parameter "x5c".')
     }
 
-    if (params.x5t) {
-      throw new InvalidKey('Unsupported parameter "x5t".')
+    if (typeof params.x5t !== 'undefined') {
+      throw new InvalidJsonWebKeyException('Unsupported parameter "x5t".')
     }
 
-    if (params['x5t#256']) {
-      throw new InvalidKey('Unsupported parameter "x5t#256".')
+    if (typeof params['x5t#256'] !== 'undefined') {
+      throw new InvalidJsonWebKeyException('Unsupported parameter "x5t#256".')
     }
 
-    Object.assign(this, removeNullishValues<JsonWebKeyParams>(params))
+    Object.assign(this, removeNullishValues(params))
   }
 
   /**
@@ -191,7 +192,7 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
    */
   public static generate(
     param: any, // eslint-disable-line
-    options?: JsonWebKeyParams // eslint-disable-line
+    options?: Optional<JsonWebKeyParams> // eslint-disable-line
   ): Promise<JsonWebKey> {
     throw new Error('Cannot call abstract static method "generate".')
   }
@@ -205,7 +206,7 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
    */
   public static parse(
     data: Buffer | string, // eslint-disable-line
-    options?: JsonWebKeyParams // eslint-disable-line
+    options?: Optional<JsonWebKeyParams> // eslint-disable-line
   ): JsonWebKey {
     throw new Error('Cannot call abstract static method "parse".')
   }
@@ -216,5 +217,7 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
    * @param params Parameters specifying the exportation of the key.
    * @returns Encoded key parameters.
    */
-  public abstract export(...params: any[]): Buffer | string
+  // @ts-expect-error
+  // eslint-disable-next-line
+  public export(...params: any[]): Buffer | string {}
 }

@@ -1,4 +1,4 @@
-import { base64UrlDecode } from '@guarani/utils'
+import { decode } from '@guarani/base64url'
 
 import { JWE_ALGORITHMS } from '../../../../lib/jwe/algorithms/alg'
 import { OctKey } from '../../../../lib/jwk'
@@ -13,7 +13,7 @@ describe('JWE A128KW Key Wrapping Algorithm', () => {
 
     expect(ek).toEqual('Ogu9AxwToenv9SHshBF8S5PKe5Pwh_YY')
 
-    await expect(alg.unwrap(base64UrlDecode(ek), key)).resolves.toEqual(cek)
+    await expect(alg.unwrap(decode(ek, Buffer), key)).resolves.toEqual(cek)
   })
 })
 
@@ -25,7 +25,7 @@ describe('JWE A192KW Key Wrapping Algorithm', () => {
 
     expect(ek).toEqual('O4K9z37P0CEqdvayE-SC1M74dJGn54St')
 
-    await expect(alg.unwrap(base64UrlDecode(ek), key)).resolves.toEqual(cek)
+    await expect(alg.unwrap(decode(ek, Buffer), key)).resolves.toEqual(cek)
   })
 })
 
@@ -37,6 +37,6 @@ describe('JWE A256KW Key Wrapping Algorithm', () => {
 
     expect(ek).toEqual('VP21n-zeSbHkgD35YR-WLiC-k1MdpmbH')
 
-    await expect(alg.unwrap(base64UrlDecode(ek), key)).resolves.toEqual(cek)
+    await expect(alg.unwrap(decode(ek, Buffer), key)).resolves.toEqual(cek)
   })
 })

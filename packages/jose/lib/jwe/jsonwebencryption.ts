@@ -1,4 +1,4 @@
-import { base64UrlDecode, base64UrlEncode } from '@guarani/utils'
+import b64Url from '@guarani/base64url'
 
 import {
   InvalidJoseHeader,
@@ -107,16 +107,14 @@ export class JsonWebEncryption {
     try {
       const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = splitToken
 
-      const decodedHeader = base64UrlDecode(b64Header)
-      const parsedHeader = <JWEHeaderParams>(
-        JSON.parse(decodedHeader.toString('utf8'))
-      )
+      const decodedHeader = b64Url.decode(b64Header, String)
+      const parsedHeader = <JWEHeaderParams>JSON.parse(decodedHeader)
 
       const header = new JsonWebEncryptionHeader(parsedHeader)
-      const ek = base64UrlDecode(b64Ek)
-      const iv = base64UrlDecode(b64Iv)
-      const ciphertext = base64UrlDecode(b64Ciphertext)
-      const tag = base64UrlDecode(b64Tag)
+      const ek = b64Url.decode(b64Ek, Buffer)
+      const iv = b64Url.decode(b64Iv, Buffer)
+      const ciphertext = b64Url.decode(b64Ciphertext, Buffer)
+      const tag = b64Url.decode(b64Tag, Buffer)
       const aad = Buffer.from(b64Header, 'ascii')
 
       return [header, ek, iv, ciphertext, tag, aad]
@@ -240,8 +238,8 @@ export class JsonWebEncryption {
     const enc = JWE_ENCRYPTIONS[this.header.enc]
     const zip = <JWECompression>JWE_COMPRESSIONS[this.header.zip!]
 
-    const cek = enc.generateCEK()
-    const iv = enc.generateIV()
+    const cek = await enc.generateCEK()
+    const iv = await enc.generateIV()
 
     const { ek, header } = await alg.wrap(cek, wrapKey)
 
@@ -249,14 +247,14 @@ export class JsonWebEncryption {
       Object.assign(this.header, header)
     }
 
-    const b64Header = base64UrlEncode(Buffer.from(JSON.stringify(this.header)))
+    const b64Header = b64Url.encode(JSON.stringify(this.header))
     const aad = Buffer.from(b64Header, 'ascii')
 
     const plaintext =
       zip != null ? await zip.compress(this.plaintext) : this.plaintext
 
     const { ciphertext, tag } = await enc.encrypt(plaintext, aad, iv, cek)
-    const b64IV = base64UrlEncode(iv)
+    const b64IV = b64Url.encode(iv)
 
     return `${b64Header}.${ek}.${b64IV}.${ciphertext}.${tag}`
   }

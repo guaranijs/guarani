@@ -1,9 +1,7 @@
-import {
-  deepEquals,
-  Dict,
-  OneOrMany,
-  removeNullishValues
-} from '@guarani/utils'
+import { removeNullishValues } from '@guarani/objects'
+import { Dict, OneOrMany } from '@guarani/types'
+
+import { isDeepStrictEqual } from 'util'
 
 import {
   ExpiredToken,
@@ -175,10 +173,7 @@ export class JsonWebTokenClaims implements JWTClaims {
         throw new InvalidJsonWebTokenClaim(`Missing required claim "${claim}".`)
       }
 
-      if (
-        'value' in option &&
-        !deepEquals(value, option.value, { sortArrays: true })
-      ) {
+      if ('value' in option && !isDeepStrictEqual(value, option.value)) {
         throw new InvalidJsonWebTokenClaim(
           `Mismatching expected value for claim "${claim}".`
         )

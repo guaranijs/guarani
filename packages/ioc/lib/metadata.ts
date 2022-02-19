@@ -1,7 +1,7 @@
-import { Dict } from '@guarani/utils/types'
+import { Constructor, Dict, Maybe } from '@guarani/types';
 
-import { Constants } from './constants'
-import { InjectableToken } from './tokens'
+import { Constants } from './constants';
+import { InjectableToken } from './tokens';
 
 /**
  * Describes the format of the object stored at the Injectable's
@@ -19,17 +19,17 @@ export interface InjectableType<T> {
    * registered for the token. If it is `false`, it will inject only the
    * last entry of the token.
    */
-  readonly multiple: boolean
+  readonly multiple: boolean;
 
   /**
    * Token registered within the Container.
    */
-  readonly token: InjectableToken<T>
+  readonly token: InjectableToken<T>;
 
   /**
    * Defines if the token will be injected into a static property.
    */
-  readonly isStatic: boolean
+  readonly isStatic: boolean;
 }
 
 /**
@@ -37,20 +37,20 @@ export interface InjectableType<T> {
  * If no `constructor()` is defined, it will return an empty list.
  *
  * @param target Constructor to be inspected.
- * @returns List of the types of the parameters of the Constructor.
+ * @returns List of the parameter types of the Constructor.
  */
-export function getDesignParamTypes(target: Object): any[] {
-  return Reflect.getMetadata(Constants.DESIGN_PARAM_TYPES, target) ?? []
+export function getDesignParamTypes(target: object): any[] {
+  return Reflect.getMetadata(Constants.DESIGN_PARAM_TYPES, target) ?? [];
 }
 
 /**
  * Returns the list of Injectable types metadata registered at the target.
  *
  * @param target Constructor to be inspected.
- * @returns Injectable types metadata.
+ * @returns List of Injectable types metadata.
  */
-export function getParamTypes(target: Object): InjectableType<any>[] {
-  return Reflect.getMetadata(Constants.PARAM_TYPES, target)
+export function getParamTypes<T>(target: Constructor<T>): Maybe<InjectableType<any>[]> {
+  return Reflect.getMetadata(Constants.PARAM_TYPES, target);
 }
 
 /**
@@ -63,26 +63,20 @@ export function getParamTypes(target: Object): InjectableType<any>[] {
  * @param target Constructor to be inspected.
  * @param types Injectable types based on the target's constructor parameters.
  */
-export function setParamTypes(
-  target: Object,
-  types: InjectableType<any>[]
-): void {
-  Reflect.defineMetadata(Constants.PARAM_TYPES, types, target)
+export function setParamTypes(target: object, types: InjectableType<any>[]): void {
+  Reflect.defineMetadata(Constants.PARAM_TYPES, types, target);
 }
 
 /**
  * Returns the dictionary of the tokens injected in the target's constructor
- * by the decorators `@Inject()` and `@InjectAll()`.
- *
- * If no items have been set, it returns an empty dictionary. Otherwise,
- * it returns a dictionary with the indices of each token's position in
- * the constructor as its keys.
+ * by the decorators `@Inject()` and `@InjectAll()`, indexed by each token's
+ * position in the constructor as its keys.
  *
  * @param target Constructor to be inspected.
  * @returns Dictionary of the target constructor's parameter tokens.
  */
-export function getParamTokens(target: Object): Dict<InjectableType<any>> {
-  return Reflect.getMetadata(Constants.PARAM_TOKENS, target)
+export function getParamTokens(target: object): Maybe<Dict<InjectableType<any>>> {
+  return Reflect.getMetadata(Constants.PARAM_TOKENS, target);
 }
 
 /**
@@ -92,11 +86,8 @@ export function getParamTokens(target: Object): Dict<InjectableType<any>> {
  * @param target Constructor to be inspected.
  * @param tokens Dictionary of injectable types to be registered.
  */
-export function setParamTokens(
-  target: Object,
-  tokens: Dict<InjectableType<any>>
-): void {
-  Reflect.defineMetadata(Constants.PARAM_TOKENS, tokens, target)
+export function setParamTokens(target: object, tokens: Dict<InjectableType<any>>): void {
+  Reflect.defineMetadata(Constants.PARAM_TOKENS, tokens, target);
 }
 
 /**
@@ -114,14 +105,14 @@ export function setParamTokens(
  * @param multiple Injects the last provider or all the providers.
  */
 export function defineParamInjectableType(
-  target: Object,
+  target: object,
   parameterIndex: number,
   token: InjectableToken<any>,
   multiple: boolean
 ): void {
-  const tokens: Dict<InjectableType<any>> = getParamTokens(target) ?? {}
-  tokens[parameterIndex] = { multiple, token, isStatic: false }
-  setParamTokens(target, tokens)
+  const tokens = getParamTokens(target) ?? {};
+  tokens[parameterIndex] = { multiple, token, isStatic: false };
+  setParamTokens(target, tokens);
 }
 
 /**
@@ -131,26 +122,20 @@ export function defineParamInjectableType(
  * @param propertyKey Name of the property.
  * @returns Type of the property.
  */
-export function getDesignPropType(
-  target: Object,
-  propertyKey: string | symbol
-): any {
-  return Reflect.getMetadata(Constants.DESIGN_PROP_TYPE, target, propertyKey)
+export function getDesignPropType(target: object, propertyKey: string | symbol): Maybe<any> {
+  return Reflect.getMetadata(Constants.DESIGN_PROP_TYPE, target, propertyKey);
 }
 
 /**
  * Returns the dictionary of the tokens injected in the target's properties
- * by the decorators `@Inject()` and `@InjectAll()`.
- *
- * If no items have been set, it returns an empty dictionary.
- * Otherwise, it returns a dictionary with the name of the decorated
- * properties as its keys.
+ * by the decorators `@Inject()` and `@InjectAll()` with the names
+ * of the decorated properties as its keys.
  *
  * @param target Constructor to be inspected.
  * @returns Dictionary of the target properties' tokens.
  */
-export function getPropTokens(target: Object): Dict<InjectableType<any>> {
-  return Reflect.getMetadata(Constants.PROP_TOKENS, target)
+export function getPropTokens(target: object): Maybe<Map<string | symbol, InjectableType<any>>> {
+  return Reflect.getMetadata(Constants.PROP_TOKENS, target);
 }
 
 /**
@@ -160,11 +145,8 @@ export function getPropTokens(target: Object): Dict<InjectableType<any>> {
  * @param target Constructor to be inspected.
  * @param tokens Dictionary of injectable types to be registered.
  */
-export function setPropTokens(
-  target: Object,
-  tokens: Dict<InjectableType<any>>
-): void {
-  Reflect.defineMetadata(Constants.PROP_TOKENS, tokens, target)
+export function setPropTokens(target: object, tokens: Map<string | symbol, InjectableType<any>>): void {
+  Reflect.defineMetadata(Constants.PROP_TOKENS, tokens, target);
 }
 
 /**
@@ -182,13 +164,13 @@ export function setPropTokens(
  * @param multiple Injects the last provider or all the providers.
  */
 export function definePropertyInjectableType<T>(
-  target: Object,
+  target: object,
   propertyKey: string | symbol,
   token: InjectableToken<T>,
   multiple: boolean,
   isStatic: boolean
 ): void {
-  const tokens: Dict<InjectableType<any>> = getPropTokens(target) ?? {}
-  tokens[String(propertyKey)] = { multiple, token, isStatic }
-  setPropTokens(target, tokens)
+  const tokens = getPropTokens(target) ?? new Map<string | symbol, InjectableType<any>>();
+  tokens.set(propertyKey, { multiple, token, isStatic });
+  setPropTokens(target, tokens);
 }

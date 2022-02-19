@@ -1,10 +1,7 @@
-import { Constructor, Factory } from '@guarani/utils'
+import { Constructor, Optional } from '@guarani/types';
 
-import {
-  defineParamInjectableType,
-  definePropertyInjectableType
-} from '../metadata'
-import { InjectableToken, LazyToken } from '../tokens'
+import { defineParamInjectableType, definePropertyInjectableType } from '../metadata';
+import { InjectableToken, LazyToken } from '../tokens';
 
 /**
  * Injects a LazyToken into the Injectable's class constructor.
@@ -15,31 +12,19 @@ import { InjectableToken, LazyToken } from '../tokens'
  *
  * @param wrappedToken Token encapsulated into a Factory.
  */
-export function LazyInject<T = any>(
-  wrappedToken: Factory<InjectableToken<T>>
-): PropertyDecorator & ParameterDecorator {
-  return function (
-    target: Object,
-    propertyKey: string | symbol,
-    parameterIndex?: number
-  ) {
-    const lazyToken = new LazyToken(wrappedToken)
+export function LazyInject<T = any>(wrappedToken: () => InjectableToken<T>): PropertyDecorator & ParameterDecorator {
+  return function (target: object, propertyKey: string | symbol, parameterIndex?: Optional<number>) {
+    const lazyToken = new LazyToken(wrappedToken);
 
     // Injecting into the parameters of the constructor.
-    if (propertyKey == null && typeof parameterIndex === 'number') {
-      defineParamInjectableType(target, parameterIndex, lazyToken, false)
+    if (propertyKey === undefined && typeof parameterIndex === 'number') {
+      defineParamInjectableType(target, parameterIndex, lazyToken, false);
     }
 
-    if (parameterIndex == null) {
-      const isStatic = (<Constructor<T>>target).prototype != null
+    if (parameterIndex === undefined) {
+      const isStatic = (<Constructor<T>>target).prototype !== undefined;
 
-      definePropertyInjectableType(
-        isStatic ? target : target.constructor,
-        propertyKey,
-        lazyToken,
-        false,
-        isStatic
-      )
+      definePropertyInjectableType(isStatic ? target : target.constructor, propertyKey, lazyToken, false, isStatic);
     }
-  }
+  };
 }

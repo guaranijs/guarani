@@ -1,9 +1,6 @@
-import {
-  base64UrlDecode,
-  base64UrlEncode,
-  OneOrMany,
-  removeNullishValues
-} from '@guarani/utils'
+import b64Url from '@guarani/base64url'
+import { removeNullishValues } from '@guarani/objects'
+import { OneOrMany } from '@guarani/types'
 
 import {
   InvalidJoseHeader,
@@ -125,7 +122,7 @@ export class JsonWebSignature {
       const [b64Header, b64Payload] = splitToken
 
       const parsedHeader = <JWSHeaderParams>(
-        JSON.parse(base64UrlDecode(b64Header).toString('utf8'))
+        JSON.parse(b64Url.decode(b64Header, Buffer).toString('utf8'))
       )
 
       if (Array.isArray(parsedHeader)) {
@@ -133,7 +130,7 @@ export class JsonWebSignature {
       }
 
       const header = new JsonWebSignatureHeader(parsedHeader)
-      const payload = base64UrlDecode(b64Payload)
+      const payload = b64Url.decode(b64Payload, Buffer)
 
       return [header, payload]
     } catch (error) {
@@ -302,7 +299,7 @@ export class JsonWebSignature {
     }
 
     try {
-      const payload = base64UrlDecode(b64Payload)
+      const payload = b64Url.decode(b64Payload, Buffer)
       const header = await JsonWebSignature.getJWSJSONHeader(
         b64Payload,
         token,
@@ -391,7 +388,7 @@ export class JsonWebSignature {
     }
 
     try {
-      const payload = base64UrlDecode(b64Payload)
+      const payload = b64Url.decode(b64Payload, Buffer)
       const awaitableHeaders = signatures.map(async (signature, i) => {
         const key =
           typeof jwkOrKeyLoader === 'function'
@@ -452,7 +449,7 @@ export class JsonWebSignature {
     }
 
     const protectedHeader: JWSHeaderParams = JSON.parse(
-      base64UrlDecode(b64ProtectedHeader!).toString('utf8')
+      b64Url.decode(b64ProtectedHeader!, Buffer).toString('utf8')
     )
 
     const header = new JsonWebSignatureHeader({
@@ -518,8 +515,8 @@ export class JsonWebSignature {
       )
     }
 
-    const b64Header = base64UrlEncode(Buffer.from(JSON.stringify(this.header)))
-    const b64Payload = base64UrlEncode(this.payload ?? Buffer.alloc(0))
+    const b64Header = b64Url.encode(Buffer.from(JSON.stringify(this.header)))
+    const b64Payload = b64Url.encode(this.payload ?? Buffer.alloc(0))
 
     const alg = JWS_ALGORITHMS[this.header.alg]
 
@@ -560,7 +557,7 @@ export class JsonWebSignature {
       )
     }
 
-    const b64Payload = base64UrlEncode(this.payload ?? Buffer.alloc(0))
+    const b64Payload = b64Url.encode(this.payload ?? Buffer.alloc(0))
     const signature = await JsonWebSignature.serializeJSONSignature(
       this.header,
       b64Payload,
@@ -644,7 +641,7 @@ export class JsonWebSignature {
   public async serializeJSON(
     jwk: OneOrMany<JsonWebKey>
   ): Promise<JWSJSONSerialization> {
-    const b64payload = base64UrlEncode(this.payload ?? Buffer.alloc(0))
+    const b64payload = b64Url.encode(this.payload ?? Buffer.alloc(0))
 
     if (jwk == null) {
       throw new InvalidKey('The JSON Web Key parameter MUST be defined.')
@@ -700,7 +697,7 @@ export class JsonWebSignature {
       )
     }
 
-    const b64Header = base64UrlEncode(
+    const b64Header = b64Url.encode(
       Buffer.from(JSON.stringify(header.protectedHeader) ?? '')
     )
 

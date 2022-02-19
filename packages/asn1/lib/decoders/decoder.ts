@@ -1,233 +1,152 @@
-import { fromBuffer } from '@guarani/utils/primitives'
-import { Nullable } from '@guarani/utils/types'
+import { Constructor, Dict, Optional } from '@guarani/types';
 
-import {
-  BitString,
-  Integer,
-  Null,
-  ObjectId,
-  OctetString,
-  Sequence
-} from '../nodes'
-import { decodeLength } from '../_utils'
+import { getInternalNodeElements, getRootNodeElement, getTransformers } from '../metadata/helpers';
+import { NodeOptions } from '../nodes/node.options';
+import { Type } from '../type';
 
-const Tags = {
-  ZERO: 0x00,
-  BOOLEAN: 0x01,
-  INTEGER: 0x02,
-  BITSTRING: 0x03,
-  OCTETSTRING: 0x04,
-  NULL: 0x05,
-  OBJECTID: 0x06,
-  SEQUENCE: 0x30
-}
+type Resolvers =
+  | 'decodeBitString'
+  | 'decodeBoolean'
+  | 'decodeBytes'
+  | 'decodeInteger'
+  | 'decodeNested'
+  | 'decodeNull'
+  | 'decodeObjectId'
+  | 'decodeOctetString'
+  | 'decodeSequence';
 
 /**
- * Decoder class used to parse a Buffer object and allow the application
- * to retrieve the values encoded into it.
- *
- * This class is not available in the Public API. Instead, it is used as
- * the return value of the execution of one of the supported Decoders
- * exported by this package.
+ * Mapper of Type Identifiers and methods of the Decoder.
  */
-export class Decoder {
-  private value: Buffer
-  private offset: number = 0
+const typeMapper: Dict<Resolvers> = {
+  [String(Type.BitString)]: 'decodeBitString',
+  [String(Type.Boolean)]: 'decodeBoolean',
+  [String(Type.Bytes)]: 'decodeBytes',
+  [String(Type.Integer)]: 'decodeInteger',
+  [String(Type.Nested)]: 'decodeNested',
+  [String(Type.Null)]: 'decodeNull',
+  [String(Type.ObjectId)]: 'decodeObjectId',
+  [String(Type.OctetString)]: 'decodeOctetString',
+  [String(Type.Sequence)]: 'decodeSequence',
+};
 
-  public constructor(value: Buffer) {
-    if (!Buffer.isBuffer(value)) {
-      throw new TypeError('Invalid parameter "value".')
-    }
+export abstract class Decoder<TData, TModel> {
+  /**
+   * Buffer to be decoded.
+   */
+  protected data: TData;
 
-    this.value = value
+  /**
+   * Model representation of the structure of the Buffer.
+   */
+  protected readonly model: Constructor<TModel>;
+
+  /**
+   * Decodes the provided Buffer into the provided structured model.
+   *
+   * @param data Buffer to be decoded.
+   * @param model Model representation of the structure of the Buffer.
+   */
+  public constructor(data: TData, model: Constructor<TModel>) {
+    this.data = data;
+    this.model = model;
   }
 
   /**
-   * Getter that exposes the underlying Buffer object
-   * sectioned by the current tag.
+   * Parses a BitString Type.
    */
-  public get data(): Buffer {
-    return this.value
-  }
+  protected abstract decodeBitString(options?: Optional<NodeOptions>): Buffer;
 
   /**
-   * Ignores any leading 0-bytes of the provided data.
-   *
-   * @param data - Data to be trimmed.
-   * @returns Reference to the new position of the Buffer.
+   * Parses a Boolean Type.
    */
-  private trim(data: Buffer): Buffer {
-    while (data[0] === 0) {
-      data = data.slice(1)
-    }
-
-    return data
-  }
+  protected abstract decodeBoolean(options?: Optional<NodeOptions>): boolean;
 
   /**
-   * Slices the value Buffer based on the length of the provided tag.
+   * Returns the first N bytes of the Decoder's data buffer
+   * and sets it to the remaining bytes.
    *
-   * @param tag Current tag being parsed.
-   * @param type Denotes the tag type in the error message.
-   * @returns Sliced section represented by the current tag.
+   * @param length Number of bytes to be displaced.
    */
-  private slice(tag: number, type: string): Buffer {
-    if (this.value[this.offset++] !== tag) {
-      throw new Error(`Node type is not ${type}.`)
-    }
-
-    // Gets the length of the type.
-    const length = decodeLength(this.value.subarray(this.offset))
-
-    // Displaces the offset if the length is in Long Form.
-    if (this.value[this.offset] & 0x80) {
-      this.offset += 1 + (this.value[this.offset] & 0x7f)
-    } else {
-      this.offset++
-    }
-
-    // Retrieves the section of the data that represents the requested type.
-    const buffer = this.trim(
-      this.value.subarray(this.offset, this.offset + length)
-    )
-
-    // Sets the data to be itself minus the selected data and resets the offset.
-    this.value = this.trim(this.value.slice(this.offset + length))
-    this.offset = 0
-
-    return buffer
-  }
+  protected abstract decodeBytes(length: number): Buffer;
 
   /**
-   * Abstraction of tags that do not do any post processings on its data.
-   *
-   * @param tag Tag passed to the slice method.
-   * @param type Tag name passed to the slice method.
-   * @returns Tag data wrapped in a new Decoder object.
+   * Parses an Integer Type.
    */
-  private wrapped(tag: number, type: string): Decoder {
-    return new Decoder(this.slice(tag, type))
-  }
+  protected abstract decodeInteger(options?: Optional<NodeOptions>): bigint;
 
   /**
-   * Displaces the reference pointer by the number of requested bytes.
-   *
-   * This is primarily used by Elliptic Curves.
-   *
-   * @param bytes - Number of bytes to be displaced.
+   * Passes the Decoder's data buffer unmodified.
    */
-  public displace(bytes: number): void {
-    if (!Number.isInteger(bytes)) {
-      throw new TypeError('Invalid parameter "bytes".')
-    }
-
-    this.value = this.data.subarray(bytes)
-    this.offset = 0
-  }
+  protected abstract decodeNested(): Buffer;
 
   /**
-   * Returns a Decoder object representing the context specific tag.
-   *
-   * Since a Context-Specific tag is of the format `10XXXXXX`,
-   * we only care about the last 5 bits.
+   * Parses a Null Type.
    */
-  public contextSpecific(
-    typpedTag: number,
-    optional: boolean = true
-  ): Nullable<Decoder> {
-    if (!Number.isInteger(typpedTag)) {
-      throw new TypeError('Invalid parameter "typpedTag".')
+  protected abstract decodeNull(options?: Optional<NodeOptions>): null;
+
+  /**
+   * Parses an ObjectId Type.
+   */
+  protected abstract decodeObjectId(options?: Optional<NodeOptions>): string;
+
+  /**
+   * Parses an OctetString Type.
+   */
+  protected abstract decodeOctetString(options?: Optional<NodeOptions>): Buffer;
+
+  /**
+   * Parses a Sequence Type into a new Decoder instance.
+   */
+  protected abstract decodeSequence(options?: Optional<NodeOptions>): Decoder<TData, TModel>;
+
+  /**
+   * Decodes the data buffer of the Decoder.
+   */
+  public decode(): TModel {
+    let decoder: Decoder<TData, TModel> = this;
+
+    const obj = Reflect.construct(this.model, []);
+
+    const rootElement = getRootNodeElement(obj);
+
+    if (rootElement?.type !== Type.Nested) {
+      decoder = this.decodeSequence(rootElement.options);
     }
 
-    if (typeof optional !== 'boolean') {
-      throw new TypeError('Invalid parameter "optional".')
-    }
+    const internalElements = getInternalNodeElements(obj);
 
-    const tag = this.data[0] & 0x1f
+    internalElements.forEach((element) => {
+      const resolverName = typeMapper[String(element.type)];
 
-    if (tag !== typpedTag) {
-      if (optional) {
-        return undefined
+      const args: any[] = [element.options];
+
+      if (element.type === Type.Bytes) {
+        args.unshift(element.bytesLength!);
       }
 
-      throw new Error(`Malformed data. Expected ${typpedTag}, got ${tag}.`)
-    }
+      let resolvedValue = (<Function>decoder[resolverName])(...args);
 
-    return new Decoder(this.slice(this.data[0], 'Context Specific'))
-  }
+      const transformers = getTransformers(obj, element.propertyKey!);
 
-  /**
-   * Parses an integer.
-   */
-  public integer(): bigint {
-    if (!Integer.isInteger(this.value)) {
-      throw new TypeError('Node is not an Integer.')
-    }
+      if (typeof transformers !== 'undefined') {
+        transformers
+          .filter(({ operation }) => operation === 'decode')
+          .forEach(({ transformer }) => {
+            resolvedValue = transformer(resolvedValue);
+          });
+      }
 
-    const buffer = this.slice(Tags.INTEGER, 'Integer')
+      if (typeof element.model !== 'undefined') {
+        const nestedDecoder = new (<Constructor<Decoder<TData, TModel>>>this.constructor)(resolvedValue, element.model);
 
-    return fromBuffer(buffer, BigInt)
-  }
+        resolvedValue = nestedDecoder.decode();
+        decoder.data = nestedDecoder.data;
+      }
 
-  /**
-   * Parses the data inside a BitString.
-   */
-  // TODO: It always adds a zero padding. Verify if it does not conflict with anything.
-  public bitstring(): Decoder {
-    if (!BitString.isBitString(this.value)) {
-      throw new TypeError('Node is not a BitString.')
-    }
+      Reflect.set(obj, element.propertyKey!, resolvedValue);
+    });
 
-    return this.wrapped(Tags.BITSTRING, 'BitString')
-  }
-
-  /**
-   * Parses the data inside an OctetString.
-   */
-  public octetstring(): Decoder {
-    if (!OctetString.isOctetString(this.value)) {
-      throw new TypeError('Node is not an OctetString.')
-    }
-
-    return this.wrapped(Tags.OCTETSTRING, 'OctetString')
-  }
-
-  /**
-   * Parses a NULL tag.
-   */
-  public null(): null {
-    if (!Null.isNull(this.value)) {
-      throw new TypeError('Node is not a Null.')
-    }
-
-    if (this.value[this.offset++] !== Tags.NULL) {
-      throw new Error('Node type is not Null.')
-    }
-
-    this.value = this.value.slice(++this.offset)
-
-    return null
-  }
-
-  /**
-   * Parses the data of an ObjectId.
-   */
-  public objectid(): Buffer {
-    if (!ObjectId.isObjectId(this.value)) {
-      throw new TypeError('Node is not an ObjectId.')
-    }
-
-    return this.slice(Tags.OBJECTID, 'ObjectId')
-  }
-
-  /**
-   * Parses the data inside a Sequence.
-   */
-  public sequence(): Decoder {
-    if (!Sequence.isSequence(this.data)) {
-      throw new TypeError('Node is not an Sequence.')
-    }
-
-    return this.wrapped(Tags.SEQUENCE, 'Sequence')
+    return obj;
   }
 }

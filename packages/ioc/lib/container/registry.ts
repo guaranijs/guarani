@@ -1,6 +1,6 @@
-import { Binding } from '../bindings'
-import { TokenNotRegistered } from '../exceptions'
-import { InjectableToken } from '../tokens'
+import { Binding } from '../bindings/binding';
+import { TokenNotRegistered } from '../exceptions';
+import { InjectableToken } from '../tokens';
 
 /**
  * Registry that holds the mappings between the Tokens and their Bindings.
@@ -9,20 +9,20 @@ export class Registry {
   /**
    * Mapping between the Tokens and their Bindings.
    */
-  private readonly bindings = new Map<InjectableToken<any>, Binding<any>[]>()
+  private readonly bindings = new Map<InjectableToken<any>, Binding<any>[]>();
 
   /**
-   * Adds an entry to the mapping of the requested token.
+   * Sets an entry to the mapping of the requested token.
    *
    * @param token Injectable Token to be extended.
    * @param binding Binding to be set at the requested token.
    */
-  public add<T>(token: InjectableToken<T>, binding: Binding<T>): void {
+  public set<T>(token: InjectableToken<T>, binding: Binding<T>): void {
     if (!this.has(token)) {
-      this.set(token, [])
+      this.bindings.set(token, []);
     }
 
-    this.bindings.get(token)!.push(binding)
+    this.bindings.get(token)!.push(binding);
   }
 
   /**
@@ -33,12 +33,12 @@ export class Registry {
    */
   public get<T>(token: InjectableToken<T>): Binding<T> {
     if (!this.has(token)) {
-      throw new TokenNotRegistered(token)
+      throw new TokenNotRegistered(token);
     }
 
-    const bindings = this.bindings.get(token)!
+    const bindings = this.bindings.get(token)!;
 
-    return bindings[bindings.length - 1]
+    return bindings[bindings.length - 1];
   }
 
   /**
@@ -49,10 +49,10 @@ export class Registry {
    */
   public getAll<T>(token: InjectableToken<T>): Binding<T>[] {
     if (!this.has(token)) {
-      throw new TokenNotRegistered(token)
+      throw new TokenNotRegistered(token);
     }
 
-    return this.bindings.get(token)!
+    return this.bindings.get(token)!;
   }
 
   /**
@@ -62,7 +62,7 @@ export class Registry {
    * @returns Whether or not the token is registered.
    */
   public has<T>(token: InjectableToken<T>): boolean {
-    return this.bindings.has(token)
+    return this.bindings.has(token);
   }
 
   /**
@@ -71,17 +71,13 @@ export class Registry {
    * @param token Injectable Token to be deleted.
    */
   public delete<T>(token: InjectableToken<T>): void {
-    this.bindings.delete(token)
+    this.bindings.delete(token);
   }
 
   /**
    * Clears all the Tokens and their respective Bindings from the mapping.
    */
   public clear(): void {
-    this.bindings.clear()
-  }
-
-  private set<T>(token: InjectableToken<T>, value: Binding<T>[]): void {
-    this.bindings.set(token, value)
+    this.bindings.clear();
   }
 }

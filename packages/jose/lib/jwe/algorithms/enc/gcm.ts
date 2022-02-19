@@ -1,4 +1,4 @@
-import { base64UrlEncode } from '@guarani/utils'
+import b64Url from '@guarani/base64url'
 
 import { createCipheriv, createDecipheriv, CipherGCMTypes } from 'crypto'
 
@@ -66,8 +66,8 @@ class AESGCMEncryption extends JWEEncryption {
     const tag = cipher.getAuthTag()
 
     return {
-      ciphertext: base64UrlEncode(ciphertext),
-      tag: base64UrlEncode(tag)
+      ciphertext: b64Url.encode(ciphertext),
+      tag: b64Url.encode(tag)
     }
   }
 

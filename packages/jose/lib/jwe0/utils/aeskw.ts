@@ -1,6 +1,6 @@
-import { createCipheriv, createDecipheriv, createSecretKey } from 'crypto';
+import { createCipheriv, createDecipheriv, KeyObject } from 'crypto';
 
-import { OctKey } from '../../jwk';
+import { OctKey } from '../../jwk/algorithms/oct/oct.key';
 
 /**
  * Wraps the provided CEK with the provided JSON Web Key.
@@ -10,11 +10,11 @@ import { OctKey } from '../../jwk';
  * @returns Wrapped Content Encryption Key.
  */
 export function wrap(cek: Buffer, key: OctKey): Buffer {
-  const secretKey = createSecretKey(key.export('binary'));
-  const keySize = secretKey.symmetricKeySize! * 8;
+  const cryptoKey: KeyObject = Reflect.get(key, 'cryptoKey');
+  const keySize = cryptoKey.symmetricKeySize! * 8;
 
   const algorithm = `aes${keySize}-wrap`;
-  const cipher = createCipheriv(algorithm, secretKey, Buffer.alloc(8, 0xa6));
+  const cipher = createCipheriv(algorithm, cryptoKey, Buffer.alloc(8, 0xa6));
 
   return Buffer.concat([cipher.update(cek), cipher.final()]);
 }
@@ -27,11 +27,11 @@ export function wrap(cek: Buffer, key: OctKey): Buffer {
  * @returns Unwrapped Content Encryption Key.
  */
 export function unwrap(ek: Buffer, key: OctKey): Buffer {
-  const secretKey = createSecretKey(key.export('binary'));
-  const keySize = secretKey.symmetricKeySize! * 8;
+  const cryptoKey: KeyObject = Reflect.get(key, 'cryptoKey');
+  const keySize = cryptoKey.symmetricKeySize! * 8;
 
   const algorithm = `aes${keySize}-wrap`;
-  const decipher = createDecipheriv(algorithm, secretKey, Buffer.alloc(8, 0xa6));
+  const decipher = createDecipheriv(algorithm, cryptoKey, Buffer.alloc(8, 0xa6));
 
   return Buffer.concat([decipher.update(ek), decipher.final()]);
 }

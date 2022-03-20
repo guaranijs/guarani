@@ -1,9 +1,12 @@
-import b64Url from '@guarani/base64url';
-
-import { InvalidJoseHeader, InvalidJsonWebEncryption, JoseError } from '../exceptions';
-import { JsonWebKey } from '../jwk';
+import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
+import { InvalidJsonWebEncryptionException } from '../exceptions/invalid-json-web-encryption.exception';
+import { JoseException } from '../exceptions/jose.exception';
+import { JsonWebKey } from '../jwk/jsonwebkey';
 import { KeyLoader } from '../types';
-import { JWECompression, JWE_ALGORITHMS, JWE_COMPRESSIONS, JWE_ENCRYPTIONS } from './algorithms';
+import { JWE_ALGORITHMS } from './algorithms/alg/jwe-algorithms';
+import { JWE_ENCRYPTIONS } from './algorithms/enc/jwe-encryptions';
+import { JWECompression } from './algorithms/zip/jwe-compression';
+import { JWE_COMPRESSIONS } from './algorithms/zip/jwe-compressions';
 import { JsonWebEncryptionHeader, JWEHeaderParams } from './jsonwebencryption.header';
 
 /**
@@ -36,7 +39,7 @@ export class JsonWebEncryption {
    */
   public constructor(header: JsonWebEncryptionHeader, plaintext: Buffer) {
     if (!(header instanceof JsonWebEncryptionHeader)) {
-      throw new InvalidJoseHeader();
+      throw new InvalidJoseHeaderException();
     }
 
     if (!Buffer.isBuffer(plaintext)) {
@@ -81,39 +84,39 @@ export class JsonWebEncryption {
    */
   public static decodeCompact(token: string): [JsonWebEncryptionHeader, Buffer, Buffer, Buffer, Buffer, Buffer] {
     if (token == null || typeof token !== 'string') {
-      throw new InvalidJsonWebEncryption();
+      throw new InvalidJsonWebEncryptionException();
     }
 
     const splitToken = token.split('.');
 
     if (splitToken.length !== 5) {
-      throw new InvalidJsonWebEncryption();
+      throw new InvalidJsonWebEncryptionException();
     }
 
     try {
       const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = splitToken;
 
-      const decodedHeader = b64Url.decode(b64Header, String);
+      const decodedHeader = Buffer.from(b64Header, 'base64url').toString('utf8');
       const parsedHeader = <JWEHeaderParams>JSON.parse(decodedHeader);
 
       const header = new JsonWebEncryptionHeader(parsedHeader);
-      const ek = b64Url.decode(b64Ek, Buffer);
-      const iv = b64Url.decode(b64Iv, Buffer);
-      const ciphertext = b64Url.decode(b64Ciphertext, Buffer);
-      const tag = b64Url.decode(b64Tag, Buffer);
+      const ek = Buffer.from(b64Ek, 'base64url');
+      const iv = Buffer.from(b64Iv, 'base64url');
+      const ciphertext = Buffer.from(b64Ciphertext, 'base64url');
+      const tag = Buffer.from(b64Tag, 'base64url');
       const aad = Buffer.from(b64Header, 'ascii');
 
       return [header, ek, iv, ciphertext, tag, aad];
     } catch (error) {
-      if (error instanceof InvalidJsonWebEncryption) {
+      if (error instanceof InvalidJsonWebEncryptionException) {
         throw error;
       }
 
-      if (error instanceof JoseError) {
-        throw new InvalidJsonWebEncryption(error.message);
+      if (error instanceof JoseException) {
+        throw new InvalidJsonWebEncryptionException(error.message);
       }
 
-      throw new InvalidJsonWebEncryption();
+      throw new InvalidJsonWebEncryptionException();
     }
   }
 
@@ -148,7 +151,7 @@ export class JsonWebEncryption {
       const wrapKey = typeof jwkOrKeyLoader === 'function' ? jwkOrKeyLoader(header) : jwkOrKeyLoader;
 
       if (wrapKey != null && !(wrapKey instanceof JsonWebKey)) {
-        throw new InvalidJsonWebEncryption('Invalid key.');
+        throw new InvalidJsonWebEncryptionException('Invalid key.');
       }
 
       const cek = await alg.unwrap(ek, wrapKey, header);
@@ -161,15 +164,15 @@ export class JsonWebEncryption {
 
       return new JsonWebEncryption(header, plaintext);
     } catch (error) {
-      if (error instanceof InvalidJsonWebEncryption) {
+      if (error instanceof InvalidJsonWebEncryptionException) {
         throw error;
       }
 
-      if (error instanceof JoseError) {
-        throw new InvalidJsonWebEncryption(error.message);
+      if (error instanceof JoseException) {
+        throw new InvalidJsonWebEncryptionException(error.message);
       }
 
-      throw new InvalidJsonWebEncryption();
+      throw new InvalidJsonWebEncryptionException();
     }
   }
 
@@ -199,13 +202,13 @@ export class JsonWebEncryption {
    */
   public async serializeCompact(wrapKey?: JsonWebKey): Promise<string> {
     if (this.header == null) {
-      throw new InvalidJoseHeader(
+      throw new InvalidJoseHeaderException(
         'This JSON Web Encryption cannot be serialized ' + 'using the JWE Compact Serialization.'
       );
     }
 
     if (wrapKey == null && this.header.alg !== 'dir') {
-      throw new InvalidJoseHeader(`The algorithm "${this.header.alg}" requires the use of a JSON Web Key.`);
+      throw new InvalidJoseHeaderException(`The algorithm "${this.header.alg}" requires the use of a JSON Web Key.`);
     }
 
     const alg = JWE_ALGORITHMS[this.header.alg];
@@ -221,13 +224,13 @@ export class JsonWebEncryption {
       Object.assign(this.header, header);
     }
 
-    const b64Header = b64Url.encode(JSON.stringify(this.header));
+    const b64Header = Buffer.from(JSON.stringify(this.header), 'utf8').toString('base64url');
     const aad = Buffer.from(b64Header, 'ascii');
 
     const plaintext = zip != null ? await zip.compress(this.plaintext) : this.plaintext;
 
     const { ciphertext, tag } = await enc.encrypt(plaintext, aad, iv, cek);
-    const b64IV = b64Url.encode(iv);
+    const b64IV = iv.toString('base64url');
 
     return `${b64Header}.${ek}.${b64IV}.${ciphertext}.${tag}`;
   }

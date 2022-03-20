@@ -4,6 +4,7 @@ import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.ex
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
 import { JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY } from './algorithms/jsonwebsignature-algorithms-registry';
+import { JsonWebSignatureAlgorithm } from './algorithms/jsonwebsignature.algorithm';
 import { JsonWebSignatureHeaderParams } from './jsonwebsignature-header.params';
 import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
 
@@ -18,6 +19,11 @@ import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature
  * and the keys to be used in signing and verifying the payload.
  */
 export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParams {
+  /**
+   * JSON Web Signature Algorithm instance.
+   */
+  public readonly algorithm!: JsonWebSignatureAlgorithm;
+
   /**
    * JSON Web Signature Algorithm used to Sign and Verify the Token.
    */
@@ -87,7 +93,9 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParams {
       throw new InvalidJoseHeaderException('Invalid parameter "alg".');
     }
 
-    if (JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[params.alg] === undefined) {
+    const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[params.alg];
+
+    if (algorithm === undefined) {
       throw new UnsupportedAlgorithmException(`Unsupported JSON Web Signature Algorithm "${params.alg}".`);
     }
 
@@ -136,5 +144,7 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParams {
     }
 
     Object.assign<JsonWebSignatureHeader, JsonWebSignatureHeaderParams>(this, removeNullishValues(params));
+
+    Object.defineProperty(this, 'algorithm', { enumerable: false, value: algorithm });
   }
 }

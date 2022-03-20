@@ -4,7 +4,6 @@ import { InvalidJsonWebKeyException } from '../exceptions/invalid-json-web-key.e
 import { InvalidJsonWebSignatureException } from '../exceptions/invalid-json-web-signature.exception';
 import { JoseException } from '../exceptions/jose.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
-import { JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY } from './algorithms/jsonwebsignature-algorithms-registry';
 import { JsonWebSignatureHeaderParams } from './jsonwebsignature-header.params';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 
@@ -68,9 +67,7 @@ export class JsonWebSignature {
 
       const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
 
-      const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
-
-      await algorithm.verify(signature, message, key ?? undefined);
+      await header.algorithm.verify(signature, message, key ?? undefined);
 
       return new JsonWebSignature(header, payload);
     } catch (exc: any) {
@@ -98,14 +95,12 @@ export class JsonWebSignature {
     }
 
     try {
-      const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
-
       const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
       const b64Payload = payload.toString('base64url');
 
       const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
 
-      const signature = await algorithm.sign(message, jwk);
+      const signature = await header.algorithm.sign(message, jwk);
 
       const b64Signature = signature.toString('base64url');
 

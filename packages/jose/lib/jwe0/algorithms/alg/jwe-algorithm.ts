@@ -1,6 +1,6 @@
 import { Dict } from '@guarani/types';
 
-import { JsonWebKey } from '../../../jwk';
+import { JsonWebKey } from '../../../jwk/jsonwebkey';
 import { WrappedKey } from '../../_types';
 
 /**

@@ -9,7 +9,7 @@ export abstract class JWECompression {
   /**
    * Name of the Compression Algorithm.
    */
-  protected abstract readonly algorithm: string
+  protected abstract readonly algorithm: string;
 
   /**
    * Compresses the plaintext before encryption.
@@ -17,7 +17,7 @@ export abstract class JWECompression {
    * @param plaintext Plaintext to be compressed.
    * @returns Compressed plaintext.
    */
-  public abstract compress(plaintext: Buffer): Promise<Buffer>
+  public abstract compress(plaintext: Buffer): Promise<Buffer>;
 
   /**
    * Decompresses a compressed plaintext after decryption.
@@ -25,5 +25,5 @@ export abstract class JWECompression {
    * @param plaintext Compressed plaintext to be decompressed.
    * @returns Decompressed plaintext.
    */
-  public abstract decompress(plaintext: Buffer): Promise<Buffer>
+  public abstract decompress(plaintext: Buffer): Promise<Buffer>;
 }

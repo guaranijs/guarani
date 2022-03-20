@@ -1,13 +1,25 @@
 import { Optional } from '@guarani/types';
 
 import { JsonWebKey } from '../jwk/jsonwebkey';
-import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
+import { SupportedJsonWebEncryptionCompressionAlgorithm } from './supported-jsonwebencryption-compression-algorithm';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './supported-jsonwebencryption-contentencryption-algorithm';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './supported-jsonwebencryption-keyencryption-algorithm';
 
-export interface JsonWebSignatureHeaderParams {
+export interface JsonWebEncryptionHeaderParams {
   /**
-   * JSON Web Signature Algorithm used to Sign and Verify the Token.
+   * JSON Web Encryption Key Wrap Algorithm used to Wrap and Unwrap the Content Encryption Key.
    */
-  readonly alg: SupportedJsonWebSignatureAlgorithm;
+  readonly alg: SupportedJsonWebEncryptionKeyWrapAlgorithm;
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithm used to Encrypt and Decrypt the Payload of the Token.
+   */
+  readonly enc: SupportedJsonWebEncryptionContentEncryptionAlgorithm;
+
+  /**
+   * JSON Web Encryption Compression Algorithm used to Compress and Decompress the Plaintext Content of the Token.
+   */
+  readonly zip?: Optional<SupportedJsonWebEncryptionCompressionAlgorithm>;
 
   /**
    * URI of a Set of Public JSON Web Keys that contains the JSON Web Key used to Sign the Token.

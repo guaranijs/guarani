@@ -1,10 +1,10 @@
-import { promisify } from 'util'
-import { deflateRaw, inflateRaw } from 'zlib'
+import { promisify } from 'util';
+import { deflateRaw, inflateRaw } from 'zlib';
 
-import { JWECompression } from './jwe-compression'
+import { JWECompression } from './jwe-compression';
 
-const deflateRawAsync = promisify(deflateRaw)
-const inflateRawAsync = promisify(inflateRaw)
+const deflateRawAsync = promisify(deflateRaw);
+const inflateRawAsync = promisify(inflateRaw);
 
 /**
  * Implementation of the DEFLATE Compression Algorithm.
@@ -13,7 +13,7 @@ class DEFCompression extends JWECompression {
   /**
    * Name of the Compression Algorithm.
    */
-  protected readonly algorithm: string = 'DEF'
+  protected readonly algorithm: string = 'DEF';
 
   /**
    * Compresses the plaintext before encryption.
@@ -22,7 +22,7 @@ class DEFCompression extends JWECompression {
    * @returns Compressed plaintext.
    */
   public async compress(plaintext: Buffer): Promise<Buffer> {
-    return await inflateRawAsync(plaintext)
+    return await inflateRawAsync(plaintext);
   }
 
   /**
@@ -32,11 +32,11 @@ class DEFCompression extends JWECompression {
    * @returns Decompressed plaintext.
    */
   public async decompress(plaintext: Buffer): Promise<Buffer> {
-    return await deflateRawAsync(plaintext)
+    return await deflateRawAsync(plaintext);
   }
 }
 
 /**
  * DEFLATE Compression Algorithm.
  */
-export const DEF = new DEFCompression()
+export const DEF = new DEFCompression();

@@ -5,10 +5,10 @@ export interface AESGMCWrappedKey {
   /**
    * Initialization Vector.
    */
-  readonly iv: string
+  readonly iv: string;
 
   /**
    * Authentication Tag.
    */
-  readonly tag: string
+  readonly tag: string;
 }

@@ -1,16 +1,11 @@
 import { removeNullishValues } from '@guarani/objects';
 
-import { InvalidJoseHeader } from '../exceptions';
+import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { JoseHeader, JoseHeaderParams } from '../jose.header';
-import { JsonWebKeyParams } from '../jwk';
-import {
-  JWE_ALGORITHMS,
-  JWE_COMPRESSIONS,
-  JWE_ENCRYPTIONS,
-  SupportedJWEAlgorithm,
-  SupportedJWECompression,
-  SupportedJWEEncryption,
-} from './algorithms';
+import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
+import { JWE_ALGORITHMS, SupportedJWEAlgorithm } from './algorithms/alg/jwe-algorithms';
+import { JWE_ENCRYPTIONS, SupportedJWEEncryption } from './algorithms/enc/jwe-encryptions';
+import { JWE_COMPRESSIONS, SupportedJWECompression } from './algorithms/zip/jwe-compressions';
 
 /**
  * Defines the parameters supported by the JWE JOSE Header.
@@ -39,7 +34,7 @@ export interface JWEHeaderParams extends JoseHeaderParams {
   /**
    * JSON Web Key used to encrypt the token.
    */
-  readonly jwk?: JsonWebKeyParams;
+  readonly jwk?: JsonWebKeyParams<any>;
 
   /**
    * ID of the key used to encrypt the token.
@@ -118,7 +113,7 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JWEHeaderPara
   /**
    * JSON Web Key used to encrypt the token.
    */
-  public readonly jwk?: JsonWebKeyParams;
+  public readonly jwk?: JsonWebKeyParams<any>;
 
   /**
    * ID of the key used to encrypt the token.
@@ -184,11 +179,11 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JWEHeaderPara
     }
 
     if (header.alg == null) {
-      throw new InvalidJoseHeader('Missing required parameter "alg".');
+      throw new InvalidJoseHeaderException('Missing required parameter "alg".');
     }
 
     if (header.enc == null) {
-      throw new InvalidJoseHeader('Missing required parameter "enc".');
+      throw new InvalidJoseHeaderException('Missing required parameter "enc".');
     }
 
     this.checkHeader(header);
@@ -203,25 +198,25 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JWEHeaderPara
    */
   protected checkHeader(header: Partial<JWEHeaderParams>): void {
     if ('enc' in header && typeof header.enc !== 'string') {
-      throw new InvalidJoseHeader('Invalid parameter "enc".');
+      throw new InvalidJoseHeaderException('Invalid parameter "enc".');
     }
 
     if ('zip' in header && typeof header.zip !== 'string') {
-      throw new InvalidJoseHeader('Invalid parameter "zip".');
+      throw new InvalidJoseHeaderException('Invalid parameter "zip".');
     }
 
     super.checkHeader(header);
 
     if (header.alg != null && !(header.alg in JWE_ALGORITHMS)) {
-      throw new InvalidJoseHeader('Invalid JSON Web Encryption Key Wrapping Algorithm.');
+      throw new InvalidJoseHeaderException('Invalid JSON Web Encryption Key Wrapping Algorithm.');
     }
 
     if (header.enc != null && !(header.enc in JWE_ENCRYPTIONS)) {
-      throw new InvalidJoseHeader('Invalid JSON Web Encryption Content Encryption Algorithm.');
+      throw new InvalidJoseHeaderException('Invalid JSON Web Encryption Content Encryption Algorithm.');
     }
 
     if (header.zip != null && !(header.zip in JWE_COMPRESSIONS)) {
-      throw new InvalidJoseHeader('Invalid JSON Web Encryption Plaintext Compression Algorithm.');
+      throw new InvalidJoseHeaderException('Invalid JSON Web Encryption Plaintext Compression Algorithm.');
     }
   }
 }

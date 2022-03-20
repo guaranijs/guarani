@@ -1,8 +1,8 @@
-import { integerToBuffer } from '@guarani/primitives';
 import { Optional } from '@guarani/types';
 
 import { Class } from '../class';
-import { Method } from '../method';
+import { UnsupportedEncodingException } from '../exceptions/unsupported-encoding.exception';
+import { Encoding } from '../encoding';
 import { Type } from '../type';
 import { Node } from './node';
 import { NodeOptions } from './node.options';
@@ -14,40 +14,28 @@ export class BooleanNode extends Node<boolean> {
   /**
    * Type Identifier of the Node.
    */
-  protected static readonly type: Type = Type.Boolean;
+  public readonly type: Type;
 
   /**
    * Instantiates a new Boolean Node.
    *
-   * @param value Boolean value.
+   * @param data Boolean value.
    * @param options Optional parameters to customize the Node.
    */
-  public constructor(value: boolean, options: Optional<NodeOptions> = {}) {
-    if (typeof value !== 'boolean') {
-      throw new TypeError('Invalid parameter "value".');
+  public constructor(data: boolean, options: Optional<NodeOptions> = {}) {
+    if (typeof data !== 'boolean') {
+      throw new TypeError('Invalid parameter "data".');
     }
 
-    if (typeof options.method !== 'undefined' && options.method !== Method.Primitive) {
-      throw new Error('Unsupported option "method".');
+    if (options.encoding !== undefined && options.encoding !== Encoding.Primitive) {
+      throw new UnsupportedEncodingException('The Boolean Type only supports the Primitive Encoding.');
     }
 
     options.class ??= Class.Universal;
-    options.method = Method.Primitive;
+    options.encoding = Encoding.Primitive;
 
-    super(value, options);
-  }
+    super(data, options);
 
-  /**
-   * Encodes the Boolean Node into a Buffer object.
-   *
-   * @example
-   * const trueValue = new BooleanNode(true)
-   * trueValue.encode() // <Buffer 01 01 01>
-   *
-   * const falseValue = new BooleanNode(false)
-   * falseValue.encode() // <Buffer 01 01 00>
-   */
-  protected encodeData(): Buffer {
-    return integerToBuffer(this.value ? 0x01n : 0x00n);
+    this.type = Type.Boolean;
   }
 }

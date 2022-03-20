@@ -1,6 +1,6 @@
-import { Optional } from '@guarani/types'
+import { Optional } from '@guarani/types';
 
-import { JoseException } from './jose.exception'
+import { JoseException } from './jose.exception';
 
 /**
  * Raised when the provided algorithm in not supported.
@@ -11,9 +11,7 @@ export class UnsupportedAlgorithmException extends JoseException {
    *
    * @param message Message describing the error.
    */
-  public constructor(
-    message: Optional<string> = 'The provided algorithm is currently not supported.'
-  ) {
-    super(message)
+  public constructor(message: Optional<string> = 'The provided algorithm is currently not supported.') {
+    super(message);
   }
 }

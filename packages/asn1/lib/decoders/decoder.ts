@@ -1,152 +1,93 @@
-import { Constructor, Dict, Optional } from '@guarani/types';
+import { Optional } from '@guarani/types';
 
-import { getInternalNodeElements, getRootNodeElement, getTransformers } from '../metadata/helpers';
 import { NodeOptions } from '../nodes/node.options';
-import { Type } from '../type';
-
-type Resolvers =
-  | 'decodeBitString'
-  | 'decodeBoolean'
-  | 'decodeBytes'
-  | 'decodeInteger'
-  | 'decodeNested'
-  | 'decodeNull'
-  | 'decodeObjectId'
-  | 'decodeOctetString'
-  | 'decodeSequence';
 
 /**
- * Mapper of Type Identifiers and methods of the Decoder.
+ * Base ASN.1 Decoder.
  */
-const typeMapper: Dict<Resolvers> = {
-  [String(Type.BitString)]: 'decodeBitString',
-  [String(Type.Boolean)]: 'decodeBoolean',
-  [String(Type.Bytes)]: 'decodeBytes',
-  [String(Type.Integer)]: 'decodeInteger',
-  [String(Type.Nested)]: 'decodeNested',
-  [String(Type.Null)]: 'decodeNull',
-  [String(Type.ObjectId)]: 'decodeObjectId',
-  [String(Type.OctetString)]: 'decodeOctetString',
-  [String(Type.Sequence)]: 'decodeSequence',
-};
-
-export abstract class Decoder<TData, TModel> {
+export abstract class Decoder<T> {
   /**
-   * Buffer to be decoded.
+   * ASN.1 Data to be decoded.
    */
-  protected data: TData;
+  protected data: T;
 
   /**
-   * Model representation of the structure of the Buffer.
-   */
-  protected readonly model: Constructor<TModel>;
-
-  /**
-   * Decodes the provided Buffer into the provided structured model.
+   * Instantiates a new ASN.1 Decoder.
    *
-   * @param data Buffer to be decoded.
-   * @param model Model representation of the structure of the Buffer.
+   * @param data ASN.1 Data to be decoded.
    */
-  public constructor(data: TData, model: Constructor<TModel>) {
+  public constructor(data: T) {
     this.data = data;
-    this.model = model;
   }
 
   /**
-   * Parses a BitString Type.
-   */
-  protected abstract decodeBitString(options?: Optional<NodeOptions>): Buffer;
-
-  /**
-   * Parses a Boolean Type.
-   */
-  protected abstract decodeBoolean(options?: Optional<NodeOptions>): boolean;
-
-  /**
-   * Returns the first N bytes of the Decoder's data buffer
-   * and sets it to the remaining bytes.
+   * Checks if the current encoded ASN.1 Type has the provided Tag.
    *
-   * @param length Number of bytes to be displaced.
+   * @param tag Expected Tag.
    */
-  protected abstract decodeBytes(length: number): Buffer;
+  public abstract is(tag: number): boolean;
 
   /**
-   * Parses an Integer Type.
+   * Decodes a BitString Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Bit String.
    */
-  protected abstract decodeInteger(options?: Optional<NodeOptions>): bigint;
+  public abstract decodeBitString(options?: Optional<NodeOptions>): string;
 
   /**
-   * Passes the Decoder's data buffer unmodified.
+   * Decodes a Boolean Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Boolean.
    */
-  protected abstract decodeNested(): Buffer;
+  public abstract decodeBoolean(options?: Optional<NodeOptions>): boolean;
 
   /**
-   * Parses a Null Type.
+   * Returns the first N bytes of the Decoder's data.
+   *
+   * @param length Number of bytes to be returned.
+   * @returns First N bytes of the Decoder's data.
    */
-  protected abstract decodeNull(options?: Optional<NodeOptions>): null;
+  public abstract decodeBytes(length: number): Buffer;
 
   /**
-   * Parses an ObjectId Type.
+   * Decodes an Integer Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Integer.
    */
-  protected abstract decodeObjectId(options?: Optional<NodeOptions>): string;
+  public abstract decodeInteger(options?: Optional<NodeOptions>): bigint;
 
   /**
-   * Parses an OctetString Type.
+   * Decodes a Null Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns `null`.
    */
-  protected abstract decodeOctetString(options?: Optional<NodeOptions>): Buffer;
+  public abstract decodeNull(options?: Optional<NodeOptions>): null;
 
   /**
-   * Parses a Sequence Type into a new Decoder instance.
+   * Decodes an ObjectIdentifier Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Object Identifier.
    */
-  protected abstract decodeSequence(options?: Optional<NodeOptions>): Decoder<TData, TModel>;
+  public abstract decodeObjectIdentifier(options?: Optional<NodeOptions>): string;
 
   /**
-   * Decodes the data buffer of the Decoder.
+   * Decodes an OctetString Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Octet String.
    */
-  public decode(): TModel {
-    let decoder: Decoder<TData, TModel> = this;
+  public abstract decodeOctetString(options?: Optional<NodeOptions>): Buffer;
 
-    const obj = Reflect.construct(this.model, []);
-
-    const rootElement = getRootNodeElement(obj);
-
-    if (rootElement?.type !== Type.Nested) {
-      decoder = this.decodeSequence(rootElement.options);
-    }
-
-    const internalElements = getInternalNodeElements(obj);
-
-    internalElements.forEach((element) => {
-      const resolverName = typeMapper[String(element.type)];
-
-      const args: any[] = [element.options];
-
-      if (element.type === Type.Bytes) {
-        args.unshift(element.bytesLength!);
-      }
-
-      let resolvedValue = (<Function>decoder[resolverName])(...args);
-
-      const transformers = getTransformers(obj, element.propertyKey!);
-
-      if (typeof transformers !== 'undefined') {
-        transformers
-          .filter(({ operation }) => operation === 'decode')
-          .forEach(({ transformer }) => {
-            resolvedValue = transformer(resolvedValue);
-          });
-      }
-
-      if (typeof element.model !== 'undefined') {
-        const nestedDecoder = new (<Constructor<Decoder<TData, TModel>>>this.constructor)(resolvedValue, element.model);
-
-        resolvedValue = nestedDecoder.decode();
-        decoder.data = nestedDecoder.data;
-      }
-
-      Reflect.set(obj, element.propertyKey!, resolvedValue);
-    });
-
-    return obj;
-  }
+  /**
+   * Decodes a Sequence Type
+   *
+   * @param options Optional attributes for the Node.
+   * @returns Decoder for the Children Nodes of the Sequence.
+   */
+  public abstract decodeSequence(options?: Optional<NodeOptions>): Decoder<T>;
 }

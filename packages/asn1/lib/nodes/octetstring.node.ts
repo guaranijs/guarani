@@ -1,50 +1,103 @@
 import { Optional } from '@guarani/types';
 
 import { Class } from '../class';
-import { Method } from '../method';
+import { Encoding } from '../encoding';
 import { Type } from '../type';
 import { Node } from './node';
 import { NodeOptions } from './node.options';
 
 /**
  * The OctetString Node denotes an arbitrary sequence of octets.
- * It is used to represent a sequence of bytes represented in hex.
+ * It is used to represent a sequence of bytes as a hexadecimal String.
  */
-export class OctetStringNode extends Node<Buffer> {
+export class OctetStringNode extends Node<Buffer | OctetStringNode[]> {
   /**
    * Type Identifier of the Node.
    */
-  protected static readonly type: Type = Type.OctetString;
+  public readonly type: Type;
 
   /**
-   * Instantiates a new OctetString object based on the provided value.
+   * Instantiates a new OctetString object based on the provided String.
    *
-   * @param value Buffer representation of the OctetString.
+   * @param data String representation of the OctetString.
    * @param options Optional parameters to customize the Node.
    */
-  public constructor(value: Buffer, options: Optional<NodeOptions> = {}) {
-    if (!Buffer.isBuffer(value)) {
-      throw new TypeError('Invalid parameter "value".');
+  public constructor(data: string, options?: Optional<NodeOptions>);
+
+  /**
+   * Instantiates a new OctetString object based on the provided Buffer.
+   *
+   * @param data Buffer representation of the OctetString.
+   * @param options Optional parameters to customize the Node.
+   */
+  public constructor(data: Buffer, options?: Optional<NodeOptions>);
+
+  /**
+   * Instantiates a new OctetString Node based on the provided OctetString Nodes.
+   *
+   * @param data Substrings of the OctetString.
+   * @param options Optional parameters to customize the Node.
+   */
+  public constructor(data: OctetStringNode[], options?: Optional<NodeOptions>);
+
+  /**
+   * Instantiates a new OctetString object based on the provided data.
+   *
+   * @param data Data representing the OctetString.
+   * @param options Optional parameters to customize the Node.
+   */
+  public constructor(data: string | Buffer | OctetStringNode[], options: Optional<NodeOptions> = {}) {
+    if (typeof data !== 'string' && !Buffer.isBuffer(data) && !Array.isArray(data)) {
+      throw new TypeError('Invalid parameter "data".');
     }
 
-    if (options.method === Method.Constructed) {
-      throw new Error('Unsupported Constructed Method for OctetString.');
+    // String Branch.
+    if (typeof data === 'string') {
+      if (data.length % 2 !== 0) {
+        data = `0${data}`;
+      }
+
+      const hexRegex = /^[0-9a-fA-F]*$/;
+
+      if (!hexRegex.test(data)) {
+        throw new TypeError('Invalid parameter "data".');
+      }
+
+      if (options.encoding !== undefined && options.encoding !== Encoding.Primitive) {
+        throw new TypeError('This configuration expects a Primitive Encoding.');
+      }
+
+      data = Buffer.from(data, 'hex');
+
+      options.encoding = Encoding.Primitive;
+    }
+
+    // Buffer Branch.
+    else if (Buffer.isBuffer(data)) {
+      if (options.encoding !== undefined && options.encoding !== Encoding.Primitive) {
+        throw new TypeError('This configuration expects a Primitive Encoding.');
+      }
+
+      options.encoding = Encoding.Primitive;
+    }
+
+    // Constructed Branch.
+    else {
+      if (data.some((node) => !(node instanceof OctetStringNode) || node.class !== Class.Universal)) {
+        throw new TypeError('Invalid parameter "data".');
+      }
+
+      if (options.encoding !== undefined && options.encoding !== Encoding.Constructed) {
+        throw new TypeError('This configuration expects a Constructed Encoding.');
+      }
+
+      options.encoding = Encoding.Constructed;
     }
 
     options.class ??= Class.Universal;
-    options.method ??= Method.Primitive;
 
-    super(value, options);
-  }
+    super(data, options);
 
-  /**
-   * Encodes the OctetString Node into a Buffer object.
-   *
-   * @example
-   * const octstr = new OctetStringNode(Buffer.from([0x02, 0x0d, 0x4f, 0x9e, 0xb3]))
-   * octstr.encode() // <Buffer 04 05 02 0d 4f 9e b3>
-   */
-  protected encodeData(): Buffer {
-    return this.value;
+    this.type = Type.OctetString;
   }
 }

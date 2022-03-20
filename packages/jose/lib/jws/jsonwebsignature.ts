@@ -1,25 +1,13 @@
-import b64Url from '@guarani/base64url'
-import { removeNullishValues } from '@guarani/objects'
-import { OneOrMany } from '@guarani/types'
+import b64Url from '@guarani/base64url';
+import { removeNullishValues } from '@guarani/objects';
+import { OneOrMany } from '@guarani/types';
 
-import {
-  InvalidJoseHeader,
-  InvalidJsonWebSignature,
-  InvalidKey,
-  JoseError
-} from '../exceptions'
-import { JsonWebKey } from '../jwk'
-import { KeyLoader } from '../types'
-import { JWS_ALGORITHMS, SupportedJWSAlgorithm } from './algorithms'
-import {
-  JsonWebSignatureHeader,
-  JWSHeaderParams
-} from './jsonwebsignature.header'
-import {
-  JWSFlattenedSerialization,
-  JWSJSONSerialization,
-  JWSJSONSignature
-} from './_types'
+import { InvalidJoseHeader, InvalidJsonWebSignature, InvalidKey, JoseError } from '../exceptions';
+import { JsonWebKey } from '../jwk';
+import { KeyLoader } from '../types';
+import { JWS_ALGORITHMS, SupportedJWSAlgorithm } from './algorithms';
+import { JsonWebSignatureHeader, JWSHeaderParams } from './jsonwebsignature.header';
+import { JWSFlattenedSerialization, JWSJSONSerialization, JWSJSONSignature } from './_types';
 
 /**
  * Implementation of RFC 7515.
@@ -35,12 +23,12 @@ export class JsonWebSignature {
   /**
    * JOSE Header containing the meta information of the token.
    */
-  public readonly header: OneOrMany<JsonWebSignatureHeader>
+  public readonly header: OneOrMany<JsonWebSignatureHeader>;
 
   /**
    * Buffer representation of the payload of the token.
    */
-  public readonly payload?: Buffer
+  public readonly payload?: Buffer;
 
   /**
    * Instantiates a new JSON Web Signature based on the provided
@@ -49,7 +37,7 @@ export class JsonWebSignature {
    * @param header JWS JOSE Header containing the token's meta information.
    * @param payload Buffer representation of the payload of the token.
    */
-  public constructor(header: JsonWebSignatureHeader, payload?: Buffer)
+  public constructor(header: JsonWebSignatureHeader, payload?: Buffer);
 
   /**
    * Instantiates a new JSON Web Signature based on the provided
@@ -58,22 +46,19 @@ export class JsonWebSignature {
    * @param headers JWS JOSE Headers containing the token's meta information.
    * @param payload Buffer representation of the payload of the token.
    */
-  public constructor(headers: JsonWebSignatureHeader[], payload?: Buffer)
+  public constructor(headers: JsonWebSignatureHeader[], payload?: Buffer);
 
-  public constructor(
-    header: OneOrMany<JsonWebSignatureHeader>,
-    payload?: Buffer
-  ) {
+  public constructor(header: OneOrMany<JsonWebSignatureHeader>, payload?: Buffer) {
     if (!Array.isArray(header) && !(header instanceof JsonWebSignatureHeader)) {
-      throw new InvalidJoseHeader()
+      throw new InvalidJoseHeader();
     }
 
     if (payload != null && !Buffer.isBuffer(payload)) {
-      throw new TypeError('The provided payload is invalid.')
+      throw new TypeError('The provided payload is invalid.');
     }
 
-    this.header = header
-    this.payload = payload
+    this.header = header;
+    this.payload = payload;
   }
 
   /**
@@ -84,20 +69,20 @@ export class JsonWebSignature {
   public static isJWS(token: string): boolean {
     // Checks a Compact JWS token.
     if (typeof token === 'string') {
-      const components = token.split('.')
+      const components = token.split('.');
 
       if (components.length !== 3) {
-        return false
+        return false;
       }
 
-      if (components.some(component => !component)) {
-        return false
+      if (components.some((component) => !component)) {
+        return false;
       }
 
-      return true
+      return true;
     }
 
-    return false
+    return false;
   }
 
   /**
@@ -109,40 +94,38 @@ export class JsonWebSignature {
    */
   public static decodeCompact(token: string): [JsonWebSignatureHeader, Buffer] {
     if (token == null || typeof token !== 'string') {
-      throw new InvalidJsonWebSignature()
+      throw new InvalidJsonWebSignature();
     }
 
-    const splitToken = token.split('.')
+    const splitToken = token.split('.');
 
     if (splitToken.length !== 3) {
-      throw new InvalidJsonWebSignature()
+      throw new InvalidJsonWebSignature();
     }
 
     try {
-      const [b64Header, b64Payload] = splitToken
+      const [b64Header, b64Payload] = splitToken;
 
-      const parsedHeader = <JWSHeaderParams>(
-        JSON.parse(b64Url.decode(b64Header, Buffer).toString('utf8'))
-      )
+      const parsedHeader = <JWSHeaderParams>JSON.parse(b64Url.decode(b64Header, Buffer).toString('utf8'));
 
       if (Array.isArray(parsedHeader)) {
-        throw new InvalidJsonWebSignature("The token's JOSE Header is invalid.")
+        throw new InvalidJsonWebSignature("The token's JOSE Header is invalid.");
       }
 
-      const header = new JsonWebSignatureHeader(parsedHeader)
-      const payload = b64Url.decode(b64Payload, Buffer)
+      const header = new JsonWebSignatureHeader(parsedHeader);
+      const payload = b64Url.decode(b64Payload, Buffer);
 
-      return [header, payload]
+      return [header, payload];
     } catch (error) {
       if (error instanceof InvalidJsonWebSignature) {
-        throw error
+        throw error;
       }
 
       if (error instanceof JoseError) {
-        throw new InvalidJsonWebSignature(error.message)
+        throw new InvalidJsonWebSignature(error.message);
       }
 
-      throw new InvalidJsonWebSignature()
+      throw new InvalidJsonWebSignature();
     }
   }
 
@@ -168,7 +151,7 @@ export class JsonWebSignature {
     token: string,
     key: JsonWebKey,
     algorithm?: SupportedJWSAlgorithm
-  ): Promise<JsonWebSignature>
+  ): Promise<JsonWebSignature>;
 
   /**
    * Decodes a **JSON Web Signature Compact Token** checking
@@ -189,7 +172,7 @@ export class JsonWebSignature {
     token: string,
     keyLoader: KeyLoader,
     algorithm?: SupportedJWSAlgorithm
-  ): Promise<JsonWebSignature>
+  ): Promise<JsonWebSignature>;
 
   public static async deserializeCompact(
     token: string,
@@ -197,44 +180,36 @@ export class JsonWebSignature {
     algorithm?: SupportedJWSAlgorithm
   ): Promise<JsonWebSignature> {
     try {
-      const [header, payload] = this.decodeCompact(token)
-      const [b64Header, b64Payload, b64Signature] = token.split('.')
+      const [header, payload] = this.decodeCompact(token);
+      const [b64Header, b64Payload, b64Signature] = token.split('.');
 
-      const key =
-        typeof jwkOrKeyLoader === 'function'
-          ? jwkOrKeyLoader(header)
-          : jwkOrKeyLoader
+      const key = typeof jwkOrKeyLoader === 'function' ? jwkOrKeyLoader(header) : jwkOrKeyLoader;
 
       if (key != null && !(key instanceof JsonWebKey)) {
-        throw new InvalidJsonWebSignature('Invalid key.')
+        throw new InvalidJsonWebSignature('Invalid key.');
       }
 
       if (algorithm && algorithm !== header.alg) {
         throw new InvalidJsonWebSignature(
-          'The algorithm used to sign this token is invalid. ' +
-            `Expected "${algorithm}", got "${header.alg}".`
-        )
+          'The algorithm used to sign this token is invalid. ' + `Expected "${algorithm}", got "${header.alg}".`
+        );
       }
 
-      const alg = JWS_ALGORITHMS[header.alg]
+      const alg = JWS_ALGORITHMS[header.alg];
 
-      await alg.verify(
-        b64Signature,
-        Buffer.from(`${b64Header}.${b64Payload}`),
-        key
-      )
+      await alg.verify(b64Signature, Buffer.from(`${b64Header}.${b64Payload}`), key);
 
-      return new JsonWebSignature(header, payload)
+      return new JsonWebSignature(header, payload);
     } catch (error) {
       if (error instanceof InvalidJsonWebSignature) {
-        throw error
+        throw error;
       }
 
       if (error instanceof JoseError) {
-        throw new InvalidJsonWebSignature(error.message)
+        throw new InvalidJsonWebSignature(error.message);
       }
 
-      throw new InvalidJsonWebSignature()
+      throw new InvalidJsonWebSignature();
     }
   }
 
@@ -260,7 +235,7 @@ export class JsonWebSignature {
     token: JWSFlattenedSerialization,
     key: JsonWebKey,
     algorithm?: SupportedJWSAlgorithm
-  ): Promise<JsonWebSignature>
+  ): Promise<JsonWebSignature>;
 
   /**
    * Decodes a **JSON Web Signature Flattened Token** checking
@@ -281,7 +256,7 @@ export class JsonWebSignature {
     token: JWSFlattenedSerialization,
     keyLoader: KeyLoader,
     algorithm?: SupportedJWSAlgorithm
-  ): Promise<JsonWebSignature>
+  ): Promise<JsonWebSignature>;
 
   public static async deserializeFlattened(
     token: JWSFlattenedSerialization,
@@ -289,35 +264,30 @@ export class JsonWebSignature {
     algorithm?: SupportedJWSAlgorithm
   ): Promise<JsonWebSignature> {
     if (token == null) {
-      throw new InvalidJsonWebSignature()
+      throw new InvalidJsonWebSignature();
     }
 
-    const { payload: b64Payload } = token
+    const { payload: b64Payload } = token;
 
     if (b64Payload == null || typeof b64Payload !== 'string') {
-      throw new InvalidJsonWebSignature('Invalid attribute "payload".')
+      throw new InvalidJsonWebSignature('Invalid attribute "payload".');
     }
 
     try {
-      const payload = b64Url.decode(b64Payload, Buffer)
-      const header = await JsonWebSignature.getJWSJSONHeader(
-        b64Payload,
-        token,
-        jwkOrKeyLoader,
-        algorithm
-      )
+      const payload = b64Url.decode(b64Payload, Buffer);
+      const header = await JsonWebSignature.getJWSJSONHeader(b64Payload, token, jwkOrKeyLoader, algorithm);
 
-      return new JsonWebSignature(header, payload)
+      return new JsonWebSignature(header, payload);
     } catch (error) {
       if (error instanceof InvalidJsonWebSignature) {
-        throw error
+        throw error;
       }
 
       if (error instanceof JoseError) {
-        throw new InvalidJsonWebSignature(error.message)
+        throw new InvalidJsonWebSignature(error.message);
       }
 
-      throw new InvalidJsonWebSignature()
+      throw new InvalidJsonWebSignature();
     }
   }
 
@@ -344,7 +314,7 @@ export class JsonWebSignature {
     token: JWSJSONSerialization,
     keys: JsonWebKey[],
     algorithms?: SupportedJWSAlgorithm[]
-  ): Promise<JsonWebSignature>
+  ): Promise<JsonWebSignature>;
 
   /**
    * Decodes a **JSON Web Signature JSON Token** checking
@@ -366,7 +336,7 @@ export class JsonWebSignature {
     token: JWSJSONSerialization,
     keyLoader: KeyLoader,
     algorithms?: SupportedJWSAlgorithm[]
-  ): Promise<JsonWebSignature>
+  ): Promise<JsonWebSignature>;
 
   public static async deserializeJSON(
     token: JWSJSONSerialization,
@@ -374,48 +344,40 @@ export class JsonWebSignature {
     algorithms?: SupportedJWSAlgorithm[]
   ): Promise<JsonWebSignature> {
     if (token == null) {
-      throw new InvalidJsonWebSignature()
+      throw new InvalidJsonWebSignature();
     }
 
-    const { payload: b64Payload, signatures } = token
+    const { payload: b64Payload, signatures } = token;
 
     if (b64Payload == null || typeof b64Payload !== 'string') {
-      throw new InvalidJsonWebSignature('Invalid attribute "payload".')
+      throw new InvalidJsonWebSignature('Invalid attribute "payload".');
     }
 
     if (!Array.isArray(signatures)) {
-      throw new InvalidJsonWebSignature('Invalid attribute "signatures".')
+      throw new InvalidJsonWebSignature('Invalid attribute "signatures".');
     }
 
     try {
-      const payload = b64Url.decode(b64Payload, Buffer)
+      const payload = b64Url.decode(b64Payload, Buffer);
       const awaitableHeaders = signatures.map(async (signature, i) => {
-        const key =
-          typeof jwkOrKeyLoader === 'function'
-            ? jwkOrKeyLoader
-            : jwkOrKeyLoader[i]
+        const key = typeof jwkOrKeyLoader === 'function' ? jwkOrKeyLoader : jwkOrKeyLoader[i];
 
-        return await JsonWebSignature.getJWSJSONHeader(
-          b64Payload,
-          signature,
-          key,
-          algorithms?.[i]
-        )
-      })
+        return await JsonWebSignature.getJWSJSONHeader(b64Payload, signature, key, algorithms?.[i]);
+      });
 
-      const headers = await Promise.all(awaitableHeaders)
+      const headers = await Promise.all(awaitableHeaders);
 
-      return new JsonWebSignature(headers, payload)
+      return new JsonWebSignature(headers, payload);
     } catch (error) {
       if (error instanceof InvalidJsonWebSignature) {
-        throw error
+        throw error;
       }
 
       if (error instanceof JoseError) {
-        throw new InvalidJsonWebSignature(error.message)
+        throw new InvalidJsonWebSignature(error.message);
       }
 
-      throw new InvalidJsonWebSignature()
+      throw new InvalidJsonWebSignature();
     }
   }
 
@@ -434,50 +396,36 @@ export class JsonWebSignature {
     jwkOrKeyLoader: JsonWebKey | KeyLoader,
     algorithm?: SupportedJWSAlgorithm
   ): Promise<JsonWebSignatureHeader> {
-    const {
-      signature: b64Signature,
-      header: unprotectedHeader,
-      protected: b64ProtectedHeader
-    } = signature
+    const { signature: b64Signature, header: unprotectedHeader, protected: b64ProtectedHeader } = signature;
 
     if (typeof b64Signature !== 'string') {
-      throw new InvalidJsonWebSignature('Invalid attribute "signature".')
+      throw new InvalidJsonWebSignature('Invalid attribute "signature".');
     }
 
     if (b64ProtectedHeader && typeof b64ProtectedHeader !== 'string') {
-      throw new InvalidJsonWebSignature('Invalid attribute "protected".')
+      throw new InvalidJsonWebSignature('Invalid attribute "protected".');
     }
 
-    const protectedHeader: JWSHeaderParams = JSON.parse(
-      b64Url.decode(b64ProtectedHeader!, Buffer).toString('utf8')
-    )
+    const protectedHeader: JWSHeaderParams = JSON.parse(b64Url.decode(b64ProtectedHeader!, Buffer).toString('utf8'));
 
     const header = new JsonWebSignatureHeader({
       protectedHeader,
-      unprotectedHeader
-    })
+      unprotectedHeader,
+    });
 
     if (algorithm && algorithm !== header.alg) {
       throw new InvalidJsonWebSignature(
-        'The algorithm used to sign this token is invalid. ' +
-          `Expected "${algorithm}", got "${header.alg}".`
-      )
+        'The algorithm used to sign this token is invalid. ' + `Expected "${algorithm}", got "${header.alg}".`
+      );
     }
 
-    const alg = JWS_ALGORITHMS[header.alg]
+    const alg = JWS_ALGORITHMS[header.alg];
 
-    const key =
-      typeof jwkOrKeyLoader === 'function'
-        ? jwkOrKeyLoader(header)
-        : jwkOrKeyLoader
+    const key = typeof jwkOrKeyLoader === 'function' ? jwkOrKeyLoader(header) : jwkOrKeyLoader;
 
-    await alg.verify(
-      b64Signature,
-      Buffer.from(`${b64ProtectedHeader}.${b64Payload}`),
-      key
-    )
+    await alg.verify(b64Signature, Buffer.from(`${b64ProtectedHeader}.${b64Payload}`), key);
 
-    return header
+    return header;
   }
 
   /**
@@ -504,26 +452,23 @@ export class JsonWebSignature {
   public async serializeCompact(key?: JsonWebKey): Promise<string> {
     if (Array.isArray(this.header)) {
       throw new InvalidJoseHeader(
-        'This JSON Web Signature cannot be serialized ' +
-          'using the JWS Compact Serialization.'
-      )
+        'This JSON Web Signature cannot be serialized ' + 'using the JWS Compact Serialization.'
+      );
     }
 
     if (key == null && this.header.alg !== 'none') {
-      throw new InvalidJoseHeader(
-        `The algorithm "${this.header.alg}" requires the use of a JSON Web Key.`
-      )
+      throw new InvalidJoseHeader(`The algorithm "${this.header.alg}" requires the use of a JSON Web Key.`);
     }
 
-    const b64Header = b64Url.encode(Buffer.from(JSON.stringify(this.header)))
-    const b64Payload = b64Url.encode(this.payload ?? Buffer.alloc(0))
+    const b64Header = b64Url.encode(Buffer.from(JSON.stringify(this.header)));
+    const b64Payload = b64Url.encode(this.payload ?? Buffer.alloc(0));
 
-    const alg = JWS_ALGORITHMS[this.header.alg]
+    const alg = JWS_ALGORITHMS[this.header.alg];
 
-    const message = `${b64Header}.${b64Payload}`
-    const signature = await alg.sign(Buffer.from(message), key)
+    const message = `${b64Header}.${b64Payload}`;
+    const signature = await alg.sign(Buffer.from(message), key);
 
-    return `${message}.${signature}`
+    return `${message}.${signature}`;
   }
 
   /**
@@ -547,27 +492,20 @@ export class JsonWebSignature {
    * @param key JSON Web Key used to generate the signature.
    * @returns JSON Web Signature Flattened Token.
    */
-  public async serializeFlattened(
-    key?: JsonWebKey
-  ): Promise<JWSFlattenedSerialization> {
+  public async serializeFlattened(key?: JsonWebKey): Promise<JWSFlattenedSerialization> {
     if (Array.isArray(this.header)) {
       throw new InvalidJoseHeader(
-        'This JSON Web Signature cannot be serialized ' +
-          'using the JWS Flattened Serialization.'
-      )
+        'This JSON Web Signature cannot be serialized ' + 'using the JWS Flattened Serialization.'
+      );
     }
 
-    const b64Payload = b64Url.encode(this.payload ?? Buffer.alloc(0))
-    const signature = await JsonWebSignature.serializeJSONSignature(
-      this.header,
-      b64Payload,
-      key
-    )
+    const b64Payload = b64Url.encode(this.payload ?? Buffer.alloc(0));
+    const signature = await JsonWebSignature.serializeJSONSignature(this.header, b64Payload, key);
 
     return removeNullishValues<JWSFlattenedSerialization>({
       payload: b64Payload,
-      ...signature
-    })
+      ...signature,
+    });
   }
 
   /**
@@ -602,7 +540,7 @@ export class JsonWebSignature {
    * @param key JSON Web Key used to generate the signature.
    * @returns JSON Web Signature JSON Token.
    */
-  public async serializeJSON(key: JsonWebKey): Promise<JWSJSONSerialization>
+  public async serializeJSON(key: JsonWebKey): Promise<JWSJSONSerialization>;
 
   /**
    * Serializes the contents of a JsonWebSignature into a JWS JSON Token.
@@ -636,46 +574,37 @@ export class JsonWebSignature {
    * @param key List of JSON Web Keys used to generate the signatures.
    * @returns JSON Web Signature JSON Token.
    */
-  public async serializeJSON(keys: JsonWebKey[]): Promise<JWSJSONSerialization>
+  public async serializeJSON(keys: JsonWebKey[]): Promise<JWSJSONSerialization>;
 
-  public async serializeJSON(
-    jwk: OneOrMany<JsonWebKey>
-  ): Promise<JWSJSONSerialization> {
-    const b64payload = b64Url.encode(this.payload ?? Buffer.alloc(0))
+  public async serializeJSON(jwk: OneOrMany<JsonWebKey>): Promise<JWSJSONSerialization> {
+    const b64payload = b64Url.encode(this.payload ?? Buffer.alloc(0));
 
     if (jwk == null) {
-      throw new InvalidKey('The JSON Web Key parameter MUST be defined.')
+      throw new InvalidKey('The JSON Web Key parameter MUST be defined.');
     }
 
     if (!Array.isArray(this.header)) {
       throw new InvalidJoseHeader(
-        'This JSON Web Signature cannot be serialized ' +
-          'using the JWS JSON Serialization.'
-      )
+        'This JSON Web Signature cannot be serialized ' + 'using the JWS JSON Serialization.'
+      );
     }
 
     if (Array.isArray(jwk) && this.header.length !== jwk.length) {
-      throw new InvalidKey(
-        'The number of JSON Web Keys and JWS JOSE Headers MUST match.'
-      )
+      throw new InvalidKey('The number of JSON Web Keys and JWS JOSE Headers MUST match.');
     }
 
     const signatures = await Promise.all(
       this.header.map<Promise<JWSJSONSignature>>(async (header, i) => {
-        const key = Array.isArray(jwk) ? jwk[i] : jwk
+        const key = Array.isArray(jwk) ? jwk[i] : jwk;
 
-        return await JsonWebSignature.serializeJSONSignature(
-          header,
-          b64payload,
-          key
-        )
+        return await JsonWebSignature.serializeJSONSignature(header, b64payload, key);
       })
-    )
+    );
 
     return removeNullishValues<JWSJSONSerialization>({
       payload: b64payload,
-      signatures
-    })
+      signatures,
+    });
   }
 
   /**
@@ -692,24 +621,20 @@ export class JsonWebSignature {
     key?: JsonWebKey
   ): Promise<JWSJSONSignature> {
     if (key == null && header.alg !== 'none') {
-      throw new InvalidJoseHeader(
-        `The algorithm "${header.alg}" requires the use of a JSON Web Key.`
-      )
+      throw new InvalidJoseHeader(`The algorithm "${header.alg}" requires the use of a JSON Web Key.`);
     }
 
-    const b64Header = b64Url.encode(
-      Buffer.from(JSON.stringify(header.protectedHeader) ?? '')
-    )
+    const b64Header = b64Url.encode(Buffer.from(JSON.stringify(header.protectedHeader) ?? ''));
 
-    const alg = JWS_ALGORITHMS[header.alg]
+    const alg = JWS_ALGORITHMS[header.alg];
 
-    const message = `${b64Header}.${b64Payload}`
-    const signature = await alg.sign(Buffer.from(message), key)
+    const message = `${b64Header}.${b64Payload}`;
+    const signature = await alg.sign(Buffer.from(message), key);
 
     return {
       signature,
       header: header.unprotectedHeader,
-      protected: b64Header || undefined
-    }
+      protected: b64Header || undefined,
+    };
   }
 }

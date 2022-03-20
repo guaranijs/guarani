@@ -1,40 +1,31 @@
+import { Class } from '../../lib/class';
+import { Encoding } from '../../lib/encoding';
+import { IntegerNode } from '../../lib/nodes/integer.node';
+import { NullNode } from '../../lib/nodes/null.node';
 import { SequenceNode } from '../../lib/nodes/sequence.node';
 
+const failures: any[] = [undefined, null, true, 123.45, 123, 123n, 'foo', Buffer.from('hello'), {}, [], [123]];
+
+const instances: [SequenceNode, object][] = [
+  [
+    new SequenceNode([new IntegerNode(0x010001), new NullNode()]),
+    {
+      data: [
+        { data: 65537n, encoding: Encoding.Primitive, class: Class.Universal },
+        { data: null, encoding: Encoding.Primitive, class: Class.Universal },
+      ],
+      encoding: Encoding.Constructed,
+      class: Class.Universal,
+    },
+  ],
+];
+
 describe('Sequence Node', () => {
-  it('should fail when instantiating with an invalid data.', () => {
-    // @ts-expect-error
-    expect(() => new SequenceNode()).toThrow();
-
-    // @ts-expect-error
-    expect(() => new SequenceNode(null)).toThrow();
-
-    // @ts-expect-error
-    expect(() => new SequenceNode(true)).toThrow();
-
-    // @ts-expect-error
-    expect(() => new SequenceNode(123.45)).toThrow();
-
-    // @ts-expect-error
-    expect(() => new SequenceNode(123)).toThrow();
-
-    // @ts-expect-error
-    expect(() => new SequenceNode(123n)).toThrow();
-
-    // @ts-expect-error
-    expect(() => new SequenceNode({})).toThrow();
-
-    // @ts-expect-error
-    expect(() => new SequenceNode([1, 2, 3])).toThrow();
-
-    // @ts-expect-error
-    expect(() => new SequenceNode(Buffer.from([0x12, 0x3f]))).toThrow();
+  it.each(failures)('should fail when instantiating with an invalid data.', (data) => {
+    expect(() => new SequenceNode(data)).toThrow(TypeError);
   });
 
-  it.todo('should instantiate a new Sequence Node.');
-
-  it.todo('should have a Node array as its data.');
-
-  it.todo('should check whether or not a Buffer is Sequence encoded.');
-
-  it.todo('should encode a Sequence Node.');
+  it.each(instances)('should instantiate a new Sequence Node.', (node, expected) => {
+    expect(node).toMatchObject(expected);
+  });
 });

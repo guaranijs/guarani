@@ -1,47 +1,62 @@
 import { Optional } from '@guarani/types';
 
+import { Encoding } from '../encoding';
 import { DecodingException } from '../exceptions/decoding.exception';
-import { Method } from '../method';
 import { NodeOptions } from '../nodes/node.options';
 import { Type } from '../type';
 import { BerDecoder } from './ber.decoder';
 
-export class DerDecoder<TModel> extends BerDecoder<TModel> {
+/**
+ * ASN.1 DER Decoder.
+ */
+export class DerDecoder extends BerDecoder {
   /**
-   * Parses a BitString Type.
+   * Decodes a BitString Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Bit String.
    */
-  protected decodeBitString(options?: Optional<NodeOptions>): Buffer {
-    if (options?.method !== Method.Primitive) {
-      throw new DecodingException('Unsupported Constructed Method for BitString.');
+  public decodeBitString(options: Optional<NodeOptions> = {}): string {
+    if (options.encoding !== undefined && options.encoding !== Encoding.Primitive) {
+      throw new DecodingException('Unsupported Constructed Encoding for BitString.');
     }
 
-    let [type, buffer] = this.slice(Type.BitString, options);
-
-    if ((type & Method.Constructed) !== 0x00) {
-      throw new DecodingException('Unsupported Constructed Method for BitString.');
-    }
-
-    if (buffer.length > 1 && buffer[0] === 0x00) {
-      buffer = buffer.subarray(1);
-    }
-
-    return buffer;
+    return super.decodeBitString(options);
   }
 
   /**
-   * Parses an OctetString Type.
+   * Decodes a Boolean Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Boolean.
    */
-  protected decodeOctetString(options?: NodeOptions): Buffer {
-    if (options?.method !== Method.Primitive) {
-      throw new DecodingException('Unsupported Constructed Method for OctetString.');
+  public decodeBoolean(options: Optional<NodeOptions> = {}): boolean {
+    const buffer = this.getSection(Type.Boolean, options);
+
+    if (buffer.length !== 1) {
+      throw new DecodingException('Invalid Boolean value.');
     }
 
-    const [type, buffer] = this.slice(Type.OctetString, options);
+    const byte = buffer[0];
 
-    if ((type & Method.Constructed) !== 0x00) {
-      throw new DecodingException('Unsupported Constructed Method for OctetString.');
+    if (byte !== 0x00 && byte !== 0xff) {
+      throw new DecodingException('Invalid Boolean value.');
     }
 
-    return buffer;
+    return byte === 0xff;
+  }
+
+  /**
+   * Decodes an OctetString Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Octet String.
+   */
+  public decodeOctetString(options: Optional<NodeOptions> = {}): Buffer {
+    if (options.encoding !== undefined && options.encoding !== Encoding.Primitive) {
+      throw new DecodingException('Unsupported Constructed Encoding for OctetString.');
+    }
+
+    return super.decodeOctetString(options);
   }
 }

@@ -1,36 +1,42 @@
 import { EncodingException } from '../exceptions/encoding.exception';
-import { InternalNodeElement } from '../metadata/elements/internal-node.element';
-import { Method } from '../method';
-import { Node } from '../nodes/node';
-import { Type } from '../type';
+import { Encoding } from '../encoding';
+import { BitStringNode } from '../nodes/bitstring.node';
+import { OctetStringNode } from '../nodes/octetstring.node';
 import { BerEncoder } from './ber.encoder';
 
+/**
+ * ASN.1 DER Encoder.
+ */
 export class DerEncoder extends BerEncoder {
   /**
-   * Resolves an Internal Node Element into a Node instance.
+   * Encodes a Bit String Node.
    *
-   * @param data Data to be resolved.
-   * @param element Internal Node Element representing a property of the data.
-   * @returns Resolved Node.
+   * @param node Bit String Node to be encoded.
+   * @returns Encoded Bit String.
    */
-  protected resolveInternalNodeElement(data: object, element: InternalNodeElement): Node {
-    if (element.type === Type.BitString && element.options!.method! === Method.Constructed) {
-      throw new EncodingException('A BitString must not be Constructed.');
+  protected encodeBitString(node: BitStringNode): Buffer {
+    this.ensureNodeInstance(node, BitStringNode);
+
+    if (node.encoding !== Encoding.Primitive) {
+      throw new EncodingException('A BitString must only be Primitive.');
     }
 
-    if (element.type === Type.OctetString && element.options!.method! === Method.Constructed) {
-      throw new EncodingException('An OctetString must not be Constructed.');
-    }
-
-    return super.resolveInternalNodeElement(data, element);
+    return super.encodeBitString(node);
   }
 
   /**
-   * Encodes the provided data into a DER Encoded Buffer.
+   * Encodes an Octet String Node.
    *
-   * @returns DER Encoded data.
+   * @param node Octet String Node to be encoded.
+   * @returns Encoded Octet String.
    */
-  public encode(): Buffer {
-    return super.encode();
+  protected encodeOctetString(node: OctetStringNode): Buffer {
+    this.ensureNodeInstance(node, OctetStringNode);
+
+    if (node.encoding !== Encoding.Primitive) {
+      throw new EncodingException('An OctetString must only be Primitive.');
+    }
+
+    return super.encodeOctetString(node);
   }
 }

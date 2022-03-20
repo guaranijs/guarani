@@ -53,9 +53,9 @@
   },
   "dependencies": {
     "@guarani/asn1": "^0.6.0",
-    "@guarani/base64url": "^0.6.0",
     "@guarani/objects": "^0.6.0",
     "@guarani/primitives": "^0.6.0",
+    "@guarani/utils": "^0.6.0",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {

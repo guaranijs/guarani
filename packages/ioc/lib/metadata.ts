@@ -1,4 +1,4 @@
-import { Constructor, Dict, Maybe } from '@guarani/types';
+import { Constructor, Dict, Optional } from '@guarani/types';
 
 import { Constants } from './constants';
 import { InjectableToken } from './tokens';
@@ -49,7 +49,7 @@ export function getDesignParamTypes(target: object): any[] {
  * @param target Constructor to be inspected.
  * @returns List of Injectable types metadata.
  */
-export function getParamTypes<T>(target: Constructor<T>): Maybe<InjectableType<any>[]> {
+export function getParamTypes<T>(target: Constructor<T>): Optional<InjectableType<any>[]> {
   return Reflect.getMetadata(Constants.PARAM_TYPES, target);
 }
 
@@ -75,7 +75,7 @@ export function setParamTypes(target: object, types: InjectableType<any>[]): voi
  * @param target Constructor to be inspected.
  * @returns Dictionary of the target constructor's parameter tokens.
  */
-export function getParamTokens(target: object): Maybe<Dict<InjectableType<any>>> {
+export function getParamTokens(target: object): Optional<Dict<InjectableType<any>>> {
   return Reflect.getMetadata(Constants.PARAM_TOKENS, target);
 }
 
@@ -122,7 +122,7 @@ export function defineParamInjectableType(
  * @param propertyKey Name of the property.
  * @returns Type of the property.
  */
-export function getDesignPropType(target: object, propertyKey: string | symbol): Maybe<any> {
+export function getDesignPropType(target: object, propertyKey: string | symbol): Optional<any> {
   return Reflect.getMetadata(Constants.DESIGN_PROP_TYPE, target, propertyKey);
 }
 
@@ -134,7 +134,7 @@ export function getDesignPropType(target: object, propertyKey: string | symbol):
  * @param target Constructor to be inspected.
  * @returns Dictionary of the target properties' tokens.
  */
-export function getPropTokens(target: object): Maybe<Map<string | symbol, InjectableType<any>>> {
+export function getPropTokens(target: object): Optional<Map<string | symbol, InjectableType<any>>> {
   return Reflect.getMetadata(Constants.PROP_TOKENS, target);
 }
 

@@ -2,14 +2,19 @@ import { bufferToInteger } from '@guarani/primitives';
 import { Optional } from '@guarani/types';
 
 import { Class } from '../class';
+import { Encoding } from '../encoding';
 import { DecodingException } from '../exceptions/decoding.exception';
 import { decodeLength } from '../length';
-import { Method } from '../method';
+import { BitStringNode } from '../nodes/bitstring.node';
 import { NodeOptions } from '../nodes/node.options';
+import { OctetStringNode } from '../nodes/octetstring.node';
 import { Type } from '../type';
 import { Decoder } from './decoder';
 
-export class BerDecoder<TModel> extends Decoder<Buffer, TModel> {
+/**
+ * ASN.1 BER Decoder.
+ */
+export class BerDecoder extends Decoder<Buffer> {
   /**
    * Displaces the reference pointer by the number of requested bytes.
    *
@@ -17,160 +22,224 @@ export class BerDecoder<TModel> extends Decoder<Buffer, TModel> {
    * @returns Data of the displaced bytes.
    */
   protected displace(bytes: number): Buffer {
-    if (!Number.isInteger(bytes) || bytes <= 0) {
+    if (!Number.isInteger(bytes) || bytes < 0) {
       throw new TypeError('Invalid parameter "bytes".');
     }
 
+    // Retrieves the requested section.
     const buffer = this.data.subarray(0, bytes);
+
+    // Sets the Decoder's data to the remaining data.
     this.data = this.data.slice(bytes);
 
     return buffer;
   }
 
-  private _sliceData(byte: number, isTag: boolean): [number, Buffer] {
-    let offset = 0;
-
-    if (this.data[offset++] !== byte) {
-      throw new DecodingException(`Expected byte "${byte}", got "${this.data[--offset]}".`);
+  /**
+   * Returns the data represented by the provided ASN.1 Tag.
+   *
+   * @param tag Expected ASN.1 Tag.
+   * @returns Sectioned data represented by the provided ASN.1 Tag.
+   */
+  protected slice(tag: number): Buffer {
+    if (!this.is(tag)) {
+      throw new DecodingException(`Expected Tag "${tag}", got "${this.data[0]}".`);
     }
 
-    // Gets the length of the type/tag.
-    const length = Number(decodeLength(this.data.subarray(offset)));
+    let offset = 1;
+
+    // Gets the length of the tag.
+    const length = decodeLength(this.data.subarray(offset));
 
     // Displaces the offset if the length is in Long Form.
-    if (this.data[offset] & 0x80) {
+    if ((this.data[offset] & 0x80) !== 0x00) {
       offset += 1 + (this.data[offset] & 0x7f);
     } else {
       offset++;
     }
 
-    const start = isTag ? 0 : offset;
-    const end = isTag ? offset : offset + length;
+    // Extracts the metadata.
+    this.displace(offset);
 
-    // Retrieves the section of the data that represents the requested type.
-    const buffer = this.data.subarray(start, end);
-
-    // Sets the data to be itself minus the selected data and resets the offset.
-    this.data = this.data.slice(end);
-
-    return [length, buffer];
-  }
-
-  /**
-   * Slices the Data Buffer based on the length of the provided ASN.1 Type.
-   *
-   * @param type Current ASN.1 Type being parsed.
-   * @returns Sliced section represented by the current ASN.1 Type.
-   */
-  protected slice(type: Type, options: Optional<NodeOptions> = {}): [Type, Buffer] {
-    // Explicit Tag.
-    if ((this.data[0] & 0xc0) !== 0x00 && (this.data[0] & 0x20) !== 0x00) {
-      if (typeof options.class === 'undefined' || options.class === Class.Universal) {
-        throw new DecodingException('Trying to decode a Tagged Type without the proper metadata.');
-      }
-
-      if (typeof options.explicit === 'undefined') {
-        throw new DecodingException('Trying to decode an EXPLICIT Tagged Type without the proper metadata.');
-      }
-
-      const tag = options.class | Method.Constructed | options.explicit;
-
-      this._sliceData(tag, true);
-    }
-
-    // Implicit Tag.
-    else if ((this.data[0] & 0xc0) !== 0x00 && (this.data[0] & 0x20) === 0x00) {
-      if (typeof options.class === 'undefined' || options.class === Class.Universal) {
-        throw new DecodingException('Trying to decode a Tagged Type without the proper metadata.');
-      }
-
-      if (typeof options.implicit === 'undefined') {
-        throw new DecodingException('Trying to decode an IMPLICIT Tagged Type without the proper metadata.');
-      }
-
-      type = options.class | Method.Primitive | options.implicit;
-    }
-
-    // No Tag.
-    else {
-      type = options.method! | type;
-    }
-
-    const [, buffer] = this._sliceData(type, false);
-
-    return [type, buffer];
-  }
-
-  /**
-   * Abstraction of Tags that do not do any post processings on its data.
-   *
-   * @param tag Tag passed to the slice method.
-   * @returns Tag data wrapped in a new Decoder object.
-   */
-  protected wrap(tag: number, options?: Optional<NodeOptions>): BerDecoder<TModel> {
-    const [, buffer] = this.slice(tag, options);
-    return new BerDecoder(buffer, this.model);
-  }
-
-  /**
-   * Parses a BitString Type.
-   */
-  protected decodeBitString(options?: Optional<NodeOptions>): Buffer {
-    let [, buffer] = this.slice(Type.BitString, options);
-
-    if (buffer.length > 1 && buffer[0] === 0x00) {
-      buffer = buffer.subarray(1);
-    }
-
-    return buffer;
-  }
-
-  /**
-   * Parses a Boolean Type.
-   */
-  protected decodeBoolean(options?: Optional<NodeOptions>): boolean {
-    const [, buffer] = this.slice(Type.Boolean, options);
-    return buffer.compare(Buffer.from([0x00])) !== 0;
-  }
-
-  /**
-   * Returns the first N bytes of the Decoder's data buffer
-   * and sets it to the remaining bytes.
-   *
-   * @param length Number of bytes to be displaced.
-   */
-  protected decodeBytes(length: number): Buffer {
+    // Returns the data represented by the tag.
     return this.displace(length);
   }
 
   /**
-   * Parses an Integer Type.
+   * Returns the data represented by the provided ASN.1 Tag.
+   *
+   * @param tag Expected ASN.1 Tag.
+   * @param options Metadata of the expected format of the data section.
+   * @returns Sectioned data represented by the provided ASN.1 Tag.
    */
-  protected decodeInteger(options?: Optional<NodeOptions>): bigint {
-    const [, buffer] = this.slice(Type.Integer, options);
+  protected getSection(tag: Type, options: Optional<NodeOptions> = {}): Buffer {
+    // Tagged Type.
+    if ((this.data[0] & 0xc0) !== 0x00) {
+      if (options.class === undefined || options.class === Class.Universal) {
+        throw new TypeError('Trying to decode a Tagged Type without the proper metadata.');
+      }
+
+      if (options.explicit === undefined && options.implicit === undefined) {
+        throw new TypeError('Trying to decode a Tagged Type without the proper metadata.');
+      }
+
+      if (options.explicit !== undefined && options.implicit !== undefined) {
+        throw new TypeError('An ASN.1 Type cannot have both EXPLICIT and IMPLICIT Tags.');
+      }
+
+      if (options.explicit !== undefined) {
+        const taggedType = options.class | Encoding.Constructed | options.explicit;
+        const unwrappedData = this.slice(taggedType);
+        const DecoderConstructor = <typeof BerDecoder>this.constructor;
+
+        return new DecoderConstructor(unwrappedData).slice(tag);
+      }
+
+      if (options.implicit !== undefined) {
+        if (options.encoding === undefined) {
+          throw new TypeError('Missing option "encoding" for IMPLICIT Encoding.');
+        }
+
+        tag = options.class | options.encoding | options.implicit;
+      }
+    }
+
+    // Universal Tag.
+    else {
+      let encoding: Encoding;
+
+      if (options.encoding !== undefined) {
+        encoding = options.encoding;
+      } else {
+        encoding = tag === Type.Sequence ? Encoding.Constructed : Encoding.Primitive;
+      }
+
+      tag = Class.Universal | encoding | tag;
+    }
+
+    return this.slice(tag);
+  }
+
+  /**
+   * Returns the Unversal value of the provided ASN.1 Tag.
+   *
+   * @param tag ASN.1 Tag received at the BER Buffer.
+   * @returns Universal ASN.1 Type.
+   */
+  protected getUniversalType(tag: number): Type {
+    return tag & 0x1f;
+  }
+
+  /**
+   * Checks if the current encoded ASN.1 Type has the provided Tag.
+   *
+   * @param tag Expected Tag.
+   */
+  public is(tag: number): boolean {
+    return this.data[0] === tag;
+  }
+
+  /**
+   * Decodes a BitString Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Bit String.
+   */
+  public decodeBitString(options: Optional<NodeOptions> = {}): string {
+    const tag = this.data[0];
+
+    if ((tag & 0xc0) !== 0x00 || (tag & 0x20) === 0x00) {
+      options.encoding ??= Encoding.Primitive;
+
+      const buffer = this.getSection(Type.BitString, options);
+      const node = new BitStringNode(buffer, options);
+
+      return <string>node.data;
+    }
+
+    if (this.getUniversalType(tag) !== Type.BitString) {
+      const expectedTag = Encoding.Constructed | Type.BitString;
+      throw new DecodingException(`Expected Tag "${expectedTag}", got "${tag}".`);
+    }
+
+    options.encoding ??= Encoding.Constructed;
+
+    const DecoderConstructor = <typeof BerDecoder>this.constructor;
+    const subdecoder = new DecoderConstructor(this.getSection(tag, options));
+
+    const children: string[] = [];
+
+    while (subdecoder.data.length !== 0) {
+      children.push(subdecoder.decodeBitString());
+    }
+
+    return children.join('');
+  }
+
+  /**
+   * Decodes a Boolean Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Boolean.
+   */
+  public decodeBoolean(options: Optional<NodeOptions> = {}): boolean {
+    options.encoding ??= Encoding.Primitive;
+
+    const buffer = this.getSection(Type.Boolean, options);
+    return buffer.some((byte) => byte !== 0x00);
+  }
+
+  /**
+   * Returns the first N bytes of the Decoder's data.
+   *
+   * @param length Number of bytes to be returned.
+   * @returns First N bytes of the Decoder's data.
+   */
+  public decodeBytes(length: number): Buffer {
+    return this.displace(length);
+  }
+
+  /**
+   * Decodes an Integer Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Integer.
+   */
+  public decodeInteger(options: Optional<NodeOptions> = {}): bigint {
+    options.encoding ??= Encoding.Primitive;
+
+    const buffer = this.getSection(Type.Integer, options);
     return bufferToInteger(buffer, true);
   }
 
   /**
-   * Passes the Decoder's data buffer unmodified.
+   * Decodes a Null Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns `null`.
    */
-  protected decodeNested(): Buffer {
-    return this.data;
-  }
+  public decodeNull(options: Optional<NodeOptions> = {}): null {
+    options.encoding ??= Encoding.Primitive;
 
-  /**
-   * Parses a Null Type.
-   */
-  protected decodeNull(options?: Optional<NodeOptions>): null {
-    this.slice(Type.Null, options);
+    const buffer = this.getSection(Type.Null, options);
+
+    if (buffer.length !== 0) {
+      throw new DecodingException('Invalid Null Type.');
+    }
+
     return null;
   }
 
   /**
-   * Parses an ObjectId Type.
+   * Decodes an ObjectIdentifier Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Object Identifier.
    */
-  protected decodeObjectId(options?: Optional<NodeOptions>): string {
-    const [, buffer] = this.slice(Type.ObjectId, options);
+  public decodeObjectIdentifier(options: Optional<NodeOptions> = {}): string {
+    options.encoding ??= Encoding.Primitive;
+
+    const buffer = this.getSection(Type.ObjectIdentifier, options);
 
     const firstDigit = Math.floor(buffer[0] / 40);
     const secondDigit = buffer[0] % 40;
@@ -193,17 +262,54 @@ export class BerDecoder<TModel> extends Decoder<Buffer, TModel> {
   }
 
   /**
-   * Parses an OctetString Type.
+   * Decodes an OctetString Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Octet String.
    */
-  protected decodeOctetString(options?: Optional<NodeOptions>): Buffer {
-    const [, buffer] = this.slice(Type.OctetString, options);
-    return buffer;
+  public decodeOctetString(options: Optional<NodeOptions> = {}): Buffer {
+    const tag = this.data[0];
+
+    if ((tag & 0xc0) !== 0x00 || (tag & 0x20) === 0x00) {
+      options.encoding ??= Encoding.Primitive;
+
+      const buffer = this.getSection(Type.OctetString, options);
+      const node = new OctetStringNode(buffer, options);
+
+      return <Buffer>node.data;
+    }
+
+    if (this.getUniversalType(tag) !== Type.OctetString) {
+      const expectedTag = Encoding.Constructed | Type.OctetString;
+      throw new DecodingException(`Expected Tag "${expectedTag}", got "${tag}".`);
+    }
+
+    options.encoding ??= Encoding.Constructed;
+
+    const DecoderConstructor = <typeof BerDecoder>this.constructor;
+    const subdecoder = new DecoderConstructor(this.getSection(tag, options));
+
+    const children: Buffer[] = [];
+
+    while (subdecoder.data.length !== 0) {
+      children.push(subdecoder.decodeOctetString());
+    }
+
+    return Buffer.concat(children);
   }
 
   /**
-   * Parses a Sequence Type into a new Decoder instance.
+   * Decodes a Sequence Type
+   *
+   * @param options Optional attributes for the Node.
+   * @returns Decoder for the Children Nodes of the Sequence.
    */
-  protected decodeSequence(options?: Optional<NodeOptions>): BerDecoder<TModel> {
-    return this.wrap(Type.Sequence, options);
+  public decodeSequence(options: Optional<NodeOptions> = {}): BerDecoder {
+    options.encoding ??= Encoding.Constructed;
+
+    const buffer = this.getSection(Encoding.Constructed | Type.Sequence, options);
+    const DecoderConstructor = <typeof BerDecoder>this.constructor;
+
+    return new DecoderConstructor(buffer);
   }
 }

@@ -1,21 +1,12 @@
-import { Dict } from '@guarani/types'
+import { Dict } from '@guarani/types';
 
-import {
-  InvalidJoseHeader,
-  InvalidJsonWebToken,
-  InvalidJsonWebTokenClaim,
-  JoseError
-} from '../exceptions'
-import { JoseHeader } from '../jose.header'
-import { JsonWebEncryption, JsonWebEncryptionHeader } from '../jwe'
-import { JsonWebKey } from '../jwk'
-import {
-  JsonWebSignature,
-  JsonWebSignatureHeader,
-  SupportedJWSAlgorithm
-} from '../jws'
-import { JsonWebTokenClaims } from './jsonwebtoken.claims'
-import { JWTClaimOptions, JWTClaims } from './jwt-claims'
+import { InvalidJoseHeader, InvalidJsonWebToken, InvalidJsonWebTokenClaim, JoseError } from '../exceptions';
+import { JoseHeader } from '../jose.header';
+import { JsonWebEncryption, JsonWebEncryptionHeader } from '../jwe';
+import { JsonWebKey } from '../jwk';
+import { JsonWebSignature, JsonWebSignatureHeader, SupportedJWSAlgorithm } from '../jws';
+import { JsonWebTokenClaims } from './jsonwebtoken.claims';
+import { JWTClaimOptions, JWTClaims } from './jwt-claims';
 
 /**
  * Implementation of RFC 7519.
@@ -46,12 +37,12 @@ export class JsonWebToken {
   /**
    * JOSE Header containing the meta information of the token.
    */
-  public readonly header: JoseHeader
+  public readonly header: JoseHeader;
 
   /**
    * Object representing the claims of the token.
    */
-  public readonly claims: JsonWebTokenClaims
+  public readonly claims: JsonWebTokenClaims;
 
   /**
    * Instantiates a new JSON Web Token based on the provided
@@ -60,7 +51,7 @@ export class JsonWebToken {
    * @param header JWS JOSE Header containing the token's meta information.
    * @param claims Claims represented by the JSON Web Token.
    */
-  public constructor(header: JsonWebSignatureHeader, claims: JsonWebTokenClaims)
+  public constructor(header: JsonWebSignatureHeader, claims: JsonWebTokenClaims);
 
   /**
    * Instantiates a new JSON Web Token based on the provided
@@ -69,22 +60,19 @@ export class JsonWebToken {
    * @param header JWE JOSE Header containing the token's meta information.
    * @param claims Claims represented by the JSON Web Token.
    */
-  public constructor(
-    header: JsonWebEncryptionHeader,
-    claims: JsonWebTokenClaims
-  )
+  public constructor(header: JsonWebEncryptionHeader, claims: JsonWebTokenClaims);
 
   public constructor(header: JoseHeader, claims: JsonWebTokenClaims) {
     if (!header) {
-      throw new InvalidJoseHeader()
+      throw new InvalidJoseHeader();
     }
 
     if (!claims) {
-      throw new InvalidJsonWebTokenClaim()
+      throw new InvalidJsonWebTokenClaim();
     }
 
-    this.header = header
-    this.claims = claims
+    this.header = header;
+    this.claims = claims;
   }
 
   /**
@@ -93,7 +81,7 @@ export class JsonWebToken {
    * @param token JSON Web Token to be checked.
    */
   public static isJWT(token: string): boolean {
-    return JsonWebEncryption.isJWE(token) || JsonWebSignature.isJWS(token)
+    return JsonWebEncryption.isJWE(token) || JsonWebSignature.isJWS(token);
   }
 
   /**
@@ -108,12 +96,12 @@ export class JsonWebToken {
     token: string,
     claimsOptions?: Dict<JWTClaimOptions>
   ): [JsonWebSignatureHeader, JsonWebTokenClaims] {
-    const [header, payload] = JsonWebSignature.decodeCompact(token)
+    const [header, payload] = JsonWebSignature.decodeCompact(token);
 
-    const parsedClaims = <JWTClaims>JSON.parse(payload.toString('utf8'))
-    const claims = new JsonWebTokenClaims(parsedClaims, claimsOptions)
+    const parsedClaims = <JWTClaims>JSON.parse(payload.toString('utf8'));
+    const claims = new JsonWebTokenClaims(parsedClaims, claimsOptions);
 
-    return [header, claims]
+    return [header, claims];
   }
 
   /**
@@ -142,32 +130,28 @@ export class JsonWebToken {
     claimsOptions?: Dict<JWTClaimOptions>
   ): Promise<JsonWebToken> {
     if (token == null || typeof token !== 'string') {
-      throw new InvalidJsonWebToken()
+      throw new InvalidJsonWebToken();
     }
 
-    claimsOptions ??= {}
+    claimsOptions ??= {};
 
     try {
-      const { header, payload } = await JsonWebSignature.deserializeCompact(
-        token,
-        key,
-        algorithm
-      )
+      const { header, payload } = await JsonWebSignature.deserializeCompact(token, key, algorithm);
 
-      const parsedClaims = <JWTClaims>JSON.parse(payload!.toString('utf8'))
-      const claims = new JsonWebTokenClaims(parsedClaims, claimsOptions)
+      const parsedClaims = <JWTClaims>JSON.parse(payload!.toString('utf8'));
+      const claims = new JsonWebTokenClaims(parsedClaims, claimsOptions);
 
-      return new JsonWebToken(<JsonWebSignatureHeader>header, claims)
+      return new JsonWebToken(<JsonWebSignatureHeader>header, claims);
     } catch (error) {
       if (error instanceof InvalidJsonWebToken) {
-        throw error
+        throw error;
       }
 
       if (error instanceof JoseError) {
-        throw new InvalidJsonWebToken(error.message)
+        throw new InvalidJsonWebToken(error.message);
       }
 
-      throw new InvalidJsonWebToken()
+      throw new InvalidJsonWebToken();
     }
   }
 
@@ -185,31 +169,28 @@ export class JsonWebToken {
     claimsOptions?: Dict<JWTClaimOptions>
   ): Promise<JsonWebToken> {
     if (token == null || typeof token !== 'string') {
-      throw new InvalidJsonWebToken()
+      throw new InvalidJsonWebToken();
     }
 
-    claimsOptions ??= {}
+    claimsOptions ??= {};
 
     try {
-      const { header, plaintext } = await JsonWebEncryption.deserializeCompact(
-        token,
-        wrapKey
-      )
+      const { header, plaintext } = await JsonWebEncryption.deserializeCompact(token, wrapKey);
 
-      const parsedClaims = <JWTClaims>JSON.parse(plaintext.toString('utf8'))
-      const claims = new JsonWebTokenClaims(parsedClaims, claimsOptions)
+      const parsedClaims = <JWTClaims>JSON.parse(plaintext.toString('utf8'));
+      const claims = new JsonWebTokenClaims(parsedClaims, claimsOptions);
 
-      return new JsonWebToken(<JsonWebEncryptionHeader>header, claims)
+      return new JsonWebToken(<JsonWebEncryptionHeader>header, claims);
     } catch (error) {
       if (error instanceof InvalidJsonWebToken) {
-        throw error
+        throw error;
       }
 
       if (error instanceof JoseError) {
-        throw new InvalidJsonWebToken(error.message)
+        throw new InvalidJsonWebToken(error.message);
       }
 
-      throw new InvalidJsonWebToken()
+      throw new InvalidJsonWebToken();
     }
   }
 
@@ -236,13 +217,13 @@ export class JsonWebToken {
    */
   public async sign(key?: JsonWebKey): Promise<string> {
     if (!(this.header instanceof JsonWebSignatureHeader)) {
-      throw new InvalidJoseHeader('The JOSE Header is not a JWS JOSE Header.')
+      throw new InvalidJoseHeader('The JOSE Header is not a JWS JOSE Header.');
     }
 
-    const payload = Buffer.from(JSON.stringify(this.claims))
-    const jws = new JsonWebSignature(this.header, payload)
+    const payload = Buffer.from(JSON.stringify(this.claims));
+    const jws = new JsonWebSignature(this.header, payload);
 
-    return await jws.serializeCompact(key)
+    return await jws.serializeCompact(key);
   }
 
   /**
@@ -274,12 +255,12 @@ export class JsonWebToken {
    */
   public async encrypt(wrapKey?: JsonWebKey): Promise<string> {
     if (!(this.header instanceof JsonWebEncryptionHeader)) {
-      throw new InvalidJoseHeader('The JOSE Header is not a JWE JOSE Header.')
+      throw new InvalidJoseHeader('The JOSE Header is not a JWE JOSE Header.');
     }
 
-    const plaintext = Buffer.from(JSON.stringify(this.claims))
-    const jwe = new JsonWebEncryption(this.header, plaintext)
+    const plaintext = Buffer.from(JSON.stringify(this.claims));
+    const jwe = new JsonWebEncryption(this.header, plaintext);
 
-    return await jwe.serializeCompact(wrapKey)
+    return await jwe.serializeCompact(wrapKey);
   }
 }

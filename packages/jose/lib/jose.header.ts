@@ -1,5 +1,5 @@
-import { InvalidJoseHeaderException } from './exceptions'
-import { JsonWebKeyParams } from './jwk'
+import { InvalidJoseHeaderException } from './exceptions';
+import { JsonWebKeyParams } from './jwk';
 
 /**
  * Defines the parameters supported by the JOSE Header.
@@ -8,62 +8,62 @@ export interface JoseHeaderParams {
   /**
    * Algorithm of the header.
    */
-  readonly alg: string
+  readonly alg: string;
 
   /**
    * URI of a Json Web Keyset.
    */
-  readonly jku?: string
+  readonly jku?: string;
 
   /**
    * JSON Web Key used by the header.
    */
-  readonly jwk?: JsonWebKeyParams
+  readonly jwk?: JsonWebKeyParams;
 
   /**
    * ID of the key used by the header.
    */
-  readonly kid?: string
+  readonly kid?: string;
 
   /**
    * URI of the X.509 certificate of the key.
    */
-  readonly x5u?: string
+  readonly x5u?: string;
 
   /**
    * Chain of X.509 certificates of the key.
    */
-  readonly x5c?: string[]
+  readonly x5c?: string[];
 
   /**
    * SHA-1 Thumbprint of the X.509 certificate of the key.
    */
-  readonly x5t?: string
+  readonly x5t?: string;
 
   /**
    * SHA-256 Thumbprint of the X.509 certificate of the key.
    */
-  readonly 'x5t#S256'?: string
+  readonly 'x5t#S256'?: string;
 
   /**
    * Defines the type of the entire token.
    */
-  readonly typ?: string
+  readonly typ?: string;
 
   /**
    * Defines the type of the payload.
    */
-  readonly cty?: string
+  readonly cty?: string;
 
   /**
    * Defines the parameters that MUST be present in the header.
    */
-  readonly crit?: string[]
+  readonly crit?: string[];
 
   /**
    * Additional parameters.
    */
-  readonly [parameter: string]: any
+  readonly [parameter: string]: any;
 }
 
 /**
@@ -73,12 +73,12 @@ export interface JoseProtectedAndUnprotectedHeaders {
   /**
    * JOSE Protected Header.
    */
-  readonly protectedHeader?: Partial<JoseHeaderParams>
+  readonly protectedHeader?: Partial<JoseHeaderParams>;
 
   /**
    * JOSE Unprotected Header.
    */
-  readonly unprotectedHeader?: Partial<JoseHeaderParams>
+  readonly unprotectedHeader?: Partial<JoseHeaderParams>;
 }
 
 /**
@@ -89,57 +89,57 @@ export abstract class JoseHeader implements JoseHeaderParams {
   /**
    * Algorithm of the header.
    */
-  public abstract readonly alg: string
+  public abstract readonly alg: string;
 
   /**
    * URI of a Json Web Keyset.
    */
-  public readonly jku?: string
+  public readonly jku?: string;
 
   /**
    * JSON Web Key used by the header.
    */
-  public readonly jwk?: JsonWebKeyParams
+  public readonly jwk?: JsonWebKeyParams;
 
   /**
    * ID of the key used by the header.
    */
-  public readonly kid?: string
+  public readonly kid?: string;
 
   /**
    * URI of the X.509 certificate of the key.
    */
-  public readonly x5u?: string
+  public readonly x5u?: string;
 
   /**
    * Chain of X.509 certificates of the key.
    */
-  public readonly x5c?: string[]
+  public readonly x5c?: string[];
 
   /**
    * SHA-1 Thumbprint of the X.509 certificate of the key.
    */
-  public readonly x5t?: string
+  public readonly x5t?: string;
 
   /**
    * SHA-256 Thumbprint of the X.509 certificate of the key.
    */
-  public readonly 'x5t#S256'?: string
+  public readonly 'x5t#S256'?: string;
 
   /**
    * Defines the type of the entire token.
    */
-  public readonly typ?: string
+  public readonly typ?: string;
 
   /**
    * Defines the type of the payload.
    */
-  public readonly cty?: string
+  public readonly cty?: string;
 
   /**
    * Defines the parameters that MUST be present in the header.
    */
-  public readonly crit?: string[]
+  public readonly crit?: string[];
 
   /**
    * Validates the parameters of the provided JOSE Header.
@@ -148,53 +148,51 @@ export abstract class JoseHeader implements JoseHeaderParams {
    */
   protected checkHeader(header: Partial<JoseHeaderParams>): void {
     if ('alg' in header && typeof header.alg !== 'string') {
-      throw new InvalidJoseHeaderException('Invalid parameter "alg".')
+      throw new InvalidJoseHeaderException('Invalid parameter "alg".');
     }
 
     if ('jku' in header) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "jku".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "jku".');
     }
 
     if ('jwk' in header) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "jwk".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "jwk".');
     }
 
     if ('kid' in header && typeof header.kid !== 'string') {
-      throw new InvalidJoseHeaderException('Invalid parameter "kid".')
+      throw new InvalidJoseHeaderException('Invalid parameter "kid".');
     }
 
     if ('x5u' in header) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5u".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5u".');
     }
 
     if ('x5c' in header) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5c".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5c".');
     }
 
     if ('x5t' in header) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5t".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5t".');
     }
 
     if ('x5t#S256' in header) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5t#S256".')
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5t#S256".');
     }
 
     if ('crit' in header) {
       if (!Array.isArray(header.crit) || header.crit.length === 0) {
-        throw new InvalidJoseHeaderException('Invalid parameter "crit".')
+        throw new InvalidJoseHeaderException('Invalid parameter "crit".');
       }
 
-      if (header.crit.some(item => typeof item !== 'string' || !item)) {
-        throw new InvalidJoseHeaderException('Invalid parameter "crit".')
+      if (header.crit.some((item) => typeof item !== 'string' || !item)) {
+        throw new InvalidJoseHeaderException('Invalid parameter "crit".');
       }
 
-      header.crit.forEach(item => {
+      header.crit.forEach((item) => {
         if (!(item in header)) {
-          throw new InvalidJoseHeaderException(
-            `Missing required parameter "${item}".`
-          )
+          throw new InvalidJoseHeaderException(`Missing required parameter "${item}".`);
         }
-      })
+      });
     }
   }
 }

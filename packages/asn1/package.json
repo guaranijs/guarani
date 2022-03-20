@@ -35,11 +35,10 @@
   },
   "dependencies": {
     "@guarani/primitives": "^0.6.0",
-    "@guarani/utils": "^0.6.0",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "@guarani/base64url": "^0.6.0",
-    "@guarani/types": "^0.6.0"
+    "@guarani/types": "^0.6.0",
+    "@guarani/utils": "^0.6.0"
   }
 }

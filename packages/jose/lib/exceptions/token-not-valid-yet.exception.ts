@@ -1,6 +1,6 @@
-import { Optional } from '@guarani/types'
+import { Optional } from '@guarani/types';
 
-import { JoseException } from './jose.exception'
+import { JoseException } from './jose.exception';
 
 /**
  * Raised when the provided JSON Web Token is not valid yet.
@@ -11,9 +11,7 @@ export class TokenNotValidYetException extends JoseException {
    *
    * @param message Message describing the error.
    */
-  public constructor(
-    message: Optional<string> = 'The provided JSON Web Token is not valid yet.'
-  ) {
-    super(message)
+  public constructor(message: Optional<string> = 'The provided JSON Web Token is not valid yet.') {
+    super(message);
   }
 }

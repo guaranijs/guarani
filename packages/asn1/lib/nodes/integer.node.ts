@@ -1,14 +1,14 @@
-import { integerToBuffer } from '@guarani/primitives';
 import { Optional } from '@guarani/types';
 
 import { Class } from '../class';
-import { Method } from '../method';
+import { UnsupportedEncodingException } from '../exceptions/unsupported-encoding.exception';
+import { Encoding } from '../encoding';
 import { Type } from '../type';
 import { Node } from './node';
 import { NodeOptions } from './node.options';
 
 /**
- * The Integer Node denotes the representation of a signed integer.
+ * The Integer Node denotes a signed integer.
  *
  * Some applications might require the integer to be unsigned,
  * or for it to be `{ x ∣ x ∈ N* }`. The conversion to and from the
@@ -18,57 +18,32 @@ export class IntegerNode extends Node<bigint> {
   /**
    * Type Identifier of the Node.
    */
-  protected static readonly type: Type = Type.Integer;
+  public readonly type: Type;
 
   /**
    * Instantiates a new Integer Node.
    *
-   * @param value Integer value.
+   * @param data Integer value.
    * @param options Optional parameters to customize the Node.
    */
-  public constructor(value: number, options?: Optional<NodeOptions>);
-
-  /**
-   * Instantiates a new Integer Node.
-   *
-   * @param value Integer value.
-   * @param options Optional parameters to customize the Node.
-   */
-  public constructor(value: bigint, options?: Optional<NodeOptions>);
-
-  /**
-   * Instantiates a new Integer Node.
-   *
-   * @param value Integer value.
-   * @param options Optional parameters to customize the Node.
-   */
-  public constructor(value: number | bigint, options: Optional<NodeOptions> = {}) {
-    if (typeof value !== 'bigint' && typeof value !== 'number') {
-      throw new TypeError('Invalid parameter "value".');
+  public constructor(data: number | bigint, options: Optional<NodeOptions> = {}) {
+    if (typeof data !== 'number' && typeof data !== 'bigint') {
+      throw new TypeError('Invalid parameter "data".');
     }
 
-    if (typeof value === 'number' && !Number.isInteger(value)) {
-      throw new TypeError('Invalid parameter "value".');
+    if (typeof data === 'number' && !Number.isInteger(data)) {
+      throw new TypeError('Invalid parameter "data".');
     }
 
-    if (typeof options.method !== 'undefined' && options.method !== Method.Primitive) {
-      throw new Error('Unsupported option "method".');
+    if (options.encoding !== undefined && options.encoding !== Encoding.Primitive) {
+      throw new UnsupportedEncodingException('The Integer Type only supports the Primitive Encoding.');
     }
 
     options.class ??= Class.Universal;
-    options.method = Method.Primitive;
+    options.encoding = Encoding.Primitive;
 
-    super(BigInt(value), options);
-  }
+    super(BigInt(data), options);
 
-  /**
-   * Encodes the Integer Node into a Buffer object.
-   *
-   * @example
-   * const integer = new IntegerNode(65537)
-   * integer.encode() // <Buffer 02 03 01 00 01>
-   */
-  protected encodeData(): Buffer {
-    return integerToBuffer(this.value, true);
+    this.type = Type.Integer;
   }
 }

@@ -44,11 +44,6 @@ export type Nullable<T> = T | null;
 export type Optional<T> = T | undefined;
 
 /**
- * Describes a return type that might be `undefined`.
- */
-export type Maybe<T> = Optional<T>;
-
-/**
  * Describes a recursively readonly object.
  */
 export type DeepReadonly<T> = { readonly [P in keyof T]: Readonly<T[P]> };

@@ -1,16 +1,16 @@
 import { Optional } from '@guarani/types';
 
 import { Class } from '../class';
-import { Method } from '../method';
+import { Encoding } from '../encoding';
 
 /**
  * Optional attributes of the Node.
  */
 export interface NodeOptions {
   /**
-   * Method of the Node.
+   * Encoding of the Node.
    */
-  method?: Optional<Method>;
+  encoding?: Optional<Encoding>;
 
   /**
    * Class of the Node.

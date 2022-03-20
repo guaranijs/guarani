@@ -1,49 +1,56 @@
 import { Optional } from '@guarani/types';
 
 import { Class } from '../class';
-import { Method } from '../method';
+import { UnsupportedEncodingException } from '../exceptions/unsupported-encoding.exception';
+import { Encoding } from '../encoding';
 import { Type } from '../type';
 import { Node } from './node';
 import { NodeOptions } from './node.options';
 
 /**
- * Representation of the NULL value.
+ * The Null Node denotes the ASN.1 NULL value.
  */
 export class NullNode extends Node<null> {
   /**
    * Type Identifier of the Node.
    */
-  protected static readonly type: Type = Type.Null;
+  public readonly type: Type;
 
   /**
    * Instantiates a new Null Node.
    *
-   * @param value Null object.
    * @param options Optional parameters to customize the Node.
    */
-  public constructor(value: null, options: Optional<NodeOptions> = {}) {
-    if (value !== null) {
-      throw new TypeError('Invalid parameter "value".');
+  public constructor(options?: Optional<NodeOptions>);
+
+  /**
+   * Instantiates a new Null Node.
+   *
+   * @param data Null value.
+   * @param options Optional parameters to customize the Node.
+   */
+  public constructor(data: null, options?: Optional<NodeOptions>);
+
+  /**
+   * Instantiates a new Null Node.
+   *
+   * @param dataOrOptions Null value or optional parameters to customize the Node.
+   * @param options Optional parameters to customize the Node.
+   */
+  public constructor(dataOrOptions?: Optional<null | NodeOptions>, options: Optional<NodeOptions> = {}) {
+    if (dataOrOptions !== undefined && dataOrOptions !== null) {
+      options = dataOrOptions;
     }
 
-    if (typeof options.method !== 'undefined' && options.method !== Method.Primitive) {
-      throw new Error('Unsupported option "method".');
+    if (options.encoding !== undefined && options.encoding !== Encoding.Primitive) {
+      throw new UnsupportedEncodingException('The Null Type only supports the Primitive Encoding.');
     }
 
     options.class ??= Class.Universal;
-    options.method = Method.Primitive;
+    options.encoding = Encoding.Primitive;
 
-    super(value, options);
-  }
+    super(null, options);
 
-  /**
-   * Encodes the Null Node into a Buffer object.
-   *
-   * @example
-   * const nullValue = new NullNode()
-   * nullValue.encode() // <Buffer 05 00>
-   */
-  protected encodeData(): Buffer {
-    return Buffer.alloc(0);
+    this.type = Type.Null;
   }
 }

@@ -1,14 +1,17 @@
-import 'reflect-metadata'
+import { JsonWebKey } from './jwk/jsonwebkey';
 
-import { Decoder } from '@guarani/asn1'
+async function main() {
+  const key = new JsonWebKey({
+    kty: 'RSA',
+    n: 'xjpFydzTbByzL5jhEa2yQO63dpS9d9SKaN107AR69skKiTR4uK1c4SzDt4YcurDByhgKNzeBo6Vq3IRrkrltp97LKWfeZdM-leGt8-UTZEWqrNf3UGOEj8kI6lbjiG-Sn_yNHcVA9qBV22norZkgXctHLeFbY6TmpD-I8_UiplZUHoc9KlYc7crCQRa-O7tKFDULNTMjjifc0dmuYP7ZcYAZXmRmoOpQuDr8s7OZY7TAqN0btMfA7RpUCWLT6TMRQPX8GcyTxfbkOrSTFueKMHVNdXDtl068XXJ9mkjORiEmwlzqSBoxdeLWcNf_u20S5JG5iK0nsm1uZYu-02XN-w',
+    e: 'AQAB',
+  });
 
-import { P256PublicX509 } from './jwk/algorithms/ec/models/p256/p256-public-x509'
+  console.log(key.toJSON());
 
-const basePem = `-----BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE4c/cS6IT6jaVQeobt/6BDCTmzBaB
-OTmmiSCpjd5a6Oiaes+cIVMOQZ0TCKVptqozsPPCUAWB61lOY/3Jwc/EXw==
------END PUBLIC KEY-----`
+  const exported = await key.export({ kty: 'RSA', encoding: 'pem', format: 'spki', type: 'public' });
 
-const decoder = Decoder.PEM(basePem, P256PublicX509)
+  console.log(exported);
+}
 
-console.log(decoder.decode())
+main();

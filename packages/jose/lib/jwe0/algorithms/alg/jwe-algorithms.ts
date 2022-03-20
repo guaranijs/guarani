@@ -1,14 +1,8 @@
-import { A128KW, A192KW, A256KW } from './aes'
-import { A128GCMKW, A192GCMKW, A256GCMKW } from './aes-gcm'
-import { dir } from './dir'
-import { JWEAlgorithm } from './jwe-algorithm'
-import {
-  RSA1_5,
-  RSA_OAEP,
-  RSA_OAEP_256,
-  RSA_OAEP_384,
-  RSA_OAEP_512
-} from './rsa'
+import { A128KW, A192KW, A256KW } from './aes';
+import { A128GCMKW, A192GCMKW, A256GCMKW } from './aes-gcm';
+import { dir } from './dir';
+import { JWEAlgorithm } from './jwe-algorithm';
+import { RSA1_5, RSA_OAEP, RSA_OAEP_256, RSA_OAEP_384, RSA_OAEP_512 } from './rsa';
 
 /**
  * Supported JSON Web Encryption Key Wrapping Algorithms.
@@ -29,7 +23,7 @@ export type SupportedJWEAlgorithm =
   // | 'ECDH-ES+A256KW'
   | 'A128GCMKW'
   | 'A192GCMKW'
-  | 'A256GCMKW'
+  | 'A256GCMKW';
 // | 'PBES2-HS256+A128KW'
 // | 'PBES2-HS384+A192KW'
 // | 'PBES2-HS512+A256KW'
@@ -49,5 +43,5 @@ export const JWE_ALGORITHMS: Record<SupportedJWEAlgorithm, JWEAlgorithm> = {
   dir: dir,
   A128GCMKW: A128GCMKW,
   A192GCMKW: A192GCMKW,
-  A256GCMKW: A256GCMKW
-}
+  A256GCMKW: A256GCMKW,
+};

@@ -1,7 +1,7 @@
-import { Dict } from '@guarani/types'
+import { Dict } from '@guarani/types';
 
-import { JsonWebKey } from '../../../jwk'
-import { WrappedKey } from '../../_types'
+import { JsonWebKey } from '../../../jwk';
+import { WrappedKey } from '../../_types';
 
 /**
  * Implementation of the Section 4 of RFC 7518.
@@ -28,7 +28,7 @@ export abstract class JWEAlgorithm {
    * @param key JWK used to wrap the generated CEK.
    * @returns CEK generated, Encrypted CEK and optional additional headers.
    */
-  public abstract wrap(cek: Buffer, key?: JsonWebKey): Promise<WrappedKey>
+  public abstract wrap(cek: Buffer, key?: JsonWebKey): Promise<WrappedKey>;
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
@@ -39,9 +39,5 @@ export abstract class JWEAlgorithm {
    * @throws {InvalidJsonWebEncryption} Could not unwrap the Encrypted CEK.
    * @returns Unwrapped Content Encryption Key.
    */
-  public abstract unwrap(
-    ek: Buffer,
-    key: JsonWebKey,
-    header?: Dict<any>
-  ): Promise<Buffer>
+  public abstract unwrap(ek: Buffer, key: JsonWebKey, header?: Dict<any>): Promise<Buffer>;
 }

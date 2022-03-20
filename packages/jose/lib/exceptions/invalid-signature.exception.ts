@@ -1,5 +1,3 @@
-import { Optional } from '@guarani/types';
-
 import { JoseException } from './jose.exception';
 
 /**
@@ -7,11 +5,9 @@ import { JoseException } from './jose.exception';
  */
 export class InvalidSignatureException extends JoseException {
   /**
-   * Raised when the provided signature does not match the provided message.
-   *
-   * @param message Message describing the error.
+   * Returns the default Error Message of the JOSE Exception.
    */
-  public constructor(message: Optional<string> = 'The provided signature does not match the provided message.') {
-    super(message);
+  protected getDefaultMessage(): string {
+    return 'The provided signature does not match the provided message.';
   }
 }

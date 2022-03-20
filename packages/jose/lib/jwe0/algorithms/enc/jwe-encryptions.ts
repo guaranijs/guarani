@@ -1,6 +1,6 @@
-import { A128CBC_HS256, A192CBC_HS384, A256CBC_HS512 } from './cbc'
-import { A128GCM, A192GCM, A256GCM } from './gcm'
-import { JWEEncryption } from './jwe-encryption'
+import { A128CBC_HS256, A192CBC_HS384, A256CBC_HS512 } from './cbc';
+import { A128GCM, A192GCM, A256GCM } from './gcm';
+import { JWEEncryption } from './jwe-encryption';
 
 /**
  * Supported JSON Web Encryption Content Encryption Algorithms.
@@ -11,7 +11,7 @@ export type SupportedJWEEncryption =
   | 'A256CBC-HS512'
   | 'A128GCM'
   | 'A192GCM'
-  | 'A256GCM'
+  | 'A256GCM';
 
 /**
  * Store of the supported JWE Content Encryption Algorithms.
@@ -22,5 +22,5 @@ export const JWE_ENCRYPTIONS: Record<SupportedJWEEncryption, JWEEncryption> = {
   'A256CBC-HS512': A256CBC_HS512,
   A128GCM: A128GCM,
   A192GCM: A192GCM,
-  A256GCM: A256GCM
-}
+  A256GCM: A256GCM,
+};

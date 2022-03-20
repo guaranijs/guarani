@@ -1,10 +1,10 @@
-import { randomBytes } from 'crypto'
-import { promisify } from 'util'
+import { randomBytes } from 'crypto';
+import { promisify } from 'util';
 
-import { InvalidJsonWebEncryption } from '../../../exceptions'
-import { AuthenticatedEncryption } from '../../_types'
+import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-json-web-encryption.exception';
+import { AuthenticatedEncryption } from '../../_types';
 
-const randomBytesAsync = promisify(randomBytes)
+const randomBytesAsync = promisify(randomBytes);
 
 /**
  * Implementation of the Section 5 of RFC 7518.
@@ -19,12 +19,12 @@ export abstract class JWEEncryption {
   /**
    * Size of the Content Encryption Key in bits.
    */
-  public abstract readonly CEK_SIZE: number
+  public abstract readonly CEK_SIZE: number;
 
   /**
    * Size of the Initialization Vector in bits.
    */
-  public abstract readonly IV_SIZE: number
+  public abstract readonly IV_SIZE: number;
 
   /**
    * Instantiates a new JWE Encryption to encrypt and decrypt a Plaintext.
@@ -39,7 +39,7 @@ export abstract class JWEEncryption {
    * @returns Generated Content Encryption Key.
    */
   public async generateCEK(): Promise<Buffer> {
-    return await randomBytesAsync(Math.floor(this.CEK_SIZE / 8))
+    return await randomBytesAsync(Math.floor(this.CEK_SIZE / 8));
   }
 
   /**
@@ -48,7 +48,7 @@ export abstract class JWEEncryption {
    * @returns Generated Initialization Vector.
    */
   public async generateIV(): Promise<Buffer> {
-    return await randomBytesAsync(Math.floor(this.IV_SIZE / 8))
+    return await randomBytesAsync(Math.floor(this.IV_SIZE / 8));
   }
 
   /**
@@ -58,7 +58,7 @@ export abstract class JWEEncryption {
    */
   protected checkIV(iv: Buffer): void {
     if (iv.length * 8 !== this.IV_SIZE) {
-      throw new InvalidJsonWebEncryption()
+      throw new InvalidJsonWebEncryptionException();
     }
   }
 
@@ -66,11 +66,11 @@ export abstract class JWEEncryption {
    * Checks if a key can be used by the requesting algorithm.
    *
    * @param key Key to be checked.
-   * @throws {InvalidJsonWebEncryption} The provided key is invalid.
+   * @throws {InvalidJsonWebEncryptionException} The provided key is invalid.
    */
   protected checkKey(key: Buffer): void {
     if (!Buffer.isBuffer(key) || key.length * 8 !== this.CEK_SIZE) {
-      throw new InvalidJsonWebEncryption('Invalid key.')
+      throw new InvalidJsonWebEncryptionException('Invalid key.');
     }
   }
 
@@ -83,12 +83,7 @@ export abstract class JWEEncryption {
    * @param key Content Encryption Key used to encrypt the plaintext.
    * @returns Resulting Ciphertext and Authentication Tag.
    */
-  public abstract encrypt(
-    plaintext: Buffer,
-    aad: Buffer,
-    iv: Buffer,
-    key: Buffer
-  ): Promise<AuthenticatedEncryption>
+  public abstract encrypt(plaintext: Buffer, aad: Buffer, iv: Buffer, key: Buffer): Promise<AuthenticatedEncryption>;
 
   /**
    * Decrypts the provided ciphertext back to its original Buffer representaion.
@@ -98,14 +93,8 @@ export abstract class JWEEncryption {
    * @param iv Initialization Vector.
    * @param tag Authentication Tag.
    * @param key Content Encryption Key used to decrypt the plaintext.
-   * @throws {InvalidJsonWebEncryption} Could not decrypt the ciphertext.
+   * @throws {InvalidJsonWebEncryptionException} Could not decrypt the ciphertext.
    * @returns Buffer representation of the decrypted plaintext.
    */
-  public abstract decrypt(
-    ciphertext: Buffer,
-    aad: Buffer,
-    iv: Buffer,
-    tag: Buffer,
-    key: Buffer
-  ): Promise<Buffer>
+  public abstract decrypt(ciphertext: Buffer, aad: Buffer, iv: Buffer, tag: Buffer, key: Buffer): Promise<Buffer>;
 }

@@ -1,5 +1,3 @@
-import { Optional } from '@guarani/types';
-
 import { JoseException } from './jose.exception';
 
 /**
@@ -7,11 +5,9 @@ import { JoseException } from './jose.exception';
  */
 export class InvalidJsonWebSignatureException extends JoseException {
   /**
-   * Raised when the provided JSON Web Signature is invalid.
-   *
-   * @param message Message describing the error.
+   * Returns the default Error Message of the JOSE Exception.
    */
-  public constructor(message: Optional<string> = 'The provided JSON Web Signature is invalid.') {
-    super(message);
+  protected getDefaultMessage(): string {
+    return 'The provided JSON Web Signature is invalid.';
   }
 }

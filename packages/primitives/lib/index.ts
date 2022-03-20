@@ -7,4 +7,5 @@ export {
   flipBufferBits,
   padBits,
 } from './buffer';
+export { Exception } from './exception';
 export { integerToBuffer } from './integer';

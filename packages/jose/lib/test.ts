@@ -1,4 +1,5 @@
 import { isDeepStrictEqual } from 'util';
+
 import { OctKey } from './jwk/algorithms/oct/oct.key';
 import { JsonWebSignature } from './jws/jsonwebsignature';
 import { JsonWebSignatureHeaderParams } from './jws/jsonwebsignature-header.params';

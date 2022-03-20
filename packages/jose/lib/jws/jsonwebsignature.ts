@@ -1,7 +1,8 @@
 import { Nullable, Optional } from '@guarani/types';
+
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-json-web-key.exception';
 import { InvalidJsonWebSignatureException } from '../exceptions/invalid-json-web-signature.exception';
-
+import { JoseException } from '../exceptions/jose.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
 import { JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY } from './algorithms/jsonwebsignature-algorithms-registry';
 import { JsonWebSignatureHeaderParams } from './jsonwebsignature-header.params';
@@ -58,19 +59,29 @@ export class JsonWebSignature {
       throw new InvalidJsonWebSignatureException();
     }
 
-    const [b64Header, b64Payload, b64Signature] = splitToken;
+    try {
+      const [b64Header, b64Payload, b64Signature] = splitToken;
 
-    const header = new JsonWebSignatureHeader(JSON.parse(Buffer.from(b64Header, 'base64url').toString('utf8')));
-    const payload = Buffer.from(b64Payload, 'base64url');
-    const signature = Buffer.from(b64Signature, 'base64url');
+      const header = new JsonWebSignatureHeader(JSON.parse(Buffer.from(b64Header, 'base64url').toString('utf8')));
+      const payload = Buffer.from(b64Payload, 'base64url');
+      const signature = Buffer.from(b64Signature, 'base64url');
 
-    const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
+      const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
 
-    const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
+      const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
 
-    await algorithm.verify(signature, message, key ?? undefined);
+      await algorithm.verify(signature, message, key ?? undefined);
 
-    return new JsonWebSignature(header, payload);
+      return new JsonWebSignature(header, payload);
+    } catch (exc: any) {
+      if (exc instanceof InvalidJsonWebSignatureException) {
+        throw exc;
+      }
+
+      throw exc instanceof JoseException
+        ? new InvalidJsonWebSignatureException(exc)
+        : new InvalidJsonWebSignatureException(null, exc);
+    }
   }
 
   /**
@@ -86,17 +97,27 @@ export class JsonWebSignature {
       throw new TypeError(`Missing required JSON Web Key for JSON Web Signature Algorithm "${header.alg}".`);
     }
 
-    const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
+    try {
+      const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
 
-    const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
-    const b64Payload = payload.toString('base64url');
+      const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
+      const b64Payload = payload.toString('base64url');
 
-    const message = `${b64Header}.${b64Payload}`;
+      const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
 
-    const signature = await algorithm.sign(Buffer.from(message, 'utf8'), jwk);
+      const signature = await algorithm.sign(message, jwk);
 
-    const b64Signature = signature.toString('base64url');
+      const b64Signature = signature.toString('base64url');
 
-    return `${message}.${b64Signature}`;
+      return `${message}.${b64Signature}`;
+    } catch (exc: any) {
+      if (exc instanceof InvalidJsonWebSignatureException) {
+        throw exc;
+      }
+
+      throw exc instanceof JoseException
+        ? new InvalidJsonWebSignatureException(exc)
+        : new InvalidJsonWebSignatureException(null, exc);
+    }
   }
 }

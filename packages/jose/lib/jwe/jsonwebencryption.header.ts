@@ -3,13 +3,14 @@ import { Optional } from '@guarani/types';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
-import { JsonWebKey } from '../jwk/jsonwebkey';
+import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithm/alg/supported-jsonwebencryption-keyencryption-algorithm';
+import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from './algorithm/alg/jsonwebencryption-keywrap-algorithms-registry';
+import { JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY } from './algorithm/enc/jsonwebencryption-contentencryption-algorithms-registry';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './algorithm/enc/supported-jsonwebencryption-contentencryption-algorithm';
 import { JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY } from './algorithm/zip/jsonwebencryption-compression-algorithms-registry';
-import { JsonWebEncryptionCompressionAlgorithm } from './algorithm/zip/jsonwebencryption-compression.algorithm';
+import { SupportedJsonWebEncryptionCompressionAlgorithm } from './algorithm/zip/supported-jsonwebencryption-compression-algorithm';
 import { JsonWebEncryptionHeaderParams } from './jsonwebencryption-header.params';
-import { SupportedJsonWebEncryptionCompressionAlgorithm } from './supported-jsonwebencryption-compression-algorithm';
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './supported-jsonwebencryption-contentencryption-algorithm';
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './supported-jsonwebencryption-keyencryption-algorithm';
 
 /**
  * Implementation of RFC 7516.
@@ -22,11 +23,6 @@ import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './supported-jsonwebe
  * and the keys to be used in encrypting and decrypting the plaintext.
  */
 export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParams {
-  /**
-   * JSON Web Encryption Compression instance.
-   */
-  public readonly compressionAlgorithm!: JsonWebEncryptionCompressionAlgorithm;
-
   /**
    * JSON Web Encryption Key Wrap Algorithm used to Wrap and Unwrap the Content Encryption Key.
    */
@@ -50,7 +46,7 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParams {
   /**
    * JSON Web Key used to Encrypt the Token.
    */
-  public readonly jwk?: Optional<JsonWebKey>;
+  public readonly jwk?: Optional<JsonWebKeyParams>;
 
   /**
    * Identifier of the JSON Web Key used to Encrypt the Token.
@@ -114,12 +110,18 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParams {
       throw new InvalidJoseHeaderException('Invalid parameter "zip".');
     }
 
-    let compressionAlgorithm: Optional<JsonWebEncryptionCompressionAlgorithm>;
+    if (JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY[params.alg] === undefined) {
+      throw new UnsupportedAlgorithmException(`Unsupported JSON Web Encryption Key Wrap Algorithm "${params.alg}".`);
+    }
+
+    if (JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY[params.enc] === undefined) {
+      throw new UnsupportedAlgorithmException(
+        `Unsupported JSON Web Encryption Content Encryption Algorithm "${params.alg}".`
+      );
+    }
 
     if (params.zip !== undefined) {
-      compressionAlgorithm = JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY[params.zip];
-
-      if (compressionAlgorithm === undefined) {
+      if (JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY[params.zip] === undefined) {
         throw new UnsupportedAlgorithmException(
           `Unsupported JSON Web Encryption Compression Algorithm "${params.zip}".`
         );
@@ -171,7 +173,5 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParams {
     }
 
     Object.assign<JsonWebEncryptionHeader, JsonWebEncryptionHeaderParams>(this, removeNullishValues(params));
-
-    Object.defineProperty(this, 'compressionAlgorithm', { enumerable: false, value: compressionAlgorithm });
   }
 }

@@ -1,7 +1,6 @@
 import { createCipheriv, createDecipheriv, CipherGCMTypes } from 'crypto';
 
-import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-json-web-encryption.exception';
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from '../../supported-jsonwebencryption-contentencryption-algorithm';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './supported-jsonwebencryption-contentencryption-algorithm';
 import { AuthenticatedEncryption } from './authenticated-encryption';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-contentencryption.algorithm';
 
@@ -29,7 +28,7 @@ class AESGCMContentEncryptionAlgorithm extends JsonWebEncryptionContentEncryptio
     const cekSize = Number.parseInt(algorithm.substring(1, 4));
     super(cekSize, 96, algorithm);
 
-    this.cipherAlgorithm = <CipherGCMTypes>`aes-${cekSize}-cbc`;
+    this.cipherAlgorithm = <CipherGCMTypes>`aes-${cekSize}-gcm`;
   }
 
   /**
@@ -69,18 +68,14 @@ class AESGCMContentEncryptionAlgorithm extends JsonWebEncryptionContentEncryptio
     this.validateInitializationVector(iv);
     this.validateContentEncryptionKey(key);
 
-    try {
-      const decipher = createDecipheriv(this.cipherAlgorithm, key, iv, { authTagLength: this.authTagLength });
+    const decipher = createDecipheriv(this.cipherAlgorithm, key, iv, { authTagLength: this.authTagLength });
 
-      decipher.setAAD(aad);
-      decipher.setAuthTag(tag);
+    decipher.setAAD(aad);
+    decipher.setAuthTag(tag);
 
-      const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 
-      return decrypted;
-    } catch {
-      throw new InvalidJsonWebEncryptionException();
-    }
+    return decrypted;
   }
 }
 

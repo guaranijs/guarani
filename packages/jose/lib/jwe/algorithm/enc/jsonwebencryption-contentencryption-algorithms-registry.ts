@@ -1,4 +1,4 @@
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from '../../supported-jsonwebencryption-contentencryption-algorithm';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './supported-jsonwebencryption-contentencryption-algorithm';
 import { A128CBC_HS256, A192CBC_HS384, A256CBC_HS512 } from './cbc';
 import { A128GCM, A192GCM, A256GCM } from './gcm';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-contentencryption.algorithm';

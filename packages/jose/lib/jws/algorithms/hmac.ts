@@ -3,16 +3,10 @@ import { createHmac, KeyObject } from 'crypto';
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
 import { InvalidSignatureException } from '../../exceptions/invalid-signature.exception';
 import { OctKey } from '../../jwk/algorithms/oct/oct.key';
-import { SupportedJsonWebKeyAlgorithm } from '../../jwk/algorithms/supported-jsonwebkey-algorithm';
-import { SupportedJsonWebSignatureAlgorithm } from '../supported-jsonwebsignature-algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
 
 class HmacAlgorithm extends JsonWebSignatureAlgorithm {
-  /**
-   * Denotes the type of JSON Web Key supported by the JSON Web Signature HMAC Algorithm.
-   */
-  public readonly keyType: SupportedJsonWebKeyAlgorithm = 'oct';
-
   /**
    * Size of the Secret accepted by the JSON Web Signature HMAC Algorithm.
    */
@@ -26,7 +20,7 @@ class HmacAlgorithm extends JsonWebSignatureAlgorithm {
    * @param keySize Size of the Secret accepted by the JSON Web Signature HMAC Algorithm.
    */
   public constructor(hash: string, algorithm: SupportedJsonWebSignatureAlgorithm, keySize: number) {
-    super(hash, algorithm);
+    super(hash, algorithm, 'oct');
 
     this.keySize = keySize;
   }

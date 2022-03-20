@@ -1,13 +1,13 @@
 import { removeNullishValues } from '@guarani/objects';
 import { Dict, Optional } from '@guarani/types';
+
 import { KeyObject } from 'crypto';
+
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-json-web-key.exception';
 import { SupportedJsonWebKeyAlgorithm } from './algorithms/supported-jsonwebkey-algorithm';
 import { JsonWebKeyParams } from './jsonwebkey.params';
 
-export abstract class JsonWebKey<T extends SupportedJsonWebKeyAlgorithm = SupportedJsonWebKeyAlgorithm>
-  implements JsonWebKeyParams<T>
-{
+export abstract class JsonWebKey implements JsonWebKeyParams {
   /**
    * NodeJS Key.
    */
@@ -16,7 +16,7 @@ export abstract class JsonWebKey<T extends SupportedJsonWebKeyAlgorithm = Suppor
   /**
    * Key type representing the algorithm of the key.
    */
-  public readonly kty!: T;
+  public readonly kty!: SupportedJsonWebKeyAlgorithm;
 
   /**
    * Defines the usage of the key.
@@ -63,7 +63,7 @@ export abstract class JsonWebKey<T extends SupportedJsonWebKeyAlgorithm = Suppor
    *
    * @param params Parameters of the JSON Web Key.
    */
-  public constructor(params: Optional<JsonWebKeyParams<T>> = {}) {
+  public constructor(params: Optional<JsonWebKeyParams> = {}) {
     if (params.use !== undefined && typeof params.use !== 'string') {
       throw new InvalidJsonWebKeyException('Invalid parameter "use".');
     }
@@ -116,7 +116,7 @@ export abstract class JsonWebKey<T extends SupportedJsonWebKeyAlgorithm = Suppor
 
     const cryptoKey = this.loadCryptoKey(params);
 
-    Object.defineProperty(this, 'cryptoKey', { enumerable: false, value: cryptoKey });
+    Object.defineProperty(this, 'cryptoKey', { value: cryptoKey });
 
     Object.assign(this, removeNullishValues(params));
   }
@@ -127,7 +127,7 @@ export abstract class JsonWebKey<T extends SupportedJsonWebKeyAlgorithm = Suppor
    * @param params Parameters of the JSON Web Key.
    * @returns NodeJS Crypto Key.
    */
-  protected abstract loadCryptoKey(params: JsonWebKeyParams<T>): KeyObject;
+  protected abstract loadCryptoKey(params: JsonWebKeyParams): KeyObject;
 
   /**
    * Exports the data of the JSON Web Key into a String.

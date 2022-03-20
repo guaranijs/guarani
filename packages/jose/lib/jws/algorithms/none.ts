@@ -1,18 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Optional } from '@guarani/types';
 
-import { SupportedJsonWebKeyAlgorithm } from '../../jwk/algorithms/supported-jsonwebkey-algorithm';
 import { JsonWebKey } from '../../jwk/jsonwebkey';
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
 
 class NoneAlgorithm extends JsonWebSignatureAlgorithm {
   /**
-   * Denotes the type of JSON Web Key supported by this JSON Web Signature Algorithm.
-   */
-  protected readonly keyType?: Optional<SupportedJsonWebKeyAlgorithm>;
-
-  /**
-   * Instantiates a new JSON Web Signature `none` Algorithm.
+   * Instantiates a new JSON Web Signature none Algorithm to Sign and Verify the Messages.
    */
   public constructor() {
     super(null, 'none');

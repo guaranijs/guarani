@@ -1,6 +1,6 @@
 import { promisify } from 'util';
 import { deflateRaw, inflateRaw } from 'zlib';
-import { SupportedJsonWebEncryptionCompressionAlgorithm } from '../../supported-jsonwebencryption-compression-algorithm';
+
 import { JsonWebEncryptionCompressionAlgorithm } from './jsonwebencryption-compression.algorithm';
 
 const deflateRawAsync = promisify(deflateRaw);
@@ -11,9 +11,11 @@ const inflateRawAsync = promisify(inflateRaw);
  */
 class DefCompressionAlgorithm extends JsonWebEncryptionCompressionAlgorithm {
   /**
-   * Name of the JSON Web Encryption Compression Algorithm.
+   * Instantiates a new Deflate JSON Web Encryption Compression Algorithm to Compress and Decompress a Plaintext.
    */
-  protected readonly algorithm: SupportedJsonWebEncryptionCompressionAlgorithm = 'DEF';
+  public constructor() {
+    super('DEF');
+  }
 
   /**
    * Compresses the provided Plaintext before Encryption.

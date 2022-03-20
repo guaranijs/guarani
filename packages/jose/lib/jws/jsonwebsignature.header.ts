@@ -1,12 +1,12 @@
 import { removeNullishValues } from '@guarani/objects';
 import { Optional } from '@guarani/types';
+
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
-import { JsonWebKey } from '../jwk/jsonwebkey';
+import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
 import { JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY } from './algorithms/jsonwebsignature-algorithms-registry';
-import { JsonWebSignatureAlgorithm } from './algorithms/jsonwebsignature.algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from './algorithms/supported-jsonwebsignature-algorithm';
 import { JsonWebSignatureHeaderParams } from './jsonwebsignature-header.params';
-import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
 
 /**
  * Implementation of RFC 7515.
@@ -20,11 +20,6 @@ import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature
  */
 export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParams {
   /**
-   * JSON Web Signature Algorithm instance.
-   */
-  public readonly algorithm!: JsonWebSignatureAlgorithm;
-
-  /**
    * JSON Web Signature Algorithm used to Sign and Verify the Token.
    */
   public readonly alg!: SupportedJsonWebSignatureAlgorithm;
@@ -37,7 +32,7 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParams {
   /**
    * JSON Web Key used to Sign the Token.
    */
-  public readonly jwk?: Optional<JsonWebKey>;
+  public readonly jwk?: Optional<JsonWebKeyParams>;
 
   /**
    * Identifier of the JSON Web Key used to Sign the Token.
@@ -93,9 +88,7 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParams {
       throw new InvalidJoseHeaderException('Invalid parameter "alg".');
     }
 
-    const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[params.alg];
-
-    if (algorithm === undefined) {
+    if (JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[params.alg] === undefined) {
       throw new UnsupportedAlgorithmException(`Unsupported JSON Web Signature Algorithm "${params.alg}".`);
     }
 
@@ -144,7 +137,5 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParams {
     }
 
     Object.assign<JsonWebSignatureHeader, JsonWebSignatureHeaderParams>(this, removeNullishValues(params));
-
-    Object.defineProperty(this, 'algorithm', { enumerable: false, value: algorithm });
   }
 }

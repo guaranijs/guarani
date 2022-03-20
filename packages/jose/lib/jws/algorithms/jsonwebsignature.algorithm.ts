@@ -3,13 +3,13 @@ import { Nullable, Optional } from '@guarani/types';
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
 import { SupportedJsonWebKeyAlgorithm } from '../../jwk/algorithms/supported-jsonwebkey-algorithm';
 import { JsonWebKey } from '../../jwk/jsonwebkey';
-import { SupportedJsonWebSignatureAlgorithm } from '../supported-jsonwebsignature-algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
 
 export abstract class JsonWebSignatureAlgorithm {
   /**
-   * Denotes the type of JSON Web Key supported by this JSON Web Signature Algorithm.
+   * Type of JSON Web Key supported by this JSON Web Signature Algorithm.
    */
-  protected abstract readonly keyType?: Optional<SupportedJsonWebKeyAlgorithm>;
+  protected readonly keyType?: Optional<SupportedJsonWebKeyAlgorithm>;
 
   /**
    * Hash Algorithm used to Sign and Verify the Messages.
@@ -26,10 +26,16 @@ export abstract class JsonWebSignatureAlgorithm {
    *
    * @param hash Hash Algorithm used to Sign and Verify the Messages.
    * @param algorithm Name of the JSON Web Signature Algorithm.
+   * @param keyType Type of JSON Web Key supported by this JSON Web Signature Algorithm.
    */
-  public constructor(hash: Nullable<string>, algorithm: SupportedJsonWebSignatureAlgorithm) {
+  public constructor(
+    hash: Nullable<string>,
+    algorithm: SupportedJsonWebSignatureAlgorithm,
+    keyType?: Optional<SupportedJsonWebKeyAlgorithm>
+  ) {
     this.hash = hash;
     this.algorithm = algorithm;
+    this.keyType = keyType;
   }
 
   /**

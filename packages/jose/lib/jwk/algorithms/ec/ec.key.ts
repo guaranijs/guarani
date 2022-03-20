@@ -1,4 +1,5 @@
 import { Optional } from '@guarani/types';
+
 import {
   createPrivateKey,
   createPublicKey,
@@ -8,6 +9,7 @@ import {
   KeyObject,
 } from 'crypto';
 import { promisify } from 'util';
+
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
 import { JsonWebKey } from '../../jsonwebkey';
 import { JsonWebKeyParams } from '../../jsonwebkey.params';
@@ -20,7 +22,12 @@ import { ExportEcKeyEncoding, ExportEcKeyFormat, ExportEcKeyType } from './types
 
 const generateKeyPairAsync = promisify(generateKeyPair);
 
-export class EcKey extends JsonWebKey<'EC'> implements EcKeyParams {
+export class EcKey extends JsonWebKey implements EcKeyParams {
+  /**
+   * Key type representing the algorithm of the key.
+   */
+  public readonly kty!: 'EC';
+
   /**
    * Name of the Elliptic Curve.
    */
@@ -47,7 +54,7 @@ export class EcKey extends JsonWebKey<'EC'> implements EcKeyParams {
    * @param key Parameters of the key.
    * @param options Optional JSON Web Key Parameters.
    */
-  public constructor(key: EcKeyParams, options: Optional<JsonWebKeyParams<'EC'>> = {}) {
+  public constructor(key: EcKeyParams, options: Optional<JsonWebKeyParams> = {}) {
     const params = <EcKeyParams>{ ...key, ...options };
 
     if (params.kty !== undefined && params.kty !== 'EC') {
@@ -84,10 +91,7 @@ export class EcKey extends JsonWebKey<'EC'> implements EcKeyParams {
    * @param params Optional JSON Web Key Parameters.
    * @returns Generated EcKey.
    */
-  public static async generate(
-    options: GenerateEcKeyOptions,
-    params: Optional<JsonWebKeyParams<'EC'>> = {}
-  ): Promise<EcKey> {
+  public static async generate(options: GenerateEcKeyOptions, params: Optional<JsonWebKeyParams> = {}): Promise<EcKey> {
     const { curve } = options;
 
     const curveMeta = ELLIPTIC_CURVES_REGISTRY.find((ellipticCurve) => ellipticCurve.id === curve);

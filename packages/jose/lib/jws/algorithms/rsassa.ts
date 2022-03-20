@@ -5,19 +5,13 @@ import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-ke
 import { InvalidSignatureException } from '../../exceptions/invalid-signature.exception';
 import { RsaPadding } from '../../jwk/algorithms/rsa/rsa-padding';
 import { RsaKey } from '../../jwk/algorithms/rsa/rsa.key';
-import { SupportedJsonWebKeyAlgorithm } from '../../jwk/algorithms/supported-jsonwebkey-algorithm';
-import { SupportedJsonWebSignatureAlgorithm } from '../supported-jsonwebsignature-algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
 
 const signAsync = promisify(sign);
 const verifyAsync = promisify(verify);
 
 export class RsaSsaAlgorithm extends JsonWebSignatureAlgorithm {
-  /**
-   * Denotes the type of JSON Web Key supported by the JSON Web Signature RSASSA Algorithm.
-   */
-  protected readonly keyType: SupportedJsonWebKeyAlgorithm = 'RSA';
-
   /**
    * RSA Padding used by the JSON Web Signature RSASSA Algorithm to Sign and Verify the Messages.
    */
@@ -31,7 +25,7 @@ export class RsaSsaAlgorithm extends JsonWebSignatureAlgorithm {
    * @param padding RSA Padding used by the JSON Web Signature RSASSA Algorithm to Sign and Verify the Messages.
    */
   public constructor(hash: string, algorithm: SupportedJsonWebSignatureAlgorithm, padding: RsaPadding) {
-    super(hash, algorithm);
+    super(hash, algorithm, 'RSA');
 
     this.padding = padding;
   }

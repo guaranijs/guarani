@@ -5,19 +5,13 @@ import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-ke
 import { InvalidSignatureException } from '../../exceptions/invalid-signature.exception';
 import { EcKey } from '../../jwk/algorithms/ec/ec.key';
 import { SupportedEllipticCurve } from '../../jwk/algorithms/ec/supported-elliptic-curve';
-import { SupportedJsonWebKeyAlgorithm } from '../../jwk/algorithms/supported-jsonwebkey-algorithm';
-import { SupportedJsonWebSignatureAlgorithm } from '../supported-jsonwebsignature-algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
 
 const signAsync = promisify(sign);
 const verifyAsync = promisify(verify);
 
 class EcdsaAlgorithm extends JsonWebSignatureAlgorithm {
-  /**
-   * Denotes the type of JSON Web Key supported by the JSON Web Signature ECDSA Algorithm.
-   */
-  protected readonly keyType: SupportedJsonWebKeyAlgorithm = 'EC';
-
   /**
    * Elliptic Curve used by the JSON Web Signature ECDSA Algorithm.
    */
@@ -31,7 +25,7 @@ class EcdsaAlgorithm extends JsonWebSignatureAlgorithm {
    * @param curve Elliptic Curve used by the JSON Web Signature ECDSA Algorithm.
    */
   public constructor(hash: string, algorithm: SupportedJsonWebSignatureAlgorithm, curve: SupportedEllipticCurve) {
-    super(hash, algorithm);
+    super(hash, algorithm, 'EC');
 
     this.curve = curve;
   }

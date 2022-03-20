@@ -4,6 +4,7 @@ import { InvalidJsonWebKeyException } from '../exceptions/invalid-json-web-key.e
 import { InvalidJsonWebSignatureException } from '../exceptions/invalid-json-web-signature.exception';
 import { JoseException } from '../exceptions/jose.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
+import { JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY } from './algorithms/jsonwebsignature-algorithms-registry';
 import { JsonWebSignatureHeaderParams } from './jsonwebsignature-header.params';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 
@@ -43,12 +44,12 @@ export class JsonWebSignature {
     this.payload = payload ?? Buffer.alloc(0);
   }
 
-  public static async deserializeCompact(token: string, key: Nullable<JsonWebKey>): Promise<JsonWebSignature> {
+  public static async deserializeCompact(token: string, verifyKey: Nullable<JsonWebKey>): Promise<JsonWebSignature> {
     if (typeof token !== 'string') {
       throw new InvalidJsonWebSignatureException();
     }
 
-    if (key !== null && !(key instanceof JsonWebKey)) {
+    if (verifyKey !== null && !(verifyKey instanceof JsonWebKey)) {
       throw new InvalidJsonWebKeyException();
     }
 
@@ -64,10 +65,11 @@ export class JsonWebSignature {
       const header = new JsonWebSignatureHeader(JSON.parse(Buffer.from(b64Header, 'base64url').toString('utf8')));
       const payload = Buffer.from(b64Payload, 'base64url');
       const signature = Buffer.from(b64Signature, 'base64url');
-
       const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
 
-      await header.algorithm.verify(signature, message, key ?? undefined);
+      const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
+
+      await algorithm.verify(signature, message, verifyKey ?? undefined);
 
       return new JsonWebSignature(header, payload);
     } catch (exc: any) {
@@ -84,15 +86,11 @@ export class JsonWebSignature {
   /**
    * Serializes the contents of the JSON Web Signature into a Compact Token.
    *
-   * @param jwk JSON Web Key used to Sign the JSON Web Signature Token.
+   * @param signKey JSON Web Key used to Sign the JSON Web Signature Token.
    * @returns JSON Web Signature Token.
    */
-  public async serializeCompact(jwk?: Optional<JsonWebKey>): Promise<string> {
+  public async serializeCompact(signKey?: Optional<JsonWebKey>): Promise<string> {
     const { header, payload } = this;
-
-    if (jwk === undefined && header.alg !== 'none') {
-      throw new TypeError(`Missing required JSON Web Key for JSON Web Signature Algorithm "${header.alg}".`);
-    }
 
     try {
       const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
@@ -100,7 +98,9 @@ export class JsonWebSignature {
 
       const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
 
-      const signature = await header.algorithm.sign(message, jwk);
+      const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
+
+      const signature = await algorithm.sign(message, signKey);
 
       const b64Signature = signature.toString('base64url');
 

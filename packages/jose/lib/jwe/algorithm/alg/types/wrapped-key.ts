@@ -12,5 +12,5 @@ export interface WrappedKey<AdditionalJoseHeaderParams extends Dict> {
   /**
    * Additional JSON Web Encryption Header Parameters.
    */
-  readonly header?: Optional<AdditionalJoseHeaderParams>;
+  readonly additionalHeaderParams?: Optional<AdditionalJoseHeaderParams>;
 }

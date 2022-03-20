@@ -1,12 +1,11 @@
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { InvalidJsonWebEncryptionException } from '../exceptions/invalid-json-web-encryption.exception';
 import { JoseException } from '../exceptions/jose.exception';
+import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from '../jwe/algorithm/alg/jsonwebencryption-keywrap-algorithms-registry';
+import { JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY } from '../jwe/algorithm/enc/jsonwebencryption-contentencryption-algorithms-registry';
+import { JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY } from '../jwe/algorithm/zip/jsonwebencryption-compression-algorithms-registry';
 import { JsonWebKey } from '../jwk/jsonwebkey';
 import { KeyLoader } from '../types';
-import { JWE_ALGORITHMS } from './algorithms/alg/jwe-algorithms';
-import { JWE_ENCRYPTIONS } from './algorithms/enc/jwe-encryptions';
-import { JWECompression } from './algorithms/zip/jwe-compression';
-import { JWE_COMPRESSIONS } from './algorithms/zip/jwe-compressions';
 import { JsonWebEncryptionHeader, JWEHeaderParams } from './jsonwebencryption.header';
 
 /**
@@ -145,8 +144,8 @@ export class JsonWebEncryption {
     try {
       const [header, ek, iv, ciphertext, tag, aad] = this.decodeCompact(token);
 
-      const alg = JWE_ALGORITHMS[header.alg];
-      const enc = JWE_ENCRYPTIONS[header.enc];
+      const alg = JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY[header.alg];
+      const enc = JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY[header.enc];
 
       const wrapKey = typeof jwkOrKeyLoader === 'function' ? jwkOrKeyLoader(header) : jwkOrKeyLoader;
 
@@ -158,7 +157,7 @@ export class JsonWebEncryption {
       let plaintext = await enc.decrypt(ciphertext, aad, iv, tag, cek);
 
       if (header.zip != null) {
-        const zip = <JWECompression>JWE_COMPRESSIONS[header.zip];
+        const zip = JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY[header.zip];
         plaintext = await zip.decompress(plaintext);
       }
 
@@ -211,17 +210,17 @@ export class JsonWebEncryption {
       throw new InvalidJoseHeaderException(`The algorithm "${this.header.alg}" requires the use of a JSON Web Key.`);
     }
 
-    const alg = JWE_ALGORITHMS[this.header.alg];
-    const enc = JWE_ENCRYPTIONS[this.header.enc];
-    const zip = <JWECompression>JWE_COMPRESSIONS[this.header.zip!];
+    const alg = JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY[this.header.alg];
+    const enc = JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY[this.header.enc];
+    const zip = JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY[this.header.zip!];
 
-    const cek = await enc.generateCEK();
-    const iv = await enc.generateIV();
+    const cek = await enc.generateContentEncryptionKey();
+    const iv = await enc.generateInitializationVector();
 
-    const { ek, header } = await alg.wrap(cek, wrapKey);
+    const { ek, additionalHeaderParams } = await alg.wrap(cek, wrapKey);
 
-    if (header) {
-      Object.assign(this.header, header);
+    if (additionalHeaderParams) {
+      Object.assign(this.header, additionalHeaderParams);
     }
 
     const b64Header = Buffer.from(JSON.stringify(this.header), 'utf8').toString('base64url');

@@ -1,4 +1,5 @@
 import { Optional } from '@guarani/types';
+
 import { SupportedJsonWebKeyAlgorithm } from './algorithms/supported-jsonwebkey-algorithm';
 
 /**
@@ -7,11 +8,11 @@ import { SupportedJsonWebKeyAlgorithm } from './algorithms/supported-jsonwebkey-
  * The parameters defined here are the default ones defined by
  * {@link https://tools.ietf.org/html/rfc7517 RFC 7517}.
  */
-export interface JsonWebKeyParams<T extends SupportedJsonWebKeyAlgorithm> {
+export interface JsonWebKeyParams {
   /**
    * Key type representing the algorithm of the key.
    */
-  readonly kty?: Optional<T>;
+  readonly kty?: Optional<SupportedJsonWebKeyAlgorithm>;
 
   /**
    * Defines the usage of the key.

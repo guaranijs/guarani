@@ -1,4 +1,5 @@
 import { Optional } from '@guarani/types';
+
 import {
   createPrivateKey,
   createPublicKey,
@@ -8,6 +9,7 @@ import {
   KeyObject,
 } from 'crypto';
 import { promisify } from 'util';
+
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
 import { JsonWebKey } from '../../jsonwebkey';
 import { JsonWebKeyParams } from '../../jsonwebkey.params';
@@ -18,7 +20,12 @@ import { ExportRsaKeyEncoding, ExportRsaKeyFormat, ExportRsaKeyType } from './ty
 
 const generateKeyPairAsync = promisify(generateKeyPair);
 
-export class RsaKey extends JsonWebKey<'RSA'> implements RsaKeyParams {
+export class RsaKey extends JsonWebKey implements RsaKeyParams {
+  /**
+   * Key type representing the algorithm of the key.
+   */
+  public readonly kty!: 'RSA';
+
   /**
    * Modulus.
    */
@@ -65,7 +72,7 @@ export class RsaKey extends JsonWebKey<'RSA'> implements RsaKeyParams {
    * @param key Parameters of the key.
    * @param options Optional JSON Web Key Parameters.
    */
-  public constructor(key: RsaKeyParams, options: Optional<JsonWebKeyParams<'RSA'>> = {}) {
+  public constructor(key: RsaKeyParams, options: Optional<JsonWebKeyParams> = {}) {
     const params = <RsaKeyParams>{ ...key, ...options };
 
     if (params.kty !== undefined && params.kty !== 'RSA') {
@@ -123,7 +130,7 @@ export class RsaKey extends JsonWebKey<'RSA'> implements RsaKeyParams {
    */
   public static async generate(
     options: GenerateRsaKeyOptions,
-    params: Optional<JsonWebKeyParams<'RSA'>> = {}
+    params: Optional<JsonWebKeyParams> = {}
   ): Promise<RsaKey> {
     const { modulus, publicExponent } = options;
 

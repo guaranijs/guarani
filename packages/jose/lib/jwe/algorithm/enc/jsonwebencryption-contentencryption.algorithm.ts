@@ -2,8 +2,8 @@ import { randomBytes } from 'crypto';
 import { promisify } from 'util';
 
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-json-web-encryption.exception';
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from '../../supported-jsonwebencryption-contentencryption-algorithm';
 import { AuthenticatedEncryption } from './authenticated-encryption';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './supported-jsonwebencryption-contentencryption-algorithm';
 
 const randomBytesAsync = promisify(randomBytes);
 
@@ -16,22 +16,22 @@ const randomBytesAsync = promisify(randomBytes);
  */
 export abstract class JsonWebEncryptionContentEncryptionAlgorithm {
   /**
-   * Size of the Content Encryption Key in bits.
-   */
-  protected readonly cekSize: number;
-
-  /**
-   * Size of the Initialization Vector in bits.
-   */
-  protected readonly ivSize: number;
-
-  /**
    * Name of the JSON Web Encryption Content Encryption Algorithm.
    */
   protected readonly algorithm: SupportedJsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
-   * Instantiates a new JWE Encryption to encrypt and decrypt a Plaintext.
+   * Size of the Content Encryption Key in bits.
+   */
+  public readonly cekSize: number;
+
+  /**
+   * Size of the Initialization Vector in bits.
+   */
+  public readonly ivSize: number;
+
+  /**
+   * Instantiates a new JSON Web Encryption Content Encryption Algorithm to Encrypt and Decrypt a Plaintext.
    *
    * @param cekSize Size of the Content Encryption Key in bits.
    * @param ivSize Size of the Initialization Vector in bits.
@@ -41,13 +41,6 @@ export abstract class JsonWebEncryptionContentEncryptionAlgorithm {
     this.cekSize = cekSize;
     this.ivSize = ivSize;
     this.algorithm = algorithm;
-  }
-
-  /**
-   * Generates a new Content Encryption Key.
-   */
-  public async generateContentEncryptionKey(): Promise<Buffer> {
-    return await randomBytesAsync(Math.floor(this.cekSize / 8));
   }
 
   /**
@@ -74,7 +67,7 @@ export abstract class JsonWebEncryptionContentEncryptionAlgorithm {
    * @param key Key to be checked.
    * @throws {InvalidJsonWebEncryptionException} The provided key is invalid.
    */
-  protected validateContentEncryptionKey(key: Buffer): void {
+  public validateContentEncryptionKey(key: Buffer): void {
     if (!Buffer.isBuffer(key) || key.length * 8 !== this.cekSize) {
       throw new InvalidJsonWebEncryptionException('Invalid Content Encryption Key.');
     }

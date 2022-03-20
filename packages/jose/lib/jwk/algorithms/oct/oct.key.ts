@@ -1,6 +1,8 @@
 import { Optional } from '@guarani/types';
+
 import { createSecretKey, KeyObject, randomBytes } from 'crypto';
 import { promisify } from 'util';
+
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
 import { JsonWebKey } from '../../jsonwebkey';
 import { JsonWebKeyParams } from '../../jsonwebkey.params';
@@ -11,7 +13,12 @@ import { ExportOctKeyEncoding, SUPPORTED_OCTKEY_ENCODINGS } from './types';
 
 const randomBytesAsync = promisify(randomBytes);
 
-export class OctKey extends JsonWebKey<'oct'> implements OctKeyParams {
+export class OctKey extends JsonWebKey implements OctKeyParams {
+  /**
+   * Key type representing the algorithm of the key.
+   */
+  public readonly kty!: 'oct';
+
   /**
    * Base64Url encoded Octet.
    */
@@ -23,7 +30,7 @@ export class OctKey extends JsonWebKey<'oct'> implements OctKeyParams {
    * @param key Parameters of the key.
    * @param options Optional JSON Web Key Parameters.
    */
-  public constructor(key: OctKeyParams, options: Optional<JsonWebKeyParams<'oct'>> = {}) {
+  public constructor(key: OctKeyParams, options: Optional<JsonWebKeyParams> = {}) {
     const params = <OctKeyParams>{ ...key, ...options };
 
     if (params.kty !== undefined && params.kty !== 'oct') {
@@ -50,7 +57,7 @@ export class OctKey extends JsonWebKey<'oct'> implements OctKeyParams {
    */
   public static async generate(
     options: GenerateOctKeyOptions,
-    params: Optional<JsonWebKeyParams<'oct'>> = {}
+    params: Optional<JsonWebKeyParams> = {}
   ): Promise<OctKey> {
     const { size } = options;
 

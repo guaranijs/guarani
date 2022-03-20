@@ -1,24 +1,30 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Dict, Optional } from '@guarani/types';
+import { Dict } from '@guarani/types';
 
-import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-json-web-encryption.exception';
-import { JoseException } from '../../../exceptions/jose.exception';
 import { OctKey } from '../../../jwk/algorithms/oct/oct.key';
 import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap.algorithm';
-import { WrappedKey } from './wrapped-key';
+import { WrappedKey } from './types/wrapped-key';
 
 /**
  * Implementation of the dir JSON Web Encryption Key Wrap Algorithm.
  */
 class DirKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
   /**
+   * Instantiates a new JSON Web Encryption dir Key Wrap Algorithm to Wrap and Unwrap Content Encryption Keys.
+   */
+  public constructor() {
+    super('dir');
+  }
+
+  /**
    * Returns an empty Buffer since the Algorithm does not Wrap the provided Content Encryption Key.
    *
-   * @param cek Content Encryption Key used to Encrypt the Plaintext.
-   * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
+   * @param key JSON Web Key to be used as the Content Encryption Key used to Encrypt the Plaintext.
    * @returns Empty Buffer as the Wrapped Content Encryption Key.
    */
-  public async wrap(cek: Buffer, key?: Optional<OctKey>): Promise<WrappedKey<Dict>> {
+  public async wrap(cek: Buffer, key: OctKey): Promise<WrappedKey<Dict>> {
+    this.validateJsonWebKey(key);
+
     return { ek: Buffer.alloc(0) };
   }
 
@@ -30,19 +36,11 @@ class DirKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
    * @returns Provided JSON Web Key as the Content Encryption Key.
    */
   public async unwrap(ek: Buffer, key: OctKey): Promise<Buffer> {
-    try {
-      return key.export({ encoding: 'buffer' });
-    } catch (exc: any) {
-      if (exc instanceof JoseException) {
-        throw new InvalidJsonWebEncryptionException(exc);
-      }
-
-      throw new InvalidJsonWebEncryptionException();
-    }
+    return key.export({ encoding: 'buffer' });
   }
 }
 
 /**
  * Direct Encryption with a Shared Symmetric Key.
  */
-export const dir = new DirKeyWrapAlgorithm('dir');
+export const dir = new DirKeyWrapAlgorithm();

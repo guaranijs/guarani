@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, createHmac, timingSafeEqual } from 'crypto';
 
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-json-web-encryption.exception';
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from '../../supported-jsonwebencryption-contentencryption-algorithm';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './supported-jsonwebencryption-contentencryption-algorithm';
 import { AuthenticatedEncryption } from './authenticated-encryption';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-contentencryption.algorithm';
 
@@ -25,7 +25,7 @@ class CBCHS2ContentEncryptionAlgorithm extends JsonWebEncryptionContentEncryptio
   private readonly cipherAlgorithm: string;
 
   /**
-   * Instantiates a new AES JSON Web Encryption Content Encryption to Encrypt and Decrypt a Plaintext.
+   * Instantiates a new AES-CBC JSON Web Encryption Content Encryption to Encrypt and Decrypt a Plaintext.
    *
    * @param algorithm Name of the JSON Web Encryption Content Encryption Algorithm.
    */
@@ -82,24 +82,19 @@ class CBCHS2ContentEncryptionAlgorithm extends JsonWebEncryptionContentEncryptio
     this.validateInitializationVector(iv);
     this.validateContentEncryptionKey(key);
 
-    try {
-      const macKey = key.subarray(0, this.keySize >> 3);
-      const encKey = key.subarray(this.keySize >> 3);
+    const macKey = key.subarray(0, this.keySize >> 3);
+    const encKey = key.subarray(this.keySize >> 3);
 
-      const expectedTag = this.getAuthTag(ciphertext, iv, aad, macKey);
+    const expectedTag = this.getAuthTag(ciphertext, iv, aad, macKey);
 
-      if (!timingSafeEqual(tag, expectedTag)) {
-        throw new InvalidJsonWebEncryptionException();
-      }
-
-      const decipher = createDecipheriv(this.cipherAlgorithm, encKey, iv);
-
-      const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
-
-      return plaintext;
-    } catch {
+    if (!timingSafeEqual(tag, expectedTag)) {
       throw new InvalidJsonWebEncryptionException();
     }
+
+    const decipher = createDecipheriv(this.cipherAlgorithm, encKey, iv);
+    const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+
+    return plaintext;
   }
 
   /**

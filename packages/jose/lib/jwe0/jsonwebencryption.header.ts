@@ -2,10 +2,13 @@ import { removeNullishValues } from '@guarani/objects';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { JoseHeader, JoseHeaderParams } from '../jose.header';
+import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from '../jwe/algorithm/alg/jsonwebencryption-keywrap-algorithms-registry';
+import { JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY } from '../jwe/algorithm/enc/jsonwebencryption-contentencryption-algorithms-registry';
+import { JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY } from '../jwe/algorithm/zip/jsonwebencryption-compression-algorithms-registry';
+import { SupportedJsonWebEncryptionCompressionAlgorithm } from '../jwe/algorithm/zip/supported-jsonwebencryption-compression-algorithm';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from '../jwe/algorithm/enc/supported-jsonwebencryption-contentencryption-algorithm';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from '../jwe/algorithm/alg/supported-jsonwebencryption-keyencryption-algorithm';
 import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
-import { JWE_ALGORITHMS, SupportedJWEAlgorithm } from './algorithms/alg/jwe-algorithms';
-import { JWE_ENCRYPTIONS, SupportedJWEEncryption } from './algorithms/enc/jwe-encryptions';
-import { JWE_COMPRESSIONS, SupportedJWECompression } from './algorithms/zip/jwe-compressions';
 
 /**
  * Defines the parameters supported by the JWE JOSE Header.
@@ -14,17 +17,17 @@ export interface JWEHeaderParams extends JoseHeaderParams {
   /**
    * JWE CEK Algorithm used to encrypt and decrypt the Content Encryption Key.
    */
-  readonly alg: SupportedJWEAlgorithm;
+  readonly alg: SupportedJsonWebEncryptionKeyWrapAlgorithm;
 
   /**
    * JWE Authenticated Algorithm used to encrypt and decrypt the Plaintext.
    */
-  readonly enc: SupportedJWEEncryption;
+  readonly enc: SupportedJsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
    * Compression algorithm of the JSON Web Encryption.
    */
-  readonly zip?: SupportedJWECompression;
+  readonly zip?: SupportedJsonWebEncryptionCompressionAlgorithm;
 
   /**
    * URI of a JWK Set that contains the key used to encrypt the token.
@@ -34,7 +37,7 @@ export interface JWEHeaderParams extends JoseHeaderParams {
   /**
    * JSON Web Key used to encrypt the token.
    */
-  readonly jwk?: JsonWebKeyParams<any>;
+  readonly jwk?: JsonWebKeyParams;
 
   /**
    * ID of the key used to encrypt the token.
@@ -93,17 +96,17 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JWEHeaderPara
   /**
    * JWE CEK Algorithm used to encrypt and decrypt the Content Encryption Key.
    */
-  public readonly alg!: SupportedJWEAlgorithm;
+  public readonly alg!: SupportedJsonWebEncryptionKeyWrapAlgorithm;
 
   /**
    * JWE Authenticated Algorithm used to encrypt and decrypt the Plaintext.
    */
-  public readonly enc!: SupportedJWEEncryption;
+  public readonly enc!: SupportedJsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
    * Compression algorithm of the JSON Web Encryption.
    */
-  public readonly zip?: SupportedJWECompression;
+  public readonly zip?: SupportedJsonWebEncryptionCompressionAlgorithm;
 
   /**
    * URI of a JWK Set that contains the key used to encrypt the token.
@@ -113,7 +116,7 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JWEHeaderPara
   /**
    * JSON Web Key used to encrypt the token.
    */
-  public readonly jwk?: JsonWebKeyParams<any>;
+  public readonly jwk?: JsonWebKeyParams;
 
   /**
    * ID of the key used to encrypt the token.
@@ -207,15 +210,15 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JWEHeaderPara
 
     super.checkHeader(header);
 
-    if (header.alg != null && !(header.alg in JWE_ALGORITHMS)) {
+    if (header.alg != null && !(header.alg in JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY)) {
       throw new InvalidJoseHeaderException('Invalid JSON Web Encryption Key Wrapping Algorithm.');
     }
 
-    if (header.enc != null && !(header.enc in JWE_ENCRYPTIONS)) {
+    if (header.enc != null && !(header.enc in JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY)) {
       throw new InvalidJoseHeaderException('Invalid JSON Web Encryption Content Encryption Algorithm.');
     }
 
-    if (header.zip != null && !(header.zip in JWE_COMPRESSIONS)) {
+    if (header.zip != null && !(header.zip in JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY)) {
       throw new InvalidJoseHeaderException('Invalid JSON Web Encryption Plaintext Compression Algorithm.');
     }
   }

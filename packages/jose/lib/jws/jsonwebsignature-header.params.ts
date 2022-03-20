@@ -1,7 +1,7 @@
 import { Optional } from '@guarani/types';
 
-import { JsonWebKey } from '../jwk/jsonwebkey';
-import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
+import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
+import { SupportedJsonWebSignatureAlgorithm } from './algorithms/supported-jsonwebsignature-algorithm';
 
 export interface JsonWebSignatureHeaderParams {
   /**
@@ -17,7 +17,7 @@ export interface JsonWebSignatureHeaderParams {
   /**
    * JSON Web Key used to Sign the Token.
    */
-  readonly jwk?: Optional<JsonWebKey>;
+  readonly jwk?: Optional<JsonWebKeyParams>;
 
   /**
    * Identifier of the JSON Web Key used to Sign the Token.

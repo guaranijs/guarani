@@ -1,9 +1,9 @@
 import { Optional } from '@guarani/types';
 
-import { JsonWebKey } from '../jwk/jsonwebkey';
-import { SupportedJsonWebEncryptionCompressionAlgorithm } from './supported-jsonwebencryption-compression-algorithm';
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './supported-jsonwebencryption-contentencryption-algorithm';
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './supported-jsonwebencryption-keyencryption-algorithm';
+import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
+import { SupportedJsonWebEncryptionCompressionAlgorithm } from './algorithm/zip/supported-jsonwebencryption-compression-algorithm';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './algorithm/enc/supported-jsonwebencryption-contentencryption-algorithm';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithm/alg/supported-jsonwebencryption-keyencryption-algorithm';
 
 export interface JsonWebEncryptionHeaderParams {
   /**
@@ -29,7 +29,7 @@ export interface JsonWebEncryptionHeaderParams {
   /**
    * JSON Web Key used to Sign the Token.
    */
-  readonly jwk?: Optional<JsonWebKey>;
+  readonly jwk?: Optional<JsonWebKeyParams>;
 
   /**
    * Identifier of the JSON Web Key used to Sign the Token.

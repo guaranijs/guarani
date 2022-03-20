@@ -1,11 +1,17 @@
 import { Optional } from '@guarani/types';
+
 import { JsonWebKeyParams } from '../../jsonwebkey.params';
 import { SupportedEllipticCurve } from './supported-elliptic-curve';
 
 /**
  * Parameters of the Elliptic Curve Key.
  */
-export interface EcKeyParams extends JsonWebKeyParams<'EC'> {
+export interface EcKeyParams extends JsonWebKeyParams {
+  /**
+   * Key type representing the algorithm of the key.
+   */
+  readonly kty: 'EC';
+
   /**
    * Name of the Elliptic Curve.
    */

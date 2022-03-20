@@ -74,16 +74,16 @@ class HmacAlgorithm extends JsonWebSignatureAlgorithm {
 }
 
 /**
- * JSON Web Signature **HS256** Algorithm.
+ * HMAC using SHA-256.
  */
 export const HS256 = new HmacAlgorithm('SHA256', 'HS256', 32);
 
 /**
- * JSON Web Signature **HS384** Algorithm.
+ * HMAC using SHA-384.
  */
 export const HS384 = new HmacAlgorithm('SHA384', 'HS384', 48);
 
 /**
- * JSON Web Signature **HS512** Algorithm.
+ * HMAC using SHA-512.
  */
 export const HS512 = new HmacAlgorithm('SHA512', 'HS512', 64);

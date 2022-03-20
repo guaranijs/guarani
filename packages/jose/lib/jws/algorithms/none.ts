@@ -1,7 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Optional } from '@guarani/types';
-
-import { JsonWebKey } from '../../jwk/jsonwebkey';
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
 
 class NoneAlgorithm extends JsonWebSignatureAlgorithm {
@@ -16,10 +13,9 @@ class NoneAlgorithm extends JsonWebSignatureAlgorithm {
    * Signs a Message with the provided JSON Web Key.
    *
    * @param message Message to be Signed.
-   * @param key JSON Web Key used to Sign the provided Message.
    * @returns Resulting Signature of the provided Message.
    */
-  public async sign(message: Buffer, key?: Optional<JsonWebKey>): Promise<Buffer> {
+  public async sign(message: Buffer): Promise<Buffer> {
     return Buffer.alloc(0);
   }
 
@@ -28,12 +24,11 @@ class NoneAlgorithm extends JsonWebSignatureAlgorithm {
    *
    * @param signature Signature to be matched against the provided Message.
    * @param message Message to be matched against the provided Signature.
-   * @param key JSON Web Key used to verify the Signature and Message.
    */
-  public async verify(signature: Buffer, message: Buffer, key?: Optional<JsonWebKey>): Promise<void> {}
+  public async verify(signature: Buffer, message: Buffer): Promise<void> {}
 }
 
 /**
- * JSON Web Signature **none** Algorithm.
+ * No digital signature or MAC performed.
  */
 export const none = new NoneAlgorithm();

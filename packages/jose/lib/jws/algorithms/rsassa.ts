@@ -77,31 +77,31 @@ export class RsaSsaAlgorithm extends JsonWebSignatureAlgorithm {
 }
 
 /**
- * JSON Web Signature **RS256** Algorithm.
+ * RSASSA-PKCS1-v1_5 using SHA-256.
  */
 export const RS256 = new RsaSsaAlgorithm('SHA256', 'RS256', RsaPadding.PKCS1);
 
 /**
- * JSON Web Signature **RS384** Algorithm.
+ * RSASSA-PKCS1-v1_5 using SHA-384.
  */
 export const RS384 = new RsaSsaAlgorithm('SHA384', 'RS384', RsaPadding.PKCS1);
 
 /**
- * JSON Web Signature **RS512** Algorithm.
+ * RSASSA-PKCS1-v1_5 using SHA-512.
  */
 export const RS512 = new RsaSsaAlgorithm('SHA512', 'RS512', RsaPadding.PKCS1);
 
 /**
- * JSON Web Signature **PS256** Algorithm.
+ * RSASSA-PSS using SHA-256 and MGF1 with SHA-256.
  */
 export const PS256 = new RsaSsaAlgorithm('SHA256', 'PS256', RsaPadding.PSS);
 
 /**
- * JSON Web Signature **PS384** Algorithm.
+ * RSASSA-PSS using SHA-384 and MGF1 with SHA-384.
  */
 export const PS384 = new RsaSsaAlgorithm('SHA384', 'PS384', RsaPadding.PSS);
 
 /**
- * JSON Web Signature **PS512** Algorithm.
+ * RSASSA-PSS using SHA-512 and MGF1 with SHA-512.
  */
 export const PS512 = new RsaSsaAlgorithm('SHA512', 'PS512', RsaPadding.PSS);

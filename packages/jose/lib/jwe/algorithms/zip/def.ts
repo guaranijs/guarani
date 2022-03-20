@@ -7,7 +7,7 @@ const deflateRawAsync = promisify(deflateRaw);
 const inflateRawAsync = promisify(inflateRaw);
 
 /**
- * Implementation of the DEFLATE Compression Algorithm.
+ * Implementation of the DEFLATE JSON Web Encryption Compression Algorithm.
  */
 class DefCompressionAlgorithm extends JsonWebEncryptionCompressionAlgorithm {
   /**
@@ -39,6 +39,6 @@ class DefCompressionAlgorithm extends JsonWebEncryptionCompressionAlgorithm {
 }
 
 /**
- * DEFLATE Compression Algorithm.
+ * JSON Web Encryption **DEFLATE** Compression Algorithm.
  */
 export const DEF = new DefCompressionAlgorithm();

@@ -3,21 +3,15 @@ import { Optional } from '@guarani/types';
 import { InvalidJsonWebEncryptionException } from '../exceptions/invalid-json-web-encryption.exception';
 import { JoseException } from '../exceptions/jose.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
-import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from './algorithm/alg/jsonwebencryption-keywrap-algorithms-registry';
-import { JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY } from './algorithm/enc/jsonwebencryption-contentencryption-algorithms-registry';
-import { JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY } from './algorithm/zip/jsonwebencryption-compression-algorithms-registry';
+import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from './algorithms/alg/jsonwebencryption-keywrap-algorithms-registry';
+import { JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY } from './algorithms/enc/jsonwebencryption-contentencryption-algorithms-registry';
+import { JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY } from './algorithms/zip/jsonwebencryption-compression-algorithms-registry';
 import { JsonWebEncryptionHeaderParams } from './jsonwebencryption-header.params';
 import { JsonWebEncryptionHeader } from './jsonwebencryption.header';
 import { CompactDecodeParams } from './types/compact-decode.params';
 
 /**
- * Implementation of RFC 7516.
- *
- * The **JSON Web Encryption** is used for transporting encrypted data on the network,
- * providing confidentiality of the information.
- *
- * This implementation provides a set of attributes to represent the state of the information,
- * as well as segregating the header from the plaintext, which in turn facilitates the use of any of them.
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7516.html RFC 7516}.
  */
 export class JsonWebEncryption {
   /**
@@ -36,7 +30,7 @@ export class JsonWebEncryption {
    * @param header JSON Web Encryption Header.
    * @param plaintext String to be used as the Plaintext.
    */
-  public constructor(header: JsonWebEncryptionHeaderParams, plaintext: Optional<string>);
+  public constructor(header: JsonWebEncryptionHeaderParams, plaintext?: Optional<string>);
 
   /**
    * Instantiates a new JSON Web Encryption based on the provided JSON Web Encryption Header and Plaintext.
@@ -44,7 +38,7 @@ export class JsonWebEncryption {
    * @param header JSON Web Encryption Header.
    * @param plaintext Buffer to be used as the Plaintext.
    */
-  public constructor(header: JsonWebEncryptionHeaderParams, plaintext: Optional<Buffer>);
+  public constructor(header: JsonWebEncryptionHeaderParams, plaintext?: Optional<Buffer>);
 
   /**
    * Instantiates a new JSON Web Encryption based on the provided JSON Web Encryption Header and Plaintext.
@@ -53,7 +47,7 @@ export class JsonWebEncryption {
    * @param plaintext Data to be used as the Plaintext.
    */
   public constructor(header: JsonWebEncryptionHeaderParams, plaintext?: Optional<string | Buffer>) {
-    if (plaintext !== undefined && !Buffer.isBuffer(plaintext)) {
+    if (plaintext !== undefined && typeof plaintext !== 'string' && !Buffer.isBuffer(plaintext)) {
       throw new TypeError('Invalid JSON Web Encryption Plaintext.');
     }
 

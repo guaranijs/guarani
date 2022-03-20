@@ -123,16 +123,16 @@ class CBCHS2ContentEncryptionAlgorithm extends JsonWebEncryptionContentEncryptio
 }
 
 /**
- * AES_128_CBC_HMAC_SHA_256 Required authenticated encryption algorithm.
+ * AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm.
  */
 export const A128CBC_HS256 = new CBCHS2ContentEncryptionAlgorithm('A128CBC-HS256');
 
 /**
- * AES_192_CBC_HMAC_SHA_384 Required authenticated encryption algorithm.
+ * AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm.
  */
 export const A192CBC_HS384 = new CBCHS2ContentEncryptionAlgorithm('A192CBC-HS384');
 
 /**
- * AES_256_CBC_HMAC_SHA_512 Required authenticated encryption algorithm.
+ * AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm.
  */
 export const A256CBC_HS512 = new CBCHS2ContentEncryptionAlgorithm('A256CBC-HS512');

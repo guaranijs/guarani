@@ -125,16 +125,16 @@ export class AesGcmKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
 }
 
 /**
- * Key wrapping with AES Galois/Counter Mode using 128-bit key.
+ * Key wrapping with AES GCM using 128-bit key.
  */
 export const A128GCMKW = new AesGcmKeyWrapAlgorithm('A128GCMKW');
 
 /**
- * Key wrapping with AES Galois/Counter Mode using 192-bit key.
+ * Key wrapping with AES GCM using 192-bit key.
  */
 export const A192GCMKW = new AesGcmKeyWrapAlgorithm('A192GCMKW');
 
 /**
- * Key wrapping with AES Galois/Counter Mode using 256-bit key.
+ * Key wrapping with AES GCM using 256-bit key.
  */
 export const A256GCMKW = new AesGcmKeyWrapAlgorithm('A256GCMKW');

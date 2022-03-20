@@ -93,16 +93,16 @@ export class AesKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
 }
 
 /**
- * Key wrapping with AES using 128-bit key.
+ * AES Key Wrap with default initial value using 128-bit key.
  */
 export const A128KW = new AesKeyWrapAlgorithm('A128KW');
 
 /**
- * Key wrapping with AES using 192-bit key.
+ * AES Key Wrap with default initial value using 192-bit key.
  */
 export const A192KW = new AesKeyWrapAlgorithm('A192KW');
 
 /**
- * Key wrapping with AES using 256-bit key.
+ * AES Key Wrap with default initial value using 256-bit key.
  */
 export const A256KW = new AesKeyWrapAlgorithm('A256KW');

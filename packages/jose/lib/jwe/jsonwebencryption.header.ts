@@ -4,23 +4,16 @@ import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.ex
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { JoseHeader } from '../jose.header';
 import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithm/alg/supported-jsonwebencryption-keyencryption-algorithm';
-import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from './algorithm/alg/jsonwebencryption-keywrap-algorithms-registry';
-import { JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY } from './algorithm/enc/jsonwebencryption-contentencryption-algorithms-registry';
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './algorithm/enc/supported-jsonwebencryption-contentencryption-algorithm';
-import { JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY } from './algorithm/zip/jsonwebencryption-compression-algorithms-registry';
-import { SupportedJsonWebEncryptionCompressionAlgorithm } from './algorithm/zip/supported-jsonwebencryption-compression-algorithm';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithms/alg/supported-jsonwebencryption-keyencryption-algorithm';
+import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from './algorithms/alg/jsonwebencryption-keywrap-algorithms-registry';
+import { JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY } from './algorithms/enc/jsonwebencryption-contentencryption-algorithms-registry';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './algorithms/enc/supported-jsonwebencryption-contentencryption-algorithm';
+import { JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY } from './algorithms/zip/jsonwebencryption-compression-algorithms-registry';
+import { SupportedJsonWebEncryptionCompressionAlgorithm } from './algorithms/zip/supported-jsonwebencryption-compression-algorithm';
 import { JsonWebEncryptionHeaderParams } from './jsonwebencryption-header.params';
 
 /**
- * Implementation of RFC 7516.
- *
- * This is the implementation of the Header of the Json Web Encryption.
- * It provides validation for the default parameters of the JOSE header.
- *
- * The JOSE Header is a JSON object that provides information on how to
- * manipulate the plaintext of the message, such as permitted algorithms
- * and the keys to be used in encrypting and decrypting the plaintext.
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7516.html#section-4 RFC 7516 Section 4}.
  */
 export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryptionHeaderParams {
   /**
@@ -29,12 +22,12 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryp
   public readonly alg!: SupportedJsonWebEncryptionKeyWrapAlgorithm;
 
   /**
-   * JSON Web Encryption Content Encryption Algorithm used to Encrypt and Decrypt the Payload of the Token.
+   * JSON Web Encryption Content Encryption Algorithm used to Encrypt and Decrypt the Plaintext of the Token.
    */
   public readonly enc!: SupportedJsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
-   * JSON Web Encryption Compression Algorithm used to Compress and Decompress the Plaintext Content of the Token.
+   * JSON Web Encryption Compression Algorithm used to Compress and Decompress the Plaintext of the Token.
    */
   public readonly zip?: Optional<SupportedJsonWebEncryptionCompressionAlgorithm>;
 
@@ -84,7 +77,7 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryp
   public readonly cty?: Optional<string>;
 
   /**
-   * Defines the parameters that MUST be present in the JOSE Header.
+   * Defines the parameters that MUST be present in the JSON Web Encryption Header.
    */
   public readonly crit?: Optional<string[]>;
 
@@ -132,7 +125,7 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryp
   }
 
   /**
-   * Checks if the provided object conforms to the JSON Web Encryption Header signature.
+   * Checks if the provided object conforms to the JSON Web Encryption Header Specification.
    *
    * @param data Object to be inspected.
    */

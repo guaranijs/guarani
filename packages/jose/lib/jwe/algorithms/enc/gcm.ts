@@ -5,7 +5,7 @@ import { AuthenticatedEncryption } from './authenticated-encryption';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-contentencryption.algorithm';
 
 /**
- * Implementation of the AES Galois/Counter Mode JSON Web Encryption Content Encryption Algorithm.
+ * Implementation of the AES-GCM JSON Web Encryption Content Encryption Algorithm.
  */
 class AESGCMContentEncryptionAlgorithm extends JsonWebEncryptionContentEncryptionAlgorithm {
   /**
@@ -19,8 +19,7 @@ class AESGCMContentEncryptionAlgorithm extends JsonWebEncryptionContentEncryptio
   private readonly cipherAlgorithm: CipherGCMTypes;
 
   /**
-   * Instantiates a new AES Galois/Counter Mode JSON Web Encryption Content Encryption
-   * to Encrypt and Decrypt a Plaintext.
+   * Instantiates a new AES-GCM JSON Web Encryption Content Encryption to Encrypt and Decrypt a Plaintext.
    *
    * @param algorithm Name of the JSON Web Encryption Content Encryption Algorithm.
    */

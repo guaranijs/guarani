@@ -98,16 +98,16 @@ export const RSA1_5 = new RsaKeyWrapAlgorithm('RSA1_5', RsaPadding.PKCS1);
 export const RSA_OAEP = new RsaKeyWrapAlgorithm('RSA-OAEP', RsaPadding.OAEP, 'SHA1');
 
 /**
- * RSAES OAEP using SHA256 and MGF1 with SHA256.
+ * RSAES OAEP using SHA-256 and MGF1 with SHA-256.
  */
 export const RSA_OAEP_256 = new RsaKeyWrapAlgorithm('RSA-OAEP-256', RsaPadding.OAEP, 'SHA256');
 
 /**
- * RSAES OAEP using SHA384 and MGF1 with SHA384.
+ * RSAES OAEP using SHA-384 and MGF1 with SHA-384.
  */
 export const RSA_OAEP_384 = new RsaKeyWrapAlgorithm('RSA-OAEP-384', RsaPadding.OAEP, 'SHA384');
 
 /**
- * RSAES OAEP using SHA512 and MGF1 with SHA512.
+ * RSAES OAEP using SHA-512 and MGF1 with SHA-512.
  */
 export const RSA_OAEP_512 = new RsaKeyWrapAlgorithm('RSA-OAEP-512', RsaPadding.OAEP, 'SHA512');

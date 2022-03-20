@@ -9,14 +9,7 @@ import { JsonWebSignatureHeaderParams } from './jsonwebsignature-header.params';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 
 /**
- * Implementation of RFC 7515.
- *
- * The **JSON Web Signature** is used for transporting data on the network,
- * providing a signature that guarantees the integrity of the information.
- *
- * This implementation provides a set of attributes to represent the state
- * of the information, as well as segregating the header from the payload,
- * which in turn facilitates the use of any of them.
+ * Implementation of {@link RFC 7515}.
  */
 export class JsonWebSignature {
   /**

@@ -1,9 +1,10 @@
 import { SupportedJsonWebEncryptionCompressionAlgorithm } from './supported-jsonwebencryption-compression-algorithm';
 
 /**
- * This class provides the expected **Plaintext Compression Algorithms** that will be used throughout the package.
+ * Abstract Base Class for the JSON Web Encryption Compression Algorithms.
  *
- * All JSON Web Encryption Compression Algorithms **MUST** inherit from this class and implement its methods.
+ * All JSON Web Encryption Compression Algorithms supported by Guarani **MUST** extend this base class
+ * and implement its abstract methods.
  */
 export abstract class JsonWebEncryptionCompressionAlgorithm {
   /**
@@ -14,7 +15,7 @@ export abstract class JsonWebEncryptionCompressionAlgorithm {
   /**
    * Instantiates a new JSON Web Encryption Compression Algorithm to Compress and Decompress a Plaintext.
    *
-   * @param algorithm Name of the JSON Web Encryption Content Encryption Algorithm.
+   * @param algorithm Name of the JSON Web Encryption Compression Algorithm.
    */
   public constructor(algorithm: SupportedJsonWebEncryptionCompressionAlgorithm) {
     this.algorithm = algorithm;

@@ -15,16 +15,21 @@ import { JsonWebKey } from '../../jsonwebkey';
 import { JsonWebKeyParams } from '../../jsonwebkey.params';
 import { EcKeyParams } from './ec-key.params';
 import { ELLIPTIC_CURVES_REGISTRY } from './elliptic-curves-registry';
-import { ExportEcKeyOptions } from './export-ec-key.options';
-import { GenerateEcKeyOptions } from './generate-ec-key.options';
 import { SupportedEllipticCurve } from './supported-elliptic-curve';
-import { ExportEcKeyEncoding, ExportEcKeyFormat, ExportEcKeyType } from './types';
+import { ExportEcKeyEncoding } from './types/export-ec-key-encoding';
+import { ExportEcKeyFormat } from './types/export-ec-key-format';
+import { ExportEcKeyType } from './types/export-ec-key-type';
+import { ExportEcKeyOptions } from './types/export-ec-key.options';
+import { GenerateEcKeyOptions } from './types/generate-ec-key.options';
 
 const generateKeyPairAsync = promisify(generateKeyPair);
 
+/**
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7518.html#section-6.2 RFC 7518 Section 6.2}.
+ */
 export class EcKey extends JsonWebKey implements EcKeyParams {
   /**
-   * Key type representing the algorithm of the key.
+   * Type of the JSON Web Key.
    */
   public readonly kty!: 'EC';
 
@@ -49,9 +54,9 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
   public readonly d?: Optional<string>;
 
   /**
-   * Instantiates an EcKey based on the provided parameters.
+   * Instantiates an Elliptic Curve JSON Web Key based on the provided Parameters.
    *
-   * @param key Parameters of the key.
+   * @param key Parameters of the Elliptic Curve JSON Web Key.
    * @param options Optional JSON Web Key Parameters.
    */
   public constructor(key: EcKeyParams, options: Optional<JsonWebKeyParams> = {}) {
@@ -89,11 +94,11 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
   }
 
   /**
-   * Generates a new EcKey.
+   * Generates a new Elliptic Curve JSON Web Key.
    *
-   * @param options Options for the generation of the EcKey.
+   * @param options Options for the generation of the Elliptic Curve JSON Web Key.
    * @param params Optional JSON Web Key Parameters.
-   * @returns Generated EcKey.
+   * @returns Generated Elliptic Curve JSON Web Key.
    */
   public static async generate(options: GenerateEcKeyOptions, params: Optional<JsonWebKeyParams> = {}): Promise<EcKey> {
     const { curve } = options;
@@ -121,58 +126,58 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
   }
 
   /**
-   * Exports the SEC 1 Elliptic Curve Private Key DER Encoding of the EcKey.
+   * Exports the SEC 1 Elliptic Curve Private Key DER Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param options Options for exporting the data of the EcKey.
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
    * @returns DER Encoded SEC 1 Elliptic Curve Private Key.
    */
   public export(options: ExportEcKeyOptions<'der', 'sec1', 'private'>): Buffer;
 
   /**
-   * Exports the SEC 1 Elliptic Curve Private Key PEM Encoding of the EcKey.
+   * Exports the SEC 1 Elliptic Curve Private Key PEM Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param options Options for exporting the data of the EcKey.
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
    * @returns PEM Encoded SEC 1 Elliptic Curve Private Key.
    */
   public export(options: ExportEcKeyOptions<'pem', 'sec1', 'private'>): string;
 
   /**
-   * Exports the PKCS#8 Elliptic Curve Private Key DER Encoding of the EcKey.
+   * Exports the PKCS#8 Elliptic Curve Private Key DER Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param options Options for exporting the data of the EcKey.
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
    * @returns DER Encoded PKCS#8 Elliptic Curve Private Key.
    */
   public export(options: ExportEcKeyOptions<'der', 'pkcs8', 'private'>): Buffer;
 
   /**
-   * Exports the PKCS#8 Elliptic Curve Private Key PEM Encoding of the EcKey.
+   * Exports the PKCS#8 Elliptic Curve Private Key PEM Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param options Options for exporting the data of the EcKey.
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
    * @returns PEM Encoded PKCS#8 Elliptic Curve Private Key.
    */
   public export(options: ExportEcKeyOptions<'pem', 'pkcs8', 'private'>): string;
 
   /**
-   * Exports the SPKI Elliptic Curve Public Key DER Encoding of the EcKey.
+   * Exports the SPKI Elliptic Curve Public Key DER Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param options Options for exporting the data of the EcKey.
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
    * @returns DER Encoded SPKI Elliptic Curve Public Key.
    */
   public export(options: ExportEcKeyOptions<'der', 'spki', 'public'>): Buffer;
 
   /**
-   * Exports the SPKI Elliptic Curve Public Key PEM Encoding of the EcKey.
+   * Exports the SPKI Elliptic Curve Public Key PEM Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param options Options for exporting the data of the EcKey.
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
    * @returns PEM Encoded SPKI Elliptic Curve Public Key.
    */
   public export(options: ExportEcKeyOptions<'pem', 'spki', 'public'>): string;
 
   /**
-   * Exports the data of the EcKey.
+   * Exports the data of the Elliptic Curve JSON Web Key.
    *
-   * @param options Options for exporting the data of the EcKey.
-   * @returns Encoded data of the EcKey.
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
+   * @returns Encoded data of the Elliptic Curve JSON Web Key.
    */
   public export<E extends ExportEcKeyEncoding, F extends ExportEcKeyFormat, T extends ExportEcKeyType>(
     options: ExportEcKeyOptions<E, F, T>

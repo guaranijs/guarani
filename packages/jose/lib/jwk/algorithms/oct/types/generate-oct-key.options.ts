@@ -1,5 +1,5 @@
 /**
- * OctKey generation options.
+ * Options for Generating an Octet Sequence JSON Web Key.
  */
 export interface GenerateOctKeyOptions {
   /**

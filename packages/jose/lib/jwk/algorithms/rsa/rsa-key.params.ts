@@ -3,11 +3,11 @@ import { Optional } from '@guarani/types';
 import { JsonWebKeyParams } from '../../jsonwebkey.params';
 
 /**
- * Parameters of the RSA Key.
+ * Parameters of the RSA JSON Web Key.
  */
 export interface RsaKeyParams extends JsonWebKeyParams {
   /**
-   * Key type representing the algorithm of the key.
+   * Type of the JSON Web Key.
    */
   readonly kty: 'RSA';
 

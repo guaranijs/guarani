@@ -1,56 +1,58 @@
 import { Optional } from '@guarani/types';
 
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from '../jwe/algorithms/alg/supported-jsonwebencryption-keyencryption-algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from '../jws/algorithms/supported-jsonwebsignature-algorithm';
 import { SupportedJsonWebKeyAlgorithm } from './algorithms/supported-jsonwebkey-algorithm';
+import { PublicKeyUse } from './types/public-key-use';
+import { KeyOperation } from './types/key-operation';
 
 /**
- * Interface defining the supported parameters of a JsonWebKey.
- *
- * The parameters defined here are the default ones defined by
- * {@link https://tools.ietf.org/html/rfc7517 RFC 7517}.
+ * Parameters of the JSON Web Key.
  */
 export interface JsonWebKeyParams {
   /**
-   * Key type representing the algorithm of the key.
+   * Type of the JSON Web Key.
    */
   readonly kty?: Optional<SupportedJsonWebKeyAlgorithm>;
 
   /**
-   * Defines the usage of the key.
+   * Indicates whether a Public JSON Web Key is used for Plaintext Encryption or Signature Verification.
    */
-  readonly use?: Optional<string>;
+  readonly use?: Optional<PublicKeyUse>;
 
   /**
-   * Defines the allowed operations to be performed with the key
+   * Operations for which the JSON Web Key are intended to be used.
    */
-  readonly key_ops?: Optional<string[]>;
+  readonly key_ops?: Optional<KeyOperation[]>;
 
   /**
-   * Defines the signature or encryption algorithm allowed to use this key.
+   * Defines the JSON Web Encryption Key Wrap Algorithm or JSON Web Signature Algorithm
+   * allowed to use this JSON Web Key.
    */
-  readonly alg?: Optional<string>;
+  readonly alg?: Optional<SupportedJsonWebEncryptionKeyWrapAlgorithm | SupportedJsonWebSignatureAlgorithm>;
 
   /**
-   * Defines the ID of the key.
+   * Defines the Identifier of the JSON Web Key.
    */
   readonly kid?: Optional<string>;
 
   /**
-   * Defines the URL of the X.509 certificate of the key.
+   * Defines the URL of the X.509 certificate of the JSON Web Key.
    */
   readonly x5u?: Optional<string>;
 
   /**
-   * Defines a chain of X.509 certificates of the key.
+   * Defines a chain of X.509 certificates of the JSON Web Key.
    */
   readonly x5c?: Optional<string[]>;
 
   /**
-   * Defines the SHA-1 Thumbprint of the X.509 certificate of the key.
+   * Defines the SHA-1 Thumbprint of the X.509 certificate of the JSON Web Key.
    */
   readonly x5t?: Optional<string>;
 
   /**
-   * Defines the SHA-256 Thumbprint of the X.509 certificate of the key.
+   * Defines the SHA-256 Thumbprint of the X.509 certificate of the JSON Web Key.
    */
   readonly 'x5t#S256'?: Optional<string>;
 

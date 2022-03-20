@@ -1,10 +1,13 @@
 import { Optional } from '@guarani/types';
 
 import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithm/alg/supported-jsonwebencryption-keyencryption-algorithm';
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './algorithm/enc/supported-jsonwebencryption-contentencryption-algorithm';
-import { SupportedJsonWebEncryptionCompressionAlgorithm } from './algorithm/zip/supported-jsonwebencryption-compression-algorithm';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithms/alg/supported-jsonwebencryption-keyencryption-algorithm';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './algorithms/enc/supported-jsonwebencryption-contentencryption-algorithm';
+import { SupportedJsonWebEncryptionCompressionAlgorithm } from './algorithms/zip/supported-jsonwebencryption-compression-algorithm';
 
+/**
+ * Parameters of the JSON Web Encryption Header.
+ */
 export interface JsonWebEncryptionHeaderParams {
   /**
    * JSON Web Encryption Key Wrap Algorithm used to Wrap and Unwrap the Content Encryption Key.
@@ -12,47 +15,47 @@ export interface JsonWebEncryptionHeaderParams {
   readonly alg: SupportedJsonWebEncryptionKeyWrapAlgorithm;
 
   /**
-   * JSON Web Encryption Content Encryption Algorithm used to Encrypt and Decrypt the Payload of the Token.
+   * JSON Web Encryption Content Encryption Algorithm used to Encrypt and Decrypt the Plaintext of the Token.
    */
   readonly enc: SupportedJsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
-   * JSON Web Encryption Compression Algorithm used to Compress and Decompress the Plaintext Content of the Token.
+   * JSON Web Encryption Compression Algorithm used to Compress and Decompress the Plaintext of the Token.
    */
   readonly zip?: Optional<SupportedJsonWebEncryptionCompressionAlgorithm>;
 
   /**
-   * URI of a Set of Public JSON Web Keys that contains the JSON Web Key used to Sign the Token.
+   * URI of a Set of Public JSON Web Keys that contains the JSON Web Key used to Encrypt the Token.
    */
   readonly jku?: Optional<string>;
 
   /**
-   * JSON Web Key used to Sign the Token.
+   * JSON Web Key used to Encrypt the Token.
    */
   readonly jwk?: Optional<JsonWebKeyParams>;
 
   /**
-   * Identifier of the JSON Web Key used to Sign the Token.
+   * Identifier of the JSON Web Key used to Encrypt the Token.
    */
   readonly kid?: Optional<string>;
 
   /**
-   * URI of the X.509 certificate of the JSON Web Key used to Sign the Token.
+   * URI of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
   readonly x5u?: Optional<string>;
 
   /**
-   * Chain of X.509 certificates of the JSON Web Key used to Sign the Token.
+   * Chain of X.509 certificates of the JSON Web Key used to Encrypt the Token.
    */
   readonly x5c?: Optional<string[]>;
 
   /**
-   * SHA-1 Thumbprint of the X.509 certificate of the JSON Web Key used to Sign the Token.
+   * SHA-1 Thumbprint of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
   readonly x5t?: Optional<string>;
 
   /**
-   * SHA-256 Thumbprint of the X.509 certificate of the JSON Web Key used to Sign the Token.
+   * SHA-256 Thumbprint of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
   readonly 'x5t#S256'?: Optional<string>;
 
@@ -67,7 +70,7 @@ export interface JsonWebEncryptionHeaderParams {
   readonly cty?: Optional<string>;
 
   /**
-   * Defines the parameters that MUST be present in the JOSE Header.
+   * Defines the parameters that MUST be present in the JSON Web Encryption Header.
    */
   readonly crit?: Optional<string[]>;
 

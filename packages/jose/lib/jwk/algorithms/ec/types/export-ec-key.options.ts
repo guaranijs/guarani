@@ -1,7 +1,9 @@
-import { ExportEcKeyEncoding, ExportEcKeyFormat, ExportEcKeyType } from './types';
+import { ExportEcKeyEncoding } from './export-ec-key-encoding';
+import { ExportEcKeyFormat } from './export-ec-key-format';
+import { ExportEcKeyType } from './export-ec-key-type';
 
 /**
- * Options for exporting an Elliptic Curve Key.
+ * Options for Exporting an Elliptic Curve JSON Web Key.
  */
 export interface ExportEcKeyOptions<
   E extends ExportEcKeyEncoding,

@@ -8,11 +8,10 @@ import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './supporte
 const randomBytesAsync = promisify(randomBytes);
 
 /**
- * Implementation of the Section 5 of RFC 7518.
+ * Abstract Base Class for {@link https://www.rfc-editor.org/rfc/rfc7518.html#section-5 RFC 7518 Section 5}.
  *
- * This class provides the expected **Content Encryption Algorithms** that will be used throughout the package.
- *
- * All JWE Encryptions **MUST** inherit from this class and implement its methods.
+ * All JSON Web Encryption Content Encryption Algorithms supported by Guarani **MUST** extend this base class
+ * and implement its abstract methods.
  */
 export abstract class JsonWebEncryptionContentEncryptionAlgorithm {
   /**
@@ -58,9 +57,10 @@ export abstract class JsonWebEncryptionContentEncryptionAlgorithm {
   }
 
   /**
-   * Validates if the provided Initialization Vector is valid to the algorithm.
+   * Checks if the provided Initialization Vector can be used by the JSON Web Encryption Content Encryption Algorithm.
    *
-   * @param iv Initialization Vector to be validated.
+   * @param iv Initialization Vector to be checked.
+   * @throws {InvalidJsonWebEncryptionException} The provided Initialization Vector is invalid.
    */
   protected validateInitializationVector(iv: Buffer): void {
     if (iv.length * 8 !== this.ivSize) {
@@ -69,10 +69,10 @@ export abstract class JsonWebEncryptionContentEncryptionAlgorithm {
   }
 
   /**
-   * Checks if a key can be used by the requesting algorithm.
+   * Checks if the provided Content Encryption Key can be used by the JSON Web Encryption Content Encryption Algorithm.
    *
-   * @param key Key to be checked.
-   * @throws {InvalidJsonWebEncryptionException} The provided key is invalid.
+   * @param key Content Encryption Key to be checked.
+   * @throws {InvalidJsonWebEncryptionException} The provided Content Encryption Key is invalid.
    */
   public validateContentEncryptionKey(key: Buffer): void {
     if (!Buffer.isBuffer(key) || key.length * 8 !== this.cekSize) {

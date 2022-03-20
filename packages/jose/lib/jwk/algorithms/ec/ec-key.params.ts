@@ -4,11 +4,11 @@ import { JsonWebKeyParams } from '../../jsonwebkey.params';
 import { SupportedEllipticCurve } from './supported-elliptic-curve';
 
 /**
- * Parameters of the Elliptic Curve Key.
+ * Parameters of the Elliptic Curve JSON Web Key.
  */
 export interface EcKeyParams extends JsonWebKeyParams {
   /**
-   * Key type representing the algorithm of the key.
+   * Type of the JSON Web Key.
    */
   readonly kty: 'EC';
 

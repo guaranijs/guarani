@@ -1,7 +1,7 @@
-import { SupportedEllipticCurve } from './supported-elliptic-curve';
+import { SupportedEllipticCurve } from '../supported-elliptic-curve';
 
 /**
- * RsaKey generation options.
+ * Options for Generating an Elliptic Curve JSON Web Key.
  */
 export interface GenerateEcKeyOptions {
   /**

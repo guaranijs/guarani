@@ -88,16 +88,16 @@ class EcdsaAlgorithm extends JsonWebSignatureAlgorithm {
 }
 
 /**
- * JSON Web Signature **ES256** Algorithm.
+ * ECDSA using P-256 and SHA-256.
  */
 export const ES256 = new EcdsaAlgorithm('SHA256', 'ES256', 'P-256');
 
 /**
- * JSON Web Signature **ES384** Algorithm.
+ * ECDSA using P-384 and SHA-384.
  */
 export const ES384 = new EcdsaAlgorithm('SHA384', 'ES384', 'P-384');
 
 /**
- * JSON Web Signature **ES512** Algorithm.
+ * ECDSA using P-521 and SHA-512.
  */
 export const ES512 = new EcdsaAlgorithm('SHA512', 'ES512', 'P-521');

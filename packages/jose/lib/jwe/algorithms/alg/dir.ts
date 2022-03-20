@@ -57,6 +57,6 @@ class DirKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
 }
 
 /**
- * Direct Encryption with a Shared Symmetric Key.
+ * Direct use of a shared symmetric key as the CEK.
  */
 export const dir = new DirKeyWrapAlgorithm();

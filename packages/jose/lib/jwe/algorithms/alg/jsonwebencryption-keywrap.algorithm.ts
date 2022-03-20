@@ -8,11 +8,10 @@ import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './supported-jsonwebe
 import { WrappedKey } from './types/wrapped-key';
 
 /**
- * Implementation of the Section 4 of RFC 7518.
+ * Abstract Base Class for {@link https://www.rfc-editor.org/rfc/rfc7518.html#section-4 RFC 7518 Section 4}.
  *
- * This class provides the expected **Key Wrapping Algorithms** that will be used throughout the package.
- *
- * All JWE Algorithms **MUST** inherit from this class and implement its methods.
+ * All JSON Web Encryption Key Wrap Algorithms supported by Guarani **MUST** extend this base class
+ * and implement its abstract methods.
  */
 export abstract class JsonWebEncryptionKeyWrapAlgorithm {
   /**

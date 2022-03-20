@@ -1,5 +1,5 @@
 /**
- * Interface of the additional header parameters of the AES-GCM-KW Algorithm.
+ * Additional JSON Web Encryption Header Parameters for the AES-GCM JSON Web Encryption Key Wrap Algorithm.
  */
 export interface AesGcmWrappedKeyParams {
   /**

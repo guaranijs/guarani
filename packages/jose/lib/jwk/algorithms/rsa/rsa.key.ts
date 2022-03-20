@@ -20,9 +20,12 @@ import { ExportRsaKeyEncoding, ExportRsaKeyFormat, ExportRsaKeyType } from './ty
 
 const generateKeyPairAsync = promisify(generateKeyPair);
 
+/**
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7518.html#section-6.3 RFC 7518 Section 6.3}.
+ */
 export class RsaKey extends JsonWebKey implements RsaKeyParams {
   /**
-   * Key type representing the algorithm of the key.
+   * Type of the JSON Web Key.
    */
   public readonly kty!: 'RSA';
 
@@ -67,9 +70,9 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
   public readonly qi?: Optional<string>;
 
   /**
-   * Instantiates an RsaKey based on the provided parameters.
+   * Instantiates an RSA JSON Web Key based on the provided Parameters.
    *
-   * @param key Parameters of the key.
+   * @param key Parameters of the RSA JSON Web Key.
    * @param options Optional JSON Web Key Parameters.
    */
   public constructor(key: RsaKeyParams, options: Optional<JsonWebKeyParams> = {}) {
@@ -126,11 +129,11 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
   }
 
   /**
-   * Generates a new RsaKey.
+   * Generates a new RSA JSON Web Key.
    *
-   * @param options Options for the generation of the RsaKey.
+   * @param options Options for the generation of the RSA JSON Web Key.
    * @param params Optional JSON Web Key Parameters.
-   * @returns Generated RsaKey.
+   * @returns Generated RSA JSON Web Key.
    */
   public static async generate(
     options: GenerateRsaKeyOptions,
@@ -167,74 +170,74 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
   }
 
   /**
-   * Exports the PKCS#1 RSA Private Key DER Encoding of the RsaKey.
+   * Exports the PKCS#1 RSA Private Key DER Encoding of the RSA JSON Web Key.
    *
-   * @param options Options for exporting the data of the RsaKey.
+   * @param options Options for exporting the data of the RSA JSON Web Key.
    * @returns DER Encoded PKCS#1 RSA Private Key.
    */
   public export(options: ExportRsaKeyOptions<'der', 'pkcs1', 'private'>): Buffer;
 
   /**
-   * Exports the PKCS#1 RSA Private Key PEM Encoding of the RsaKey.
+   * Exports the PKCS#1 RSA Private Key PEM Encoding of the RSA JSON Web Key.
    *
-   * @param options Options for exporting the data of the RsaKey.
+   * @param options Options for exporting the data of the RSA JSON Web Key.
    * @returns PEM Encoded PKCS#1 RSA Private Key.
    */
   public export(options: ExportRsaKeyOptions<'pem', 'pkcs1', 'private'>): string;
 
   /**
-   * Exports the PKCS#8 RSA Private Key DER Encoding of the RsaKey.
+   * Exports the PKCS#8 RSA Private Key DER Encoding of the RSA JSON Web Key.
    *
-   * @param options Options for exporting the data of the RsaKey.
+   * @param options Options for exporting the data of the RSA JSON Web Key.
    * @returns DER Encoded PKCS#8 RSA Private Key.
    */
   public export(options: ExportRsaKeyOptions<'der', 'pkcs8', 'private'>): Buffer;
 
   /**
-   * Exports the PKCS#8 RSA Private Key PEM Encoding of the RsaKey.
+   * Exports the PKCS#8 RSA Private Key PEM Encoding of the RSA JSON Web Key.
    *
-   * @param options Options for exporting the data of the RsaKey.
+   * @param options Options for exporting the data of the RSA JSON Web Key.
    * @returns PEM Encoded PKCS#8 RSA Private Key.
    */
   public export(options: ExportRsaKeyOptions<'pem', 'pkcs8', 'private'>): string;
 
   /**
-   * Exports the PKCS#1 RSA Public Key DER Encoding of the RsaKey.
+   * Exports the PKCS#1 RSA Public Key DER Encoding of the RSA JSON Web Key.
    *
-   * @param options Options for exporting the data of the RsaKey.
+   * @param options Options for exporting the data of the RSA JSON Web Key.
    * @returns DER Encoded PKCS#1 RSA Public Key.
    */
   public export(options: ExportRsaKeyOptions<'der', 'pkcs1', 'public'>): Buffer;
 
   /**
-   * Exports the PKCS#1 RSA Public Key PEM Encoding of the RsaKey.
+   * Exports the PKCS#1 RSA Public Key PEM Encoding of the RSA JSON Web Key.
    *
-   * @param options Options for exporting the data of the RsaKey.
+   * @param options Options for exporting the data of the RSA JSON Web Key.
    * @returns PEM Encoded PKCS#1 RSA Public Key.
    */
   public export(options: ExportRsaKeyOptions<'pem', 'pkcs1', 'public'>): string;
 
   /**
-   * Exports the SPKI RSA Public Key DER Encoding of the RsaKey.
+   * Exports the SPKI RSA Public Key DER Encoding of the RSA JSON Web Key.
    *
-   * @param options Options for exporting the data of the RsaKey.
+   * @param options Options for exporting the data of the RSA JSON Web Key.
    * @returns DER Encoded SPKI RSA Public Key.
    */
   public export(options: ExportRsaKeyOptions<'der', 'spki', 'public'>): Buffer;
 
   /**
-   * Exports the SPKI RSA Public Key PEM Encoding of the RsaKey.
+   * Exports the SPKI RSA Public Key PEM Encoding of the RSA JSON Web Key.
    *
-   * @param options Options for exporting the data of the RsaKey.
+   * @param options Options for exporting the data of the RSA JSON Web Key.
    * @returns PEM Encoded SPKI RSA Public Key.
    */
   public export(options: ExportRsaKeyOptions<'pem', 'spki', 'public'>): string;
 
   /**
-   * Exports the data of the RsaKey.
+   * Exports the data of the RSA JSON Web Key.
    *
-   * @param options Options for exporting the data of the RsaKey.
-   * @returns Encoded data of the RsaKey.
+   * @param options Options for exporting the data of the RSA JSON Web Key.
+   * @returns Encoded data of the RSA JSON Web Key.
    */
   public export<E extends ExportRsaKeyEncoding, F extends ExportRsaKeyFormat, T extends ExportRsaKeyType>(
     options: ExportRsaKeyOptions<E, F, T>

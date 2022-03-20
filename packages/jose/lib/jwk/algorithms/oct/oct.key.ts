@@ -6,16 +6,19 @@ import { promisify } from 'util';
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
 import { JsonWebKey } from '../../jsonwebkey';
 import { JsonWebKeyParams } from '../../jsonwebkey.params';
-import { ExportOctKeyOptions } from './export-oct-key.options';
-import { GenerateOctKeyOptions } from './generate-oct-key.options';
 import { OctKeyParams } from './oct-key.params';
-import { ExportOctKeyEncoding, SUPPORTED_OCTKEY_ENCODINGS } from './types';
+import { ExportOctKeyEncoding } from './types/export-oct-key-encoding';
+import { ExportOctKeyOptions } from './types/export-oct-key.options';
+import { GenerateOctKeyOptions } from './types/generate-oct-key.options';
 
 const randomBytesAsync = promisify(randomBytes);
 
+/**
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7518.html#section-6.4 RFC 7518 Section 6.4}.
+ */
 export class OctKey extends JsonWebKey implements OctKeyParams {
   /**
-   * Key type representing the algorithm of the key.
+   * Type of the JSON Web Key.
    */
   public readonly kty!: 'oct';
 
@@ -25,9 +28,9 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
   public readonly k!: string;
 
   /**
-   * Instantiates an OctKey based on the provided parameters.
+   * Instantiates an Octet Sequence JSON Web Key based on the provided Parameters.
    *
-   * @param key Parameters of the key.
+   * @param key Parameters of the Octet Sequence JSON Web Key.
    * @param options Optional JSON Web Key Parameters.
    */
   public constructor(key: OctKeyParams, options: Optional<JsonWebKeyParams> = {}) {
@@ -53,11 +56,11 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
   }
 
   /**
-   * Generates a new OctKey.
+   * Generates a new Octet Sequence JSON Web Key.
    *
-   * @param options Options for the generation of the OctKey.
+   * @param options Options for the generation of the Octet Sequence JSON Web Key.
    * @param params Optional JSON Web Key Parameters.
-   * @returns Generated OctKey.
+   * @returns Generated Octet Sequence JSON Web Key.
    */
   public static async generate(
     options: GenerateOctKeyOptions,
@@ -89,33 +92,29 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
   }
 
   /**
-   * Exports the data of the OctKey into a String.
+   * Exports the data of the Octet Sequence JSON Web Key into a String.
    *
-   * @param options Options for exporting the data of the OctKey.
+   * @param options Options for exporting the data of the Octet Sequence JSON Web Key.
    * @returns Resulting String.
    */
   public export(options: ExportOctKeyOptions<globalThis.BufferEncoding>): string;
 
   /**
-   * Exports the data of the OctKey into a Buffer.
+   * Exports the data of the Octet Sequence JSON Web Key into a Buffer.
    *
-   * @param options Options for exporting the data of the OctKey.
+   * @param options Options for exporting the data of the Octet Sequence JSON Web Key.
    * @returns Resulting Buffer.
    */
   public export(options: ExportOctKeyOptions<'buffer'>): Buffer;
 
   /**
-   * Exports the data of the OctKey.
+   * Exports the data of the Octet Sequence JSON Web Key.
    *
-   * @param options Options for exporting the data of the OctKey.
+   * @param options Options for exporting the data of the Octet Sequence JSON Web Key.
    * @returns Resulting Object.
    */
   public export<T extends ExportOctKeyEncoding>(options: ExportOctKeyOptions<T>): string | Buffer {
     const { encoding } = options;
-
-    if (!SUPPORTED_OCTKEY_ENCODINGS.includes(encoding)) {
-      throw new TypeError('Invalid option "encoding".');
-    }
 
     const secret = this.cryptoKey.export();
 

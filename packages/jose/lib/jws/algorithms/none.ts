@@ -1,50 +1,45 @@
-import { Nullable } from '@guarani/types'
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Optional } from '@guarani/types';
 
-import type { JsonWebKey } from '../../jwk'
-import { JWSAlgorithm } from './jws-algorithm'
+import { SupportedJsonWebKeyAlgorithm } from '../../jwk/algorithms/supported-jsonwebkey-algorithm';
+import { JsonWebKey } from '../../jwk/jsonwebkey';
+import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
 
-/**
- * Implementation of the `none` algorithm.
- *
- * This algorithm provides an empty string as a signature,
- * and the verification of a signature always succeeds.
- *
- * It is **NOT RECOMMENDED** to use this algorithm in production.
- */
-class NoneAlgorithm extends JWSAlgorithm {
-  public readonly kty: Nullable<string> = null
+class NoneAlgorithm extends JsonWebSignatureAlgorithm {
+  /**
+   * Denotes the type of JSON Web Key supported by this JSON Web Signature Algorithm.
+   */
+  protected readonly keyType?: Optional<SupportedJsonWebKeyAlgorithm>;
 
+  /**
+   * Instantiates a new JSON Web Signature `none` Algorithm.
+   */
   public constructor() {
-    super(null, 'none')
+    super(null, 'none');
   }
 
   /**
-   * Returns an empty string as a signature.
+   * Signs a Message with the provided JSON Web Key.
    *
-   * @param message Message to be signed.
-   * @param key Key used to sign the message.
-   * @returns Empty string.
+   * @param message Message to be Signed.
+   * @param key JSON Web Key used to Sign the provided Message.
+   * @returns Resulting Signature of the provided Message.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async sign(message: Buffer, key?: JsonWebKey): Promise<string> {
-    return ''
+  public async sign(message: Buffer, key?: Optional<JsonWebKey>): Promise<Buffer> {
+    return Buffer.alloc(0);
   }
 
   /**
-   * Always successfully verifies the signature.
+   * Checks if the provided Signature matches the provided Message based on the provide JSON Web Key.
    *
-   * @param signature Signature to be matched against the message.
-   * @param message Message to be matched against the signature.
-   * @param key Key used to verify the signature.
+   * @param signature Signature to be matched against the provided Message.
+   * @param message Message to be matched against the provided Signature.
+   * @param key JSON Web Key used to verify the Signature and Message.
    */
-  public async verify(
-    signature: string, // eslint-disable-line @typescript-eslint/no-unused-vars
-    message: Buffer, // eslint-disable-line @typescript-eslint/no-unused-vars
-    key?: JsonWebKey // eslint-disable-line @typescript-eslint/no-unused-vars
-  ): Promise<void> {}
+  public async verify(signature: Buffer, message: Buffer, key?: Optional<JsonWebKey>): Promise<void> {}
 }
 
 /**
- * `none` algorithm.
+ * JSON Web Signature **none** Algorithm.
  */
-export const none = new NoneAlgorithm()
+export const none = new NoneAlgorithm();

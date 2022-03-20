@@ -1,4 +1,4 @@
-import { Dict } from '@guarani/types'
+import { Dict } from '@guarani/types';
 
 /**
  * Interface of the Content Encryption result.
@@ -7,12 +7,12 @@ export interface AuthenticatedEncryption {
   /**
    * Base64Url representation of the generated ciphertext.
    */
-  readonly ciphertext: string
+  readonly ciphertext: string;
 
   /**
    * Base64Url representation of the Authentication Tag.
    */
-  readonly tag: string
+  readonly tag: string;
 }
 
 /**
@@ -22,10 +22,10 @@ export interface WrappedKey<AdditionalJoseHeaderParams = Dict> {
   /**
    * Encrypted CEK.
    */
-  readonly ek: string
+  readonly ek: string;
 
   /**
    * Additional JWE JOSE Header parameters.
    */
-  readonly header?: AdditionalJoseHeaderParams
+  readonly header?: AdditionalJoseHeaderParams;
 }

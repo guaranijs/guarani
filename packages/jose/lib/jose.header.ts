@@ -1,5 +1,6 @@
-import { InvalidJoseHeaderException } from './exceptions';
-import { JsonWebKeyParams } from './jwk';
+import { InvalidJoseHeaderException } from './exceptions/invalid-jose-header.exception';
+import { SupportedJsonWebKeyAlgorithm } from './jwk/algorithms/supported-jsonwebkey-algorithm';
+import { JsonWebKeyParams } from './jwk/jsonwebkey.params';
 
 /**
  * Defines the parameters supported by the JOSE Header.
@@ -18,7 +19,7 @@ export interface JoseHeaderParams {
   /**
    * JSON Web Key used by the header.
    */
-  readonly jwk?: JsonWebKeyParams;
+  readonly jwk?: JsonWebKeyParams<SupportedJsonWebKeyAlgorithm>;
 
   /**
    * ID of the key used by the header.
@@ -99,7 +100,7 @@ export abstract class JoseHeader implements JoseHeaderParams {
   /**
    * JSON Web Key used by the header.
    */
-  public readonly jwk?: JsonWebKeyParams;
+  public readonly jwk?: JsonWebKeyParams<SupportedJsonWebKeyAlgorithm>;
 
   /**
    * ID of the key used by the header.

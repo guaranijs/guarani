@@ -1,288 +1,69 @@
 import { removeNullishValues } from '@guarani/objects';
 import { Dict, Optional } from '@guarani/types';
-
 import { KeyObject } from 'crypto';
-import { inspect } from 'util';
-
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-json-web-key.exception';
-import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
-import { EcKey } from '../jwa/jwk/ec/ec.key';
-import { ExportEcKeyOptions, GenerateEcKeyOptions } from '../jwa/jwk/ec/types';
-import { JsonWebKeyAlgorithm } from '../jwa/jwk/jsonwebkey.algorithm';
-import { OctKey } from '../jwa/jwk/oct/oct.key';
-import { ExportOctKeyOptions, GenerateOctKeyOptions } from '../jwa/jwk/oct/types';
-import { RsaKey } from '../jwa/jwk/rsa/rsa.key';
-import { ExportRsaKeyOptions, GenerateRsaKeyOptions } from '../jwa/jwk/rsa/types';
-import { JsonWebKeyOptions } from './jsonwebkey.options';
+import { SupportedJsonWebKeyAlgorithm } from './algorithms/supported-jsonwebkey-algorithm';
 import { JsonWebKeyParams } from './jsonwebkey.params';
 
-export class JsonWebKey {
-  private static readonly JWK_ALGORITHMS: Dict<JsonWebKeyAlgorithm> = {
-    EC: new EcKey(),
-    RSA: new RsaKey(),
-    oct: new OctKey(),
-  };
+export abstract class JsonWebKey<T extends SupportedJsonWebKeyAlgorithm = SupportedJsonWebKeyAlgorithm>
+  implements JsonWebKeyParams<T>
+{
+  /**
+   * NodeJS Key.
+   */
+  protected readonly cryptoKey!: KeyObject;
 
   /**
-   * NodeJS Key represented by the JSON Web Key.
+   * Key type representing the algorithm of the key.
    */
-  private readonly cryptoKey!: KeyObject;
+  public readonly kty!: T;
 
   /**
-   * Parameters of the JSON Web Key.
+   * Defines the usage of the key.
    */
-  private readonly key!: JsonWebKeyParams;
+  public readonly use?: Optional<string>;
+
+  /**
+   * Defines the allowed operations to be performed with the key
+   */
+  public readonly key_ops?: Optional<string[]>;
+
+  /**
+   * Defines the signature or encryption algorithm allowed to use this key.
+   */
+  public readonly alg?: Optional<string>;
+
+  /**
+   * Defines the ID of the key.
+   */
+  public readonly kid?: Optional<string>;
+
+  /**
+   * Defines the URL of the X.509 certificate of the key.
+   */
+  public readonly x5u?: Optional<string>;
+
+  /**
+   * Defines a chain of X.509 certificates of the key.
+   */
+  public readonly x5c?: Optional<string[]>;
+
+  /**
+   * Defines the SHA-1 Thumbprint of the X.509 certificate of the key.
+   */
+  public readonly x5t?: Optional<string>;
+
+  /**
+   * Defines the SHA-256 Thumbprint of the X.509 certificate of the key.
+   */
+  public readonly 'x5t#S256'?: Optional<string>;
 
   /**
    * Instantiates a new JSON Web Key based on the provided parameters.
    *
-   * @param jwk Parameters of the JSON Web Key.
-   * @param options Optional JSON Web Key Parameters to customize the JSON Web Key.
+   * @param params Parameters of the JSON Web Key.
    */
-  public constructor(jwk: JsonWebKeyParams, options: Optional<JsonWebKeyOptions> = {}) {
-    const params = <JsonWebKeyParams>{ ...jwk, ...options };
-
-    this.validateJwkParams(params);
-    this.loadCryptoKey(jwk);
-
-    Object.defineProperty(this, 'key', { enumerable: false, value: removeNullishValues(params) });
-  }
-
-  /**
-   * Generates a new Elliptic Curve JSON Web Key.
-   *
-   * @param options JSON Web Key Elliptic Curve generation options.
-   * @param jwkOptions Optional JSON Web Key Parameters.
-   */
-  public static async generate(
-    options: GenerateEcKeyOptions,
-    jwkOptions?: Optional<JsonWebKeyParams>
-  ): Promise<JsonWebKey>;
-
-  /**
-   * Generates a new Octet JSON Web Key.
-   *
-   * @param options JSON Web Key Octet generation options.
-   * @param jwkOptions Optional JSON Web Key Parameters.
-   */
-  public static async generate(
-    options: GenerateOctKeyOptions,
-    jwkOptions?: Optional<JsonWebKeyParams>
-  ): Promise<JsonWebKey>;
-
-  /**
-   * Generates a new RSA JSON Web Key.
-   *
-   * @param options JSON Web Key RSA generation options.
-   * @param jwkOptions Optional JSON Web Key Parameters.
-   */
-  public static async generate(
-    options: GenerateRsaKeyOptions,
-    jwkOptions?: Optional<JsonWebKeyParams>
-  ): Promise<JsonWebKey>;
-
-  /**
-   * Generates a new JSON Web Key.
-   *
-   * @param options JSON Web Key generation options.
-   * @param jwkOptions Optional JSON Web Key Parameters.
-   */
-  public static async generate(
-    options: GenerateEcKeyOptions | GenerateOctKeyOptions | GenerateRsaKeyOptions,
-    jwkOptions: Optional<JsonWebKeyParams>
-  ): Promise<JsonWebKey> {
-    const algorithm = JsonWebKey.JWK_ALGORITHMS[options.kty];
-
-    if (algorithm === undefined) {
-      throw new UnsupportedAlgorithmException(`Unsupported JSON Web Key Algorithm "${options.kty}".`);
-    }
-
-    const key = await algorithm.generate(options);
-
-    return new JsonWebKey(key.export({ format: 'jwk' }), jwkOptions);
-  }
-
-  /**
-   * Returns the SEC 1 Elliptic Curve Private Key DER Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns DER Encoded SEC 1 Elliptic Curve Private Key.
-   */
-  public async export(options: ExportEcKeyOptions<'der', 'sec1', 'private'>): Promise<Buffer>;
-
-  /**
-   * Returns the SEC 1 Elliptic Curve Private Key PEM Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns PEM Encoded SEC 1 Elliptic Curve Private Key.
-   */
-  public async export(options: ExportEcKeyOptions<'pem', 'sec1', 'private'>): Promise<string>;
-
-  /**
-   * Returns the PKCS#8 Elliptic Curve Private Key DER Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns DER Encoded PKCS#8 Elliptic Curve Private Key.
-   */
-  public async export(options: ExportEcKeyOptions<'der', 'pkcs8', 'private'>): Promise<Buffer>;
-
-  /**
-   * Returns the PKCS#8 Elliptic Curve Private Key PEM Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns PEM Encoded PKCS#8 Elliptic Curve Private Key.
-   */
-  public async export(options: ExportEcKeyOptions<'pem', 'pkcs8', 'private'>): Promise<string>;
-
-  /**
-   * Returns the SPKI Elliptic Curve Public Key DER Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns DER Encoded SPKI Elliptic Curve Public Key.
-   */
-  public async export(options: ExportEcKeyOptions<'der', 'spki', 'public'>): Promise<Buffer>;
-
-  /**
-   * Returns the SPKI Elliptic Curve Public Key PEM Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns PEM Encoded SPKI Elliptic Curve Public Key.
-   */
-  public async export(options: ExportEcKeyOptions<'pem', 'spki', 'public'>): Promise<string>;
-
-  /**
-   * Exports the Octet JSON Web Key into a Base64 Encoded String.
-   *
-   * @param options Parameters for exporing the JSON Web Key.
-   * @returns Resulting Base64 Encoded String.
-   */
-  public async export(options: ExportOctKeyOptions<'base64'>): Promise<string>;
-
-  /**
-   * Exports the Octet JSON Web Key into a Buffer.
-   *
-   * @param options Parameters for exporing the JSON Web Key.
-   * @returns Resulting Buffer.
-   */
-  public async export(options: ExportOctKeyOptions<'buffer'>): Promise<Buffer>;
-
-  /**
-   * Returns the PKCS#1 RSA Private Key DER Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns DER Encoded PKCS#1 RSA Private Key.
-   */
-  public async export(options: ExportRsaKeyOptions<'der', 'pkcs1', 'private'>): Promise<Buffer>;
-
-  /**
-   * Returns the PKCS#1 RSA Private Key PEM Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns PEM Encoded PKCS#1 RSA Private Key.
-   */
-  public async export(options: ExportRsaKeyOptions<'pem', 'pkcs1', 'private'>): Promise<string>;
-
-  /**
-   * Returns the PKCS#8 RSA Private Key DER Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns DER Encoded PKCS#8 RSA Private Key.
-   */
-  public async export(options: ExportRsaKeyOptions<'der', 'pkcs8', 'private'>): Promise<Buffer>;
-
-  /**
-   * Returns the PKCS#8 RSA Private Key PEM Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns PEM Encoded PKCS#8 RSA Private Key.
-   */
-  public async export(options: ExportRsaKeyOptions<'pem', 'pkcs8', 'private'>): Promise<string>;
-
-  /**
-   * Returns the PKCS#1 RSA Public Key DER Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns DER Encoded PKCS#1 RSA Public Key.
-   */
-  public async export(options: ExportRsaKeyOptions<'der', 'pkcs1', 'public'>): Promise<Buffer>;
-
-  /**
-   * Returns the PKCS#1 RSA Public Key PEM Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns PEM Encoded PKCS#1 RSA Public Key.
-   */
-  public async export(options: ExportRsaKeyOptions<'pem', 'pkcs1', 'public'>): Promise<string>;
-
-  /**
-   * Returns the SPKI RSA Public Key DER Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns DER Encoded SPKI RSA Public Key.
-   */
-  public async export(options: ExportRsaKeyOptions<'der', 'spki', 'public'>): Promise<Buffer>;
-
-  /**
-   * Returns the SPKI RSA Public Key PEM Encoding of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns PEM Encoded SPKI RSA Public Key.
-   */
-  public async export(options: ExportRsaKeyOptions<'pem', 'spki', 'public'>): Promise<string>;
-
-  /**
-   * Encodes and exports the parameters of the JSON Web Key.
-   *
-   * @param options Parameters for exporting the JSON Web Key.
-   * @returns Encoded JSON Web Key.
-   */
-  public async export(
-    options:
-      | ExportEcKeyOptions<'der', 'sec1', 'private'>
-      | ExportEcKeyOptions<'pem', 'sec1', 'private'>
-      | ExportEcKeyOptions<'der', 'pkcs8', 'private'>
-      | ExportEcKeyOptions<'pem', 'pkcs8', 'private'>
-      | ExportEcKeyOptions<'der', 'spki', 'public'>
-      | ExportEcKeyOptions<'pem', 'spki', 'public'>
-      | ExportOctKeyOptions<'base64'>
-      | ExportOctKeyOptions<'buffer'>
-      | ExportRsaKeyOptions<'der', 'pkcs1', 'private'>
-      | ExportRsaKeyOptions<'pem', 'pkcs1', 'private'>
-      | ExportRsaKeyOptions<'der', 'pkcs8', 'private'>
-      | ExportRsaKeyOptions<'pem', 'pkcs8', 'private'>
-      | ExportRsaKeyOptions<'der', 'pkcs1', 'public'>
-      | ExportRsaKeyOptions<'pem', 'pkcs1', 'public'>
-      | ExportRsaKeyOptions<'der', 'spki', 'public'>
-      | ExportRsaKeyOptions<'pem', 'spki', 'public'>
-  ): Promise<string | Buffer> {
-    const algorithm = JsonWebKey.JWK_ALGORITHMS[this.key.kty];
-    return await algorithm.export(this.cryptoKey, options);
-  }
-
-  /**
-   * Parameters of the JSON Web Key.
-   */
-  public toJSON(): JsonWebKeyParams {
-    return this.key;
-  }
-
-  /**
-   * Representation of the JSON Web Key.
-   */
-  public [inspect.custom](): JsonWebKeyParams {
-    return this.toJSON();
-  }
-
-  /**
-   * Validates the provided JSON Web Key Parameters.
-   *
-   * @param params Parameters of the provided JSON Web Key and its options.
-   */
-  private validateJwkParams(params: JsonWebKeyParams): void {
-    if (typeof params.kty !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid parameter "kty".');
-    }
-
+  public constructor(params: Optional<JsonWebKeyParams<T>> = {}) {
     if (params.use !== undefined && typeof params.use !== 'string') {
       throw new InvalidJsonWebKeyException('Invalid parameter "use".');
     }
@@ -329,25 +110,38 @@ export class JsonWebKey {
       throw new InvalidJsonWebKeyException('Unsupported parameter "x5t".');
     }
 
-    if (params['x5t#S256'] !== undefined) {
+    if (params['x5t#256'] !== undefined) {
       throw new InvalidJsonWebKeyException('Unsupported parameter "x5t#256".');
     }
+
+    const cryptoKey = this.loadCryptoKey(params);
+
+    Object.defineProperty(this, 'cryptoKey', { enumerable: false, value: cryptoKey });
+
+    Object.assign(this, removeNullishValues(params));
   }
 
   /**
-   * Loads a NodeJS Crypto Key based on the provided JSON Web Key.
+   * Loads the provided JSON Web Key into a NodeJS Crypto Key.
    *
-   * @param jwk JSON Web Key provided by the application.
+   * @param params Parameters of the JSON Web Key.
+   * @returns NodeJS Crypto Key.
    */
-  private loadCryptoKey(jwk: JsonWebKeyParams): void {
-    const algorithm = JsonWebKey.JWK_ALGORITHMS[jwk.kty];
+  protected abstract loadCryptoKey(params: JsonWebKeyParams<T>): KeyObject;
 
-    if (algorithm === undefined) {
-      throw new UnsupportedAlgorithmException(`Unsupported JSON Web Key Algorithm "${jwk.kty}".`);
-    }
+  /**
+   * Exports the data of the JSON Web Key into a String.
+   *
+   * @param options Options for exporting the data of the JSON Web Key.
+   * @returns Resulting String.
+   */
+  public abstract export(options: Dict): string;
 
-    const cryptoKey = algorithm.load(jwk);
-
-    Object.defineProperty(this, 'cryptoKey', { enumerable: false, value: cryptoKey });
-  }
+  /**
+   * Exports the data of the JSON Web Key into a Buffer.
+   *
+   * @param options Options for exporing the data of the JSON Web Key.
+   * @returns Resulting Buffer.
+   */
+  public abstract export(options: Dict): Buffer;
 }

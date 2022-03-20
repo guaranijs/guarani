@@ -52,11 +52,9 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@guarani/asn1": "^0.6.0",
     "@guarani/objects": "^0.6.0",
     "@guarani/primitives": "^0.6.0",
-    "@guarani/utils": "^0.6.0",
-    "reflect-metadata": "^0.1.13"
+    "@guarani/utils": "^0.6.0"
   },
   "devDependencies": {
     "@guarani/types": "^0.6.0"

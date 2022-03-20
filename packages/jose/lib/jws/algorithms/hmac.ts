@@ -1,95 +1,95 @@
-import b64Url from '@guarani/base64url';
+import { createHmac, KeyObject } from 'crypto';
 
-import { createHmac, createSecretKey } from 'crypto';
+import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
+import { InvalidSignatureException } from '../../exceptions/invalid-signature.exception';
+import { OctKey } from '../../jwk/algorithms/oct/oct.key';
+import { SupportedJsonWebKeyAlgorithm } from '../../jwk/algorithms/supported-jsonwebkey-algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from '../supported-jsonwebsignature-algorithm';
+import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
 
-import { InvalidKey, InvalidSignature } from '../../exceptions';
-import { OctKey } from '../../jwk';
-import { SupportedHash } from '../../types';
-import { JWSAlgorithm } from './jws-algorithm';
-
-/**
- * Implementation of an HMAC Signature Algorithm.
- */
-class HMACAlgorithm extends JWSAlgorithm {
+class HmacAlgorithm extends JsonWebSignatureAlgorithm {
   /**
-   * Accepted key type.
+   * Denotes the type of JSON Web Key supported by the JSON Web Signature HMAC Algorithm.
    */
-  public readonly kty: string = 'oct';
+  public readonly keyType: SupportedJsonWebKeyAlgorithm = 'oct';
 
   /**
-   * Instantiates a new HMAC Algorithm to sign and verify the messages.
+   * Size of the Secret accepted by the JSON Web Signature HMAC Algorithm.
+   */
+  protected readonly keySize: number;
+
+  /**
+   * Instantiates a new JSON Web Signature HMAC Algorithm to Sign and Verify the Messages.
    *
-   * @param hash Hash algorithm used to sign and verify the messages.
-   * @param algorithm Name of the algorithm.
-   * @param keySize Minimum buffer size in bytes of the secret
-   * accepted by the algorithm.
+   * @param hash Hash Algorithm used to Sign and Verify the Messages.
+   * @param algorithm Name of the JSON Web Signature Algorithm.
+   * @param keySize Size of the Secret accepted by the JSON Web Signature HMAC Algorithm.
    */
-  public constructor(
-    protected readonly hash: SupportedHash,
-    protected readonly algorithm: string,
-    protected readonly keySize: number
-  ) {
+  public constructor(hash: string, algorithm: SupportedJsonWebSignatureAlgorithm, keySize: number) {
     super(hash, algorithm);
+
+    this.keySize = keySize;
   }
 
   /**
-   * Signs the provided message using HMAC.
+   * Signs a Message with the provided JSON Web Key.
    *
-   * @param message Message to be signed.
-   * @param key Key used to sign the message.
-   * @returns Base64Url encoded signature.
+   * @param message Message to be Signed.
+   * @param key JSON Web Key used to Sign the provided Message.
+   * @returns Resulting Signature of the provided Message.
    */
-  public async sign(message: Buffer, key: OctKey): Promise<string> {
-    this.checkKey(key);
+  public async sign(message: Buffer, key: OctKey): Promise<Buffer> {
+    this.validateJsonWebKey(key);
 
-    const secretKey = createSecretKey(key.export('binary'));
-    const signature = createHmac(this.hash, secretKey).update(message).digest();
+    const cryptoKey: KeyObject = Reflect.get(key, 'cryptoKey');
+    const signature = createHmac(this.hash!, cryptoKey).update(message).digest();
 
-    return b64Url.encode(signature);
+    return signature;
   }
 
   /**
-   * Verifies the signature against a message using HMAC.
+   * Checks if the provided Signature matches the provided Message based on the provide JSON Web Key.
    *
-   * @param signature Signature to be matched against the message.
-   * @param message Message to be matched against the signature.
-   * @param key Key used to verify the signature.
-   * @throws {InvalidSignature} The signature does not match the message.
+   * @param signature Signature to be matched against the provided Message.
+   * @param message Message to be matched against the provided Signature.
+   * @param key JSON Web Key used to verify the Signature and Message.
    */
-  public async verify(signature: string, message: Buffer, key: OctKey): Promise<void> {
-    this.checkKey(key);
+  public async verify(signature: Buffer, message: Buffer, key: OctKey): Promise<void> {
+    this.validateJsonWebKey(key);
 
-    if ((await this.sign(message, key)) !== signature) {
-      throw new InvalidSignature();
+    const calculatedSignature = await this.sign(message, key);
+
+    if (signature.compare(calculatedSignature) !== 0) {
+      throw new InvalidSignatureException();
     }
   }
 
   /**
-   * Checks if a key can be used by the requesting algorithm.
+   * Checks if the provided JSON Web Key can be used by the JSON Web Signature HMAC Algorithm.
    *
-   * @param key Key to be checked.
-   * @throws {InvalidKey} The provided JSON Web Key is invalid.
+   * @param key JSON Web Key to be checked.
+   * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
    */
-  protected checkKey(key: OctKey): void {
-    super.checkKey(key);
+  protected validateJsonWebKey(key: OctKey): void {
+    super.validateJsonWebKey(key);
 
-    if (b64Url.byteLength(key.k) < this.keySize) {
-      throw new InvalidKey(`The secret MUST be AT LEAST ${this.keySize} bytes.`);
+    if (Buffer.from(key.k, 'base64url').length < this.keySize) {
+      throw new InvalidJsonWebKeyException(`The size of the OctKey Secret must be at least ${this.keySize} bytes.`);
     }
   }
 }
 
 /**
- * HMAC with SHA256.
+ * JSON Web Signature **HS256** Algorithm.
  */
-export const HS256 = new HMACAlgorithm('SHA256', 'HS256', 32);
+export const HS256 = new HmacAlgorithm('SHA256', 'HS256', 32);
 
 /**
- * HMAC with SHA384.
+ * JSON Web Signature **HS384** Algorithm.
  */
-export const HS384 = new HMACAlgorithm('SHA384', 'HS384', 48);
+export const HS384 = new HmacAlgorithm('SHA384', 'HS384', 48);
 
 /**
- * HMAC with SHA512.
+ * JSON Web Signature **HS512** Algorithm.
  */
-export const HS512 = new HMACAlgorithm('SHA512', 'HS512', 64);
+export const HS512 = new HmacAlgorithm('SHA512', 'HS512', 64);

@@ -51,6 +51,13 @@ export abstract class JsonWebEncryptionContentEncryptionAlgorithm {
   }
 
   /**
+   * Generates a new Content Encryption Key.
+   */
+  public async generateContentEncryptionKey(): Promise<Buffer> {
+    return await randomBytesAsync(Math.floor(this.cekSize / 8));
+  }
+
+  /**
    * Validates if the provided Initialization Vector is valid to the algorithm.
    *
    * @param iv Initialization Vector to be validated.

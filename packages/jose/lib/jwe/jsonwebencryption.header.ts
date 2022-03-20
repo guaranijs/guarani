@@ -1,8 +1,8 @@
-import { removeNullishValues } from '@guarani/objects';
 import { Optional } from '@guarani/types';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
+import { JoseHeader } from '../jose.header';
 import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
 import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithm/alg/supported-jsonwebencryption-keyencryption-algorithm';
 import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from './algorithm/alg/jsonwebencryption-keywrap-algorithms-registry';
@@ -22,7 +22,7 @@ import { JsonWebEncryptionHeaderParams } from './jsonwebencryption-header.params
  * manipulate the plaintext of the message, such as permitted algorithms
  * and the keys to be used in encrypting and decrypting the plaintext.
  */
-export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParams {
+export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryptionHeaderParams {
   /**
    * JSON Web Encryption Key Wrap Algorithm used to Wrap and Unwrap the Content Encryption Key.
    */
@@ -128,50 +128,21 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParams {
       }
     }
 
-    if (params.jku !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "jku".');
-    }
+    super(params);
+  }
 
-    if (params.jwk !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "jwk".');
-    }
+  /**
+   * Checks if the provided object conforms to the JSON Web Encryption Header signature.
+   *
+   * @param data Object to be inspected.
+   */
+  public static isJsonWebEncryptionHeader(data: unknown): data is JsonWebEncryptionHeaderParams {
+    const algs = Object.keys(JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY);
+    const encs = Object.keys(JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY);
 
-    if (params.kid !== undefined && typeof params.kid !== 'string') {
-      throw new InvalidJoseHeaderException('Invalid parameter "kid".');
-    }
+    const hasAlg = algs.includes((<JsonWebEncryptionHeaderParams>data).alg);
+    const hasEnc = encs.includes((<JsonWebEncryptionHeaderParams>data).enc);
 
-    if (params.x5u !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5u".');
-    }
-
-    if (params.x5c !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5c".');
-    }
-
-    if (params.x5t !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5t".');
-    }
-
-    if (params['x5t#S256'] !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5t#S256".');
-    }
-
-    if (params.crit !== undefined) {
-      if (!Array.isArray(params.crit) || params.crit.length === 0) {
-        throw new InvalidJoseHeaderException('Invalid parameter "crit".');
-      }
-
-      if (params.crit.some((criticalParam) => typeof criticalParam !== 'string' || criticalParam.length === 0)) {
-        throw new InvalidJoseHeaderException('Invalid parameter "crit".');
-      }
-
-      params.crit.forEach((criticalParam) => {
-        if (params[criticalParam] === undefined) {
-          throw new InvalidJoseHeaderException(`Missing required parameter "${criticalParam}".`);
-        }
-      });
-    }
-
-    Object.assign<JsonWebEncryptionHeader, JsonWebEncryptionHeaderParams>(this, removeNullishValues(params));
+    return hasAlg && hasEnc;
   }
 }

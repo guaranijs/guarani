@@ -73,6 +73,10 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
    * @param options Optional JSON Web Key Parameters.
    */
   public constructor(key: RsaKeyParams, options: Optional<JsonWebKeyParams> = {}) {
+    if (key instanceof RsaKey) {
+      return key;
+    }
+
     const params = <RsaKeyParams>{ ...key, ...options };
 
     if (params.kty !== undefined && params.kty !== 'RSA') {

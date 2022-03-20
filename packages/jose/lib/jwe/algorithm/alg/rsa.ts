@@ -8,6 +8,7 @@ import { RsaKey } from '../../../jwk/algorithms/rsa/rsa.key';
 import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './supported-jsonwebencryption-keyencryption-algorithm';
 import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap.algorithm';
 import { WrappedKey } from './types/wrapped-key';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from '../enc/jsonwebencryption-contentencryption.algorithm';
 
 /**
  * Implementation of the RSA JSON Web Encryption Key Wrap Algorithm.
@@ -44,27 +45,30 @@ export class RsaKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
   /**
    * Wraps the provided Content Encryption Key using the provide JSON Web Key.
    *
+   * @param enc JSON Web Encryption Content Encryption Algorithm.
    * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
-   * @param cek Content Encryption Key used to Encrypt the Plaintext.
    * @returns Wrapped Content Encryption Key and optional additional JSON Web Encryption Header Parameters.
    */
-  public async wrap(key: RsaKey, cek: Buffer): Promise<WrappedKey<Dict>> {
+  public async wrap(enc: JsonWebEncryptionContentEncryptionAlgorithm, key: RsaKey): Promise<WrappedKey<Dict>> {
     this.validateJsonWebKey(key);
 
     const cryptoKey = <KeyObject>Reflect.get(key, 'cryptoKey');
-    const wrappedKey = publicEncrypt({ key: cryptoKey, oaepHash: this.hashAlgorithm, padding: this.padding }, cek);
 
-    return { ek: wrappedKey };
+    const cek = await enc.generateContentEncryptionKey();
+    const ek = publicEncrypt({ key: cryptoKey, oaepHash: this.hashAlgorithm, padding: this.padding }, cek);
+
+    return { cek, ek };
   }
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param ek Wrapped Content Encryption Key.
+   * @param enc JSON Web Encryption Content Encryption Algorithm.
    * @param key JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
+   * @param ek Wrapped Content Encryption Key.
    * @returns Unwrapped Content Encryption Key.
    */
-  public async unwrap(ek: Buffer, key: RsaKey): Promise<Buffer> {
+  public async unwrap(enc: JsonWebEncryptionContentEncryptionAlgorithm, key: RsaKey, ek: Buffer): Promise<Buffer> {
     this.validateJsonWebKey(key);
 
     if (key.d === undefined) {
@@ -74,7 +78,12 @@ export class RsaKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
     }
 
     const cryptoKey = <KeyObject>Reflect.get(key, 'cryptoKey');
-    return privateDecrypt({ key: cryptoKey, oaepHash: this.hashAlgorithm, padding: this.padding }, ek);
+
+    const cek = privateDecrypt({ key: cryptoKey, oaepHash: this.hashAlgorithm, padding: this.padding }, ek);
+
+    enc.validateContentEncryptionKey(cek);
+
+    return cek;
   }
 }
 

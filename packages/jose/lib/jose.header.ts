@@ -1,199 +1,111 @@
+import { removeNullishValues } from '@guarani/objects';
+import { Optional } from '@guarani/types';
+
 import { InvalidJoseHeaderException } from './exceptions/invalid-jose-header.exception';
-import { SupportedJsonWebKeyAlgorithm } from './jwk/algorithms/supported-jsonwebkey-algorithm';
+import { JoseHeaderParams } from './jose-header.params';
 import { JsonWebKeyParams } from './jwk/jsonwebkey.params';
 
-/**
- * Defines the parameters supported by the JOSE Header.
- */
-export interface JoseHeaderParams {
-  /**
-   * Algorithm of the header.
-   */
-  readonly alg: string;
-
-  /**
-   * URI of a Json Web Keyset.
-   */
-  readonly jku?: string;
-
-  /**
-   * JSON Web Key used by the header.
-   */
-  readonly jwk?: JsonWebKeyParams<SupportedJsonWebKeyAlgorithm>;
-
-  /**
-   * ID of the key used by the header.
-   */
-  readonly kid?: string;
-
-  /**
-   * URI of the X.509 certificate of the key.
-   */
-  readonly x5u?: string;
-
-  /**
-   * Chain of X.509 certificates of the key.
-   */
-  readonly x5c?: string[];
-
-  /**
-   * SHA-1 Thumbprint of the X.509 certificate of the key.
-   */
-  readonly x5t?: string;
-
-  /**
-   * SHA-256 Thumbprint of the X.509 certificate of the key.
-   */
-  readonly 'x5t#S256'?: string;
-
-  /**
-   * Defines the type of the entire token.
-   */
-  readonly typ?: string;
-
-  /**
-   * Defines the type of the payload.
-   */
-  readonly cty?: string;
-
-  /**
-   * Defines the parameters that MUST be present in the header.
-   */
-  readonly crit?: string[];
-
-  /**
-   * Additional parameters.
-   */
-  readonly [parameter: string]: any;
-}
-
-/**
- * JOSE Protected and Unprotected Headers that compose the entire JOSE Header.
- */
-export interface JoseProtectedAndUnprotectedHeaders {
-  /**
-   * JOSE Protected Header.
-   */
-  readonly protectedHeader?: Partial<JoseHeaderParams>;
-
-  /**
-   * JOSE Unprotected Header.
-   */
-  readonly unprotectedHeader?: Partial<JoseHeaderParams>;
-}
-
-/**
- * Base class representing the JOSE Header used by both the
- * **JSON Web Signature** and **JSON Web Encryption** implementations.
- */
 export abstract class JoseHeader implements JoseHeaderParams {
   /**
-   * Algorithm of the header.
+   * URI of a Set of Public JSON Web Keys that contains the JSON Web Key.
    */
-  public abstract readonly alg: string;
+  public readonly jku?: Optional<string>;
 
   /**
-   * URI of a Json Web Keyset.
+   * JSON Web Key.
    */
-  public readonly jku?: string;
+  public readonly jwk?: Optional<JsonWebKeyParams>;
 
   /**
-   * JSON Web Key used by the header.
+   * Identifier of the JSON Web Key.
    */
-  public readonly jwk?: JsonWebKeyParams<SupportedJsonWebKeyAlgorithm>;
+  public readonly kid?: Optional<string>;
 
   /**
-   * ID of the key used by the header.
+   * URI of the X.509 certificate of the JSON Web Key.
    */
-  public readonly kid?: string;
+  public readonly x5u?: Optional<string>;
 
   /**
-   * URI of the X.509 certificate of the key.
+   * Chain of X.509 certificates of the JSON Web Key.
    */
-  public readonly x5u?: string;
+  public readonly x5c?: Optional<string[]>;
 
   /**
-   * Chain of X.509 certificates of the key.
+   * SHA-1 Thumbprint of the X.509 certificate of the JSON Web Key.
    */
-  public readonly x5c?: string[];
+  public readonly x5t?: Optional<string>;
 
   /**
-   * SHA-1 Thumbprint of the X.509 certificate of the key.
+   * SHA-256 Thumbprint of the X.509 certificate of the JSON Web Key.
    */
-  public readonly x5t?: string;
+  public readonly 'x5t#S256'?: Optional<string>;
 
   /**
-   * SHA-256 Thumbprint of the X.509 certificate of the key.
+   * Defines the type of the Token.
    */
-  public readonly 'x5t#S256'?: string;
+  public readonly typ?: Optional<string>;
 
   /**
-   * Defines the type of the entire token.
+   * Defines the type of the Payload or Plaintext of the Token.
    */
-  public readonly typ?: string;
+  public readonly cty?: Optional<string>;
 
   /**
-   * Defines the type of the payload.
+   * Defines the parameters that MUST be present in the JOSE Header.
    */
-  public readonly cty?: string;
+  public readonly crit?: Optional<string[]>;
 
   /**
-   * Defines the parameters that MUST be present in the header.
-   */
-  public readonly crit?: string[];
-
-  /**
-   * Validates the parameters of the provided JOSE Header.
+   * Instantiates a new JOSE Header.
    *
-   * @param header JOSE Header to be validated.
+   * @param params Parameters of the JOSE Header.
    */
-  protected checkHeader(header: Partial<JoseHeaderParams>): void {
-    if ('alg' in header && typeof header.alg !== 'string') {
-      throw new InvalidJoseHeaderException('Invalid parameter "alg".');
-    }
-
-    if ('jku' in header) {
+  public constructor(params: JoseHeaderParams) {
+    if (params.jku !== undefined) {
       throw new InvalidJoseHeaderException('Unsupported parameter "jku".');
     }
 
-    if ('jwk' in header) {
+    if (params.jwk !== undefined) {
       throw new InvalidJoseHeaderException('Unsupported parameter "jwk".');
     }
 
-    if ('kid' in header && typeof header.kid !== 'string') {
+    if (params.kid !== undefined && typeof params.kid !== 'string') {
       throw new InvalidJoseHeaderException('Invalid parameter "kid".');
     }
 
-    if ('x5u' in header) {
+    if (params.x5u !== undefined) {
       throw new InvalidJoseHeaderException('Unsupported parameter "x5u".');
     }
 
-    if ('x5c' in header) {
+    if (params.x5c !== undefined) {
       throw new InvalidJoseHeaderException('Unsupported parameter "x5c".');
     }
 
-    if ('x5t' in header) {
+    if (params.x5t !== undefined) {
       throw new InvalidJoseHeaderException('Unsupported parameter "x5t".');
     }
 
-    if ('x5t#S256' in header) {
+    if (params['x5t#S256'] !== undefined) {
       throw new InvalidJoseHeaderException('Unsupported parameter "x5t#S256".');
     }
 
-    if ('crit' in header) {
-      if (!Array.isArray(header.crit) || header.crit.length === 0) {
+    if (params.crit !== undefined) {
+      if (!Array.isArray(params.crit) || params.crit.length === 0) {
         throw new InvalidJoseHeaderException('Invalid parameter "crit".');
       }
 
-      if (header.crit.some((item) => typeof item !== 'string' || !item)) {
+      if (params.crit.some((criticalParam) => typeof criticalParam !== 'string' || criticalParam.length === 0)) {
         throw new InvalidJoseHeaderException('Invalid parameter "crit".');
       }
 
-      header.crit.forEach((item) => {
-        if (!(item in header)) {
-          throw new InvalidJoseHeaderException(`Missing required parameter "${item}".`);
+      params.crit.forEach((criticalParam) => {
+        if (params[criticalParam] === undefined) {
+          throw new InvalidJoseHeaderException(`Missing required parameter "${criticalParam}".`);
         }
       });
     }
+
+    Object.assign<JoseHeader, JoseHeaderParams>(this, removeNullishValues(params));
   }
 }

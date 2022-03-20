@@ -1,7 +1,7 @@
 import { createHmac, KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
-import { InvalidSignatureException } from '../../exceptions/invalid-signature.exception';
+import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-json-web-signature.exception';
 import { OctKey } from '../../jwk/algorithms/oct/oct.key';
 import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
@@ -54,7 +54,7 @@ class HmacAlgorithm extends JsonWebSignatureAlgorithm {
     const calculatedSignature = await this.sign(message, key);
 
     if (signature.compare(calculatedSignature) !== 0) {
-      throw new InvalidSignatureException();
+      throw new InvalidJsonWebSignatureException();
     }
   }
 

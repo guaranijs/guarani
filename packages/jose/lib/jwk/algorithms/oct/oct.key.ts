@@ -31,6 +31,10 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
    * @param options Optional JSON Web Key Parameters.
    */
   public constructor(key: OctKeyParams, options: Optional<JsonWebKeyParams> = {}) {
+    if (key instanceof OctKey) {
+      return key;
+    }
+
     const params = <OctKeyParams>{ ...key, ...options };
 
     if (params.kty !== undefined && params.kty !== 'oct') {

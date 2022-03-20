@@ -1,21 +1,14 @@
 import { Optional } from '@guarani/types';
 
-import { randomBytes } from 'crypto';
-import { promisify } from 'util';
-
 import { InvalidJsonWebEncryptionException } from '../exceptions/invalid-json-web-encryption.exception';
 import { JoseException } from '../exceptions/jose.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
 import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from './algorithm/alg/jsonwebencryption-keywrap-algorithms-registry';
-import { JsonWebEncryptionKeyWrapAlgorithm } from './algorithm/alg/jsonwebencryption-keywrap.algorithm';
 import { JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY } from './algorithm/enc/jsonwebencryption-contentencryption-algorithms-registry';
-import { JsonWebEncryptionContentEncryptionAlgorithm } from './algorithm/enc/jsonwebencryption-contentencryption.algorithm';
 import { JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY } from './algorithm/zip/jsonwebencryption-compression-algorithms-registry';
 import { JsonWebEncryptionHeaderParams } from './jsonwebencryption-header.params';
 import { JsonWebEncryptionHeader } from './jsonwebencryption.header';
 import { CompactDecodeParams } from './types/compact-decode.params';
-
-const randomBytesAsync = promisify(randomBytes);
 
 /**
  * Implementation of RFC 7516.
@@ -41,15 +34,38 @@ export class JsonWebEncryption {
    * Instantiates a new JSON Web Encryption based on the provided JSON Web Encryption Header and Plaintext.
    *
    * @param header JSON Web Encryption Header.
-   * @param plaintext Buffer encoded Plaintext.
+   * @param plaintext String to be used as the Plaintext.
    */
-  public constructor(header: JsonWebEncryptionHeaderParams, plaintext?: Optional<Buffer>) {
+  public constructor(header: JsonWebEncryptionHeaderParams, plaintext: Optional<string>);
+
+  /**
+   * Instantiates a new JSON Web Encryption based on the provided JSON Web Encryption Header and Plaintext.
+   *
+   * @param header JSON Web Encryption Header.
+   * @param plaintext Buffer to be used as the Plaintext.
+   */
+  public constructor(header: JsonWebEncryptionHeaderParams, plaintext: Optional<Buffer>);
+
+  /**
+   * Instantiates a new JSON Web Encryption based on the provided JSON Web Encryption Header and Plaintext.
+   *
+   * @param header JSON Web Encryption Header.
+   * @param plaintext Data to be used as the Plaintext.
+   */
+  public constructor(header: JsonWebEncryptionHeaderParams, plaintext?: Optional<string | Buffer>) {
     if (plaintext !== undefined && !Buffer.isBuffer(plaintext)) {
       throw new TypeError('Invalid JSON Web Encryption Plaintext.');
     }
 
     this.header = new JsonWebEncryptionHeader(header);
-    this.plaintext = plaintext ?? Buffer.alloc(0);
+
+    if (typeof plaintext === 'string') {
+      this.plaintext = Buffer.from(plaintext, 'utf8');
+    } else if (Buffer.isBuffer(plaintext)) {
+      this.plaintext = plaintext;
+    } else {
+      this.plaintext = Buffer.alloc(0);
+    }
   }
 
   /**
@@ -78,13 +94,13 @@ export class JsonWebEncryption {
   }
 
   /**
-   * Decodes a JSON Web Encryption Compact Token.
+   * Deserializes a JSON Web Encryption Compact Token.
    *
-   * @param token JSON Web Encryption Compact Token to be Decoded.
-   * @param wrapKey JSON Web Key used to Unwrap the Encrypted Key.
-   * @returns JSON Web Encryption containing the Decoded JSON Web Encryption Header and Plaintext.
+   * @param token JSON Web Encryption Compact Token to be Deserialized.
+   * @param key JSON Web Key used to Deserialize the JSON Web Encryption Compact Token.
+   * @returns JSON Web Encryption containing the Deserialized JSON Web Encryption Header and Plaintext.
    */
-  public static async deserializeCompact(token: string, wrapKey: JsonWebKey): Promise<JsonWebEncryption> {
+  public static async deserializeCompact(token: string, key: JsonWebKey): Promise<JsonWebEncryption> {
     try {
       const { aad, ciphertext, ek, header, iv, tag } = this.decodeCompact(token);
 
@@ -92,7 +108,7 @@ export class JsonWebEncryption {
       const enc = JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY[header.enc];
       const zip = header.zip !== undefined ? JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY[header.zip] : null;
 
-      const cek = await alg.unwrap(ek, wrapKey, header);
+      const cek = await alg.unwrap(enc, key, ek, header);
       let plaintext = await enc.decrypt(ciphertext, aad, iv, tag, cek);
 
       if (zip !== null) {
@@ -111,21 +127,11 @@ export class JsonWebEncryption {
     }
   }
 
-  private async generateContentEncryptionKey(
-    key: JsonWebKey,
-    alg: JsonWebEncryptionKeyWrapAlgorithm,
-    enc: JsonWebEncryptionContentEncryptionAlgorithm
-  ): Promise<Buffer> {
-    return this.header.alg === 'dir'
-      ? <Buffer>(<unknown>key.export({ encoding: 'buffer' }))
-      : await alg.generateContentEncryptionKey(enc.cekSize);
-  }
-
   /**
-   * Serializes the contents of the JSON Web Encryption into a Compact Token.
+   * Serializes the JSON Web Encryption into a Compact Token.
    *
    * @param key JSON Web Key used to Serialize the JSON Web Encryption.
-   * @returns JSON Web Encryption Token.
+   * @returns JSON Web Encryption Compact Token.
    */
   public async serializeCompact(key: JsonWebKey): Promise<string> {
     let { header, plaintext } = this;
@@ -134,10 +140,9 @@ export class JsonWebEncryption {
     const enc = JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY[header.enc];
     const zip = header.zip !== undefined ? JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY[header.zip] : null;
 
-    const cek = await this.generateContentEncryptionKey(key, alg, enc);
-    const iv = await randomBytesAsync(enc.ivSize);
+    const iv = await enc.generateInitializationVector();
 
-    const { ek, additionalHeaderParams } = await alg.wrap(key, cek);
+    const { cek, ek, additionalHeaderParams } = await alg.wrap(enc, key);
 
     if (additionalHeaderParams !== undefined) {
       Object.assign(header, additionalHeaderParams);

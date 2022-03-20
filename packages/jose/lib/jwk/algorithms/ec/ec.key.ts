@@ -55,6 +55,10 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
    * @param options Optional JSON Web Key Parameters.
    */
   public constructor(key: EcKeyParams, options: Optional<JsonWebKeyParams> = {}) {
+    if (key instanceof EcKey) {
+      return key;
+    }
+
     const params = <EcKeyParams>{ ...key, ...options };
 
     if (params.kty !== undefined && params.kty !== 'EC') {

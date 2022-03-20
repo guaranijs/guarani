@@ -52,6 +52,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
+    "@guarani/data-structures": "^0.6.1",
     "@guarani/objects": "^0.6.0",
     "@guarani/primitives": "^0.6.0",
     "@guarani/utils": "^0.6.0"

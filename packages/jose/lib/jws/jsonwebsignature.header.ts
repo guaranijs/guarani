@@ -1,8 +1,8 @@
-import { removeNullishValues } from '@guarani/objects';
 import { Optional } from '@guarani/types';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
+import { JoseHeader } from '../jose.header';
 import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
 import { JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY } from './algorithms/jsonwebsignature-algorithms-registry';
 import { SupportedJsonWebSignatureAlgorithm } from './algorithms/supported-jsonwebsignature-algorithm';
@@ -18,7 +18,7 @@ import { JsonWebSignatureHeaderParams } from './jsonwebsignature-header.params';
  * manipulate the payload of the message, such as permitted algorithms
  * and the keys to be used in signing and verifying the payload.
  */
-export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParams {
+export class JsonWebSignatureHeader extends JoseHeader implements JsonWebSignatureHeaderParams {
   /**
    * JSON Web Signature Algorithm used to Sign and Verify the Token.
    */
@@ -92,50 +92,19 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParams {
       throw new UnsupportedAlgorithmException(`Unsupported JSON Web Signature Algorithm "${params.alg}".`);
     }
 
-    if (params.jku !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "jku".');
-    }
+    super(params);
+  }
 
-    if (params.jwk !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "jwk".');
-    }
+  /**
+   * Checks if the provided object conforms to the JSON Web Signature Header signature.
+   *
+   * @param data Object to be inspected.
+   */
+  public static isJsonWebSignatureHeader(data: unknown): data is JsonWebSignatureHeaderParams {
+    const algs = Object.keys(JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY);
 
-    if (params.kid !== undefined && typeof params.kid !== 'string') {
-      throw new InvalidJoseHeaderException('Invalid parameter "kid".');
-    }
+    const hasAlg = algs.includes((<JsonWebSignatureHeaderParams>data).alg);
 
-    if (params.x5u !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5u".');
-    }
-
-    if (params.x5c !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5c".');
-    }
-
-    if (params.x5t !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5t".');
-    }
-
-    if (params['x5t#S256'] !== undefined) {
-      throw new InvalidJoseHeaderException('Unsupported parameter "x5t#S256".');
-    }
-
-    if (params.crit !== undefined) {
-      if (!Array.isArray(params.crit) || params.crit.length === 0) {
-        throw new InvalidJoseHeaderException('Invalid parameter "crit".');
-      }
-
-      if (params.crit.some((criticalParam) => typeof criticalParam !== 'string' || criticalParam.length === 0)) {
-        throw new InvalidJoseHeaderException('Invalid parameter "crit".');
-      }
-
-      params.crit.forEach((criticalParam) => {
-        if (params[criticalParam] === undefined) {
-          throw new InvalidJoseHeaderException(`Missing required parameter "${criticalParam}".`);
-        }
-      });
-    }
-
-    Object.assign<JsonWebSignatureHeader, JsonWebSignatureHeaderParams>(this, removeNullishValues(params));
+    return hasAlg;
   }
 }

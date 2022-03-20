@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { JsonWebKeyParams } from '../lib/jwk';
+import { JsonWebKeyParams } from '../lib/jwk/jsonwebkey.params';
 
 export function loadSymmetricKey<T extends JsonWebKeyParams>(kty: string, ext: 'json'): T;
 export function loadSymmetricKey(kty: string, ext: 'pem'): string;

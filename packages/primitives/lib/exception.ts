@@ -3,7 +3,7 @@ import { Nullable, Optional } from '@guarani/types';
 /**
  * Exception class that keeps the Stack Trace of rethrown Errors.
  */
-export abstract class Exception extends Error {
+export class Exception extends Error {
   /**
    * Previous Error of the Chain.
    */
@@ -55,10 +55,7 @@ export abstract class Exception extends Error {
 
     this.name = this.constructor.name;
 
-    Object.defineProperties(this, {
-      originalError: { enumerable: false, value: originalError, writable: true },
-      stackInitialized: { enumerable: false, value: false, writable: true },
-    });
+    Object.defineProperty(this, 'originalError', { enumerable: false, value: originalError, writable: true });
 
     if (this.message === '') {
       this.message = this.getDefaultMessage();

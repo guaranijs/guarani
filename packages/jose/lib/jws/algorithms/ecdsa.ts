@@ -2,7 +2,7 @@ import { KeyObject, sign, verify } from 'crypto';
 import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
-import { InvalidSignatureException } from '../../exceptions/invalid-signature.exception';
+import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-json-web-signature.exception';
 import { EcKey } from '../../jwk/algorithms/ec/ec.key';
 import { SupportedEllipticCurve } from '../../jwk/algorithms/ec/supported-elliptic-curve';
 import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
@@ -66,7 +66,7 @@ class EcdsaAlgorithm extends JsonWebSignatureAlgorithm {
     const verificationResult = await verifyAsync(this.hash, message, cryptoKey, signature);
 
     if (!verificationResult) {
-      throw new InvalidSignatureException();
+      throw new InvalidJsonWebSignatureException();
     }
   }
 

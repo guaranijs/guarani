@@ -6,11 +6,6 @@ export default {
   coverageDirectory: 'coverage',
   coverageProvider: 'v8',
   coverageReporters: ['json', 'lcov'],
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.spec.json',
-    },
-  },
   moduleFileExtensions: ['js', 'ts', 'node'],
   moduleNameMapper: {
     '@guarani/(.*)': ['<rootDir>/packages/$1'],

@@ -33,23 +33,53 @@ export class JsonWebSignature {
    * Instantiates a new JSON Web Signature based on the provided JSON Web Signature Header and Payload.
    *
    * @param header JSON Web Signature Header.
-   * @param payload Buffer encoded Payload.
+   * @param payload String to be used as the Payload.
    */
-  public constructor(header: JsonWebSignatureHeaderParams, payload?: Optional<Buffer>) {
-    if (payload !== undefined && !Buffer.isBuffer(payload)) {
+  public constructor(header: JsonWebSignatureHeaderParams, payload: Optional<string>);
+
+  /**
+   * Instantiates a new JSON Web Signature based on the provided JSON Web Signature Header and Payload.
+   *
+   * @param header JSON Web Signature Header.
+   * @param payload Buffer to be used as the Payload.
+   */
+  public constructor(header: JsonWebSignatureHeaderParams, payload: Optional<Buffer>);
+
+  /**
+   * Instantiates a new JSON Web Signature based on the provided JSON Web Signature Header and Payload.
+   *
+   * @param header JSON Web Signature Header.
+   * @param payload Data to be used as the Payload.
+   */
+  public constructor(header: JsonWebSignatureHeaderParams, payload?: Optional<string | Buffer>) {
+    if (payload !== undefined && typeof payload !== 'string' && !Buffer.isBuffer(payload)) {
       throw new TypeError('Invalid JSON Web Signature Payload.');
     }
 
     this.header = new JsonWebSignatureHeader(header);
-    this.payload = payload ?? Buffer.alloc(0);
+
+    if (typeof payload === 'string') {
+      this.payload = Buffer.from(payload, 'utf8');
+    } else if (Buffer.isBuffer(payload)) {
+      this.payload = payload;
+    } else {
+      this.payload = Buffer.alloc(0);
+    }
   }
 
-  public static async deserializeCompact(token: string, verifyKey: Nullable<JsonWebKey>): Promise<JsonWebSignature> {
+  /**
+   * Deserializes a JSON Web Signature Compact Token.
+   *
+   * @param token JSON Web Signature Compact Token to be Deserialized.
+   * @param key JSON Web Key used to verify the Signature of the JSON Web Signature Compact Token.
+   * @returns JSON Web Signature containing the Deserialized JSON Web Signature Header and Payload.
+   */
+  public static async deserializeCompact(token: string, key: Nullable<JsonWebKey>): Promise<JsonWebSignature> {
     if (typeof token !== 'string') {
       throw new InvalidJsonWebSignatureException();
     }
 
-    if (verifyKey !== null && !(verifyKey instanceof JsonWebKey)) {
+    if (key !== null && !(key instanceof JsonWebKey)) {
       throw new InvalidJsonWebKeyException();
     }
 
@@ -69,7 +99,7 @@ export class JsonWebSignature {
 
       const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
 
-      await algorithm.verify(signature, message, verifyKey ?? undefined);
+      await algorithm.verify(signature, message, key ?? undefined);
 
       return new JsonWebSignature(header, payload);
     } catch (exc: any) {
@@ -84,12 +114,12 @@ export class JsonWebSignature {
   }
 
   /**
-   * Serializes the contents of the JSON Web Signature into a Compact Token.
+   * Serializes the JSON Web Signature into a Compact Token.
    *
-   * @param signKey JSON Web Key used to Sign the JSON Web Signature Token.
-   * @returns JSON Web Signature Token.
+   * @param key JSON Web Key used to Sign the JSON Web Signature Token.
+   * @returns JSON Web Signature Compact Token.
    */
-  public async serializeCompact(signKey?: Optional<JsonWebKey>): Promise<string> {
+  public async serializeCompact(key?: Optional<JsonWebKey>): Promise<string> {
     const { header, payload } = this;
 
     try {
@@ -100,7 +130,7 @@ export class JsonWebSignature {
 
       const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
 
-      const signature = await algorithm.sign(message, signKey);
+      const signature = await algorithm.sign(message, key);
 
       const b64Signature = signature.toString('base64url');
 

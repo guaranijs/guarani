@@ -2,7 +2,7 @@ import { KeyObject, sign, verify } from 'crypto';
 import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
-import { InvalidSignatureException } from '../../exceptions/invalid-signature.exception';
+import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-json-web-signature.exception';
 import { RsaPadding } from '../../jwk/algorithms/rsa/rsa-padding';
 import { RsaKey } from '../../jwk/algorithms/rsa/rsa.key';
 import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
@@ -71,7 +71,7 @@ export class RsaSsaAlgorithm extends JsonWebSignatureAlgorithm {
     );
 
     if (!verificationResult) {
-      throw new InvalidSignatureException();
+      throw new InvalidJsonWebSignatureException();
     }
   }
 }

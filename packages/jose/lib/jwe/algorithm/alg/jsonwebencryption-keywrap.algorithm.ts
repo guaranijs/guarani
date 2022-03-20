@@ -1,15 +1,11 @@
 import { Dict, Optional } from '@guarani/types';
 
-import { randomBytes } from 'crypto';
-import { promisify } from 'util';
-
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
 import { SupportedJsonWebKeyAlgorithm } from '../../../jwk/algorithms/supported-jsonwebkey-algorithm';
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from '../enc/jsonwebencryption-contentencryption.algorithm';
 import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './supported-jsonwebencryption-keyencryption-algorithm';
 import { WrappedKey } from './types/wrapped-key';
-
-const randomBytesAsync = promisify(randomBytes);
 
 /**
  * Implementation of the Section 4 of RFC 7518.
@@ -27,7 +23,7 @@ export abstract class JsonWebEncryptionKeyWrapAlgorithm {
   /**
    * Type of JSON Web Key supported by this JSON Web Encryption Key Wrap Algorithm.
    */
-  protected readonly keyType?: Optional<SupportedJsonWebKeyAlgorithm>;
+  protected readonly keyType: SupportedJsonWebKeyAlgorithm;
 
   /**
    * Instantiates a new JSON Web Encryption Key Wrap Algorithm to Wrap and Unwrap Content Encryption Keys.
@@ -35,42 +31,40 @@ export abstract class JsonWebEncryptionKeyWrapAlgorithm {
    * @param algorithm Name of the JSON Web Encryption Key Wrap Algorithm.
    * @param keyType Type of JSON Web Key supported by this JSON Web Encryption Key Wrap Algorithm.
    */
-  public constructor(
-    algorithm: SupportedJsonWebEncryptionKeyWrapAlgorithm,
-    keyType?: Optional<SupportedJsonWebKeyAlgorithm>
-  ) {
+  public constructor(algorithm: SupportedJsonWebEncryptionKeyWrapAlgorithm, keyType: SupportedJsonWebKeyAlgorithm) {
     this.algorithm = algorithm;
     this.keyType = keyType;
   }
 
   /**
-   * Generates a new Content Encryption Key.
-   *
-   * @param cekSize Size of the Content Encryption Key in bits.
-   * @returns Content Encryption Key.
-   */
-  public async generateContentEncryptionKey(cekSize: number): Promise<Buffer> {
-    return await randomBytesAsync(Math.floor(cekSize / 8));
-  }
-
-  /**
    * Wraps the provided Content Encryption Key using the provide JSON Web Key.
    *
-   * @param cek Content Encryption Key used to Encrypt the Plaintext.
+   * @param enc JSON Web Encryption Content Encryption Algorithm.
    * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
+   * @param header Optional JSON Web Encryption Header containing the additional Parameters.
    * @returns Wrapped Content Encryption Key and optional additional JSON Web Encryption Header Parameters.
    */
-  public abstract wrap(cek: Buffer, key: JsonWebKey): Promise<WrappedKey<Dict>>;
+  public abstract wrap(
+    enc: JsonWebEncryptionContentEncryptionAlgorithm,
+    key: JsonWebKey,
+    header?: Optional<Dict>
+  ): Promise<WrappedKey<Dict>>;
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param ek Wrapped Content Encryption Key.
+   * @param enc JSON Web Encrytpion Content Encryption Algorithm.
    * @param key JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
+   * @param ek Wrapped Content Encryption Key.
    * @param header Optional JSON Web Encryption Header containing the additional Parameters.
    * @returns Unwrapped Content Encryption Key.
    */
-  public abstract unwrap(ek: Buffer, key: JsonWebKey, header?: Optional<Dict>): Promise<Buffer>;
+  public abstract unwrap(
+    enc: JsonWebEncryptionContentEncryptionAlgorithm,
+    key: JsonWebKey,
+    ek: Buffer,
+    header?: Optional<Dict>
+  ): Promise<Buffer>;
 
   /**
    * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption Key Wrap Algorithm.
@@ -87,7 +81,7 @@ export abstract class JsonWebEncryptionKeyWrapAlgorithm {
       throw new InvalidJsonWebKeyException(`This JSON Web Key is intended to be used by the Algorithm "${key.alg}".`);
     }
 
-    if (this.keyType !== undefined && key.kty !== this.keyType) {
+    if (key.kty !== this.keyType) {
       throw new InvalidJsonWebKeyException(
         `This JSON Web Encryption Key Wrap Algorithm only accepts "${this.keyType}" JSON Web Keys.`
       );

@@ -122,6 +122,15 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
   }
 
   /**
+   * Checks if the provided data conforms to the JSON Web Key Interface.
+   *
+   * @param data Data to be checked.
+   */
+  public static isJsonWebKey(data: unknown): data is JsonWebKeyParams {
+    return typeof data === 'object' && typeof (<JsonWebKeyParams>data).kty === 'string';
+  }
+
+  /**
    * Loads the provided JSON Web Key into a NodeJS Crypto Key.
    *
    * @param params Parameters of the JSON Web Key.

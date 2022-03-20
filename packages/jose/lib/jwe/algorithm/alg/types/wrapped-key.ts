@@ -5,6 +5,11 @@ import { Dict, Optional } from '@guarani/types';
  */
 export interface WrappedKey<AdditionalJoseHeaderParams extends Dict> {
   /**
+   * Content Encryption Key.
+   */
+  readonly cek: Buffer;
+
+  /**
    * Wrapped Content Encryption Key.
    */
   readonly ek: Buffer;

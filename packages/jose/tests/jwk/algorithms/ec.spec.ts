@@ -21,36 +21,38 @@ const invalidCoords: any[] = [undefined, null, true, 1, 1.2, 1n, Buffer.alloc(1)
 
 const invalidPrivateKeys: any[] = [null, true, 1, 1.2, 1n, Buffer.alloc(1), Symbol.for('foo'), () => {}, {}, []];
 
-describe('Elliptic Curve Key', () => {
+describe('Elliptic Curve JSON Web Key Algorithm', () => {
   describe('constructor', () => {
+    const publicJson = loadJwkEllipticCurveKey('public');
+
     it.each(invalidKtys)('should reject an invalid "kty".', (invalidKty) => {
-      expect(() => new EcKey({ kty: invalidKty, crv: 'P-256', x: '', y: '' })).toThrow(InvalidJsonWebKeyException);
+      expect(() => new EcKey({ ...publicJson, kty: invalidKty })).toThrow(InvalidJsonWebKeyException);
     });
 
     it('should reject a JSON Web Key Type other than "EC".', () => {
       // @ts-expect-error Wrong JSON Web Key Type.
-      expect(() => new EcKey({ kty: 'wrong', crv: 'P-256', x: '', y: '' })).toThrow(UnsupportedAlgorithmException);
+      expect(() => new EcKey({ ...publicJson, kty: 'wrong' })).toThrow(UnsupportedAlgorithmException);
     });
 
     it.each(invalidCurves)('should reject an invalid "crv".', (invalidCurve) => {
-      expect(() => new EcKey({ kty: 'EC', crv: invalidCurve, x: '', y: '' })).toThrow(InvalidJsonWebKeyException);
+      expect(() => new EcKey({ ...publicJson, crv: invalidCurve })).toThrow(InvalidJsonWebKeyException);
     });
 
     it('should reject an unsupported Elliptic Curve.', () => {
       // @ts-expect-error Unsupported Elliptic Curve.
-      expect(() => new EcKey({ kty: 'EC', crv: 'wrong', x: '', y: '' })).toThrow(UnsupportedEllipticCurveException);
+      expect(() => new EcKey({ ...publicJson, crv: 'wrong' })).toThrow(UnsupportedEllipticCurveException);
     });
 
     it.each(invalidCoords)('should reject an invalid "x".', (invalidCoordinate) => {
-      expect(() => new EcKey({ kty: 'EC', crv: 'P-256', x: invalidCoordinate, y: '' }));
+      expect(() => new EcKey({ ...publicJson, x: invalidCoordinate }));
     });
 
     it.each(invalidCoords)('should reject an invalid "y".', (invalidCoordinate) => {
-      expect(() => new EcKey({ kty: 'EC', crv: 'P-256', x: '', y: invalidCoordinate }));
+      expect(() => new EcKey({ ...publicJson, y: invalidCoordinate }));
     });
 
     it.each(invalidPrivateKeys)('should reject an invalid "d".', (invalidPrivateKey) => {
-      expect(() => new EcKey({ kty: 'EC', crv: 'P-256', x: '', y: '', d: invalidPrivateKey }));
+      expect(() => new EcKey({ ...publicJson, d: invalidPrivateKey }));
     });
   });
 

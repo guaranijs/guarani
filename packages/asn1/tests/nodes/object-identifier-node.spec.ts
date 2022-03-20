@@ -29,11 +29,11 @@ const failures: any[] = [
 const instances: [ObjectIdentifierNode, object][] = [
   [
     new ObjectIdentifierNode('1.2.840.113549'),
-    { data: [1, 2, 840, 113549], encoding: Encoding.Primitive, class: Class.Universal },
+    { data: '1.2.840.113549', encoding: Encoding.Primitive, class: Class.Universal },
   ],
   [
     new ObjectIdentifierNode([1, 2, 840, 113549]),
-    { data: [1, 2, 840, 113549], encoding: Encoding.Primitive, class: Class.Universal },
+    { data: '1.2.840.113549', encoding: Encoding.Primitive, class: Class.Universal },
   ],
 ];
 

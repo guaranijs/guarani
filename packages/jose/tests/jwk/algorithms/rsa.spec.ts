@@ -18,10 +18,10 @@ const invalidModuli: any[] = [undefined, null, true, 1.2, 1n, 'a', Buffer.alloc(
 
 const invalidPublicExponents: any[] = [null, true, 1.2, 1n, 'a', Buffer.alloc(1), Symbol.for('a'), () => {}, {}, []];
 
-describe('RSA Key', () => {
+describe('RSA JSON Web Key Algorithm', () => {
   describe('constructor', () => {
     const privateJson = loadJwkRsaKey('private');
-    const publicJson = loadJwkRsaKey('private');
+    const publicJson = loadJwkRsaKey('public');
 
     it.each(invalidKtys)('should reject an invalid "kty".', (invalidKty) => {
       expect(() => new RsaKey({ ...publicJson, kty: invalidKty })).toThrow(InvalidJsonWebKeyException);
@@ -37,7 +37,7 @@ describe('RSA Key', () => {
     });
 
     it('should reject a public exponent smaller than 2048 bits.', () => {
-      expect(() => new RsaKey({ kty: 'RSA', n: '', e: '' })).toThrow(InvalidJsonWebKeyException);
+      expect(() => new RsaKey({ kty: 'RSA', n: 'AQAB', e: 'AQAB' })).toThrow(InvalidJsonWebKeyException);
     });
 
     it.each(invalidPubNums)('should reject an invalid "e".', (invalidPublicNumber) => {

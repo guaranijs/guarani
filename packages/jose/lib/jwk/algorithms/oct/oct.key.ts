@@ -53,8 +53,8 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
       throw new InvalidJsonWebKeyException('Invalid key parameter "k".');
     }
 
-    if (params.k.length < 2) {
-      throw new InvalidJsonWebKeyException('The Secret size must be a positive integer.');
+    if (Buffer.from(params.k, 'base64url').length === 0) {
+      throw new InvalidJsonWebKeyException('The Secret cannot be empty.');
     }
 
     super(params);
@@ -120,6 +120,10 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
    */
   public export<T extends ExportOctKeyEncoding>(options: ExportOctKeyOptions<T>): string | Buffer {
     const { encoding } = options;
+
+    if (typeof encoding !== 'string') {
+      throw new TypeError('Invalid option "encoding".');
+    }
 
     const secret = this.cryptoKey.export();
 

@@ -23,12 +23,8 @@ export class JsonWebKeySet implements JsonWebKeySetParams {
    * @param keys JSON Web Keys to be registered at the JSON Web Key Set.
    */
   public constructor(keys: JsonWebKey[]) {
-    if (!Array.isArray(keys) || keys.length === 0) {
+    if (!Array.isArray(keys) || keys.length === 0 || keys.some((key) => !(key instanceof JsonWebKey))) {
       throw new TypeError('Invalid parameter "keys".');
-    }
-
-    if (keys.some((key) => !(key instanceof JsonWebKey))) {
-      throw new InvalidJsonWebKeySetException();
     }
 
     const identifiers = keys.map((key) => key.kid);
@@ -79,17 +75,19 @@ export class JsonWebKeySet implements JsonWebKeySetParams {
       return params;
     }
 
-    if (!Array.isArray(params.keys)) {
-      throw new InvalidJsonWebKeySetException();
+    if (typeof params !== 'object' || params === null) {
+      throw new TypeError('Invalid parameter "params".');
     }
 
-    if (!Array.isArray(params.keys)) {
-      throw new InvalidJsonWebKeySetException();
+    if (!Array.isArray(params.keys) || params.keys.length === 0) {
+      throw new TypeError('Invalid JSON Web Key Set Parameter "keys".');
     }
 
-    if (params.keys.some((key) => !JsonWebKey.isJsonWebKey(key))) {
-      throw new InvalidJsonWebKeySetException();
-    }
+    params.keys.forEach((key, index) => {
+      if (!JsonWebKey.isJsonWebKey(key)) {
+        throw new TypeError(`The item at position #${index} is not a valid JSON Web Key.`);
+      }
+    });
 
     const keys = params.keys.map(this._loadJsonWebKey);
 

@@ -1,21 +1,21 @@
+import { removeNullishValues } from '@guarani/objects';
 import { Optional } from '@guarani/types';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
-import { JoseHeader } from '../jose.header';
 import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithms/alg/supported-jsonwebencryption-keyencryption-algorithm';
 import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from './algorithms/alg/jsonwebencryption-keywrap-algorithms-registry';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithms/alg/types/supported-jsonwebencryption-keyencryption-algorithm';
 import { JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY } from './algorithms/enc/jsonwebencryption-contentencryption-algorithms-registry';
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './algorithms/enc/supported-jsonwebencryption-contentencryption-algorithm';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './algorithms/enc/types/supported-jsonwebencryption-contentencryption-algorithm';
 import { JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY } from './algorithms/zip/jsonwebencryption-compression-algorithms-registry';
-import { SupportedJsonWebEncryptionCompressionAlgorithm } from './algorithms/zip/supported-jsonwebencryption-compression-algorithm';
+import { SupportedJsonWebEncryptionCompressionAlgorithm } from './algorithms/zip/types/supported-jsonwebencryption-compression-algorithm';
 import { JsonWebEncryptionHeaderParams } from './jsonwebencryption-header.params';
 
 /**
  * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7516.html#section-4 RFC 7516 Section 4}.
  */
-export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryptionHeaderParams {
+export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParams {
   /**
    * JSON Web Encryption Key Wrap Algorithm used to Wrap and Unwrap the Content Encryption Key.
    */
@@ -121,7 +121,51 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryp
       }
     }
 
-    super(params);
+    if (params.jku !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "jku".');
+    }
+
+    if (params.jwk !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "jwk".');
+    }
+
+    if (params.kid !== undefined && typeof params.kid !== 'string') {
+      throw new InvalidJoseHeaderException('Invalid parameter "kid".');
+    }
+
+    if (params.x5u !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5u".');
+    }
+
+    if (params.x5c !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5c".');
+    }
+
+    if (params.x5t !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5t".');
+    }
+
+    if (params['x5t#S256'] !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5t#S256".');
+    }
+
+    if (params.crit !== undefined) {
+      if (!Array.isArray(params.crit) || params.crit.length === 0) {
+        throw new InvalidJoseHeaderException('Invalid parameter "crit".');
+      }
+
+      if (params.crit.some((criticalParam) => typeof criticalParam !== 'string' || criticalParam.length === 0)) {
+        throw new InvalidJoseHeaderException('Invalid parameter "crit".');
+      }
+
+      params.crit.forEach((criticalParam) => {
+        if (params[criticalParam] === undefined) {
+          throw new InvalidJoseHeaderException(`Missing required parameter "${criticalParam}".`);
+        }
+      });
+    }
+
+    Object.assign<JsonWebEncryptionHeader, JsonWebEncryptionHeaderParams>(this, removeNullishValues(params));
   }
 
   /**

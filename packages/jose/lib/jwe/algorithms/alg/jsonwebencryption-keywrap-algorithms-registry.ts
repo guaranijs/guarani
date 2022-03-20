@@ -1,9 +1,9 @@
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './supported-jsonwebencryption-keyencryption-algorithm';
 import { A128KW, A192KW, A256KW } from './aes';
 import { A128GCMKW, A192GCMKW, A256GCMKW } from './aes-gcm';
 import { dir } from './dir';
 import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap.algorithm';
 import { RSA1_5, RSA_OAEP, RSA_OAEP_256, RSA_OAEP_384, RSA_OAEP_512 } from './rsa';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './types/supported-jsonwebencryption-keyencryption-algorithm';
 
 /**
  * JSON Web Encryption Key Wrap Algorithms Registry.

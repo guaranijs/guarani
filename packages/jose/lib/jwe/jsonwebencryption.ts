@@ -28,38 +28,15 @@ export class JsonWebEncryption {
    * Instantiates a new JSON Web Encryption based on the provided JSON Web Encryption Header and Plaintext.
    *
    * @param header JSON Web Encryption Header.
-   * @param plaintext String to be used as the Plaintext.
-   */
-  public constructor(header: JsonWebEncryptionHeaderParams, plaintext?: Optional<string>);
-
-  /**
-   * Instantiates a new JSON Web Encryption based on the provided JSON Web Encryption Header and Plaintext.
-   *
-   * @param header JSON Web Encryption Header.
    * @param plaintext Buffer to be used as the Plaintext.
    */
-  public constructor(header: JsonWebEncryptionHeaderParams, plaintext?: Optional<Buffer>);
-
-  /**
-   * Instantiates a new JSON Web Encryption based on the provided JSON Web Encryption Header and Plaintext.
-   *
-   * @param header JSON Web Encryption Header.
-   * @param plaintext Data to be used as the Plaintext.
-   */
-  public constructor(header: JsonWebEncryptionHeaderParams, plaintext?: Optional<string | Buffer>) {
-    if (plaintext !== undefined && typeof plaintext !== 'string' && !Buffer.isBuffer(plaintext)) {
+  public constructor(header: JsonWebEncryptionHeaderParams, plaintext?: Optional<Buffer>) {
+    if (plaintext !== undefined && !Buffer.isBuffer(plaintext)) {
       throw new TypeError('Invalid JSON Web Encryption Plaintext.');
     }
 
     this.header = new JsonWebEncryptionHeader(header);
-
-    if (typeof plaintext === 'string') {
-      this.plaintext = Buffer.from(plaintext, 'utf8');
-    } else if (Buffer.isBuffer(plaintext)) {
-      this.plaintext = plaintext;
-    } else {
-      this.plaintext = Buffer.alloc(0);
-    }
+    this.plaintext = Buffer.isBuffer(plaintext) ? plaintext : Buffer.alloc(0);
   }
 
   /**

@@ -9,7 +9,7 @@ import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
 import { JsonWebKeySetParams } from './jsonwebkeyset.params';
 
 /**
- * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7517.html#section-5 RFC 7517}.
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7517.html#section-5 RFC 7517 Section 5}.
  */
 export class JsonWebKeySet implements JsonWebKeySetParams {
   /**
@@ -136,12 +136,12 @@ export class JsonWebKeySet implements JsonWebKeySetParams {
    * @returns JSON Web Key based on the required Parameters.
    */
   public getKeyOrThrow<T extends JsonWebKey>(params: JsonWebKeyParams): T {
-    const key = this.getKeyOrNone(params);
+    const key = this.getKeyOrNone<T>(params);
 
     if (key === undefined) {
       throw new JsonWebKeyNotFoundException();
     }
 
-    return <T>key;
+    return key;
   }
 }

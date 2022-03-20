@@ -4,7 +4,7 @@ import { JsonWebKey } from '../jsonwebkey';
 import { EcKey } from './ec/ec.key';
 import { OctKey } from './oct/oct.key';
 import { RsaKey } from './rsa/rsa.key';
-import { SupportedJsonWebKeyAlgorithm } from './supported-jsonwebkey-algorithm';
+import { SupportedJsonWebKeyAlgorithm } from './types/supported-jsonwebkey-algorithm';
 
 /**
  * JSON Web Key Algorithms Registry.

@@ -1,7 +1,7 @@
-import { SupportedEllipticCurve } from './supported-elliptic-curve';
+import { SupportedEllipticCurve } from './types/supported-elliptic-curve';
 
 /**
- * Defines the necessary meta information of an Elliptic Curve.
+ * Meta information of the Elliptic Curves.
  */
 interface EllipticCurveParams {
   /**
@@ -10,12 +10,12 @@ interface EllipticCurveParams {
   readonly id: SupportedEllipticCurve;
 
   /**
-   * Name of the elliptic curve as registered with NodeJS' `crypto` module.
+   * Name of the Elliptic Curve as registered with NodeJS' `crypto` module.
    */
   readonly name: string;
 
   /**
-   * String representation of the ObjectId of the Elliptic Curve.
+   * String representation of the Object Identifier of the Elliptic Curve.
    */
   readonly oid: string;
 

@@ -12,11 +12,7 @@ import { JsonWebTokenClaimOptions } from './jsonwebtoken-claim.options';
 import { JsonWebTokenClaimsParams } from './jsonwebtoken-claims.params';
 
 /**
- * Implementation of RFC 7519.
- *
- * It provides validation for the default parameters of the JSON Web Token Claims.
- *
- * The **JSON Web Token Claims** is a JSON object that contains information about an application, system or user.
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7519.html#section-4 RFC 7519 Section 4}.
  */
 export class JsonWebTokenClaims implements JsonWebTokenClaimsParams {
   /**

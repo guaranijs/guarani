@@ -11,16 +11,18 @@ import {
 import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
+import { UnsupportedAlgorithmException } from '../../../exceptions/unsupported-algorithm.exception';
+import { UnsupportedEllipticCurveException } from '../../../exceptions/unsupported-elliptic-curve.exception';
 import { JsonWebKey } from '../../jsonwebkey';
 import { JsonWebKeyParams } from '../../jsonwebkey.params';
 import { EcKeyParams } from './ec-key.params';
 import { ELLIPTIC_CURVES_REGISTRY } from './elliptic-curves-registry';
-import { SupportedEllipticCurve } from './supported-elliptic-curve';
 import { ExportEcKeyEncoding } from './types/export-ec-key-encoding';
 import { ExportEcKeyFormat } from './types/export-ec-key-format';
 import { ExportEcKeyType } from './types/export-ec-key-type';
 import { ExportEcKeyOptions } from './types/export-ec-key.options';
 import { GenerateEcKeyOptions } from './types/generate-ec-key.options';
+import { SupportedEllipticCurve } from './types/supported-elliptic-curve';
 
 const generateKeyPairAsync = promisify(generateKeyPair);
 
@@ -66,14 +68,22 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
 
     const params = <EcKeyParams>{ ...key, ...options };
 
-    if (params.kty !== undefined && params.kty !== 'EC') {
-      throw new InvalidJsonWebKeyException(`Invalid key parameter "kty". Expected "EC", got "${params.kty}".`);
+    if (typeof params.kty !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid parameter "kty".');
+    }
+
+    if (params.kty !== 'EC') {
+      throw new UnsupportedAlgorithmException(`Invalid JSON Web Key Type. Expected "EC", got "${params.kty}".`);
+    }
+
+    if (typeof params.crv !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid parameter "crv".');
     }
 
     const curve = ELLIPTIC_CURVES_REGISTRY.find((ellipticCurve) => ellipticCurve.id === params.crv);
 
     if (curve === undefined) {
-      throw new InvalidJsonWebKeyException(`Unsupported Elliptic Curve "${params.crv}".`);
+      throw new UnsupportedEllipticCurveException(`Unsupported Elliptic Curve "${params.crv}".`);
     }
 
     if (typeof params.x !== 'string') {
@@ -103,10 +113,14 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
   public static async generate(options: GenerateEcKeyOptions, params: Optional<JsonWebKeyParams> = {}): Promise<EcKey> {
     const { curve } = options;
 
+    if (typeof curve !== 'string') {
+      throw new TypeError('Invalid option "curve".');
+    }
+
     const curveMeta = ELLIPTIC_CURVES_REGISTRY.find((ellipticCurve) => ellipticCurve.id === curve);
 
     if (curveMeta === undefined) {
-      throw new TypeError(`Unsupported Elliptic Curve "${curve}".`);
+      throw new UnsupportedEllipticCurveException(`Unsupported Elliptic Curve "${curve}".`);
     }
 
     const { privateKey } = await generateKeyPairAsync('ec', { namedCurve: curveMeta.name });
@@ -216,6 +230,12 @@ export class EcKey extends JsonWebKey implements EcKeyParams {
       cryptoKey = createPublicKey(cryptoKey);
     }
 
-    return cryptoKey.export(input);
+    let exported = cryptoKey.export(input);
+
+    if (encoding === 'pem') {
+      exported = exported.slice(0, -1);
+    }
+
+    return exported;
   }
 }

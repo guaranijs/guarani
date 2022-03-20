@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
 
+/**
+ * Implementation of the JSON Web Signature none Algorithm.
+ */
 class NoneAlgorithm extends JsonWebSignatureAlgorithm {
   /**
    * Instantiates a new JSON Web Signature none Algorithm to Sign and Verify the Messages.

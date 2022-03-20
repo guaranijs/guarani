@@ -3,9 +3,12 @@ import { createHmac, KeyObject } from 'crypto';
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
 import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-json-web-signature.exception';
 import { OctKey } from '../../jwk/algorithms/oct/oct.key';
-import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from './types/supported-jsonwebsignature-algorithm';
 
+/**
+ * Implementation of the JSON Web Signature HMAC Algorithm.
+ */
 class HmacAlgorithm extends JsonWebSignatureAlgorithm {
   /**
    * Size of the Secret accepted by the JSON Web Signature HMAC Algorithm.

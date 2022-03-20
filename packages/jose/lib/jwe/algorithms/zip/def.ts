@@ -9,9 +9,9 @@ const inflateRawAsync = promisify(inflateRaw);
 /**
  * Implementation of the DEFLATE JSON Web Encryption Compression Algorithm.
  */
-class DefCompressionAlgorithm extends JsonWebEncryptionCompressionAlgorithm {
+class DEFCompressionAlgorithm extends JsonWebEncryptionCompressionAlgorithm {
   /**
-   * Instantiates a new Deflate JSON Web Encryption Compression Algorithm to Compress and Decompress a Plaintext.
+   * Instantiates a new DEFLATE JSON Web Encryption Compression Algorithm to Compress and Decompress a Plaintext.
    */
   public constructor() {
     super('DEF');
@@ -41,4 +41,4 @@ class DefCompressionAlgorithm extends JsonWebEncryptionCompressionAlgorithm {
 /**
  * JSON Web Encryption **DEFLATE** Compression Algorithm.
  */
-export const DEF = new DefCompressionAlgorithm();
+export const DEF = new DEFCompressionAlgorithm();

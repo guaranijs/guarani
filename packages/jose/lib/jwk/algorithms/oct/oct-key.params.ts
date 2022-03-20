@@ -10,7 +10,7 @@ export interface OctKeyParams extends JsonWebKeyParams {
   readonly kty: 'oct';
 
   /**
-   * Base64Url encoded Octet.
+   * Base64Url encoded Octet Sequence.
    */
   readonly k: string;
 }

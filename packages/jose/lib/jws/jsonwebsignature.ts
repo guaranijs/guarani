@@ -1,4 +1,4 @@
-import { Nullable, Optional } from '@guarani/types';
+import { Optional } from '@guarani/types';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-json-web-key.exception';
 import { InvalidJsonWebSignatureException } from '../exceptions/invalid-json-web-signature.exception';
@@ -9,7 +9,7 @@ import { JsonWebSignatureHeaderParams } from './jsonwebsignature-header.params';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 
 /**
- * Implementation of {@link RFC 7515}.
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7515.html RFC 7515}.
  */
 export class JsonWebSignature {
   /**
@@ -26,38 +26,15 @@ export class JsonWebSignature {
    * Instantiates a new JSON Web Signature based on the provided JSON Web Signature Header and Payload.
    *
    * @param header JSON Web Signature Header.
-   * @param payload String to be used as the Payload.
-   */
-  public constructor(header: JsonWebSignatureHeaderParams, payload: Optional<string>);
-
-  /**
-   * Instantiates a new JSON Web Signature based on the provided JSON Web Signature Header and Payload.
-   *
-   * @param header JSON Web Signature Header.
    * @param payload Buffer to be used as the Payload.
    */
-  public constructor(header: JsonWebSignatureHeaderParams, payload: Optional<Buffer>);
-
-  /**
-   * Instantiates a new JSON Web Signature based on the provided JSON Web Signature Header and Payload.
-   *
-   * @param header JSON Web Signature Header.
-   * @param payload Data to be used as the Payload.
-   */
-  public constructor(header: JsonWebSignatureHeaderParams, payload?: Optional<string | Buffer>) {
-    if (payload !== undefined && typeof payload !== 'string' && !Buffer.isBuffer(payload)) {
+  public constructor(header: JsonWebSignatureHeaderParams, payload?: Optional<Buffer>) {
+    if (payload !== undefined && !Buffer.isBuffer(payload)) {
       throw new TypeError('Invalid JSON Web Signature Payload.');
     }
 
     this.header = new JsonWebSignatureHeader(header);
-
-    if (typeof payload === 'string') {
-      this.payload = Buffer.from(payload, 'utf8');
-    } else if (Buffer.isBuffer(payload)) {
-      this.payload = payload;
-    } else {
-      this.payload = Buffer.alloc(0);
-    }
+    this.payload = Buffer.isBuffer(payload) ? payload : Buffer.alloc(0);
   }
 
   /**
@@ -67,12 +44,12 @@ export class JsonWebSignature {
    * @param key JSON Web Key used to verify the Signature of the JSON Web Signature Compact Token.
    * @returns JSON Web Signature containing the Deserialized JSON Web Signature Header and Payload.
    */
-  public static async deserializeCompact(token: string, key: Nullable<JsonWebKey>): Promise<JsonWebSignature> {
+  public static async deserializeCompact(token: string, key?: Optional<JsonWebKey>): Promise<JsonWebSignature> {
     if (typeof token !== 'string') {
       throw new InvalidJsonWebSignatureException();
     }
 
-    if (key !== null && !(key instanceof JsonWebKey)) {
+    if (key !== undefined && !(key instanceof JsonWebKey)) {
       throw new InvalidJsonWebKeyException();
     }
 
@@ -92,7 +69,7 @@ export class JsonWebSignature {
 
       const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
 
-      await algorithm.verify(signature, message, key ?? undefined);
+      await algorithm.verify(signature, message, key);
 
       return new JsonWebSignature(header, payload);
     } catch (exc: any) {

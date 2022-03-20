@@ -4,13 +4,16 @@ import { promisify } from 'util';
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
 import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-json-web-signature.exception';
 import { EcKey } from '../../jwk/algorithms/ec/ec.key';
-import { SupportedEllipticCurve } from '../../jwk/algorithms/ec/supported-elliptic-curve';
-import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
+import { SupportedEllipticCurve } from '../../jwk/algorithms/ec/types/supported-elliptic-curve';
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from './types/supported-jsonwebsignature-algorithm';
 
 const signAsync = promisify(sign);
 const verifyAsync = promisify(verify);
 
+/**
+ * Implementation of the JSON Web Signature ECDSA Algorithm.
+ */
 class EcdsaAlgorithm extends JsonWebSignatureAlgorithm {
   /**
    * Elliptic Curve used by the JSON Web Signature ECDSA Algorithm.

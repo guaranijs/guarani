@@ -2,8 +2,8 @@ import { randomBytes } from 'crypto';
 import { promisify } from 'util';
 
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-json-web-encryption.exception';
-import { AuthenticatedEncryption } from './authenticated-encryption';
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './supported-jsonwebencryption-contentencryption-algorithm';
+import { AuthenticatedEncryption } from './types/authenticated-encryption';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './types/supported-jsonwebencryption-contentencryption-algorithm';
 
 const randomBytesAsync = promisify(randomBytes);
 

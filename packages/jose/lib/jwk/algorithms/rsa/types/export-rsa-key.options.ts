@@ -1,7 +1,9 @@
-import { ExportRsaKeyEncoding, ExportRsaKeyFormat, ExportRsaKeyType } from './types';
+import { ExportRsaKeyEncoding } from './export-rsa-key-encoding';
+import { ExportRsaKeyFormat } from './export-rsa-key-format';
+import { ExportRsaKeyType } from './export-rsa-key-type';
 
 /**
- * Options for exporting an RSA Key.
+ * Options for exporting an RSA JSON Web Key.
  */
 export interface ExportRsaKeyOptions<
   E extends ExportRsaKeyEncoding,

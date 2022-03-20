@@ -1,10 +1,16 @@
 import { Nullable, Optional } from '@guarani/types';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
-import { SupportedJsonWebKeyAlgorithm } from '../../jwk/algorithms/supported-jsonwebkey-algorithm';
+import { SupportedJsonWebKeyAlgorithm } from '../../jwk/algorithms/types/supported-jsonwebkey-algorithm';
 import { JsonWebKey } from '../../jwk/jsonwebkey';
-import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from './types/supported-jsonwebsignature-algorithm';
 
+/**
+ * Abstract Base Class for {@link https://www.rfc-editor.org/rfc/rfc7518.html#section-3 RFC 7518 Section 3}.
+ *
+ * All JSON Web Signature Algorithms supported by Guarani **MUST** extend this base class
+ * and implement its abstract methods.
+ */
 export abstract class JsonWebSignatureAlgorithm {
   /**
    * Type of JSON Web Key supported by this JSON Web Signature Algorithm.
@@ -48,7 +54,7 @@ export abstract class JsonWebSignatureAlgorithm {
   public abstract sign(message: Buffer, key?: Optional<JsonWebKey>): Promise<Buffer>;
 
   /**
-   * Checks if the provided Signature matches the provided Message based on the provide JSON Web Key.
+   * Checks if the provided Signature matches the provided Message based on the provided JSON Web Key.
    *
    * @param signature Signature to be matched against the provided Message.
    * @param message Message to be matched against the provided Signature.

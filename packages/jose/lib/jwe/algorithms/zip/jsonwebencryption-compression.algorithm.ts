@@ -1,4 +1,4 @@
-import { SupportedJsonWebEncryptionCompressionAlgorithm } from './supported-jsonwebencryption-compression-algorithm';
+import { SupportedJsonWebEncryptionCompressionAlgorithm } from './types/supported-jsonwebencryption-compression-algorithm';
 
 /**
  * Abstract Base Class for the JSON Web Encryption Compression Algorithms.

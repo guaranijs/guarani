@@ -5,8 +5,8 @@ import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web
 import { OctKey } from '../../../jwk/algorithms/oct/oct.key';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from '../enc/jsonwebencryption-contentencryption.algorithm';
 import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap.algorithm';
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './supported-jsonwebencryption-keyencryption-algorithm';
 import { AesGcmWrappedKeyParams } from './types/aes-gcm-wrapped-key.params';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './types/supported-jsonwebencryption-keyencryption-algorithm';
 import { WrappedKey } from './types/wrapped-key';
 
 const randomBytesAsync = promisify(randomBytes);
@@ -14,7 +14,7 @@ const randomBytesAsync = promisify(randomBytes);
 /**
  * Implementation of the AES-GCM JSON Web Encryption Key Wrap Algorithm.
  */
-export class AesGcmKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
+class AESGCMKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
   /**
    * Size of the Initialization Vector in bits.
    */
@@ -127,14 +127,14 @@ export class AesGcmKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
 /**
  * Key wrapping with AES GCM using 128-bit key.
  */
-export const A128GCMKW = new AesGcmKeyWrapAlgorithm('A128GCMKW');
+export const A128GCMKW = new AESGCMKeyWrapAlgorithm('A128GCMKW');
 
 /**
  * Key wrapping with AES GCM using 192-bit key.
  */
-export const A192GCMKW = new AesGcmKeyWrapAlgorithm('A192GCMKW');
+export const A192GCMKW = new AESGCMKeyWrapAlgorithm('A192GCMKW');
 
 /**
  * Key wrapping with AES GCM using 256-bit key.
  */
-export const A256GCMKW = new AesGcmKeyWrapAlgorithm('A256GCMKW');
+export const A256GCMKW = new AESGCMKeyWrapAlgorithm('A256GCMKW');

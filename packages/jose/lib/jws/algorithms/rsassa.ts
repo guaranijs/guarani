@@ -3,14 +3,17 @@ import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
 import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-json-web-signature.exception';
-import { RsaPadding } from '../../jwk/algorithms/rsa/rsa-padding';
+import { RsaPadding } from '../../jwk/algorithms/rsa/types/rsa-padding';
 import { RsaKey } from '../../jwk/algorithms/rsa/rsa.key';
-import { SupportedJsonWebSignatureAlgorithm } from './supported-jsonwebsignature-algorithm';
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from './types/supported-jsonwebsignature-algorithm';
 
 const signAsync = promisify(sign);
 const verifyAsync = promisify(verify);
 
+/**
+ * Implementation of the JSON Web Signature RSASSA Algorithm.
+ */
 export class RsaSsaAlgorithm extends JsonWebSignatureAlgorithm {
   /**
    * RSA Padding used by the JSON Web Signature RSASSA Algorithm to Sign and Verify the Messages.

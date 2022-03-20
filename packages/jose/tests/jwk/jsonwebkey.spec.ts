@@ -1,37 +1,65 @@
-import { MockKey } from './fixtures/mock.key'
+import { InvalidJsonWebKeyException } from '../../lib/exceptions/invalid-json-web-key.exception';
+import { KeyOperation } from '../../lib/jwk/types/key-operation';
+import { PublicKeyUse } from '../../lib/jwk/types/public-key-use';
+import { JsonWebKeyMock } from './mocks/jsonwebkey.mock';
 
-describe('JsonWebKey constructor', () => {
-  it('should reject an invalid "use".', () => {
-    // @ts-expect-error
-    expect(() => new MockKey({ use: 123 })).toThrow('Invalid parameter "use".')
-  })
+const invalidUses: any[] = [null, true, 12, 12n, 12.3, Buffer.alloc(1), Symbol.for('foo'), () => {}, [], {}];
 
-  it('should reject an invalid "key_ops".', () => {
-    // @ts-expect-error
-    expect(() => new MockKey({ key_ops: 123 })).toThrow(
-      'Invalid parameter "key_ops".'
-    )
+const invalidKeyOps: any[] = [
+  null,
+  true,
+  12,
+  12n,
+  12.3,
+  'invalidKeyOp',
+  Buffer.alloc(1),
+  Symbol.for('foo'),
+  () => {},
+  {},
+  [],
+  [123],
+];
 
-    expect(() => new MockKey({ key_ops: ['sign', 'sign', 'verify'] })).toThrow(
-      'Parameter "key_ops" cannot have repeated operations.'
-    )
+const invalidUseKeyOps: [PublicKeyUse, KeyOperation[]][] = [
+  ['enc', ['sign']],
+  ['enc', ['verify']],
+  ['sig', ['decrypt']],
+  ['sig', ['encrypt']],
+  ['sig', ['wrapKey']],
+  ['sig', ['unwrapKey']],
+  ['sig', ['deriveKey']],
+  ['sig', ['deriveBits']],
+];
 
-    expect(() => new MockKey({ use: 'sig', key_ops: ['encrypt'] })).toThrow(
-      'Invalid combination of "use" and "key_ops".'
-    )
+const invalidAlgs: any[] = [null, true, 12, 12n, 12.3, Buffer.alloc(1), Symbol.for('foo'), () => {}, [], {}];
 
-    expect(() => new MockKey({ use: 'enc', key_ops: ['verify'] })).toThrow(
-      'Invalid combination of "use" and "key_ops".'
-    )
-  })
+const invalidKeyIds: any[] = [null, true, 12, 12n, 12.3, Buffer.alloc(1), Symbol.for('foo'), () => {}, [], {}];
 
-  it('should reject an invalid "alg".', () => {
-    // @ts-expect-error
-    expect(() => new MockKey({ alg: 123 })).toThrow('Invalid parameter "alg".')
-  })
+describe('JSON Web Key', () => {
+  it.each(invalidUses)('should reject an invalid "use".', (invalidKeyUse) => {
+    expect(() => new JsonWebKeyMock({ use: invalidKeyUse })).toThrow(InvalidJsonWebKeyException);
+  });
 
-  it('should reject an invalid "kid".', () => {
-    // @ts-expect-error
-    expect(() => new MockKey({ kid: 123 })).toThrow('Invalid parameter "kid".')
-  })
-})
+  it.each(invalidKeyOps)('should reject an invalid "key_ops".', (invalidKeyOp) => {
+    expect(() => new JsonWebKeyMock({ key_ops: invalidKeyOp })).toThrow(InvalidJsonWebKeyException);
+  });
+
+  it('should reject duplicate "key_ops".', () => {
+    expect(() => new JsonWebKeyMock({ key_ops: ['sign', 'sign', 'verify'] })).toThrow(InvalidJsonWebKeyException);
+  });
+
+  it.each(invalidUseKeyOps)(
+    'should reject an invalid combination of "use" and "key_ops".',
+    (invalidUse, invalidKeyOps) => {
+      expect(() => new JsonWebKeyMock({ use: invalidUse, key_ops: invalidKeyOps })).toThrow(InvalidJsonWebKeyException);
+    }
+  );
+
+  it.each(invalidAlgs)('should reject an invalid "alg".', (invalidAlg) => {
+    expect(() => new JsonWebKeyMock({ alg: invalidAlg })).toThrow(InvalidJsonWebKeyException);
+  });
+
+  it.each(invalidKeyIds)('should reject an invalid "kid".', (invalidKeyId) => {
+    expect(() => new JsonWebKeyMock({ kid: invalidKeyId })).toThrow(InvalidJsonWebKeyException);
+  });
+});

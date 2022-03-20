@@ -1,7 +1,7 @@
 import { Optional } from '@guarani/types';
 
 /**
- * RsaKey generation options.
+ * Options for Generating an RSA JSON Web Key.
  */
 export interface GenerateRsaKeyOptions {
   /**
@@ -10,7 +10,7 @@ export interface GenerateRsaKeyOptions {
   readonly modulus: number;
 
   /**
-   * Public Exponent of the key.
+   * Public Exponent.
    */
   readonly publicExponent?: Optional<number>;
 }

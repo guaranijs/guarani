@@ -3,17 +3,17 @@ import { Dict, Optional } from '@guarani/types';
 import { KeyObject, privateDecrypt, publicEncrypt } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
-import { RsaPadding } from '../../../jwk/algorithms/rsa/rsa-padding';
+import { RsaPadding } from '../../../jwk/algorithms/rsa/types/rsa-padding';
 import { RsaKey } from '../../../jwk/algorithms/rsa/rsa.key';
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './supported-jsonwebencryption-keyencryption-algorithm';
-import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap.algorithm';
-import { WrappedKey } from './types/wrapped-key';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from '../enc/jsonwebencryption-contentencryption.algorithm';
+import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap.algorithm';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './types/supported-jsonwebencryption-keyencryption-algorithm';
+import { WrappedKey } from './types/wrapped-key';
 
 /**
  * Implementation of the RSA JSON Web Encryption Key Wrap Algorithm.
  */
-export class RsaKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
+class RSAKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
   /**
    * RSA Encryption Padding used by the JSON Web Encryption Key Wrap Algorithm.
    */
@@ -90,24 +90,24 @@ export class RsaKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
 /**
  * RSAES-PKCS1-v1_5.
  */
-export const RSA1_5 = new RsaKeyWrapAlgorithm('RSA1_5', RsaPadding.PKCS1);
+export const RSA1_5 = new RSAKeyWrapAlgorithm('RSA1_5', RsaPadding.PKCS1);
 
 /**
  * RSAES OAEP using default parameters.
  */
-export const RSA_OAEP = new RsaKeyWrapAlgorithm('RSA-OAEP', RsaPadding.OAEP, 'SHA1');
+export const RSA_OAEP = new RSAKeyWrapAlgorithm('RSA-OAEP', RsaPadding.OAEP, 'SHA1');
 
 /**
  * RSAES OAEP using SHA-256 and MGF1 with SHA-256.
  */
-export const RSA_OAEP_256 = new RsaKeyWrapAlgorithm('RSA-OAEP-256', RsaPadding.OAEP, 'SHA256');
+export const RSA_OAEP_256 = new RSAKeyWrapAlgorithm('RSA-OAEP-256', RsaPadding.OAEP, 'SHA256');
 
 /**
  * RSAES OAEP using SHA-384 and MGF1 with SHA-384.
  */
-export const RSA_OAEP_384 = new RsaKeyWrapAlgorithm('RSA-OAEP-384', RsaPadding.OAEP, 'SHA384');
+export const RSA_OAEP_384 = new RSAKeyWrapAlgorithm('RSA-OAEP-384', RsaPadding.OAEP, 'SHA384');
 
 /**
  * RSAES OAEP using SHA-512 and MGF1 with SHA-512.
  */
-export const RSA_OAEP_512 = new RsaKeyWrapAlgorithm('RSA-OAEP-512', RsaPadding.OAEP, 'SHA512');
+export const RSA_OAEP_512 = new RSAKeyWrapAlgorithm('RSA-OAEP-512', RsaPadding.OAEP, 'SHA512');

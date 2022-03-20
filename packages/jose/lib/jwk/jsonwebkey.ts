@@ -4,15 +4,15 @@ import { Dict, Optional } from '@guarani/types';
 import { KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-json-web-key.exception';
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from '../jwe/algorithms/alg/supported-jsonwebencryption-keyencryption-algorithm';
-import { SupportedJsonWebSignatureAlgorithm } from '../jws/algorithms/supported-jsonwebsignature-algorithm';
-import { SupportedJsonWebKeyAlgorithm } from './algorithms/supported-jsonwebkey-algorithm';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from '../jwe/algorithms/alg/types/supported-jsonwebencryption-keyencryption-algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from '../jws/algorithms/types/supported-jsonwebsignature-algorithm';
+import { SupportedJsonWebKeyAlgorithm } from './algorithms/types/supported-jsonwebkey-algorithm';
 import { JsonWebKeyParams } from './jsonwebkey.params';
 import { KeyOperation } from './types/key-operation';
 import { PublicKeyUse } from './types/public-key-use';
 
 /**
- * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7517.html RFC 7517}.
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7517.html#section-4 RFC 7517 Section 4}.
  */
 export abstract class JsonWebKey implements JsonWebKeyParams {
   /**
@@ -77,7 +77,11 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
     }
 
     if (params.key_ops !== undefined) {
-      if (!Array.isArray(params.key_ops) || params.key_ops.some((p) => typeof p !== 'string')) {
+      if (
+        !Array.isArray(params.key_ops) ||
+        params.key_ops.length === 0 ||
+        params.key_ops.some((p) => typeof p !== 'string')
+      ) {
         throw new InvalidJsonWebKeyException('Invalid parameter "key_ops".');
       }
 
@@ -87,8 +91,8 @@ export abstract class JsonWebKey implements JsonWebKeyParams {
     }
 
     if (params.use !== undefined && params.key_ops !== undefined) {
-      const sig = ['sign', 'verify'];
-      const enc = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey', 'deriveKey', 'deriveBits'];
+      const sig: KeyOperation[] = ['sign', 'verify'];
+      const enc: KeyOperation[] = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey', 'deriveKey', 'deriveBits'];
 
       if (
         (params.use === 'sig' && params.key_ops.some((p) => !sig.includes(p))) ||

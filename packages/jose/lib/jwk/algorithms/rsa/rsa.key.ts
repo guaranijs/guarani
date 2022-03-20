@@ -11,12 +11,15 @@ import {
 import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
+import { UnsupportedAlgorithmException } from '../../../exceptions/unsupported-algorithm.exception';
 import { JsonWebKey } from '../../jsonwebkey';
 import { JsonWebKeyParams } from '../../jsonwebkey.params';
-import { ExportRsaKeyOptions } from './export-rsa-key.options';
-import { GenerateRsaKeyOptions } from './generate-rsa-key.options';
 import { RsaKeyParams } from './rsa-key.params';
-import { ExportRsaKeyEncoding, ExportRsaKeyFormat, ExportRsaKeyType } from './types';
+import { ExportRsaKeyEncoding } from './types/export-rsa-key-encoding';
+import { ExportRsaKeyFormat } from './types/export-rsa-key-format';
+import { ExportRsaKeyType } from './types/export-rsa-key-type';
+import { ExportRsaKeyOptions } from './types/export-rsa-key.options';
+import { GenerateRsaKeyOptions } from './types/generate-rsa-key.options';
 
 const generateKeyPairAsync = promisify(generateKeyPair);
 
@@ -82,8 +85,12 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
 
     const params = <RsaKeyParams>{ ...key, ...options };
 
-    if (params.kty !== undefined && params.kty !== 'RSA') {
-      throw new InvalidJsonWebKeyException(`Invalid key parameter "kty". Expected "RSA", got "${params.kty}".`);
+    if (typeof params.kty !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid parameter "kty".');
+    }
+
+    if (params.kty !== 'RSA') {
+      throw new UnsupportedAlgorithmException(`Invalid JSON Web Key Type. Expected "RSA", got "${params.kty}".`);
     }
 
     if (typeof params.n !== 'string') {
@@ -99,7 +106,7 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
     }
 
     // TODO: Validate the following values based on the previous ones.
-    if (params.d !== undefined) {
+    if (['d', 'p', 'q', 'dp', 'dq', 'qi'].some((param) => params[param] !== undefined)) {
       if (typeof params.d !== 'string') {
         throw new InvalidJsonWebKeyException('Invalid key parameter "d".');
       }
@@ -145,12 +152,12 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
       throw new TypeError('Invalid parameter "modulus".');
     }
 
-    if (publicExponent !== undefined && !Number.isInteger(publicExponent)) {
-      throw new TypeError('Invalid parameter "publicExponent".');
-    }
-
     if (modulus < 2048) {
       throw new Error('The modulus must be at least 2048 bits.');
+    }
+
+    if (publicExponent !== undefined && !Number.isInteger(publicExponent)) {
+      throw new TypeError('Invalid parameter "publicExponent".');
     }
 
     const { privateKey } = await generateKeyPairAsync('rsa', { modulusLength: modulus, publicExponent });
@@ -276,6 +283,12 @@ export class RsaKey extends JsonWebKey implements RsaKeyParams {
       cryptoKey = createPublicKey(cryptoKey);
     }
 
-    return cryptoKey.export(input);
+    let exported = cryptoKey.export(input);
+
+    if (encoding === 'pem') {
+      exported = exported.slice(0, -1);
+    }
+
+    return exported;
   }
 }

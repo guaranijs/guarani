@@ -1,4 +1,4 @@
-import { SupportedEllipticCurve } from '../supported-elliptic-curve';
+import { SupportedEllipticCurve } from './supported-elliptic-curve';
 
 /**
  * Options for Generating an Elliptic Curve JSON Web Key.

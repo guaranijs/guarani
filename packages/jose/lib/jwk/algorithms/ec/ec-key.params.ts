@@ -1,7 +1,7 @@
 import { Optional } from '@guarani/types';
 
 import { JsonWebKeyParams } from '../../jsonwebkey.params';
-import { SupportedEllipticCurve } from './supported-elliptic-curve';
+import { SupportedEllipticCurve } from './types/supported-elliptic-curve';
 
 /**
  * Parameters of the Elliptic Curve JSON Web Key.

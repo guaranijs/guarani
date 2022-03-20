@@ -1,10 +1,10 @@
 import { Dict, Optional } from '@guarani/types';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
-import { SupportedJsonWebKeyAlgorithm } from '../../../jwk/algorithms/supported-jsonwebkey-algorithm';
+import { SupportedJsonWebKeyAlgorithm } from '../../../jwk/algorithms/types/supported-jsonwebkey-algorithm';
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from '../enc/jsonwebencryption-contentencryption.algorithm';
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './supported-jsonwebencryption-keyencryption-algorithm';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './types/supported-jsonwebencryption-keyencryption-algorithm';
 import { WrappedKey } from './types/wrapped-key';
 
 /**

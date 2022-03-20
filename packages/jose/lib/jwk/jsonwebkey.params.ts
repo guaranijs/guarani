@@ -1,8 +1,8 @@
 import { Optional } from '@guarani/types';
 
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from '../jwe/algorithms/alg/supported-jsonwebencryption-keyencryption-algorithm';
-import { SupportedJsonWebSignatureAlgorithm } from '../jws/algorithms/supported-jsonwebsignature-algorithm';
-import { SupportedJsonWebKeyAlgorithm } from './algorithms/supported-jsonwebkey-algorithm';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from '../jwe/algorithms/alg/types/supported-jsonwebencryption-keyencryption-algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from '../jws/algorithms/types/supported-jsonwebsignature-algorithm';
+import { SupportedJsonWebKeyAlgorithm } from './algorithms/types/supported-jsonwebkey-algorithm';
 import { PublicKeyUse } from './types/public-key-use';
 import { KeyOperation } from './types/key-operation';
 

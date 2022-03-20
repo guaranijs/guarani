@@ -4,6 +4,7 @@ import { createSecretKey, KeyObject, randomBytes } from 'crypto';
 import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
+import { UnsupportedAlgorithmException } from '../../../exceptions/unsupported-algorithm.exception';
 import { JsonWebKey } from '../../jsonwebkey';
 import { JsonWebKeyParams } from '../../jsonwebkey.params';
 import { OctKeyParams } from './oct-key.params';
@@ -40,8 +41,12 @@ export class OctKey extends JsonWebKey implements OctKeyParams {
 
     const params = <OctKeyParams>{ ...key, ...options };
 
-    if (params.kty !== undefined && params.kty !== 'oct') {
-      throw new InvalidJsonWebKeyException(`Invalid key parameter "kty". Expected "oct", got "${params.kty}".`);
+    if (typeof params.kty !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid parameter "kty".');
+    }
+
+    if (params.kty !== 'oct') {
+      throw new UnsupportedAlgorithmException(`Invalid JSON Web Key Type. Expected "EC", got "${params.kty}".`);
     }
 
     if (typeof params.k !== 'string') {

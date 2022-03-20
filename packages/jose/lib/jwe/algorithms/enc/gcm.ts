@@ -1,8 +1,8 @@
 import { createCipheriv, createDecipheriv, CipherGCMTypes } from 'crypto';
 
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './supported-jsonwebencryption-contentencryption-algorithm';
-import { AuthenticatedEncryption } from './authenticated-encryption';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-contentencryption.algorithm';
+import { AuthenticatedEncryption } from './types/authenticated-encryption';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './types/supported-jsonwebencryption-contentencryption-algorithm';
 
 /**
  * Implementation of the AES-GCM JSON Web Encryption Content Encryption Algorithm.

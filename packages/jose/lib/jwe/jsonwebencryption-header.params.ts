@@ -1,9 +1,9 @@
 import { Optional } from '@guarani/types';
 
 import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
-import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithms/alg/supported-jsonwebencryption-keyencryption-algorithm';
-import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './algorithms/enc/supported-jsonwebencryption-contentencryption-algorithm';
-import { SupportedJsonWebEncryptionCompressionAlgorithm } from './algorithms/zip/supported-jsonwebencryption-compression-algorithm';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithms/alg/types/supported-jsonwebencryption-keyencryption-algorithm';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './algorithms/enc/types/supported-jsonwebencryption-contentencryption-algorithm';
+import { SupportedJsonWebEncryptionCompressionAlgorithm } from './algorithms/zip/types/supported-jsonwebencryption-compression-algorithm';
 
 /**
  * Parameters of the JSON Web Encryption Header.

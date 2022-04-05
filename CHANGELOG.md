@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/guaranijs/guarani/compare/v0.6.1...v0.7.0) (2022-04-05)
+
+
+### Bug Fixes
+
+* **jose:** Added missing JWT exports. ([83d0d2b](https://github.com/guaranijs/guarani/commit/83d0d2b644644a6c420d733922b123a40902717d))
+* **jose:** Added missing types exports. ([1caea3d](https://github.com/guaranijs/guarani/commit/1caea3dc0e136c0ec144ff2fea43da6b2ea9887c))
+* **jose:** Fixed JWK "kty" parameter. ([4b5e0fa](https://github.com/guaranijs/guarani/commit/4b5e0fa75a43924aa625f48fda70adf32ea08bee))
+* **oauth2:** token endpoint was missing its name. ([79f7298](https://github.com/guaranijs/guarani/commit/79f72989adcb39780999ff96640bd0ba46d4af87))
+
+
+### Features
+
+* **ioc:** added lifecycle to the bindings. ([1f90bbd](https://github.com/guaranijs/guarani/commit/1f90bbd84218205cdf843e5880d50c4d549094d6))
+* **ioc:** Added support for static property injection. ([832915f](https://github.com/guaranijs/guarani/commit/832915f088f3a3c6a795df897a4e17e0c5213449))
+* **jose:** Added JsonWebToken.isJWT() method. ([974993d](https://github.com/guaranijs/guarani/commit/974993da8db10042a3d6bc61b7d7e9eacb090335))
+* **oauth2:** Added support for RFC 7523 and its OpenID Connect profiles. ([55041fa](https://github.com/guaranijs/guarani/commit/55041fa156c11509a89c1c32b8526c5b5b97b705))
+* **oauth2:** Changed the Authorization and Token flows from their endpoints to their respective abstract class. ([e7b33af](https://github.com/guaranijs/guarani/commit/e7b33afc4eea55ddeecdb966e1cf747990c65961))
+* **oauth2:** Changed the Authorization and Token flows from their endpoints to their respective abstract class. ([4a5c6cf](https://github.com/guaranijs/guarani/commit/4a5c6cf704ce81e396337df0347e46b9d5b24cea))
+
+
+
+
+
 ## [0.6.1](https://github.com/guaranijs/guarani/compare/v0.6.0...v0.6.1) (2021-09-08)
 
 

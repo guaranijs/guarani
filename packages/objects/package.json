@@ -1,6 +1,6 @@
 {
   "name": "@guarani/objects",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Utilities for manipulating Objects.",
   "license": "MIT",
   "main": "dist/index.js",
@@ -34,7 +34,6 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "@guarani/types": "^0.6.0"
+    "@guarani/types": "0.7.0"
   }
 }
-

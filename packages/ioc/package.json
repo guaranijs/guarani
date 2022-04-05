@@ -1,6 +1,6 @@
 {
   "name": "@guarani/ioc",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Inversion of Control Framework for Guarani.",
   "keywords": [
     "inversion",
@@ -40,6 +40,6 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "@guarani/types": "^0.6.0"
+    "@guarani/types": "0.7.0"
   }
 }

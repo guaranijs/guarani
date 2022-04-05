@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/guaranijs/guarani/compare/v0.6.1...v0.7.0) (2022-04-05)
+
+
+### Bug Fixes
+
+* **jose:** Added missing JWT exports. ([83d0d2b](https://github.com/guaranijs/guarani/commit/83d0d2b644644a6c420d733922b123a40902717d))
+* **jose:** Added missing types exports. ([1caea3d](https://github.com/guaranijs/guarani/commit/1caea3dc0e136c0ec144ff2fea43da6b2ea9887c))
+* **jose:** Fixed JWK "kty" parameter. ([4b5e0fa](https://github.com/guaranijs/guarani/commit/4b5e0fa75a43924aa625f48fda70adf32ea08bee))
+
+
+### Features
+
+* **jose:** Added JsonWebToken.isJWT() method. ([974993d](https://github.com/guaranijs/guarani/commit/974993da8db10042a3d6bc61b7d7e9eacb090335))
+
+
+
+
+
 # [0.6.0](https://github.com/guaranijs/guarani/compare/v0.5.0...v0.6.0) (2021-09-08)
 
 **Note:** Version bump only for package @guarani/jose

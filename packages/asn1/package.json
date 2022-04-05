@@ -1,6 +1,6 @@
 {
   "name": "@guarani/asn1",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "ASN.1 utilities and functionalities used throughout Guarani.",
   "license": "MIT",
   "main": "dist/index.js",
@@ -34,11 +34,11 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@guarani/primitives": "^0.6.0",
+    "@guarani/primitives": "0.7.0",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "@guarani/types": "^0.6.0",
-    "@guarani/utils": "^0.6.0"
+    "@guarani/types": "0.7.0",
+    "@guarani/utils": "0.7.0"
   }
 }

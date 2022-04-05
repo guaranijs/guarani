@@ -1,6 +1,6 @@
 {
   "name": "@guarani/data-structures",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Implementation of various Data Structures.",
   "license": "MIT",
   "main": "dist/index.js",
@@ -31,9 +31,9 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@guarani/objects": "^0.6.0"
+    "@guarani/objects": "0.7.0"
   },
   "devDependencies": {
-    "@guarani/types": "^0.6.0"
+    "@guarani/types": "0.7.0"
   }
 }

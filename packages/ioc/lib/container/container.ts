@@ -1,19 +1,16 @@
-import { Constructor, Dict } from '@guarani/utils'
+import { Constructor, Dict, Optional } from '@guarani/types';
 
-import { Binding, ProviderBinding } from '../bindings'
-import { TokenNotRegistered } from '../exceptions'
-import { Lifecycle } from '../lifecycle'
-import { getParamTypes, getPropTokens } from '../metadata'
-import {
-  isClassProvider,
-  isFactoryProvider,
-  isProvider,
-  isTokenProvider,
-  isValueProvider,
-  Provider
-} from '../providers'
-import { InjectableToken, LazyToken } from '../tokens'
-import { Registry } from './registry'
+import { Binding } from '../bindings/binding';
+import { ProviderBinding } from '../bindings/provider.binding';
+import { Lifecycle } from '../lifecycle/lifecycle';
+import { getParamTypes, getPropTokens } from '../metadata';
+import { isClassProvider } from '../providers/class.provider';
+import { isFactoryProvider } from '../providers/factory.provider';
+import { Provider } from '../providers/provider';
+import { isTokenProvider } from '../providers/token.provider';
+import { isValueProvider } from '../providers/value.provider';
+import { InjectableToken, LazyToken } from '../tokens';
+import { Registry } from './registry';
 
 /**
  * Implementation of the IoC Container.
@@ -24,7 +21,7 @@ export class IoCContainer {
    * where each binding contains a provider specifying the resolution
    * method to be used when resolving the Token.
    */
-  private readonly registry = new Registry()
+  private readonly registry = new Registry();
 
   /**
    * Adds an entry to the registry using the provided binding or,
@@ -37,10 +34,9 @@ export class IoCContainer {
    * @returns Binding Provider configuration object.
    */
   public bindToken<T>(token: InjectableToken<T>): ProviderBinding<T> {
-    const binding = new Binding<T>(token)
-    this.registry.add(token, binding)
-
-    return new ProviderBinding(binding)
+    const binding = new Binding<T>(token);
+    this.registry.set(token, binding);
+    return new ProviderBinding(binding);
   }
 
   /**
@@ -52,16 +48,11 @@ export class IoCContainer {
    */
   public resolve<T>(token: InjectableToken<T>): T {
     if (token instanceof LazyToken) {
-      return token.resolve(lazyToken => this.resolve(lazyToken))
+      return token.resolve((lazyToken) => this.resolve<T>(lazyToken));
     }
 
-    if (!this.isBound(token)) {
-      throw new TokenNotRegistered(token)
-    }
-
-    const binding = this.registry.get(token)
-
-    return this.resolveBinding(binding)
+    const binding = this.registry.get<T>(token);
+    return this.resolveBinding<T>(binding);
   }
 
   /**
@@ -75,23 +66,27 @@ export class IoCContainer {
    */
   public resolveAll<T>(token: InjectableToken<T>): T[] {
     if (token instanceof LazyToken) {
-      throw new Error('The resolution of multiple LazyTokens is unsupported.')
+      throw new Error('The resolution of multiple LazyTokens is unsupported.');
     }
 
-    if (!this.isBound(token)) {
-      throw new TokenNotRegistered(token)
-    }
+    const bindings = this.registry.getAll<T>(token);
+    return bindings.map((binding) => this.resolveBinding<T>(binding));
+  }
 
-    const bindings = this.registry.getAll(token)
-
-    return bindings.map(binding => this.resolveBinding(binding))
+  /**
+   * Deletes an Injectable Token from the Container's Registry.
+   *
+   * @param token Injectable Token to be deleted.
+   */
+  public delete<T>(token: InjectableToken<T>): void {
+    this.registry.delete(token);
   }
 
   /**
    * Clears the registry, removing all the bindings from it.
    */
   public clear(): void {
-    this.registry.clear()
+    this.registry.clear();
   }
 
   /**
@@ -102,18 +97,18 @@ export class IoCContainer {
    */
   private resolveBinding<T>(binding: Binding<T>): T {
     if (binding.lifecycle === Lifecycle.Singleton) {
-      if (binding.instance == null) {
-        binding.instance = this.resolveProvider(binding.provider)
+      if (binding.instance === undefined) {
+        binding.instance = this.resolveProvider(binding.provider);
       }
 
-      return binding.instance
+      return binding.instance;
     }
 
     if (binding.lifecycle === Lifecycle.Transient) {
-      return this.resolveProvider(binding.provider)
+      return this.resolveProvider(binding.provider);
     }
 
-    throw new Error(`Unsupported lifecycle "${binding.lifecycle}".`)
+    throw new Error(`Unsupported lifecycle "${binding.lifecycle}".`);
   }
 
   /**
@@ -123,25 +118,23 @@ export class IoCContainer {
    * @returns Resolved provider.
    */
   private resolveProvider<T>(provider: Provider<T>): T {
-    if (!isProvider<T>(provider)) {
-      throw new TypeError(`The object ${provider} is not a provider.`)
-    }
-
     if (isClassProvider<T>(provider)) {
-      return this.construct(provider.target)
+      return this.construct(provider.target);
     }
 
     if (isFactoryProvider<T>(provider)) {
-      return provider.factory()
+      return provider.factory();
     }
 
     if (isTokenProvider<T>(provider)) {
-      return this.resolve(provider.token)
+      return this.resolve(provider.token);
     }
 
     if (isValueProvider<T>(provider)) {
-      return provider.value
+      return provider.value;
     }
+
+    throw new TypeError(`The object ${provider} is not a provider.`);
   }
 
   /**
@@ -153,44 +146,51 @@ export class IoCContainer {
    * @returns Instantiated Constructor.
    */
   private construct<T>(constructor: Constructor<T>): T {
-    const tokens = getParamTypes(constructor) ?? []
+    const tokens = getParamTypes(constructor) ?? [];
 
-    const resolvedTokens = tokens.map(token =>
+    const resolvedTokens = tokens.map((token) =>
       token.multiple ? this.resolveAll(token.token) : this.resolve(token.token)
-    )
+    );
 
-    const instance = Reflect.construct(constructor, resolvedTokens)
-    const propTokens = getPropTokens(constructor)
+    const instance = <T>Reflect.construct(constructor, resolvedTokens);
+    const propTokens = getPropTokens(constructor);
 
-    if (propTokens) {
-      Object.entries(propTokens).forEach(([prop, token]) => {
-        const resolvedToken = token.multiple
-          ? this.resolveAll(token.token)
-          : this.resolve(token.token)
+    if (propTokens !== undefined) {
+      for (const [prop, token] of propTokens) {
+        const resolvedToken = token.multiple ? this.resolveAll(token.token) : this.resolve(token.token);
 
         if (token.isStatic) {
-          instance.constructor[prop] = resolvedToken
+          // @ts-expect-error
+          instance.constructor[prop] = resolvedToken;
         } else {
-          instance[prop] = resolvedToken
+          // @ts-expect-error
+          instance[prop] = resolvedToken;
         }
-      })
+      }
     }
 
-    return instance
-  }
-
-  /**
-   * Returns whether or not the requested token is registered at the Container.
-   *
-   * @param token Injectable Token to be inspected.
-   * @returns Whether or not the Token is registered.
-   */
-  private isBound<T>(token: InjectableToken<T>): boolean {
-    return this.registry.has(token)
+    return instance;
   }
 }
 
-const containers: Dict<IoCContainer> = {}
+/**
+ * Registry of the containers requested through `getContainer()`.
+ */
+const containers: Dict<IoCContainer> = {};
+
+/**
+ * Returns a singleton instance of an IoC Container based on the requested name.
+ *
+ * @param name Name of the Container.
+ * @returns Instance of the requested Container.
+ */
+export function getContainer(name: Optional<string> = 'default'): IoCContainer {
+  if (containers[name] === undefined) {
+    containers[name] = new IoCContainer();
+  }
+
+  return containers[name];
+}
 
 /**
  * Implementation of the Inversion of Control Container.
@@ -203,22 +203,20 @@ const containers: Dict<IoCContainer> = {}
  * own definition of a class, as a string or as a symbol.
  *
  * ```
- *   import { getContainer, Injectable } from "@guarani/ioc"
- *
- *   const Container = getContainer("test")
+ *   import { Container, Injectable } from "@guarani/ioc";
  *
  *   // Example of binding the token `Foo` to the class `Foo`.
  *  ⠀@Injectable()
  *   class Foo {}
- *   Container.bindToken(Foo).toSelf()
+ *   Container.bindToken(Foo).toSelf();
  *
  *   // Example of binding the token "Bar" to the class `Bar`.
  *  ⠀@Injectable()
  *   class Bar {}
- *   Container.bindToken<Bar>("Bar").toClass(Bar)
+ *   Container.bindToken<Bar>("Bar").toClass(Bar);
  *
  *   // Example of binding the token "issuer" to the value "http://example.com".
- *   Container.bindToken<string>("issuer").toValue<string>("http://example.com")
+ *   Container.bindToken<string>("issuer").toValue<string>("http://example.com");
  * ```
  *
  * To inject a dependency into a class, simple decorate it as an `@Injectable()`
@@ -229,19 +227,17 @@ const containers: Dict<IoCContainer> = {}
  * at the Container via the `Container.bindToken()` method.
  *
  * ```
- *   import { getContainer, Injectable } from "@guarani/ioc"
- *
- *   const Container = getContainer("test")
+ *   import { Container, Injectable } from "@guarani/ioc";
  *
  *  ⠀@Injectable()
  *   class Foo {}
- *   Container.bindToken(Foo).toSelf()
+ *   Container.bindToken(Foo).toSelf();
  *
  *  ⠀@Injectable()
  *   class Bar {
  *     public constructor(private readonly foo: Foo) {}
  *   }
- *   Container.bindToken(Bar).toSelf()
+ *   Container.bindToken(Bar).toSelf();
  * ```
  *
  * To inject values that cannot be registered as an `@Injectable()`,
@@ -253,49 +249,47 @@ const containers: Dict<IoCContainer> = {}
  *
  * ```
  *   import {
- *     getContainer,
+ *     Container,
  *     Inject,
  *     InjectAll,
- *     Injectable
- *   } from "@guarani/ioc"
- *
- *   const Container = getContainer("test")
+ *     Injectable,
+ *   } from "@guarani/ioc";
  *
  *   interface Foo {
- *     echo(): string
+ *     echo(): string;
  *   }
  *
  *  ⠀@Injectable()
  *   class Bar implements Foo {
  *     public echo(): string {
- *       return "foo"
+ *       return "foo";
  *     }
  *   }
- *   Container.bindToken<Foo>("Foo").toClass(Bar)
+ *   Container.bindToken<Foo>("Foo").toClass(Bar);
  *
  *  ⠀@Injectable()
  *   class Baz implements Foo {
  *     public echo(): string {
- *       return "bar"
+ *       return "bar";
  *     }
  *   }
- *   Container.bindToken<Foo>("Foo").toClass(Baz)
+ *   Container.bindToken<Foo>("Foo").toClass(Baz);
  *
  *  ⠀@Injectable()
  *   class Qux {}
- *   Container.bindToken(Qux).toSelf()
+ *   Container.bindToken(Qux).toSelf();
  *
- *   Container.bindToken<string>("issuer").toValue<string>("http://example.com")
+ *   Container.bindToken<string>("issuer").toValue<string>("http://example.com");
  *
  *  ⠀@Injectable()
  *   class Service {
  *     public constructor(
  *       private readonly qux: Qux,
  *      ⠀@Inject("issuer") private readonly issuer: string,
- *      ⠀@InjectAll("Foo") private readonly fooArray: Foo[]
+ *      ⠀@InjectAll("Foo") private readonly fooArray: Foo[],
  *     ) {}
  *   }
- *   Container.bindToken(Service).toSelf()
+ *   Container.bindToken(Service).toSelf();
  * ```
  *
  * To resolve a single `@Injectable()` or a single value, use the method
@@ -307,10 +301,4 @@ const containers: Dict<IoCContainer> = {}
  * providers bound to the requested Token and return an array containing
  * the resolved instances or values, ordered by the insertion precedence.
  */
-export function getContainer(name: string = 'default'): IoCContainer {
-  if (containers[name] == null) {
-    containers[name] = new IoCContainer()
-  }
-
-  return containers[name]
-}
+export const Container = new IoCContainer();

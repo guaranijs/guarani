@@ -1,507 +1,294 @@
-import {
-  Decoder,
-  DERDecoder,
-  DEREncoder,
-  Integer,
-  Node,
-  PEMDecoder,
-  PEMEncoder
-} from '@guarani/asn1'
-import { base64UrlBufferLength } from '@guarani/utils'
+import { Optional } from '@guarani/types';
 
-import { generateKeyPair } from 'crypto'
-import { promisify } from 'util'
+import {
+  createPrivateKey,
+  createPublicKey,
+  generateKeyPair,
+  JsonWebKeyInput as CryptoJsonWebKeyInput,
+  KeyExportOptions,
+  KeyObject,
+} from 'crypto';
+import { promisify } from 'util';
 
-import { InvalidKey } from '../../../exceptions'
-import {
-  JsonWebKey,
-  JsonWebKeyParams,
-  SupportedJWKAlgorithm
-} from '../../jsonwebkey'
-import {
-  decodePrivatePkcs1,
-  decodePrivatePkcs8,
-  encodePrivatePkcs1,
-  encodePrivatePkcs8
-} from './_private'
-import {
-  decodePublicPkcs1,
-  decodePublicX509,
-  encodePublicPkcs1,
-  encodePublicX509
-} from './_public'
+import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
+import { UnsupportedAlgorithmException } from '../../../exceptions/unsupported-algorithm.exception';
+import { JsonWebKey } from '../../jsonwebkey';
+import { JsonWebKeyParams } from '../../jsonwebkey.params';
+import { RsaKeyParams } from './rsa-key.params';
+import { ExportRsaKeyEncoding } from './types/export-rsa-key-encoding';
+import { ExportRsaKeyFormat } from './types/export-rsa-key-format';
+import { ExportRsaKeyType } from './types/export-rsa-key-type';
+import { ExportRsaKeyOptions } from './types/export-rsa-key.options';
+import { GenerateRsaKeyOptions } from './types/generate-rsa-key.options';
 
-const generateKeyPairAsync = promisify(generateKeyPair)
+const generateKeyPairAsync = promisify(generateKeyPair);
 
 /**
- * Representation of the parameters of an **RSA Key**.
- */
-export interface RsaKeyParams extends JsonWebKeyParams {
-  /**
-   * Base64Url representation of the Modulus.
-   */
-  readonly n: string
-
-  /**
-   * Base64Url representation of the Public Exponent.
-   */
-  readonly e: string
-
-  /**
-   * Base64Url representation of the Private Exponent.
-   */
-  readonly d?: string
-
-  /**
-   * Base64Url representation of the First Prime.
-   */
-  readonly p?: string
-
-  /**
-   * Base64Url representation of the Second Prime.
-   */
-  readonly q?: string
-
-  /**
-   * Base64Url representation of the CRT's First Exponent.
-   */
-  readonly dp?: string
-
-  /**
-   * Base64Url representation of the CRT's Second Exponent.
-   */
-  readonly dq?: string
-
-  /**
-   * Base64Url representation of the CRT's Coefficient.
-   */
-  readonly qi?: string
-
-  /**
-   * Base64Url representation of the Other Primes.
-   */
-  readonly oth?: [string?, string?, string?]
-}
-
-/**
- * Implementation of the RSA Key.
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7518.html#section-6.3 RFC 7518 Section 6.3}.
  */
 export class RsaKey extends JsonWebKey implements RsaKeyParams {
   /**
-   * Key type representing the algorithm of the key.
+   * Type of the JSON Web Key.
    */
-  public readonly kty: SupportedJWKAlgorithm
+  public readonly kty!: 'RSA';
 
   /**
-   * Base64Url representation of the Modulus.
+   * Modulus.
    */
-  public readonly n: string
+  public readonly n!: string;
 
   /**
-   * Base64Url representation of the Public Exponent.
+   * Public Exponent.
    */
-  public readonly e: string
+  public readonly e!: string;
 
   /**
-   * Base64Url representation of the Private Exponent.
+   * Private Exponent.
    */
-  public readonly d?: string
+  public readonly d?: Optional<string>;
 
   /**
-   * Base64Url representation of the First Prime.
+   * First Prime Factor.
    */
-  public readonly p?: string
+  public readonly p?: Optional<string>;
 
   /**
-   * Base64Url representation of the Second Prime.
+   * Second Prime Factor.
    */
-  public readonly q?: string
+  public readonly q?: Optional<string>;
 
   /**
-   * Base64Url representation of the CRT's First Exponent.
+   * First Factor CRT Exponent.
    */
-  public readonly dp?: string
+  public readonly dp?: Optional<string>;
 
   /**
-   * Base64Url representation of the CRT's Second Exponent.
+   * Second Factor CRT Exponent.
    */
-  public readonly dq?: string
+  public readonly dq?: Optional<string>;
 
   /**
-   * Base64Url representation of the CRT's Coefficient.
+   * First Factor CRT Coefficient.
    */
-  public readonly qi?: string
+  public readonly qi?: Optional<string>;
 
   /**
-   * Base64Url representation of the Other Primes.
-   */
-  public readonly oth?: [string?, string?, string?]
-
-  /**
-   * Instantiantes a new RSA Key based on the provided parameters.
+   * Instantiates an RSA JSON Web Key based on the provided Parameters.
    *
-   * @param key Parameters of the key.
+   * @param key Parameters of the RSA JSON Web Key.
    * @param options Optional JSON Web Key Parameters.
    */
-  public constructor(key: RsaKeyParams, options: JsonWebKeyParams = {}) {
-    const params: RsaKeyParams = { ...key, ...options }
-
-    super(params)
-
-    if (params.kty && params.kty !== 'RSA') {
-      throw new InvalidKey(
-        `Invalid parameter "kty". Expected "RSA", got "${params.kty}".`
-      )
+  public constructor(key: RsaKeyParams, options: Optional<JsonWebKeyParams> = {}) {
+    if (key instanceof RsaKey) {
+      return key;
     }
 
-    if (!params.n || typeof params.n !== 'string') {
-      throw new InvalidKey('Invalid parameter "n".')
+    const params = <RsaKeyParams>{ ...key, ...options };
+
+    if (typeof params.kty !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid parameter "kty".');
     }
 
-    if (base64UrlBufferLength(params.n) < 256) {
-      throw new InvalidKey('The modulus MUST have AT LEAST 2048 bits.')
+    if (params.kty !== 'RSA') {
+      throw new UnsupportedAlgorithmException(`Invalid JSON Web Key Type. Expected "RSA", got "${params.kty}".`);
     }
 
-    if (!params.e || typeof params.e !== 'string') {
-      throw new InvalidKey('Invalid parameter "e".')
+    if (typeof params.n !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid key parameter "n".');
     }
 
-    this.kty = 'RSA'
-    this.n = params.n
-    this.e = params.e
-
-    if (params.d != null) {
-      if (!params.d || typeof params.d !== 'string') {
-        throw new InvalidKey('Invalid parameter "d".')
-      }
-
-      if (!params.p || typeof params.p !== 'string') {
-        throw new InvalidKey('Invalid parameter "p".')
-      }
-
-      if (!params.q || typeof params.q !== 'string') {
-        throw new InvalidKey('Invalid parameter "q".')
-      }
-
-      if (!params.dp || typeof params.dp !== 'string') {
-        throw new InvalidKey('Invalid parameter "dp".')
-      }
-
-      if (!params.dq || typeof params.dq !== 'string') {
-        throw new InvalidKey('Invalid parameter "dq".')
-      }
-
-      if (!params.qi || typeof params.qi !== 'string') {
-        throw new InvalidKey('Invalid parameter "qi".')
-      }
-
-      this.d = params.d
-      this.p = params.p
-      this.q = params.q
-      this.dp = params.dp
-      this.dq = params.dq
-      this.qi = params.qi
+    if (Buffer.from(params.n, 'base64url').length < 256) {
+      throw new InvalidJsonWebKeyException('The modulus MUST have AT LEAST 2048 bits.');
     }
+
+    if (typeof params.e !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid key parameter "e".');
+    }
+
+    // TODO: Validate the following values based on the previous ones.
+    if (['d', 'p', 'q', 'dp', 'dq', 'qi'].some((param) => params[param] !== undefined)) {
+      if (typeof params.d !== 'string') {
+        throw new InvalidJsonWebKeyException('Invalid key parameter "d".');
+      }
+
+      if (typeof params.p !== 'string') {
+        throw new InvalidJsonWebKeyException('Invalid key parameter "p".');
+      }
+
+      if (typeof params.q !== 'string') {
+        throw new InvalidJsonWebKeyException('Invalid key parameter "q".');
+      }
+
+      if (typeof params.dp !== 'string') {
+        throw new InvalidJsonWebKeyException('Invalid key parameter "dp".');
+      }
+
+      if (typeof params.dq !== 'string') {
+        throw new InvalidJsonWebKeyException('Invalid key parameter "dq".');
+      }
+
+      if (typeof params.qi !== 'string') {
+        throw new InvalidJsonWebKeyException('Invalid key parameter "qi".');
+      }
+    }
+
+    super(params);
   }
 
   /**
-   * Creates a new RSA Key.
+   * Generates a new RSA JSON Web Key.
    *
-   * @param modulus Length of the Modulus of the Key in bits.
-   * @param options Optional JSON Web Key Parameters.
-   * @returns Instance of an RsaKey.
+   * @param options Options for the generation of the RSA JSON Web Key.
+   * @param params Optional JSON Web Key Parameters.
+   * @returns Generated RSA JSON Web Key.
    */
   public static async generate(
-    modulus: number,
-    options?: JsonWebKeyParams
+    options: GenerateRsaKeyOptions,
+    params: Optional<JsonWebKeyParams> = {}
   ): Promise<RsaKey> {
+    const { modulus, publicExponent } = options;
+
     if (!Number.isInteger(modulus)) {
-      throw new InvalidKey('Invalid modulus length.')
+      throw new TypeError('Invalid parameter "modulus".');
     }
 
     if (modulus < 2048) {
-      throw new InvalidKey('The modulus MUST be AT LEAST 2048 bits long.')
+      throw new Error('The modulus must be at least 2048 bits.');
     }
 
-    const { privateKey } = await generateKeyPairAsync('rsa', {
-      modulusLength: modulus,
-      publicExponent: 0x10001
-    })
+    if (publicExponent !== undefined && !Number.isInteger(publicExponent)) {
+      throw new TypeError('Invalid parameter "publicExponent".');
+    }
 
-    const der = privateKey.export({ format: 'der', type: 'pkcs1' })
-    const decoder = DERDecoder(der).sequence()
+    const { privateKey } = await generateKeyPairAsync('rsa', { modulusLength: modulus, publicExponent });
 
-    // Removes the version.
-    decoder.integer()
-
-    return decodePrivatePkcs1(decoder, options)
+    return new RsaKey(<RsaKeyParams>privateKey.export({ format: 'jwk' }), params);
   }
 
   /**
-   * Parses a DER encoded RSA Key.
+   * Loads the provided JSON Web Key into a NodeJS Crypto Key.
    *
-   * @param der DER representation of the RSA Key.
-   * @param options Optional JSON Web Key Parameters.
-   * @returns Instance of an RsaKey.
+   * @param params Parameters of the JSON Web Key.
+   * @returns NodeJS Crypto Key.
    */
-  public static parse(der: Buffer, options?: JsonWebKeyParams): RsaKey
-
-  /**
-   * Parses a PEM encoded RSA Key.
-   *
-   * @param pem PEM representation of the RSA Key.
-   * @param options Optional JSON Web Key Parameters.
-   * @returns Instance of an RsaKey.
-   */
-  public static parse(pem: string, options?: JsonWebKeyParams): RsaKey
-
-  public static parse(
-    data: Buffer | string,
-    options?: JsonWebKeyParams
-  ): RsaKey {
-    if (!data || (!Buffer.isBuffer(data) && typeof data !== 'string')) {
-      throw new TypeError('Invalid Key Data.')
-    }
-
-    let decoder: Decoder
-
-    try {
-      if (Buffer.isBuffer(data)) {
-        decoder = DERDecoder(data).sequence()
-      } else {
-        decoder = PEMDecoder(data).sequence()
-      }
-    } catch {
-      throw new InvalidKey('Could not parse the provided key.')
-    }
-
-    // Private Key.
-    if (!Buffer.compare(decoder.data.slice(0, 3), new Integer(0x00).encode())) {
-      // Removes the version.
-      decoder.integer()
-
-      try {
-        try {
-          return decodePrivatePkcs1(decoder, options)
-        } catch {
-          return decodePrivatePkcs8(decoder, options)
-        }
-      } catch {
-        throw new InvalidKey('Could not parse the provided key.')
-      }
-    } else {
-      try {
-        try {
-          return decodePublicPkcs1(decoder, options)
-        } catch {
-          return decodePublicX509(decoder, options)
-        }
-      } catch {
-        throw new InvalidKey('Could not parse the provided key.')
-      }
-    }
+  protected loadCryptoKey(params: RsaKeyParams): KeyObject {
+    const input: CryptoJsonWebKeyInput = { format: 'jwk', key: params };
+    return params.d === undefined ? createPublicKey(input) : createPrivateKey(input);
   }
 
   /**
-   * Returns a DER representation of the Public Key
-   * that only contains the parameters of the Key.
+   * Exports the PKCS#1 RSA Private Key DER Encoding of the RSA JSON Web Key.
    *
-   * @param key Defines the encoding of the Public Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Public Key.
-   * @returns DER encoded PKCS#1 RSA Public Key.
-   *
-   * @example
-   * ```
-   * > const pkcs1 = key.export('public', 'der', 'pkcs1')
-   * > pkcs1
-   * <Buffer 30 82 01 0a 02 82 01 01 00 c6 3a 45 c9 dc d3 ... 255 more bytes>
-   * ```
+   * @param options Options for exporting the data of the RSA JSON Web Key.
+   * @returns DER Encoded PKCS#1 RSA Private Key.
    */
-  public export(key: 'public', format: 'der', type: 'pkcs1'): Buffer
+  public export(options: ExportRsaKeyOptions<'der', 'pkcs1', 'private'>): Buffer;
 
   /**
-   * Returns a DER representation of the Public Key enveloped
-   * in an X.509 SubjectPublicKeyInfo containing the Modulus
-   * and the Public Exponent of the Key.
+   * Exports the PKCS#1 RSA Private Key PEM Encoding of the RSA JSON Web Key.
    *
-   * @param key Defines the encoding of the Public Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Public Key.
-   * @returns DER encoded SPKI RSA Public Key.
-   *
-   * @example
-   * ```
-   * > const x509 = key.export('public', 'der', 'x509')
-   * > x509
-   * <Buffer 30 82 01 22 30 0d 06 09 2a 86 48 86 f7 0d 01 ... 279 more bytes>
-   * ```
+   * @param options Options for exporting the data of the RSA JSON Web Key.
+   * @returns PEM Encoded PKCS#1 RSA Private Key.
    */
-  public export(key: 'public', format: 'der', type: 'x509'): Buffer
+  public export(options: ExportRsaKeyOptions<'pem', 'pkcs1', 'private'>): string;
 
   /**
-   * Returns a PEM representation of the Public Key
-   * that only contains the parameters of the Key.
+   * Exports the PKCS#8 RSA Private Key DER Encoding of the RSA JSON Web Key.
    *
-   * @param key Defines the encoding of the Public Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Public Key.
-   * @returns PEM encoded PKCS#1 RSA Public Key.
-   *
-   * @example
-   * ```
-   * > const pkcs1 = key.export('public', 'pem', 'pkcs1')
-   * > pkcs1
-   * '-----BEGIN RSA PUBLIC KEY-----\n' +
-   * '<Base64 representation...>\n' +
-   * '-----END RSA PUBLIC KEY-----\n'
-   * ```
+   * @param options Options for exporting the data of the RSA JSON Web Key.
+   * @returns DER Encoded PKCS#8 RSA Private Key.
    */
-  public export(key: 'public', format: 'pem', type: 'pkcs1'): string
+  public export(options: ExportRsaKeyOptions<'der', 'pkcs8', 'private'>): Buffer;
 
   /**
-   * Returns a PEM representation of the Public Key enveloped
-   * in an X.509 SubjectPublicKeyInfo containing the Modulus
-   * and the Public Exponent of the Key.
+   * Exports the PKCS#8 RSA Private Key PEM Encoding of the RSA JSON Web Key.
    *
-   * @param key Defines the encoding of the Public Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Public Key.
-   * @returns PEM encoded SPKI RSA Public Key.
-   *
-   * @example
-   * ```
-   * > const x509 = key.export('public', 'pem', 'x509')
-   * > x509
-   * '-----BEGIN PUBLIC KEY-----\n' +
-   * '<Base64 representation...>\n' +
-   * '-----END PUBLIC KEY-----\n'
-   * ```
+   * @param options Options for exporting the data of the RSA JSON Web Key.
+   * @returns PEM Encoded PKCS#8 RSA Private Key.
    */
-  public export(key: 'public', format: 'pem', type: 'x509'): string
+  public export(options: ExportRsaKeyOptions<'pem', 'pkcs8', 'private'>): string;
 
   /**
-   * Returns a DER representation of the Private Key
-   * that only contains the parameters of the Key.
+   * Exports the PKCS#1 RSA Public Key DER Encoding of the RSA JSON Web Key.
    *
-   * @param key Defines the encoding of the Private Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Private Key.
-   * @returns DER encoded PKCS#1 RSA Private Key.
-   *
-   * @example
-   * ```
-   * > const pkcs1 = key.export('private', 'der', 'pkcs1')
-   * > pkcs1
-   * <Buffer 30 82 04 a4 02 01 00 02 82 01 01 00 c6 3a 45 ... 1177 more bytes>
-   * ```
+   * @param options Options for exporting the data of the RSA JSON Web Key.
+   * @returns DER Encoded PKCS#1 RSA Public Key.
    */
-  public export(key: 'private', format: 'der', type: 'pkcs1'): Buffer
+  public export(options: ExportRsaKeyOptions<'der', 'pkcs1', 'public'>): Buffer;
 
   /**
-   * Returns a DER representation of the Private Key enveloped
-   * in a PKCS#8 object containing all the parameters of the key.
+   * Exports the PKCS#1 RSA Public Key PEM Encoding of the RSA JSON Web Key.
    *
-   * @param key Defines the encoding of the Private Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Private Key.
-   * @returns DER encoded PKCS#8 RSA Private Key.
-   *
-   * @example
-   * ```
-   * > const pkcs8 = key.export('private', 'der', 'pkcs8')
-   * > pkcs8
-   * <Buffer 30 82 04 be 02 01 00 30 0d 06 09 2a 86 48 86 ... 1203 more bytes>
-   * ```
+   * @param options Options for exporting the data of the RSA JSON Web Key.
+   * @returns PEM Encoded PKCS#1 RSA Public Key.
    */
-  public export(key: 'private', format: 'der', type: 'pkcs8'): Buffer
+  public export(options: ExportRsaKeyOptions<'pem', 'pkcs1', 'public'>): string;
 
   /**
-   * Returns a PEM representation of the Private Key
-   * that only contains the parameters of the Key.
+   * Exports the SPKI RSA Public Key DER Encoding of the RSA JSON Web Key.
    *
-   * @param key Defines the encoding of the Private Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Private Key.
-   * @returns PEM encoded PKCS#1 RSA Private Key.
-   *
-   * @example
-   * ```
-   * > const pkcs1 = key.export('private', 'pem', 'pkcs1')
-   * > pkcs1
-   * '-----BEGIN RSA PRIVATE KEY-----\n' +
-   * '<Base64 representation...>\n' +
-   * '-----END RSA PRIVATE KEY-----\n'
-   * ```
+   * @param options Options for exporting the data of the RSA JSON Web Key.
+   * @returns DER Encoded SPKI RSA Public Key.
    */
-  public export(key: 'private', format: 'pem', type: 'pkcs1'): string
+  public export(options: ExportRsaKeyOptions<'der', 'spki', 'public'>): Buffer;
 
   /**
-   * Returns a PEM representation of the Private Key enveloped
-   * in a PKCS#8 object containing all the parameters of the key.
+   * Exports the SPKI RSA Public Key PEM Encoding of the RSA JSON Web Key.
    *
-   * @param key Defines the encoding of the Private Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Private Key.
-   * @returns PEM encoded PKCS#8 RSA Private Key.
-   *
-   * @example
-   * ```
-   * > const pkcs8 = key.export('private', 'pem', 'pkcs8')
-   * > pkcs8
-   * '-----BEGIN PRIVATE KEY-----\n' +
-   * '<Base64 representation...>\n' +
-   * '-----END PRIVATE KEY-----\n'
-   * ```
+   * @param options Options for exporting the data of the RSA JSON Web Key.
+   * @returns PEM Encoded SPKI RSA Public Key.
    */
-  public export(key: 'private', format: 'pem', type: 'pkcs8'): string
+  public export(options: ExportRsaKeyOptions<'pem', 'spki', 'public'>): string;
 
-  public export(
-    key: 'public' | 'private',
-    format: 'der' | 'pem',
-    type: 'pkcs1' | 'pkcs8' | 'x509'
-  ): Buffer | string {
-    if (key !== 'public' && key !== 'private') {
-      throw new TypeError('Invalid parameter "key".')
+  /**
+   * Exports the data of the RSA JSON Web Key.
+   *
+   * @param options Options for exporting the data of the RSA JSON Web Key.
+   * @returns Encoded data of the RSA JSON Web Key.
+   */
+  public export<E extends ExportRsaKeyEncoding, F extends ExportRsaKeyFormat, T extends ExportRsaKeyType>(
+    options: ExportRsaKeyOptions<E, F, T>
+  ): string | Buffer {
+    const { encoding, format, type } = options;
+
+    if (encoding !== 'der' && encoding !== 'pem') {
+      throw new TypeError('Invalid option "encoding".');
     }
 
-    if (format !== 'der' && format !== 'pem') {
-      throw new TypeError('Invalid parameter "format".')
+    if (format !== 'pkcs1' && format !== 'pkcs8' && format !== 'spki') {
+      throw new TypeError('Invalid option "format".');
     }
 
-    if (
-      (key === 'public' && type !== 'pkcs1' && type !== 'x509') ||
-      (key === 'private' && type !== 'pkcs1' && type !== 'pkcs8')
-    ) {
-      throw new TypeError('Invalid parameter "type".')
+    if (type !== 'private' && type !== 'public') {
+      throw new TypeError('Invalid option "type".');
     }
 
-    let root: Node, label: string
-
-    if (key === 'public') {
-      if (type === 'pkcs1') {
-        root = encodePublicPkcs1(this)
-        label = 'RSA PUBLIC KEY'
-      }
-
-      if (type === 'x509') {
-        root = encodePublicX509(this)
-        label = 'PUBLIC KEY'
-      }
+    if (type === 'private' && format !== 'pkcs1' && format !== 'pkcs8') {
+      throw new TypeError(`Unsupported format "${format}" for type "${type}".`);
     }
 
-    if (key === 'private') {
-      if (type === 'pkcs1') {
-        root = encodePrivatePkcs1(this)
-        label = 'RSA PRIVATE KEY'
-      }
-
-      if (type === 'pkcs8') {
-        root = encodePrivatePkcs8(this)
-        label = 'PRIVATE KEY'
-      }
+    if (type === 'public' && format !== 'pkcs1' && format !== 'spki') {
+      throw new TypeError(`Unsupported format "${format}" for type "${type}".`);
     }
 
-    return format === 'der' ? DEREncoder(root) : PEMEncoder(root, label)
+    if (this.cryptoKey.type === 'public' && type === 'private') {
+      throw new TypeError('Cannot export private data from a public key.');
+    }
+
+    let { cryptoKey } = this;
+
+    const input: KeyExportOptions<any> = { format: encoding, type: format };
+
+    if (this.cryptoKey.type === 'private' && type === 'public') {
+      cryptoKey = createPublicKey(cryptoKey);
+    }
+
+    let exported = cryptoKey.export(input);
+
+    if (encoding === 'pem') {
+      exported = exported.slice(0, -1);
+    }
+
+    return exported;
   }
 }

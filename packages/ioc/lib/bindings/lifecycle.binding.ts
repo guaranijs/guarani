@@ -1,5 +1,5 @@
-import { Lifecycle } from '../lifecycle'
-import { Binding } from './binding'
+import { Lifecycle } from '../lifecycle/lifecycle';
+import { Binding } from './binding';
 
 /**
  * Binding Configuration used to define the Lifecycle of the Token.
@@ -24,7 +24,7 @@ export class LifecycleBinding<T> {
    * resolved instance cached at the Binding.
    */
   public asSingleton(): void {
-    this.binding.lifecycle = Lifecycle.Singleton
+    this.binding.lifecycle = Lifecycle.Singleton;
   }
 
   /**
@@ -33,6 +33,6 @@ export class LifecycleBinding<T> {
    * Transient Tokens always resolve a new instance.
    */
   public asTransient(): void {
-    this.binding.lifecycle = Lifecycle.Transient
+    this.binding.lifecycle = Lifecycle.Transient;
   }
 }

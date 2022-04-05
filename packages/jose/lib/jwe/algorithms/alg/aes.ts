@@ -1,88 +1,108 @@
-import { base64UrlEncode } from '@guarani/utils'
+import { Dict } from '@guarani/types';
 
-import { InvalidJsonWebEncryption, JoseError } from '../../../exceptions'
-import { OctKey } from '../../../jwk'
-import { unwrap, wrap } from '../../utils/aeskw'
-import { WrappedKey } from '../../_types'
-import { JWEAlgorithm } from './jwe-algorithm'
+import { createCipheriv, createDecipheriv, KeyObject } from 'crypto';
+
+import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
+import { OctKey } from '../../../jwk/algorithms/oct/oct.key';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from '../enc/jsonwebencryption-contentencryption.algorithm';
+import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap.algorithm';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './types/supported-jsonwebencryption-keyencryption-algorithm';
+import { WrappedKey } from './types/wrapped-key';
 
 /**
- * Implementation of the AES Key Wrapping Algorithm.
+ * Implementation of the AES JSON Web Encryption Key Wrap Algorithm.
  */
-class AESAlgorithm extends JWEAlgorithm {
+class AESKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
   /**
    * Size of the Content Encryption Key in bits.
    */
-  private readonly KEY_SIZE: number
+  private readonly keySize: number;
 
   /**
-   * Instantiates a new AES Algorithm to wrap and unwrap a Content Encryption Key.
-   *
-   * @param algorithm Name of the algorithm.
+   * Name of the Cipher Algorithm.
    */
-  public constructor(protected readonly algorithm: string) {
-    super(algorithm)
+  private readonly cipherAlgorithm: string;
 
-    this.KEY_SIZE = parseInt(this.algorithm.substr(1, 3))
+  /**
+   * Instantiates a new JSON Web Encryption AES Key Wrap Algorithm to Wrap and Unwrap Content Encryption Keys.
+   *
+   * @param algorithm Name of the JSON Web Encryption Key Wrap Algorithm.
+   */
+  public constructor(algorithm: SupportedJsonWebEncryptionKeyWrapAlgorithm) {
+    super(algorithm, 'oct');
+
+    this.keySize = Number.parseInt(this.algorithm.substring(1, 4));
+    this.cipherAlgorithm = `aes${this.keySize}-wrap`;
   }
 
   /**
-   * Generates a new CEK based on the provided JWE Content Encryption Algorithm
-   * and wraps it using the provided JSON Web Key.
+   * Wraps the provided Content Encryption Key using the provide JSON Web Key.
    *
-   * @param cek Content Encryption Key used to encrypt the Plaintext.
-   * @param key JWK used to wrap the generated CEK.
-   * @returns CEK generated and Encrypted CEK.
+   * @param enc JSON Web Encryption Content Encryption Algorithm.
+   * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
+   * @returns Wrapped Content Encryption Key and optional additional JSON Web Encryption Header Parameters.
    */
-  public async wrap(cek: Buffer, key: OctKey): Promise<WrappedKey> {
-    const exportedKey = key.export('binary')
+  public async wrap(enc: JsonWebEncryptionContentEncryptionAlgorithm, key: OctKey): Promise<WrappedKey<Dict>> {
+    this.validateJsonWebKey(key);
 
-    if (exportedKey.length * 8 !== this.KEY_SIZE) {
-      throw new JoseError('Invalid key size.')
-    }
+    const cryptoKey = <KeyObject>Reflect.get(key, 'cryptoKey');
+    const cipher = createCipheriv(this.cipherAlgorithm, cryptoKey, Buffer.alloc(8, 0xa6));
 
-    return { ek: base64UrlEncode(wrap(cek, key)) }
+    const cek = await enc.generateContentEncryptionKey();
+    const ek = Buffer.concat([cipher.update(cek), cipher.final()]);
+
+    return { cek, ek };
   }
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param enc JWE Content Encryption of the JSON Web Encryption Token.
-   * @param ek Encrypted CEK of the JSON Web Encryption Token.
-   * @param key JSON Web Key used to unwrap the Encrypted CEK.
-   * @throws {InvalidJsonWebEncryption} Could not unwrap the Encrypted CEK.
+   * @param enc JSON Web Encryption Content Encryption Algorithm.
+   * @param key JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
+   * @param ek Wrapped Content Encryption Key.
    * @returns Unwrapped Content Encryption Key.
    */
-  public async unwrap(ek: Buffer, key: OctKey): Promise<Buffer> {
-    try {
-      const exportedKey = key.export('binary')
+  public async unwrap(enc: JsonWebEncryptionContentEncryptionAlgorithm, key: OctKey, ek: Buffer): Promise<Buffer> {
+    this.validateJsonWebKey(key);
 
-      if (exportedKey.length * 8 !== this.KEY_SIZE) {
-        throw new JoseError('Invalid key size.')
-      }
+    const cryptoKey = <KeyObject>Reflect.get(key, 'cryptoKey');
+    const decipher = createDecipheriv(this.cipherAlgorithm, cryptoKey, Buffer.alloc(8, 0xa6));
 
-      return unwrap(ek, key)
-    } catch (error) {
-      if (error instanceof JoseError) {
-        throw new InvalidJsonWebEncryption(error.message)
-      }
+    const cek = Buffer.concat([decipher.update(ek), decipher.final()]);
 
-      throw new InvalidJsonWebEncryption()
+    enc.validateContentEncryptionKey(cek);
+
+    return cek;
+  }
+
+  /**
+   * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption AES Key Wrap Algorithm.
+   *
+   * @param key JSON Web Key to be checked.
+   * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
+   */
+  protected validateJsonWebKey(key: OctKey): void {
+    super.validateJsonWebKey(key);
+
+    const exportedKey = key.export({ encoding: 'buffer' });
+
+    if (exportedKey.length * 8 !== this.keySize) {
+      throw new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.');
     }
   }
 }
 
 /**
- * Key wrapping with AES using 128-bit key.
+ * AES Key Wrap with default initial value using 128-bit key.
  */
-export const A128KW = new AESAlgorithm('A128KW')
+export const A128KW = new AESKeyWrapAlgorithm('A128KW');
 
 /**
- * Key wrapping with AES using 192-bit key.
+ * AES Key Wrap with default initial value using 192-bit key.
  */
-export const A192KW = new AESAlgorithm('A192KW')
+export const A192KW = new AESKeyWrapAlgorithm('A192KW');
 
 /**
- * Key wrapping with AES using 256-bit key.
+ * AES Key Wrap with default initial value using 256-bit key.
  */
-export const A256KW = new AESAlgorithm('A256KW')
+export const A256KW = new AESKeyWrapAlgorithm('A256KW');

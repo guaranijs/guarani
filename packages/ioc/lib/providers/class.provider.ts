@@ -1,6 +1,4 @@
-import { Constructor } from '@guarani/utils'
-
-import { Provider } from './provider'
+import { Constructor } from '@guarani/types';
 
 /**
  * Defines the format of a Class Provider.
@@ -9,17 +7,15 @@ export interface ClassProvider<T> {
   /**
    * Class to be used when resolving the bound token.
    */
-  readonly target: Constructor<T>
+  readonly target: Constructor<T>;
 }
 
 /**
- * Validates whether or not the provider is a Class Provider.
+ * Validates whether or not the provided object is a Class Provider.
  *
- * @param provider Provider to be validated.
- * @returns The provider is a Class Provider.
+ * @param obj Object to be validated.
+ * @returns The provided object is a Class Provider.
  */
-export function isClassProvider<T>(
-  provider: Provider<T>
-): provider is ClassProvider<T> {
-  return (provider as ClassProvider<T>).target != null
+export function isClassProvider<T>(obj: unknown): obj is ClassProvider<T> {
+  return (obj as ClassProvider<T>).target !== undefined;
 }

@@ -1,173 +1,138 @@
-import { base64UrlEncode } from '@guarani/utils'
+import { createCipheriv, createDecipheriv, createHmac, timingSafeEqual } from 'crypto';
 
-import {
-  createCipheriv,
-  createDecipheriv,
-  createHmac,
-  timingSafeEqual
-} from 'crypto'
-
-import { InvalidJsonWebEncryption } from '../../../exceptions'
-import { SupportedHash } from '../../../types'
-import { AuthenticatedEncryption } from '../../_types'
-import { JWEEncryption } from './jwe-encryption'
+import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-json-web-encryption.exception';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-contentencryption.algorithm';
+import { AuthenticatedEncryption } from './types/authenticated-encryption';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './types/supported-jsonwebencryption-contentencryption-algorithm';
 
 /**
- * Implementation of the AES-CBC Content Encryption Algorithm.
+ * Implementation of the AES-CBC JSON Web Encryption Content Encryption Algorithm.
  */
-class CBCHS2Encryption extends JWEEncryption {
+class CBCHS2ContentEncryptionAlgorithm extends JsonWebEncryptionContentEncryptionAlgorithm {
   /**
-   * Size of the Content Encryption Key in bits.
+   * Size of the Encryption Key and the MAC Key in bits.
    */
-  public readonly CEK_SIZE: number
+  private readonly keySize: number;
 
   /**
-   * Size of the Initialization Vector in bits.
+   * Name of the Hash Algorithm.
    */
-  public readonly IV_SIZE: number = 128
+  private readonly hashAlgorithm: string;
 
   /**
-   * Size of the Encryption Key and the MAC Key.
+   * Name of the Cipher Algorithm.
    */
-  private readonly KEY_SIZE: number
+  private readonly cipherAlgorithm: string;
 
   /**
-   * Hash function of the algorithm.
-   */
-  private readonly HASH: SupportedHash
-
-  /**
-   * Instantiates a new AES Encryption to encrypt and decrypt a Plaintext.
+   * Instantiates a new AES-CBC JSON Web Encryption Content Encryption to Encrypt and Decrypt a Plaintext.
    *
-   * @param algorithm Name of the algorithm.
+   * @param algorithm Name of the JSON Web Encryption Content Encryption Algorithm.
    */
-  public constructor(protected readonly algorithm: string) {
-    super(algorithm)
+  public constructor(algorithm: SupportedJsonWebEncryptionContentEncryptionAlgorithm) {
+    const regex = /^A([0-9]{3})CBC-HS([0-9]{3})$/;
 
-    const regex = this.algorithm.match(/A([0-9]{3})CBC-HS([0-9]{3})/)
+    const [keySize, hashSize] = regex
+      .exec(algorithm)!
+      .slice(1)
+      .map((value) => Number.parseInt(value));
 
-    this.KEY_SIZE = parseInt(regex[1])
-    this.HASH = <SupportedHash>`SHA${regex[2]}`
-    this.CEK_SIZE = this.KEY_SIZE * 2
+    super(keySize * 2, 128, algorithm);
+
+    this.keySize = keySize;
+    this.hashAlgorithm = `SHA${hashSize}`;
+    this.cipherAlgorithm = `aes-${keySize}-cbc`;
   }
 
   /**
-   * Encrypts the provided plaintext.
+   * Encrypts the provided Plaintext.
    *
-   * @param plaintext Plaintext to be encrypted.
+   * @param plaintext Plaintext to be Cncrypted.
    * @param aad Additional Authenticated Data.
    * @param iv Initialization Vector.
-   * @param key Content Encryption Key used to encrypt the plaintext.
+   * @param key Content Encryption Key used to Encrypt the provided Plaintext.
    * @returns Resulting Ciphertext and Authentication Tag.
    */
-  public async encrypt(
-    plaintext: Buffer,
-    aad: Buffer,
-    iv: Buffer,
-    key: Buffer
-  ): Promise<AuthenticatedEncryption> {
-    this.checkIV(iv)
-    this.checkKey(key)
+  public async encrypt(plaintext: Buffer, aad: Buffer, iv: Buffer, key: Buffer): Promise<AuthenticatedEncryption> {
+    this.validateInitializationVector(iv);
+    this.validateContentEncryptionKey(key);
 
-    const macKey = key.subarray(0, this.KEY_SIZE >> 3)
-    const encKey = key.subarray(this.KEY_SIZE >> 3)
+    const macKey = key.subarray(0, this.keySize >> 3);
+    const encKey = key.subarray(this.keySize >> 3);
 
-    const cipher = createCipheriv(`aes-${this.KEY_SIZE}-cbc`, encKey, iv)
-    const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()])
+    const cipher = createCipheriv(this.cipherAlgorithm, encKey, iv);
+    const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
 
-    const tag = this.getAuthTag(ciphertext, iv, aad, macKey)
+    const tag = this.getAuthTag(ciphertext, iv, aad, macKey);
 
-    return {
-      ciphertext: base64UrlEncode(ciphertext),
-      tag: base64UrlEncode(tag)
-    }
+    return { ciphertext, tag };
   }
 
   /**
-   * Decrypts the provided ciphertext back to its original Buffer representaion.
+   * Decrypts the provided Ciphertext back to its original Plaintext.
    *
-   * @param ciphertext Ciphertext to be decrypted.
+   * @param ciphertext Ciphertext to be Decrypted.
    * @param aad Additional Authenticated Data.
    * @param iv Initialization Vector.
    * @param tag Authentication Tag.
-   * @param key Content Encryption Key used to decrypt the plaintext.
-   * @throws {InvalidJsonWebEncryption} Could not decrypt the ciphertext.
-   * @returns Buffer representation of the decrypted plaintext.
+   * @param key Content Encryption Key used to Decrypt the provided Ciphertext.
+   * @returns Resulting Plaintext.
    */
-  public async decrypt(
-    ciphertext: Buffer,
-    aad: Buffer,
-    iv: Buffer,
-    tag: Buffer,
-    key: Buffer
-  ): Promise<Buffer> {
-    this.checkIV(iv)
-    this.checkKey(key)
+  public async decrypt(ciphertext: Buffer, aad: Buffer, iv: Buffer, tag: Buffer, key: Buffer): Promise<Buffer> {
+    this.validateInitializationVector(iv);
+    this.validateContentEncryptionKey(key);
 
-    try {
-      const macKey = key.subarray(0, this.KEY_SIZE >> 3)
-      const encKey = key.subarray(this.KEY_SIZE >> 3)
+    const macKey = key.subarray(0, this.keySize >> 3);
+    const encKey = key.subarray(this.keySize >> 3);
 
-      const expectedTag = this.getAuthTag(ciphertext, iv, aad, macKey)
+    const expectedTag = this.getAuthTag(ciphertext, iv, aad, macKey);
 
-      if (!timingSafeEqual(tag, expectedTag)) {
-        throw new InvalidJsonWebEncryption()
-      }
-
-      const decipher = createDecipheriv(`aes-${this.KEY_SIZE}-cbc`, encKey, iv)
-
-      const plaintext = Buffer.concat([
-        decipher.update(ciphertext),
-        decipher.final()
-      ])
-
-      return plaintext
-    } catch {
-      throw new InvalidJsonWebEncryption()
+    if (!timingSafeEqual(tag, expectedTag)) {
+      throw new InvalidJsonWebEncryptionException();
     }
+
+    const decipher = createDecipheriv(this.cipherAlgorithm, encKey, iv);
+    const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+
+    return plaintext;
   }
 
   /**
-   * Generates the Authentication Tag of the Encryption.
+   * Generates the Authentication Tag of the provided Ciphertext.
    *
-   * @param ciphertext Ciphertext to be encrypted.
+   * @param ciphertext Ciphertext to be Decrypted.
    * @param iv Initialization Vector.
    * @param aad Additional Authenticated Data.
    * @param key Content Encryption Key.
    * @returns Authentication Tag.
    */
-  private getAuthTag(
-    ciphertext: Buffer,
-    iv: Buffer,
-    aad: Buffer,
-    key: Buffer
-  ): Buffer {
-    const len = aad.length << 3
-    const buf = Buffer.alloc(8)
+  private getAuthTag(ciphertext: Buffer, iv: Buffer, aad: Buffer, key: Buffer): Buffer {
+    const len = aad.length << 3;
+    const buf = Buffer.alloc(8);
 
-    buf.writeUInt32BE(Math.floor(len / 2 ** 32), 0)
-    buf.writeUInt32BE(len % 2 ** 32, 4)
+    buf.writeUInt32BE(Math.floor(len / 2 ** 32), 0);
+    buf.writeUInt32BE(len % 2 ** 32, 4);
 
-    const data = Buffer.concat([aad, iv, ciphertext, buf])
+    const data = Buffer.concat([aad, iv, ciphertext, buf]);
 
-    return createHmac(this.HASH, key)
+    return createHmac(this.hashAlgorithm, key)
       .update(data)
       .digest()
-      .slice(0, this.KEY_SIZE >> 3)
+      .slice(0, this.keySize >> 3);
   }
 }
 
 /**
- * AES_128_CBC_HMAC_SHA_256 Required authenticated encryption algorithm.
+ * AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm.
  */
-export const A128CBC_HS256 = new CBCHS2Encryption('A128CBC-HS256')
+export const A128CBC_HS256 = new CBCHS2ContentEncryptionAlgorithm('A128CBC-HS256');
 
 /**
- * AES_192_CBC_HMAC_SHA_384 Required authenticated encryption algorithm.
+ * AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm.
  */
-export const A192CBC_HS384 = new CBCHS2Encryption('A192CBC-HS384')
+export const A192CBC_HS384 = new CBCHS2ContentEncryptionAlgorithm('A192CBC-HS384');
 
 /**
- * AES_256_CBC_HMAC_SHA_512 Required authenticated encryption algorithm.
+ * AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm.
  */
-export const A256CBC_HS512 = new CBCHS2Encryption('A256CBC-HS512')
+export const A256CBC_HS512 = new CBCHS2ContentEncryptionAlgorithm('A256CBC-HS512');

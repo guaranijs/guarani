@@ -1,108 +1,110 @@
-import { base64UrlDecode, base64UrlEncode } from '@guarani/utils'
+import { KeyObject, sign, verify } from 'crypto';
+import { promisify } from 'util';
 
-import { createPrivateKey, createPublicKey, sign, verify } from 'crypto'
+import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
+import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-json-web-signature.exception';
+import { RsaPadding } from '../../jwk/algorithms/rsa/types/rsa-padding';
+import { RsaKey } from '../../jwk/algorithms/rsa/rsa.key';
+import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from './types/supported-jsonwebsignature-algorithm';
 
-import { InvalidSignature } from '../../exceptions'
-import { RsaKey, RsaPadding, SupportedJWKAlgorithm } from '../../jwk'
-import { SupportedHash } from '../../types'
-import { JWSAlgorithm } from './jws-algorithm'
+const signAsync = promisify(sign);
+const verifyAsync = promisify(verify);
 
 /**
- * Implementation of an RSASSA Signature Algorithm.
+ * Implementation of the JSON Web Signature RSASSA Algorithm.
  */
-class RSASSAAlgorithm extends JWSAlgorithm {
+export class RsaSsaAlgorithm extends JsonWebSignatureAlgorithm {
   /**
-   * Accepted key type.
+   * RSA Padding used by the JSON Web Signature RSASSA Algorithm to Sign and Verify the Messages.
    */
-  public readonly kty: SupportedJWKAlgorithm = 'RSA'
+  protected readonly padding: RsaPadding;
 
   /**
-   * Instantiates a new RSASSA Algorithm to sign and verify the messages.
+   * Instantiates a new JSON Web Signature RSASSA Algorithm to Sign and Verify the Messages.
    *
-   * @param hash Hash algorithm used to sign and verify the messages.
-   * @param algorithm Name of the algorithm.
-   * @param padding Padding to be used by the algorithm.
+   * @param hash Hash Algorithm used to Sign and Verify the Messages.
+   * @param algorithm Name of the JSON Web Signature Algorithm.
+   * @param padding RSA Padding used by the JSON Web Signature RSASSA Algorithm to Sign and Verify the Messages.
    */
-  public constructor(
-    protected readonly hash: SupportedHash,
-    protected readonly algorithm: string,
-    protected readonly padding: RsaPadding
-  ) {
-    super(hash, algorithm)
+  public constructor(hash: string, algorithm: SupportedJsonWebSignatureAlgorithm, padding: RsaPadding) {
+    super(hash, algorithm, 'RSA');
+
+    this.padding = padding;
   }
 
   /**
-   * Signs the provided message using RSASSA.
+   * Signs a Message with the provided JSON Web Key.
    *
-   * @param message Message to be signed.
-   * @param key Key used to sign the message.
-   * @returns Base64Url encoded signature.
+   * @param message Message to be Signed.
+   * @param key JSON Web Key used to Sign the provided Message.
+   * @returns Resulting Signature of the provided Message.
    */
-  public async sign(message: Buffer, key: RsaKey): Promise<string> {
-    this.checkKey(key)
+  public async sign(message: Buffer, key: RsaKey): Promise<Buffer> {
+    this.validateJsonWebKey(key);
 
-    const privateKey = createPrivateKey(key.export('private', 'pem', 'pkcs1'))
+    const cryptoKey: KeyObject = Reflect.get(key, 'cryptoKey');
 
-    return base64UrlEncode(
-      sign(this.hash, message, { key: privateKey, padding: this.padding })
-    )
+    if (cryptoKey.type !== 'private') {
+      throw new InvalidJsonWebKeyException('A Private Key is needed to Sign a JSON Web Signature Message.');
+    }
+
+    const signature = await signAsync(this.hash, message, { key: cryptoKey, padding: this.padding });
+
+    return signature;
   }
 
   /**
-   * Verifies the signature against a message using RSASSA.
+   * Checks if the provided Signature matches the provided Message based on the provide JSON Web Key.
    *
-   * @param signature Signature to be matched against the message.
-   * @param message Message to be matched against the signature.
-   * @param key Key used to verify the signature.
-   * @throws {InvalidSignature} The signature does not match the message.
+   * @param signature Signature to be matched against the provided Message.
+   * @param message Message to be matched against the provided Signature.
+   * @param key JSON Web Key used to verify the Signature and Message.
    */
-  public async verify(
-    signature: string,
-    message: Buffer,
-    key: RsaKey
-  ): Promise<void> {
-    this.checkKey(key)
+  public async verify(signature: Buffer, message: Buffer, key: RsaKey): Promise<void> {
+    this.validateJsonWebKey(key);
 
-    const publicKey = createPublicKey(key.export('public', 'pem', 'pkcs1'))
-    const verified = verify(
+    const cryptoKey: KeyObject = Reflect.get(key, 'cryptoKey');
+
+    const verificationResult = await verifyAsync(
       this.hash,
       message,
-      { key: publicKey, padding: this.padding },
-      base64UrlDecode(signature)
-    )
+      { key: cryptoKey, padding: this.padding },
+      signature
+    );
 
-    if (!verified) {
-      throw new InvalidSignature()
+    if (!verificationResult) {
+      throw new InvalidJsonWebSignatureException();
     }
   }
 }
 
 /**
- * RSASSA-PKCS1-v1_5 with SHA256.
+ * RSASSA-PKCS1-v1_5 using SHA-256.
  */
-export const RS256 = new RSASSAAlgorithm('SHA256', 'RS256', RsaPadding.PKCS1)
+export const RS256 = new RsaSsaAlgorithm('SHA256', 'RS256', RsaPadding.PKCS1);
 
 /**
- * RSASSA-PKCS1-v1_5 with SHA384.
+ * RSASSA-PKCS1-v1_5 using SHA-384.
  */
-export const RS384 = new RSASSAAlgorithm('SHA384', 'RS384', RsaPadding.PKCS1)
+export const RS384 = new RsaSsaAlgorithm('SHA384', 'RS384', RsaPadding.PKCS1);
 
 /**
- * RSASSA-PKCS1-v1_5 with SHA512.
+ * RSASSA-PKCS1-v1_5 using SHA-512.
  */
-export const RS512 = new RSASSAAlgorithm('SHA512', 'RS512', RsaPadding.PKCS1)
+export const RS512 = new RsaSsaAlgorithm('SHA512', 'RS512', RsaPadding.PKCS1);
 
 /**
- * RSASSA-PSS with SHA256.
+ * RSASSA-PSS using SHA-256 and MGF1 with SHA-256.
  */
-export const PS256 = new RSASSAAlgorithm('SHA256', 'PS256', RsaPadding.PSS)
+export const PS256 = new RsaSsaAlgorithm('SHA256', 'PS256', RsaPadding.PSS);
 
 /**
- * RSASSA-PSS with SHA384.
+ * RSASSA-PSS using SHA-384 and MGF1 with SHA-384.
  */
-export const PS384 = new RSASSAAlgorithm('SHA384', 'PS384', RsaPadding.PSS)
+export const PS384 = new RsaSsaAlgorithm('SHA384', 'PS384', RsaPadding.PSS);
 
 /**
- * RSASSA-PSS with SHA512.
+ * RSASSA-PSS using SHA-512 and MGF1 with SHA-512.
  */
-export const PS512 = new RSASSAAlgorithm('SHA512', 'PS512', RsaPadding.PSS)
+export const PS512 = new RsaSsaAlgorithm('SHA512', 'PS512', RsaPadding.PSS);

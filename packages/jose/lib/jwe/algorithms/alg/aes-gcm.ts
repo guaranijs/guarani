@@ -1,152 +1,140 @@
-import { base64UrlDecode, base64UrlEncode } from '@guarani/utils'
+import { CipherGCMTypes, createCipheriv, createDecipheriv, KeyObject, randomBytes } from 'crypto';
+import { promisify } from 'util';
 
-import {
-  CipherGCMTypes,
-  createCipheriv,
-  createDecipheriv,
-  createSecretKey,
-  randomBytes
-} from 'crypto'
+import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
+import { OctKey } from '../../../jwk/algorithms/oct/oct.key';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from '../enc/jsonwebencryption-contentencryption.algorithm';
+import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap.algorithm';
+import { AesGcmWrappedKeyParams } from './types/aes-gcm-wrapped-key.params';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './types/supported-jsonwebencryption-keyencryption-algorithm';
+import { WrappedKey } from './types/wrapped-key';
 
-import { InvalidJsonWebEncryption, JoseError } from '../../../exceptions'
-import { OctKey } from '../../../jwk'
-import { WrappedKey } from '../../_types'
-import { JWEAlgorithm } from './jwe-algorithm'
-import { AESGMCWrappedKey } from './_types'
+const randomBytesAsync = promisify(randomBytes);
 
 /**
- * Implementation of the AES Galois/Counter Mode Key Wrapping Algorithm.
+ * Implementation of the AES-GCM JSON Web Encryption Key Wrap Algorithm.
  */
-class AESGCMAlgorithm extends JWEAlgorithm {
+class AESGCMKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
   /**
    * Size of the Initialization Vector in bits.
    */
-  private readonly IV_SIZE: number = 96
+  private readonly ivSize: number = 96;
 
   /**
    * Size of the Authentication Tag in bytes.
    */
-  private readonly TAG_LENGTH: number = 16
+  private readonly authTagLength: number = 16;
 
   /**
    * Size of the Content Encryption Key in bits.
    */
-  private readonly KEY_SIZE: number
+  private readonly keySize: number;
 
   /**
-   * Instantiates a new AES Galois/Counter Mode Algorithm
-   * to wrap and unwrap a Content Encryption Key.
-   *
-   * @param algorithm Name of the algorithm.
+   * Name of the Cipher Algorithm.
    */
-  public constructor(protected readonly algorithm: string) {
-    super(algorithm)
+  private readonly cipherAlgorithm: CipherGCMTypes;
 
-    this.KEY_SIZE = parseInt(this.algorithm.substr(1, 3))
+  /**
+   * Instantiates a new JSON Web Encryption AES-GCM Key Wrap Algorithm to Wrap and Unwrap Content Encryption Keys.
+   *
+   * @param algorithm Name of the JSON Web Encryption Key Wrap Algorithm.
+   */
+  public constructor(algorithm: SupportedJsonWebEncryptionKeyWrapAlgorithm) {
+    super(algorithm, 'oct');
+
+    this.keySize = Number.parseInt(this.algorithm.substring(1, 4));
+    this.cipherAlgorithm = <CipherGCMTypes>`aes${this.keySize}-gcm`;
   }
 
   /**
-   * Generates a new CEK based on the provided JWE Content Encryption Algorithm
-   * and wraps it using the provided JSON Web Key.
+   * Wraps the provided Content Encryption Key using the provide JSON Web Key.
    *
-   * @param cek Content Encryption Key used to encrypt the Plaintext.
-   * @param key JWK used to wrap the generated CEK.
-   * @returns CEK generated, Encrypted CEK and additional headers.
+   * @param enc JSON Web Encryption Content Encryption Algorithm.
+   * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
+   * @returns Wrapped Content Encryption Key and optional additional JSON Web Encryption Header Parameters.
    */
   public async wrap(
-    cek: Buffer,
+    enc: JsonWebEncryptionContentEncryptionAlgorithm,
     key: OctKey
-  ): Promise<WrappedKey<AESGMCWrappedKey>> {
-    const exportedKey = key.export('binary')
+  ): Promise<WrappedKey<AesGcmWrappedKeyParams>> {
+    this.validateJsonWebKey(key);
 
-    if (exportedKey.length * 8 !== this.KEY_SIZE) {
-      throw new JoseError('Invalid key size.')
-    }
+    const iv = await randomBytesAsync(this.ivSize / 8);
 
-    const secretKey = createSecretKey(exportedKey)
-    const iv = this.generateIV()
+    const cryptoKey = <KeyObject>Reflect.get(key, 'cryptoKey');
+    const cipher = createCipheriv(this.cipherAlgorithm, cryptoKey, iv, { authTagLength: this.authTagLength });
 
-    const algorithm = <CipherGCMTypes>`aes-${this.KEY_SIZE}-gcm`
-    const cipher = createCipheriv(algorithm, secretKey, iv, {
-      authTagLength: this.TAG_LENGTH
-    })
+    cipher.setAAD(Buffer.alloc(0));
 
-    cipher.setAAD(Buffer.alloc(0))
+    const cek = await enc.generateContentEncryptionKey();
+    const ek = Buffer.concat([cipher.update(cek), cipher.final()]);
+    const tag = cipher.getAuthTag();
 
-    const ek = Buffer.concat([cipher.update(cek), cipher.final()])
-    const tag = cipher.getAuthTag()
-
-    return {
-      ek: base64UrlEncode(ek),
-      header: { iv: base64UrlEncode(iv), tag: base64UrlEncode(tag) }
-    }
+    return { cek, ek, additionalHeaderParams: { iv: iv.toString('base64url'), tag: tag.toString('base64url') } };
   }
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param enc JWE Content Encryption of the JSON Web Encryption Token.
-   * @param ek Encrypted CEK of the JSON Web Encryption Token.
-   * @param key JSON Web Key used to unwrap the Encrypted CEK.
-   * @param header JWE JOSE Header containing the additional headers.
-   * @throws {InvalidJsonWebEncryption} Could not unwrap the Encrypted CEK.
+   * @param enc JSON Web Encryption Content Encryption Algorithm.
+   * @param key JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
+   * @param ek Wrapped Content Encryption Key.
+   * @param header JSON Web Encryption Header containing the additional Parameters.
    * @returns Unwrapped Content Encryption Key.
    */
   public async unwrap(
-    ek: Buffer,
+    enc: JsonWebEncryptionContentEncryptionAlgorithm,
     key: OctKey,
-    header: AESGMCWrappedKey
+    ek: Buffer,
+    header: AesGcmWrappedKeyParams
   ): Promise<Buffer> {
-    try {
-      const exportedKey = key.export('binary')
+    this.validateJsonWebKey(key);
 
-      if (exportedKey.length * 8 !== this.KEY_SIZE) {
-        throw new JoseError('Invalid key size.')
-      }
+    const iv = Buffer.from(header.iv, 'base64url');
+    const tag = Buffer.from(header.tag, 'base64url');
 
-      const secretKey = createSecretKey(exportedKey)
-      const tag = base64UrlDecode(header.tag)
-      const iv = base64UrlDecode(header.iv)
+    const cryptoKey = <KeyObject>Reflect.get(key, 'cryptoKey');
+    const decipher = createDecipheriv(this.cipherAlgorithm, cryptoKey, iv, { authTagLength: this.authTagLength });
 
-      const algorithm = <CipherGCMTypes>`aes-${this.KEY_SIZE}-gcm`
-      const decipher = createDecipheriv(algorithm, secretKey, iv, {
-        authTagLength: this.TAG_LENGTH
-      })
+    decipher.setAAD(Buffer.alloc(0));
+    decipher.setAuthTag(tag);
 
-      decipher.setAAD(Buffer.alloc(0))
-      decipher.setAuthTag(tag)
+    const cek = Buffer.concat([decipher.update(ek), decipher.final()]);
 
-      return Buffer.concat([decipher.update(ek), decipher.final()])
-    } catch (error) {
-      if (error instanceof JoseError) {
-        throw new InvalidJsonWebEncryption(error.message)
-      }
+    enc.validateContentEncryptionKey(cek);
 
-      throw new InvalidJsonWebEncryption()
-    }
+    return cek;
   }
 
   /**
-   * Generates a new Initialization Vector.
+   * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption AES-GCM Key Wrap Algorithm.
    *
-   * @returns Generated Initialization Vector.
+   * @param key JSON Web Key to be checked.
+   * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
    */
-  private generateIV(): Buffer {
-    return randomBytes(Math.floor(this.IV_SIZE / 8))
+  protected validateJsonWebKey(key: OctKey): void {
+    super.validateJsonWebKey(key);
+
+    const exportedKey = key.export({ encoding: 'buffer' });
+
+    if (exportedKey.length * 8 !== this.keySize) {
+      throw new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.');
+    }
   }
 }
 
 /**
- * Key wrapping with AES Galois/Counter Mode using 128-bit key.
+ * Key wrapping with AES GCM using 128-bit key.
  */
-export const A128GCMKW = new AESGCMAlgorithm('A128GCMKW')
+export const A128GCMKW = new AESGCMKeyWrapAlgorithm('A128GCMKW');
 
 /**
- * Key wrapping with AES Galois/Counter Mode using 192-bit key.
+ * Key wrapping with AES GCM using 192-bit key.
  */
-export const A192GCMKW = new AESGCMAlgorithm('A192GCMKW')
+export const A192GCMKW = new AESGCMKeyWrapAlgorithm('A192GCMKW');
 
 /**
- * Key wrapping with AES Galois/Counter Mode using 256-bit key.
+ * Key wrapping with AES GCM using 256-bit key.
  */
-export const A256GCMKW = new AESGCMAlgorithm('A256GCMKW')
+export const A256GCMKW = new AESGCMKeyWrapAlgorithm('A256GCMKW');

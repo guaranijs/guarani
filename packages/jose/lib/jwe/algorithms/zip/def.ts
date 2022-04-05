@@ -1,42 +1,44 @@
-import { promisify } from 'util'
-import { deflateRaw, inflateRaw } from 'zlib'
+import { promisify } from 'util';
+import { deflateRaw, inflateRaw } from 'zlib';
 
-import { JWECompression } from './jwe-compression'
+import { JsonWebEncryptionCompressionAlgorithm } from './jsonwebencryption-compression.algorithm';
 
-const deflateRawAsync = promisify(deflateRaw)
-const inflateRawAsync = promisify(inflateRaw)
+const deflateRawAsync = promisify(deflateRaw);
+const inflateRawAsync = promisify(inflateRaw);
 
 /**
- * Implementation of the DEFLATE Compression Algorithm.
+ * Implementation of the DEFLATE JSON Web Encryption Compression Algorithm.
  */
-class DEFCompression extends JWECompression {
+class DEFCompressionAlgorithm extends JsonWebEncryptionCompressionAlgorithm {
   /**
-   * Name of the Compression Algorithm.
+   * Instantiates a new DEFLATE JSON Web Encryption Compression Algorithm to Compress and Decompress a Plaintext.
    */
-  protected readonly algorithm: string = 'DEF'
-
-  /**
-   * Compresses the plaintext before encryption.
-   *
-   * @param plaintext Plaintext to be compressed.
-   * @returns Compressed plaintext.
-   */
-  public async compress(plaintext: Buffer): Promise<Buffer> {
-    return await inflateRawAsync(plaintext)
+  public constructor() {
+    super('DEF');
   }
 
   /**
-   * Decompresses a compressed plaintext after decryption.
+   * Compresses the provided Plaintext before Encryption.
    *
-   * @param plaintext Compressed plaintext to be decompressed.
-   * @returns Decompressed plaintext.
+   * @param plaintext Plaintext to be Compressed.
+   * @returns Compressed Plaintext.
+   */
+  public async compress(plaintext: Buffer): Promise<Buffer> {
+    return await inflateRawAsync(plaintext);
+  }
+
+  /**
+   * Decompresses the provided Compressed Plaintext after Decryption.
+   *
+   * @param plaintext Compressed Plaintext to be Decompressed.
+   * @returns Decompressed Plaintext.
    */
   public async decompress(plaintext: Buffer): Promise<Buffer> {
-    return await deflateRawAsync(plaintext)
+    return await deflateRawAsync(plaintext);
   }
 }
 
 /**
- * DEFLATE Compression Algorithm.
+ * JSON Web Encryption **DEFLATE** Compression Algorithm.
  */
-export const DEF = new DEFCompression()
+export const DEF = new DEFCompressionAlgorithm();

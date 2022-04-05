@@ -1,129 +1,94 @@
-import { base64UrlEncode } from '@guarani/utils'
+import { createCipheriv, createDecipheriv, CipherGCMTypes } from 'crypto';
 
-import { createCipheriv, createDecipheriv, CipherGCMTypes } from 'crypto'
-
-import { InvalidJsonWebEncryption } from '../../../exceptions'
-import { AuthenticatedEncryption } from '../../_types'
-import { JWEEncryption } from './jwe-encryption'
+import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-contentencryption.algorithm';
+import { AuthenticatedEncryption } from './types/authenticated-encryption';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './types/supported-jsonwebencryption-contentencryption-algorithm';
 
 /**
- * Implementation of the AES Galois/Counter Mode Content Encryption Algorithm.
+ * Implementation of the AES-GCM JSON Web Encryption Content Encryption Algorithm.
  */
-class AESGCMEncryption extends JWEEncryption {
-  /**
-   * Size of the Content Encryption Key in bits.
-   */
-  public readonly CEK_SIZE: number
-
-  /**
-   * Size of the Initialization Vector in bits.
-   */
-  public readonly IV_SIZE: number = 96
-
+class AESGCMContentEncryptionAlgorithm extends JsonWebEncryptionContentEncryptionAlgorithm {
   /**
    * Size of the Authentication Tag in bytes.
    */
-  private readonly TAG_LENGTH: number = 16
+  private readonly authTagLength: number = 16;
 
   /**
-   * Instantiates a new AES Galois/Counter Mode Encryption
-   * to encrypt and decrypt a Plaintext.
-   *
-   * @param algorithm Name of the algorithm.
+   * Name of the Cipher Algorithm.
    */
-  public constructor(protected readonly algorithm: string) {
-    super(algorithm)
+  private readonly cipherAlgorithm: CipherGCMTypes;
 
-    this.CEK_SIZE = parseInt(this.algorithm.substr(1, 3))
+  /**
+   * Instantiates a new AES-GCM JSON Web Encryption Content Encryption to Encrypt and Decrypt a Plaintext.
+   *
+   * @param algorithm Name of the JSON Web Encryption Content Encryption Algorithm.
+   */
+  public constructor(algorithm: SupportedJsonWebEncryptionContentEncryptionAlgorithm) {
+    const cekSize = Number.parseInt(algorithm.substring(1, 4));
+    super(cekSize, 96, algorithm);
+
+    this.cipherAlgorithm = <CipherGCMTypes>`aes-${cekSize}-gcm`;
   }
 
   /**
-   * Encrypts the provided plaintext.
+   * Encrypts the provided Plaintext.
    *
-   * @param plaintext Plaintext to be encrypted.
+   * @param plaintext Plaintext to be Cncrypted.
    * @param aad Additional Authenticated Data.
    * @param iv Initialization Vector.
-   * @param key Content Encryption Key used to encrypt the plaintext.
+   * @param key Content Encryption Key used to Encrypt the provided Plaintext.
    * @returns Resulting Ciphertext and Authentication Tag.
    */
-  public async encrypt(
-    plaintext: Buffer,
-    aad: Buffer,
-    iv: Buffer,
-    key: Buffer
-  ): Promise<AuthenticatedEncryption> {
-    this.checkIV(iv)
-    this.checkKey(key)
+  public async encrypt(plaintext: Buffer, aad: Buffer, iv: Buffer, key: Buffer): Promise<AuthenticatedEncryption> {
+    this.validateInitializationVector(iv);
+    this.validateContentEncryptionKey(key);
 
-    const algorithm = <CipherGCMTypes>`aes-${this.CEK_SIZE}-gcm`
-    const cipher = createCipheriv(algorithm, key, iv, {
-      authTagLength: this.TAG_LENGTH
-    })
+    const cipher = createCipheriv(this.cipherAlgorithm, key, iv, { authTagLength: this.authTagLength });
 
-    cipher.setAAD(aad)
+    cipher.setAAD(aad);
 
-    const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()])
-    const tag = cipher.getAuthTag()
+    const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+    const tag = cipher.getAuthTag();
 
-    return {
-      ciphertext: base64UrlEncode(ciphertext),
-      tag: base64UrlEncode(tag)
-    }
+    return { ciphertext, tag };
   }
 
   /**
-   * Decrypts the provided ciphertext back to its original Buffer representaion.
+   * Decrypts the provided Ciphertext back to its original Plaintext.
    *
-   * @param ciphertext Ciphertext to be decrypted.
+   * @param ciphertext Ciphertext to be Decrypted.
    * @param aad Additional Authenticated Data.
    * @param iv Initialization Vector.
    * @param tag Authentication Tag.
-   * @param key Content Encryption Key used to decrypt the plaintext.
-   * @throws {InvalidJsonWebEncryption} Could not decrypt the ciphertext.
-   * @returns Buffer representation of the decrypted plaintext.
+   * @param key Content Encryption Key used to Decrypt the provided Ciphertext.
+   * @returns Resulting Plaintext.
    */
-  public async decrypt(
-    ciphertext: Buffer,
-    aad: Buffer,
-    iv: Buffer,
-    tag: Buffer,
-    key: Buffer
-  ): Promise<Buffer> {
-    this.checkIV(iv)
-    this.checkKey(key)
+  public async decrypt(ciphertext: Buffer, aad: Buffer, iv: Buffer, tag: Buffer, key: Buffer): Promise<Buffer> {
+    this.validateInitializationVector(iv);
+    this.validateContentEncryptionKey(key);
 
-    try {
-      const algorithm = <CipherGCMTypes>`aes-${this.CEK_SIZE}-gcm`
-      const decipher = createDecipheriv(algorithm, key, iv, {
-        authTagLength: this.TAG_LENGTH
-      })
+    const decipher = createDecipheriv(this.cipherAlgorithm, key, iv, { authTagLength: this.authTagLength });
 
-      decipher.setAAD(aad)
-      decipher.setAuthTag(tag)
+    decipher.setAAD(aad);
+    decipher.setAuthTag(tag);
 
-      const decrypted = Buffer.concat([
-        decipher.update(ciphertext),
-        decipher.final()
-      ])
+    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 
-      return decrypted
-    } catch (error) {
-      throw new InvalidJsonWebEncryption()
-    }
+    return decrypted;
   }
 }
 
 /**
  * AES GCM using 128-bit key.
  */
-export const A128GCM = new AESGCMEncryption('A128GCM')
+export const A128GCM = new AESGCMContentEncryptionAlgorithm('A128GCM');
 
 /**
  * AES GCM using 192-bit key.
  */
-export const A192GCM = new AESGCMEncryption('A192GCM')
+export const A192GCM = new AESGCMContentEncryptionAlgorithm('A192GCM');
 
 /**
  * AES GCM using 256-bit key.
  */
-export const A256GCM = new AESGCMEncryption('A256GCM')
+export const A256GCM = new AESGCMContentEncryptionAlgorithm('A256GCM');

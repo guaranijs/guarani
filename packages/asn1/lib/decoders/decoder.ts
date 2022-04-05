@@ -1,229 +1,93 @@
-import { fromBuffer } from '@guarani/utils'
+import { Optional } from '@guarani/types';
 
-import {
-  BitString,
-  Integer,
-  Null,
-  ObjectId,
-  OctetString,
-  Sequence
-} from '../nodes'
-import { decodeLength } from '../_utils'
-
-const Tags = {
-  ZERO: 0x00,
-  BOOLEAN: 0x01,
-  INTEGER: 0x02,
-  BITSTRING: 0x03,
-  OCTETSTRING: 0x04,
-  NULL: 0x05,
-  OBJECTID: 0x06,
-  SEQUENCE: 0x30
-}
+import { NodeOptions } from '../nodes/node.options';
 
 /**
- * Decoder class used to parse a Buffer object and allow the application
- * to retrieve the values encoded into it.
- *
- * This class is not available in the Public API. Instead, it is used as
- * the return value of the execution of one of the supported Decoders
- * exported by this package.
+ * Base ASN.1 Decoder.
  */
-export class Decoder {
-  private value: Buffer
-  private offset: number = 0
-
-  public constructor(value: Buffer) {
-    if (!Buffer.isBuffer(value)) {
-      throw new TypeError('Invalid parameter "value".')
-    }
-
-    this.value = value
-  }
-
+export abstract class Decoder<T> {
   /**
-   * Getter that exposes the underlying Buffer object
-   * sectioned by the current tag.
+   * ASN.1 Data to be decoded.
    */
-  public get data(): Buffer {
-    return this.value
-  }
+  protected data: T;
 
   /**
-   * Ignores any leading 0-bytes of the provided data.
+   * Instantiates a new ASN.1 Decoder.
    *
-   * @param data - Data to be trimmed.
-   * @returns Reference to the new position of the Buffer.
+   * @param data ASN.1 Data to be decoded.
    */
-  private static trim(data: Buffer): Buffer {
-    while (data[0] === 0) {
-      data = data.slice(1)
-    }
-
-    return data
+  public constructor(data: T) {
+    this.data = data;
   }
 
   /**
-   * Slices the value Buffer based on the length of the provided tag.
+   * Checks if the current encoded ASN.1 Type has the provided Tag.
    *
-   * @param tag Current tag being parsed.
-   * @param type Denotes the tag type in the error message.
-   * @returns Sliced section represented by the current tag.
+   * @param tag Expected Tag.
    */
-  private slice(tag: number, type: string): Buffer {
-    if (this.value[this.offset++] !== tag) {
-      throw new Error(`Node type is not ${type}.`)
-    }
-
-    // Gets the length of the type.
-    const length = decodeLength(this.value.subarray(this.offset))
-
-    // Displaces the offset if the length is in Long Form.
-    if (this.value[this.offset] & 0x80) {
-      this.offset += 1 + (this.value[this.offset] & 0x7f)
-    } else {
-      this.offset++
-    }
-
-    // Retrieves the section of the data that represents the requested type.
-    const buffer = Decoder.trim(
-      this.value.subarray(this.offset, this.offset + length)
-    )
-
-    // Sets the data to be itself minus the selected data and resets the offset.
-    this.value = Decoder.trim(this.value.slice(this.offset + length))
-    this.offset = 0
-
-    return buffer
-  }
+  public abstract is(tag: number): boolean;
 
   /**
-   * Abstraction of tags that do not do any post processings on its data.
+   * Decodes a BitString Type.
    *
-   * @param tag Tag passed to the slice method.
-   * @param type Tag name passed to the slice method.
-   * @returns Tag data wrapped in a new Decoder object.
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Bit String.
    */
-  private wrapped(tag: number, type: string): Decoder {
-    return new Decoder(this.slice(tag, type))
-  }
+  public abstract decodeBitString(options?: Optional<NodeOptions>): string;
 
   /**
-   * Displaces the reference pointer by the number of requested bytes.
+   * Decodes a Boolean Type.
    *
-   * This is primarily used by Elliptic Curves.
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Boolean.
+   */
+  public abstract decodeBoolean(options?: Optional<NodeOptions>): boolean;
+
+  /**
+   * Returns the first N bytes of the Decoder's data.
    *
-   * @param bytes - Number of bytes to be displaced.
+   * @param length Number of bytes to be returned.
+   * @returns First N bytes of the Decoder's data.
    */
-  public displace(bytes: number): void {
-    if (!Number.isInteger(bytes)) {
-      throw new TypeError('Invalid parameter "bytes".')
-    }
-
-    this.value = this.data.subarray(bytes)
-    this.offset = 0
-  }
+  public abstract decodeBytes(length: number): Buffer;
 
   /**
-   * Returns a Decoder object representing the context specific tag.
+   * Decodes an Integer Type.
    *
-   * Since a Context-Specific tag is of the format `10XXXXXX`,
-   * we only care about the last 5 bits.
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Integer.
    */
-  public contextSpecific(typpedTag: number, optional: boolean = true): Decoder {
-    if (!Number.isInteger(typpedTag)) {
-      throw new TypeError('Invalid parameter "typpedTag".')
-    }
-
-    if (typeof optional !== 'boolean') {
-      throw new TypeError('Invalid parameter "optional".')
-    }
-
-    const tag = this.data[0] & 0x1f
-
-    if (tag !== typpedTag) {
-      if (optional) {
-        return undefined
-      }
-
-      throw new Error(`Malformed data. Expected ${typpedTag}, got ${tag}.`)
-    }
-
-    return new Decoder(this.slice(this.data[0], 'Context Specific'))
-  }
+  public abstract decodeInteger(options?: Optional<NodeOptions>): bigint;
 
   /**
-   * Parses an integer.
+   * Decodes a Null Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns `null`.
    */
-  public integer(): bigint {
-    if (!Integer.isInteger(this.value)) {
-      throw new TypeError('Node is not an Integer.')
-    }
-
-    const buffer = this.slice(Tags.INTEGER, 'Integer')
-
-    return fromBuffer(buffer, 'integer')
-  }
+  public abstract decodeNull(options?: Optional<NodeOptions>): null;
 
   /**
-   * Parses the data inside a BitString.
+   * Decodes an ObjectIdentifier Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Object Identifier.
    */
-  // TODO: It always adds a zero padding. Verify if it does not conflict with anything.
-  public bitstring(): Decoder {
-    if (!BitString.isBitString(this.value)) {
-      throw new TypeError('Node is not a BitString.')
-    }
-
-    return this.wrapped(Tags.BITSTRING, 'BitString')
-  }
+  public abstract decodeObjectIdentifier(options?: Optional<NodeOptions>): string;
 
   /**
-   * Parses the data inside an OctetString.
+   * Decodes an OctetString Type.
+   *
+   * @param options Optional attributes for the Node, along with the Transformers registered for it.
+   * @returns Resulting Octet String.
    */
-  public octetstring(): Decoder {
-    if (!OctetString.isOctetString(this.value)) {
-      throw new TypeError('Node is not an OctetString.')
-    }
-
-    return this.wrapped(Tags.OCTETSTRING, 'OctetString')
-  }
+  public abstract decodeOctetString(options?: Optional<NodeOptions>): Buffer;
 
   /**
-   * Parses a NULL tag.
+   * Decodes a Sequence Type
+   *
+   * @param options Optional attributes for the Node.
+   * @returns Decoder for the Children Nodes of the Sequence.
    */
-  public null(): null {
-    if (!Null.isNull(this.value)) {
-      throw new TypeError('Node is not a Null.')
-    }
-
-    if (this.value[this.offset++] !== Tags.NULL) {
-      throw new Error('Node type is not Null.')
-    }
-
-    this.value = this.value.slice(++this.offset)
-
-    return null
-  }
-
-  /**
-   * Parses the data of an ObjectId.
-   */
-  public objectid(): Buffer {
-    if (!ObjectId.isObjectId(this.value)) {
-      throw new TypeError('Node is not an ObjectId.')
-    }
-
-    return this.slice(Tags.OBJECTID, 'ObjectId')
-  }
-
-  /**
-   * Parses the data inside a Sequence.
-   */
-  public sequence(): Decoder {
-    if (!Sequence.isSequence(this.data)) {
-      throw new TypeError('Node is not an Sequence.')
-    }
-
-    return this.wrapped(Tags.SEQUENCE, 'Sequence')
-  }
+  public abstract decodeSequence(options?: Optional<NodeOptions>): Decoder<T>;
 }

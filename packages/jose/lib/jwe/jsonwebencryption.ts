@@ -1,263 +1,138 @@
-import { base64UrlDecode, base64UrlEncode } from '@guarani/utils'
+import { Optional } from '@guarani/types';
 
-import {
-  InvalidJoseHeader,
-  InvalidJsonWebEncryption,
-  JoseError
-} from '../exceptions'
-import { JsonWebKey } from '../jwk'
-import { KeyLoader } from '../types'
-import {
-  JWECompression,
-  JWE_ALGORITHMS,
-  JWE_COMPRESSIONS,
-  JWE_ENCRYPTIONS
-} from './algorithms'
-import {
-  JsonWebEncryptionHeader,
-  JWEHeaderParams
-} from './jsonwebencryption.header'
+import { InvalidJsonWebEncryptionException } from '../exceptions/invalid-json-web-encryption.exception';
+import { JoseException } from '../exceptions/jose.exception';
+import { JsonWebKey } from '../jwk/jsonwebkey';
+import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from './algorithms/alg/jsonwebencryption-keywrap-algorithms-registry';
+import { JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY } from './algorithms/enc/jsonwebencryption-contentencryption-algorithms-registry';
+import { JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY } from './algorithms/zip/jsonwebencryption-compression-algorithms-registry';
+import { JsonWebEncryptionHeaderParams } from './jsonwebencryption-header.params';
+import { JsonWebEncryptionHeader } from './jsonwebencryption.header';
+import { CompactDecodeParams } from './types/compact-decode.params';
 
 /**
- * Implementation of RFC 7516.
- *
- * The **JSON Web Encryption** is used for transporting encrypted data
- * on the network, providing confidentiality of the information.
- *
- * This implementation provides a set of attributes to represent the state
- * of the information, as well as segregating the header from the payload,
- * which in turn facilitates the use of any of them.
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7516.html RFC 7516}.
  */
 export class JsonWebEncryption {
   /**
-   * JOSE Header containing the meta information of the token.
+   * Header of the JSON Web Encryption.
    */
-  public readonly header: JsonWebEncryptionHeader
+  public readonly header: JsonWebEncryptionHeader;
 
   /**
-   * Buffer representation of the plaintext to be encrypted.
+   * Plaintext of the JSON Web Encryption.
    */
-  public readonly plaintext: Buffer
+  public readonly plaintext: Buffer;
 
   /**
-   * Instantiates a new JSON Web Encryption based on the provided
-   * JWE JOSE Header and plaintext.
+   * Instantiates a new JSON Web Encryption based on the provided JSON Web Encryption Header and Plaintext.
    *
-   * @param header JWE JOSE Header containing the token's meta information.
-   * @param plaintext Buffer representation of the plaintext to be encrypted.
+   * @param header JSON Web Encryption Header.
+   * @param plaintext Buffer to be used as the Plaintext.
    */
-  public constructor(header: JsonWebEncryptionHeader, plaintext: Buffer) {
-    if (!header) {
-      throw new InvalidJoseHeader()
+  public constructor(header: JsonWebEncryptionHeaderParams, plaintext?: Optional<Buffer>) {
+    if (plaintext !== undefined && !Buffer.isBuffer(plaintext)) {
+      throw new TypeError('Invalid JSON Web Encryption Plaintext.');
     }
 
-    if (!Buffer.isBuffer(plaintext)) {
-      throw new TypeError('The provided plaintext is invalid.')
-    }
-
-    this.header = header
-    this.plaintext = plaintext
+    this.header = new JsonWebEncryptionHeader(header);
+    this.plaintext = Buffer.isBuffer(plaintext) ? plaintext : Buffer.alloc(0);
   }
 
   /**
-   * Checks if the provided token is a JSON Web Encryption Token.
+   * Decodes the provided JSON Web Encryption Token and returns its parsed Parameters.
    *
-   * @param token JSON Web Encryption Token to be checked.
+   * @param token JSON Web Encryption Token to be Decoded.
+   * @returns Parsed Parameters of the JSON Web Encryption Token.
    */
-  public static isJWE(token: string): boolean {
-    // Checks a Compact JWE token.
-    if (typeof token === 'string') {
-      const components = token.split('.')
-
-      if (components.length !== 5) {
-        return false
-      }
-
-      if (components.some(component => !component)) {
-        return false
-      }
-
-      return true
-    }
-
-    return false
-  }
-
-  /**
-   * Decodes the provided **JSON Web Encryption Compact Token** and returns its
-   * parsed JWE Header, Encryption Key, Initialization Vector, Ciphertext,
-   * Authentication Tag and Aditional Authenticated Data.
-   *
-   * @param token JSON Web Encryption Compact Token to be decoded.
-   * @returns Components of the JSON Web Encryption Compact Token.
-   */
-  public static decodeCompact(
-    token: string
-  ): [JsonWebEncryptionHeader, Buffer, Buffer, Buffer, Buffer, Buffer] {
-    if (token == null || typeof token !== 'string') {
-      throw new InvalidJsonWebEncryption()
-    }
-
-    const splitToken = token.split('.')
+  private static decodeCompact(token: string): CompactDecodeParams {
+    const splitToken = token.split('.');
 
     if (splitToken.length !== 5) {
-      throw new InvalidJsonWebEncryption()
+      throw new InvalidJsonWebEncryptionException();
     }
 
+    const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = splitToken;
+
+    const header = new JsonWebEncryptionHeader(JSON.parse(Buffer.from(b64Header, 'base64url').toString('utf8')));
+    const ek = Buffer.from(b64Ek, 'base64url');
+    const iv = Buffer.from(b64Iv, 'base64url');
+    const ciphertext = Buffer.from(b64Ciphertext, 'base64url');
+    const tag = Buffer.from(b64Tag, 'base64url');
+    const aad = Buffer.from(b64Header, 'ascii');
+
+    return { aad, ciphertext, ek, header, iv, tag };
+  }
+
+  /**
+   * Deserializes a JSON Web Encryption Compact Token.
+   *
+   * @param token JSON Web Encryption Compact Token to be Deserialized.
+   * @param key JSON Web Key used to Deserialize the JSON Web Encryption Compact Token.
+   * @returns JSON Web Encryption containing the Deserialized JSON Web Encryption Header and Plaintext.
+   */
+  public static async deserializeCompact(token: string, key: JsonWebKey): Promise<JsonWebEncryption> {
     try {
-      const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = splitToken
+      const { aad, ciphertext, ek, header, iv, tag } = this.decodeCompact(token);
 
-      const decodedHeader = base64UrlDecode(b64Header)
-      const parsedHeader = <JWEHeaderParams>(
-        JSON.parse(decodedHeader.toString('utf8'))
-      )
+      const alg = JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY[header.alg];
+      const enc = JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY[header.enc];
+      const zip = header.zip !== undefined ? JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY[header.zip] : null;
 
-      const header = new JsonWebEncryptionHeader(parsedHeader)
-      const ek = base64UrlDecode(b64Ek)
-      const iv = base64UrlDecode(b64Iv)
-      const ciphertext = base64UrlDecode(b64Ciphertext)
-      const tag = base64UrlDecode(b64Tag)
-      const aad = Buffer.from(b64Header, 'ascii')
+      const cek = await alg.unwrap(enc, key, ek, header);
+      let plaintext = await enc.decrypt(ciphertext, aad, iv, tag, cek);
 
-      return [header, ek, iv, ciphertext, tag, aad]
-    } catch (error) {
-      if (error instanceof InvalidJsonWebEncryption) {
-        throw error
+      if (zip !== null) {
+        plaintext = await zip.decompress(plaintext);
       }
 
-      if (error instanceof JoseError) {
-        throw new InvalidJsonWebEncryption(error.message)
+      return new JsonWebEncryption(header, plaintext);
+    } catch (exc: any) {
+      if (exc instanceof InvalidJsonWebEncryptionException) {
+        throw exc;
       }
 
-      throw new InvalidJsonWebEncryption()
+      throw exc instanceof JoseException
+        ? new InvalidJsonWebEncryptionException(exc)
+        : new InvalidJsonWebEncryptionException(null, exc);
     }
   }
 
   /**
-   * Decodes a **JSON Web Encryption Compact Token**.
+   * Serializes the JSON Web Encryption into a Compact Token.
    *
-   * @param token JSON Web Encryption Compact Token to be decoded.
-   * @param wrapKey JSON Web Key used to unwrap the Encrypted Key.
-   * @returns JSON Web Encryption containing the decoded JOSE Header and Plaintext.
-   */
-  public static async deserializeCompact(
-    token: string,
-    wrapKey: JsonWebKey
-  ): Promise<JsonWebEncryption>
-
-  /**
-   * Decodes a **JSON Web Encryption Compact Token**.
-   *
-   * @param token JSON Web Encryption Compact Token to be decoded.
-   * @param keyLoader Function used to load a JWK based on the JOSE Header.
-   * @returns JSON Web Encryption containing the decoded JOSE Header and Plaintext.
-   */
-  public static async deserializeCompact(
-    token: string,
-    keyLoader: KeyLoader
-  ): Promise<JsonWebEncryption>
-
-  public static async deserializeCompact(
-    token: string,
-    jwkOrKeyLoader: JsonWebKey | KeyLoader
-  ): Promise<JsonWebEncryption> {
-    try {
-      const [header, ek, iv, ciphertext, tag, aad] = this.decodeCompact(token)
-
-      const alg = JWE_ALGORITHMS[header.alg]
-      const enc = JWE_ENCRYPTIONS[header.enc]
-      const zip = <JWECompression>JWE_COMPRESSIONS[header.zip]
-
-      const wrapKey =
-        typeof jwkOrKeyLoader === 'function'
-          ? jwkOrKeyLoader(header)
-          : jwkOrKeyLoader
-
-      if (wrapKey != null && !(wrapKey instanceof JsonWebKey)) {
-        throw new InvalidJsonWebEncryption('Invalid key.')
-      }
-
-      const cek = await alg.unwrap(ek, wrapKey, header)
-      let plaintext = await enc.decrypt(ciphertext, aad, iv, tag, cek)
-
-      if (zip != null) {
-        plaintext = await zip.decompress(plaintext)
-      }
-
-      return new JsonWebEncryption(header, plaintext)
-    } catch (error) {
-      if (error instanceof InvalidJsonWebEncryption) {
-        throw error
-      }
-
-      if (error instanceof JoseError) {
-        throw new InvalidJsonWebEncryption(error.message)
-      }
-
-      throw new InvalidJsonWebEncryption()
-    }
-  }
-
-  /**
-   * Serializes the contents of a JsonWebEncryption into a JWE Compact Token.
-   *
-   * It encodes the Header into a Base64Url version of its JSON representation,
-   * and encodes the Encrypted Key, Initialization Vector, Ciphertext and
-   * Authentication Tag into a Base64Url format, allowing the compatibility
-   * in different systems.
-   *
-   * It creates a string message of the following format
-   * (with break lines for display purposes only):
-   *
-   * `
-   * Base64Url(UTF-8(header)).
-   * Base64Url(Encrypted Key).
-   * Base64Url(Initialization Vector).
-   * Base64Url(Ciphertext).
-   * Base64Url(Authentication Tag)
-   * `
-   *
-   * The resulting token is then returned to the application.
-   *
-   * @param wrapKey JSON Web Key used to wrap the Content Encryption Key.
+   * @param key JSON Web Key used to Serialize the JSON Web Encryption.
    * @returns JSON Web Encryption Compact Token.
    */
-  public async serializeCompact(wrapKey?: JsonWebKey): Promise<string> {
-    if (this.header == null) {
-      throw new InvalidJoseHeader(
-        'This JSON Web Encryption cannot be serialized ' +
-          'using the JWE Compact Serialization.'
-      )
+  public async serializeCompact(key: JsonWebKey): Promise<string> {
+    let { header, plaintext } = this;
+
+    const alg = JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY[header.alg];
+    const enc = JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY[header.enc];
+    const zip = header.zip !== undefined ? JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY[header.zip] : null;
+
+    const iv = await enc.generateInitializationVector();
+
+    const { cek, ek, additionalHeaderParams } = await alg.wrap(enc, key);
+
+    if (additionalHeaderParams !== undefined) {
+      Object.assign(header, additionalHeaderParams);
     }
 
-    if (wrapKey == null && this.header.alg !== 'dir') {
-      throw new InvalidJoseHeader(
-        `The algorithm "${this.header.alg}" requires the use of a JSON Web Key.`
-      )
+    const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
+    const aad = Buffer.from(b64Header, 'ascii');
+
+    if (zip !== null) {
+      plaintext = await zip.compress(plaintext);
     }
 
-    const alg = JWE_ALGORITHMS[this.header.alg]
-    const enc = JWE_ENCRYPTIONS[this.header.enc]
-    const zip = <JWECompression>JWE_COMPRESSIONS[this.header.zip]
+    const { ciphertext, tag } = await enc.encrypt(plaintext, aad, iv, cek);
 
-    const cek = enc.generateCEK()
-    const iv = enc.generateIV()
+    const b64Ek = ek.toString('base64url');
+    const b64Iv = iv.toString('base64url');
+    const b64Ciphertext = ciphertext.toString('base64url');
+    const b64Tag = tag.toString('base64url');
 
-    const { ek, header } = await alg.wrap(cek, wrapKey)
-
-    if (header) {
-      Object.assign(this.header, header)
-    }
-
-    const b64Header = base64UrlEncode(Buffer.from(JSON.stringify(this.header)))
-    const aad = Buffer.from(b64Header, 'ascii')
-
-    const plaintext =
-      zip != null ? await zip.compress(this.plaintext) : this.plaintext
-
-    const { ciphertext, tag } = await enc.encrypt(plaintext, aad, iv, cek)
-    const b64IV = base64UrlEncode(iv)
-
-    return `${b64Header}.${ek}.${b64IV}.${ciphertext}.${tag}`
+    return `${b64Header}.${b64Ek}.${b64Iv}.${b64Ciphertext}.${b64Tag}`;
   }
 }

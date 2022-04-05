@@ -1,16 +1,13 @@
-import { Constructor, Factory } from '@guarani/utils'
+import { Constructor } from '@guarani/types';
 
-import {
-  isClassProvider,
-  isFactoryProvider,
-  isProvider,
-  isTokenProvider,
-  isValueProvider,
-  Provider
-} from '../providers'
-import { InjectableToken, isConstructorToken } from '../tokens'
-import { Binding } from './binding'
-import { LifecycleBinding } from './lifecycle.binding'
+import { isClassProvider } from '../providers/class.provider';
+import { isFactoryProvider } from '../providers/factory.provider';
+import { Provider } from '../providers/provider';
+import { isTokenProvider } from '../providers/token.provider';
+import { isValueProvider } from '../providers/value.provider';
+import { InjectableToken, isConstructorToken } from '../tokens';
+import { Binding } from './binding';
+import { LifecycleBinding } from './lifecycle.binding';
 
 /**
  * Binding Configuration used to define the Provider bound to the Token.
@@ -29,25 +26,23 @@ export class ProviderBinding<T> {
    * @param provider Current Provider.
    */
   public to<U>(provider: Provider<U>): LifecycleBinding<T> {
-    if (!isProvider<U>(provider)) {
-      throw new TypeError(`Invalid format for provider: ${provider}.`)
-    }
-
     if (isClassProvider<U>(provider)) {
-      return this.toClass(provider.target)
+      return this.toClass(provider.target);
     }
 
     if (isFactoryProvider<U>(provider)) {
-      return this.toFactory(provider.factory)
+      return this.toFactory(provider.factory);
     }
 
     if (isTokenProvider<U>(provider)) {
-      return this.toToken(provider.token)
+      return this.toToken(provider.token);
     }
 
     if (isValueProvider<U>(provider)) {
-      return this.toValue(provider.value)
+      return this.toValue(provider.value);
     }
+
+    throw new TypeError(`Invalid format for provider: ${provider}.`);
   }
 
   /**
@@ -56,8 +51,8 @@ export class ProviderBinding<T> {
    * @param target Class to be bound to the Token.
    */
   public toClass<U>(target: Constructor<U>): LifecycleBinding<T> {
-    this.binding.provider = { target: target as any }
-    return new LifecycleBinding(this.binding)
+    this.binding.provider = { target: target as any };
+    return new LifecycleBinding(this.binding);
   }
 
   /**
@@ -65,9 +60,9 @@ export class ProviderBinding<T> {
    *
    * @param factory Factory to be bound to the Token.
    */
-  public toFactory<U>(factory: Factory<U>): LifecycleBinding<T> {
-    this.binding.provider = { factory: factory as any }
-    return new LifecycleBinding(this.binding)
+  public toFactory<U>(factory: () => U): LifecycleBinding<T> {
+    this.binding.provider = { factory: factory as any };
+    return new LifecycleBinding(this.binding);
   }
 
   /**
@@ -76,8 +71,8 @@ export class ProviderBinding<T> {
    * @param token Token to be aliased.
    */
   public toToken<U>(token: InjectableToken<U>): LifecycleBinding<T> {
-    this.binding.provider = { token: token as any }
-    return new LifecycleBinding(this.binding)
+    this.binding.provider = { token: token as any };
+    return new LifecycleBinding(this.binding);
   }
 
   /**
@@ -86,8 +81,8 @@ export class ProviderBinding<T> {
    * @param value Value to be bound to the Token.
    */
   public toValue<U>(value: U): LifecycleBinding<T> {
-    this.binding.provider = { value: value as any }
-    return new LifecycleBinding(this.binding)
+    this.binding.provider = { value: value as any };
+    return new LifecycleBinding(this.binding);
   }
 
   /**
@@ -95,11 +90,9 @@ export class ProviderBinding<T> {
    */
   public toSelf(): LifecycleBinding<T> {
     if (!isConstructorToken<T>(this.binding.token)) {
-      throw new TypeError(
-        `The token "${String(this.binding.token)}" is not a valid constructor.`
-      )
+      throw new TypeError(`The token "${String(this.binding.token)}" is not a valid constructor.`);
     }
 
-    return this.toClass(this.binding.token)
+    return this.toClass(this.binding.token);
   }
 }

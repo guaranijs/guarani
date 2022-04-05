@@ -1,67 +1,65 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+import { InvalidJsonWebKeyException } from '../../lib/exceptions/invalid-json-web-key.exception';
+import { KeyOperation } from '../../lib/jwk/types/key-operation';
+import { PublicKeyUse } from '../../lib/jwk/types/public-key-use';
+import { JsonWebKeyMock } from './mocks/jsonwebkey.mock';
 
-import { Dict } from '@guarani/utils'
+const invalidUses: any[] = [null, true, 12, 12n, 12.3, Buffer.alloc(1), Symbol.for('foo'), () => {}, [], {}];
 
-import { JsonWebKey, SupportedJWKAlgorithm } from '../../lib/jwk'
-import { SupportedHash } from '../../lib/types'
+const invalidKeyOps: any[] = [
+  null,
+  true,
+  12,
+  12n,
+  12.3,
+  'invalidKeyOp',
+  Buffer.alloc(1),
+  Symbol.for('foo'),
+  () => {},
+  {},
+  [],
+  [123],
+];
 
-class MockKey extends JsonWebKey {
-  public readonly kty: SupportedJWKAlgorithm
+const invalidUseKeyOps: [PublicKeyUse, KeyOperation[]][] = [
+  ['enc', ['sign']],
+  ['enc', ['verify']],
+  ['sig', ['decrypt']],
+  ['sig', ['encrypt']],
+  ['sig', ['wrapKey']],
+  ['sig', ['unwrapKey']],
+  ['sig', ['deriveKey']],
+  ['sig', ['deriveBits']],
+];
 
-  public export(...params: any[]): string | Buffer {
-    throw new Error('Method not implemented.')
-  }
+const invalidAlgs: any[] = [null, true, 12, 12n, 12.3, Buffer.alloc(1), Symbol.for('foo'), () => {}, [], {}];
 
-  public sign(
-    message: Buffer,
-    hash: SupportedHash,
-    options?: Dict<any>
-  ): Buffer {
-    throw new Error('Method not implemented.')
-  }
+const invalidKeyIds: any[] = [null, true, 12, 12n, 12.3, Buffer.alloc(1), Symbol.for('foo'), () => {}, [], {}];
 
-  public verify(
-    signature: Buffer,
-    message: Buffer,
-    hash: SupportedHash,
-    options?: Dict<any>
-  ): void {
-    throw new Error('Method not implemented.')
-  }
-}
+describe('JSON Web Key', () => {
+  it.each(invalidUses)('should reject an invalid "use".', (invalidKeyUse) => {
+    expect(() => new JsonWebKeyMock({ use: invalidKeyUse })).toThrow(InvalidJsonWebKeyException);
+  });
 
-describe('JsonWebKey constructor', () => {
-  it('should reject an invalid "use".', () => {
-    // @ts-expect-error
-    expect(() => new MockKey({ use: 123 })).toThrow('Invalid parameter "use".')
-  })
+  it.each(invalidKeyOps)('should reject an invalid "key_ops".', (invalidKeyOp) => {
+    expect(() => new JsonWebKeyMock({ key_ops: invalidKeyOp })).toThrow(InvalidJsonWebKeyException);
+  });
 
-  it('should reject an invalid "key_ops".', () => {
-    // @ts-expect-error
-    expect(() => new MockKey({ key_ops: 123 })).toThrow(
-      'Invalid parameter "key_ops".'
-    )
+  it('should reject duplicate "key_ops".', () => {
+    expect(() => new JsonWebKeyMock({ key_ops: ['sign', 'sign', 'verify'] })).toThrow(InvalidJsonWebKeyException);
+  });
 
-    expect(() => new MockKey({ key_ops: ['sign', 'sign', 'verify'] })).toThrow(
-      'Parameter "key_ops" cannot have repeated operations.'
-    )
+  it.each(invalidUseKeyOps)(
+    'should reject an invalid combination of "use" and "key_ops".',
+    (invalidUse, invalidKeyOps) => {
+      expect(() => new JsonWebKeyMock({ use: invalidUse, key_ops: invalidKeyOps })).toThrow(InvalidJsonWebKeyException);
+    }
+  );
 
-    expect(() => new MockKey({ use: 'sig', key_ops: ['encrypt'] })).toThrow(
-      'Invalid combination of "use" and "key_ops".'
-    )
+  it.each(invalidAlgs)('should reject an invalid "alg".', (invalidAlg) => {
+    expect(() => new JsonWebKeyMock({ alg: invalidAlg })).toThrow(InvalidJsonWebKeyException);
+  });
 
-    expect(() => new MockKey({ use: 'enc', key_ops: ['verify'] })).toThrow(
-      'Invalid combination of "use" and "key_ops".'
-    )
-  })
-
-  it('should reject an invalid "alg".', () => {
-    // @ts-expect-error
-    expect(() => new MockKey({ alg: 123 })).toThrow('Invalid parameter "alg".')
-  })
-
-  it('should reject an invalid "kid".', () => {
-    // @ts-expect-error
-    expect(() => new MockKey({ kid: 123 })).toThrow('Invalid parameter "kid".')
-  })
-})
+  it.each(invalidKeyIds)('should reject an invalid "kid".', (invalidKeyId) => {
+    expect(() => new JsonWebKeyMock({ kid: invalidKeyId })).toThrow(InvalidJsonWebKeyException);
+  });
+});

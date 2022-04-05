@@ -1,46 +1,62 @@
-import { InvalidJsonWebEncryption, JoseError } from '../../../exceptions'
-import { OctKey } from '../../../jwk'
-import { WrappedKey } from '../../_types'
-import { JWEAlgorithm } from './jwe-algorithm'
+import { Dict } from '@guarani/types';
+
+import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-json-web-encryption.exception';
+import { OctKey } from '../../../jwk/algorithms/oct/oct.key';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from '../enc/jsonwebencryption-contentencryption.algorithm';
+import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap.algorithm';
+import { WrappedKey } from './types/wrapped-key';
 
 /**
- * Implementation of the `No Key Wrapping` Algorithm.
+ * Implementation of the dir JSON Web Encryption Key Wrap Algorithm.
  */
-class DIRAlgorithm extends JWEAlgorithm {
+class DirKeyWrapAlgorithm extends JsonWebEncryptionKeyWrapAlgorithm {
   /**
-   * Uses the provided JSON Web Key as the Content Encryption Key.
-   *
-   * @param cek Content Encryption Key used to encrypt the Plaintext.
-   * @param key JWK used as Content Encryption Key.
-   * @returns WrapKey as the CEK and an empty string as the EK.
+   * Instantiates a new JSON Web Encryption dir Key Wrap Algorithm to Wrap and Unwrap Content Encryption Keys.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async wrap(cek: Buffer, key: OctKey): Promise<WrappedKey> {
-    return { ek: '' }
+  public constructor() {
+    super('dir', 'oct');
   }
 
   /**
-   * Unwraps the provided Encrypted Key using the provided JSON Web Key.
+   * Returns an empty Buffer since the Algorithm does not Wrap the provided Content Encryption Key.
    *
-   * @param ek ~Ignored Parameter~.
-   * @param key JSON Web Key used as the Content Encryption Key.
-   * @throws {InvalidJsonWebEncryption} Could not unwrap the Encrypted CEK.
-   * @returns Unwrapped Content Encryption Key.
+   * @param enc JSON Web Encryption Content Encryption Algorithm.
+   * @param key JSON Web Key to be used as the Content Encryption Key used to Encrypt the Plaintext.
+   * @returns Empty Buffer as the Wrapped Content Encryption Key.
    */
-  public async unwrap(ek: Buffer, key: OctKey): Promise<Buffer> {
-    try {
-      return key.export('binary')
-    } catch (error) {
-      if (error instanceof JoseError) {
-        throw new InvalidJsonWebEncryption(error.message)
-      }
+  public async wrap(enc: JsonWebEncryptionContentEncryptionAlgorithm, key: OctKey): Promise<WrappedKey<Dict>> {
+    this.validateJsonWebKey(key);
 
-      throw new InvalidJsonWebEncryption()
+    const cek = key.export({ encoding: 'buffer' });
+    const ek = Buffer.alloc(0);
+
+    enc.validateContentEncryptionKey(cek);
+
+    return { cek, ek };
+  }
+
+  /**
+   * Returns the provided JSON Web Key as the Content Encryption Key.
+   *
+   * @param enc JSON Web Encryption Content Encryption Algorithm.
+   * @param key JSON Web Key used as the Content Encryption Key.
+   * @param ek ~Wrapped Content Encryption Key~.
+   * @returns Provided JSON Web Key as the Content Encryption Key.
+   */
+  public async unwrap(enc: JsonWebEncryptionContentEncryptionAlgorithm, key: OctKey, ek: Buffer): Promise<Buffer> {
+    if (ek.length !== 0) {
+      throw new InvalidJsonWebEncryptionException('Expected the Encrypted Content Encryption Key to be empty.');
     }
+
+    const cek = key.export({ encoding: 'buffer' });
+
+    enc.validateContentEncryptionKey(cek);
+
+    return cek;
   }
 }
 
 /**
- * Direct Encryption with a Shared Symmetric Key.
+ * Direct use of a shared symmetric key as the CEK.
  */
-export const dir = new DIRAlgorithm('dir')
+export const dir = new DirKeyWrapAlgorithm();

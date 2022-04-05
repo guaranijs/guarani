@@ -3,6 +3,6 @@
 package.json
 packages/*/node_modules
 packages/*/dist
-packages/*/test/fixtures
-packages/*/test/tmp
+packages/*/tests/fixtures
+packages/*/tests/tmp
 **/static/*

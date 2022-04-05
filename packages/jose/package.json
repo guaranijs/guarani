@@ -43,7 +43,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "prebuild": "rimraf dist",
+    "build": "tsc -p tsconfig.build.json",
     "test": "jest"
   },
   "publishConfig": {
@@ -51,7 +52,10 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@guarani/asn1": "0.6.0",
-    "@guarani/utils": "0.6.0"
+    "@guarani/objects": "^0.6.0",
+    "@guarani/primitives": "^0.6.0"
+  },
+  "devDependencies": {
+    "@guarani/types": "^0.6.0"
   }
 }

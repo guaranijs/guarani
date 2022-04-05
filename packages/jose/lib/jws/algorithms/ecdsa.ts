@@ -1,101 +1,106 @@
-import { base64UrlDecode, base64UrlEncode } from '@guarani/utils'
+import { KeyObject, sign, verify } from 'crypto';
+import { promisify } from 'util';
 
-import { createPrivateKey, createPublicKey, sign, verify } from 'crypto'
+import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
+import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-json-web-signature.exception';
+import { EcKey } from '../../jwk/algorithms/ec/ec.key';
+import { SupportedEllipticCurve } from '../../jwk/algorithms/ec/types/supported-elliptic-curve';
+import { JsonWebSignatureAlgorithm } from './jsonwebsignature.algorithm';
+import { SupportedJsonWebSignatureAlgorithm } from './types/supported-jsonwebsignature-algorithm';
 
-import { InvalidKey, InvalidSignature } from '../../exceptions'
-import { EcKey, SupportedEllipticCurve, SupportedJWKAlgorithm } from '../../jwk'
-import { SupportedHash } from '../../types'
-import { JWSAlgorithm } from './jws-algorithm'
+const signAsync = promisify(sign);
+const verifyAsync = promisify(verify);
 
 /**
- * Implementation of an ECDSA Signature Algorithm.
+ * Implementation of the JSON Web Signature ECDSA Algorithm.
  */
-class ECDSAAlgorithm extends JWSAlgorithm {
+class EcdsaAlgorithm extends JsonWebSignatureAlgorithm {
   /**
-   * Accepted key type.
+   * Elliptic Curve used by the JSON Web Signature ECDSA Algorithm.
    */
-  public readonly kty: SupportedJWKAlgorithm = 'EC'
+  protected readonly curve: SupportedEllipticCurve;
 
   /**
-   * Instantiates a new ECDSA Algorithm to sign and verify the messages.
+   * Instantiates a new JSON Web Signature ECDSA Algorithm to Sign and Verify the Messages.
    *
-   * @param hash Hash algorithm used to sign and verify the messages.
-   * @param algorithm  Name of the algorithm.
-   * @param curve Curve to be used by the algorithm.
+   * @param hash Hash Algorithm used to Sign and Verify the Messages.
+   * @param algorithm Name of the JSON Web Signature Algorithm.
+   * @param curve Elliptic Curve used by the JSON Web Signature ECDSA Algorithm.
    */
-  public constructor(
-    protected readonly hash: SupportedHash,
-    protected readonly algorithm: string,
-    protected readonly curve: SupportedEllipticCurve
-  ) {
-    super(hash, algorithm)
+  public constructor(hash: string, algorithm: SupportedJsonWebSignatureAlgorithm, curve: SupportedEllipticCurve) {
+    super(hash, algorithm, 'EC');
+
+    this.curve = curve;
   }
 
   /**
-   * Signs the provided message using ECDSA.
+   * Signs a Message with the provided JSON Web Key.
    *
-   * @param message Message to be signed.
-   * @param key Key used to sign the message.
-   * @returns Base64Url encoded signature.
+   * @param message Message to be Signed.
+   * @param key JSON Web Key used to Sign the provided Message.
+   * @returns Resulting Signature of the provided Message.
    */
-  public async sign(message: Buffer, key: EcKey): Promise<string> {
-    this.checkKey(key)
+  public async sign(message: Buffer, key: EcKey): Promise<Buffer> {
+    this.validateJsonWebKey(key);
 
-    const privateKey = createPrivateKey(key.export('private', 'pem', 'sec1'))
+    const cryptoKey: KeyObject = Reflect.get(key, 'cryptoKey');
 
-    return base64UrlEncode(sign(this.hash, message, privateKey))
+    if (cryptoKey.type !== 'private') {
+      throw new InvalidJsonWebKeyException('A Private Key is needed to Sign a JSON Web Signature Message.');
+    }
+
+    const signature = await signAsync(this.hash, message, cryptoKey);
+
+    return signature;
   }
 
   /**
-   * Verifies the signature against a message using ECDSA.
+   * Checks if the provided Signature matches the provided Message based on the provide JSON Web Key.
    *
-   * @param signature Signature to be matched against the message.
-   * @param message Message to be matched against the signature.
-   * @param key Key used to verify the signature.
-   * @throws {InvalidSignature} The signature does not match the message.
+   * @param signature Signature to be matched against the provided Message.
+   * @param message Message to be matched against the provided Signature.
+   * @param key JSON Web Key used to verify the Signature and Message.
    */
-  public async verify(
-    signature: string,
-    message: Buffer,
-    key: EcKey
-  ): Promise<void> {
-    this.checkKey(key)
+  public async verify(signature: Buffer, message: Buffer, key: EcKey): Promise<void> {
+    this.validateJsonWebKey(key);
 
-    const publicKey = createPublicKey(key.export('public', 'pem'))
+    const cryptoKey: KeyObject = Reflect.get(key, 'cryptoKey');
 
-    if (!verify(this.hash, message, publicKey, base64UrlDecode(signature))) {
-      throw new InvalidSignature()
+    const verificationResult = await verifyAsync(this.hash, message, cryptoKey, signature);
+
+    if (!verificationResult) {
+      throw new InvalidJsonWebSignatureException();
     }
   }
 
   /**
-   * Checks if a key can be used by the requesting algorithm.
+   * Checks if the provided JSON Web Key can be used by the JSON Web Signature ECDSA Algorithm.
    *
-   * @param key Key to be checked.
-   * @throws {InvalidKey} The provided JSON Web Key is invalid.
+   * @param key JSON Web Key to be checked.
+   * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
    */
-  protected checkKey(key: EcKey): void {
-    super.checkKey(key)
+  protected validateJsonWebKey(key: EcKey): void {
+    super.validateJsonWebKey(key);
 
     if (key.crv !== this.curve) {
-      throw new InvalidKey(
-        `This algorithm only accepts the curve "${this.curve}".`
-      )
+      throw new InvalidJsonWebKeyException(
+        `The JSON Web Signature ECDSA Algorithm "${this.algorithm}" only accepts the Elliptic Curve "${this.curve}".`
+      );
     }
   }
 }
 
 /**
- * ECDSA with SHA256.
+ * ECDSA using P-256 and SHA-256.
  */
-export const ES256 = new ECDSAAlgorithm('SHA256', 'ES256', 'P-256')
+export const ES256 = new EcdsaAlgorithm('SHA256', 'ES256', 'P-256');
 
 /**
- * ECDSA with SHA384.
+ * ECDSA using P-384 and SHA-384.
  */
-export const ES384 = new ECDSAAlgorithm('SHA384', 'ES384', 'P-384')
+export const ES384 = new EcdsaAlgorithm('SHA384', 'ES384', 'P-384');
 
 /**
- * ECDSA with SHA512.
+ * ECDSA using P-521 and SHA-512.
  */
-export const ES512 = new ECDSAAlgorithm('SHA512', 'ES512', 'P-521')
+export const ES512 = new EcdsaAlgorithm('SHA512', 'ES512', 'P-521');

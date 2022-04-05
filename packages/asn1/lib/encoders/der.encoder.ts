@@ -1,15 +1,42 @@
-import { Node } from '../nodes'
+import { EncodingException } from '../exceptions/encoding.exception';
+import { Encoding } from '../encoding';
+import { BitStringNode } from '../nodes/bitstring.node';
+import { OctetStringNode } from '../nodes/octetstring.node';
+import { BerEncoder } from './ber.encoder';
 
 /**
- * Encodes the data of an ASN.1 Node into a DER array.
- *
- * @param data - ASN.1 Node to be encoded.
- * @returns Data of the ASN.1 Node encoded into a DER array.
+ * ASN.1 DER Encoder.
  */
-export function DEREncoder(data: Node): Buffer {
-  if (!(data instanceof Node)) {
-    throw new TypeError('Invalid parameter "data".')
+export class DerEncoder extends BerEncoder {
+  /**
+   * Encodes a Bit String Node.
+   *
+   * @param node Bit String Node to be encoded.
+   * @returns Encoded Bit String.
+   */
+  protected encodeBitString(node: BitStringNode): Buffer {
+    this.ensureNodeInstance(node, BitStringNode);
+
+    if (node.encoding !== Encoding.Primitive) {
+      throw new EncodingException('A BitString must only be Primitive.');
+    }
+
+    return super.encodeBitString(node);
   }
 
-  return data.encode()
+  /**
+   * Encodes an Octet String Node.
+   *
+   * @param node Octet String Node to be encoded.
+   * @returns Encoded Octet String.
+   */
+  protected encodeOctetString(node: OctetStringNode): Buffer {
+    this.ensureNodeInstance(node, OctetStringNode);
+
+    if (node.encoding !== Encoding.Primitive) {
+      throw new EncodingException('An OctetString must only be Primitive.');
+    }
+
+    return super.encodeOctetString(node);
+  }
 }

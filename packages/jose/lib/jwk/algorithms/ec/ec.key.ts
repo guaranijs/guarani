@@ -1,366 +1,241 @@
-import {
-  Decoder,
-  DERDecoder,
-  DEREncoder,
-  Node,
-  PEMDecoder,
-  PEMEncoder
-} from '@guarani/asn1'
+import { Optional } from '@guarani/types';
 
-import { generateKeyPair } from 'crypto'
-import { promisify } from 'util'
-
-import { InvalidKey } from '../../../exceptions'
 import {
-  JsonWebKey,
-  JsonWebKeyParams,
-  SupportedJWKAlgorithm
-} from '../../jsonwebkey'
-import {
-  decodePrivatePkcs8,
-  decodePrivateSec1,
-  encodePrivatePkcs8,
-  encodePrivateSec1
-} from './_private'
-import { decodePublicX509, encodePublicX509 } from './_public'
-import { ELLIPTIC_CURVES, SupportedEllipticCurve } from './_types'
+  createPrivateKey,
+  createPublicKey,
+  generateKeyPair,
+  JsonWebKeyInput as CryptoJsonWebKeyInput,
+  KeyExportOptions,
+  KeyObject,
+} from 'crypto';
+import { promisify } from 'util';
 
-const generateKeyPairAsync = promisify(generateKeyPair)
+import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-json-web-key.exception';
+import { UnsupportedAlgorithmException } from '../../../exceptions/unsupported-algorithm.exception';
+import { UnsupportedEllipticCurveException } from '../../../exceptions/unsupported-elliptic-curve.exception';
+import { JsonWebKey } from '../../jsonwebkey';
+import { JsonWebKeyParams } from '../../jsonwebkey.params';
+import { EcKeyParams } from './ec-key.params';
+import { ELLIPTIC_CURVES_REGISTRY } from './elliptic-curves-registry';
+import { ExportEcKeyEncoding } from './types/export-ec-key-encoding';
+import { ExportEcKeyFormat } from './types/export-ec-key-format';
+import { ExportEcKeyType } from './types/export-ec-key-type';
+import { ExportEcKeyOptions } from './types/export-ec-key.options';
+import { GenerateEcKeyOptions } from './types/generate-ec-key.options';
+import { SupportedEllipticCurve } from './types/supported-elliptic-curve';
+
+const generateKeyPairAsync = promisify(generateKeyPair);
 
 /**
- * Representation of the parameters of an **Elliptic Curve Key**.
- */
-export interface EcKeyParams extends JsonWebKeyParams {
-  /**
-   * Name of the elliptic curve.
-   */
-  readonly crv: SupportedEllipticCurve
-
-  /**
-   * Base64Url representation of the X value.
-   */
-  readonly x: string
-
-  /**
-   * Base64Url representation of the Y value.
-   */
-  readonly y: string
-
-  /**
-   * Base64Url representation of the Private Value.
-   */
-  readonly d?: string
-}
-
-/**
- * Implementation of the Elliptic Curve Key.
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7518.html#section-6.2 RFC 7518 Section 6.2}.
  */
 export class EcKey extends JsonWebKey implements EcKeyParams {
   /**
-   * Key type representing the algorithm of the key.
+   * Type of the JSON Web Key.
    */
-  public readonly kty: SupportedJWKAlgorithm
+  public readonly kty!: 'EC';
 
   /**
-   * Name of the elliptic curve.
+   * Name of the Elliptic Curve.
    */
-  public readonly crv: SupportedEllipticCurve
+  public readonly crv!: SupportedEllipticCurve;
 
   /**
-   * Base64Url representation of the X value.
+   * X Coordinate.
    */
-  public readonly x: string
+  public readonly x!: string;
 
   /**
-   * Base64Url representation of the Y value.
+   * Y Coordinate.
    */
-  public readonly y: string
+  public readonly y!: string;
 
   /**
-   * Base64Url representation of the Private Value.
+   * Private Key.
    */
-  public readonly d?: string
+  public readonly d?: Optional<string>;
 
   /**
-   * Instantiantes a new Elliptic Curve Key based on the provided parameters.
+   * Instantiates an Elliptic Curve JSON Web Key based on the provided Parameters.
    *
-   * @param key Parameters of the key.
+   * @param key Parameters of the Elliptic Curve JSON Web Key.
    * @param options Optional JSON Web Key Parameters.
    */
-  public constructor(key: EcKeyParams, options: JsonWebKeyParams = {}) {
-    const params: EcKeyParams = { ...key, ...options }
-
-    super(params)
-
-    if (params.kty && params.kty !== 'EC') {
-      throw new InvalidKey(
-        `Invalid parameter "kty". Expected "EC", got "${params.kty}".`
-      )
+  public constructor(key: EcKeyParams, options: Optional<JsonWebKeyParams> = {}) {
+    if (key instanceof EcKey) {
+      return key;
     }
 
-    if (!(params.crv in ELLIPTIC_CURVES)) {
-      throw new InvalidKey(`Unsupported curve "${params.crv}".`)
+    const params = <EcKeyParams>{ ...key, ...options };
+
+    if (typeof params.kty !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid parameter "kty".');
     }
 
-    if (!params.x || typeof params.x !== 'string') {
-      throw new InvalidKey('Invalid parameter "x".')
+    if (params.kty !== 'EC') {
+      throw new UnsupportedAlgorithmException(`Invalid JSON Web Key Type. Expected "EC", got "${params.kty}".`);
     }
 
-    if (!params.y || typeof params.y !== 'string') {
-      throw new InvalidKey('Invalid parameter "y".')
+    if (typeof params.crv !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid parameter "crv".');
     }
 
-    this.kty = 'EC'
-    this.crv = params.crv
-    this.x = params.x
-    this.y = params.y
+    const curve = ELLIPTIC_CURVES_REGISTRY.find((ellipticCurve) => ellipticCurve.id === params.crv);
 
-    if (params.d != null) {
-      if (!params.d || typeof params.d !== 'string') {
-        throw new InvalidKey('Invalid parameter "d".')
+    if (curve === undefined) {
+      throw new UnsupportedEllipticCurveException(`Unsupported Elliptic Curve "${params.crv}".`);
+    }
+
+    if (typeof params.x !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid key parameter "x".');
+    }
+
+    if (typeof params.y !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid key parameter "y".');
+    }
+
+    if (params.d !== undefined) {
+      if (typeof params.d !== 'string') {
+        throw new InvalidJsonWebKeyException('Invalid key parameter "d".');
       }
-
-      this.d = params.d
     }
+
+    super(params);
   }
 
   /**
-   * Creates a new Elliptic Curve Key.
+   * Generates a new Elliptic Curve JSON Web Key.
    *
-   * @param curve Name of the Elliptic Curve.
-   * @param options Optional JSON Web Key Parameters.
-   * @returns Instance of an EcKey.
+   * @param options Options for the generation of the Elliptic Curve JSON Web Key.
+   * @param params Optional JSON Web Key Parameters.
+   * @returns Generated Elliptic Curve JSON Web Key.
    */
-  public static async generate(
-    curve: SupportedEllipticCurve,
-    options?: JsonWebKeyParams
-  ): Promise<EcKey> {
-    if (!(curve in ELLIPTIC_CURVES)) {
-      throw new TypeError(`Unsupported curve "${curve}".`)
+  public static async generate(options: GenerateEcKeyOptions, params: Optional<JsonWebKeyParams> = {}): Promise<EcKey> {
+    const { curve } = options;
+
+    if (typeof curve !== 'string') {
+      throw new TypeError('Invalid option "curve".');
     }
 
-    const curveMeta = ELLIPTIC_CURVES[curve]
+    const curveMeta = ELLIPTIC_CURVES_REGISTRY.find((ellipticCurve) => ellipticCurve.id === curve);
 
-    const { privateKey } = await generateKeyPairAsync('ec', {
-      namedCurve: curveMeta.name
-    })
+    if (curveMeta === undefined) {
+      throw new UnsupportedEllipticCurveException(`Unsupported Elliptic Curve "${curve}".`);
+    }
 
-    const der = privateKey.export({ format: 'der', type: 'sec1' })
-    const decoder = DERDecoder(der).sequence()
+    const { privateKey } = await generateKeyPairAsync('ec', { namedCurve: curveMeta.name });
 
-    // Removes the version.
-    decoder.integer()
-
-    return decodePrivateSec1(decoder, options)
+    return new EcKey(<EcKeyParams>privateKey.export({ format: 'jwk' }), params);
   }
 
   /**
-   * Parses a DER encoded Elliptic Curve Key.
+   * Loads the provided JSON Web Key into a NodeJS Crypto Key.
    *
-   * @param der DER representation of the Elliptic Curve Key.
-   * @param options Optional JSON Web Key Parameters.
-   * @returns Instance of an EcKey.
+   * @param params Parameters of the JSON Web Key.
+   * @returns NodeJS Crypto Key.
    */
-  public static parse(der: Buffer, options?: JsonWebKeyParams): EcKey
-
-  /**
-   * Parses a PEM encoded Elliptic Curve Key.
-   *
-   * @param pem PEM representation of the Elliptic Curve Key.
-   * @param options Optional JSON Web Key Parameters.
-   * @returns Instance of an EcKey.
-   */
-  public static parse(pem: string, options?: JsonWebKeyParams): EcKey
-
-  public static parse(
-    data: Buffer | string,
-    options?: JsonWebKeyParams
-  ): EcKey {
-    if (!data || (!Buffer.isBuffer(data) && typeof data !== 'string')) {
-      throw new TypeError('Invalid Key Data.')
-    }
-
-    let decoder: Decoder
-
-    try {
-      if (Buffer.isBuffer(data)) {
-        decoder = DERDecoder(data).sequence()
-      } else {
-        decoder = PEMDecoder(data).sequence()
-      }
-    } catch {
-      throw new InvalidKey('Could not parse the provided key.')
-    }
-
-    try {
-      return decodePublicX509(decoder, options)
-    } catch {
-      try {
-        const version = decoder.integer()
-
-        if (version === 0x01n) {
-          return decodePrivateSec1(decoder, options)
-        }
-
-        if (version === 0x00n) {
-          return decodePrivatePkcs8(decoder, options)
-        }
-      } catch {
-        throw new InvalidKey('Could not parse the provided key.')
-      }
-    }
+  protected loadCryptoKey(params: EcKeyParams): KeyObject {
+    const input: CryptoJsonWebKeyInput = { format: 'jwk', key: params };
+    return params.d === undefined ? createPublicKey(input) : createPrivateKey(input);
   }
 
   /**
-   * Returns a DER representation of the Public Key enveloped
-   * in an X.509 SubjectPublicKeyInfo containing the Modulus
-   * and the Public Exponent of the Key.
+   * Exports the SEC 1 Elliptic Curve Private Key DER Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param key Defines the encoding of the Public Key.
-   * @param format Format of the exported key.
-   * @returns DER encoded SPKI Elliptic Curve Public Key.
-   *
-   * @example
-   * ```
-   * > const spki = key.export('public', 'der')
-   * > spki
-   * <Buffer 30 59 30 13 06 07 2a 86 48 ce 3d 02 01 06 08 ... 76 more bytes>
-   * ```
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
+   * @returns DER Encoded SEC 1 Elliptic Curve Private Key.
    */
-  public export(key: 'public', format: 'der'): Buffer
+  public export(options: ExportEcKeyOptions<'der', 'sec1', 'private'>): Buffer;
 
   /**
-   * Returns a PEM representation of the Public Key enveloped
-   * in an X.509 SubjectPublicKeyInfo containing the Modulus
-   * and the Public Exponent of the Key.
+   * Exports the SEC 1 Elliptic Curve Private Key PEM Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param key Defines the encoding of the Public Key.
-   * @param format Format of the exported key.
-   * @returns PEM encoded SPKI Elliptic Curve Public Key.
-   *
-   * @example
-   * ```
-   * > const spki = key.export('public', 'pem')
-   * > spki
-   * '-----BEGIN PUBLIC KEY-----\n' +
-   * '<Base64 representation...>\n' +
-   * '-----END PUBLIC KEY-----\n'
-   * ```
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
+   * @returns PEM Encoded SEC 1 Elliptic Curve Private Key.
    */
-  public export(key: 'public', format: 'pem'): string
+  public export(options: ExportEcKeyOptions<'pem', 'sec1', 'private'>): string;
 
   /**
-   * Returns a DER representation of the Private Key
-   * that only contains the parameters of the Key.
+   * Exports the PKCS#8 Elliptic Curve Private Key DER Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param key Defines the encoding of the Private Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Private Key.
-   * @returns DER encoded SEC.1 Elliptic Curve Private Key.
-   *
-   * @example
-   * ```
-   * > const sec1 = key.export('private', 'der', 'sec1')
-   * > sec1
-   * <Buffer 30 77 02 01 01 04 20 6f 05 57 e9 5c 7e 4c e7 ... 106 more bytes>
-   * ```
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
+   * @returns DER Encoded PKCS#8 Elliptic Curve Private Key.
    */
-  public export(key: 'private', format: 'der', type: 'sec1'): Buffer
+  public export(options: ExportEcKeyOptions<'der', 'pkcs8', 'private'>): Buffer;
 
   /**
-   * Returns a DER representation of the Private Key enveloped
-   * in a PKCS#8 object containing all the parameters of the key.
+   * Exports the PKCS#8 Elliptic Curve Private Key PEM Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param key Defines the encoding of the Private Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Private Key.
-   * @returns DER encoded PKCS#8 Elliptic Curve Private Key.
-   *
-   * @example
-   * ```
-   * > const pkcs8 = key.export('private', 'der', 'pkcs8')
-   * > pkcs8
-   * <Buffer 30 81 87 02 01 00 30 13 06 07 2a 86 48 ce 3d ... 123 more bytes>
-   * ```
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
+   * @returns PEM Encoded PKCS#8 Elliptic Curve Private Key.
    */
-  public export(key: 'private', format: 'der', type: 'pkcs8'): Buffer
+  public export(options: ExportEcKeyOptions<'pem', 'pkcs8', 'private'>): string;
 
   /**
-   * Returns a PEM representation of the Private Key
-   * that only contains the parameters of the Key.
+   * Exports the SPKI Elliptic Curve Public Key DER Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param key Defines the encoding of the Private Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Private Key.
-   * @returns PEM encoded SEC.1 Elliptic Curve Private Key.
-   *
-   * @example
-   * ```
-   * > const sec1 = key.export('private', 'pem', 'sec1')
-   * > sec1
-   * '-----BEGIN EC PRIVATE KEY-----\n' +
-   * '<Base64 representation...>\n' +
-   * '-----END EC PRIVATE KEY-----\n'
-   * ```
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
+   * @returns DER Encoded SPKI Elliptic Curve Public Key.
    */
-  public export(key: 'private', format: 'pem', type: 'sec1'): string
+  public export(options: ExportEcKeyOptions<'der', 'spki', 'public'>): Buffer;
 
   /**
-   * Returns a PEM representation of the Private Key enveloped
-   * in a PKCS#8 object containing all the parameters of the key.
+   * Exports the SPKI Elliptic Curve Public Key PEM Encoding of the Elliptic Curve JSON Web Key.
    *
-   * @param key Defines the encoding of the Private Key.
-   * @param format Format of the exported key.
-   * @param type ASN.1 Syntax Tree representation of the Private Key.
-   * @returns PEM encoded PKCS#8 Elliptic Curve Private Key.
-   *
-   * @example
-   * ```
-   * > const pkcs8 = key.export('private', 'pem', 'pkcs8')
-   * > pkcs8
-   * '-----BEGIN PRIVATE KEY-----\n' +
-   * '<Base64 representation...>\n' +
-   * '-----END PRIVATE KEY-----\n'
-   * ```
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
+   * @returns PEM Encoded SPKI Elliptic Curve Public Key.
    */
-  public export(key: 'private', format: 'pem', type: 'pkcs8'): string
+  public export(options: ExportEcKeyOptions<'pem', 'spki', 'public'>): string;
 
-  public export(
-    key: 'public' | 'private',
-    format: 'der' | 'pem',
-    type?: 'sec1' | 'pkcs8'
-  ): Buffer | string {
-    if (key !== 'public' && key !== 'private') {
-      throw new TypeError('Invalid parameter "key".')
+  /**
+   * Exports the data of the Elliptic Curve JSON Web Key.
+   *
+   * @param options Options for exporting the data of the Elliptic Curve JSON Web Key.
+   * @returns Encoded data of the Elliptic Curve JSON Web Key.
+   */
+  public export<E extends ExportEcKeyEncoding, F extends ExportEcKeyFormat, T extends ExportEcKeyType>(
+    options: ExportEcKeyOptions<E, F, T>
+  ): string | Buffer {
+    const { encoding, format, type } = options;
+
+    if (encoding !== 'der' && encoding !== 'pem') {
+      throw new TypeError('Invalid option "encoding".');
     }
 
-    if (format !== 'der' && format !== 'pem') {
-      throw new TypeError('Invalid parameter "format".')
+    if (format !== 'sec1' && format !== 'pkcs8' && format !== 'spki') {
+      throw new TypeError('Invalid option "format".');
     }
 
-    if (key === 'private' && type !== 'sec1' && type !== 'pkcs8') {
-      throw new TypeError('Invalid parameter "type".')
+    if (type !== 'private' && type !== 'public') {
+      throw new TypeError('Invalid option "type".');
     }
 
-    let root: Node, label: string
-
-    if (key === 'public') {
-      root = encodePublicX509(this)
-      label = 'PUBLIC KEY'
+    if (type === 'private' && format !== 'sec1' && format !== 'pkcs8') {
+      throw new TypeError(`Unsupported format "${format}" for type "${type}".`);
     }
 
-    if (key === 'private') {
-      if (type === 'sec1') {
-        root = encodePrivateSec1(this)
-        label = 'EC PRIVATE KEY'
-      }
-
-      if (type === 'pkcs8') {
-        root = encodePrivatePkcs8(this)
-        label = 'PRIVATE KEY'
-      }
+    if (type === 'public' && format !== 'spki') {
+      throw new TypeError(`Unsupported format "${format}" for type "${type}".`);
     }
 
-    return format === 'der' ? DEREncoder(root) : PEMEncoder(root, label)
+    if (this.cryptoKey.type === 'public' && type === 'private') {
+      throw new TypeError('Cannot export private data from a public key.');
+    }
+
+    let { cryptoKey } = this;
+
+    const input: KeyExportOptions<any> = { format: encoding, type: format };
+
+    if (this.cryptoKey.type === 'private' && type === 'public') {
+      cryptoKey = createPublicKey(cryptoKey);
+    }
+
+    let exported = cryptoKey.export(input);
+
+    if (encoding === 'pem') {
+      exported = exported.slice(0, -1);
+    }
+
+    return exported;
   }
 }

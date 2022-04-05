@@ -1,235 +1,185 @@
-import { removeNullishValues } from '@guarani/utils'
+import { removeNullishValues } from '@guarani/objects';
+import { Optional } from '@guarani/types';
 
-import { InvalidJoseHeader } from '../exceptions'
-import { JoseHeader, JoseHeaderParams } from '../jose.header'
-import { JsonWebKeyParams } from '../jwk'
-import {
-  JWE_ALGORITHMS,
-  JWE_COMPRESSIONS,
-  JWE_ENCRYPTIONS,
-  SupportedJWEAlgorithm,
-  SupportedJWECompression,
-  SupportedJWEEncryption
-} from './algorithms'
-
-/**
- * Defines the parameters supported by the JWE JOSE Header.
- */
-export interface JWEHeaderParams extends JoseHeaderParams {
-  /**
-   * JWE CEK Algorithm used to encrypt and decrypt the Content Encryption Key.
-   */
-  readonly alg: SupportedJWEAlgorithm
-
-  /**
-   * JWE Authenticated Algorithm used to encrypt and decrypt the Plaintext.
-   */
-  readonly enc: SupportedJWEEncryption
-
-  /**
-   * Compression algorithm of the JSON Web Encryption.
-   */
-  readonly zip?: SupportedJWECompression
-
-  /**
-   * URI of a JWK Set that contains the key used to encrypt the token.
-   */
-  readonly jku?: string
-
-  /**
-   * JSON Web Key used to encrypt the token.
-   */
-  readonly jwk?: JsonWebKeyParams
-
-  /**
-   * ID of the key used to encrypt the token.
-   */
-  readonly kid?: string
-
-  /**
-   * URI of the X.509 certificate of the key used to encrypt the token.
-   */
-  readonly x5u?: string
-
-  /**
-   * Chain of X.509 certificates of the key used to encrypt the token.
-   */
-  readonly x5c?: string[]
-
-  /**
-   * SHA-1 Thumbprint of the X.509 certificate of the key used
-   * to encrypt the token.
-   */
-  readonly x5t?: string
-
-  /**
-   * SHA-256 Thumbprint of the X.509 certificate of the key used
-   * to encrypt the token.
-   */
-  readonly 'x5t#S256'?: string
-
-  /**
-   * Defines the type of the entire token.
-   */
-  readonly typ?: string
-
-  /**
-   * Defines the type of the payload.
-   */
-  readonly cty?: string
-
-  /**
-   * Defines the parameters that MUST be present in the header.
-   */
-  readonly crit?: string[]
-}
+import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
+import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
+import { JsonWebKeyParams } from '../jwk/jsonwebkey.params';
+import { JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY } from './algorithms/alg/jsonwebencryption-keywrap-algorithms-registry';
+import { SupportedJsonWebEncryptionKeyWrapAlgorithm } from './algorithms/alg/types/supported-jsonwebencryption-keyencryption-algorithm';
+import { JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY } from './algorithms/enc/jsonwebencryption-contentencryption-algorithms-registry';
+import { SupportedJsonWebEncryptionContentEncryptionAlgorithm } from './algorithms/enc/types/supported-jsonwebencryption-contentencryption-algorithm';
+import { JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY } from './algorithms/zip/jsonwebencryption-compression-algorithms-registry';
+import { SupportedJsonWebEncryptionCompressionAlgorithm } from './algorithms/zip/types/supported-jsonwebencryption-compression-algorithm';
+import { JsonWebEncryptionHeaderParams } from './jsonwebencryption-header.params';
 
 /**
- * Implementation of RFC 7516.
- *
- * This is the implementation of the Header of the Json Web Encryption.
- * It provides validation for the default parameters of the JOSE header.
- *
- * The JOSE Header is a JSON object that provides information on how to
- * manipulate the plaintext of the message, such as permitted algorithms
- * and the keys to be used in encrypting and decrypting the plaintext.
+ * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7516.html#section-4 RFC 7516 Section 4}.
  */
-export class JsonWebEncryptionHeader
-  extends JoseHeader
-  implements JWEHeaderParams {
+export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParams {
   /**
-   * JWE CEK Algorithm used to encrypt and decrypt the Content Encryption Key.
+   * JSON Web Encryption Key Wrap Algorithm used to Wrap and Unwrap the Content Encryption Key.
    */
-  public readonly alg: SupportedJWEAlgorithm
+  public readonly alg!: SupportedJsonWebEncryptionKeyWrapAlgorithm;
 
   /**
-   * JWE Authenticated Algorithm used to encrypt and decrypt the Plaintext.
+   * JSON Web Encryption Content Encryption Algorithm used to Encrypt and Decrypt the Plaintext of the Token.
    */
-  public readonly enc: SupportedJWEEncryption
+  public readonly enc!: SupportedJsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
-   * Compression algorithm of the JSON Web Encryption.
+   * JSON Web Encryption Compression Algorithm used to Compress and Decompress the Plaintext of the Token.
    */
-  public readonly zip?: SupportedJWECompression
+  public readonly zip?: Optional<SupportedJsonWebEncryptionCompressionAlgorithm>;
 
   /**
-   * URI of a JWK Set that contains the key used to encrypt the token.
+   * URI of a Set of Public JSON Web Keys that contains the JSON Web Key used to Encrypt the Token.
    */
-  public readonly jku?: string
+  public readonly jku?: Optional<string>;
 
   /**
-   * JSON Web Key used to encrypt the token.
+   * JSON Web Key used to Encrypt the Token.
    */
-  public readonly jwk?: JsonWebKeyParams
+  public readonly jwk?: Optional<JsonWebKeyParams>;
 
   /**
-   * ID of the key used to encrypt the token.
+   * Identifier of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly kid?: string
+  public readonly kid?: Optional<string>;
 
   /**
-   * URI of the X.509 certificate of the key used to encrypt the token.
+   * URI of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly x5u?: string
+  public readonly x5u?: Optional<string>;
 
   /**
-   * Chain of X.509 certificates of the key used to encrypt the token.
+   * Chain of X.509 certificates of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly x5c?: string[]
+  public readonly x5c?: Optional<string[]>;
 
   /**
-   * SHA-1 Thumbprint of the X.509 certificate of the key used
-   * to encrypt the token.
+   * SHA-1 Thumbprint of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly x5t?: string
+  public readonly x5t?: Optional<string>;
 
   /**
-   * SHA-256 Thumbprint of the X.509 certificate of the key used
-   * to encrypt the token.
+   * SHA-256 Thumbprint of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly 'x5t#S256'?: string
+  public readonly 'x5t#S256'?: Optional<string>;
 
   /**
-   * Defines the type of the entire token.
+   * Defines the type of the Token.
    */
-  public readonly typ?: string
+  public readonly typ?: Optional<string>;
 
   /**
-   * Defines the type of the payload.
+   * Defines the type of the Payload of the Token.
    */
-  public readonly cty?: string
+  public readonly cty?: Optional<string>;
 
   /**
-   * Defines the parameters that MUST be present in the header.
+   * Defines the parameters that MUST be present in the JSON Web Encryption Header.
    */
-  public readonly crit?: string[]
+  public readonly crit?: Optional<string[]>;
 
   /**
-   * Returns the provided JWE JOSE Header unmodified.
+   * Instantiates a JSON Web Encryption Header for Compact Serialization.
    *
-   * @param header Instance of a JsonWebEncryptionHeader
+   * @param params Parameters of the JSON Web Encryption Header.
    */
-  public constructor(header: JsonWebEncryptionHeader)
-
-  /**
-   * Instantiates a new JWE JOSE Header for JWE Compact Serialization.
-   *
-   * @param header Parameters of the JWE JOSE Header.
-   */
-  public constructor(header: JWEHeaderParams)
-
-  public constructor(header: JsonWebEncryptionHeader | JWEHeaderParams) {
-    super()
-
-    if (header instanceof JsonWebEncryptionHeader) {
-      return header
+  public constructor(params: JsonWebEncryptionHeaderParams) {
+    if (params instanceof JsonWebEncryptionHeader) {
+      return params;
     }
 
-    if (header.alg == null) {
-      throw new InvalidJoseHeader('Missing required parameter "alg".')
+    if (typeof params.alg !== 'string') {
+      throw new InvalidJoseHeaderException('Invalid parameter "alg".');
     }
 
-    if (header.enc == null) {
-      throw new InvalidJoseHeader('Missing required parameter "enc".')
+    if (typeof params.enc !== 'string') {
+      throw new InvalidJoseHeaderException('Invalid parameter "enc".');
     }
 
-    this.checkHeader(header)
+    if (params.zip !== undefined && typeof params.zip !== 'string') {
+      throw new InvalidJoseHeaderException('Invalid parameter "zip".');
+    }
 
-    Object.assign(this, removeNullishValues(header))
+    if (JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY[params.alg] === undefined) {
+      throw new UnsupportedAlgorithmException(`Unsupported JSON Web Encryption Key Wrap Algorithm "${params.alg}".`);
+    }
+
+    if (JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY[params.enc] === undefined) {
+      throw new UnsupportedAlgorithmException(
+        `Unsupported JSON Web Encryption Content Encryption Algorithm "${params.alg}".`
+      );
+    }
+
+    if (params.zip !== undefined) {
+      if (JSON_WEB_ENCRYPTION_COMPRESSION_ALGORITHMS_REGISTRY[params.zip] === undefined) {
+        throw new UnsupportedAlgorithmException(
+          `Unsupported JSON Web Encryption Compression Algorithm "${params.zip}".`
+        );
+      }
+    }
+
+    if (params.jku !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "jku".');
+    }
+
+    if (params.jwk !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "jwk".');
+    }
+
+    if (params.kid !== undefined && typeof params.kid !== 'string') {
+      throw new InvalidJoseHeaderException('Invalid parameter "kid".');
+    }
+
+    if (params.x5u !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5u".');
+    }
+
+    if (params.x5c !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5c".');
+    }
+
+    if (params.x5t !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5t".');
+    }
+
+    if (params['x5t#S256'] !== undefined) {
+      throw new InvalidJoseHeaderException('Unsupported parameter "x5t#S256".');
+    }
+
+    if (params.crit !== undefined) {
+      if (!Array.isArray(params.crit) || params.crit.length === 0) {
+        throw new InvalidJoseHeaderException('Invalid parameter "crit".');
+      }
+
+      if (params.crit.some((criticalParam) => typeof criticalParam !== 'string' || criticalParam.length === 0)) {
+        throw new InvalidJoseHeaderException('Invalid parameter "crit".');
+      }
+
+      params.crit.forEach((criticalParam) => {
+        if (params[criticalParam] === undefined) {
+          throw new InvalidJoseHeaderException(`Missing required parameter "${criticalParam}".`);
+        }
+      });
+    }
+
+    Object.assign<JsonWebEncryptionHeader, JsonWebEncryptionHeaderParams>(this, removeNullishValues(params));
   }
 
   /**
-   * Validates the parameters of the provided JWE JOSE Header.
+   * Checks if the provided object conforms to the JSON Web Encryption Header Specification.
    *
-   * @param header JWE JOSE Header to be validated.
+   * @param data Object to be inspected.
    */
-  protected checkHeader(header: Partial<JWEHeaderParams>): void {
-    if ('enc' in header && typeof header.enc !== 'string') {
-      throw new InvalidJoseHeader('Invalid parameter "enc".')
-    }
+  public static isJsonWebEncryptionHeader(data: unknown): data is JsonWebEncryptionHeaderParams {
+    const algs = Object.keys(JSON_WEB_ENCRYPTION_KEY_WRAP_ALGORITHMS_REGISTRY);
+    const encs = Object.keys(JSON_WEB_ENCRYPTION_CONTENT_ENCRYPTION_ALGORITHMS_REGISTRY);
 
-    if ('zip' in header && typeof header.zip !== 'string') {
-      throw new InvalidJoseHeader('Invalid parameter "zip".')
-    }
+    const hasAlg = algs.includes((<JsonWebEncryptionHeaderParams>data).alg);
+    const hasEnc = encs.includes((<JsonWebEncryptionHeaderParams>data).enc);
 
-    super.checkHeader(header)
-
-    if (header.alg != null && !(header.alg in JWE_ALGORITHMS)) {
-      throw new InvalidJoseHeader(
-        'Invalid JSON Web Encryption Key Wrapping Algorithm.'
-      )
-    }
-
-    if (header.enc != null && !(header.enc in JWE_ENCRYPTIONS)) {
-      throw new InvalidJoseHeader(
-        'Invalid JSON Web Encryption Content Encryption Algorithm.'
-      )
-    }
-
-    if (header.zip != null && !(header.zip in JWE_COMPRESSIONS)) {
-      throw new InvalidJoseHeader(
-        'Invalid JSON Web Encryption Plaintext Compression Algorithm.'
-      )
-    }
+    return hasAlg && hasEnc;
   }
 }

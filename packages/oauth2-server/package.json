@@ -1,0 +1,49 @@
+{
+  "name": "@guarani/oauth2-server",
+  "version": "0.7.0",
+  "description": "OAuth 2.0, OpenID Connect and User-Managed Access 2.0 Authorization Server and Identity Provider implementation for Guarani.",
+  "keywords": [
+    "oauth",
+    "oauth2",
+    "authorization",
+    "authz",
+    "oidc",
+    "openid",
+    "connect",
+    "authentication",
+    "authn",
+    "uma",
+    "uma2"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "homepage": "https://github.com/guaranijs/guarani/tree/master/packages/oauth2-server#readme",
+  "bugs": "https://github.com/guaranijs/guarani/issues",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/guaranijs/guarani.git",
+    "directory": "packages/oauth2-server"
+  },
+  "author": {
+    "name": "Eduardo Ribeiro Rezende",
+    "email": "eduardorbr7@gmail.com",
+    "url": "https://github.com/revensky"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "jest"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

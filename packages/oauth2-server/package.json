@@ -45,5 +45,11 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "@guarani/primitives": "^0.7.0"
+  },
+  "devDependencies": {
+    "@guarani/types": "^0.7.0"
   }
 }

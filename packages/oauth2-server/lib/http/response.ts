@@ -12,38 +12,17 @@ export class Response {
   /**
    * Status Code of the Response.
    */
-  private _statusCode: number = 200;
+  public statusCode: number = 200;
 
   /**
    * Headers of the Response.
    */
-  private _headers: OutgoingHttpHeaders = {};
+  public headers: OutgoingHttpHeaders = {};
 
   /**
    * Encoded Body of the Response.
    */
-  private _body: Buffer = Buffer.alloc(0);
-
-  /**
-   * Status Code of the Response.
-   */
-  public get statusCode(): number {
-    return this._statusCode;
-  }
-
-  /**
-   * Headers of the Response.
-   */
-  public get headers(): OutgoingHttpHeaders {
-    return this._headers;
-  }
-
-  /**
-   * Encoded Body of the Response.
-   */
-  public get body(): Buffer {
-    return this._body;
-  }
+  public body: Buffer = Buffer.alloc(0);
 
   /**
    * Defines the Status Code of the Response.
@@ -51,7 +30,7 @@ export class Response {
    * @param statusCode Status Code of the Response.
    */
   public status(statusCode: number): Response {
-    this._statusCode = statusCode;
+    this.statusCode = statusCode;
     return this;
   }
 
@@ -62,7 +41,7 @@ export class Response {
    * @param value Value of the Header.
    */
   public setHeader(header: string, value: OutgoingHttpHeader): Response {
-    this._headers[header] = value;
+    this.headers[header] = value;
     return this;
   }
 
@@ -72,7 +51,7 @@ export class Response {
    * @param headers Dictionary of the Headers.
    */
   public setHeaders(headers: OutgoingHttpHeaders): Response {
-    Object.assign(this._headers, headers);
+    Object.assign(this.headers, headers);
     return this;
   }
 
@@ -83,7 +62,7 @@ export class Response {
    */
   public json<T extends Dict>(data: T): Response {
     this.setHeader('Content-Type', 'application/json');
-    this._body = Buffer.from(JSON.stringify(data), 'utf8');
+    this.body = Buffer.from(JSON.stringify(data), 'utf8');
     return this;
   }
 
@@ -105,7 +84,7 @@ export class Response {
    */
   public html(html: string): Response {
     this.setHeader('Content-Type', 'text/html; charset=UTF-8');
-    this._body = Buffer.from(html, 'utf8');
+    this.body = Buffer.from(html, 'utf8');
     return this;
   }
 }

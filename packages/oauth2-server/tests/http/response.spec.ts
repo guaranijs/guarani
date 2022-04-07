@@ -21,7 +21,7 @@ describe('Response', () => {
     expect(new Response().redirect('https://example.com')).toMatchObject({
       statusCode: 303,
       headers: { Location: 'https://example.com' },
-      body: Buffer.alloc(0),
+      body: expect.any(Buffer),
     });
   });
 

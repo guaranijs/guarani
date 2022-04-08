@@ -5,7 +5,6 @@ describe('Response', () => {
     expect(new Response()).toMatchObject({
       statusCode: 200,
       headers: {},
-      body: Buffer.alloc(0),
     });
   });
 
@@ -13,7 +12,7 @@ describe('Response', () => {
     expect(new Response().json({ foo: 'foo' })).toMatchObject({
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: Buffer.from(JSON.stringify({ foo: 'foo' }), 'utf8'),
+      body: { foo: 'foo' },
     });
   });
 
@@ -21,7 +20,6 @@ describe('Response', () => {
     expect(new Response().redirect('https://example.com')).toMatchObject({
       statusCode: 303,
       headers: { Location: 'https://example.com' },
-      body: expect.any(Buffer),
     });
   });
 
@@ -29,7 +27,7 @@ describe('Response', () => {
     expect(new Response().html('<html></html>').setHeader('X-Session', 'sessionid').status(201)).toMatchObject({
       statusCode: 201,
       headers: { 'Content-Type': 'text/html; charset=UTF-8', 'X-Session': 'sessionid' },
-      body: Buffer.from('<html></html>', 'utf8'),
+      body: '<html></html>',
     });
   });
 });

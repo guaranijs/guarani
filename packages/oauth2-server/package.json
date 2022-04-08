@@ -47,7 +47,10 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@guarani/primitives": "^0.7.0"
+    "@guarani/ioc": "^0.7.0",
+    "@guarani/primitives": "^0.7.0",
+    "@guarani/utils": "^0.7.0",
+    "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
     "@guarani/types": "^0.7.0"

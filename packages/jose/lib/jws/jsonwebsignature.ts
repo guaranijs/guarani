@@ -1,12 +1,15 @@
-import { Optional } from '@guarani/types';
+import { Nullable, Optional } from '@guarani/types';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-json-web-key.exception';
 import { InvalidJsonWebSignatureException } from '../exceptions/invalid-json-web-signature.exception';
 import { JoseException } from '../exceptions/jose.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
+import { JsonWebKeyLoader } from '../types/jsonwebkey-loader';
 import { JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY } from './algorithms/jsonwebsignature-algorithms-registry';
+import { SupportedJsonWebSignatureAlgorithm } from './algorithms/types/supported-jsonwebsignature-algorithm';
 import { JsonWebSignatureHeaderParams } from './jsonwebsignature-header.params';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
+import { DecodeCompactParams } from './types/decode-compact.params';
 
 /**
  * Implementation of {@link https://www.rfc-editor.org/rfc/rfc7515.html RFC 7515}.
@@ -38,19 +41,16 @@ export class JsonWebSignature {
   }
 
   /**
-   * Deserializes a JSON Web Signature Compact Token.
+   * Decodes the Parameters of the provided JSON Web Signature Compact Token.
    *
-   * @param token JSON Web Signature Compact Token to be Deserialized.
-   * @param key JSON Web Key used to verify the Signature of the JSON Web Signature Compact Token.
-   * @returns JSON Web Signature containing the Deserialized JSON Web Signature Header and Payload.
+   * ***note: this method does not validate the signature of the token.***
+   *
+   * @param token JSON Web Signature Compact Token to be decoded.
+   * @returns Decoded Parameters of the JSON Web Signature Compact Token.
    */
-  public static async deserializeCompact(token: string, key?: Optional<JsonWebKey>): Promise<JsonWebSignature> {
+  public static decodeCompact(token: string): DecodeCompactParams {
     if (typeof token !== 'string') {
       throw new InvalidJsonWebSignatureException();
-    }
-
-    if (key !== undefined && !(key instanceof JsonWebKey)) {
-      throw new InvalidJsonWebKeyException();
     }
 
     const splitToken = token.split('.');
@@ -65,13 +65,8 @@ export class JsonWebSignature {
       const header = new JsonWebSignatureHeader(JSON.parse(Buffer.from(b64Header, 'base64url').toString('utf8')));
       const payload = Buffer.from(b64Payload, 'base64url');
       const signature = Buffer.from(b64Signature, 'base64url');
-      const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
 
-      const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
-
-      await algorithm.verify(signature, message, key);
-
-      return new JsonWebSignature(header, payload);
+      return { header, payload, signature };
     } catch (exc: any) {
       if (exc instanceof InvalidJsonWebSignatureException) {
         throw exc;
@@ -81,6 +76,72 @@ export class JsonWebSignature {
         ? new InvalidJsonWebSignatureException(exc)
         : new InvalidJsonWebSignatureException(null, exc);
     }
+  }
+
+  /**
+   * Deserializes a JSON Web Signature Compact Token.
+   *
+   * @param token JSON Web Signature Compact Token to be Deserialized.
+   * @param key JSON Web Key used to verify the Signature of the JSON Web Signature Compact Token.
+   * @returns JSON Web Signature containing the Deserialized JSON Web Signature Header and Payload.
+   */
+  public static async deserializeCompact(
+    token: string,
+    key: Nullable<JsonWebKey>,
+    expectedAlgorithms?: Optional<SupportedJsonWebSignatureAlgorithm[]>
+  ): Promise<JsonWebSignature>;
+
+  /**
+   * Deserializes a JSON Web Signature Compact Token.
+   *
+   * @param token JSON Web Signature Compact Token to be Deserialized.
+   * @param keyLoader Function used to load the JSON Web Key used to verify
+   * the Signature of the JSON Web Signature Compact Token.
+   * @returns JSON Web Signature containing the Deserialized JSON Web Signature Header and Payload.
+   */
+  public static async deserializeCompact(
+    token: string,
+    keyLoader: JsonWebKeyLoader,
+    expectedAlgorithms?: Optional<SupportedJsonWebSignatureAlgorithm[]>
+  ): Promise<JsonWebSignature>;
+
+  /**
+   * Deserializes a JSON Web Signature Compact Token.
+   *
+   * @param token JSON Web Signature Compact Token to be Deserialized.
+   * @param keyOrKeyLoader JSON Web Key or function used to load the JSON Web Key used to verify
+   * the Signature of the JSON Web Signature Compact Token.
+   * @returns JSON Web Signature containing the Deserialized JSON Web Signature Header and Payload.
+   */
+  public static async deserializeCompact(
+    token: string,
+    keyOrKeyLoader: Nullable<JsonWebKey> | JsonWebKeyLoader,
+    expectedAlgorithms?: Optional<SupportedJsonWebSignatureAlgorithm[]>
+  ): Promise<JsonWebSignature> {
+    if (keyOrKeyLoader !== null && !(keyOrKeyLoader instanceof JsonWebKey) && typeof keyOrKeyLoader !== 'function') {
+      throw new InvalidJsonWebKeyException();
+    }
+
+    const { header, payload, signature } = this.decodeCompact(token);
+
+    const key = typeof keyOrKeyLoader === 'function' ? await keyOrKeyLoader(header) : keyOrKeyLoader;
+
+    if (Array.isArray(expectedAlgorithms) && expectedAlgorithms.every((alg) => alg !== header.alg)) {
+      throw new InvalidJsonWebSignatureException(
+        `The Algorithm "${header.alg}" does not match the expected Algorithms.`
+      );
+    }
+
+    const b64Header = Buffer.from(header.toString(), 'utf8').toString('base64url');
+    const b64Payload = payload.toString('base64url');
+
+    const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
+
+    const algorithm = JSON_WEB_SIGNATURE_ALGORITHMS_REGISTRY[header.alg];
+
+    await algorithm.verify(signature, message, key ?? undefined);
+
+    return new JsonWebSignature(header, payload);
   }
 
   /**

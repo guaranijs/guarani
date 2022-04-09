@@ -144,4 +144,11 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParams {
 
     return hasAlg;
   }
+
+  /**
+   * Returns the JSON Encoded String representation of the JSON Web Signature Header.
+   */
+  public toString(): string {
+    return JSON.stringify(this);
+  }
 }

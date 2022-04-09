@@ -1,4 +1,5 @@
 import { Dict, Optional } from '@guarani/types';
+import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 
 import { OAuth2ExceptionParams } from './oauth2.exception.params';
 import { SupportedOAuth2Error } from './types/supported-oauth2-errors';
@@ -7,6 +8,16 @@ import { SupportedOAuth2Error } from './types/supported-oauth2-errors';
  * Errors that can happen during the authorization process.
  */
 export class OAuth2Exception extends Error {
+  /**
+   * HTTP Response Status Code of the OAuth 2.0 Exception.
+   */
+  public readonly statusCode: number = 400;
+
+  /**
+   * HTTP Response Headers of the OAuth 2.0 Exception.
+   */
+  public readonly headers: OutgoingHttpHeaders = {};
+
   /**
    * Parameters of the OAuth 2.0 Exception.
    */
@@ -31,6 +42,37 @@ export class OAuth2Exception extends Error {
   }
 
   /**
+   * Sets the HTTP Response Status Code of the OAuth 2.0 Exception.
+   *
+   * @param statusCode HTTP Response Status Code.
+   */
+  public status(statusCode: number): OAuth2Exception {
+    Reflect.set(this, 'statusCode', statusCode);
+    return this;
+  }
+
+  /**
+   * Sets a HTTP Response Header of the OAuth 2.0 Exception.
+   *
+   * @param header Name of the HTTP Response Header.
+   * @param value Value of the HTTP Response Header.
+   */
+  public setHeader(header: string, value: OutgoingHttpHeader): OAuth2Exception {
+    this.headers[header] = value;
+    return this;
+  }
+
+  /**
+   * Sets multiple HTTP Response Headers of the OAuth 2.0 Exception.
+   *
+   * @param headers HTTP Response Headers.
+   */
+  public setHeaders(headers: OutgoingHttpHeaders): OAuth2Exception {
+    Object.assign(this.headers, headers);
+    return this;
+  }
+
+  /**
    * Parameters of the OAuth 2.0 Exception.
    */
   public toJSON(): OAuth2ExceptionParams {
@@ -52,7 +94,7 @@ export class OAuth2Exception extends Error {
    * @param params Parameters of the OAuth 2.0 Exception.
    */
   public static InvalidClient(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('invalid_client', params);
+    return new OAuth2Exception('invalid_client', params).status(401);
   }
 
   /**
@@ -88,7 +130,7 @@ export class OAuth2Exception extends Error {
    * @param params Parameters of the OAuth 2.0 Exception.
    */
   public static ServerError(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('server_error', params);
+    return new OAuth2Exception('server_error', params).status(500);
   }
 
   /**
@@ -97,7 +139,7 @@ export class OAuth2Exception extends Error {
    * @param params Parameters of the OAuth 2.0 Exception.
    */
   public static TemporarilyUnavailable(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('temporarily_unavailable', params);
+    return new OAuth2Exception('temporarily_unavailable', params).status(503);
   }
 
   /**

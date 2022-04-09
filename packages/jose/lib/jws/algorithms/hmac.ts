@@ -1,4 +1,4 @@
-import { createHmac, KeyObject } from 'crypto';
+import { createHmac, KeyObject, timingSafeEqual } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-json-web-key.exception';
 import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-json-web-signature.exception';
@@ -56,7 +56,7 @@ class HmacAlgorithm extends JsonWebSignatureAlgorithm {
 
     const calculatedSignature = await this.sign(message, key);
 
-    if (signature.compare(calculatedSignature) !== 0) {
+    if (!timingSafeEqual(signature, calculatedSignature)) {
       throw new InvalidJsonWebSignatureException();
     }
   }

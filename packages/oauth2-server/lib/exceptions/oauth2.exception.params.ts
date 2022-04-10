@@ -1,6 +1,6 @@
 import { Optional } from '@guarani/types';
 
-import { SupportedOAuth2Error } from './types/supported-oauth2-errors';
+import { SupportedOAuth2ErrorCode } from './types/supported-oauth2-error-code';
 
 /**
  * Parameters of the OAuth 2.0 Exception.
@@ -9,7 +9,7 @@ export interface OAuth2ExceptionParams {
   /**
    * OAuth 2.0 Error Code.
    */
-  readonly error: SupportedOAuth2Error;
+  readonly error: SupportedOAuth2ErrorCode;
 
   /**
    * Description of the Error.

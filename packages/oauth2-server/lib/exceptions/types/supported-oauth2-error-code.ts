@@ -1,7 +1,7 @@
 /**
  * OAuth 2.0 Error Codes supported by Guarani.
  */
-export type SupportedOAuth2Error =
+export type SupportedOAuth2ErrorCode =
   | 'access_denied'
   | 'invalid_client'
   | 'invalid_grant'

@@ -1,13 +1,19 @@
-import { Dict, Optional } from '@guarani/types';
+import { Dict } from '@guarani/types';
+
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 
 import { OAuth2ExceptionParams } from './oauth2.exception.params';
-import { SupportedOAuth2Error } from './types/supported-oauth2-errors';
+import { SupportedOAuth2ErrorCode } from './types/supported-oauth2-error-code';
 
 /**
  * Errors that can happen during the authorization process.
  */
-export class OAuth2Exception extends Error {
+export abstract class OAuth2Exception extends Error {
+  /**
+   * OAuth 2.0 Error Code.
+   */
+  public abstract readonly errorCode: SupportedOAuth2ErrorCode;
+
   /**
    * HTTP Response Status Code of the OAuth 2.0 Exception.
    */
@@ -21,24 +27,34 @@ export class OAuth2Exception extends Error {
   /**
    * Parameters of the OAuth 2.0 Exception.
    */
-  private data: OAuth2ExceptionParams;
+  private data!: Dict;
 
   /**
    * Instantiates a new OAuth 2.0 Exception.
    *
-   * @param error OAuth 2.0 Error Code.
    * @param params Parameters of the OAuth 2.0 Exception.
    */
-  private constructor(error: SupportedOAuth2Error, params: Dict = {}) {
-    let message = <string>error;
+  public constructor(params: Dict = {}) {
+    super();
 
-    if (params.description !== undefined) {
-      message = `"${message}": ${params.description}`;
+    this.message = this.getErrorMessage(params);
+    this.data = params;
+  }
+
+  /**
+   * Creates the parsed message of the Error.
+   *
+   * @param params Parameters of the OAuth 2.0 Exception.
+   * @returns Parsed Error message.
+   */
+  private getErrorMessage(params: Dict): string {
+    let message = <string>this.errorCode;
+
+    if (params.error_description !== undefined) {
+      message = `"${message}": ${params.error_description}`;
     }
 
-    super(message);
-
-    this.data = { ...params, error };
+    return message;
   }
 
   /**
@@ -76,96 +92,6 @@ export class OAuth2Exception extends Error {
    * Parameters of the OAuth 2.0 Exception.
    */
   public toJSON(): OAuth2ExceptionParams {
-    return this.data;
-  }
-
-  /**
-   * Raised when the User did not authorize the Client.
-   *
-   * @param params Parameters of the OAuth 2.0 Exception.
-   */
-  public static AccessDenied(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('access_denied', params);
-  }
-
-  /**
-   * Raised when the Client Authentication failed.
-   *
-   * @param params Parameters of the OAuth 2.0 Exception.
-   */
-  public static InvalidClient(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('invalid_client', params).status(401);
-  }
-
-  /**
-   * Raised when the provided authorization grant is invalid.
-   *
-   * @param params Parameters of the OAuth 2.0 Exception.
-   */
-  public static InvalidGrant(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('invalid_grant', params);
-  }
-
-  /**
-   * Raised when the OAuth 2.0 Request is invalid.
-   *
-   * @param params Parameters of the OAuth 2.0 Exception.
-   */
-  public static InvalidRequest(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('invalid_request', params);
-  }
-
-  /**
-   * Raised when the requested scope is invalid.
-   *
-   * @param params Parameters of the OAuth 2.0 Exception.
-   */
-  public static InvalidScope(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('invalid_scope', params);
-  }
-
-  /**
-   * Raised when the server encountered an unexpected error.
-   *
-   * @param params Parameters of the OAuth 2.0 Exception.
-   */
-  public static ServerError(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('server_error', params).status(500);
-  }
-
-  /**
-   * Raised when the server is temporarily unavailable.
-   *
-   * @param params Parameters of the OAuth 2.0 Exception.
-   */
-  public static TemporarilyUnavailable(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('temporarily_unavailable', params).status(503);
-  }
-
-  /**
-   * Raised when the Client is not authorized to use the requested Grant.
-   *
-   * @param params Parameters of the OAuth 2.0 Exception.
-   */
-  public static UnauthorizedClient(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('unauthorized_client', params);
-  }
-
-  /**
-   * Raised when the requested **grant_type** is not supported by Guarani.
-   *
-   * @param params Parameters of the OAuth 2.0 Exception.
-   */
-  public static UnsupportedGrantType(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('unsupported_grant_type', params);
-  }
-
-  /**
-   * Raised when the requested **response_type** is not supported by Guarani.
-   *
-   * @param params Parameters of the OAuth 2.0 Exception.
-   */
-  public static UnsupportedResponseType(params?: Optional<Dict>): OAuth2Exception {
-    return new OAuth2Exception('unsupported_response_type', params);
+    return { ...this.data, error: this.errorCode };
   }
 }

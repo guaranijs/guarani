@@ -22,7 +22,7 @@ interface ClientCredentials {
 }
 
 @Injectable()
-export class NoneClientAuthentication extends ClientAuthentication {
+export class NoneClientAuthentication implements ClientAuthentication {
   /**
    * Name of the Client Authentication Method.
    */
@@ -38,9 +38,7 @@ export class NoneClientAuthentication extends ClientAuthentication {
    *
    * @param clientService Instance of the Client Service.
    */
-  public constructor(@Inject<ClientService>('ClientService') clientService: ClientService) {
-    super();
-
+  public constructor(@Inject('ClientService') clientService: ClientService) {
     this.clientService = clientService;
   }
 

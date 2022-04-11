@@ -22,7 +22,7 @@ import { SupportedClientAuthentication } from './types/supported-client-authenti
  * a Base64 Encoded String that contains the Client Credentials in the format `client_id:client_secret`.
  */
 @Injectable()
-export class ClientSecretBasicClientAuthentication extends ClientAuthentication {
+export class ClientSecretBasicClientAuthentication implements ClientAuthentication {
   /**
    * Name of the Client Authentication Method.
    */
@@ -43,9 +43,7 @@ export class ClientSecretBasicClientAuthentication extends ClientAuthentication 
    *
    * @param clientService Instance of the Client Service.
    */
-  public constructor(@Inject<ClientService>('ClientService') clientService: ClientService) {
-    super();
-
+  public constructor(@Inject('ClientService') clientService: ClientService) {
     this.clientService = clientService;
   }
 

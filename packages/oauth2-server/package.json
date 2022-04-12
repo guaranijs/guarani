@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "@guarani/ioc": "^0.7.0",
+    "@guarani/objects": "^0.7.0",
     "@guarani/primitives": "^0.7.0",
     "@guarani/utils": "^0.7.0",
     "reflect-metadata": "^0.1.13"

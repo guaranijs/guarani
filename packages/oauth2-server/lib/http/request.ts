@@ -57,4 +57,11 @@ export class Request implements RequestParams {
 
     this.body = params.body;
   }
+
+  /**
+   * Data of the Request, retrieved from the Query and, if the HTTP Method is POST, merged with the Body.
+   */
+  public get data(): Dict {
+    return this.method === 'get' ? this.query : { ...this.query, ...this.body };
+  }
 }

@@ -3,6 +3,8 @@ import { Optional } from '@guarani/types';
 import { URL } from 'url';
 
 import { SupportedClientAuthentication } from '../client-authentication/types/supported-client-authentication';
+import { SupportedGrantType } from '../grant-types/types/supported-grant-type';
+import { SupportedResponseType } from '../response-types/types/supported-response-type';
 
 /**
  * Representation of the OAuth 2.0 Client.
@@ -31,12 +33,12 @@ export interface ClientEntity {
   /**
    * Grant Types allowed to the Client.
    */
-  grantTypes: string[];
+  grantTypes: SupportedGrantType[];
 
   /**
    * Response Types allowed to the Client.
    */
-  responseTypes: string[];
+  responseTypes: SupportedResponseType[];
 
   /**
    * Scopes allowed to the Client.

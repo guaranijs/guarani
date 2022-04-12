@@ -7,7 +7,7 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { Request } from '../http/request';
 import { SupportedResponseMode } from '../response-modes/types/supported-response-mode';
 import { AccessTokenService } from '../services/access-token.service';
-import { AccessTokenResponse } from '../types/access-token-response';
+import { AccessTokenResponse } from '../types/access-token.response';
 import { ResponseType } from './response-type';
 import { AuthorizationParameters } from './types/authorization.parameters';
 import { SupportedResponseType } from './types/supported-response-type';
@@ -16,7 +16,9 @@ import { SupportedResponseType } from './types/supported-response-type';
  * Implementation of the Token Response Type.
  *
  * In this Response Type the Client obtains consent from the End User and receives an Access Token without the need
- * for a second visit to the Authorization Server. The Access Token is returned at the Redirect URI of the Client.
+ * for a second visit to the Authorization Server.
+ *
+ * The Access Token is returned at the Redirect URI of the Client.
  *
  * This **COULD** lead to a potential security issue, since the URI is usually saved at the browser's history.
  * A malware could read the history and extract the Access Token from one of the Authorization Responses.
@@ -52,7 +54,7 @@ export class TokenResponseType extends ResponseType {
   }
 
   /**
-   * Creates the Authorization Response with the Authorization Granted used by the Client on behalf of the End User.
+   * Creates the Authorization Response with the Authorization Grant used by the Client on behalf of the End User.
    *
    * @param request HTTP Request.
    * @param client OAuth 2.0 Client of the Request.

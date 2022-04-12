@@ -24,7 +24,7 @@ export abstract class ResponseType {
   public abstract readonly defaultResponseMode: SupportedResponseMode;
 
   /**
-   * Creates the Authorization Response with the Authorization Granted used by the Client on behalf of the End User.
+   * Creates the Authorization Response with the Authorization Grant used by the Client on behalf of the End User.
    *
    * @param request HTTP Request.
    * @param client OAuth 2.0 Client of the Request.

@@ -12,7 +12,7 @@ import { SupportedResponseMode } from '../../lib/response-modes/types/supported-
 import { TokenResponseType } from '../../lib/response-types/token.response-type';
 import { SupportedResponseType } from '../../lib/response-types/types/supported-response-type';
 import { AccessTokenService } from '../../lib/services/access-token.service';
-import { AccessTokenResponse } from '../../lib/types/access-token-response';
+import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
 const accessTokenServiceMock = <AccessTokenService>{
   createAccessToken: async function (
@@ -21,7 +21,7 @@ const accessTokenServiceMock = <AccessTokenService>{
     client: ClientEntity,
     user: UserEntity
   ): Promise<AccessTokenEntity> {
-    return { token: await secretToken(), scopes, isExpired: false, lifetime: 300, createdAt: new Date(), client, user };
+    return { token: await secretToken(), scopes, isRevoked: false, lifetime: 300, createdAt: new Date(), client, user };
   },
 };
 

@@ -16,9 +16,9 @@ export interface AccessTokenEntity {
   readonly scopes: string[];
 
   /**
-   * Informs whether or not the Access Token is expired.
+   * Informs whether or not the Access Token is revoked.
    */
-  readonly isExpired: boolean;
+  readonly isRevoked: boolean;
 
   /**
    * Lifetime of the Access Token in seconds.

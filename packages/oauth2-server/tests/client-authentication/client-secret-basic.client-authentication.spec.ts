@@ -8,6 +8,7 @@ import { SupportedClientAuthentication } from '../../lib/client-authentication/t
 import { ClientEntity } from '../../lib/entities/client.entity';
 import { InvalidClientException } from '../../lib/exceptions/invalid-client.exception';
 import { Request } from '../../lib/http/request';
+import { ClientService } from '../../lib/services/client.service';
 
 const clientSecretBasic = <ClientEntity>{
   id: 'client_id',
@@ -38,7 +39,7 @@ const clientNone = <ClientEntity>{
   scopes: ['scope1', 'scope2'],
 };
 
-const clientServiceMock: any = {
+const clientServiceMock = <ClientService>{
   findClient: async (clientId: string): Promise<Optional<ClientEntity>> => {
     return [clientSecretBasic, clientSecretPost, clientNone].find((client) => client.id === clientId);
   },

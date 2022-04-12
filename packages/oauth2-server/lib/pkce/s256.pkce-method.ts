@@ -2,19 +2,19 @@ import { Injectable } from '@guarani/ioc';
 
 import { createHash } from 'crypto';
 
-import { Pkce } from './pkce';
-import { SupportedPkce } from './types/supported-pkce';
+import { PkceMethod } from './pkce-method';
+import { SupportedPkceMethod } from './types/supported-pkce-method';
 
 /**
  * Implementation of the **S256 PKCE Method** as defined by
  * {@link https://www.rfc-editor.org/rfc/rfc7636.html#section-4.2 Proof Key for Code Exchange by OAuth Public Clients}.
  */
 @Injectable()
-export class S256Pkce implements Pkce {
+export class S256PkceMethod implements PkceMethod {
   /**
    * Name of the PKCE Method.
    */
-  public readonly name: SupportedPkce = 'S256';
+  public readonly name: SupportedPkceMethod = 'S256';
 
   /**
    * Performs a comparison between the Code Challenge hash received at the Authorization Endpoint

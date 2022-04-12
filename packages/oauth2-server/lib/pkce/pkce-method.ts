@@ -1,14 +1,14 @@
-import { SupportedPkce } from './types/supported-pkce';
+import { SupportedPkceMethod } from './types/supported-pkce-method';
 
 /**
  * Interface with the Parameters of a **Proof Key for Code Exchange** defined by
  * {@link https://www.rfc-editor.org/rfc/rfc7636.html Proof Key for Code Exchange by OAuth Public Clients}.
  */
-export interface Pkce {
+export interface PkceMethod {
   /**
    * Name of the PKCE Method.
    */
-  readonly name: SupportedPkce;
+  readonly name: SupportedPkceMethod;
 
   /**
    * Checks if the Code Verifier provided by the Client at the Token Endpoint

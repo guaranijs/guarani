@@ -1,7 +1,8 @@
-import { Nullable } from '@guarani/types';
+import { Nullable, Optional } from '@guarani/types';
 
 import { AccessTokenEntity } from '../entities/access-token.entity';
 import { ClientEntity } from '../entities/client.entity';
+import { RefreshTokenEntity } from '../entities/refresh-token.entity';
 import { UserEntity } from '../entities/user.entity';
 import { SupportedGrantType } from '../grant-types/types/supported-grant-type';
 
@@ -19,12 +20,14 @@ export interface AccessTokenService {
    * @param scopes Scopes granted to the Client.
    * @param client Client of the Request.
    * @param user User that granted authorization to the Client.
+   * @param refreshToken Refresh Token that generated the Access Token.
    * @returns Instance of an Access Token.
    */
   createAccessToken(
     grant: SupportedGrantType,
     scopes: string[],
     client: ClientEntity,
-    user: Nullable<UserEntity>
+    user: Nullable<UserEntity>,
+    refreshToken?: Optional<RefreshTokenEntity>
   ): Promise<AccessTokenEntity>;
 }

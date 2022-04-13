@@ -8,6 +8,7 @@ import { Request } from '../http/request';
 import { PkceMethod } from '../pkce/pkce-method';
 import { SupportedResponseMode } from '../response-modes/types/supported-response-mode';
 import { AuthorizationCodeService } from '../services/authorization-code.service';
+import { getAllowedScopes } from '../utils';
 import { ResponseType } from './response-type';
 import { AuthorizationCodeParameters } from './types/authorization-code.parameters';
 import { AuthorizationCodeResponse } from './types/authorization-code.response';
@@ -24,7 +25,7 @@ import { SupportedResponseType } from './types/supported-response-type';
  * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1
  */
 @Injectable()
-export class CodeResponseType extends ResponseType {
+export class CodeResponseType implements ResponseType {
   /**
    * Name of the Response Type.
    */
@@ -55,8 +56,6 @@ export class CodeResponseType extends ResponseType {
     @InjectAll('PkceMethod') pkceMethods: PkceMethod[],
     @Inject('AuthorizationCodeService') authorizationCodeService: AuthorizationCodeService
   ) {
-    super();
-
     if (pkceMethods.length === 0) {
       throw new TypeError('Missing PKCE Methods for Code Response Type.');
     }
@@ -82,8 +81,7 @@ export class CodeResponseType extends ResponseType {
 
     this.checkParameters(params);
 
-    const scopes = this.getAllowedScopes(client, params.scope);
-
+    const scopes = getAllowedScopes(client, params.scope);
     const authorizationCode = await this.authorizationCodeService.createAuthorizationCode(params, scopes, client, user);
 
     return removeNullishValues<AuthorizationCodeResponse>({ code: authorizationCode.code, state: params.state });

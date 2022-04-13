@@ -15,13 +15,24 @@ import { AccessTokenService } from '../../lib/services/access-token.service';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
 const accessTokenServiceMock = <AccessTokenService>{
-  createAccessToken: async function (
-    grant: SupportedGrantType,
+  createAccessToken: async (
+    _grant: SupportedGrantType,
     scopes: string[],
     client: ClientEntity,
     user: UserEntity
-  ): Promise<AccessTokenEntity> {
-    return { token: await secretToken(), scopes, grant, lifetime: 300, createdAt: new Date(), client, user };
+  ): Promise<AccessTokenEntity> => {
+    const expiration = new Date();
+    expiration.setUTCSeconds(expiration.getUTCSeconds() + 300);
+
+    return {
+      token: await secretToken(),
+      tokenType: 'Bearer',
+      scopes,
+      isRevoked: false,
+      expiresAt: expiration,
+      client,
+      user,
+    };
   },
 };
 
@@ -70,7 +81,7 @@ describe('Token Response Type', () => {
       ).resolves.toMatchObject<AccessTokenResponse>({
         access_token: expect.any(String),
         token_type: 'Bearer',
-        expires_in: 300,
+        expires_in: expect.any(Number),
         scope: 'foo bar',
       });
     });
@@ -82,7 +93,7 @@ describe('Token Response Type', () => {
       ).resolves.toMatchObject<AccessTokenResponse>({
         access_token: expect.any(String),
         token_type: 'Bearer',
-        expires_in: 300,
+        expires_in: expect.any(Number),
         scope: 'foo bar',
         state: 'client-state',
       });

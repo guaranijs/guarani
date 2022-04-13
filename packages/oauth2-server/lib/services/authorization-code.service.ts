@@ -1,3 +1,4 @@
+import { Optional } from '@guarani/types';
 import { AuthorizationCodeEntity } from '../entities/authorization-code.entity';
 import { ClientEntity } from '../entities/client.entity';
 import { UserEntity } from '../entities/user.entity';
@@ -25,4 +26,19 @@ export interface AuthorizationCodeService {
     client: ClientEntity,
     user: UserEntity
   ): Promise<AuthorizationCodeEntity>;
+
+  /**
+   * Searches the application's storage for an Authorization Code containing the provided Code.
+   *
+   * @param code Code of the Authorization Code.
+   * @returns Authorization Code based on the provided Code.
+   */
+  findAuthorizationCode(code: string): Promise<Optional<AuthorizationCodeEntity>>;
+
+  /**
+   * Revokes the provided Authorization Code.
+   *
+   * @param authorizationCode Authorization Code to be revoked.
+   */
+  revokeAuthorizationCode(authorizationCode: AuthorizationCodeEntity): Promise<void>;
 }

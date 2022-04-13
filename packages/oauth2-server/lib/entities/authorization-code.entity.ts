@@ -1,3 +1,7 @@
+import { Dict, Optional } from '@guarani/types';
+
+import { URL } from 'url';
+
 import { SupportedPkceMethod } from '../pkce/types/supported-pkce-method';
 import { ClientEntity } from './client.entity';
 import { UserEntity } from './user.entity';
@@ -5,7 +9,7 @@ import { UserEntity } from './user.entity';
 /**
  * Representation of the OAuth 2.0 Authorization Code.
  */
-export interface AuthorizationCodeEntity {
+export interface AuthorizationCodeEntity extends Dict {
   /**
    * String representation of the Authorization Code.
    */
@@ -29,7 +33,7 @@ export interface AuthorizationCodeEntity {
   /**
    * Code Challenge Method used to verify the Code Challenge.
    */
-  readonly codeChallengeMethod: SupportedPkceMethod;
+  readonly codeChallengeMethod?: Optional<SupportedPkceMethod>;
 
   /**
    * Informs whether or not the Authorization Code is revoked.
@@ -37,14 +41,9 @@ export interface AuthorizationCodeEntity {
   readonly isRevoked: boolean;
 
   /**
-   * Lifetime of the Authorization Code in seconds.
+   * Expiration Date of the Authorization Code.
    */
-  readonly lifetime: number;
-
-  /**
-   * Date when the Authorization Code was issued.
-   */
-  readonly createdAt: Date;
+  readonly expiresAt: Date;
 
   /**
    * Client that requested the Authorization Code.

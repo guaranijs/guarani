@@ -27,15 +27,17 @@ const authorizationCodeServiceMock = <AuthorizationCodeService>{
     client: ClientEntity,
     user: UserEntity
   ): Promise<AuthorizationCodeEntity> => {
+    const expiration = new Date();
+    expiration.setUTCSeconds(expiration.getUTCSeconds() + 300);
+
     return {
       code: UUID.v4().toString(),
       redirectUri: new URL('https://example.com/callback'),
       scopes,
       codeChallenge: params.code_challenge,
-      codeChallengeMethod: params.code_challenge_method ?? 'plain',
+      codeChallengeMethod: params.code_challenge_method,
       isRevoked: false,
-      lifetime: 300,
-      createdAt: new Date(),
+      expiresAt: expiration,
       client,
       user,
     };

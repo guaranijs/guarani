@@ -1,4 +1,4 @@
-import { Optional } from '@guarani/types';
+import { Dict, Optional } from '@guarani/types';
 
 import { URL } from 'url';
 
@@ -9,7 +9,7 @@ import { SupportedResponseType } from '../response-types/types/supported-respons
 /**
  * Representation of the OAuth 2.0 Client.
  */
-export interface ClientEntity {
+export interface ClientEntity extends Dict {
   /**
    * Identifier of the Client.
    */
@@ -44,9 +44,4 @@ export interface ClientEntity {
    * Scopes allowed to the Client.
    */
   scopes: string[];
-
-  /**
-   * Optional additional parameters.
-   */
-  [parameter: string]: any;
 }

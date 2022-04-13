@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@guarani/ioc';
-import { removeNullishValues } from '@guarani/objects';
 
 import { ClientEntity } from '../entities/client.entity';
 import { UserEntity } from '../entities/user.entity';
@@ -8,6 +7,7 @@ import { Request } from '../http/request';
 import { SupportedResponseMode } from '../response-modes/types/supported-response-mode';
 import { AccessTokenService } from '../services/access-token.service';
 import { AccessTokenResponse } from '../types/access-token.response';
+import { createAccessTokenResponse, getAllowedScopes } from '../utils';
 import { ResponseType } from './response-type';
 import { AuthorizationParameters } from './types/authorization.parameters';
 import { SupportedResponseType } from './types/supported-response-type';
@@ -26,7 +26,7 @@ import { SupportedResponseType } from './types/supported-response-type';
  * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-4.2
  */
 @Injectable()
-export class TokenResponseType extends ResponseType {
+export class TokenResponseType implements ResponseType {
   /**
    * Name of the Response Type.
    */
@@ -48,8 +48,6 @@ export class TokenResponseType extends ResponseType {
    * @param accessTokenService Instance of the Access Token Service.
    */
   public constructor(@Inject('AccessTokenService') accessTokenService: AccessTokenService) {
-    super();
-
     this.accessTokenService = accessTokenService;
   }
 
@@ -70,17 +68,15 @@ export class TokenResponseType extends ResponseType {
 
     this.checkParameters(params);
 
-    const scopes = this.getAllowedScopes(client, params.scope);
-
+    const scopes = getAllowedScopes(client, params.scope);
     const accessToken = await this.accessTokenService.createAccessToken('implicit', scopes, client, user);
+    const token = createAccessTokenResponse(accessToken);
 
-    return removeNullishValues<AccessTokenResponse>({
-      access_token: accessToken.token,
-      token_type: 'Bearer',
-      expires_in: accessToken.lifetime,
-      scope: scopes.join(' '),
-      state: params.state,
-    });
+    if (params.state !== undefined) {
+      token.state = params.state;
+    }
+
+    return token;
   }
 
   /**

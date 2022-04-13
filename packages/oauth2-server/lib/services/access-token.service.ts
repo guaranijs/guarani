@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { AccessTokenEntity } from '../entities/access-token.entity';
 import { ClientEntity } from '../entities/client.entity';
 import { UserEntity } from '../entities/user.entity';
@@ -23,6 +25,6 @@ export interface AccessTokenService {
     grant: SupportedGrantType,
     scopes: string[],
     client: ClientEntity,
-    user: UserEntity
+    user: Nullable<UserEntity>
   ): Promise<AccessTokenEntity>;
 }

@@ -16,12 +16,12 @@ import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
 const accessTokenServiceMock = <AccessTokenService>{
   createAccessToken: async function (
-    _grant: SupportedGrantType,
+    grant: SupportedGrantType,
     scopes: string[],
     client: ClientEntity,
     user: UserEntity
   ): Promise<AccessTokenEntity> {
-    return { token: await secretToken(), scopes, isRevoked: false, lifetime: 300, createdAt: new Date(), client, user };
+    return { token: await secretToken(), scopes, grant, lifetime: 300, createdAt: new Date(), client, user };
   },
 };
 

@@ -1,3 +1,4 @@
+import { SupportedGrantType } from '../grant-types/types/supported-grant-type';
 import { ClientEntity } from './client.entity';
 import { UserEntity } from './user.entity';
 
@@ -16,9 +17,9 @@ export interface AccessTokenEntity {
   readonly scopes: string[];
 
   /**
-   * Informs whether or not the Access Token is revoked.
+   * Grant Type that generated the Access Token.
    */
-  readonly isRevoked: boolean;
+  readonly grant: SupportedGrantType;
 
   /**
    * Lifetime of the Access Token in seconds.

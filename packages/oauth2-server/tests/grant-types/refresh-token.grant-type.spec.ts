@@ -114,6 +114,11 @@ describe('Refresh Token Grant Type', () => {
       // @ts-expect-error Testing a private method.
       expect(() => grantType.checkParameters({})).toThrow(InvalidRequestException);
     });
+
+    it('should not reject when providing a "refresh_token" parameter.', () => {
+      // @ts-expect-error Testing a private method.
+      expect(() => grantType.checkParameters({ refresh_token: 'foo' })).not.toThrow();
+    });
   });
 
   describe('getRefreshToken()', () => {

@@ -37,10 +37,7 @@ describe('Revocation Endpoint', () => {
   describe('headers', () => {
     it('should have a default headers object for the HTTP Response.', () => {
       // @ts-expect-error Testing a protected attribute.
-      expect(endpoint.headers).toMatchObject<OutgoingHttpHeaders>({
-        'Cache-Control': 'no-store',
-        Pragma: 'no-cache',
-      });
+      expect(endpoint.headers).toMatchObject<OutgoingHttpHeaders>({ 'Cache-Control': 'no-store', Pragma: 'no-cache' });
     });
   });
 
@@ -64,11 +61,7 @@ describe('Revocation Endpoint', () => {
   });
 
   describe('authenticateClient()', () => {
-    let request: Request;
-
-    beforeEach(() => {
-      request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
-    });
+    const request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
 
     afterEach(() => {
       clientAuthenticationMethodsMock.forEach((method) => {
@@ -77,55 +70,55 @@ describe('Revocation Endpoint', () => {
       });
     });
 
-    it('should reject not using a Client Authentication Method.', () => {
+    it('should reject not using a Client Authentication Method.', async () => {
       clientAuthenticationMethodsMock.forEach((method) => method.hasBeenRequested.mockReturnValue(false));
 
       // @ts-expect-error Testing a private method.
-      expect(endpoint.authenticateClient(request)).rejects.toThrow(InvalidClientException);
+      await expect(endpoint.authenticateClient(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should reject using multiple Client Authentication Methods.', () => {
+    it('should reject using multiple Client Authentication Methods.', async () => {
       clientAuthenticationMethodsMock.forEach((method) => method.hasBeenRequested.mockReturnValue(true));
 
       // @ts-expect-error Testing a private method.
-      expect(endpoint.authenticateClient(request)).rejects.toThrow(InvalidClientException);
+      await expect(endpoint.authenticateClient(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should return an authenticated Client.', () => {
+    it('should return an authenticated Client.', async () => {
       clientAuthenticationMethodsMock[0].hasBeenRequested.mockReturnValue(true);
       clientAuthenticationMethodsMock[0].authenticate.mockResolvedValue(client);
 
       // @ts-expect-error Testing a private method.
-      expect(endpoint.authenticateClient(request)).resolves.toMatchObject(client);
+      await expect(endpoint.authenticateClient(request)).resolves.toMatchObject(client);
     });
   });
 
   describe('handle()', () => {
-    let request: Request;
+    const request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
 
     beforeEach(() => {
-      request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
+      Reflect.set(request, 'body', {});
     });
 
-    it('should return an error response when not providing a "token" parameter.', () => {
-      expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
+    it('should return an error response when not providing a "token" parameter.', async () => {
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
         body: { error: 'invalid_request', error_description: 'Invalid parameter "token".' },
         headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 400,
       });
     });
 
-    it('should return an error response when providing an unsupported "token_type_hint".', () => {
-      Reflect.set(request, 'body', { token: 'token', token_type_hint: 'unknown' });
+    it('should return an error response when providing an unsupported "token_type_hint".', async () => {
+      Object.assign(request.body, { token: 'token', token_type_hint: 'unknown' });
 
-      expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
         body: { error: 'invalid_request', error_description: 'Invalid parameter "token_type_hint".' },
         headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 400,
       });
     });
 
-    it('should return an error response when the Client Authentication fails.', () => {
+    it('should return an error response when the Client Authentication fails.', async () => {
       clientAuthenticationMethodsMock[0].hasBeenRequested.mockReturnValue(true);
       clientAuthenticationMethodsMock[0].authenticate.mockRejectedValue(
         new InvalidClientException({ error_description: 'Invalid Credentials.' })
@@ -133,7 +126,7 @@ describe('Revocation Endpoint', () => {
 
       request.body.token = 'token';
 
-      expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
         body: { error: 'invalid_client', error_description: 'Invalid Credentials.' },
         headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 401,
@@ -151,14 +144,12 @@ describe('Revocation Endpoint', () => {
 
       request.body.token = 'token';
 
-      const response = await endpoint.handle(request);
-
-      expect(spy).toHaveBeenCalledTimes(1);
-
-      expect(response).toMatchObject<Partial<Response>>({
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
         headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 200,
       });
+
+      expect(spy).toHaveBeenCalledTimes(1);
 
       clientAuthenticationMethodsMock[0].hasBeenRequested.mockReset();
       clientAuthenticationMethodsMock[0].authenticate.mockReset();

@@ -33,18 +33,18 @@ const fakeAccessTokenResponse = <AccessTokenResponse>{
   refresh_token: 'refresh_token',
 };
 
-const clientAuthenticationMethodsMock = [
+const clientAuthenticationMethodsMock: jest.Mocked<ClientAuthentication>[] = [
   { name: 'client_secret_basic', hasBeenRequested: jest.fn(), authenticate: jest.fn() },
   { name: 'client_secret_post', hasBeenRequested: jest.fn(), authenticate: jest.fn() },
   { name: 'none', hasBeenRequested: jest.fn(), authenticate: jest.fn() },
 ];
 
-const grantTypes = [
+const grantTypes: jest.Mocked<GrantType>[] = [
   { name: 'authorization_code', createTokenResponse: jest.fn() },
   { name: 'client_credentials', createTokenResponse: jest.fn() },
 ];
 
-const endpoint = new TokenEndpoint(<ClientAuthentication[]>clientAuthenticationMethodsMock, <GrantType[]>grantTypes);
+const endpoint = new TokenEndpoint(clientAuthenticationMethodsMock, grantTypes);
 
 describe('Token Endpoint', () => {
   describe('name', () => {
@@ -56,10 +56,7 @@ describe('Token Endpoint', () => {
   describe('headers', () => {
     it('should have a default headers object for the HTTP Response.', () => {
       // @ts-expect-error Testing a private attribute.
-      expect(endpoint.headers).toMatchObject<OutgoingHttpHeaders>({
-        'Cache-Control': 'no-store',
-        Pragma: 'no-cache',
-      });
+      expect(endpoint.headers).toMatchObject<OutgoingHttpHeaders>({ 'Cache-Control': 'no-store', Pragma: 'no-cache' });
     });
   });
 
@@ -101,26 +98,26 @@ describe('Token Endpoint', () => {
       });
     });
 
-    it('should reject not using a Client Authentication Method.', () => {
+    it('should reject not using a Client Authentication Method.', async () => {
       clientAuthenticationMethodsMock.forEach((method) => method.hasBeenRequested.mockReturnValue(false));
 
       // @ts-expect-error Testing a private method.
-      expect(endpoint.authenticateClient(request)).rejects.toThrow(InvalidClientException);
+      await expect(endpoint.authenticateClient(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should reject using multiple Client Authentication Methods.', () => {
+    it('should reject using multiple Client Authentication Methods.', async () => {
       clientAuthenticationMethodsMock.forEach((method) => method.hasBeenRequested.mockReturnValue(true));
 
       // @ts-expect-error Testing a private method.
-      expect(endpoint.authenticateClient(request)).rejects.toThrow(InvalidClientException);
+      await expect(endpoint.authenticateClient(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should return an authenticated Client.', () => {
+    it('should return an authenticated Client.', async () => {
       clientAuthenticationMethodsMock[0].hasBeenRequested.mockReturnValue(true);
-      clientAuthenticationMethodsMock[0].authenticate.mockReturnValue(client);
+      clientAuthenticationMethodsMock[0].authenticate.mockResolvedValue(client);
 
       // @ts-expect-error Testing a private method.
-      expect(endpoint.authenticateClient(request)).resolves.toMatchObject(client);
+      await expect(endpoint.authenticateClient(request)).resolves.toMatchObject(client);
     });
   });
 
@@ -137,20 +134,20 @@ describe('Token Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: Request;
+    const request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
 
     beforeEach(() => {
-      request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
+      Reflect.set(request, 'body', {});
     });
 
     afterEach(() => {
       grantTypes.forEach((grantType) => grantType.createTokenResponse.mockReset());
     });
 
-    it('should return an error response when the Client requests an unsupported Grant Type.', () => {
-      Reflect.set(request, 'body', { grant_type: 'unknown' });
+    it('should return an error response when the Client requests an unsupported Grant Type.', async () => {
+      request.body.grant_type = 'unknown';
 
-      expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
         body: <OAuth2ExceptionParams>{
           error: 'unsupported_grant_type',
           error_description: 'Unsupported grant_type "unknown".',
@@ -161,16 +158,18 @@ describe('Token Endpoint', () => {
     });
 
     it('should return an error response when the Client Authentication fails.', async () => {
-      Reflect.set(request, 'body', { grant_type: 'authorization_code' });
+      request.body.grant_type = 'authorization_code';
 
-      const spy = jest.spyOn<TokenEndpoint, any>(endpoint, 'authenticateClient').mockImplementation(async () => {
-        throw new InvalidClientException({ error_description: 'Invalid Credentials.' }).setHeader(
-          'WWW-Authenticate',
-          'Basic'
+      const spy = jest
+        .spyOn<TokenEndpoint, any>(endpoint, 'authenticateClient')
+        .mockRejectedValue(
+          new InvalidClientException({ error_description: 'Invalid Credentials.' }).setHeader(
+            'WWW-Authenticate',
+            'Basic'
+          )
         );
-      });
 
-      expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
         body: <OAuth2ExceptionParams>{ error: 'invalid_client', error_description: 'Invalid Credentials.' },
         headers: { 'WWW-Authenticate': 'Basic', 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 401,
@@ -179,12 +178,12 @@ describe('Token Endpoint', () => {
       spy.mockRestore();
     });
 
-    it('should return an error response when the Client requests a Grant Type it is not allowed to request.', () => {
-      Reflect.set(request, 'body', { grant_type: 'client_credentials' });
+    it('should return an error response when the Client requests a Grant Type it is not allowed to.', async () => {
+      request.body.grant_type = 'client_credentials';
 
-      const spy = jest.spyOn<TokenEndpoint, any>(endpoint, 'authenticateClient').mockReturnValue(client);
+      const spy = jest.spyOn<TokenEndpoint, any>(endpoint, 'authenticateClient').mockResolvedValue(client);
 
-      expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
         body: <OAuth2ExceptionParams>{
           error: 'unauthorized_client',
           error_description: 'This Client is not allowed to request the grant_type "client_credentials".',
@@ -197,15 +196,12 @@ describe('Token Endpoint', () => {
     });
 
     it('should return an Access Token Response.', async () => {
-      Reflect.set(request, 'body', { grant_type: 'authorization_code' });
+      request.body.grant_type = 'authorization_code';
 
-      const spyToken = jest.spyOn(grantTypes[0], 'createTokenResponse').mockReturnValue(fakeAccessTokenResponse);
-      const spyAuth = jest.spyOn<TokenEndpoint, any>(endpoint, 'authenticateClient').mockReturnValue(client);
+      const spyToken = jest.spyOn(grantTypes[0], 'createTokenResponse').mockResolvedValue(fakeAccessTokenResponse);
+      const spyAuth = jest.spyOn<TokenEndpoint, any>(endpoint, 'authenticateClient').mockResolvedValue(client);
 
-      // For some reason, using .resolves makes the mocked grantType return "undefined".
-      const response = await endpoint.handle(request);
-
-      expect(response).toMatchObject<Partial<Response>>({
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
         body: <AccessTokenResponse>{
           access_token: 'access_token',
           token_type: 'Bearer',

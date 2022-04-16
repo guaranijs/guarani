@@ -1,4 +1,4 @@
-import { Constructor, Dict, Optional } from '@guarani/types';
+import { Constructor, Dict } from '@guarani/types';
 
 import { URL } from 'url';
 
@@ -18,7 +18,7 @@ import { Request } from '../../lib/http/request';
 import { Response } from '../../lib/http/response';
 import { ResponseMode } from '../../lib/response-modes/response-mode';
 import { ResponseType } from '../../lib/response-types/response-type';
-import { AuthorizationCodeResponse } from '../../lib/response-types/types/authorization-code.response';
+import { AuthorizationParameters } from '../../lib/response-types/types/authorization.parameters';
 import { ClientService } from '../../lib/services/client.service';
 
 const clients: ClientEntity[] = [
@@ -33,23 +33,23 @@ const clients: ClientEntity[] = [
   },
 ];
 
-const clientService = <ClientService>{
-  findClient: async (clientId: string): Promise<Optional<ClientEntity>> => {
+const clientService: jest.Mocked<ClientService> = {
+  findClient: jest.fn().mockImplementation(async (clientId: string) => {
     return clients.find((client) => client.id === clientId);
-  },
+  }),
 };
 
-const responseTypes = [
+const responseTypes: jest.Mocked<ResponseType>[] = [
   { name: 'code', defaultResponseMode: 'query', createAuthorizationResponse: jest.fn() },
   { name: 'token', defaultResponseMode: 'fragment', createAuthorizationResponse: jest.fn() },
 ];
 
-const responseModes = [
+const responseModes: jest.Mocked<ResponseMode>[] = [
   { name: 'query', createHttpResponse: jest.fn() },
   { name: 'fragment', createHttpResponse: jest.fn() },
 ];
 
-const endpoint = new AuthorizationEndpoint(clientService, <ResponseType[]>responseTypes, <ResponseMode[]>responseModes);
+const endpoint = new AuthorizationEndpoint(clientService, responseTypes, responseModes);
 
 describe('Authorization Endpoint', () => {
   describe('name', () => {
@@ -78,44 +78,37 @@ describe('Authorization Endpoint', () => {
   });
 
   describe('checkParameters()', () => {
-    it('should reject not providing a "response_type" parameter.', () => {
-      // @ts-expect-error Testing a private method.
-      expect(() => endpoint.checkParameters({})).toThrow(InvalidRequestException);
+    let parameters: AuthorizationParameters;
+
+    beforeEach(() => {
+      parameters = {
+        response_type: 'code',
+        client_id: 'client_id',
+        redirect_uri: 'https://example.com/callback',
+        scope: 'foo bar',
+      };
     });
 
-    it('should reject not providing a "client_id" parameter.', () => {
-      // @ts-expect-error Testing a private method.
-      expect(() => endpoint.checkParameters({ response_type: 'code' })).toThrow(InvalidRequestException);
-    });
+    it.each(['response_type', 'client_id', 'redirect_uri', 'scope'])(
+      'should reject not providing a required parameter.',
+      (requiredParameter) => {
+        Reflect.deleteProperty(parameters, requiredParameter);
 
-    it('should reject not providing a "redirect_uri" parameter.', () => {
-      expect(() => {
         // @ts-expect-error Testing a private method.
-        endpoint.checkParameters({ response_type: 'code', client_id: 'client_id' });
-      }).toThrow(InvalidRequestException);
-    });
-
-    it('should reject not providing a "scope" parameter.', () => {
-      expect(() => {
-        // @ts-expect-error Testing a private method.
-        endpoint.checkParameters({
-          response_type: 'code',
-          client_id: 'client_id',
-          redirect_uri: 'https://example.com/callback',
-        });
-      }).toThrow(InvalidRequestException);
-    });
+        expect(() => endpoint.checkParameters(parameters)).toThrow(InvalidRequestException);
+      }
+    );
   });
 
   describe('getClient()', () => {
-    it('should reject when a Client is not found.', () => {
+    it('should reject when a Client is not found.', async () => {
       // @ts-expect-error Testing a private method.
-      expect(endpoint.getClient('unknown')).rejects.toThrow(InvalidClientException);
+      await expect(endpoint.getClient('unknown')).rejects.toThrow(InvalidClientException);
     });
 
-    it('should return a Client based on the Client Identifier.', () => {
+    it('should return a Client based on the Client Identifier.', async () => {
       // @ts-expect-error Testing a private method.
-      expect(endpoint.getClient('client1')).resolves.toMatchObject(clients[0]);
+      await expect(endpoint.getClient('client1')).resolves.toMatchObject(clients[0]);
     });
   });
 
@@ -170,10 +163,10 @@ describe('Authorization Endpoint', () => {
   });
 
   describe('getUser()', () => {
-    let request: Request;
+    const request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
 
     beforeEach(() => {
-      request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
+      delete request.user;
     });
 
     it('should reject when the User has not given Consent.', () => {
@@ -190,31 +183,23 @@ describe('Authorization Endpoint', () => {
   });
 
   describe('getConsentParams()', () => {
-    let request: Request;
+    const request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
 
     beforeEach(() => {
-      request = new Request({
-        body: {},
-        headers: {},
-        method: 'get',
-        query: {
-          response_type: 'code',
-          client_id: 'client1',
-          redirect_uri: 'https://example.com/callback',
-          scope: 'foo bar baz',
-          state: 'client-state',
-        },
+      Reflect.set(request, 'query', {
+        response_type: 'code',
+        client_id: 'client1',
+        redirect_uri: 'https://example.com/callback',
+        scope: 'foo bar baz',
+        state: 'client-state',
       });
     });
 
-    const requiredParameters: string[] = ['response_type', 'client_id', 'redirect_uri', 'scope'];
-
-    it.each(requiredParameters)(
+    it.each(['response_type', 'client_id', 'redirect_uri', 'scope'])(
       'should return an error response when the Client does not provide a required parameter.',
-      (requiredParameter) => {
+      async (requiredParameter) => {
         Reflect.deleteProperty(request.query, requiredParameter);
-
-        expect(endpoint.getConsentParams(request)).rejects.toThrow(InvalidRequestException);
+        await expect(endpoint.getConsentParams(request)).rejects.toThrow(InvalidRequestException);
       }
     );
 
@@ -227,15 +212,14 @@ describe('Authorization Endpoint', () => {
 
     it.each(invalidChecks)(
       'should return an error response when the data provided fails to validate.',
-      (parameter, value, errorConstructor) => {
+      async (parameter, value, errorConstructor) => {
         request.query[parameter] = value;
-
-        expect(endpoint.getConsentParams(request)).rejects.toThrow(errorConstructor);
+        await expect(endpoint.getConsentParams(request)).rejects.toThrow(errorConstructor);
       }
     );
 
-    it('should return the Client and the Scopes it requested.', () => {
-      expect(endpoint.getConsentParams(request)).resolves.toMatchObject<ConsentParameters>({
+    it('should return the Client and the Scopes it requested.', async () => {
+      await expect(endpoint.getConsentParams(request)).resolves.toMatchObject<ConsentParameters>({
         client: clients[0],
         scopes: ['foo', 'bar', 'baz'],
       });
@@ -273,10 +257,10 @@ describe('Authorization Endpoint', () => {
 
     it.each(requiredParameters)(
       'should return an error response when the Client does not provide a required parameter.',
-      (requiredParameter) => {
-        Reflect.deleteProperty(request.query, requiredParameter);
+      async (requiredParameter) => {
+        delete request.query[requiredParameter];
 
-        expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
+        await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
           headers: {
             Location: `https://server.example.com/error?error=invalid_request&error_description=Invalid+parameter+%22${requiredParameter}%22.`,
           },
@@ -300,10 +284,10 @@ describe('Authorization Endpoint', () => {
 
     it.each(invalidChecks)(
       'should return an error response when the data provided fails to validate.',
-      (parameter, value, code, description) => {
+      async (parameter, value, code, description) => {
         request.query[parameter] = value;
 
-        expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
+        await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
           headers: { Location: `https://server.example.com/error?error=${code}&error_description=${description}` },
           statusCode: 303,
         });
@@ -317,9 +301,7 @@ describe('Authorization Endpoint', () => {
         )
       );
 
-      const response = await endpoint.handle(request);
-
-      expect(response).toMatchObject<Partial<Response>>({
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
         headers: {
           Location:
             'https://example.com/callback?error=access_denied&error_description=Authorization+denied+by+the+End+User.',
@@ -333,12 +315,7 @@ describe('Authorization Endpoint', () => {
     it('should return a valid authorization response.', async () => {
       request.user = { id: 'user_id' };
 
-      responseTypes[0].createAuthorizationResponse.mockImplementation((request: Request) => {
-        return <AuthorizationCodeResponse>{
-          code: 'code',
-          state: request.query.state,
-        };
-      });
+      responseTypes[0].createAuthorizationResponse.mockResolvedValue({ code: 'code', state: request.query.state });
 
       responseModes[0].createHttpResponse.mockImplementation((redirectUri: string, params: Dict) => {
         const url = new URL(redirectUri);
@@ -347,9 +324,7 @@ describe('Authorization Endpoint', () => {
         return new Response().redirect(url.href);
       });
 
-      const response = await endpoint.handle(request);
-
-      expect(response).toMatchObject<Partial<Response>>({
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
         headers: { Location: 'https://example.com/callback?code=code&state=client-state' },
         statusCode: 303,
       });

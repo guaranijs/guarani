@@ -14,6 +14,11 @@ describe('Response', () => {
       headers: { 'Content-Type': 'application/json' },
       body: { foo: 'foo' },
     });
+
+    expect(new Response().json()).toMatchObject({
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   });
 
   it('should create a Redirect Response.', () => {

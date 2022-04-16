@@ -1,3 +1,4 @@
+import { removeNullishValues } from '@guarani/objects';
 import { Dict } from '@guarani/types';
 
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
@@ -92,6 +93,6 @@ export abstract class OAuth2Exception extends Error {
    * Parameters of the OAuth 2.0 Exception.
    */
   public toJSON(): OAuth2ExceptionParams {
-    return { error: this.errorCode, ...this.data };
+    return removeNullishValues<OAuth2ExceptionParams>({ error: this.errorCode, ...this.data });
   }
 }

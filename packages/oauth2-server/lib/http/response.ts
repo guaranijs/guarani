@@ -1,5 +1,4 @@
-import { Dict } from '@guarani/types';
-
+import { Optional } from '@guarani/types';
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 
 /**
@@ -60,7 +59,7 @@ export class Response {
    *
    * @param data Object to be used as the JSON Encoded Body of the Response.
    */
-  public json<T extends Dict>(data: T): Response {
+  public json(data?: Optional<any>): Response {
     this.setHeader('Content-Type', 'application/json');
     this.body = data;
     return this;

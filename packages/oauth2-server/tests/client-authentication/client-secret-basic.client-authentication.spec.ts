@@ -1,5 +1,3 @@
-import { Optional } from '@guarani/types';
-
 import { IncomingHttpHeaders } from 'http';
 import { URL } from 'url';
 
@@ -10,39 +8,39 @@ import { InvalidClientException } from '../../lib/exceptions/invalid-client.exce
 import { Request } from '../../lib/http/request';
 import { ClientService } from '../../lib/services/client.service';
 
-const clientSecretBasic = <ClientEntity>{
-  id: 'client_id',
-  secret: 'client_secret',
-  redirectUris: [new URL('https://example.com/callback')],
-  authenticationMethod: 'client_secret_basic',
-  grantTypes: ['authorization_code'],
-  responseTypes: ['code'],
-  scopes: ['scope1', 'scope2'],
-};
-
-const clientSecretPost = <ClientEntity>{
-  id: 'id_client',
-  secret: 'secret_client',
-  redirectUris: [new URL('https://example.com/callback')],
-  authenticationMethod: 'client_secret_post',
-  grantTypes: ['authorization_code'],
-  responseTypes: ['code'],
-  scopes: ['scope1', 'scope2'],
-};
-
-const clientNone = <ClientEntity>{
-  id: 'foobar',
-  redirectUris: [new URL('https://example.com/callback')],
-  authenticationMethod: 'none',
-  grantTypes: ['authorization_code'],
-  responseTypes: ['code'],
-  scopes: ['scope1', 'scope2'],
-};
-
-const clientServiceMock = <ClientService>{
-  findClient: async (clientId: string): Promise<Optional<ClientEntity>> => {
-    return [clientSecretBasic, clientSecretPost, clientNone].find((client) => client.id === clientId);
+const clients: ClientEntity[] = [
+  {
+    id: 'client_id',
+    secret: 'client_secret',
+    redirectUris: [new URL('https://example.com/callback')],
+    authenticationMethod: 'client_secret_basic',
+    grantTypes: ['authorization_code'],
+    responseTypes: ['code'],
+    scopes: ['scope1', 'scope2'],
   },
+  {
+    id: 'id_client',
+    secret: 'secret_client',
+    redirectUris: [new URL('https://example.com/callback')],
+    authenticationMethod: 'client_secret_post',
+    grantTypes: ['authorization_code'],
+    responseTypes: ['code'],
+    scopes: ['scope1', 'scope2'],
+  },
+  {
+    id: 'foobar',
+    redirectUris: [new URL('https://example.com/callback')],
+    authenticationMethod: 'none',
+    grantTypes: ['authorization_code'],
+    responseTypes: ['code'],
+    scopes: ['scope1', 'scope2'],
+  },
+];
+
+const clientServiceMock: jest.Mocked<ClientService> = {
+  findClient: jest.fn().mockImplementation(async (clientId: string) => {
+    return clients.find((client) => client.id === clientId);
+  }),
 };
 
 const method = new ClientSecretBasicClientAuthentication(clientServiceMock);
@@ -72,61 +70,58 @@ describe('Client Secret Basic Authentication Method', () => {
   });
 
   describe('authenticate()', () => {
-    let request: Request;
+    const request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
 
     beforeEach(() => {
-      request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
+      delete request.headers.authorization;
     });
 
-    it.each(['Basic', 'Basic '])('should reject an authorization header without a token.', (header) => {
+    it.each(['Basic', 'Basic '])('should reject an authorization header without a token.', async (header) => {
       request.headers.authorization = header;
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should reject a token that is not Base64 encoded.', () => {
+    it('should reject a token that is not Base64 encoded.', async () => {
       request.headers.authorization = 'Basic $';
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should reject a token that does not contain a semicolon.', () => {
+    it('should reject a token that does not contain a semicolon.', async () => {
       request.headers.authorization = 'Basic ' + Buffer.from('foobar', 'utf8').toString('base64');
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
     it.each([':', 'id:', ':secret'])(
       'should reject a token with an empty "client_id" and/or "client_secret".',
-      (credentials) => {
+      async (credentials) => {
         request.headers.authorization = 'Basic ' + Buffer.from(credentials, 'utf8').toString('base64');
-        expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+        await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
       }
     );
 
-    it('should reject when a Client is not found.', () => {
+    it('should reject when a Client is not found.', async () => {
       request.headers.authorization = 'Basic ' + Buffer.from('unknown_id:unknown_secret', 'utf8').toString('base64');
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should reject a Client without a Secret.', () => {
+    it('should reject a Client without a Secret.', async () => {
       request.headers.authorization = 'Basic ' + Buffer.from('foobar:barfoo', 'utf8').toString('base64');
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it.each(['client_id:unknown_secret', 'client_id:client-secret'])(
-      "should reject when the provided Client Secret does not match the Client's one.",
-      (unencodedScheme) => {
-        request.headers.authorization = 'Basic ' + Buffer.from(unencodedScheme, 'utf8').toString('base64');
-        expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
-      }
-    );
+    it("should reject when the provided Client Secret does not match the Client's one.", async () => {
+      request.headers.authorization = 'Basic ' + Buffer.from('client_id:unknown', 'utf8').toString('base64');
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+    });
 
-    it('should reject a Client not authorized to use this Authentication Method.', () => {
+    it('should reject a Client not authorized to use this Authentication Method.', async () => {
       request.headers.authorization = 'Basic ' + Buffer.from('id_client:secret_client', 'utf8').toString('base64');
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should return an instance of a Client Entity.', () => {
+    it('should return an instance of a Client Entity.', async () => {
       request.headers.authorization = 'Basic ' + Buffer.from('client_id:client_secret', 'utf8').toString('base64');
-      expect(method.authenticate(request)).resolves.toMatchObject(clientSecretBasic);
+      await expect(method.authenticate(request)).resolves.toMatchObject(clients[0]);
     });
   });
 });

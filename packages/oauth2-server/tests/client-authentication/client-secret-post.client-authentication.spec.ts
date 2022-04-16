@@ -1,4 +1,4 @@
-import { Dict, Optional } from '@guarani/types';
+import { Dict } from '@guarani/types';
 
 import { URL } from 'url';
 
@@ -9,39 +9,39 @@ import { InvalidClientException } from '../../lib/exceptions/invalid-client.exce
 import { Request } from '../../lib/http/request';
 import { ClientService } from '../../lib/services/client.service';
 
-const clientSecretPost = <ClientEntity>{
-  id: 'client_id',
-  secret: 'client_secret',
-  redirectUris: [new URL('https://example.com/callback')],
-  authenticationMethod: 'client_secret_post',
-  grantTypes: ['authorization_code'],
-  responseTypes: ['code'],
-  scopes: ['scope1', 'scope2'],
-};
-
-const clientSecretBasic = <ClientEntity>{
-  id: 'id_client',
-  secret: 'secret_client',
-  redirectUris: [new URL('https://example.com/callback')],
-  authenticationMethod: 'client_secret_basic',
-  grantTypes: ['authorization_code'],
-  responseTypes: ['code'],
-  scopes: ['scope1', 'scope2'],
-};
-
-const clientNone = <ClientEntity>{
-  id: 'foobar',
-  redirectUris: [new URL('https://example.com/callback')],
-  authenticationMethod: 'none',
-  grantTypes: ['authorization_code'],
-  responseTypes: ['code'],
-  scopes: ['scope1', 'scope2'],
-};
-
-const clientServiceMock = <ClientService>{
-  findClient: async (clientId: string): Promise<Optional<ClientEntity>> => {
-    return [clientSecretPost, clientSecretBasic, clientNone].find((client) => client.id === clientId);
+const clients: ClientEntity[] = [
+  {
+    id: 'client_id',
+    secret: 'client_secret',
+    redirectUris: [new URL('https://example.com/callback')],
+    authenticationMethod: 'client_secret_post',
+    grantTypes: ['authorization_code'],
+    responseTypes: ['code'],
+    scopes: ['scope1', 'scope2'],
   },
+  {
+    id: 'id_client',
+    secret: 'secret_client',
+    redirectUris: [new URL('https://example.com/callback')],
+    authenticationMethod: 'client_secret_basic',
+    grantTypes: ['authorization_code'],
+    responseTypes: ['code'],
+    scopes: ['scope1', 'scope2'],
+  },
+  {
+    id: 'foobar',
+    redirectUris: [new URL('https://example.com/callback')],
+    authenticationMethod: 'none',
+    grantTypes: ['authorization_code'],
+    responseTypes: ['code'],
+    scopes: ['scope1', 'scope2'],
+  },
+];
+
+const clientServiceMock: jest.Mocked<ClientService> = {
+  findClient: jest.fn().mockImplementation(async (clientId: string) => {
+    return clients.find((client) => client.id === clientId);
+  }),
 };
 
 const method = new ClientSecretPostClientAuthentication(clientServiceMock);
@@ -56,11 +56,6 @@ const methodRequests: [Dict, boolean][] = [
   [{ client_id: 'foo', client_secret: '' }, true],
   [{ client_id: '', client_secret: 'bar' }, true],
   [{ client_id: 'foo', client_secret: 'bar' }, true],
-];
-
-const mismatchingCredentials: Dict[] = [
-  { client_id: 'client_id', client_secret: 'unknown_secret' },
-  { client_id: 'client_id', client_secret: 'client-secret' },
 ];
 
 describe('Client Secret Post Authentication Method', () => {
@@ -78,38 +73,35 @@ describe('Client Secret Post Authentication Method', () => {
   });
 
   describe('authenticate()', () => {
-    let request: Request;
+    const request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
 
     beforeEach(() => {
-      request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
+      Reflect.set(request, 'body', {});
     });
 
-    it('should reject when a Client is not found.', () => {
-      Reflect.set(request, 'body', { client_id: 'unknown_client', client_secret: 'unknown_secret' });
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+    it('should reject when a Client is not found.', async () => {
+      Object.assign(request.body, { client_id: 'unknown_client', client_secret: 'unknown_secret' });
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should reject a Client without a Secret.', () => {
-      Reflect.set(request, 'body', { client_id: 'foobar', client_secret: 'barfoo' });
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+    it('should reject a Client without a Secret.', async () => {
+      Object.assign(request.body, { client_id: 'foobar', client_secret: 'barfoo' });
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it.each(mismatchingCredentials)(
-      "should reject when the provided Client Secret does not match the Client's one.",
-      (credentials) => {
-        Reflect.set(request, 'body', credentials);
-        expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
-      }
-    );
-
-    it('should reject a Client not authorized to use this Authentication Method.', () => {
-      Reflect.set(request, 'body', { client_id: 'id_client', client_secret: 'secret_client' });
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+    it("should reject when the provided Client Secret does not match the Client's one.", async () => {
+      Object.assign(request.body, { client_id: 'client_id', client_secret: 'unknown' });
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should return an instance of a Client Entity.', () => {
-      Reflect.set(request, 'body', { client_id: 'client_id', client_secret: 'client_secret' });
-      expect(method.authenticate(request)).resolves.toMatchObject(clientSecretPost);
+    it('should reject a Client not authorized to use this Authentication Method.', async () => {
+      Object.assign(request.body, { client_id: 'id_client', client_secret: 'secret_client' });
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+    });
+
+    it('should return an instance of a Client Entity.', async () => {
+      Object.assign(request.body, { client_id: 'client_id', client_secret: 'client_secret' });
+      await expect(method.authenticate(request)).resolves.toMatchObject(clients[0]);
     });
   });
 });

@@ -1,4 +1,4 @@
-import { Dict, Optional } from '@guarani/types';
+import { Dict } from '@guarani/types';
 
 import { URL } from 'url';
 
@@ -9,38 +9,38 @@ import { InvalidClientException } from '../../lib/exceptions/invalid-client.exce
 import { Request } from '../../lib/http/request';
 import { ClientService } from '../../lib/services/client.service';
 
-const clientNone = <ClientEntity>{
-  id: 'client_id',
-  redirectUris: [new URL('https://example.com/callback')],
-  authenticationMethod: 'none',
-  grantTypes: ['authorization_code'],
-  responseTypes: ['code'],
-  scopes: ['scope1', 'scope2'],
-};
-
-const clientSecretBasic = <ClientEntity>{
-  id: 'id_client',
-  secret: 'secret_client',
-  redirectUris: [new URL('https://example.com/callback')],
-  authenticationMethod: 'client_secret_basic',
-  grantTypes: ['authorization_code'],
-  responseTypes: ['code'],
-  scopes: ['scope1', 'scope2'],
-};
-
-const clientSecretPost = <ClientEntity>{
-  id: 'foobar',
-  redirectUris: [new URL('https://example.com/callback')],
-  authenticationMethod: 'client_secret_post',
-  grantTypes: ['authorization_code'],
-  responseTypes: ['code'],
-  scopes: ['scope1', 'scope2'],
-};
-
-const clientServiceMock = <ClientService>{
-  findClient: async (clientId: string): Promise<Optional<ClientEntity>> => {
-    return [clientNone, clientSecretBasic, clientSecretPost].find((client) => client.id === clientId);
+const clients: ClientEntity[] = [
+  {
+    id: 'client_id',
+    redirectUris: [new URL('https://example.com/callback')],
+    authenticationMethod: 'none',
+    grantTypes: ['authorization_code'],
+    responseTypes: ['code'],
+    scopes: ['scope1', 'scope2'],
   },
+  {
+    id: 'id_client',
+    secret: 'secret_client',
+    redirectUris: [new URL('https://example.com/callback')],
+    authenticationMethod: 'client_secret_basic',
+    grantTypes: ['authorization_code'],
+    responseTypes: ['code'],
+    scopes: ['scope1', 'scope2'],
+  },
+  {
+    id: 'foobar',
+    redirectUris: [new URL('https://example.com/callback')],
+    authenticationMethod: 'client_secret_post',
+    grantTypes: ['authorization_code'],
+    responseTypes: ['code'],
+    scopes: ['scope1', 'scope2'],
+  },
+];
+
+const clientServiceMock: jest.Mocked<ClientService> = {
+  findClient: jest.fn().mockImplementation(async (clientId: string) => {
+    return clients.find((client) => client.id === clientId);
+  }),
 };
 
 const method = new NoneClientAuthentication(clientServiceMock);
@@ -72,30 +72,30 @@ describe('None Client Authentication Method', () => {
   });
 
   describe('authenticate()', () => {
-    let request: Request;
+    const request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
 
     beforeEach(() => {
-      request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
+      Reflect.set(request, 'body', {});
     });
 
-    it('should reject when a Client is not found.', () => {
-      Reflect.set(request, 'body', { client_id: 'unknown_client' });
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+    it('should reject when a Client is not found.', async () => {
+      Object.assign(request.body, { client_id: 'unknown_client' });
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should reject a Client with a Secret.', () => {
-      Reflect.set(request, 'body', { client_id: 'id_client' });
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+    it('should reject a Client with a Secret.', async () => {
+      Object.assign(request.body, { client_id: 'id_client' });
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should reject a Client not authorized to use this Authentication Method.', () => {
-      Reflect.set(request, 'body', { client_id: 'foobar' });
-      expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
+    it('should reject a Client not authorized to use this Authentication Method.', async () => {
+      Object.assign(request.body, { client_id: 'foobar' });
+      await expect(method.authenticate(request)).rejects.toThrow(InvalidClientException);
     });
 
-    it('should return an instance of a Client Entity.', () => {
-      Reflect.set(request, 'body', { client_id: 'client_id' });
-      expect(method.authenticate(request)).resolves.toMatchObject(clientNone);
+    it('should return an instance of a Client Entity.', async () => {
+      Object.assign(request.body, { client_id: 'client_id' });
+      await expect(method.authenticate(request)).resolves.toMatchObject(clients[0]);
     });
   });
 });

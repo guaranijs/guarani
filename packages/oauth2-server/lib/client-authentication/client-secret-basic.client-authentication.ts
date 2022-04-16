@@ -53,7 +53,7 @@ export class ClientSecretBasicClientAuthentication implements ClientAuthenticati
    * @param request HTTP Request.
    */
   public hasBeenRequested(request: Request): boolean {
-    return request.headers.authorization?.match(/^(Basic|Basic .*)$/) != null; // The "!=" is proposital.
+    return request.headers.authorization?.startsWith('Basic') === true;
   }
 
   /**

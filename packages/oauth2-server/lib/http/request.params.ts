@@ -1,7 +1,8 @@
-import { Dict } from '@guarani/types';
+import { Dict, Optional } from '@guarani/types';
 
 import { IncomingHttpHeaders } from 'http';
 
+import { UserEntity } from '../entities/user.entity';
 import { SupportedHttpMethod } from './types/supported-http-method';
 
 /**
@@ -27,4 +28,9 @@ export interface RequestParams {
    * Parsed Body of the Request.
    */
   readonly body: Dict;
+
+  /**
+   * Authenticated End User of the Request.
+   */
+  readonly user?: Optional<UserEntity>;
 }

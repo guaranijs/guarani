@@ -92,6 +92,6 @@ export abstract class OAuth2Exception extends Error {
    * Parameters of the OAuth 2.0 Exception.
    */
   public toJSON(): OAuth2ExceptionParams {
-    return { ...this.data, error: this.errorCode };
+    return { error: this.errorCode, ...this.data };
   }
 }

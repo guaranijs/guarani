@@ -1,4 +1,3 @@
-import { Optional } from '@guarani/types';
 import { secretToken } from '@guarani/utils';
 
 import { URL } from 'url';
@@ -6,7 +5,6 @@ import { URL } from 'url';
 import { AccessTokenEntity } from '../../lib/entities/access-token.entity';
 import { AuthorizationCodeEntity } from '../../lib/entities/authorization-code.entity';
 import { ClientEntity } from '../../lib/entities/client.entity';
-import { RefreshTokenEntity } from '../../lib/entities/refresh-token.entity';
 import { UserEntity } from '../../lib/entities/user.entity';
 import { InvalidGrantException } from '../../lib/exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
@@ -20,15 +18,26 @@ import { AuthorizationCodeService } from '../../lib/services/authorization-code.
 import { RefreshTokenService } from '../../lib/services/refresh-token.service';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
-const client = <ClientEntity>{
-  id: 'client_id',
-  secret: 'client_secret',
-  scopes: ['foo', 'bar', 'baz'],
-  authenticationMethod: 'client_secret_basic',
-  responseTypes: ['code'],
-  grantTypes: ['authorization_code'],
-  redirectUris: [new URL('https://example.com/callback')],
-};
+const clients: ClientEntity[] = [
+  {
+    id: 'client_id',
+    secret: 'client_secret',
+    scopes: ['foo', 'bar', 'baz'],
+    authenticationMethod: 'client_secret_basic',
+    responseTypes: ['code'],
+    grantTypes: ['authorization_code'],
+    redirectUris: [new URL('https://example.com/callback')],
+  },
+  {
+    id: 'client2',
+    secret: 'secret_client',
+    scopes: ['foo', 'bar', 'baz'],
+    authenticationMethod: 'client_secret_basic',
+    responseTypes: [],
+    grantTypes: ['password'],
+    redirectUris: [new URL('https://foobar.com/callback')],
+  },
+];
 
 const user = <UserEntity>{ id: 'user_id' };
 
@@ -41,60 +50,52 @@ const authorizationCodes: AuthorizationCodeEntity[] = [
     codeChallengeMethod: 'plain',
     isRevoked: false,
     expiresAt: new Date(Date.now() + 86400000),
-    client: Object.assign({}, client),
-    user: Object.assign({}, user),
+    client: clients[0],
+    user,
   },
 ];
 
-const pkceMethods: PkceMethod[] = [
+const pkceMethods: jest.Mocked<PkceMethod>[] = [
   { name: 'plain', verify: jest.fn((challenge, verifier) => challenge === verifier) },
   { name: 'S256', verify: jest.fn() },
 ];
 
-const authorizationCodeServiceMock = <AuthorizationCodeService>{
-  findAuthorizationCode: async (code: string): Promise<Optional<AuthorizationCodeEntity>> => {
+const authorizationCodeServiceMock: jest.Mocked<AuthorizationCodeService> = {
+  createAuthorizationCode: jest.fn(),
+  findAuthorizationCode: jest.fn(async (code) => {
     return authorizationCodes.find((authorizationCode) => authorizationCode.code === code);
-  },
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  revokeAuthorizationCode: async (_authorizationCode: AuthorizationCodeEntity): Promise<void> => {},
+  }),
+  revokeAuthorizationCode: jest.fn(),
 };
 
-const accessTokenServiceMock = <AccessTokenService>{
-  createAccessToken: async (
-    _grant: SupportedGrantType,
-    scopes: string[],
-    client: ClientEntity,
-    user: UserEntity,
-    refreshToken: Optional<RefreshTokenEntity>
-  ): Promise<AccessTokenEntity> => {
-    const expiration = new Date();
-    expiration.setUTCSeconds(expiration.getUTCSeconds() + 300);
-
+const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
+  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessTokenEntity> => {
     return {
       token: await secretToken(),
       tokenType: 'Bearer',
       scopes,
       isRevoked: false,
-      expiresAt: expiration,
+      expiresAt: new Date(Date.now() + 300000),
       client,
-      user,
+      user: user!,
       refreshToken,
     };
-  },
+  }),
 };
 
-const refreshTokenServiceMock = <RefreshTokenService>{
-  createRefreshToken: async (
-    grant: SupportedGrantType,
-    scopes: string[],
-    client: ClientEntity,
-    user: UserEntity
-  ): Promise<RefreshTokenEntity> => {
-    const expiration = new Date();
-    expiration.setUTCSeconds(expiration.getUTCSeconds() + 3600);
-
-    return { token: await secretToken(16), scopes, grant, isRevoked: false, expiresAt: expiration, client, user };
-  },
+const refreshTokenServiceMock: jest.Mocked<RefreshTokenService> = {
+  createRefreshToken: jest.fn(async (grant, scopes, client, user) => {
+    return {
+      token: await secretToken(16),
+      scopes,
+      grant,
+      isRevoked: false,
+      expiresAt: new Date(Date.now() + 3600000),
+      client,
+      user,
+    };
+  }),
+  findRefreshToken: jest.fn(),
 };
 
 const grantType = new AuthorizationCodeGrantType(
@@ -107,7 +108,14 @@ const grantType = new AuthorizationCodeGrantType(
 describe('Authorization Code Grant Type', () => {
   describe('constructor', () => {
     it('should reject not providing any PKCE Methods.', () => {
-      expect(() => new AuthorizationCodeGrantType([], <any>{}, <any>[], <any>{})).toThrow(TypeError);
+      expect(() => {
+        return new AuthorizationCodeGrantType(
+          [],
+          authorizationCodeServiceMock,
+          accessTokenServiceMock,
+          refreshTokenServiceMock
+        );
+      }).toThrow(TypeError);
     });
   });
 
@@ -126,8 +134,8 @@ describe('Authorization Code Grant Type', () => {
 
     const requiredParameters = ['code', 'code_verifier', 'redirect_uri'];
 
-    it.each(requiredParameters)('should reject not passing a required parameter.', (parameter) => {
-      Reflect.deleteProperty(parameters, parameter);
+    it.each(requiredParameters)('should reject not passing a required parameter.', (requiredParameter) => {
+      Reflect.deleteProperty(parameters, requiredParameter);
 
       // @ts-expect-error Testing a private method.
       expect(() => grantType.checkParameters(parameters)).toThrow(InvalidRequestException);
@@ -140,14 +148,14 @@ describe('Authorization Code Grant Type', () => {
   });
 
   describe('getAuthorizationCode()', () => {
-    it('should reject when an Authorization Code is not found.', () => {
+    it('should reject when an Authorization Code is not found.', async () => {
       // @ts-expect-error Testing a private method.
-      expect(grantType.getAuthorizationCode('unknown')).rejects.toThrow(InvalidGrantException);
+      await expect(grantType.getAuthorizationCode('unknown')).rejects.toThrow(InvalidGrantException);
     });
 
-    it('should return an instance of an Authorization Code.', () => {
+    it('should return an instance of an Authorization Code.', async () => {
       // @ts-expect-error Testing a private method.
-      expect(grantType.getAuthorizationCode('code')).resolves.toMatchObject(authorizationCodes[0]);
+      await expect(grantType.getAuthorizationCode('code')).resolves.toMatchObject(authorizationCodes[0]);
     });
   });
 
@@ -172,14 +180,10 @@ describe('Authorization Code Grant Type', () => {
     });
 
     it('should reject a mismatching Client Identifier.', () => {
-      Reflect.set(invalidAuthorizationCode.client, 'id', 'unknown_client');
-
       expect(() => {
         // @ts-expect-error Testing a private method.
-        grantType.checkAuthorizationCode(invalidAuthorizationCode, params, client);
+        grantType.checkAuthorizationCode(invalidAuthorizationCode, params, clients[1]);
       }).toThrow(InvalidGrantException);
-
-      Reflect.set(invalidAuthorizationCode.client, 'id', 'client_id');
     });
 
     it('should reject an expired Authorization Code.', () => {
@@ -187,7 +191,7 @@ describe('Authorization Code Grant Type', () => {
 
       expect(() => {
         // @ts-expect-error Testing a private method.
-        grantType.checkAuthorizationCode(invalidAuthorizationCode, params, client);
+        grantType.checkAuthorizationCode(invalidAuthorizationCode, params, clients[0]);
       }).toThrow(InvalidGrantException);
     });
 
@@ -196,16 +200,16 @@ describe('Authorization Code Grant Type', () => {
 
       expect(() => {
         // @ts-expect-error Testing a private method.
-        grantType.checkAuthorizationCode(invalidAuthorizationCode, params, client);
+        grantType.checkAuthorizationCode(invalidAuthorizationCode, params, clients[0]);
       }).toThrow(InvalidGrantException);
     });
 
     it('should reject a mismatching Redirect URI.', () => {
-      Reflect.set(invalidAuthorizationCode, 'redirectUri', new URL('https://notexample.com/callback'));
+      Reflect.set(invalidAuthorizationCode, 'redirectUri', new URL('https://bad.example.com/callback'));
 
       expect(() => {
         // @ts-expect-error Testing a private method.
-        grantType.checkAuthorizationCode(invalidAuthorizationCode, params, client);
+        grantType.checkAuthorizationCode(invalidAuthorizationCode, params, clients[0]);
       }).toThrow(InvalidGrantException);
     });
 
@@ -214,13 +218,13 @@ describe('Authorization Code Grant Type', () => {
 
       expect(() => {
         // @ts-expect-error Testing a private method.
-        grantType.checkAuthorizationCode(invalidAuthorizationCode, params, client);
+        grantType.checkAuthorizationCode(invalidAuthorizationCode, params, clients[0]);
       }).toThrow(InvalidGrantException);
     });
 
     it('should not reject when the Authorization Code is valid.', () => {
       // @ts-expect-error Testing a private method.
-      expect(() => grantType.checkAuthorizationCode(authorizationCodes[0], params, client)).not.toThrow();
+      expect(() => grantType.checkAuthorizationCode(authorizationCodes[0], params, clients[0])).not.toThrow();
     });
   });
 
@@ -232,8 +236,8 @@ describe('Authorization Code Grant Type', () => {
       query: {},
     });
 
-    it('should create an Access Token Response with all the scopes of the Client.', () => {
-      expect(grantType.createTokenResponse(request, client)).resolves.toMatchObject<AccessTokenResponse>({
+    it('should create an Access Token Response with all the scopes of the Client.', async () => {
+      await expect(grantType.createTokenResponse(request, clients[0])).resolves.toMatchObject<AccessTokenResponse>({
         access_token: expect.any(String),
         token_type: 'Bearer',
         expires_in: expect.any(Number),
@@ -241,17 +245,18 @@ describe('Authorization Code Grant Type', () => {
       });
     });
 
-    it('should create an Access Token Response with a Refresh Token.', () => {
-      const previousGrantTypes = client.grantTypes;
-      Reflect.set(client, 'grantTypes', [...previousGrantTypes, 'refresh_token']);
+    it('should create an Access Token Response with a Refresh Token.', async () => {
+      clients[0].grantTypes.push('refresh_token');
 
-      expect(grantType.createTokenResponse(request, client)).resolves.toMatchObject<AccessTokenResponse>({
+      await expect(grantType.createTokenResponse(request, clients[0])).resolves.toMatchObject<AccessTokenResponse>({
         access_token: expect.any(String),
         token_type: 'Bearer',
         expires_in: expect.any(Number),
         scope: 'foo bar',
         refresh_token: expect.any(String),
       });
+
+      clients[0].grantTypes.pop();
     });
   });
 });

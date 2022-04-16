@@ -9,17 +9,18 @@ import { Request } from '../../lib/http/request';
 import { AccessTokenService } from '../../lib/services/access-token.service';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
-const accessTokenServiceMock = <AccessTokenService>{
-  createAccessToken: async (
-    _grant: SupportedGrantType,
-    scopes: string[],
-    client: ClientEntity
-  ): Promise<AccessTokenEntity> => {
-    const expiration = new Date();
-    expiration.setUTCSeconds(expiration.getUTCSeconds() + 300);
-
-    return { token: await secretToken(), tokenType: 'Bearer', scopes, isRevoked: false, expiresAt: expiration, client };
-  },
+const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  createAccessToken: jest.fn(async (_grant, scopes, client, _user): Promise<AccessTokenEntity> => {
+    return {
+      token: await secretToken(),
+      tokenType: 'Bearer',
+      scopes,
+      isRevoked: false,
+      expiresAt: new Date(Date.now() + 300000),
+      client,
+    };
+  }),
 };
 
 const grantType = new ClientCredentialsGrantType(accessTokenServiceMock);
@@ -42,19 +43,19 @@ describe('Client Credentials Grant Type', () => {
   });
 
   describe('createTokenResponse()', () => {
-    let request: Request;
+    const request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
 
     beforeEach(() => {
-      request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
+      Reflect.set(request, 'body', {});
     });
 
-    it('should reject requesting scopes not allowed to the Client.', () => {
-      Reflect.set(request, 'body', { scope: 'foo qux' });
-      expect(grantType.createTokenResponse(request, client)).rejects.toThrow(InvalidScopeException);
+    it('should reject requesting scopes not allowed to the Client.', async () => {
+      request.body.scope = 'foo qux';
+      await expect(grantType.createTokenResponse(request, client)).rejects.toThrow(InvalidScopeException);
     });
 
-    it('should create an Access Token Response with all the scopes of the Client.', () => {
-      expect(grantType.createTokenResponse(request, client)).resolves.toMatchObject<AccessTokenResponse>({
+    it('should create an Access Token Response with all the scopes of the Client.', async () => {
+      await expect(grantType.createTokenResponse(request, client)).resolves.toMatchObject<AccessTokenResponse>({
         access_token: expect.any(String),
         token_type: 'Bearer',
         expires_in: expect.any(Number),
@@ -62,10 +63,10 @@ describe('Client Credentials Grant Type', () => {
       });
     });
 
-    it('should create an Access Token Response with the requested scopes.', () => {
-      Reflect.set(request, 'body', { scope: 'foo baz' });
+    it('should create an Access Token Response with the requested scopes.', async () => {
+      request.body.scope = 'foo baz';
 
-      expect(grantType.createTokenResponse(request, client)).resolves.toMatchObject<AccessTokenResponse>({
+      await expect(grantType.createTokenResponse(request, client)).resolves.toMatchObject<AccessTokenResponse>({
         access_token: expect.any(String),
         token_type: 'Bearer',
         expires_in: expect.any(Number),

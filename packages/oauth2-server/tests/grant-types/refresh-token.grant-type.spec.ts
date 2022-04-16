@@ -1,5 +1,5 @@
-import { Optional } from '@guarani/types';
 import { secretToken } from '@guarani/utils';
+
 import { AccessTokenEntity } from '../../lib/entities/access-token.entity';
 import { ClientEntity } from '../../lib/entities/client.entity';
 import { RefreshTokenEntity } from '../../lib/entities/refresh-token.entity';
@@ -57,14 +57,8 @@ const refreshTokens: RefreshTokenEntity[] = [
   },
 ];
 
-const accessTokenServiceMock = <AccessTokenService>{
-  createAccessToken: async (
-    _grant: SupportedGrantType,
-    scopes: string[],
-    client: ClientEntity,
-    user: UserEntity,
-    refreshToken: Optional<RefreshTokenEntity>
-  ): Promise<AccessTokenEntity> => {
+const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
+  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessTokenEntity> => {
     return {
       token: await secretToken(),
       tokenType: 'Bearer',
@@ -72,19 +66,14 @@ const accessTokenServiceMock = <AccessTokenService>{
       isRevoked: false,
       expiresAt: new Date(Date.now() + 300000),
       client,
-      user,
+      user: user!,
       refreshToken,
     };
-  },
+  }),
 };
 
-const refreshTokenServiceMock = <RefreshTokenService>{
-  createRefreshToken: async (
-    grant: SupportedGrantType,
-    scopes: string[],
-    client: ClientEntity,
-    user: UserEntity
-  ): Promise<RefreshTokenEntity> => {
+const refreshTokenServiceMock: jest.Mocked<RefreshTokenService> = {
+  createRefreshToken: jest.fn(async (grant, scopes, client, user) => {
     return {
       token: await secretToken(16),
       scopes,
@@ -94,10 +83,10 @@ const refreshTokenServiceMock = <RefreshTokenService>{
       client,
       user,
     };
-  },
-  findRefreshToken: async (token: string): Promise<Optional<RefreshTokenEntity>> => {
+  }),
+  findRefreshToken: jest.fn(async (token) => {
     return refreshTokens.find((refreshToken) => refreshToken.token === token);
-  },
+  }),
 };
 
 const grantType = new RefreshTokenGrantType(accessTokenServiceMock, refreshTokenServiceMock);
@@ -122,45 +111,46 @@ describe('Refresh Token Grant Type', () => {
   });
 
   describe('getRefreshToken()', () => {
-    it('should reject when a Refresh Token is not found.', () => {
+    it('should reject when a Refresh Token is not found.', async () => {
       // @ts-expect-error Testing a private method.
-      expect(() => grantType.getRefreshToken('unknown')).rejects.toThrow(InvalidGrantException);
+      await expect(() => grantType.getRefreshToken('unknown')).rejects.toThrow(InvalidGrantException);
     });
 
-    it('should return a Refresh Token.', () => {
+    it('should return a Refresh Token.', async () => {
       // @ts-expect-error Testing a private method.
-      expect(grantType.getRefreshToken('refresh_token_1')).resolves.toMatchObject(refreshTokens[0]);
+      await expect(grantType.getRefreshToken('refresh_token_1')).resolves.toMatchObject(refreshTokens[0]);
     });
   });
 
   describe('checkRefreshToken()', () => {
+    let invalidRefreshToken: RefreshTokenEntity;
+
+    beforeEach(() => {
+      invalidRefreshToken = Object.assign({}, refreshTokens[0]);
+    });
+
     it('should reject a mismatching Client Identifier.', () => {
       // @ts-expect-error Testing a private method.
       expect(() => grantType.checkRefreshToken(refreshTokens[1], clients[0])).toThrow(InvalidGrantException);
     });
 
     it('should reject an expired Refresh Token.', () => {
-      const originalExpiresAt = refreshTokens[0].expiresAt;
-      Reflect.set(refreshTokens[0], 'expiresAt', new Date(Date.now() - 3600000));
+      Reflect.set(invalidRefreshToken, 'expiresAt', new Date(Date.now() - 3600000));
 
       // @ts-expect-error Testing a private method.
-      expect(() => grantType.checkRefreshToken(refreshTokens[0], clients[0])).toThrow(InvalidGrantException);
-
-      Reflect.set(refreshTokens[0], 'expiresAt', originalExpiresAt);
+      expect(() => grantType.checkRefreshToken(invalidRefreshToken, clients[0])).toThrow(InvalidGrantException);
     });
 
     it('should reject a revoked Refresh Token.', () => {
-      Reflect.set(refreshTokens[0], 'isRevoked', true);
+      Reflect.set(invalidRefreshToken, 'isRevoked', true);
 
       // @ts-expect-error Testing a private method.
-      expect(() => grantType.checkRefreshToken(refreshTokens[0], clients[0])).toThrow(InvalidGrantException);
-
-      Reflect.set(refreshTokens[0], 'isRevoked', false);
+      expect(() => grantType.checkRefreshToken(invalidRefreshToken, clients[0])).toThrow(InvalidGrantException);
     });
 
     it('should not reject when the Refresh Token is valid.', () => {
       // @ts-expect-error Testing a private method.
-      expect(() => grantType.checkRefreshToken(refreshTokens[0], clients[0])).not.toThrow();
+      expect(() => grantType.checkRefreshToken(invalidRefreshToken, clients[0])).not.toThrow();
     });
   });
 
@@ -182,15 +172,16 @@ describe('Refresh Token Grant Type', () => {
   });
 
   describe('createTokenResponse()', () => {
-    it('should create an Access Token Response with the same Refresh Token and unmodified scopes.', () => {
-      const request = new Request({
-        body: { refresh_token: 'refresh_token_2' },
-        headers: {},
-        method: 'post',
-        query: {},
-      });
+    const request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
 
-      expect(grantType.createTokenResponse(request, clients[1])).resolves.toMatchObject<AccessTokenResponse>({
+    beforeEach(() => {
+      Reflect.set(request, 'body', {});
+    });
+
+    it('should create an Access Token Response with the same Refresh Token and unmodified scopes.', async () => {
+      request.body.refresh_token = 'refresh_token_2';
+
+      await expect(grantType.createTokenResponse(request, clients[1])).resolves.toMatchObject<AccessTokenResponse>({
         access_token: expect.any(String),
         token_type: 'Bearer',
         expires_in: expect.any(Number),
@@ -199,15 +190,10 @@ describe('Refresh Token Grant Type', () => {
       });
     });
 
-    it('should create an Access Token Response with the same Refresh Token and a subset of its scopes.', () => {
-      const request = new Request({
-        body: { refresh_token: 'refresh_token_1', scope: 'baz bar' },
-        headers: {},
-        method: 'post',
-        query: {},
-      });
+    it('should create an Access Token Response with the same Refresh Token and a subset of its scopes.', async () => {
+      Object.assign(request.body, { refresh_token: 'refresh_token_1', scope: 'baz bar' });
 
-      expect(grantType.createTokenResponse(request, clients[0])).resolves.toMatchObject<AccessTokenResponse>({
+      await expect(grantType.createTokenResponse(request, clients[0])).resolves.toMatchObject<AccessTokenResponse>({
         access_token: expect.any(String),
         token_type: 'Bearer',
         expires_in: expect.any(Number),

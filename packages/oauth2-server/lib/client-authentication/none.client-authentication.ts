@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@guarani/ioc';
+
 import { ClientEntity } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { Request } from '../http/request';
@@ -14,11 +15,6 @@ interface ClientCredentials {
    * Client Identifier.
    */
   readonly client_id: string;
-
-  /**
-   * Client Secret.
-   */
-  readonly client_secret: undefined;
 }
 
 @Injectable()

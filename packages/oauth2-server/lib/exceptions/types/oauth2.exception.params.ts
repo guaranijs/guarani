@@ -1,6 +1,6 @@
 import { Optional } from '@guarani/types';
 
-import { SupportedOAuth2ErrorCode } from './types/supported-oauth2-error-code';
+import { SupportedOAuth2ErrorCode } from './supported-oauth2-error-code';
 
 /**
  * Parameters of the OAuth 2.0 Exception.

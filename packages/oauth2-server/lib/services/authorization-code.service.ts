@@ -1,4 +1,5 @@
 import { Optional } from '@guarani/types';
+
 import { AuthorizationCodeEntity } from '../entities/authorization-code.entity';
 import { ClientEntity } from '../entities/client.entity';
 import { UserEntity } from '../entities/user.entity';

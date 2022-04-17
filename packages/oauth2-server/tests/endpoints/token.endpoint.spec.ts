@@ -7,7 +7,7 @@ import { SupportedEndpoint } from '../../lib/endpoints/types/supported-endpoint'
 import { ClientEntity } from '../../lib/entities/client.entity';
 import { InvalidClientException } from '../../lib/exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
-import { OAuth2ExceptionParams } from '../../lib/exceptions/oauth2.exception.params';
+import { OAuth2ExceptionParams } from '../../lib/exceptions/types/oauth2.exception.params';
 import { UnauthorizedClientException } from '../../lib/exceptions/unauthorized-client.exception';
 import { UnsupportedGrantTypeException } from '../../lib/exceptions/unsupported-grant-type.exception';
 import { GrantType } from '../../lib/grant-types/grant-type';

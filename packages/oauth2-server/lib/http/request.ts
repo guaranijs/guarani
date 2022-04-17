@@ -1,8 +1,8 @@
 import { Dict, Optional } from '@guarani/types';
 
 import { IncomingHttpHeaders } from 'http';
-import { UserEntity } from '../entities/user.entity';
 
+import { UserEntity } from '../entities/user.entity';
 import { RequestParams } from './request.params';
 import { SupportedHttpMethod } from './types/supported-http-method';
 

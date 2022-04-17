@@ -1,4 +1,5 @@
 import { Optional } from '@guarani/types';
+
 import { TokenParameters } from './token.parameters';
 
 /**

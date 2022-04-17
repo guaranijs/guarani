@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@guarani/ioc';
 import { Optional } from '@guarani/types';
+
 import { ClientEntity } from '../entities/client.entity';
 import { RefreshTokenEntity } from '../entities/refresh-token.entity';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
@@ -127,7 +128,7 @@ export class RefreshTokenGrantType implements GrantType {
    * @param scope Subset of scopes requested by the Client.
    * @returns Scopes of the new Access Token.
    */
-  private getScopes(refreshToken: RefreshTokenEntity, scope: Optional<string>): string[] {
+  private getScopes(refreshToken: RefreshTokenEntity, scope?: Optional<string>): string[] {
     if (scope === undefined) {
       return refreshToken.scopes;
     }

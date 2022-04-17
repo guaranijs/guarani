@@ -1,9 +1,9 @@
 import { removeNullishValues } from '@guarani/objects';
-import { Dict } from '@guarani/types';
+import { Dict, Optional } from '@guarani/types';
 
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 
-import { OAuth2ExceptionParams } from './oauth2.exception.params';
+import { OAuth2ExceptionParams } from './types/oauth2.exception.params';
 import { SupportedOAuth2ErrorCode } from './types/supported-oauth2-error-code';
 
 /**
@@ -35,7 +35,7 @@ export abstract class OAuth2Exception extends Error {
    *
    * @param params Parameters of the OAuth 2.0 Exception.
    */
-  public constructor(params: Dict = {}) {
+  public constructor(params: Optional<Dict> = {}) {
     super();
 
     this.message = this.getErrorMessage(params);

@@ -1,4 +1,5 @@
 import { Optional } from '@guarani/types';
+
 import { UserEntity } from '../entities/user.entity';
 
 /**

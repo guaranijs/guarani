@@ -6,9 +6,9 @@ import { InvalidGrantException } from '../lib/exceptions/invalid-grant.exception
 import { InvalidRequestException } from '../lib/exceptions/invalid-request.exception';
 import { InvalidScopeException } from '../lib/exceptions/invalid-scope.exception';
 import { OAuth2Exception } from '../lib/exceptions/oauth2.exception';
-import { OAuth2ExceptionParams } from '../lib/exceptions/oauth2.exception.params';
 import { ServerErrorException } from '../lib/exceptions/server-error.exception';
 import { TemporarilyUnavailableException } from '../lib/exceptions/temporarily-unavailable.exception';
+import { OAuth2ExceptionParams } from '../lib/exceptions/types/oauth2.exception.params';
 import { SupportedOAuth2ErrorCode } from '../lib/exceptions/types/supported-oauth2-error-code';
 import { UnauthorizedClientException } from '../lib/exceptions/unauthorized-client.exception';
 import { UnsupportedGrantTypeException } from '../lib/exceptions/unsupported-grant-type.exception';

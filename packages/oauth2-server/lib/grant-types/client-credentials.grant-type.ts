@@ -9,6 +9,16 @@ import { GrantType } from './grant-type';
 import { ClientCredentialsParameters } from './types/client-credentials.parameters';
 import { SupportedGrantType } from './types/supported-grant-type';
 
+/**
+ * Implementation of the Client Credentials Grant Type.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-4.4
+ *
+ * In this Grant Type the Client exchanges its Credentials for an Access Token.
+ *
+ * At the most basic level, authenticating with the Token Endpoint is sufficient for the issuance of an Access Token.
+ * A Refresh Token is **NOT** issued.
+ */
 @Injectable()
 export class ClientCredentialsGrantType implements GrantType {
   /**
@@ -32,6 +42,12 @@ export class ClientCredentialsGrantType implements GrantType {
 
   /**
    * Creates the Access Token Response with the Access Token issued to the Client.
+   *
+   * In this flow the Authorization Server checks the Credentials of the Client and, if valid, issues an Access Token.
+   * A Refresh Token is **NOT** issued.
+   *
+   * Since the Client asks for an Access Token on behalf of itself, it is **RECOMMENDED**
+   * for the Access Token to have a small lifetime.
    *
    * @param request HTTP Request.
    * @param client OAuth 2.0 Client of the Request.

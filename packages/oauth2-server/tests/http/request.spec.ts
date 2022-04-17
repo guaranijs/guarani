@@ -1,5 +1,5 @@
 import { Request } from '../../lib/http/request';
-import { RequestParams } from '../../lib/http/request.params';
+import { RequestParams } from '../../lib/http/types/request.params';
 
 describe('Request', () => {
   it.each(['put', 'patch', 'delete'])('should reject an unsupported HTTP Method.', (method) => {

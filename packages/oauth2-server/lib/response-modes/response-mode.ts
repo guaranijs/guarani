@@ -4,8 +4,9 @@ import { Response } from '../http/response';
 import { SupportedResponseMode } from './types/supported-response-mode';
 
 /**
- * Interface with the Parameters of a **Response Mode** defined by
- * {@link https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html#ResponseModes OAuth 2.0 Multiple Response Type Encoding Practices}.
+ * Interface with the Parameters of a **Response Mode**.
+ *
+ * @see https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html#ResponseModes
  */
 export interface ResponseMode {
   /**

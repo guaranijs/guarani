@@ -67,6 +67,21 @@ export class CodeResponseType implements ResponseType {
   /**
    * Creates the Authorization Response with the Authorization Grant used by the Client on behalf of the End User.
    *
+   * In this part of the Authorization process the Authorization Server checks the scopes requested by the Client and,
+   * if authorized by the End User, issues an Authorization Code as a temporary Authorization Grant to the Client.
+   *
+   * The format of the Authorization Response is exemplified as follows:
+   *
+   * ```json
+   *   {
+   *     "code": "XUFJGWdzVCx8K153POB1XasJB-gUjeAj",
+   *     "state": "VGLgcR2TLMhguh7t"
+   *   }
+   * ```
+   *
+   * Both the Code Challenge and the PKCE Method used by the Client to generate the PKCE Code Challenge are registered
+   * at the application's storage together with the issued Authorization Code for verification at the Token Endpoint.
+   *
    * @param request HTTP Request.
    * @param client OAuth 2.0 Client of the Request.
    * @param user End User represented by the Client.

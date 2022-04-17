@@ -8,8 +8,9 @@ import { ResponseMode } from './response-mode';
 import { SupportedResponseMode } from './types/supported-response-mode';
 
 /**
- * Implementation of the **Fragment Response Mode** as defined by
- * {@link https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html#ResponseModes OAuth 2.0 Multiple Response Type Encoding Practices}.
+ * Implementation of the **Fragment Response Mode**.
+ *
+ * @see https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html#ResponseModes
  */
 @Injectable()
 export class FragmentResponseMode implements ResponseMode {

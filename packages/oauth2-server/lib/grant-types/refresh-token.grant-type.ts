@@ -14,6 +14,14 @@ import { GrantType } from './grant-type';
 import { RefreshTokenParameters } from './types/refresh-token.parameters';
 import { SupportedGrantType } from './types/supported-grant-type';
 
+/**
+ * Implementation of the Authorization Code Grant Type.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-6
+ *
+ * In this Grant Type the Client requests the Authorization Server for the issuance of a new Access Token
+ * without the need to repeat the User Consent process.
+ */
 @Injectable()
 export class RefreshTokenGrantType implements GrantType {
   /**
@@ -47,6 +55,13 @@ export class RefreshTokenGrantType implements GrantType {
 
   /**
    * Creates the Access Token Response with the Access Token issued to the Client.
+   *
+   * In this flow the Client uses the Refresh Token received by the Authorization Server as an Authorization Grant
+   * to request a new Access Token without the need to trigger a new User Consent process.
+   *
+   * If the Refresh Token presented is valid, the Authorization Server issues a new Access Token.
+   *
+   * If **Refresh Token Rotation** is enabled, it issues a new Refresh Token and revokes the provided Refresh Token.
    *
    * @param request HTTP Request.
    * @param client OAuth 2.0 Client of the Request.

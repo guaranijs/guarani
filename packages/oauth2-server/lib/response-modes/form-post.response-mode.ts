@@ -27,8 +27,9 @@ const templateFn = (redirectUri: string, params: Dict) => `
 `;
 
 /**
- * Implementation of the **Form Post Response Mode** as defined by
- * {@link https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html#FormPostResponseMode OAuth 2.0 Form Post Response Mode}.
+ * Implementation of the **Form Post Response Mode**.
+ *
+ * @see https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html#FormPostResponseMode
  */
 @Injectable()
 export class FormPostResponseMode implements ResponseMode {

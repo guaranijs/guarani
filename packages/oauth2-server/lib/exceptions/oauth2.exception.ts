@@ -7,7 +7,7 @@ import { OAuth2ExceptionParams } from './types/oauth2.exception.params';
 import { SupportedOAuth2ErrorCode } from './types/supported-oauth2-error-code';
 
 /**
- * Errors that can happen during the authorization process.
+ * Sbstract Base class for the errors that may happen during the authorization process.
  */
 export abstract class OAuth2Exception extends Error {
   /**

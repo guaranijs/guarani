@@ -4,8 +4,9 @@ import { PkceMethod } from './pkce-method';
 import { SupportedPkceMethod } from './types/supported-pkce-method';
 
 /**
- * Implementation of the **Plain PKCE Method** as defined by
- * {@link https://www.rfc-editor.org/rfc/rfc7636.html#section-4.2 Proof Key for Code Exchange by OAuth Public Clients}.
+ * Implementation of the **Plain PKCE Method**.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc7636.html#section-4.2
  */
 @Injectable()
 export class PlainPkceMethod implements PkceMethod {

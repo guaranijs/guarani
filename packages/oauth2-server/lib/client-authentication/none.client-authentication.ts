@@ -17,6 +17,25 @@ interface ClientCredentials {
   readonly client_id: string;
 }
 
+/**
+ * Implements the Client Authentication via the Request Body.
+ *
+ * If this workflow is enabled, it will look at the Request Body for a scheme similar to the following:
+ *
+ * ```rst
+ *     client_id=client1
+ * ```
+ *
+ * The Request Body often comes with more information that may pertain to a specific Endpoint or Authorization Grant.
+ * In this case, the Request Body will be similar to the following:
+ *
+ * ```rst
+ *     key1=value1&key2=value2&client_id=client1
+ * ```
+ *
+ * In this workflow, if the Client provides a Secret, it will automatically fail,
+ * since it is intended to be used by Public Clients.
+ */
 @Injectable()
 export class NoneClientAuthentication implements ClientAuthentication {
   /**

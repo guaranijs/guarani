@@ -17,6 +17,15 @@ import { GrantType } from './grant-type';
 import { AuthorizationCodeParameters } from './types/authorization-code.parameters';
 import { SupportedGrantType } from './types/supported-grant-type';
 
+/**
+ * Implementation of the Authorization Code Grant Type.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1
+ *
+ * In this Grant Type the Client obtains an Authorization Grant from the End User and exchanges it for an Access Token.
+ *
+ * This implementation uses PKCE by default, and enforces its use every time.
+ */
 @Injectable()
 export class AuthorizationCodeGrantType implements GrantType {
   /**
@@ -70,6 +79,13 @@ export class AuthorizationCodeGrantType implements GrantType {
 
   /**
    * Creates the Access Token Response with the Access Token issued to the Client.
+   *
+   * In this part of the Authorization process the Authorization Server checks the validity of the Authorization Code
+   * provided by the Client against the Authorization Code metadata saved at the application's storage.
+   *
+   * If the Client presented a valid Authorization Code that was granted to itself, and if it presented the correct PKCE
+   * Code Verifier that matches the Code Challenge presented at the Authorization Endpoint, then the Provider issues
+   * an Access Token and, if allowed to the Client, a Refresh Token.
    *
    * @param request HTTP Request.
    * @param client OAuth 2.0 Client of the Request.

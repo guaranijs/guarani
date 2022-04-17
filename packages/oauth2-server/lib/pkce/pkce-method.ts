@@ -1,8 +1,9 @@
 import { SupportedPkceMethod } from './types/supported-pkce-method';
 
 /**
- * Interface with the Parameters of a **Proof Key for Code Exchange** defined by
- * {@link https://www.rfc-editor.org/rfc/rfc7636.html Proof Key for Code Exchange by OAuth Public Clients}.
+ * Interface with the Parameters of a **Proof Key for Code Exchange**.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc7636.html
  */
 export interface PkceMethod {
   /**

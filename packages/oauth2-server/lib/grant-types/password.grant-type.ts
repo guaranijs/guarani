@@ -14,6 +14,14 @@ import { GrantType } from './grant-type';
 import { PasswordParameters } from './types/password.parameters';
 import { SupportedGrantType } from './types/supported-grant-type';
 
+/**
+ * Implementation of the Resource Owner Password Credentials Grant Type.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-4.3
+ *
+ * In this Grant Type the Client must obtain the **username** and **password** of the End User
+ * and present them as the Authorization Grant to the Authorization Server.
+ */
 @Injectable()
 export class PasswordGrantType implements GrantType {
   /**
@@ -55,6 +63,10 @@ export class PasswordGrantType implements GrantType {
 
   /**
    * Creates the Access Token Response with the Access Token issued to the Client.
+   *
+   * In this flow the Authorization Server checks the **username** and **password** provided by the Client
+   * on behalf of the End User, checks if the credentials are valid, issues an Access Token and,
+   * if allowed to the Client, a Refresh Token.
    *
    * @param request HTTP Request.
    * @param client OAuth 2.0 Client of the Request.

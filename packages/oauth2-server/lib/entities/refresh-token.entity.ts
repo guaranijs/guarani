@@ -4,6 +4,9 @@ import { SupportedGrantType } from '../grant-types/types/supported-grant-type';
 import { ClientEntity } from './client.entity';
 import { UserEntity } from './user.entity';
 
+/**
+ * Representation of the OAuth 2.0 Refresh Token.
+ */
 export interface RefreshTokenEntity extends Dict {
   /**
    * String representation of the Refresh Token.

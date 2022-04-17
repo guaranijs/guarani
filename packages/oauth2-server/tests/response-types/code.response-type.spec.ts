@@ -1,8 +1,5 @@
-import { UUID } from '@guarani/uuid';
-
 import { URL } from 'url';
 
-import { AuthorizationCodeEntity } from '../../lib/entities/authorization-code.entity';
 import { ClientEntity } from '../../lib/entities/client.entity';
 import { UserEntity } from '../../lib/entities/user.entity';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
@@ -10,38 +7,31 @@ import { Request } from '../../lib/http/request';
 import { PkceMethod } from '../../lib/pkce/pkce-method';
 import { SupportedResponseMode } from '../../lib/response-modes/types/supported-response-mode';
 import { CodeResponseType } from '../../lib/response-types/code.response-type';
-import { AuthorizationCodeParameters } from '../../lib/response-types/types/authorization-code.parameters';
 import { AuthorizationCodeResponse } from '../../lib/response-types/types/authorization-code.response';
 import { SupportedResponseType } from '../../lib/response-types/types/supported-response-type';
 import { AuthorizationCodeService } from '../../lib/services/authorization-code.service';
 
-const pkceMethods: PkceMethod[] = [
+const pkceMethods: jest.Mocked<PkceMethod>[] = [
   { name: 'plain', verify: jest.fn() },
   { name: 'S256', verify: jest.fn() },
 ];
 
-const authorizationCodeServiceMock = <AuthorizationCodeService>{
-  createAuthorizationCode: async (
-    params: AuthorizationCodeParameters,
-    scopes: string[],
-    client: ClientEntity,
-    user: UserEntity
-  ): Promise<AuthorizationCodeEntity> => {
-    const expiration = new Date();
-    expiration.setUTCSeconds(expiration.getUTCSeconds() + 300);
-
+const authorizationCodeServiceMock: jest.Mocked<AuthorizationCodeService> = {
+  findAuthorizationCode: jest.fn(),
+  createAuthorizationCode: jest.fn(async (params, scopes, client, user) => {
     return {
-      code: UUID.v4().toString(),
+      code: 'code',
       redirectUri: new URL('https://example.com/callback'),
       scopes,
       codeChallenge: params.code_challenge,
       codeChallengeMethod: params.code_challenge_method,
       isRevoked: false,
-      expiresAt: expiration,
+      expiresAt: new Date(Date.now() + 300000),
       client,
       user,
     };
-  },
+  }),
+  revokeAuthorizationCode: jest.fn(),
 };
 
 const responseType = new CodeResponseType(pkceMethods, authorizationCodeServiceMock);
@@ -77,37 +67,55 @@ describe('Code Response Type', () => {
     });
   });
 
+  describe('checkParameters()', () => {
+    it('should reject not providing a "code_challenge" parameter.', () => {
+      // @ts-expect-error Testing a private method.
+      expect(() => responseType.checkParameters({})).toThrow(InvalidRequestException);
+    });
+
+    it('should reject providing an unsupported "code_challenge_method".', () => {
+      // @ts-expect-error Testing a private method; unsupported pkce method.
+      expect(() => responseType.checkParameters({ code_challenge: '', code_challenge_method: 'unknown' })).toThrow(
+        InvalidRequestException
+      );
+    });
+  });
+
   describe('createAuthorizationResponse()', () => {
-    let request: Request;
+    const request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
 
     beforeEach(() => {
-      request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
+      Reflect.set(request, 'query', {});
     });
 
-    it('should reject not providing a "code_challenge".', () => {
-      expect(responseType.createAuthorizationResponse(request, client, user)).rejects.toThrow(InvalidRequestException);
+    it('should reject not providing a "code_challenge".', async () => {
+      await expect(responseType.createAuthorizationResponse(request, client, user)).rejects.toThrow(
+        InvalidRequestException
+      );
     });
 
-    it('should reject not providing a supported "code_challenge_method".', () => {
-      Reflect.set(request, 'query', { code_challenge_method: 'unknown' });
-      expect(responseType.createAuthorizationResponse(request, client, user)).rejects.toThrow(InvalidRequestException);
+    it('should reject not providing a supported "code_challenge_method".', async () => {
+      request.query.code_challenge_method = 'unknown';
+      await expect(responseType.createAuthorizationResponse(request, client, user)).rejects.toThrow(
+        InvalidRequestException
+      );
     });
 
-    it('should create an Authorization Code Response.', () => {
-      Reflect.set(request, 'query', {
+    it('should create an Authorization Code Response.', async () => {
+      Object.assign(request.query, {
         redirect_uri: 'https://example.com/callback',
         scope: 'foo bar',
         code_challenge: 'challenge',
         code_challenge_method: 'plain',
       });
 
-      expect(
+      await expect(
         responseType.createAuthorizationResponse(request, client, user)
-      ).resolves.toMatchObject<AuthorizationCodeResponse>({ code: expect.any(String) });
+      ).resolves.toMatchObject<AuthorizationCodeResponse>({ code: 'code' });
     });
 
-    it('should create an Authorization Code Response and pass the State unmodified.', () => {
-      Reflect.set(request, 'query', {
+    it('should create an Authorization Code Response and pass the State unmodified.', async () => {
+      Object.assign(request.query, {
         redirect_uri: 'https://example.com/callback',
         scope: 'foo bar',
         code_challenge: 'challenge',
@@ -115,9 +123,9 @@ describe('Code Response Type', () => {
         state: 'client-state',
       });
 
-      expect(
+      await expect(
         responseType.createAuthorizationResponse(request, client, user)
-      ).resolves.toMatchObject<AuthorizationCodeResponse>({ code: expect.any(String), state: 'client-state' });
+      ).resolves.toMatchObject<AuthorizationCodeResponse>({ code: 'code', state: 'client-state' });
     });
   });
 });

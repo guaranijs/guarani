@@ -1,12 +1,9 @@
-import { secretToken } from '@guarani/utils';
-
 import { URL } from 'url';
 
 import { AccessTokenEntity } from '../../lib/entities/access-token.entity';
 import { ClientEntity } from '../../lib/entities/client.entity';
 import { UserEntity } from '../../lib/entities/user.entity';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
-import { SupportedGrantType } from '../../lib/grant-types/types/supported-grant-type';
 import { Request } from '../../lib/http/request';
 import { SupportedResponseMode } from '../../lib/response-modes/types/supported-response-mode';
 import { TokenResponseType } from '../../lib/response-types/token.response-type';
@@ -14,26 +11,18 @@ import { SupportedResponseType } from '../../lib/response-types/types/supported-
 import { AccessTokenService } from '../../lib/services/access-token.service';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
-const accessTokenServiceMock = <AccessTokenService>{
-  createAccessToken: async (
-    _grant: SupportedGrantType,
-    scopes: string[],
-    client: ClientEntity,
-    user: UserEntity
-  ): Promise<AccessTokenEntity> => {
-    const expiration = new Date();
-    expiration.setUTCSeconds(expiration.getUTCSeconds() + 300);
-
+const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
+  createAccessToken: jest.fn(async (_grant, scopes, client, user): Promise<AccessTokenEntity> => {
     return {
-      token: await secretToken(),
+      token: 'access_token',
       tokenType: 'Bearer',
       scopes,
       isRevoked: false,
-      expiresAt: expiration,
+      expiresAt: new Date(Date.now() + 300000),
       client,
-      user,
+      user: user!,
     };
-  },
+  }),
 };
 
 const responseType = new TokenResponseType(accessTokenServiceMock);
@@ -62,21 +51,31 @@ describe('Token Response Type', () => {
     });
   });
 
+  describe('checkParameters()', () => {
+    it('should reject using "query" as the "response_mode".', () => {
+      // @ts-expect-error Testing a private method.
+      expect(() => responseType.checkParameters({ response_mode: 'query' })).toThrow(InvalidRequestException);
+    });
+  });
+
   describe('createAuthorizationResponse()', () => {
-    let request: Request;
+    const request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
 
     beforeEach(() => {
-      request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
+      Reflect.set(request, 'query', {});
     });
 
-    it('should reject using "query" as the "response_mode".', () => {
-      Reflect.set(request, 'query', { response_mode: 'query' });
-      expect(responseType.createAuthorizationResponse(request, client, user)).rejects.toThrow(InvalidRequestException);
+    it('should reject using "query" as the "response_mode".', async () => {
+      request.query.response_mode = 'query';
+      await expect(responseType.createAuthorizationResponse(request, client, user)).rejects.toThrow(
+        InvalidRequestException
+      );
     });
 
-    it('should create an Access Token Response.', () => {
-      Reflect.set(request, 'query', { scope: 'foo bar' });
-      expect(
+    it('should create an Access Token Response.', async () => {
+      request.query.scope = 'foo bar';
+
+      await expect(
         responseType.createAuthorizationResponse(request, client, user)
       ).resolves.toMatchObject<AccessTokenResponse>({
         access_token: expect.any(String),
@@ -86,9 +85,10 @@ describe('Token Response Type', () => {
       });
     });
 
-    it('should create an Access Token Response and pass the State unmodified.', () => {
-      Reflect.set(request, 'query', { scope: 'foo bar', state: 'client-state' });
-      expect(
+    it('should create an Access Token Response and pass the State unmodified.', async () => {
+      Object.assign(request.query, { scope: 'foo bar', state: 'client-state' });
+
+      await expect(
         responseType.createAuthorizationResponse(request, client, user)
       ).resolves.toMatchObject<AccessTokenResponse>({
         access_token: expect.any(String),

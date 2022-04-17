@@ -54,7 +54,6 @@
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "@guarani/types": "^0.7.0",
-    "@guarani/uuid": "^0.7.0"
+    "@guarani/types": "^0.7.0"
   }
 }

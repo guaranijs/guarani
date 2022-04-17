@@ -6,6 +6,7 @@ import { SupportedEndpoint } from '../../lib/endpoints/types/supported-endpoint'
 import { ClientEntity } from '../../lib/entities/client.entity';
 import { InvalidClientException } from '../../lib/exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
+import { GrantType } from '../../lib/grant-types/grant-type';
 import { Request } from '../../lib/http/request';
 import { Response } from '../../lib/http/response';
 import { RevocationEndpointMock } from './mocks/revocation.endpoint.mock';
@@ -20,14 +21,25 @@ const client: ClientEntity = {
   scopes: ['foo', 'bar', 'baz'],
 };
 
+const grantTypes: jest.Mocked<GrantType>[] = [
+  { name: 'authorization_code', createTokenResponse: jest.fn() },
+  { name: 'refresh_token', createTokenResponse: jest.fn() },
+];
+
 const clientAuthenticationMethodsMock: jest.Mocked<ClientAuthentication>[] = [
   { name: 'client_secret_basic', hasBeenRequested: jest.fn(), authenticate: jest.fn() },
   { name: 'client_secret_post', hasBeenRequested: jest.fn(), authenticate: jest.fn() },
 ];
 
-const endpoint = new RevocationEndpointMock(clientAuthenticationMethodsMock);
+const endpoint = new RevocationEndpointMock(grantTypes, clientAuthenticationMethodsMock);
 
 describe('Revocation Endpoint', () => {
+  describe('constructor', () => {
+    it('should reject when the Authorization Server does not support Refresh Tokens.', () => {
+      expect(() => new RevocationEndpointMock([], [])).toThrow(Error);
+    });
+  });
+
   describe('name', () => {
     it('should have "revocation" as its name.', () => {
       expect(endpoint.name).toBe<SupportedEndpoint>('revocation');

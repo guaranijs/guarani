@@ -8,6 +8,7 @@ import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
+import { GrantType } from '../grant-types/grant-type';
 import { Request } from '../http/request';
 import { Response } from '../http/response';
 import { Endpoint } from './endpoint';
@@ -46,9 +47,17 @@ export abstract class RevocationEndpoint implements Endpoint {
   /**
    * Instantiates a new Revocation Endpoint.
    *
+   * @param grantTypes Grant Types registered at the Authorization Server.
    * @param clientAuthenticationMethods Client Authentication Methods registered at the Authorization Server.
    */
-  public constructor(@InjectAll('ClientAuthentication') clientAuthenticationMethods: ClientAuthentication[]) {
+  public constructor(
+    @InjectAll('GrantType') grantTypes: GrantType[],
+    @InjectAll('ClientAuthentication') clientAuthenticationMethods: ClientAuthentication[]
+  ) {
+    if (!grantTypes.find((grantType) => grantType.name === 'refresh_token')) {
+      throw new Error('The Authorization Server does not support Refresh Tokens.');
+    }
+
     this.clientAuthenticationMethods = clientAuthenticationMethods;
   }
 

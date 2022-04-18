@@ -22,7 +22,7 @@ export class Response {
   /**
    * Encoded Body of the Response.
    */
-  public body: any;
+  public body: Buffer = Buffer.alloc(0);
 
   /**
    * Defines the Status Code of the Response.
@@ -62,7 +62,7 @@ export class Response {
    */
   public json(data?: Optional<any>): Response {
     this.setHeader('Content-Type', 'application/json');
-    this.body = data;
+    this.body = Buffer.from(JSON.stringify(data ?? null), 'utf8');
     return this;
   }
 
@@ -84,7 +84,7 @@ export class Response {
    */
   public html(html: string): Response {
     this.setHeader('Content-Type', 'text/html; charset=UTF-8');
-    this.body = html;
+    this.body = Buffer.from(html, 'utf8');
     return this;
   }
 }

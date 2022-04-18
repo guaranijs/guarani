@@ -14,23 +14,23 @@ describe('getAllowedScopes()', () => {
     redirectUris: [new URL('https://example.com/callback')],
   };
 
-  const invalidScopes: string[] = ['qux', 'foo qux'];
+  const invalidClientScopes: string[] = ['qux', 'foo qux'];
 
-  const scopes: [string, string[]][] = [
-    ['foo', ['foo']],
-    ['bar baz', ['bar', 'baz']],
-    ['foo bar baz', ['foo', 'bar', 'baz']],
-    ['foo baz bar', ['foo', 'baz', 'bar']],
-  ];
+  const scopes: string[] = ['foo', 'bar baz', 'foo bar baz', 'foo baz bar'];
 
-  it.each(invalidScopes)(
+  // This is defined at jest.setup.ts
+  it('should reject when requesting an unsupported Scope.', () => {
+    expect(() => getAllowedScopes(client, 'foo unknown qux')).toThrow(InvalidScopeException);
+  });
+
+  it.each(invalidClientScopes)(
     'should reject when a Client requests a Scope it is not allowed to request.',
     (invalidScope) => {
       expect(() => getAllowedScopes(client, invalidScope)).toThrow(InvalidScopeException);
     }
   );
 
-  it.each(scopes)('should return a list of the requested scopes.', (scope, expected) => {
-    expect(getAllowedScopes(client, scope)).toEqual(expect.arrayContaining(expected));
+  it.each(scopes)('should return a list of the requested scopes.', (scope) => {
+    expect(getAllowedScopes(client, scope)).toEqual(expect.arrayContaining(scope.split(' ')));
   });
 });

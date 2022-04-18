@@ -1,3 +1,4 @@
+import { getContainer } from '@guarani/ioc';
 import { Constructor, Dict } from '@guarani/types';
 
 import { URL } from 'url';
@@ -58,23 +59,37 @@ describe('Authorization Endpoint', () => {
     });
   });
 
-  describe('handleFatalAuthorizationError()', () => {
-    const spy = jest
-      .spyOn<AuthorizationEndpoint, any>(endpoint, 'errorUrl', 'get')
-      .mockReturnValue('https://server.example.com/oauth/error');
+  describe('errorUrl', () => {
+    it('should reject not registering the "errorUrl" metadata.', () => {
+      // @ts-expect-error Testing a protected attribute.
+      expect(() => endpoint.errorUrl).toThrow(TypeError);
+    });
 
+    it('should have "https://server.example.com/oauth2/error" as its value.', () => {
+      getContainer('oauth2').bindToken<string>('ErrorUrl').toValue('https://server.example.com/oauth2/error');
+
+      // @ts-expect-error Testing a protected attribute.
+      expect(endpoint.errorUrl).toBe('https://server.example.com/oauth2/error');
+
+      getContainer('oauth2').delete<string>('ErrorUrl');
+    });
+  });
+
+  describe('handleFatalAuthorizationError()', () => {
     it('should return the parameters of the OAuth 2.0 Error in the data of the Response.', () => {
+      getContainer('oauth2').bindToken<string>('ErrorUrl').toValue('https://server.example.com/oauth2/error');
+
       expect(
         endpoint.handleFatalAuthorizationError(new InvalidRequestException({ error_description: 'description' }))
       ).toMatchObject<Partial<Response>>({
         headers: {
-          Location: 'https://server.example.com/oauth/error?error=invalid_request&error_description=description',
+          Location: 'https://server.example.com/oauth2/error?error=invalid_request&error_description=description',
         },
         statusCode: 303,
       });
-    });
 
-    spy.mockRestore();
+      getContainer('oauth2').delete<string>('ErrorUrl');
+    });
   });
 
   describe('checkParameters()', () => {

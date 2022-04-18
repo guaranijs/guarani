@@ -105,9 +105,10 @@ export class AuthorizationCodeGrantType implements GrantType {
 
       const { scopes, user } = authorizationCode;
 
-      const refreshToken = client.grantTypes.includes('refresh_token')
-        ? await this.refreshTokenService.createRefreshToken(this.name, scopes, client, user)
-        : undefined;
+      const refreshToken =
+        client.grantTypes.includes('refresh_token') && this.refreshTokenService !== undefined
+          ? await this.refreshTokenService.createRefreshToken(this.name, scopes, client, user)
+          : undefined;
 
       const accessToken = await this.accessTokenService.createAccessToken(
         this.name,

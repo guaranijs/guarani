@@ -1,4 +1,4 @@
-import { Inject, Injectable, InjectAll } from '@guarani/ioc';
+import { getContainer, Inject, Injectable, InjectAll } from '@guarani/ioc';
 
 import { URL } from 'url';
 
@@ -72,7 +72,11 @@ export class AuthorizationEndpoint implements Endpoint {
    * Error Endpoint of the Authorization Server.
    */
   private get errorUrl(): string {
-    return 'https://server.example.com/oauth/error';
+    try {
+      return getContainer('oauth2').resolve<string>('ErrorUrl');
+    } catch {
+      throw new TypeError('Missing required metadata "errorUrl" for the Authorization Endpoint.');
+    }
   }
 
   /**

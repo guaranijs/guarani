@@ -114,7 +114,10 @@ describe('Revocation Endpoint', () => {
 
     it('should return an error response when not providing a "token" parameter.', async () => {
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        body: { error: 'invalid_request', error_description: 'Invalid parameter "token".' },
+        body: Buffer.from(
+          JSON.stringify({ error: 'invalid_request', error_description: 'Invalid parameter "token".' }),
+          'utf8'
+        ),
         headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 400,
       });
@@ -124,7 +127,10 @@ describe('Revocation Endpoint', () => {
       Object.assign(request.body, { token: 'token', token_type_hint: 'unknown' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        body: { error: 'invalid_request', error_description: 'Invalid parameter "token_type_hint".' },
+        body: Buffer.from(
+          JSON.stringify({ error: 'invalid_request', error_description: 'Invalid parameter "token_type_hint".' }),
+          'utf8'
+        ),
         headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 400,
       });
@@ -139,7 +145,10 @@ describe('Revocation Endpoint', () => {
       request.body.token = 'token';
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        body: { error: 'invalid_client', error_description: 'Invalid Credentials.' },
+        body: Buffer.from(
+          JSON.stringify({ error: 'invalid_client', error_description: 'Invalid Credentials.' }),
+          'utf8'
+        ),
         headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 401,
       });

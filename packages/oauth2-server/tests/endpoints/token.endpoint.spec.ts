@@ -148,10 +148,13 @@ describe('Token Endpoint', () => {
       request.body.grant_type = 'unknown';
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        body: <OAuth2ExceptionParams>{
-          error: 'unsupported_grant_type',
-          error_description: 'Unsupported grant_type "unknown".',
-        },
+        body: Buffer.from(
+          JSON.stringify(<OAuth2ExceptionParams>{
+            error: 'unsupported_grant_type',
+            error_description: 'Unsupported grant_type "unknown".',
+          }),
+          'utf8'
+        ),
         headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 400,
       });
@@ -170,7 +173,10 @@ describe('Token Endpoint', () => {
         );
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        body: <OAuth2ExceptionParams>{ error: 'invalid_client', error_description: 'Invalid Credentials.' },
+        body: Buffer.from(
+          JSON.stringify(<OAuth2ExceptionParams>{ error: 'invalid_client', error_description: 'Invalid Credentials.' }),
+          'utf8'
+        ),
         headers: { 'WWW-Authenticate': 'Basic', 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 401,
       });
@@ -184,10 +190,13 @@ describe('Token Endpoint', () => {
       const spy = jest.spyOn<TokenEndpoint, any>(endpoint, 'authenticateClient').mockResolvedValue(client);
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        body: <OAuth2ExceptionParams>{
-          error: 'unauthorized_client',
-          error_description: 'This Client is not allowed to request the grant_type "client_credentials".',
-        },
+        body: Buffer.from(
+          JSON.stringify(<OAuth2ExceptionParams>{
+            error: 'unauthorized_client',
+            error_description: 'This Client is not allowed to request the grant_type "client_credentials".',
+          }),
+          'utf8'
+        ),
         headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 400,
       });
@@ -202,13 +211,16 @@ describe('Token Endpoint', () => {
       const spyAuth = jest.spyOn<TokenEndpoint, any>(endpoint, 'authenticateClient').mockResolvedValue(client);
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        body: <AccessTokenResponse>{
-          access_token: 'access_token',
-          token_type: 'Bearer',
-          expires_in: 3600,
-          scope: 'bar foo',
-          refresh_token: 'refresh_token',
-        },
+        body: Buffer.from(
+          JSON.stringify(<AccessTokenResponse>{
+            access_token: 'access_token',
+            token_type: 'Bearer',
+            expires_in: 3600,
+            scope: 'bar foo',
+            refresh_token: 'refresh_token',
+          }),
+          'utf8'
+        ),
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', Pragma: 'no-cache' },
         statusCode: 200,
       });

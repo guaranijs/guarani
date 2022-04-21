@@ -1,3 +1,4 @@
+import { Response } from '../../lib/http/response';
 import { FormPostResponseMode } from '../../lib/response-modes/form-post.response-mode';
 import { SupportedResponseMode } from '../../lib/response-modes/types/supported-response-mode';
 
@@ -26,9 +27,9 @@ describe('Form Post Response Mode', () => {
   it('should create a HTTP Response with a populated HTML Body.', () => {
     expect(
       new FormPostResponseMode().createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar' })
-    ).toMatchObject({
+    ).toMatchObject<Partial<Response>>({
       statusCode: 200,
-      body,
+      body: Buffer.from(body, 'utf8'),
     });
   });
 });

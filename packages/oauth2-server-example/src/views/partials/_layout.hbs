@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>{{ title }} - Guarani</title>
+
+  <link href="/static/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/static/css/bootstrap-icons.min.css" rel="stylesheet" />
+  {{!--
+  <link href="/static/css/base.css" rel="stylesheet" /> --}}
+  {{#block "custom-css"}}{{/block}}
+</head>
+
+<body>
+  <header>
+    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom">
+      <div class="container">
+        <a class="navbar-brand" href="/">Guarani</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" id="navbarSupportedContent">
+          <ul class="navbar-nav flex-grow-1">
+            <li class="nav-item">
+              <a class="nav-link" href="/">Home</a>
+            </li>
+          </ul>
+          {{> _login}}
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  {{#block "body"}}{{/block}}
+
+  <script src="/static/js/bootstrap.bundle.min.js"></script>
+  {{#block "custom-js"}}{{/block}}
+</body>
+
+</html>

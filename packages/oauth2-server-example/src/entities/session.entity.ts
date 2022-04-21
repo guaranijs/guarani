@@ -1,0 +1,15 @@
+import { ISession } from 'connect-typeorm';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
+
+@Entity({ name: 'sessions' })
+export class SessionEntity implements ISession {
+  @PrimaryColumn({ type: 'varchar', length: 255 })
+  public readonly id!: string;
+
+  @Index()
+  @Column({ name: 'expired_at', type: 'bigint' })
+  public expiredAt: number = Date.now();
+
+  @Column({ name: 'text' })
+  public json!: string;
+}

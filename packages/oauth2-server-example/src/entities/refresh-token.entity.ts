@@ -1,13 +1,13 @@
-import { RefreshTokenEntity as BaseRefreshTokenEntity, SupportedGrantType } from '@guarani/oauth2-server';
+import { RefreshTokenEntity, SupportedGrantType } from '@guarani/oauth2-server';
 
 import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
-import { ClientEntity } from './client.entity';
-import { UserEntity } from './user.entity';
+import { Client } from './client.entity';
+import { User } from './user.entity';
 
 @Entity({ name: 'refresh_tokens' })
-export class RefreshTokenEntity extends BaseEntity implements BaseRefreshTokenEntity {
-  @PrimaryColumn({ name: 'refresh_token', type: 'varchar', length: 16 })
+export class RefreshToken extends BaseEntity implements RefreshTokenEntity {
+  @PrimaryColumn({ name: 'token', type: 'varchar', length: 16 })
   public readonly token!: string;
 
   @Column({
@@ -29,17 +29,17 @@ export class RefreshTokenEntity extends BaseEntity implements BaseRefreshTokenEn
   @Column({ name: 'expires_at', type: 'datetime' })
   public readonly expiresAt!: Date;
 
-  @ManyToOne(() => ClientEntity, {
+  @ManyToOne(() => Client, {
     cascade: true,
     eager: true,
     nullable: false,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn({ name: 'client_id', referencedColumnName: 'client_id' })
-  public readonly client!: ClientEntity;
+  @JoinColumn({ name: 'client_id', referencedColumnName: 'id' })
+  public readonly client!: Client;
 
-  @ManyToOne(() => UserEntity, {
+  @ManyToOne(() => User, {
     cascade: true,
     eager: true,
     nullable: false,
@@ -47,5 +47,5 @@ export class RefreshTokenEntity extends BaseEntity implements BaseRefreshTokenEn
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  public readonly user!: UserEntity;
+  public readonly user!: User;
 }

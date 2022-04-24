@@ -11,7 +11,7 @@ import serveFavicon from 'serve-favicon';
 import { passportConfig } from './config/passport.config';
 
 import { typeormConfig } from './config/typeorm.config';
-import { SessionEntity } from './entities/session.entity';
+import { Session } from './entities/session.entity';
 import { router } from './router';
 
 const secret = 'horGHmztKplp50r7Z9t2ydxnvWgHoJjE';
@@ -37,7 +37,7 @@ async function main(): Promise<void> {
       secret,
       resave: false,
       saveUninitialized: false,
-      store: new TypeormStore({ cleanupLimit: 2, ttl: 43200 }).connect(dataSource.getRepository(SessionEntity)),
+      store: new TypeormStore({ cleanupLimit: 2, ttl: 43200 }).connect(dataSource.getRepository(Session)),
     })
   );
 

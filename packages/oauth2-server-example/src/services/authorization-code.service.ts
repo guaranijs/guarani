@@ -7,20 +7,20 @@ import { Optional } from '@guarani/types';
 import { randomUUID } from 'crypto';
 import { URL } from 'url';
 
-import { AuthorizationCodeEntity } from '../entities/authorization-code.entity';
-import { ClientEntity } from '../entities/client.entity';
-import { UserEntity } from '../entities/user.entity';
+import { AuthorizationCode } from '../entities/authorization-code.entity';
+import { Client } from '../entities/client.entity';
+import { User } from '../entities/user.entity';
 
 export class AuthorizationCodeService implements BaseAuthorizationCodeService {
   public async createAuthorizationCode(
     params: AuthorizationCodeParameters,
     scopes: string[],
-    client: ClientEntity,
-    user: UserEntity
-  ): Promise<AuthorizationCodeEntity> {
-    const authorizationCode = new AuthorizationCodeEntity();
+    client: Client,
+    user: User
+  ): Promise<AuthorizationCode> {
+    const authorizationCode = new AuthorizationCode();
 
-    Object.assign<AuthorizationCodeEntity, Partial<AuthorizationCodeEntity>>(authorizationCode, {
+    Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(authorizationCode, {
       code: randomUUID(),
       redirectUri: new URL(params.redirect_uri),
       scopes,
@@ -36,11 +36,11 @@ export class AuthorizationCodeService implements BaseAuthorizationCodeService {
     return authorizationCode;
   }
 
-  public async findAuthorizationCode(code: string): Promise<Optional<AuthorizationCodeEntity>> {
-    return (await AuthorizationCodeEntity.findOneBy({ code })) ?? undefined;
+  public async findAuthorizationCode(code: string): Promise<Optional<AuthorizationCode>> {
+    return (await AuthorizationCode.findOneBy({ code })) ?? undefined;
   }
 
-  public async revokeAuthorizationCode(authorizationCode: AuthorizationCodeEntity): Promise<void> {
+  public async revokeAuthorizationCode(authorizationCode: AuthorizationCode): Promise<void> {
     authorizationCode.isRevoked = true;
     await authorizationCode.save();
   }

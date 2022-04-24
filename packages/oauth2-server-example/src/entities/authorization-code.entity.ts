@@ -1,14 +1,14 @@
-import { AuthorizationCodeEntity as BaseAuthorizationCodeEntity, SupportedPkceMethod } from '@guarani/oauth2-server';
+import { AuthorizationCodeEntity, SupportedPkceMethod } from '@guarani/oauth2-server';
 import { Optional } from '@guarani/types';
 
 import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { URL } from 'url';
 
-import { ClientEntity } from './client.entity';
-import { UserEntity } from './user.entity';
+import { Client } from './client.entity';
+import { User } from './user.entity';
 
 @Entity({ name: 'authorization_codes' })
-export class AuthorizationCodeEntity extends BaseEntity implements BaseAuthorizationCodeEntity {
+export class AuthorizationCode extends BaseEntity implements AuthorizationCodeEntity {
   @PrimaryGeneratedColumn('uuid', { name: 'code' })
   public readonly code!: string;
 
@@ -41,17 +41,17 @@ export class AuthorizationCodeEntity extends BaseEntity implements BaseAuthoriza
   @Column({ name: 'expires_at', type: 'datetime' })
   public readonly expiresAt!: Date;
 
-  @ManyToOne(() => ClientEntity, {
+  @ManyToOne(() => Client, {
     cascade: true,
     eager: true,
     nullable: false,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn({ name: 'client_id', referencedColumnName: 'client_id' })
-  public readonly client!: ClientEntity;
+  @JoinColumn({ name: 'client_id', referencedColumnName: 'id' })
+  public readonly client!: Client;
 
-  @ManyToOne(() => UserEntity, {
+  @ManyToOne(() => User, {
     cascade: true,
     eager: true,
     nullable: false,
@@ -59,5 +59,5 @@ export class AuthorizationCodeEntity extends BaseEntity implements BaseAuthoriza
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  public readonly user!: UserEntity;
+  public readonly user!: User;
 }

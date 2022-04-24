@@ -2,7 +2,7 @@ import { ISession } from 'connect-typeorm';
 import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
 @Entity({ name: 'sessions' })
-export class SessionEntity implements ISession {
+export class Session implements ISession {
   @PrimaryColumn({ type: 'varchar', length: 255 })
   public readonly id!: string;
 

@@ -1,5 +1,5 @@
 import {
-  ClientEntity as BaseClientEntity,
+  ClientEntity,
   SupportedClientAuthentication,
   SupportedGrantType,
   SupportedResponseType,
@@ -10,11 +10,11 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { URL } from 'url';
 
 @Entity({ name: 'clients' })
-export class ClientEntity extends BaseEntity implements BaseClientEntity {
-  @PrimaryGeneratedColumn('uuid', { name: 'client_id' })
+export class Client extends BaseEntity implements ClientEntity {
+  @PrimaryGeneratedColumn('uuid', { name: 'id' })
   public readonly id!: string;
 
-  @Column({ name: 'client_secret', type: 'varchar', length: 32, nullable: true, unique: true })
+  @Column({ name: 'secret', type: 'varchar', length: 32, nullable: true, unique: true })
   public secret?: Optional<string>;
 
   @Column({

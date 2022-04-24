@@ -3,7 +3,7 @@ import { validate } from 'class-validator';
 import { Request, Response } from 'express';
 
 import { CreateUserDto } from '../../dto/create-user.dto';
-import { UserEntity } from '../../entities/user.entity';
+import { User } from '../../entities/user.entity';
 
 class Controller {
   public async get(request: Request, response: Response): Promise<void> {
@@ -25,7 +25,7 @@ class Controller {
       });
     }
 
-    let user = await UserEntity.findOne({
+    let user = await User.findOne({
       where: [{ email: createUserDto.email }, { username: createUserDto.username }],
     });
 
@@ -33,7 +33,7 @@ class Controller {
       return response.render('auth/register', { request, title: 'Register', error: 'User already registered.' });
     }
 
-    user = new UserEntity();
+    user = new User();
 
     user.email = createUserDto.email;
     user.username = createUserDto.username;

@@ -1,14 +1,14 @@
-import { AccessTokenEntity as BaseAccessTokenEntity, SupportedTokenType } from '@guarani/oauth2-server';
+import { AccessTokenEntity, SupportedTokenType } from '@guarani/oauth2-server';
 import { Optional } from '@guarani/types';
 
 import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
-import { ClientEntity } from './client.entity';
-import { RefreshTokenEntity } from './refresh-token.entity';
-import { UserEntity } from './user.entity';
+import { Client } from './client.entity';
+import { RefreshToken } from './refresh-token.entity';
+import { User } from './user.entity';
 
 @Entity({ name: 'access_tokens' })
-export class AccessTokenEntity extends BaseEntity implements BaseAccessTokenEntity {
+export class AccessToken extends BaseEntity implements AccessTokenEntity {
   @PrimaryColumn({ name: 'access_token', type: 'varchar', length: 24 })
   public readonly token!: string;
 
@@ -31,27 +31,27 @@ export class AccessTokenEntity extends BaseEntity implements BaseAccessTokenEnti
   @Column({ name: 'expires_at', type: 'datetime' })
   public readonly expiresAt!: Date;
 
-  @ManyToOne(() => ClientEntity, {
+  @ManyToOne(() => Client, {
     cascade: true,
     eager: true,
     nullable: false,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn({ name: 'client_id', referencedColumnName: 'client_id' })
-  public readonly client!: ClientEntity;
+  @JoinColumn({ name: 'client_id', referencedColumnName: 'id' })
+  public readonly client!: Client;
 
-  @ManyToOne(() => UserEntity, { cascade: true, eager: true, nullable: true, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @ManyToOne(() => User, { cascade: true, eager: true, nullable: true, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  public readonly user?: Optional<UserEntity>;
+  public readonly user?: Optional<User>;
 
-  @ManyToOne(() => RefreshTokenEntity, {
+  @ManyToOne(() => RefreshToken, {
     cascade: true,
     eager: true,
     nullable: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn({ name: 'refresh_token_id', referencedColumnName: 'id' })
-  public readonly refreshToken?: Optional<RefreshTokenEntity>;
+  @JoinColumn({ name: 'refresh_token', referencedColumnName: 'token' })
+  public readonly refreshToken?: Optional<RefreshToken>;
 }

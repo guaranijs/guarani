@@ -3,15 +3,15 @@ import { Optional } from '@guarani/types';
 
 import argon2 from 'argon2';
 
-import { UserEntity } from '../entities/user.entity';
+import { User } from '../entities/user.entity';
 
 export class UserService implements BaseUserService {
-  public async findUser(userId: string): Promise<Optional<UserEntity>> {
-    return (await UserEntity.findOneBy({ id: userId })) ?? undefined;
+  public async findUser(userId: string): Promise<Optional<User>> {
+    return (await User.findOneBy({ id: userId })) ?? undefined;
   }
 
-  public async authenticate(username: string, password: string): Promise<Optional<UserEntity>> {
-    const user = await UserEntity.findOneBy({ username });
+  public async authenticate(username: string, password: string): Promise<Optional<User>> {
+    const user = await User.findOneBy({ username });
 
     if (user === null) {
       return undefined;

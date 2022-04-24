@@ -3,12 +3,12 @@ import { Express } from 'express';
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 
-import { UserEntity } from '../entities/user.entity';
+import { User } from '../entities/user.entity';
 
 export function passportConfig(app: Express): void {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      const user = await UserEntity.findOne({ where: { username } });
+      const user = await User.findOne({ where: { username } });
 
       if (user === null) {
         return done(null, false);
@@ -25,11 +25,11 @@ export function passportConfig(app: Express): void {
   );
 
   passport.serializeUser((user, done) => {
-    return done(null, (user as UserEntity).id);
+    return done(null, (user as User).id);
   });
 
   passport.deserializeUser(async (id: string, done) => {
-    const user = await UserEntity.findOneBy({ id });
+    const user = await User.findOneBy({ id });
     return user !== null ? done(null, user) : done(null, false);
   });
 

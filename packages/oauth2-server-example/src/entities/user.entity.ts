@@ -1,9 +1,9 @@
-import { UserEntity as BaseUserEntity } from '@guarani/oauth2-server';
+import { UserEntity } from '@guarani/oauth2-server';
 
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'users' })
-export class UserEntity extends BaseEntity implements BaseUserEntity {
+export class User extends BaseEntity implements UserEntity {
   @PrimaryGeneratedColumn('uuid', { name: 'id' })
   public readonly id!: string;
 

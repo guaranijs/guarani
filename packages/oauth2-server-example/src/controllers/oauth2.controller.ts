@@ -6,6 +6,7 @@ import {
 } from '@guarani/oauth2-server';
 
 import { Request, Response } from 'express';
+import { URLSearchParams } from 'url';
 
 import { provider } from '../oauth2/provider';
 
@@ -28,6 +29,15 @@ async function handleEndpoint(name: SupportedEndpoint, request: Request, respons
 
 class Controller {
   public async authorize(request: Request, response: Response): Promise<void> {
+    const user = request.user;
+
+    if (user === undefined) {
+      const params = new URLSearchParams({ redirect_to: request.originalUrl });
+      const redirectTo = `/auth/login?${params.toString()}`;
+
+      return response.redirect(redirectTo);
+    }
+
     await handleEndpoint('authorization', request, response);
   }
 

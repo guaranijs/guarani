@@ -2,20 +2,20 @@ import { RefreshTokenService as BaseRefreshTokenService, SupportedGrantType } fr
 import { Optional } from '@guarani/types';
 import { secretToken } from '@guarani/utils';
 
-import { ClientEntity } from '../entities/client.entity';
-import { RefreshTokenEntity } from '../entities/refresh-token.entity';
-import { UserEntity } from '../entities/user.entity';
+import { Client } from '../entities/client.entity';
+import { RefreshToken } from '../entities/refresh-token.entity';
+import { User } from '../entities/user.entity';
 
 export class RefreshTokenService implements BaseRefreshTokenService {
   public async createRefreshToken(
     grant: SupportedGrantType,
     scopes: string[],
-    client: ClientEntity,
-    user: UserEntity
-  ): Promise<RefreshTokenEntity> {
-    const refreshToken = new RefreshTokenEntity();
+    client: Client,
+    user: User
+  ): Promise<RefreshToken> {
+    const refreshToken = new RefreshToken();
 
-    Object.assign<RefreshTokenEntity, Partial<RefreshTokenEntity>>(refreshToken, {
+    Object.assign<RefreshToken, Partial<RefreshToken>>(refreshToken, {
       token: await secretToken(16),
       scopes,
       grant,
@@ -30,7 +30,7 @@ export class RefreshTokenService implements BaseRefreshTokenService {
     return refreshToken;
   }
 
-  public async findRefreshToken(token: string): Promise<Optional<RefreshTokenEntity>> {
-    return (await RefreshTokenEntity.findOneBy({ token })) ?? undefined;
+  public async findRefreshToken(token: string): Promise<Optional<RefreshToken>> {
+    return (await RefreshToken.findOneBy({ token })) ?? undefined;
   }
 }

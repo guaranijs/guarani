@@ -1,10 +1,10 @@
 import { AccessTokenService as BaseAccessTokenService, SupportedGrantType } from '@guarani/oauth2-server';
 import { secretToken } from '@guarani/utils';
 
-import { AccessTokenEntity } from '../entities/access-token.entity';
-import { ClientEntity } from '../entities/client.entity';
-import { RefreshTokenEntity } from '../entities/refresh-token.entity';
-import { UserEntity } from '../entities/user.entity';
+import { AccessToken } from '../entities/access-token.entity';
+import { Client } from '../entities/client.entity';
+import { RefreshToken } from '../entities/refresh-token.entity';
+import { User } from '../entities/user.entity';
 
 export class AccessTokenService implements BaseAccessTokenService {
   private readonly grants: Partial<Record<SupportedGrantType, number>> = {
@@ -14,13 +14,13 @@ export class AccessTokenService implements BaseAccessTokenService {
   public async createAccessToken(
     grant: SupportedGrantType,
     scopes: string[],
-    client: ClientEntity,
-    user: UserEntity,
-    refreshToken: RefreshTokenEntity
-  ): Promise<AccessTokenEntity> {
-    const accessToken = new AccessTokenEntity();
+    client: Client,
+    user: User,
+    refreshToken: RefreshToken
+  ): Promise<AccessToken> {
+    const accessToken = new AccessToken();
 
-    Object.assign<AccessTokenEntity, Partial<AccessTokenEntity>>(accessToken, {
+    Object.assign<AccessToken, Partial<AccessToken>>(accessToken, {
       token: await secretToken(24),
       tokenType: 'Bearer',
       scopes,

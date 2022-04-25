@@ -73,7 +73,7 @@ export class Response {
    */
   public redirect(url: string): Response {
     this.setHeader('Location', url);
-    this.status(303);
+    this.status(302);
     return this;
   }
 

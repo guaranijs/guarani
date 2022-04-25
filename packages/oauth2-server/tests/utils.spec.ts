@@ -1,17 +1,16 @@
-import { URL } from 'url';
-
 import { ClientEntity } from '../lib/entities/client.entity';
 import { InvalidScopeException } from '../lib/exceptions/invalid-scope.exception';
 import { getAllowedScopes } from '../lib/utils';
 
 describe('getAllowedScopes()', () => {
-  const client = <ClientEntity>{
+  const client: ClientEntity = {
     id: 'client_id',
+    secret: null,
     scopes: ['foo', 'bar', 'baz'],
     authenticationMethod: 'none',
     responseTypes: ['token'],
     grantTypes: ['implicit'],
-    redirectUris: [new URL('https://example.com/callback')],
+    redirectUris: ['https://example.com/callback'],
   };
 
   const invalidClientScopes: string[] = ['qux', 'foo qux'];

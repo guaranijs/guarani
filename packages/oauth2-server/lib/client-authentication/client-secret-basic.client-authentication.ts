@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@guarani/ioc';
 
 import { timingSafeEqual } from 'crypto';
+import { OutgoingHttpHeaders } from 'http';
 
 import { ClientEntity } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -31,7 +32,7 @@ export class ClientSecretBasicClientAuthentication implements ClientAuthenticati
   /**
    * Defines the `WWW-Authenticate` HTTP Header in case of Client Authentication failure.
    */
-  private readonly headers = { 'WWW-Authenticate': 'Basic' };
+  private readonly headers: OutgoingHttpHeaders = { 'WWW-Authenticate': 'Basic' };
 
   /**
    * Instance of the Client Service.
@@ -89,11 +90,11 @@ export class ClientSecretBasicClientAuthentication implements ClientAuthenticati
 
     const client = await this.clientService.findClient(clientId);
 
-    if (client === undefined) {
+    if (client === null) {
       throw new InvalidClientException({ error_description: 'Invalid Credentials.' }).setHeaders(this.headers);
     }
 
-    if (client.secret === undefined) {
+    if (client.secret === null) {
       throw new InvalidClientException({ error_description: 'Invalid Credentials.' }).setHeaders(this.headers);
     }
 

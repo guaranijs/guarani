@@ -9,31 +9,36 @@ import { Request } from '../../lib/http/request';
 import { AccessTokenService } from '../../lib/services/access-token.service';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
-const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  createAccessToken: jest.fn(async (_grant, scopes, client, _user): Promise<AccessTokenEntity> => {
-    return {
-      token: await secretToken(),
-      tokenType: 'Bearer',
-      scopes,
-      isRevoked: false,
-      expiresAt: new Date(Date.now() + 300000),
-      client,
-    };
-  }),
-};
-
-const grantType = new ClientCredentialsGrantType(accessTokenServiceMock);
-
-const client = <ClientEntity>{
+const client: ClientEntity = {
   id: 'client_id',
   secret: 'client_secret',
   scopes: ['foo', 'bar', 'baz'],
   authenticationMethod: 'client_secret_basic',
   responseTypes: [],
   grantTypes: ['client_credentials'],
-  redirectUris: [new URL('https://example.com/callback')],
+  redirectUris: ['https://example.com/callback'],
 };
+
+const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  createAccessToken: jest.fn(async (_grant, scopes, client, _user, _refreshToken): Promise<AccessTokenEntity> => {
+    return {
+      token: await secretToken(),
+      audience: client.id,
+      issuedAt: new Date(),
+      validAfter: new Date(),
+      tokenType: 'Bearer',
+      scopes,
+      isRevoked: false,
+      expiresAt: new Date(Date.now() + 300000),
+      client,
+      user: null,
+      refreshToken: null,
+    };
+  }),
+};
+
+const grantType = new ClientCredentialsGrantType(accessTokenServiceMock);
 
 describe('Client Credentials Grant Type', () => {
   describe('name', () => {

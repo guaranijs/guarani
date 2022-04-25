@@ -1,6 +1,4 @@
-import { Dict, Optional } from '@guarani/types';
-
-import { URL } from 'url';
+import { Nullable } from '@guarani/types';
 
 import { SupportedClientAuthentication } from '../client-authentication/types/supported-client-authentication';
 import { SupportedGrantType } from '../grant-types/types/supported-grant-type';
@@ -9,7 +7,7 @@ import { SupportedResponseType } from '../response-types/types/supported-respons
 /**
  * Representation of the OAuth 2.0 Client.
  */
-export interface ClientEntity extends Dict {
+export interface ClientEntity {
   /**
    * Identifier of the Client.
    */
@@ -18,12 +16,12 @@ export interface ClientEntity extends Dict {
   /**
    * Secret of the Client.
    */
-  secret?: Optional<string>;
+  secret: Nullable<string>;
 
   /**
    * Redirect URIs of the Client.
    */
-  redirectUris: URL[];
+  redirectUris: string[];
 
   /**
    * Authentication Method of the Client.

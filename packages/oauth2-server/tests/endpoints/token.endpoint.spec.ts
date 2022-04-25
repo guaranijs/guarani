@@ -1,5 +1,4 @@
 import { OutgoingHttpHeaders } from 'http';
-import { URL } from 'url';
 
 import { ClientAuthentication } from '../../lib/client-authentication/client-authentication';
 import { TokenEndpoint } from '../../lib/endpoints/token.endpoint';
@@ -15,17 +14,17 @@ import { Request } from '../../lib/http/request';
 import { Response } from '../../lib/http/response';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
-const client = <ClientEntity>{
+const client: ClientEntity = {
   id: 'client_id',
   secret: 'client_secret',
-  redirectUris: [new URL('https://example.com/callback')],
+  redirectUris: ['https://example.com/callback'],
   authenticationMethod: 'client_secret_basic',
   grantTypes: ['authorization_code', 'refresh_token'],
   responseTypes: ['code'],
   scopes: ['foo', 'bar'],
 };
 
-const fakeAccessTokenResponse = <AccessTokenResponse>{
+const fakeAccessTokenResponse: AccessTokenResponse = {
   access_token: 'access_token',
   token_type: 'Bearer',
   expires_in: 3600,

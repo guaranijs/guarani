@@ -1,3 +1,4 @@
+import { Nullable } from '@guarani/types';
 import { secretToken } from '@guarani/utils';
 
 import { URL } from 'url';
@@ -5,6 +6,7 @@ import { URL } from 'url';
 import { AccessTokenEntity } from '../../lib/entities/access-token.entity';
 import { AuthorizationCodeEntity } from '../../lib/entities/authorization-code.entity';
 import { ClientEntity } from '../../lib/entities/client.entity';
+import { RefreshTokenEntity } from '../../lib/entities/refresh-token.entity';
 import { UserEntity } from '../../lib/entities/user.entity';
 import { InvalidGrantException } from '../../lib/exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
@@ -26,7 +28,7 @@ const clients: ClientEntity[] = [
     authenticationMethod: 'client_secret_basic',
     responseTypes: ['code'],
     grantTypes: ['authorization_code'],
-    redirectUris: [new URL('https://example.com/callback')],
+    redirectUris: ['https://example.com/callback'],
   },
   {
     id: 'client2',
@@ -35,16 +37,19 @@ const clients: ClientEntity[] = [
     authenticationMethod: 'client_secret_basic',
     responseTypes: [],
     grantTypes: ['password'],
-    redirectUris: [new URL('https://foobar.com/callback')],
+    redirectUris: ['https://foobar.com/callback'],
   },
 ];
 
-const user = <UserEntity>{ id: 'user_id' };
+const user: UserEntity = { id: 'user_id' };
 
 const authorizationCodes: AuthorizationCodeEntity[] = [
   {
-    code: 'code',
-    redirectUri: new URL('https://example.com/callback'),
+    token: 'code',
+    audience: clients[0].id,
+    issuedAt: new Date(),
+    validAfter: new Date(),
+    redirectUri: 'https://example.com/callback',
     scopes: ['foo', 'bar'],
     codeChallenge: 'code_challenge',
     codeChallengeMethod: 'plain',
@@ -62,8 +67,8 @@ const pkceMethods: jest.Mocked<PkceMethod>[] = [
 
 const authorizationCodeServiceMock: jest.Mocked<AuthorizationCodeService> = {
   createAuthorizationCode: jest.fn(),
-  findAuthorizationCode: jest.fn(async (code) => {
-    return authorizationCodes.find((authorizationCode) => authorizationCode.code === code);
+  findAuthorizationCode: jest.fn(async (code: string): Promise<Nullable<AuthorizationCodeEntity>> => {
+    return authorizationCodes.find((authorizationCode) => authorizationCode.token === code) ?? null;
   }),
   revokeAuthorizationCode: jest.fn(),
 };
@@ -72,6 +77,9 @@ const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
   createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessTokenEntity> => {
     return {
       token: await secretToken(),
+      audience: client.id,
+      issuedAt: new Date(),
+      validAfter: new Date(),
       tokenType: 'Bearer',
       scopes,
       isRevoked: false,
@@ -84,9 +92,12 @@ const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
 };
 
 const refreshTokenServiceMock: jest.Mocked<RefreshTokenService> = {
-  createRefreshToken: jest.fn(async (grant, scopes, client, user) => {
+  createRefreshToken: jest.fn(async (grant, scopes, client, user): Promise<RefreshTokenEntity> => {
     return {
       token: await secretToken(16),
+      audience: client.id,
+      issuedAt: new Date(),
+      validAfter: new Date(),
       scopes,
       grant,
       isRevoked: false,

@@ -1,5 +1,5 @@
 import { getContainer } from '@guarani/ioc';
-import { Constructor, Dict } from '@guarani/types';
+import { Constructor, Dict, Nullable } from '@guarani/types';
 
 import { URL } from 'url';
 
@@ -26,7 +26,7 @@ const clients: ClientEntity[] = [
   {
     id: 'client1',
     secret: 'secret1',
-    redirectUris: [new URL('https://example.com/callback')],
+    redirectUris: ['https://example.com/callback'],
     authenticationMethod: 'client_secret_basic',
     grantTypes: ['authorization_code'],
     responseTypes: ['code'],
@@ -35,8 +35,8 @@ const clients: ClientEntity[] = [
 ];
 
 const clientService: jest.Mocked<ClientService> = {
-  findClient: jest.fn().mockImplementation(async (clientId: string) => {
-    return clients.find((client) => client.id === clientId);
+  findClient: jest.fn(async (clientId: string): Promise<Nullable<ClientEntity>> => {
+    return clients.find((client) => client.id === clientId) ?? null;
   }),
 };
 
@@ -85,7 +85,7 @@ describe('Authorization Endpoint', () => {
         headers: {
           Location: 'https://server.example.com/oauth2/error?error=invalid_request&error_description=description',
         },
-        statusCode: 303,
+        statusCode: 302,
       });
 
       getContainer('oauth2').delete<string>('ErrorUrl');
@@ -242,26 +242,24 @@ describe('Authorization Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: Request;
     let spyErrorUri: jest.SpyInstance<any, []>;
+
+    const request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
 
     beforeEach(() => {
       spyErrorUri = jest
         .spyOn<AuthorizationEndpoint, any>(endpoint, 'errorUrl', 'get')
         .mockReturnValue('https://server.example.com/error');
 
-      request = new Request({
-        body: {},
-        headers: {},
-        method: 'get',
-        query: {
-          response_type: 'code',
-          client_id: 'client1',
-          redirect_uri: 'https://example.com/callback',
-          scope: 'foo bar baz',
-          state: 'client-state',
-        },
+      Reflect.set(request, 'query', {
+        response_type: 'code',
+        client_id: 'client1',
+        redirect_uri: 'https://example.com/callback',
+        scope: 'foo bar baz',
+        state: 'client-state',
       });
+
+      request.user = undefined;
     });
 
     afterEach(() => {
@@ -279,7 +277,7 @@ describe('Authorization Endpoint', () => {
           headers: {
             Location: `https://server.example.com/error?error=invalid_request&error_description=Invalid+parameter+%22${requiredParameter}%22.`,
           },
-          statusCode: 303,
+          statusCode: 302,
         });
       }
     );
@@ -304,7 +302,7 @@ describe('Authorization Endpoint', () => {
 
         await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
           headers: { Location: `https://server.example.com/error?error=${code}&error_description=${description}` },
-          statusCode: 303,
+          statusCode: 302,
         });
       }
     );
@@ -321,7 +319,7 @@ describe('Authorization Endpoint', () => {
           Location:
             'https://example.com/callback?error=access_denied&error_description=Authorization+denied+by+the+End+User.',
         },
-        statusCode: 303,
+        statusCode: 302,
       });
 
       responseModes[0].createHttpResponse.mockReset();
@@ -341,7 +339,7 @@ describe('Authorization Endpoint', () => {
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
         headers: { Location: 'https://example.com/callback?code=code&state=client-state' },
-        statusCode: 303,
+        statusCode: 302,
       });
 
       responseModes[0].createHttpResponse.mockReset();

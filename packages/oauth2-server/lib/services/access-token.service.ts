@@ -1,4 +1,4 @@
-import { Nullable, Optional } from '@guarani/types';
+import { Nullable } from '@guarani/types';
 
 import { AccessTokenEntity } from '../entities/access-token.entity';
 import { ClientEntity } from '../entities/client.entity';
@@ -28,6 +28,6 @@ export interface AccessTokenService {
     scopes: string[],
     client: ClientEntity,
     user: Nullable<UserEntity>,
-    refreshToken?: Optional<RefreshTokenEntity>
+    refreshToken: Nullable<RefreshTokenEntity>
   ): Promise<AccessTokenEntity>;
 }

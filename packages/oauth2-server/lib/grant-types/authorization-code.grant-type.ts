@@ -108,7 +108,7 @@ export class AuthorizationCodeGrantType implements GrantType {
       const refreshToken =
         client.grantTypes.includes('refresh_token') && this.refreshTokenService !== undefined
           ? await this.refreshTokenService.createRefreshToken(this.name, scopes, client, user)
-          : undefined;
+          : null;
 
       const accessToken = await this.accessTokenService.createAccessToken(
         this.name,
@@ -156,7 +156,7 @@ export class AuthorizationCodeGrantType implements GrantType {
   private async getAuthorizationCode(code: string): Promise<AuthorizationCodeEntity> {
     const authorizationCode = await this.authorizationCodeService.findAuthorizationCode(code);
 
-    if (authorizationCode === undefined) {
+    if (authorizationCode === null) {
       throw new InvalidGrantException({ error_description: 'Invalid Authorization Code.' });
     }
 
@@ -187,7 +187,7 @@ export class AuthorizationCodeGrantType implements GrantType {
       throw new InvalidGrantException({ error_description: 'Invalid Authorization Code.' });
     }
 
-    if (authorizationCode.redirectUri.href !== params.redirect_uri) {
+    if (authorizationCode.redirectUri !== params.redirect_uri) {
       throw new InvalidGrantException({ error_description: 'Mismatching Redirect URI.' });
     }
 

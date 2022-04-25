@@ -25,7 +25,7 @@ describe('Response', () => {
 
   it('should create a Redirect Response.', () => {
     expect(new Response().redirect('https://example.com')).toMatchObject<Partial<Response>>({
-      statusCode: 303,
+      statusCode: 302,
       headers: { Location: 'https://example.com' },
       body: Buffer.alloc(0),
     });

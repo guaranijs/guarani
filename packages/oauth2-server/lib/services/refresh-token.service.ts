@@ -1,4 +1,4 @@
-import { Optional } from '@guarani/types';
+import { Nullable } from '@guarani/types';
 
 import { ClientEntity } from '../entities/client.entity';
 import { RefreshTokenEntity } from '../entities/refresh-token.entity';
@@ -34,5 +34,5 @@ export interface RefreshTokenService {
    * @param token Token of the Refresh Token.
    * @returns Refresh Token based on the provided Token.
    */
-  findRefreshToken(token: string): Promise<Optional<RefreshTokenEntity>>;
+  findRefreshToken(token: string): Promise<Nullable<RefreshTokenEntity>>;
 }

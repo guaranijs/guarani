@@ -1,5 +1,6 @@
-import { IncomingHttpHeaders } from 'http';
-import { URL } from 'url';
+import { Nullable } from '@guarani/types';
+
+import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
 
 import { ClientSecretBasicClientAuthentication } from '../../lib/client-authentication/client-secret-basic.client-authentication';
 import { SupportedClientAuthentication } from '../../lib/client-authentication/types/supported-client-authentication';
@@ -12,7 +13,7 @@ const clients: ClientEntity[] = [
   {
     id: 'client_id',
     secret: 'client_secret',
-    redirectUris: [new URL('https://example.com/callback')],
+    redirectUris: ['https://example.com/callback'],
     authenticationMethod: 'client_secret_basic',
     grantTypes: ['authorization_code'],
     responseTypes: ['code'],
@@ -21,7 +22,7 @@ const clients: ClientEntity[] = [
   {
     id: 'id_client',
     secret: 'secret_client',
-    redirectUris: [new URL('https://example.com/callback')],
+    redirectUris: ['https://example.com/callback'],
     authenticationMethod: 'client_secret_post',
     grantTypes: ['authorization_code'],
     responseTypes: ['code'],
@@ -29,7 +30,8 @@ const clients: ClientEntity[] = [
   },
   {
     id: 'foobar',
-    redirectUris: [new URL('https://example.com/callback')],
+    secret: null,
+    redirectUris: ['https://example.com/callback'],
     authenticationMethod: 'none',
     grantTypes: ['authorization_code'],
     responseTypes: ['code'],
@@ -38,8 +40,8 @@ const clients: ClientEntity[] = [
 ];
 
 const clientServiceMock: jest.Mocked<ClientService> = {
-  findClient: jest.fn().mockImplementation(async (clientId: string) => {
-    return clients.find((client) => client.id === clientId);
+  findClient: jest.fn(async (clientId: string): Promise<Nullable<ClientEntity>> => {
+    return clients.find((client) => client.id === clientId) ?? null;
   }),
 };
 
@@ -59,6 +61,13 @@ describe('Client Secret Basic Authentication Method', () => {
   describe('name', () => {
     it('should have "client_secret_basic" as its name.', () => {
       expect(method.name).toBe<SupportedClientAuthentication>('client_secret_basic');
+    });
+  });
+
+  describe('headers', () => {
+    it('should have a "WWW-Authenticate" header.', () => {
+      // @ts-expect-error Testing a private attribute.
+      expect(method.headers).toMatchObject<OutgoingHttpHeaders>({ 'WWW-Authenticate': 'Basic' });
     });
   });
 

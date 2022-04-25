@@ -1,4 +1,4 @@
-import { Optional } from '@guarani/types';
+import { Nullable } from '@guarani/types';
 
 import { ClientEntity } from '../entities/client.entity';
 
@@ -14,5 +14,5 @@ export interface ClientService {
    * @param clientId Identifier of the Client.
    * @returns Client based on the provided Identifier.
    */
-  findClient(clientId: string): Promise<Optional<ClientEntity>>;
+  findClient(clientId: string): Promise<Nullable<ClientEntity>>;
 }

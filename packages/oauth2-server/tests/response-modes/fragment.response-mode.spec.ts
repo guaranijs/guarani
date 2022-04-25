@@ -11,7 +11,7 @@ describe('Fragment Response Mode', () => {
     expect(
       new FragmentResponseMode().createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar' })
     ).toMatchObject<Partial<Response>>({
-      statusCode: 303,
+      statusCode: 302,
       headers: { Location: 'https://example.com/#foo=foo&bar=bar' },
       body: Buffer.alloc(0),
     });

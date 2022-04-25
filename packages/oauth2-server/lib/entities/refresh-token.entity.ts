@@ -1,42 +1,15 @@
-import { Dict } from '@guarani/types';
-
 import { SupportedGrantType } from '../grant-types/types/supported-grant-type';
-import { ClientEntity } from './client.entity';
+import { AbstractToken } from './abstract-token';
 import { UserEntity } from './user.entity';
 
 /**
  * Representation of the OAuth 2.0 Refresh Token.
  */
-export interface RefreshTokenEntity extends Dict {
-  /**
-   * String representation of the Refresh Token.
-   */
-  readonly token: string;
-
-  /**
-   * Scopes granted to the Refresh Token.
-   */
-  readonly scopes: string[];
-
+export interface RefreshTokenEntity extends AbstractToken {
   /**
    * Grant Type that generated the Refresh Token.
    */
   readonly grant: SupportedGrantType;
-
-  /**
-   * Informs whether or not the Refresh Token is revoked.
-   */
-  readonly isRevoked: boolean;
-
-  /**
-   * Expiration Date of the Refresh Token.
-   */
-  readonly expiresAt: Date;
-
-  /**
-   * Client that requested the Refresh Token.
-   */
-  readonly client: ClientEntity;
 
   /**
    * User that granted access to the Client.

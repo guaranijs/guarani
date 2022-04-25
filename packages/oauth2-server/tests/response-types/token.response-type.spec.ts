@@ -1,5 +1,3 @@
-import { URL } from 'url';
-
 import { AccessTokenEntity } from '../../lib/entities/access-token.entity';
 import { ClientEntity } from '../../lib/entities/client.entity';
 import { UserEntity } from '../../lib/entities/user.entity';
@@ -12,31 +10,36 @@ import { AccessTokenService } from '../../lib/services/access-token.service';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
 const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
-  createAccessToken: jest.fn(async (_grant, scopes, client, user): Promise<AccessTokenEntity> => {
+  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessTokenEntity> => {
     return {
       token: 'access_token',
       tokenType: 'Bearer',
       scopes,
+      audience: client.id,
       isRevoked: false,
+      issuedAt: new Date(),
+      validAfter: new Date(),
       expiresAt: new Date(Date.now() + 300000),
       client,
-      user: user!,
+      user,
+      refreshToken,
     };
   }),
 };
 
 const responseType = new TokenResponseType(accessTokenServiceMock);
 
-const client = <ClientEntity>{
+const client: ClientEntity = {
   id: 'client_id',
+  secret: null,
   scopes: ['foo', 'bar', 'baz'],
   authenticationMethod: 'none',
   responseTypes: ['token'],
   grantTypes: ['implicit'],
-  redirectUris: [new URL('https://example.com/callback')],
+  redirectUris: ['https://example.com/callback'],
 };
 
-const user = <UserEntity>{ id: 'user_id' };
+const user: UserEntity = { id: 'user_id' };
 
 describe('Token Response Type', () => {
   describe('name', () => {

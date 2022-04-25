@@ -82,7 +82,7 @@ export class PasswordGrantType implements GrantType {
 
     const refreshToken = client.grantTypes.includes('refresh_token')
       ? await this.refreshTokenService.createRefreshToken(this.name, scopes, client, user)
-      : undefined;
+      : null;
 
     const accessToken = await this.accessTokenService.createAccessToken(this.name, scopes, client, user, refreshToken);
 
@@ -116,7 +116,7 @@ export class PasswordGrantType implements GrantType {
   private async authenticate(username: string, password: string): Promise<UserEntity> {
     const user = await this.userService.authenticate(username, password);
 
-    if (user === undefined) {
+    if (user === null) {
       throw new InvalidGrantException({ error_description: 'Invalid Credentials.' });
     }
 

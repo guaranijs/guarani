@@ -1,5 +1,4 @@
 import { OutgoingHttpHeaders } from 'http';
-import { URL } from 'url';
 
 import { ClientAuthentication } from '../../lib/client-authentication/client-authentication';
 import { SupportedEndpoint } from '../../lib/endpoints/types/supported-endpoint';
@@ -13,7 +12,7 @@ import { IntrospectionEndpointMock } from './mocks/introspection.endpoint.mock';
 const client: ClientEntity = {
   id: 'client1',
   secret: 'secret1',
-  redirectUris: [new URL('https://client1.example.com/callback')],
+  redirectUris: ['https://client1.example.com/callback'],
   authenticationMethod: 'client_secret_basic',
   grantTypes: ['authorization_code'],
   responseTypes: ['code'],

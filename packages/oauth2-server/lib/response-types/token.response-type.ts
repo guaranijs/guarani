@@ -69,7 +69,7 @@ export class TokenResponseType implements ResponseType {
     this.checkParameters(params);
 
     const scopes = getAllowedScopes(client, params.scope);
-    const accessToken = await this.accessTokenService.createAccessToken('implicit', scopes, client, user);
+    const accessToken = await this.accessTokenService.createAccessToken('implicit', scopes, client, user, null);
     const token = createAccessTokenResponse(accessToken);
 
     if (params.state !== undefined) {

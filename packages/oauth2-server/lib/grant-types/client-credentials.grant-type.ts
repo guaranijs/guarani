@@ -56,7 +56,7 @@ export class ClientCredentialsGrantType implements GrantType {
   public async createTokenResponse(request: Request, client: ClientEntity): Promise<AccessTokenResponse> {
     const params = <ClientCredentialsParameters>request.body;
     const scopes = params.scope !== undefined ? getAllowedScopes(client, params.scope) : client.scopes;
-    const accessToken = await this.accessTokenService.createAccessToken(this.name, scopes, client, null);
+    const accessToken = await this.accessTokenService.createAccessToken(this.name, scopes, client, null, null);
 
     return createAccessTokenResponse(accessToken);
   }

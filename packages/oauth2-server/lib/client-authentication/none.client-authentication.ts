@@ -77,11 +77,11 @@ export class NoneClientAuthentication implements ClientAuthentication {
 
     const client = await this.clientService.findClient(clientId);
 
-    if (client === undefined) {
+    if (client === null) {
       throw new InvalidClientException({ error_description: 'Invalid Credentials.' });
     }
 
-    if (client.secret !== undefined) {
+    if (client.secret !== null) {
       throw new InvalidClientException({
         error_description: `A Client with a Secret cannot use the Authentication Method "${this.name}".`,
       });

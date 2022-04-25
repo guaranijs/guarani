@@ -200,7 +200,7 @@ export class AuthorizationEndpoint implements Endpoint {
   private async getClient(clientId: string): Promise<ClientEntity> {
     const client = await this.clientService.findClient(clientId);
 
-    if (client === undefined) {
+    if (client === null) {
       throw new InvalidClientException({ error_description: 'Invalid Client.' });
     }
 
@@ -244,7 +244,7 @@ export class AuthorizationEndpoint implements Endpoint {
    * @param redirectUri Redirect URI provided by the Client.
    */
   private checkClientRedirectUri(client: ClientEntity, redirectUri: string): void {
-    if (!client.redirectUris.map((redirectUri) => redirectUri.href).includes(redirectUri)) {
+    if (!client.redirectUris.includes(redirectUri)) {
       throw new AccessDeniedException({ error_description: 'Invalid Redirect URI.' });
     }
   }

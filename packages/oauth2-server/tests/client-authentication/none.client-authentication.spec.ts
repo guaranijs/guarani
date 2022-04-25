@@ -1,6 +1,4 @@
-import { Dict } from '@guarani/types';
-
-import { URL } from 'url';
+import { Dict, Nullable } from '@guarani/types';
 
 import { NoneClientAuthentication } from '../../lib/client-authentication/none.client-authentication';
 import { SupportedClientAuthentication } from '../../lib/client-authentication/types/supported-client-authentication';
@@ -12,7 +10,8 @@ import { ClientService } from '../../lib/services/client.service';
 const clients: ClientEntity[] = [
   {
     id: 'client_id',
-    redirectUris: [new URL('https://example.com/callback')],
+    secret: null,
+    redirectUris: ['https://example.com/callback'],
     authenticationMethod: 'none',
     grantTypes: ['authorization_code'],
     responseTypes: ['code'],
@@ -21,7 +20,7 @@ const clients: ClientEntity[] = [
   {
     id: 'id_client',
     secret: 'secret_client',
-    redirectUris: [new URL('https://example.com/callback')],
+    redirectUris: ['https://example.com/callback'],
     authenticationMethod: 'client_secret_basic',
     grantTypes: ['authorization_code'],
     responseTypes: ['code'],
@@ -29,7 +28,8 @@ const clients: ClientEntity[] = [
   },
   {
     id: 'foobar',
-    redirectUris: [new URL('https://example.com/callback')],
+    secret: null,
+    redirectUris: ['https://example.com/callback'],
     authenticationMethod: 'client_secret_post',
     grantTypes: ['authorization_code'],
     responseTypes: ['code'],
@@ -38,8 +38,8 @@ const clients: ClientEntity[] = [
 ];
 
 const clientServiceMock: jest.Mocked<ClientService> = {
-  findClient: jest.fn().mockImplementation(async (clientId: string) => {
-    return clients.find((client) => client.id === clientId);
+  findClient: jest.fn(async (clientId: string): Promise<Nullable<ClientEntity>> => {
+    return clients.find((client) => client.id === clientId) ?? null;
   }),
 };
 

@@ -99,7 +99,7 @@ export class CodeResponseType implements ResponseType {
     const scopes = getAllowedScopes(client, params.scope);
     const authorizationCode = await this.authorizationCodeService.createAuthorizationCode(params, scopes, client, user);
 
-    return removeNullishValues<AuthorizationCodeResponse>({ code: authorizationCode.code, state: params.state });
+    return removeNullishValues<AuthorizationCodeResponse>({ code: authorizationCode.token, state: params.state });
   }
 
   /**

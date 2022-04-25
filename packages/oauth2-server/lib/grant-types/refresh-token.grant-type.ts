@@ -109,7 +109,7 @@ export class RefreshTokenGrantType implements GrantType {
   private async getRefreshToken(token: string): Promise<RefreshTokenEntity> {
     const refreshToken = await this.refreshTokenService.findRefreshToken(token);
 
-    if (refreshToken === undefined) {
+    if (refreshToken === null) {
       throw new InvalidGrantException({ error_description: 'Invalid Refresh Token.' });
     }
 

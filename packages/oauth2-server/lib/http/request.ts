@@ -1,4 +1,4 @@
-import { Dict, Optional } from '@guarani/types';
+import { Dict, Nullable, Optional } from '@guarani/types';
 
 import { IncomingHttpHeaders } from 'http';
 
@@ -35,8 +35,14 @@ export class Request implements RequestParams {
 
   /**
    * Authenticated End User of the Request.
+   *
+   * This attribute can assume one of the following values:
+   *
+   * * ***User*** - The Authenticated User granted Authorization to the Client.
+   * * ***null*** - The Authenticated User denied Authorization to the Client.
+   * * ***undefined*** - The Authorization Server needs to display the Consent Page to the Authenticated User.
    */
-  public user?: Optional<User>;
+  public user?: Optional<Nullable<User>>;
 
   /**
    * Instantiates a new HTTP Request based on the provided Parameters.
@@ -62,8 +68,6 @@ export class Request implements RequestParams {
     });
 
     this.body = params.body;
-
-    this.user = params.user;
   }
 
   /**

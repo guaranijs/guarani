@@ -9,7 +9,7 @@ import { AccessTokenService } from '../services/access-token.service';
 import { RefreshTokenService } from '../services/refresh-token.service';
 import { UserService } from '../services/user.service';
 import { AccessTokenResponse } from '../types/access-token.response';
-import { createAccessTokenResponse, getAllowedScopes } from '../utils';
+import { createAccessTokenResponse, checkRequestedScope } from '../utils';
 import { GrantType } from './grant-type';
 import { PasswordParameters } from './types/password.parameters';
 import { SupportedGrantType } from './types/supported-grant-type';
@@ -77,7 +77,7 @@ export class PasswordGrantType implements GrantType {
 
     this.checkParameters(params);
 
-    const scopes = params.scope !== undefined ? getAllowedScopes(client, params.scope) : client.scopes;
+    const scopes = params.scope !== undefined ? checkRequestedScope(client, params.scope) : client.scopes;
     const user = await this.authenticate(params.username, params.password);
 
     const refreshToken = client.grantTypes.includes('refresh_token')

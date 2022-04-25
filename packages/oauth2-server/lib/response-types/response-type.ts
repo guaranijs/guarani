@@ -2,8 +2,8 @@ import { Dict } from '@guarani/types';
 
 import { Client } from '../entities/client';
 import { User } from '../entities/user';
-import { Request } from '../http/request';
 import { SupportedResponseMode } from '../response-modes/types/supported-response-mode';
+import { AuthorizationParameters } from './types/authorization.parameters';
 import { SupportedResponseType } from './types/supported-response-type';
 
 /**
@@ -23,10 +23,10 @@ export interface ResponseType {
   /**
    * Creates the Authorization Response with the Authorization Grant used by the Client on behalf of the End User.
    *
-   * @param request HTTP Request.
+   * @param params Parameters of the Authorization Request.
    * @param client OAuth 2.0 Client of the Request.
    * @param user End User represented by the Client.
    * @returns Authorization Response.
    */
-  createAuthorizationResponse(request: Request, client: Client, user: User): Promise<Dict>;
+  createAuthorizationResponse(params: AuthorizationParameters, client: Client, user: User): Promise<Dict>;
 }

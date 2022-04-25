@@ -3,10 +3,10 @@ import { Inject, Injectable } from '@guarani/ioc';
 import { timingSafeEqual } from 'crypto';
 import { OutgoingHttpHeaders } from 'http';
 
+import { Adapter } from '../adapter';
 import { Client } from '../entities/client';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { Request } from '../http/request';
-import { ClientService } from '../services/client.service';
 import { ClientAuthentication } from './client-authentication';
 import { SupportedClientAuthentication } from './types/supported-client-authentication';
 
@@ -35,18 +35,11 @@ export class ClientSecretBasicClientAuthentication implements ClientAuthenticati
   private readonly headers: OutgoingHttpHeaders = { 'WWW-Authenticate': 'Basic' };
 
   /**
-   * Instance of the Client Service.
-   */
-  private readonly clientService: ClientService;
-
-  /**
    * Instantiates a new Client Secret Basic Client Authentication Method.
    *
-   * @param clientService Instance of the Client Service.
+   * @param adapter Instance of the Adapter.
    */
-  public constructor(@Inject('ClientService') clientService: ClientService) {
-    this.clientService = clientService;
-  }
+  public constructor(@Inject('Adapter') private readonly adapter: Adapter) {}
 
   /**
    * Checks if the Client Authentication Method has been requested by the Client.
@@ -88,7 +81,7 @@ export class ClientSecretBasicClientAuthentication implements ClientAuthenticati
       throw new InvalidClientException({ error_description: 'Invalid Credentials.' }).setHeaders(this.headers);
     }
 
-    const client = await this.clientService.findClient(clientId);
+    const client = await this.adapter.findClient(clientId);
 
     if (client === null) {
       throw new InvalidClientException({ error_description: 'Invalid Credentials.' }).setHeaders(this.headers);

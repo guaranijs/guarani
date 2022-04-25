@@ -40,11 +40,6 @@ export abstract class RevocationEndpoint implements Endpoint {
   };
 
   /**
-   * Client Authentication Methods registered at the Authorization Server.
-   */
-  private readonly clientAuthenticationMethods: ClientAuthentication[];
-
-  /**
    * Instantiates a new Revocation Endpoint.
    *
    * @param grantTypes Grant Types registered at the Authorization Server.
@@ -52,13 +47,11 @@ export abstract class RevocationEndpoint implements Endpoint {
    */
   public constructor(
     @InjectAll('GrantType') grantTypes: GrantType[],
-    @InjectAll('ClientAuthentication') clientAuthenticationMethods: ClientAuthentication[]
+    @InjectAll('ClientAuthentication') private readonly clientAuthenticationMethods: ClientAuthentication[]
   ) {
     if (!grantTypes.find((grantType) => grantType.name === 'refresh_token')) {
       throw new Error('The Authorization Server does not support Refresh Tokens.');
     }
-
-    this.clientAuthenticationMethods = clientAuthenticationMethods;
   }
 
   /**

@@ -2,8 +2,8 @@ import { getContainer, Inject, Injectable, InjectAll } from '@guarani/ioc';
 
 import { URL } from 'url';
 
+import { Adapter } from '../adapter';
 import { Client } from '../entities/client';
-import { User } from '../entities/user';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
@@ -18,8 +18,7 @@ import { SupportedResponseMode } from '../response-modes/types/supported-respons
 import { ResponseType } from '../response-types/response-type';
 import { AuthorizationParameters } from '../response-types/types/authorization.parameters';
 import { SupportedResponseType } from '../response-types/types/supported-response-type';
-import { ClientService } from '../services/client.service';
-import { getAllowedScopes } from '../utils';
+import { checkRequestedScope } from '../utils';
 import { Endpoint } from './endpoint';
 import { ConsentParameters } from './types/consent.parameters';
 import { SupportedEndpoint } from './types/supported-endpoint';
@@ -37,36 +36,17 @@ export class AuthorizationEndpoint implements Endpoint {
   public readonly name: SupportedEndpoint = 'authorization';
 
   /**
-   * Instance of the Client Service.
-   */
-  private readonly clientService: ClientService;
-
-  /**
-   * Response Types registered at the Authorization Server.
-   */
-  private readonly responseTypes: ResponseType[];
-
-  /**
-   * Response Modes registered at the Authorization Server.
-   */
-  private readonly responseModes: ResponseMode[];
-
-  /**
    * Instantiates a new Authorization Endpoint.
    *
-   * @param clientService Instance of the Client Service.
+   * @param adapter Instance of the Adapter.
    * @param responseTypes Response Types registered at the Authorization Server.
    * @param responseModes Response Modes registered at the Authorization Server.
    */
   public constructor(
-    @Inject('ClientService') clientService: ClientService,
-    @InjectAll('ResponseType') responseTypes: ResponseType[],
-    @InjectAll('ResponseMode') responseModes: ResponseMode[]
-  ) {
-    this.clientService = clientService;
-    this.responseTypes = responseTypes;
-    this.responseModes = responseModes;
-  }
+    @Inject('Adapter') private readonly adapter: Adapter,
+    @InjectAll('ResponseType') private readonly responseTypes: ResponseType[],
+    @InjectAll('ResponseMode') private readonly responseModes: ResponseMode[]
+  ) {}
 
   /**
    * Error Endpoint of the Authorization Server.
@@ -96,7 +76,7 @@ export class AuthorizationEndpoint implements Endpoint {
     this.checkClientResponseType(client, responseType);
     this.checkClientRedirectUri(client, params.redirect_uri);
 
-    const scopes = getAllowedScopes(client, params.scope);
+    const scopes = checkRequestedScope(client, params.scope);
 
     return { client, scopes };
   }
@@ -105,17 +85,13 @@ export class AuthorizationEndpoint implements Endpoint {
    * Creates a HTTP Redirect Authorization Response.
    *
    * Any error is safely redirected to the Redirect URI provided by the Client in the Authorization Request,
-   * or to the Authorization Server's Error Endpoint, if the error should not be returned to the Client's Redirect URI.
+   * or to the Authorization Server's Error Endpoint, should the error not be returned to the Client's Redirect URI.
    *
    * If the authorization flow of the grant results in a successful response, it will redirect the User-Agent
    * to the Redirect URI provided by the Client.
    *
    * This method **REQUIRES** consent given by the User, be it implicit or explicit.
-   *
-   * The means of which the application obtains the consent of the User has to be defined in the Framework Integration,
-   * since it usually requires a redirection to an endpoint that is not supported by OAuth 2.0.
-   *
-   * If this method is hit, it assumes that the User has given consent to whatever scopes were requested by the Client.
+   * The means of which the application obtains the consent of the User has to be defined by the application.
    *
    * @param request HTTP Request.
    * @returns HTTP Response.
@@ -143,8 +119,18 @@ export class AuthorizationEndpoint implements Endpoint {
     }
 
     try {
-      const user = this.getUser(request);
-      const authorizationResponse = await responseType.createAuthorizationResponse(request, client, user);
+      if (request.user === undefined) {
+        const scopes = checkRequestedScope(client, params.scope);
+
+        // TODO: Check if this should be a render or a redirect.
+        return this.adapter.render('consent', { client, scopes, state: params.state });
+      }
+
+      if (request.user === null) {
+        throw new AccessDeniedException({ error_description: 'Authorization denied by the End User.' });
+      }
+
+      const authorizationResponse = await responseType.createAuthorizationResponse(params, client, request.user);
 
       return responseMode.createHttpResponse(params.redirect_uri, authorizationResponse);
     } catch (exc: any) {
@@ -198,7 +184,7 @@ export class AuthorizationEndpoint implements Endpoint {
    * @returns Client based on the provided Client Identifier.
    */
   private async getClient(clientId: string): Promise<Client> {
-    const client = await this.clientService.findClient(clientId);
+    const client = await this.adapter.findClient(clientId);
 
     if (client === null) {
       throw new InvalidClientException({ error_description: 'Invalid Client.' });
@@ -263,21 +249,5 @@ export class AuthorizationEndpoint implements Endpoint {
     }
 
     return responseMode;
-  }
-
-  /**
-   * Returns the End User of the Request if Consent was given.
-   *
-   * @param request HTTP Request.
-   * @returns End User.
-   */
-  private getUser(request: Request): User {
-    const { user } = request;
-
-    if (user === undefined) {
-      throw new AccessDeniedException({ error_description: 'Authorization denied by the End User.' });
-    }
-
-    return user;
   }
 }

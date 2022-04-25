@@ -14,7 +14,7 @@ import { AccessTokenResponse } from './types/access-token.response';
  * @param scope Scope requested by the Client.
  * @returns List of allowed Scopes.
  */
-export function getAllowedScopes(client: Client, scope: string): string[] {
+export function checkRequestedScope(client: Client, scope: string): string[] {
   const registeredScopes = getContainer('oauth2').resolve<string[]>('Scopes');
   const requestedScopes = scope.split(' ');
 

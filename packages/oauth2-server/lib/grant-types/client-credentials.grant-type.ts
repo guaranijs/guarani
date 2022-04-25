@@ -4,7 +4,7 @@ import { Client } from '../entities/client';
 import { Request } from '../http/request';
 import { AccessTokenService } from '../services/access-token.service';
 import { AccessTokenResponse } from '../types/access-token.response';
-import { createAccessTokenResponse, getAllowedScopes } from '../utils';
+import { createAccessTokenResponse, checkRequestedScope } from '../utils';
 import { GrantType } from './grant-type';
 import { ClientCredentialsParameters } from './types/client-credentials.parameters';
 import { SupportedGrantType } from './types/supported-grant-type';
@@ -55,7 +55,7 @@ export class ClientCredentialsGrantType implements GrantType {
    */
   public async createTokenResponse(request: Request, client: Client): Promise<AccessTokenResponse> {
     const params = <ClientCredentialsParameters>request.body;
-    const scopes = params.scope !== undefined ? getAllowedScopes(client, params.scope) : client.scopes;
+    const scopes = params.scope !== undefined ? checkRequestedScope(client, params.scope) : client.scopes;
     const accessToken = await this.accessTokenService.createAccessToken(this.name, scopes, client, null, null);
 
     return createAccessTokenResponse(accessToken);

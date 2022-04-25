@@ -1,11 +1,11 @@
 import { Dict, Nullable } from '@guarani/types';
 
+import { Adapter } from '../../lib/adapter';
 import { ClientSecretPostClientAuthentication } from '../../lib/client-authentication/client-secret-post.client-authentication';
 import { SupportedClientAuthentication } from '../../lib/client-authentication/types/supported-client-authentication';
 import { Client } from '../../lib/entities/client';
 import { InvalidClientException } from '../../lib/exceptions/invalid-client.exception';
 import { Request } from '../../lib/http/request';
-import { ClientService } from '../../lib/services/client.service';
 
 const clients: Client[] = [
   {
@@ -37,13 +37,13 @@ const clients: Client[] = [
   },
 ];
 
-const clientServiceMock: jest.Mocked<ClientService> = {
+const adapterMock: jest.Mocked<Adapter> = {
   findClient: jest.fn(async (clientId: string): Promise<Nullable<Client>> => {
     return clients.find((client) => client.id === clientId) ?? null;
   }),
 };
 
-const method = new ClientSecretPostClientAuthentication(clientServiceMock);
+const method = new ClientSecretPostClientAuthentication(adapterMock);
 
 const methodRequests: [Dict, boolean][] = [
   [{}, false],

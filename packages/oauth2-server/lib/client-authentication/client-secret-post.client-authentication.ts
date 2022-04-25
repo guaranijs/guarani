@@ -2,10 +2,10 @@ import { Inject, Injectable } from '@guarani/ioc';
 
 import { timingSafeEqual } from 'crypto';
 
+import { Adapter } from '../adapter';
 import { Client } from '../entities/client';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { Request } from '../http/request';
-import { ClientService } from '../services/client.service';
 import { ClientAuthentication } from './client-authentication';
 import { SupportedClientAuthentication } from './types/supported-client-authentication';
 
@@ -50,18 +50,11 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
   public readonly name: SupportedClientAuthentication = 'client_secret_post';
 
   /**
-   * Instance of the Client Service.
-   */
-  private readonly clientService: ClientService;
-
-  /**
    * Instantiates a new Client Secret Post Client Authentication Method.
    *
-   * @param clientService Instance of the Client Service.
+   * @param adapter Instance of the Adapter.
    */
-  public constructor(@Inject('ClientService') clientService: ClientService) {
-    this.clientService = clientService;
-  }
+  public constructor(@Inject('Adapter') private readonly adapter: Adapter) {}
 
   /**
    * Checks if the Client Authentication Method has been requested by the Client.
@@ -81,7 +74,7 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
   public async authenticate(request: Request): Promise<Client> {
     const { client_id: clientId, client_secret: clientSecret } = <ClientCredentials>request.body;
 
-    const client = await this.clientService.findClient(clientId);
+    const client = await this.adapter.findClient(clientId);
 
     if (client === null) {
       throw new InvalidClientException({ error_description: 'Invalid Credentials.' });

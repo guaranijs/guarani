@@ -14,7 +14,6 @@ import { ResponseMode } from '../response-modes/response-mode';
 import { ResponseType } from '../response-types/response-type';
 import { AccessTokenService } from '../services/access-token.service';
 import { AuthorizationCodeService } from '../services/authorization-code.service';
-import { ClientService } from '../services/client.service';
 import { RefreshTokenService } from '../services/refresh-token.service';
 import { UserService } from '../services/user.service';
 import { getMetadata } from './helpers/get-metadata';
@@ -57,7 +56,6 @@ export class OAuth2Factory {
     this.setResponseTypes(server);
     this.setResponseModes(server);
     this.setPkceMethods(server);
-    this.setClientService(server);
     this.setAccessTokenService(server);
     this.setUserService(server);
     this.setAuthorizationCodeService(server);
@@ -203,17 +201,6 @@ export class OAuth2Factory {
         this.container.bindToken<PkceMethod>('PkceMethod').toClass(pkceMethod);
       });
     }
-  }
-
-  /**
-   * Defines the Client Service used by the Authorization Server.
-   *
-   * @param server Authorization Server.
-   */
-  private static setClientService(server: Constructor<AuthorizationServer>): void {
-    const clientService = <ClientService>getMetadata(MetadataToken.ClientService, server);
-
-    this.container.bindToken<ClientService>('ClientService').toValue(clientService).asSingleton();
   }
 
   /**

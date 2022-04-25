@@ -3,6 +3,7 @@ import { Constructor, Dict, Nullable } from '@guarani/types';
 
 import { URL } from 'url';
 
+import { Adapter } from '../../lib/adapter';
 import { AuthorizationEndpoint } from '../../lib/endpoints/authorization.endpoint';
 import { ConsentParameters } from '../../lib/endpoints/types/consent.parameters';
 import { SupportedEndpoint } from '../../lib/endpoints/types/supported-endpoint';
@@ -20,7 +21,6 @@ import { Response } from '../../lib/http/response';
 import { ResponseMode } from '../../lib/response-modes/response-mode';
 import { ResponseType } from '../../lib/response-types/response-type';
 import { AuthorizationParameters } from '../../lib/response-types/types/authorization.parameters';
-import { ClientService } from '../../lib/services/client.service';
 
 const clients: Client[] = [
   {
@@ -34,23 +34,23 @@ const clients: Client[] = [
   },
 ];
 
-const clientService: jest.Mocked<ClientService> = {
+const adapterMock: jest.Mocked<Adapter> = {
   findClient: jest.fn(async (clientId: string): Promise<Nullable<Client>> => {
     return clients.find((client) => client.id === clientId) ?? null;
   }),
 };
 
-const responseTypes: jest.Mocked<ResponseType>[] = [
+const responseTypesMock: jest.Mocked<ResponseType>[] = [
   { name: 'code', defaultResponseMode: 'query', createAuthorizationResponse: jest.fn() },
   { name: 'token', defaultResponseMode: 'fragment', createAuthorizationResponse: jest.fn() },
 ];
 
-const responseModes: jest.Mocked<ResponseMode>[] = [
+const responseModesMock: jest.Mocked<ResponseMode>[] = [
   { name: 'query', createHttpResponse: jest.fn() },
   { name: 'fragment', createHttpResponse: jest.fn() },
 ];
 
-const endpoint = new AuthorizationEndpoint(clientService, responseTypes, responseModes);
+const endpoint = new AuthorizationEndpoint(adapterMock, responseTypesMock, responseModesMock);
 
 describe('Authorization Endpoint', () => {
   describe('name', () => {
@@ -135,19 +135,21 @@ describe('Authorization Endpoint', () => {
 
     it('should return the requested Response Type.', () => {
       // @ts-expect-error Testing a private method.
-      expect(endpoint.getResponseType('code')).toMatchObject(responseTypes[0]);
+      expect(endpoint.getResponseType('code')).toMatchObject(responseTypesMock[0]);
     });
   });
 
   describe('checkClientResponseType()', () => {
     it('should reject when a Client requests a Response Type that it is not allowed to request.', () => {
       // @ts-expect-error Testing a private method.
-      expect(() => endpoint.checkClientResponseType(clients[0], responseTypes[1])).toThrow(UnauthorizedClientException);
+      expect(() => endpoint.checkClientResponseType(clients[0], responseTypesMock[1])).toThrow(
+        UnauthorizedClientException
+      );
     });
 
     it('should not reject when a Client requests a Response Type that it is allowed to request.', () => {
       // @ts-expect-error Testing a private method.
-      expect(() => endpoint.checkClientResponseType(clients[0], responseTypes[0])).not.toThrow();
+      expect(() => endpoint.checkClientResponseType(clients[0], responseTypesMock[0])).not.toThrow();
     });
   });
 
@@ -173,7 +175,7 @@ describe('Authorization Endpoint', () => {
 
     it('should return the requested Response Mode.', () => {
       // @ts-expect-error Testing a private method.
-      expect(endpoint.getResponseMode('query')).toMatchObject(responseModes[0]);
+      expect(endpoint.getResponseMode('query')).toMatchObject(responseModesMock[0]);
     });
   });
 
@@ -308,7 +310,7 @@ describe('Authorization Endpoint', () => {
     );
 
     it('should return an error response when the End User denied the Authorization Request.', async () => {
-      responseModes[0].createHttpResponse.mockReturnValue(
+      responseModesMock[0].createHttpResponse.mockReturnValue(
         new Response().redirect(
           'https://example.com/callback?error=access_denied&error_description=Authorization+denied+by+the+End+User.'
         )
@@ -322,15 +324,15 @@ describe('Authorization Endpoint', () => {
         statusCode: 302,
       });
 
-      responseModes[0].createHttpResponse.mockReset();
+      responseModesMock[0].createHttpResponse.mockReset();
     });
 
     it('should return a valid authorization response.', async () => {
       request.user = { id: 'user_id' };
 
-      responseTypes[0].createAuthorizationResponse.mockResolvedValue({ code: 'code', state: request.query.state });
+      responseTypesMock[0].createAuthorizationResponse.mockResolvedValue({ code: 'code', state: request.query.state });
 
-      responseModes[0].createHttpResponse.mockImplementation((redirectUri: string, params: Dict) => {
+      responseModesMock[0].createHttpResponse.mockImplementation((redirectUri: string, params: Dict) => {
         const url = new URL(redirectUri);
         const searchParams = new URLSearchParams(params);
         url.search = searchParams.toString();
@@ -342,8 +344,8 @@ describe('Authorization Endpoint', () => {
         statusCode: 302,
       });
 
-      responseModes[0].createHttpResponse.mockReset();
-      responseTypes[0].createAuthorizationResponse.mockReset();
+      responseModesMock[0].createHttpResponse.mockReset();
+      responseTypesMock[0].createAuthorizationResponse.mockReset();
     });
   });
 });

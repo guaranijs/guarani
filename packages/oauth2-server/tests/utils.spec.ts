@@ -1,8 +1,8 @@
 import { Client } from '../lib/entities/client';
 import { InvalidScopeException } from '../lib/exceptions/invalid-scope.exception';
-import { getAllowedScopes } from '../lib/utils';
+import { checkRequestedScope } from '../lib/utils';
 
-describe('getAllowedScopes()', () => {
+describe('checkRequestedScope()', () => {
   const client: Client = {
     id: 'client_id',
     secret: null,
@@ -19,17 +19,17 @@ describe('getAllowedScopes()', () => {
 
   // This is defined at jest.setup.ts
   it('should reject when requesting an unsupported Scope.', () => {
-    expect(() => getAllowedScopes(client, 'foo unknown qux')).toThrow(InvalidScopeException);
+    expect(() => checkRequestedScope(client, 'foo unknown qux')).toThrow(InvalidScopeException);
   });
 
   it.each(invalidClientScopes)(
     'should reject when a Client requests a Scope it is not allowed to request.',
     (invalidScope) => {
-      expect(() => getAllowedScopes(client, invalidScope)).toThrow(InvalidScopeException);
+      expect(() => checkRequestedScope(client, invalidScope)).toThrow(InvalidScopeException);
     }
   );
 
   it.each(scopes)('should return a list of the requested scopes.', (scope) => {
-    expect(getAllowedScopes(client, scope)).toEqual(expect.arrayContaining(scope.split(' ')));
+    expect(checkRequestedScope(client, scope)).toEqual(expect.arrayContaining(scope.split(' ')));
   });
 });

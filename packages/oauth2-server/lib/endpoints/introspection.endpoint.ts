@@ -41,18 +41,13 @@ export abstract class IntrospectionEndpoint implements Endpoint {
   };
 
   /**
-   * Client Authentication Methods registered at the Authorization Server.
-   */
-  private readonly clientAuthenticationMethods: ClientAuthentication[];
-
-  /**
    * Instantiates a new Introspection Endpoint.
    *
    * @param clientAuthenticationMethods Client Authentication Methods registered at the Authorization Server.
    */
-  public constructor(@InjectAll('ClientAuthentication') clientAuthenticationMethods: ClientAuthentication[]) {
-    this.clientAuthenticationMethods = clientAuthenticationMethods;
-  }
+  public constructor(
+    @InjectAll('ClientAuthentication') private readonly clientAuthenticationMethods: ClientAuthentication[]
+  ) {}
 
   /**
    * Introspects the provided Token about its metadata and state within the Authorization Server.

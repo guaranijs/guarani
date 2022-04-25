@@ -8,7 +8,6 @@ import { ResponseMode } from '../../response-modes/response-mode';
 import { ResponseType } from '../../response-types/response-type';
 import { AccessTokenService } from '../../services/access-token.service';
 import { AuthorizationCodeService } from '../../services/authorization-code.service';
-import { ClientService } from '../../services/client.service';
 import { RefreshTokenService } from '../../services/refresh-token.service';
 import { UserService } from '../../services/user.service';
 
@@ -60,11 +59,6 @@ export interface AuthorizationServerMetadataParameters {
    * PKCE Methods supported by the Authorization Server.
    */
   readonly pkceMethods?: Optional<Constructor<PkceMethod>[]>;
-
-  /**
-   * Client Service.
-   */
-  readonly clientService: ClientService;
 
   /**
    * Access Token Service.

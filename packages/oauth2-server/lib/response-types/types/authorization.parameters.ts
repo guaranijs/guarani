@@ -1,4 +1,4 @@
-import { Optional } from '@guarani/types';
+import { Dict, Optional } from '@guarani/types';
 
 import { SupportedResponseMode } from '../../response-modes/types/supported-response-mode';
 import { SupportedResponseType } from './supported-response-type';
@@ -6,7 +6,7 @@ import { SupportedResponseType } from './supported-response-type';
 /**
  * Defines the default parameters of the Authorization Request.
  */
-export interface AuthorizationParameters {
+export interface AuthorizationParameters extends Dict {
   /**
    * Response Type requested by the Client.
    */
@@ -36,9 +36,4 @@ export interface AuthorizationParameters {
    * Response Mode requested by the Client.
    */
   readonly response_mode?: Optional<SupportedResponseMode>;
-
-  /**
-   * Optional additional Parameters.
-   */
-  readonly [parameter: string]: any;
 }

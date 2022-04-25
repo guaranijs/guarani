@@ -3,11 +3,10 @@ import { Inject, Injectable } from '@guarani/ioc';
 import { Client } from '../entities/client';
 import { User } from '../entities/user';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { Request } from '../http/request';
 import { SupportedResponseMode } from '../response-modes/types/supported-response-mode';
 import { AccessTokenService } from '../services/access-token.service';
 import { AccessTokenResponse } from '../types/access-token.response';
-import { createAccessTokenResponse, getAllowedScopes } from '../utils';
+import { createAccessTokenResponse, checkRequestedScope } from '../utils';
 import { ResponseType } from './response-type';
 import { AuthorizationParameters } from './types/authorization.parameters';
 import { SupportedResponseType } from './types/supported-response-type';
@@ -54,17 +53,19 @@ export class TokenResponseType implements ResponseType {
   /**
    * Creates the Authorization Response with the Authorization Grant used by the Client on behalf of the End User.
    *
-   * @param request HTTP Request.
+   * @param params Parameters of the Authorization Request.
    * @param client OAuth 2.0 Client of the Request.
    * @param user End User represented by the Client.
    * @returns Authorization Response.
    */
-  public async createAuthorizationResponse(request: Request, client: Client, user: User): Promise<AccessTokenResponse> {
-    const params = <AuthorizationParameters>request.data;
-
+  public async createAuthorizationResponse(
+    params: AuthorizationParameters,
+    client: Client,
+    user: User
+  ): Promise<AccessTokenResponse> {
     this.checkParameters(params);
 
-    const scopes = getAllowedScopes(client, params.scope);
+    const scopes = checkRequestedScope(client, params.scope);
     const accessToken = await this.accessTokenService.createAccessToken('implicit', scopes, client, user, null);
     const token = createAccessTokenResponse(accessToken);
 

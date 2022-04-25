@@ -4,11 +4,10 @@ import { removeNullishValues } from '@guarani/objects';
 import { Client } from '../entities/client';
 import { User } from '../entities/user';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { Request } from '../http/request';
 import { PkceMethod } from '../pkce/pkce-method';
 import { SupportedResponseMode } from '../response-modes/types/supported-response-mode';
 import { AuthorizationCodeService } from '../services/authorization-code.service';
-import { getAllowedScopes } from '../utils';
+import { checkRequestedScope } from '../utils';
 import { ResponseType } from './response-type';
 import { AuthorizationCodeParameters } from './types/authorization-code.parameters';
 import { AuthorizationCodeResponse } from './types/authorization-code.response';
@@ -82,21 +81,19 @@ export class CodeResponseType implements ResponseType {
    * Both the Code Challenge and the PKCE Method used by the Client to generate the PKCE Code Challenge are registered
    * at the application's storage together with the issued Authorization Code for verification at the Token Endpoint.
    *
-   * @param request HTTP Request.
+   * @param params Parameters of the Authorization Request.
    * @param client OAuth 2.0 Client of the Request.
    * @param user End User represented by the Client.
    * @returns Authorization Response.
    */
   public async createAuthorizationResponse(
-    request: Request,
+    params: AuthorizationCodeParameters,
     client: Client,
     user: User
   ): Promise<AuthorizationCodeResponse> {
-    const params = <AuthorizationCodeParameters>request.data;
-
     this.checkParameters(params);
 
-    const scopes = getAllowedScopes(client, params.scope);
+    const scopes = checkRequestedScope(client, params.scope);
     const authorizationCode = await this.authorizationCodeService.createAuthorizationCode(params, scopes, client, user);
 
     return removeNullishValues<AuthorizationCodeResponse>({ code: authorizationCode.token, state: params.state });

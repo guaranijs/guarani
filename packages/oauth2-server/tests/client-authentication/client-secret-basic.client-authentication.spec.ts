@@ -2,12 +2,12 @@ import { Nullable } from '@guarani/types';
 
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
 
+import { Adapter } from '../../lib/adapter';
 import { ClientSecretBasicClientAuthentication } from '../../lib/client-authentication/client-secret-basic.client-authentication';
 import { SupportedClientAuthentication } from '../../lib/client-authentication/types/supported-client-authentication';
 import { Client } from '../../lib/entities/client';
 import { InvalidClientException } from '../../lib/exceptions/invalid-client.exception';
 import { Request } from '../../lib/http/request';
-import { ClientService } from '../../lib/services/client.service';
 
 const clients: Client[] = [
   {
@@ -39,13 +39,13 @@ const clients: Client[] = [
   },
 ];
 
-const clientServiceMock: jest.Mocked<ClientService> = {
+const adapterMock: jest.Mocked<Adapter> = {
   findClient: jest.fn(async (clientId: string): Promise<Nullable<Client>> => {
     return clients.find((client) => client.id === clientId) ?? null;
   }),
 };
 
-const method = new ClientSecretBasicClientAuthentication(clientServiceMock);
+const method = new ClientSecretBasicClientAuthentication(adapterMock);
 
 const methodRequests: [IncomingHttpHeaders, boolean][] = [
   [{}, false],

@@ -38,28 +38,15 @@ export class TokenEndpoint implements Endpoint {
   };
 
   /**
-   * Client Authentication Methods registered at the Authorization Server.
-   */
-  private readonly clientAuthenticationMethods: ClientAuthentication[];
-
-  /**
-   * Grant Types registered at the Authorization Server.
-   */
-  private readonly grantTypes: GrantType[];
-
-  /**
    * Instantiates a new Token Endpoint.
    *
    * @param clientAuthenticationMethods Client Authentication Methods registered at the Authorization Server.
    * @param grantTypes Grant Types registered at the Authorization Server.
    */
   public constructor(
-    @InjectAll('ClientAuthentication') clientAuthenticationMethods: ClientAuthentication[],
-    @InjectAll('GrantType') grantTypes: GrantType[]
-  ) {
-    this.clientAuthenticationMethods = clientAuthenticationMethods;
-    this.grantTypes = grantTypes;
-  }
+    @InjectAll('ClientAuthentication') private readonly clientAuthenticationMethods: ClientAuthentication[],
+    @InjectAll('GrantType') private readonly grantTypes: GrantType[]
+  ) {}
 
   /**
    * Creates a HTTP JSON Token Response.

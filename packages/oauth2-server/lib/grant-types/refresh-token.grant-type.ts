@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@guarani/ioc';
 import { Optional } from '@guarani/types';
 
-import { ClientEntity } from '../entities/client.entity';
-import { RefreshTokenEntity } from '../entities/refresh-token.entity';
+import { Client } from '../entities/client';
+import { RefreshToken } from '../entities/refresh-token';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { Request } from '../http/request';
@@ -67,7 +67,7 @@ export class RefreshTokenGrantType implements GrantType {
    * @param client OAuth 2.0 Client of the Request.
    * @returns Access Token Response.
    */
-  public async createTokenResponse(request: Request, client: ClientEntity): Promise<AccessTokenResponse> {
+  public async createTokenResponse(request: Request, client: Client): Promise<AccessTokenResponse> {
     const params = <RefreshTokenParameters>request.body;
 
     this.checkParameters(params);
@@ -106,7 +106,7 @@ export class RefreshTokenGrantType implements GrantType {
    * @param token Token provided by the Client.
    * @returns Refresh Token based on the provided token.
    */
-  private async getRefreshToken(token: string): Promise<RefreshTokenEntity> {
+  private async getRefreshToken(token: string): Promise<RefreshToken> {
     const refreshToken = await this.refreshTokenService.findRefreshToken(token);
 
     if (refreshToken === null) {
@@ -122,7 +122,7 @@ export class RefreshTokenGrantType implements GrantType {
    * @param refreshToken Refresh Token to be checked.
    * @param client Client of the Request.
    */
-  private checkRefreshToken(refreshToken: RefreshTokenEntity, client: ClientEntity): void {
+  private checkRefreshToken(refreshToken: RefreshToken, client: Client): void {
     if (refreshToken.client.id !== client.id) {
       throw new InvalidGrantException({ error_description: 'Mismatching Client Identifier.' });
     }
@@ -143,7 +143,7 @@ export class RefreshTokenGrantType implements GrantType {
    * @param scope Subset of scopes requested by the Client.
    * @returns Scopes of the new Access Token.
    */
-  private getScopes(refreshToken: RefreshTokenEntity, scope?: Optional<string>): string[] {
+  private getScopes(refreshToken: RefreshToken, scope?: Optional<string>): string[] {
     if (scope === undefined) {
       return refreshToken.scopes;
     }

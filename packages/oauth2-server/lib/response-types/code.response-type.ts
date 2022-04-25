@@ -1,8 +1,8 @@
 import { Inject, Injectable, InjectAll } from '@guarani/ioc';
 import { removeNullishValues } from '@guarani/objects';
 
-import { ClientEntity } from '../entities/client.entity';
-import { UserEntity } from '../entities/user.entity';
+import { Client } from '../entities/client';
+import { User } from '../entities/user';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { Request } from '../http/request';
 import { PkceMethod } from '../pkce/pkce-method';
@@ -89,8 +89,8 @@ export class CodeResponseType implements ResponseType {
    */
   public async createAuthorizationResponse(
     request: Request,
-    client: ClientEntity,
-    user: UserEntity
+    client: Client,
+    user: User
   ): Promise<AuthorizationCodeResponse> {
     const params = <AuthorizationCodeParameters>request.data;
 

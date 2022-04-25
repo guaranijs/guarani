@@ -1,6 +1,6 @@
 import { Nullable } from '@guarani/types';
 
-import { UserEntity } from '../entities/user.entity';
+import { User } from '../entities/user';
 
 /**
  * Representation of the User Service.
@@ -14,7 +14,7 @@ export interface UserService {
    * @param userId Identifier of the User.
    * @returns User based on the provided Identifier.
    */
-  findUser(userId: string): Promise<Nullable<UserEntity>>;
+  findUser(userId: string): Promise<Nullable<User>>;
 
   /**
    * Searches the application's storage for a User containing the provided Username.
@@ -28,5 +28,5 @@ export interface UserService {
    * @param password Password of the User to be fetched.
    * @returns User based on the provided Username.
    */
-  authenticate(username: string, password: string): Promise<Nullable<UserEntity>>;
+  authenticate(username: string, password: string): Promise<Nullable<User>>;
 }

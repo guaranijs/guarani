@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@guarani/ioc';
 
-import { ClientEntity } from '../entities/client.entity';
-import { UserEntity } from '../entities/user.entity';
+import { Client } from '../entities/client';
+import { User } from '../entities/user';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { Request } from '../http/request';
 import { SupportedResponseMode } from '../response-modes/types/supported-response-mode';
@@ -59,11 +59,7 @@ export class TokenResponseType implements ResponseType {
    * @param user End User represented by the Client.
    * @returns Authorization Response.
    */
-  public async createAuthorizationResponse(
-    request: Request,
-    client: ClientEntity,
-    user: UserEntity
-  ): Promise<AccessTokenResponse> {
+  public async createAuthorizationResponse(request: Request, client: Client, user: User): Promise<AccessTokenResponse> {
     const params = <AuthorizationParameters>request.data;
 
     this.checkParameters(params);

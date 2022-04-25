@@ -2,7 +2,7 @@ import { Dict, Optional } from '@guarani/types';
 
 import { IncomingHttpHeaders } from 'http';
 
-import { UserEntity } from '../../entities/user.entity';
+import { User } from '../../entities/user';
 import { SupportedHttpMethod } from '../types/supported-http-method';
 
 /**
@@ -32,5 +32,5 @@ export interface RequestParams {
   /**
    * Authenticated End User of the Request.
    */
-  readonly user?: Optional<UserEntity>;
+  readonly user?: Optional<User>;
 }

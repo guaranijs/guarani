@@ -2,7 +2,7 @@ import { Dict, Optional } from '@guarani/types';
 
 import { IncomingHttpHeaders } from 'http';
 
-import { UserEntity } from '../entities/user.entity';
+import { User } from '../entities/user';
 import { RequestParams } from './types/request.params';
 import { SupportedHttpMethod } from './types/supported-http-method';
 
@@ -36,7 +36,7 @@ export class Request implements RequestParams {
   /**
    * Authenticated End User of the Request.
    */
-  public user?: Optional<UserEntity>;
+  public user?: Optional<User>;
 
   /**
    * Instantiates a new HTTP Request based on the provided Parameters.

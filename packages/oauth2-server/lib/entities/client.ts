@@ -7,7 +7,7 @@ import { SupportedResponseType } from '../response-types/types/supported-respons
 /**
  * Representation of the OAuth 2.0 Client.
  */
-export interface ClientEntity {
+export interface Client {
   /**
    * Identifier of the Client.
    */

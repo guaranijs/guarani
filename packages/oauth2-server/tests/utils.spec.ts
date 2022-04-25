@@ -1,9 +1,9 @@
-import { ClientEntity } from '../lib/entities/client.entity';
+import { Client } from '../lib/entities/client';
 import { InvalidScopeException } from '../lib/exceptions/invalid-scope.exception';
 import { getAllowedScopes } from '../lib/utils';
 
 describe('getAllowedScopes()', () => {
-  const client: ClientEntity = {
+  const client: Client = {
     id: 'client_id',
     secret: null,
     scopes: ['foo', 'bar', 'baz'],

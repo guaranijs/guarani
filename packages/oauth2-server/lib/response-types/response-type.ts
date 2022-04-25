@@ -1,7 +1,7 @@
 import { Dict } from '@guarani/types';
 
-import { ClientEntity } from '../entities/client.entity';
-import { UserEntity } from '../entities/user.entity';
+import { Client } from '../entities/client';
+import { User } from '../entities/user';
 import { Request } from '../http/request';
 import { SupportedResponseMode } from '../response-modes/types/supported-response-mode';
 import { SupportedResponseType } from './types/supported-response-type';
@@ -28,5 +28,5 @@ export interface ResponseType {
    * @param user End User represented by the Client.
    * @returns Authorization Response.
    */
-  createAuthorizationResponse(request: Request, client: ClientEntity, user: UserEntity): Promise<Dict>;
+  createAuthorizationResponse(request: Request, client: Client, user: User): Promise<Dict>;
 }

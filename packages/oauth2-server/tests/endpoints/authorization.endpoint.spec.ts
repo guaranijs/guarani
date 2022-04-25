@@ -6,8 +6,8 @@ import { URL } from 'url';
 import { AuthorizationEndpoint } from '../../lib/endpoints/authorization.endpoint';
 import { ConsentParameters } from '../../lib/endpoints/types/consent.parameters';
 import { SupportedEndpoint } from '../../lib/endpoints/types/supported-endpoint';
-import { ClientEntity } from '../../lib/entities/client.entity';
-import { UserEntity } from '../../lib/entities/user.entity';
+import { Client } from '../../lib/entities/client';
+import { User } from '../../lib/entities/user';
 import { AccessDeniedException } from '../../lib/exceptions/access-denied.exception';
 import { InvalidClientException } from '../../lib/exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
@@ -22,7 +22,7 @@ import { ResponseType } from '../../lib/response-types/response-type';
 import { AuthorizationParameters } from '../../lib/response-types/types/authorization.parameters';
 import { ClientService } from '../../lib/services/client.service';
 
-const clients: ClientEntity[] = [
+const clients: Client[] = [
   {
     id: 'client1',
     secret: 'secret1',
@@ -35,7 +35,7 @@ const clients: ClientEntity[] = [
 ];
 
 const clientService: jest.Mocked<ClientService> = {
-  findClient: jest.fn(async (clientId: string): Promise<Nullable<ClientEntity>> => {
+  findClient: jest.fn(async (clientId: string): Promise<Nullable<Client>> => {
     return clients.find((client) => client.id === clientId) ?? null;
   }),
 };
@@ -193,7 +193,7 @@ describe('Authorization Endpoint', () => {
       request.user = { id: 'user_id' };
 
       // @ts-expect-error Testing a private method.
-      expect(endpoint.getUser(request)).toMatchObject<UserEntity>({ id: 'user_id' });
+      expect(endpoint.getUser(request)).toMatchObject<User>({ id: 'user_id' });
     });
   });
 

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@guarani/ioc';
 
-import { ClientEntity } from '../entities/client.entity';
+import { Client } from '../entities/client';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { Request } from '../http/request';
 import { ClientService } from '../services/client.service';
@@ -72,7 +72,7 @@ export class NoneClientAuthentication implements ClientAuthentication {
    * @param request HTTP Request.
    * @returns Authenticated Client.
    */
-  public async authenticate(request: Request): Promise<ClientEntity> {
+  public async authenticate(request: Request): Promise<Client> {
     const { client_id: clientId } = <ClientCredentials>request.body;
 
     const client = await this.clientService.findClient(clientId);

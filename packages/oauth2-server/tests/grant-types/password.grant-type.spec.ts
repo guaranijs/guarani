@@ -1,10 +1,10 @@
 import { Dict, Nullable } from '@guarani/types';
 import { secretToken } from '@guarani/utils';
 
-import { AccessTokenEntity } from '../../lib/entities/access-token.entity';
-import { ClientEntity } from '../../lib/entities/client.entity';
-import { RefreshTokenEntity } from '../../lib/entities/refresh-token.entity';
-import { UserEntity } from '../../lib/entities/user.entity';
+import { AccessToken } from '../../lib/entities/access-token';
+import { Client } from '../../lib/entities/client';
+import { RefreshToken } from '../../lib/entities/refresh-token';
+import { User } from '../../lib/entities/user';
 import { InvalidGrantException } from '../../lib/exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
 import { PasswordGrantType } from '../../lib/grant-types/password.grant-type';
@@ -16,7 +16,7 @@ import { RefreshTokenService } from '../../lib/services/refresh-token.service';
 import { UserService } from '../../lib/services/user.service';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
-const client: ClientEntity = {
+const client: Client = {
   id: 'client_id',
   secret: 'client_secret',
   scopes: ['foo', 'bar', 'baz'],
@@ -26,20 +26,20 @@ const client: ClientEntity = {
   redirectUris: ['https://example.com/callback'],
 };
 
-const users: (UserEntity & Dict)[] = [
+const users: (User & Dict)[] = [
   { id: 'user1', username: 'username1', password: 'password1' },
   { id: 'user2', username: 'username2', password: 'password2' },
 ];
 
 const userServiceMock: jest.Mocked<UserService> = {
   findUser: jest.fn(),
-  authenticate: jest.fn(async (username, password): Promise<Nullable<UserEntity>> => {
+  authenticate: jest.fn(async (username, password): Promise<Nullable<User>> => {
     return users.find((user) => user.username === username && user.password === password) ?? null;
   }),
 };
 
 const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
-  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessTokenEntity> => {
+  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessToken> => {
     return {
       token: await secretToken(),
       audience: client.id,
@@ -58,7 +58,7 @@ const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
 
 const refreshTokenServiceMock: jest.Mocked<RefreshTokenService> = {
   findRefreshToken: jest.fn(),
-  createRefreshToken: jest.fn(async (grant, scopes, client, user): Promise<RefreshTokenEntity> => {
+  createRefreshToken: jest.fn(async (grant, scopes, client, user): Promise<RefreshToken> => {
     return {
       token: await secretToken(16),
       audience: client.id,

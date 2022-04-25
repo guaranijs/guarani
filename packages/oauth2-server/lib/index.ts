@@ -15,11 +15,11 @@ export { IntrospectionResponse } from './endpoints/types/introspection.response'
 export { RevocationParameters } from './endpoints/types/revocation.parameters';
 export { SupportedEndpoint } from './endpoints/types/supported-endpoint';
 
-export { AccessTokenEntity } from './entities/access-token.entity';
-export { AuthorizationCodeEntity } from './entities/authorization-code.entity';
-export { ClientEntity } from './entities/client.entity';
-export { RefreshTokenEntity } from './entities/refresh-token.entity';
-export { UserEntity } from './entities/user.entity';
+export { AccessToken as AccessTokenEntity } from './entities/access-token';
+export { AuthorizationCode as AuthorizationCodeEntity } from './entities/authorization-code';
+export { Client as ClientEntity } from './entities/client';
+export { RefreshToken as RefreshTokenEntity } from './entities/refresh-token';
+export { User as UserEntity } from './entities/user';
 
 export { AccessDeniedException } from './exceptions/access-denied.exception';
 export { InvalidClientException } from './exceptions/invalid-client.exception';

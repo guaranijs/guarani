@@ -1,7 +1,7 @@
 import { secretToken } from '@guarani/utils';
 
-import { AccessTokenEntity } from '../../lib/entities/access-token.entity';
-import { ClientEntity } from '../../lib/entities/client.entity';
+import { AccessToken } from '../../lib/entities/access-token';
+import { Client } from '../../lib/entities/client';
 import { InvalidScopeException } from '../../lib/exceptions/invalid-scope.exception';
 import { ClientCredentialsGrantType } from '../../lib/grant-types/client-credentials.grant-type';
 import { SupportedGrantType } from '../../lib/grant-types/types/supported-grant-type';
@@ -9,7 +9,7 @@ import { Request } from '../../lib/http/request';
 import { AccessTokenService } from '../../lib/services/access-token.service';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
-const client: ClientEntity = {
+const client: Client = {
   id: 'client_id',
   secret: 'client_secret',
   scopes: ['foo', 'bar', 'baz'],
@@ -21,7 +21,7 @@ const client: ClientEntity = {
 
 const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  createAccessToken: jest.fn(async (_grant, scopes, client, _user, _refreshToken): Promise<AccessTokenEntity> => {
+  createAccessToken: jest.fn(async (_grant, scopes, client, _user, _refreshToken): Promise<AccessToken> => {
     return {
       token: await secretToken(),
       audience: client.id,

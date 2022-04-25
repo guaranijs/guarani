@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@guarani/ioc';
 
-import { ClientEntity } from '../entities/client.entity';
+import { Client } from '../entities/client';
 import { Request } from '../http/request';
 import { AccessTokenService } from '../services/access-token.service';
 import { AccessTokenResponse } from '../types/access-token.response';
@@ -53,7 +53,7 @@ export class ClientCredentialsGrantType implements GrantType {
    * @param client OAuth 2.0 Client of the Request.
    * @returns Access Token Response.
    */
-  public async createTokenResponse(request: Request, client: ClientEntity): Promise<AccessTokenResponse> {
+  public async createTokenResponse(request: Request, client: Client): Promise<AccessTokenResponse> {
     const params = <ClientCredentialsParameters>request.body;
     const scopes = params.scope !== undefined ? getAllowedScopes(client, params.scope) : client.scopes;
     const accessToken = await this.accessTokenService.createAccessToken(this.name, scopes, client, null, null);

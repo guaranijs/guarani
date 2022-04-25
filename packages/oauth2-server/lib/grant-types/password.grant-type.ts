@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@guarani/ioc';
 
-import { ClientEntity } from '../entities/client.entity';
-import { UserEntity } from '../entities/user.entity';
+import { Client } from '../entities/client';
+import { User } from '../entities/user';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { Request } from '../http/request';
@@ -72,7 +72,7 @@ export class PasswordGrantType implements GrantType {
    * @param client OAuth 2.0 Client of the Request.
    * @returns Access Token Response.
    */
-  public async createTokenResponse(request: Request, client: ClientEntity): Promise<AccessTokenResponse> {
+  public async createTokenResponse(request: Request, client: Client): Promise<AccessTokenResponse> {
     const params = <PasswordParameters>request.body;
 
     this.checkParameters(params);
@@ -113,7 +113,7 @@ export class PasswordGrantType implements GrantType {
    * @param password Password of the User represented by the Client.
    * @returns Authenticated User.
    */
-  private async authenticate(username: string, password: string): Promise<UserEntity> {
+  private async authenticate(username: string, password: string): Promise<User> {
     const user = await this.userService.authenticate(username, password);
 
     if (user === null) {

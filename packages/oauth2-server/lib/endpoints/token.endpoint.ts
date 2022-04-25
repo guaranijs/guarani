@@ -3,7 +3,7 @@ import { Injectable, InjectAll } from '@guarani/ioc';
 import { OutgoingHttpHeaders } from 'http';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication';
-import { ClientEntity } from '../entities/client.entity';
+import { Client } from '../entities/client';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
@@ -138,7 +138,7 @@ export class TokenEndpoint implements Endpoint {
    * @param request HTTP Request.
    * @returns Authenticated Client.
    */
-  private async authenticateClient(request: Request): Promise<ClientEntity> {
+  private async authenticateClient(request: Request): Promise<Client> {
     const methods = this.clientAuthenticationMethods.filter((method) => method.hasBeenRequested(request));
 
     if (methods.length === 0) {
@@ -160,7 +160,7 @@ export class TokenEndpoint implements Endpoint {
    * @param client Client of the Request.
    * @param grantType Grant Type requested by the Client.
    */
-  private checkClientGrantType(client: ClientEntity, grantType: GrantType): void {
+  private checkClientGrantType(client: Client, grantType: GrantType): void {
     if (!client.grantTypes.includes(grantType.name)) {
       throw new UnauthorizedClientException({
         error_description: `This Client is not allowed to request the grant_type "${grantType.name}".`,

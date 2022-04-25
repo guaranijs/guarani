@@ -3,11 +3,11 @@ import { secretToken } from '@guarani/utils';
 
 import { URL } from 'url';
 
-import { AccessTokenEntity } from '../../lib/entities/access-token.entity';
-import { AuthorizationCodeEntity } from '../../lib/entities/authorization-code.entity';
-import { ClientEntity } from '../../lib/entities/client.entity';
-import { RefreshTokenEntity } from '../../lib/entities/refresh-token.entity';
-import { UserEntity } from '../../lib/entities/user.entity';
+import { AccessToken } from '../../lib/entities/access-token';
+import { AuthorizationCode } from '../../lib/entities/authorization-code';
+import { Client } from '../../lib/entities/client';
+import { RefreshToken } from '../../lib/entities/refresh-token';
+import { User } from '../../lib/entities/user';
 import { InvalidGrantException } from '../../lib/exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
 import { AuthorizationCodeGrantType } from '../../lib/grant-types/authorization-code.grant-type';
@@ -20,7 +20,7 @@ import { AuthorizationCodeService } from '../../lib/services/authorization-code.
 import { RefreshTokenService } from '../../lib/services/refresh-token.service';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
-const clients: ClientEntity[] = [
+const clients: Client[] = [
   {
     id: 'client_id',
     secret: 'client_secret',
@@ -41,9 +41,9 @@ const clients: ClientEntity[] = [
   },
 ];
 
-const user: UserEntity = { id: 'user_id' };
+const user: User = { id: 'user_id' };
 
-const authorizationCodes: AuthorizationCodeEntity[] = [
+const authorizationCodes: AuthorizationCode[] = [
   {
     token: 'code',
     audience: clients[0].id,
@@ -67,14 +67,14 @@ const pkceMethods: jest.Mocked<PkceMethod>[] = [
 
 const authorizationCodeServiceMock: jest.Mocked<AuthorizationCodeService> = {
   createAuthorizationCode: jest.fn(),
-  findAuthorizationCode: jest.fn(async (code: string): Promise<Nullable<AuthorizationCodeEntity>> => {
+  findAuthorizationCode: jest.fn(async (code: string): Promise<Nullable<AuthorizationCode>> => {
     return authorizationCodes.find((authorizationCode) => authorizationCode.token === code) ?? null;
   }),
   revokeAuthorizationCode: jest.fn(),
 };
 
 const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
-  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessTokenEntity> => {
+  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessToken> => {
     return {
       token: await secretToken(),
       audience: client.id,
@@ -92,7 +92,7 @@ const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
 };
 
 const refreshTokenServiceMock: jest.Mocked<RefreshTokenService> = {
-  createRefreshToken: jest.fn(async (grant, scopes, client, user): Promise<RefreshTokenEntity> => {
+  createRefreshToken: jest.fn(async (grant, scopes, client, user): Promise<RefreshToken> => {
     return {
       token: await secretToken(16),
       audience: client.id,
@@ -178,7 +178,7 @@ describe('Authorization Code Grant Type', () => {
   });
 
   describe('checkAuthorizationCode()', () => {
-    let invalidAuthorizationCode: AuthorizationCodeEntity;
+    let invalidAuthorizationCode: AuthorizationCode;
 
     const params = <AuthorizationCodeParameters>{
       code: 'code',

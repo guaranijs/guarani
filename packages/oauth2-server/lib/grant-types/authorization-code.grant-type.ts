@@ -1,8 +1,8 @@
 import { Inject, Injectable, InjectAll } from '@guarani/ioc';
 import { Optional } from '@guarani/types';
 
-import { AuthorizationCodeEntity } from '../entities/authorization-code.entity';
-import { ClientEntity } from '../entities/client.entity';
+import { AuthorizationCode } from '../entities/authorization-code';
+import { Client } from '../entities/client';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { Request } from '../http/request';
@@ -91,10 +91,10 @@ export class AuthorizationCodeGrantType implements GrantType {
    * @param client OAuth 2.0 Client of the Request.
    * @returns Access Token Response.
    */
-  public async createTokenResponse(request: Request, client: ClientEntity): Promise<AccessTokenResponse> {
+  public async createTokenResponse(request: Request, client: Client): Promise<AccessTokenResponse> {
     const params = <AuthorizationCodeParameters>request.body;
 
-    let authorizationCode: Optional<AuthorizationCodeEntity>;
+    let authorizationCode: Optional<AuthorizationCode>;
 
     try {
       this.checkParameters(params);
@@ -153,7 +153,7 @@ export class AuthorizationCodeGrantType implements GrantType {
    * @param code Code provided by the Client.
    * @returns Authorization Code based on the provided Code.
    */
-  private async getAuthorizationCode(code: string): Promise<AuthorizationCodeEntity> {
+  private async getAuthorizationCode(code: string): Promise<AuthorizationCode> {
     const authorizationCode = await this.authorizationCodeService.findAuthorizationCode(code);
 
     if (authorizationCode === null) {
@@ -171,9 +171,9 @@ export class AuthorizationCodeGrantType implements GrantType {
    * @param client Client of the Request.
    */
   private checkAuthorizationCode(
-    authorizationCode: AuthorizationCodeEntity,
+    authorizationCode: AuthorizationCode,
     params: AuthorizationCodeParameters,
-    client: ClientEntity
+    client: Client
   ): void {
     if (authorizationCode.client.id !== client.id) {
       throw new InvalidGrantException({ error_description: 'Mismatching Client Identifier.' });

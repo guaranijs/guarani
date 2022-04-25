@@ -1,9 +1,9 @@
 import { Nullable } from '@guarani/types';
 
-import { AccessTokenEntity } from '../entities/access-token.entity';
-import { ClientEntity } from '../entities/client.entity';
-import { RefreshTokenEntity } from '../entities/refresh-token.entity';
-import { UserEntity } from '../entities/user.entity';
+import { AccessToken } from '../entities/access-token';
+import { Client } from '../entities/client';
+import { RefreshToken } from '../entities/refresh-token';
+import { User } from '../entities/user';
 import { SupportedGrantType } from '../grant-types/types/supported-grant-type';
 
 /**
@@ -26,8 +26,8 @@ export interface AccessTokenService {
   createAccessToken(
     grant: SupportedGrantType,
     scopes: string[],
-    client: ClientEntity,
-    user: Nullable<UserEntity>,
-    refreshToken: Nullable<RefreshTokenEntity>
-  ): Promise<AccessTokenEntity>;
+    client: Client,
+    user: Nullable<User>,
+    refreshToken: Nullable<RefreshToken>
+  ): Promise<AccessToken>;
 }

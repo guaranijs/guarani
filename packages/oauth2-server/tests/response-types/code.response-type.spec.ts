@@ -1,6 +1,6 @@
-import { AuthorizationCodeEntity } from '../../lib/entities/authorization-code.entity';
-import { ClientEntity } from '../../lib/entities/client.entity';
-import { UserEntity } from '../../lib/entities/user.entity';
+import { AuthorizationCode } from '../../lib/entities/authorization-code';
+import { Client } from '../../lib/entities/client';
+import { User } from '../../lib/entities/user';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
 import { Request } from '../../lib/http/request';
 import { PkceMethod } from '../../lib/pkce/pkce-method';
@@ -17,7 +17,7 @@ const pkceMethods: jest.Mocked<PkceMethod>[] = [
 
 const authorizationCodeServiceMock: jest.Mocked<AuthorizationCodeService> = {
   findAuthorizationCode: jest.fn(),
-  createAuthorizationCode: jest.fn(async (params, scopes, client, user): Promise<AuthorizationCodeEntity> => {
+  createAuthorizationCode: jest.fn(async (params, scopes, client, user): Promise<AuthorizationCode> => {
     return {
       token: 'code',
       redirectUri: 'https://example.com/callback',
@@ -38,7 +38,7 @@ const authorizationCodeServiceMock: jest.Mocked<AuthorizationCodeService> = {
 
 const responseType = new CodeResponseType(pkceMethods, authorizationCodeServiceMock);
 
-const client: ClientEntity = {
+const client: Client = {
   id: 'client_id',
   secret: 'client_secret',
   scopes: ['foo', 'bar', 'baz'],
@@ -48,7 +48,7 @@ const client: ClientEntity = {
   redirectUris: ['https://example.com/callback'],
 };
 
-const user: UserEntity = { id: 'user_id' };
+const user: User = { id: 'user_id' };
 
 describe('Code Response Type', () => {
   describe('constructor', () => {

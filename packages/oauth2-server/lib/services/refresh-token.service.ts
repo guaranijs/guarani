@@ -1,8 +1,8 @@
 import { Nullable } from '@guarani/types';
 
-import { ClientEntity } from '../entities/client.entity';
-import { RefreshTokenEntity } from '../entities/refresh-token.entity';
-import { UserEntity } from '../entities/user.entity';
+import { Client } from '../entities/client';
+import { RefreshToken } from '../entities/refresh-token';
+import { User } from '../entities/user';
 import { SupportedGrantType } from '../grant-types/types/supported-grant-type';
 
 /**
@@ -21,12 +21,7 @@ export interface RefreshTokenService {
    * @param user User that granted authorization to the Client.
    * @returns Instance of a Refresh Token.
    */
-  createRefreshToken(
-    grant: SupportedGrantType,
-    scopes: string[],
-    client: ClientEntity,
-    user: UserEntity
-  ): Promise<RefreshTokenEntity>;
+  createRefreshToken(grant: SupportedGrantType, scopes: string[], client: Client, user: User): Promise<RefreshToken>;
 
   /**
    * Searches the application's storage for a Refresh Token containing the provided Token.
@@ -34,5 +29,5 @@ export interface RefreshTokenService {
    * @param token Token of the Refresh Token.
    * @returns Refresh Token based on the provided Token.
    */
-  findRefreshToken(token: string): Promise<Nullable<RefreshTokenEntity>>;
+  findRefreshToken(token: string): Promise<Nullable<RefreshToken>>;
 }

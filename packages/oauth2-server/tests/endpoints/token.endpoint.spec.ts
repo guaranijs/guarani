@@ -3,7 +3,7 @@ import { OutgoingHttpHeaders } from 'http';
 import { ClientAuthentication } from '../../lib/client-authentication/client-authentication';
 import { TokenEndpoint } from '../../lib/endpoints/token.endpoint';
 import { SupportedEndpoint } from '../../lib/endpoints/types/supported-endpoint';
-import { ClientEntity } from '../../lib/entities/client.entity';
+import { Client } from '../../lib/entities/client';
 import { InvalidClientException } from '../../lib/exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
 import { OAuth2ExceptionParams } from '../../lib/exceptions/types/oauth2.exception.params';
@@ -14,7 +14,7 @@ import { Request } from '../../lib/http/request';
 import { Response } from '../../lib/http/response';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
-const client: ClientEntity = {
+const client: Client = {
   id: 'client_id',
   secret: 'client_secret',
   redirectUris: ['https://example.com/callback'],

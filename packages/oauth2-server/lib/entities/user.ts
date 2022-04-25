@@ -1,7 +1,7 @@
 /**
  * Representation of the OAuth 2.0 End User.
  */
-export interface UserEntity {
+export interface User {
   /**
    * Identifier of the End User.
    */

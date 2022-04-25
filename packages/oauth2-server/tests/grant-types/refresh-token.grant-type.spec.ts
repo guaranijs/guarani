@@ -1,10 +1,10 @@
 import { Nullable } from '@guarani/types';
 import { secretToken } from '@guarani/utils';
 
-import { AccessTokenEntity } from '../../lib/entities/access-token.entity';
-import { ClientEntity } from '../../lib/entities/client.entity';
-import { RefreshTokenEntity } from '../../lib/entities/refresh-token.entity';
-import { UserEntity } from '../../lib/entities/user.entity';
+import { AccessToken } from '../../lib/entities/access-token';
+import { Client } from '../../lib/entities/client';
+import { RefreshToken } from '../../lib/entities/refresh-token';
+import { User } from '../../lib/entities/user';
 import { InvalidGrantException } from '../../lib/exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
 import { RefreshTokenGrantType } from '../../lib/grant-types/refresh-token.grant-type';
@@ -14,7 +14,7 @@ import { AccessTokenService } from '../../lib/services/access-token.service';
 import { RefreshTokenService } from '../../lib/services/refresh-token.service';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
-const clients: ClientEntity[] = [
+const clients: Client[] = [
   {
     id: 'client1',
     secret: 'client_secret',
@@ -35,9 +35,9 @@ const clients: ClientEntity[] = [
   },
 ];
 
-const users: UserEntity[] = [{ id: 'user1' }, { id: 'user2' }];
+const users: User[] = [{ id: 'user1' }, { id: 'user2' }];
 
-const refreshTokens: RefreshTokenEntity[] = [
+const refreshTokens: RefreshToken[] = [
   {
     token: 'refresh_token_1',
     audience: clients[0].id,
@@ -65,7 +65,7 @@ const refreshTokens: RefreshTokenEntity[] = [
 ];
 
 const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
-  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessTokenEntity> => {
+  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessToken> => {
     return {
       token: await secretToken(),
       audience: client.id,
@@ -83,7 +83,7 @@ const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
 };
 
 const refreshTokenServiceMock: jest.Mocked<RefreshTokenService> = {
-  createRefreshToken: jest.fn(async (grant, scopes, client, user): Promise<RefreshTokenEntity> => {
+  createRefreshToken: jest.fn(async (grant, scopes, client, user): Promise<RefreshToken> => {
     return {
       token: await secretToken(16),
       audience: client.id,
@@ -97,7 +97,7 @@ const refreshTokenServiceMock: jest.Mocked<RefreshTokenService> = {
       user,
     };
   }),
-  findRefreshToken: jest.fn(async (token): Promise<Nullable<RefreshTokenEntity>> => {
+  findRefreshToken: jest.fn(async (token): Promise<Nullable<RefreshToken>> => {
     return refreshTokens.find((refreshToken) => refreshToken.token === token) ?? null;
   }),
 };
@@ -136,7 +136,7 @@ describe('Refresh Token Grant Type', () => {
   });
 
   describe('checkRefreshToken()', () => {
-    let invalidRefreshToken: RefreshTokenEntity;
+    let invalidRefreshToken: RefreshToken;
 
     beforeEach(() => {
       invalidRefreshToken = Object.assign({}, refreshTokens[0]);

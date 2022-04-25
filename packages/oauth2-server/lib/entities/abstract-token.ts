@@ -1,6 +1,6 @@
 import { OneOrMany } from '@guarani/types';
 
-import { ClientEntity } from './client.entity';
+import { Client } from './client';
 
 export interface AbstractToken {
   /**
@@ -41,5 +41,5 @@ export interface AbstractToken {
   /**
    * Client that requested the Token.
    */
-  readonly client: ClientEntity;
+  readonly client: Client;
 }

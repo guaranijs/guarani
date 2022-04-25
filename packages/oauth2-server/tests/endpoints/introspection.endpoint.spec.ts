@@ -2,14 +2,14 @@ import { OutgoingHttpHeaders } from 'http';
 
 import { ClientAuthentication } from '../../lib/client-authentication/client-authentication';
 import { SupportedEndpoint } from '../../lib/endpoints/types/supported-endpoint';
-import { ClientEntity } from '../../lib/entities/client.entity';
+import { Client } from '../../lib/entities/client';
 import { InvalidClientException } from '../../lib/exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
 import { Request } from '../../lib/http/request';
 import { Response } from '../../lib/http/response';
 import { IntrospectionEndpointMock } from './mocks/introspection.endpoint.mock';
 
-const client: ClientEntity = {
+const client: Client = {
   id: 'client1',
   secret: 'secret1',
   redirectUris: ['https://client1.example.com/callback'],

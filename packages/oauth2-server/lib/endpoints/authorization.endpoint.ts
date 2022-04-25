@@ -2,8 +2,8 @@ import { getContainer, Inject, Injectable, InjectAll } from '@guarani/ioc';
 
 import { URL } from 'url';
 
-import { ClientEntity } from '../entities/client.entity';
-import { UserEntity } from '../entities/user.entity';
+import { Client } from '../entities/client';
+import { User } from '../entities/user';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
@@ -123,7 +123,7 @@ export class AuthorizationEndpoint implements Endpoint {
   public async handle(request: Request): Promise<Response> {
     const params = <AuthorizationParameters>request.data;
 
-    let client: ClientEntity;
+    let client: Client;
     let responseType: ResponseType;
     let responseMode: ResponseMode;
 
@@ -197,7 +197,7 @@ export class AuthorizationEndpoint implements Endpoint {
    * @param clientId Identifier of the Client.
    * @returns Client based on the provided Client Identifier.
    */
-  private async getClient(clientId: string): Promise<ClientEntity> {
+  private async getClient(clientId: string): Promise<Client> {
     const client = await this.clientService.findClient(clientId);
 
     if (client === null) {
@@ -229,7 +229,7 @@ export class AuthorizationEndpoint implements Endpoint {
    * @param client Client of the Request.
    * @param responseType Response Type requested by the Client.
    */
-  private checkClientResponseType(client: ClientEntity, responseType: ResponseType): void {
+  private checkClientResponseType(client: Client, responseType: ResponseType): void {
     if (!client.responseTypes.includes(responseType.name)) {
       throw new UnauthorizedClientException({
         error_description: `This Client is not allowed to request the response_type "${responseType.name}".`,
@@ -243,7 +243,7 @@ export class AuthorizationEndpoint implements Endpoint {
    * @param client Client of the Request.
    * @param redirectUri Redirect URI provided by the Client.
    */
-  private checkClientRedirectUri(client: ClientEntity, redirectUri: string): void {
+  private checkClientRedirectUri(client: Client, redirectUri: string): void {
     if (!client.redirectUris.includes(redirectUri)) {
       throw new AccessDeniedException({ error_description: 'Invalid Redirect URI.' });
     }
@@ -271,7 +271,7 @@ export class AuthorizationEndpoint implements Endpoint {
    * @param request HTTP Request.
    * @returns End User.
    */
-  private getUser(request: Request): UserEntity {
+  private getUser(request: Request): User {
     const { user } = request;
 
     if (user === undefined) {

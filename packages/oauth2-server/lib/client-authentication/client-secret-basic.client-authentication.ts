@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@guarani/ioc';
 import { timingSafeEqual } from 'crypto';
 import { OutgoingHttpHeaders } from 'http';
 
-import { ClientEntity } from '../entities/client.entity';
+import { Client } from '../entities/client';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { Request } from '../http/request';
 import { ClientService } from '../services/client.service';
@@ -63,7 +63,7 @@ export class ClientSecretBasicClientAuthentication implements ClientAuthenticati
    * @param request HTTP Request.
    * @returns Authenticated Client.
    */
-  public async authenticate(request: Request): Promise<ClientEntity> {
+  public async authenticate(request: Request): Promise<Client> {
     const { authorization } = request.headers;
 
     const [, token] = authorization!.split(' ', 2);

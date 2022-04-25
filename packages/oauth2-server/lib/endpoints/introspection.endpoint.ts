@@ -3,7 +3,7 @@ import { Injectable, InjectAll } from '@guarani/ioc';
 import { OutgoingHttpHeaders } from 'http';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication';
-import { ClientEntity } from '../entities/client.entity';
+import { Client } from '../entities/client';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
@@ -116,7 +116,7 @@ export abstract class IntrospectionEndpoint implements Endpoint {
    * @param request HTTP Request.
    * @returns Authenticated Client.
    */
-  private async authenticateClient(request: Request): Promise<ClientEntity> {
+  private async authenticateClient(request: Request): Promise<Client> {
     const methods = this.clientAuthenticationMethods.filter((method) => method.hasBeenRequested(request));
 
     if (methods.length === 0) {
@@ -139,5 +139,5 @@ export abstract class IntrospectionEndpoint implements Endpoint {
    * @param client Authenticated Client.
    * @returns Introspected metadata of the Token.
    */
-  protected abstract introspectToken(request: Request, client: ClientEntity): Promise<IntrospectionResponse>;
+  protected abstract introspectToken(request: Request, client: Client): Promise<IntrospectionResponse>;
 }

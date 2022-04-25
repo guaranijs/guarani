@@ -1,4 +1,4 @@
-import { ClientEntity } from '../entities/client.entity';
+import { Client } from '../entities/client';
 import { Request } from '../http/request';
 import { AccessTokenResponse } from '../types/access-token.response';
 import { SupportedGrantType } from './types/supported-grant-type';
@@ -19,5 +19,5 @@ export interface GrantType {
    * @param client OAuth 2.0 Client of the Request.
    * @returns Access Token Response.
    */
-  createTokenResponse(request: Request, client: ClientEntity): Promise<AccessTokenResponse>;
+  createTokenResponse(request: Request, client: Client): Promise<AccessTokenResponse>;
 }

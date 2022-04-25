@@ -1,8 +1,8 @@
 import { Nullable } from '@guarani/types';
 
-import { AuthorizationCodeEntity } from '../entities/authorization-code.entity';
-import { ClientEntity } from '../entities/client.entity';
-import { UserEntity } from '../entities/user.entity';
+import { AuthorizationCode } from '../entities/authorization-code';
+import { Client } from '../entities/client';
+import { User } from '../entities/user';
 import { AuthorizationCodeParameters } from '../response-types/types/authorization-code.parameters';
 
 /**
@@ -24,9 +24,9 @@ export interface AuthorizationCodeService {
   createAuthorizationCode(
     params: AuthorizationCodeParameters,
     scopes: string[],
-    client: ClientEntity,
-    user: UserEntity
-  ): Promise<AuthorizationCodeEntity>;
+    client: Client,
+    user: User
+  ): Promise<AuthorizationCode>;
 
   /**
    * Searches the application's storage for an Authorization Code containing the provided Code.
@@ -34,12 +34,12 @@ export interface AuthorizationCodeService {
    * @param code Code of the Authorization Code.
    * @returns Authorization Code based on the provided Code.
    */
-  findAuthorizationCode(code: string): Promise<Nullable<AuthorizationCodeEntity>>;
+  findAuthorizationCode(code: string): Promise<Nullable<AuthorizationCode>>;
 
   /**
    * Revokes the provided Authorization Code.
    *
    * @param authorizationCode Authorization Code to be revoked.
    */
-  revokeAuthorizationCode(authorizationCode: AuthorizationCodeEntity): Promise<void>;
+  revokeAuthorizationCode(authorizationCode: AuthorizationCode): Promise<void>;
 }

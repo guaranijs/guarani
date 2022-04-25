@@ -1,6 +1,6 @@
-import { AccessTokenEntity } from '../../lib/entities/access-token.entity';
-import { ClientEntity } from '../../lib/entities/client.entity';
-import { UserEntity } from '../../lib/entities/user.entity';
+import { AccessToken } from '../../lib/entities/access-token';
+import { Client } from '../../lib/entities/client';
+import { User } from '../../lib/entities/user';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
 import { Request } from '../../lib/http/request';
 import { SupportedResponseMode } from '../../lib/response-modes/types/supported-response-mode';
@@ -10,7 +10,7 @@ import { AccessTokenService } from '../../lib/services/access-token.service';
 import { AccessTokenResponse } from '../../lib/types/access-token.response';
 
 const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
-  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessTokenEntity> => {
+  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessToken> => {
     return {
       token: 'access_token',
       tokenType: 'Bearer',
@@ -29,7 +29,7 @@ const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
 
 const responseType = new TokenResponseType(accessTokenServiceMock);
 
-const client: ClientEntity = {
+const client: Client = {
   id: 'client_id',
   secret: null,
   scopes: ['foo', 'bar', 'baz'],
@@ -39,7 +39,7 @@ const client: ClientEntity = {
   redirectUris: ['https://example.com/callback'],
 };
 
-const user: UserEntity = { id: 'user_id' };
+const user: User = { id: 'user_id' };
 
 describe('Token Response Type', () => {
   describe('name', () => {

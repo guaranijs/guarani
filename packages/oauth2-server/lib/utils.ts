@@ -1,8 +1,8 @@
 import { getContainer } from '@guarani/ioc';
 import { removeNullishValues } from '@guarani/objects';
 
-import { AccessTokenEntity } from './entities/access-token.entity';
-import { ClientEntity } from './entities/client.entity';
+import { AccessToken } from './entities/access-token';
+import { Client } from './entities/client';
 import { InvalidScopeException } from './exceptions/invalid-scope.exception';
 import { AccessTokenResponse } from './types/access-token.response';
 
@@ -14,7 +14,7 @@ import { AccessTokenResponse } from './types/access-token.response';
  * @param scope Scope requested by the Client.
  * @returns List of allowed Scopes.
  */
-export function getAllowedScopes(client: ClientEntity, scope: string): string[] {
+export function getAllowedScopes(client: Client, scope: string): string[] {
   const registeredScopes = getContainer('oauth2').resolve<string[]>('Scopes');
   const requestedScopes = scope.split(' ');
 
@@ -39,7 +39,7 @@ export function getAllowedScopes(client: ClientEntity, scope: string): string[] 
  * @param accessToken Access Token issued to the Client.
  * @returns Access Token Response.
  */
-export function createAccessTokenResponse(accessToken: AccessTokenEntity): AccessTokenResponse {
+export function createAccessTokenResponse(accessToken: AccessToken): AccessTokenResponse {
   return removeNullishValues<AccessTokenResponse>({
     access_token: accessToken.token,
     token_type: accessToken.tokenType,

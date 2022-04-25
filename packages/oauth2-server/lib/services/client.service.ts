@@ -1,6 +1,6 @@
 import { Nullable } from '@guarani/types';
 
-import { ClientEntity } from '../entities/client.entity';
+import { Client } from '../entities/client';
 
 /**
  * Representation of the Client Service.
@@ -14,5 +14,5 @@ export interface ClientService {
    * @param clientId Identifier of the Client.
    * @returns Client based on the provided Identifier.
    */
-  findClient(clientId: string): Promise<Nullable<ClientEntity>>;
+  findClient(clientId: string): Promise<Nullable<Client>>;
 }

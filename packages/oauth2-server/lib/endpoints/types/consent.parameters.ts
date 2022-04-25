@@ -1,4 +1,4 @@
-import { ClientEntity } from '../../entities/client.entity';
+import { Client } from '../../entities/client';
 
 /**
  * Parameters used by the application to create the Consent Screen.
@@ -7,7 +7,7 @@ export interface ConsentParameters {
   /**
    * Client requesting authorization.
    */
-  readonly client: ClientEntity;
+  readonly client: Client;
 
   /**
    * Scopes requested by the Client.

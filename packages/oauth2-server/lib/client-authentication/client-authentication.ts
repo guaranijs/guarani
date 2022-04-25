@@ -1,4 +1,4 @@
-import { ClientEntity } from '../entities/client.entity';
+import { Client } from '../entities/client';
 import { Request } from '../http/request';
 import { SupportedClientAuthentication } from './types/supported-client-authentication';
 
@@ -24,5 +24,5 @@ export interface ClientAuthentication {
    * @param request HTTP Request.
    * @returns Authenticated Client.
    */
-  authenticate(request: Request): Promise<ClientEntity>;
+  authenticate(request: Request): Promise<Client>;
 }

@@ -1,11 +1,9 @@
 import { Router } from 'express';
 
-import { HomeController } from '../controllers/home.controller';
-import { authenticated } from '../guards/authenticated.guard';
+import { HomeController } from '../controllers/home/home.controller';
 
-const HomeRouter = Router();
+const router = Router();
 
-HomeRouter.get('/', authenticated, HomeController.home);
-HomeRouter.get('/home', authenticated, HomeController.home);
+router.get('/', HomeController.home);
 
-export { HomeRouter };
+export { router as HomeRouter };

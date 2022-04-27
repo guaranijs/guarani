@@ -1,81 +1,80 @@
-import { secretToken } from '@guarani/utils';
-
+import { AuthorizationServerOptions } from '../../lib/authorization-server/options/authorization-server.options';
 import { AccessToken } from '../../lib/entities/access-token';
 import { Client } from '../../lib/entities/client';
 import { InvalidScopeException } from '../../lib/exceptions/invalid-scope.exception';
 import { ClientCredentialsGrantType } from '../../lib/grant-types/client-credentials.grant-type';
-import { SupportedGrantType } from '../../lib/grant-types/types/supported-grant-type';
-import { Request } from '../../lib/http/request';
-import { AccessTokenService } from '../../lib/services/access-token.service';
-import { AccessTokenResponse } from '../../lib/types/access-token.response';
+import { ScopeHandler } from '../../lib/handlers/scope.handler';
+import { ClientCredentialsTokenParameters } from '../../lib/models/client-credentials.token-parameter';
+import { TokenResponse } from '../../lib/models/token-response';
+import { IAccessTokenService } from '../../lib/services/access-token.service.interface';
+import { GrantType } from '../../lib/types/grant-type';
 
-const client: Client = {
-  id: 'client_id',
-  secret: 'client_secret',
-  scopes: ['foo', 'bar', 'baz'],
-  authenticationMethod: 'client_secret_basic',
-  responseTypes: [],
-  grantTypes: ['client_credentials'],
-  redirectUris: ['https://example.com/callback'],
-};
+const client = <Client>{ scopes: ['foo', 'bar', 'baz'] };
 
-const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  createAccessToken: jest.fn(async (_grant, scopes, client, _user, _refreshToken): Promise<AccessToken> => {
-    return {
-      token: await secretToken(),
-      audience: client.id,
-      issuedAt: new Date(),
-      validAfter: new Date(),
+const accessTokenServiceMock: jest.Mocked<Partial<IAccessTokenService>> = {
+  createAccessToken: jest.fn().mockImplementation(async (scopes: string[]): Promise<AccessToken> => {
+    return <AccessToken>{
+      token: 'access_token',
       tokenType: 'Bearer',
       scopes,
-      isRevoked: false,
       expiresAt: new Date(Date.now() + 300000),
-      client,
-      user: null,
-      refreshToken: null,
     };
   }),
 };
 
-const grantType = new ClientCredentialsGrantType(accessTokenServiceMock);
+const authorizationServerOptionsMock = <AuthorizationServerOptions>{ scopes: ['foo', 'bar', 'baz', 'qux'] };
+
+const scopeHandler = new ScopeHandler(authorizationServerOptionsMock);
+
+const grantType = new ClientCredentialsGrantType(scopeHandler, <IAccessTokenService>accessTokenServiceMock);
 
 describe('Client Credentials Grant Type', () => {
   describe('name', () => {
     it('should have "client_credentials" as its name.', () => {
-      expect(grantType.name).toBe<SupportedGrantType>('client_credentials');
+      expect(grantType.name).toBe<GrantType>('client_credentials');
     });
   });
 
-  describe('createTokenResponse()', () => {
-    const request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
+  describe('handle()', () => {
+    let parameters: ClientCredentialsTokenParameters;
 
     beforeEach(() => {
-      Reflect.set(request, 'body', {});
+      parameters = { grant_type: 'client_credentials' };
     });
 
-    it('should reject requesting scopes not allowed to the Client.', async () => {
-      request.body.scope = 'foo qux';
-      await expect(grantType.createTokenResponse(request, client)).rejects.toThrow(InvalidScopeException);
+    it('should reject requesting an unsupported scope.', async () => {
+      Reflect.set(parameters, 'scope', 'foo unknown bar');
+      await expect(grantType.handle(parameters, client)).rejects.toThrow(InvalidScopeException);
     });
 
-    it('should create an Access Token Response with all the scopes of the Client.', async () => {
-      await expect(grantType.createTokenResponse(request, client)).resolves.toMatchObject<AccessTokenResponse>({
-        access_token: expect.any(String),
-        token_type: 'Bearer',
-        expires_in: expect.any(Number),
-        scope: 'foo bar baz',
-      });
-    });
+    it('should create a token response with a restricted scope.', async () => {
+      Reflect.set(parameters, 'scope', 'foo qux baz');
 
-    it('should create an Access Token Response with the requested scopes.', async () => {
-      request.body.scope = 'foo baz';
-
-      await expect(grantType.createTokenResponse(request, client)).resolves.toMatchObject<AccessTokenResponse>({
-        access_token: expect.any(String),
+      await expect(grantType.handle(parameters, client)).resolves.toMatchObject<TokenResponse>({
+        access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: expect.any(Number),
         scope: 'foo baz',
+      });
+    });
+
+    it('should create a token response with the requested scope.', async () => {
+      Reflect.set(parameters, 'scope', 'baz foo');
+
+      await expect(grantType.handle(parameters, client)).resolves.toMatchObject<TokenResponse>({
+        access_token: 'access_token',
+        token_type: 'Bearer',
+        expires_in: expect.any(Number),
+        scope: 'baz foo',
+      });
+    });
+
+    it('should create a token response with the default scope of the client.', async () => {
+      await expect(grantType.handle(parameters, client)).resolves.toMatchObject<TokenResponse>({
+        access_token: 'access_token',
+        token_type: 'Bearer',
+        expires_in: expect.any(Number),
+        scope: 'foo bar baz',
       });
     });
   });

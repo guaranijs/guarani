@@ -1,351 +1,287 @@
-import { getContainer } from '@guarani/ioc';
-import { Constructor, Dict, Nullable } from '@guarani/types';
+import { Attributes, Optional } from '@guarani/types';
 
-import { URL } from 'url';
+import { URL, URLSearchParams } from 'url';
 
-import { Adapter } from '../../lib/adapter';
+import { AuthorizationServerOptions } from '../../lib/authorization-server/options/authorization-server.options';
 import { AuthorizationEndpoint } from '../../lib/endpoints/authorization.endpoint';
-import { ConsentParameters } from '../../lib/endpoints/types/consent.parameters';
-import { SupportedEndpoint } from '../../lib/endpoints/types/supported-endpoint';
 import { Client } from '../../lib/entities/client';
-import { User } from '../../lib/entities/user';
 import { AccessDeniedException } from '../../lib/exceptions/access-denied.exception';
 import { InvalidClientException } from '../../lib/exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
-import { OAuth2Exception } from '../../lib/exceptions/oauth2.exception';
-import { SupportedOAuth2ErrorCode } from '../../lib/exceptions/types/supported-oauth2-error-code';
+import { InvalidScopeException } from '../../lib/exceptions/invalid-scope.exception';
 import { UnauthorizedClientException } from '../../lib/exceptions/unauthorized-client.exception';
 import { UnsupportedResponseTypeException } from '../../lib/exceptions/unsupported-response-type.exception';
-import { Request } from '../../lib/http/request';
-import { Response } from '../../lib/http/response';
-import { ResponseMode } from '../../lib/response-modes/response-mode';
-import { ResponseType } from '../../lib/response-types/response-type';
-import { AuthorizationParameters } from '../../lib/response-types/types/authorization.parameters';
+import { ScopeHandler } from '../../lib/handlers/scope.handler';
+import { HttpRequest } from '../../lib/http/http.request';
+import { HttpResponse } from '../../lib/http/http.response';
+import { IResponseMode } from '../../lib/response-modes/response-mode.interface';
+import { IResponseType } from '../../lib/response-types/response-type.interface';
+import { IClientService } from '../../lib/services/client.service.interface';
+import { Endpoint } from '../../lib/types/endpoint';
+import { HttpMethod } from '../../lib/types/http-method';
 
-const clients: Client[] = [
+const clients = <Client[]>[
   {
-    id: 'client1',
-    secret: 'secret1',
+    id: 'client_id',
     redirectUris: ['https://example.com/callback'],
-    authenticationMethod: 'client_secret_basic',
-    grantTypes: ['authorization_code'],
     responseTypes: ['code'],
     scopes: ['foo', 'bar', 'baz'],
   },
 ];
 
-const adapterMock: jest.Mocked<Adapter> = {
-  findClient: jest.fn(async (clientId: string): Promise<Nullable<Client>> => {
-    return clients.find((client) => client.id === clientId) ?? null;
-  }),
-};
-
-const responseTypesMock: jest.Mocked<ResponseType>[] = [
-  { name: 'code', defaultResponseMode: 'query', createAuthorizationResponse: jest.fn() },
-  { name: 'token', defaultResponseMode: 'fragment', createAuthorizationResponse: jest.fn() },
+const responseTypesMock: jest.Mocked<IResponseType>[] = [
+  { name: 'code', defaultResponseMode: 'query', handle: jest.fn() },
+  { name: 'token', defaultResponseMode: 'fragment', handle: jest.fn() },
 ];
 
-const responseModesMock: jest.Mocked<ResponseMode>[] = [
+const responseModesMock: jest.Mocked<IResponseMode>[] = [
   { name: 'query', createHttpResponse: jest.fn() },
   { name: 'fragment', createHttpResponse: jest.fn() },
 ];
 
-const endpoint = new AuthorizationEndpoint(adapterMock, responseTypesMock, responseModesMock);
+const clientServiceMock: jest.Mocked<Partial<IClientService>> = {
+  findClient: jest.fn().mockImplementation(async (clientId: string): Promise<Optional<Client>> => {
+    return clients.find((client) => client.id === clientId);
+  }),
+};
+
+const authorizationServerOptionsMock = <AuthorizationServerOptions>{
+  issuer: 'https://server.example.com',
+  scopes: ['foo', 'bar', 'baz', 'qux'],
+  userInteraction: { errorUrl: '/oauth/error', loginUrl: '/auth/login' },
+};
+
+const scopeHandler = new ScopeHandler(authorizationServerOptionsMock);
+
+const endpoint = new AuthorizationEndpoint(
+  responseTypesMock,
+  responseModesMock,
+  <IClientService>clientServiceMock,
+  scopeHandler,
+  authorizationServerOptionsMock
+);
 
 describe('Authorization Endpoint', () => {
   describe('name', () => {
     it('should have "authorization" as its name.', () => {
-      expect(endpoint.name).toBe<SupportedEndpoint>('authorization');
+      expect(endpoint.name).toBe<Endpoint>('authorization');
+    });
+  });
+
+  describe('path', () => {
+    it('should have "/oauth/authorize" as its default path.', () => {
+      expect(endpoint.path).toBe('/oauth/authorize');
+    });
+  });
+
+  describe('methods', () => {
+    it('should have "[\'get\']" as its methods.', () => {
+      expect(endpoint.methods).toStrictEqual<HttpMethod[]>(['get']);
     });
   });
 
   describe('errorUrl', () => {
-    it('should reject not registering the "errorUrl" metadata.', () => {
-      // @ts-expect-error Testing a protected attribute.
-      expect(() => endpoint.errorUrl).toThrow(TypeError);
-    });
-
-    it('should have "https://server.example.com/oauth2/error" as its value.', () => {
-      getContainer('oauth2').bindToken<string>('ErrorUrl').toValue('https://server.example.com/oauth2/error');
-
-      // @ts-expect-error Testing a protected attribute.
-      expect(endpoint.errorUrl).toBe('https://server.example.com/oauth2/error');
-
-      getContainer('oauth2').delete<string>('ErrorUrl');
+    it('should be defined based on the provided user interaction.', () => {
+      expect(endpoint['errorUrl']).toBe('https://server.example.com/oauth/error');
     });
   });
 
-  describe('handleFatalAuthorizationError()', () => {
-    it('should return the parameters of the OAuth 2.0 Error in the data of the Response.', () => {
-      getContainer('oauth2').bindToken<string>('ErrorUrl').toValue('https://server.example.com/oauth2/error');
-
-      expect(
-        endpoint.handleFatalAuthorizationError(new InvalidRequestException({ error_description: 'description' }))
-      ).toMatchObject<Partial<Response>>({
-        headers: {
-          Location: 'https://server.example.com/oauth2/error?error=invalid_request&error_description=description',
-        },
-        statusCode: 302,
-      });
-
-      getContainer('oauth2').delete<string>('ErrorUrl');
+  describe('loginUrl', () => {
+    it('should be defined based on the provided user interaction.', () => {
+      expect(endpoint['loginUrl']).toBe('https://server.example.com/auth/login');
     });
   });
 
-  describe('checkParameters()', () => {
-    let parameters: AuthorizationParameters;
-
-    beforeEach(() => {
-      parameters = {
-        response_type: 'code',
-        client_id: 'client_id',
-        redirect_uri: 'https://example.com/callback',
-        scope: 'foo bar',
-      };
-    });
-
-    it.each(['response_type', 'client_id', 'redirect_uri', 'scope'])(
-      'should reject not providing a required parameter.',
-      (requiredParameter) => {
-        Reflect.deleteProperty(parameters, requiredParameter);
-
-        // @ts-expect-error Testing a private method.
-        expect(() => endpoint.checkParameters(parameters)).toThrow(InvalidRequestException);
-      }
-    );
-  });
-
-  describe('getClient()', () => {
-    it('should reject when a Client is not found.', async () => {
-      // @ts-expect-error Testing a private method.
-      await expect(endpoint.getClient('unknown')).rejects.toThrow(InvalidClientException);
-    });
-
-    it('should return a Client based on the Client Identifier.', async () => {
-      // @ts-expect-error Testing a private method.
-      await expect(endpoint.getClient('client1')).resolves.toMatchObject(clients[0]);
-    });
-  });
-
-  describe('getResponseType()', () => {
-    it('should reject requesting an unsupported Response Type.', () => {
-      // @ts-expect-error Testing a private method; unsupported response type.
-      expect(() => endpoint.getResponseType('unknown')).toThrow(UnsupportedResponseTypeException);
-    });
-
-    it('should return the requested Response Type.', () => {
-      // @ts-expect-error Testing a private method.
-      expect(endpoint.getResponseType('code')).toMatchObject(responseTypesMock[0]);
-    });
-  });
-
-  describe('checkClientResponseType()', () => {
-    it('should reject when a Client requests a Response Type that it is not allowed to request.', () => {
-      // @ts-expect-error Testing a private method.
-      expect(() => endpoint.checkClientResponseType(clients[0], responseTypesMock[1])).toThrow(
-        UnauthorizedClientException
-      );
-    });
-
-    it('should not reject when a Client requests a Response Type that it is allowed to request.', () => {
-      // @ts-expect-error Testing a private method.
-      expect(() => endpoint.checkClientResponseType(clients[0], responseTypesMock[0])).not.toThrow();
-    });
-  });
-
-  describe('checkClientRedirectUri()', () => {
-    it('should reject when a Client provides a Redirect URI that it is not allowed to use.', () => {
-      expect(() => {
-        // @ts-expect-error Testing a private method.
-        endpoint.checkClientRedirectUri(clients[0], 'https://bad.example.com/callback');
-      }).toThrow(AccessDeniedException);
-    });
-
-    it('should not reject when a Client provides a Redirect URI that it is allowed to use.', () => {
-      // @ts-expect-error Testing a private method.
-      expect(() => endpoint.checkClientRedirectUri(clients[0], 'https://example.com/callback')).not.toThrow();
-    });
-  });
-
-  describe('getResponseMode()', () => {
-    it('should reject requesting an unsupported Response Mode.', () => {
-      // @ts-expect-error Testing a private method; unsupported response mode.
-      expect(() => endpoint.getResponseMode('unknown')).toThrow(InvalidRequestException);
-    });
-
-    it('should return the requested Response Mode.', () => {
-      // @ts-expect-error Testing a private method.
-      expect(endpoint.getResponseMode('query')).toMatchObject(responseModesMock[0]);
-    });
-  });
-
-  describe('getUser()', () => {
-    const request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
-
-    beforeEach(() => {
-      delete request.user;
-    });
-
-    it('should reject when the User has not given Consent.', () => {
-      // @ts-expect-error Testing a private method.
-      expect(() => endpoint.getUser(request)).toThrow(AccessDeniedException);
-    });
-
-    it('should return the User of the Request.', () => {
-      request.user = { id: 'user_id' };
-
-      // @ts-expect-error Testing a private method.
-      expect(endpoint.getUser(request)).toMatchObject<User>({ id: 'user_id' });
-    });
-  });
-
-  describe('getConsentParams()', () => {
-    const request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
-
-    beforeEach(() => {
-      Reflect.set(request, 'query', {
-        response_type: 'code',
-        client_id: 'client1',
-        redirect_uri: 'https://example.com/callback',
-        scope: 'foo bar baz',
-        state: 'client-state',
-      });
-    });
-
-    it.each(['response_type', 'client_id', 'redirect_uri', 'scope'])(
-      'should return an error response when the Client does not provide a required parameter.',
-      async (requiredParameter) => {
-        Reflect.deleteProperty(request.query, requiredParameter);
-        await expect(endpoint.getConsentParams(request)).rejects.toThrow(InvalidRequestException);
-      }
-    );
-
-    const invalidChecks: [string, string, Constructor<OAuth2Exception>][] = [
-      ['client_id', 'unknown', InvalidClientException],
-      ['response_type', 'unknown', UnsupportedResponseTypeException],
-      ['response_type', 'token', UnauthorizedClientException],
-      ['redirect_uri', 'https://bad.example.com/callback', AccessDeniedException],
-    ];
-
-    it.each(invalidChecks)(
-      'should return an error response when the data provided fails to validate.',
-      async (parameter, value, errorConstructor) => {
-        request.query[parameter] = value;
-        await expect(endpoint.getConsentParams(request)).rejects.toThrow(errorConstructor);
-      }
-    );
-
-    it('should return the Client and the Scopes it requested.', async () => {
-      await expect(endpoint.getConsentParams(request)).resolves.toMatchObject<ConsentParameters>({
-        client: clients[0],
-        scopes: ['foo', 'bar', 'baz'],
-      });
+  describe('constructor', () => {
+    it('should reject not providing a user interaction object.', () => {
+      expect(() => new AuthorizationEndpoint([], [], <any>{}, scopeHandler, <any>{})).toThrow(TypeError);
     });
   });
 
   describe('handle()', () => {
-    let spyErrorUri: jest.SpyInstance<any, []>;
-
-    const request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
+    const request = new HttpRequest({ body: {}, headers: {}, method: 'get', query: {}, user: { id: 'user_id' } });
 
     beforeEach(() => {
-      spyErrorUri = jest
-        .spyOn<AuthorizationEndpoint, any>(endpoint, 'errorUrl', 'get')
-        .mockReturnValue('https://server.example.com/error');
-
       Reflect.set(request, 'query', {
         response_type: 'code',
-        client_id: 'client1',
+        client_id: 'client_id',
         redirect_uri: 'https://example.com/callback',
-        scope: 'foo bar baz',
+        scope: 'foo bar',
         state: 'client-state',
       });
-
-      request.user = undefined;
     });
 
-    afterEach(() => {
-      spyErrorUri.mockRestore();
+    it('should reject using a http method other than "get" or "post".', async () => {
+      Reflect.set(request, 'method', 'delete');
+      await expect(endpoint.handle(request)).rejects.toThrow(TypeError);
+      Reflect.set(request, 'method', 'get');
     });
 
-    const requiredParameters: string[] = ['response_type', 'client_id', 'redirect_uri', 'scope'];
+    it('should reject not providing a "response_type" parameter.', async () => {
+      delete request.query.response_type;
 
-    it.each(requiredParameters)(
-      'should return an error response when the Client does not provide a required parameter.',
-      async (requiredParameter) => {
-        delete request.query[requiredParameter];
+      const error = new InvalidRequestException('Invalid parameter "response_type".');
+      const params = new URLSearchParams(error.toJSON());
 
-        await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-          headers: {
-            Location: `https://server.example.com/error?error=invalid_request&error_description=Invalid+parameter+%22${requiredParameter}%22.`,
-          },
-          statusCode: 302,
-        });
-      }
-    );
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        statusCode: 303,
+      });
+    });
 
-    const invalidChecks: [string, string, SupportedOAuth2ErrorCode, string][] = [
-      ['client_id', 'unknown', 'invalid_client', 'Invalid+Client.'],
-      ['response_type', 'unknown', 'unsupported_response_type', 'Unsupported+response_type+%22unknown%22.'],
-      [
-        'response_type',
-        'token',
-        'unauthorized_client',
-        'This+Client+is+not+allowed+to+request+the+response_type+%22token%22.',
-      ],
-      ['redirect_uri', 'https://bad.example.com/callback', 'access_denied', 'Invalid+Redirect+URI.'],
-      ['response_mode', 'unknown', 'invalid_request', 'Unsupported+response_mode+%22unknown%22.'],
-    ];
+    it('should reject not providing a "client_id" parameter.', async () => {
+      delete request.query.client_id;
 
-    it.each(invalidChecks)(
-      'should return an error response when the data provided fails to validate.',
-      async (parameter, value, code, description) => {
-        request.query[parameter] = value;
+      const error = new InvalidRequestException('Invalid parameter "client_id".');
+      const params = new URLSearchParams(error.toJSON());
 
-        await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-          headers: { Location: `https://server.example.com/error?error=${code}&error_description=${description}` },
-          statusCode: 302,
-        });
-      }
-    );
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        statusCode: 303,
+      });
+    });
 
-    it('should return an error response when the End User denied the Authorization Request.', async () => {
-      responseModesMock[0].createHttpResponse.mockReturnValue(
-        new Response().redirect(
-          'https://example.com/callback?error=access_denied&error_description=Authorization+denied+by+the+End+User.'
-        )
-      );
+    it('should reject not providing a "redirect_uri" parameter.', async () => {
+      delete request.query.redirect_uri;
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        headers: {
-          Location:
-            'https://example.com/callback?error=access_denied&error_description=Authorization+denied+by+the+End+User.',
-        },
-        statusCode: 302,
+      const error = new InvalidRequestException('Invalid parameter "redirect_uri".');
+      const params = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should reject not providing a "scope" parameter.', async () => {
+      delete request.query.scope;
+
+      const error = new InvalidRequestException('Invalid parameter "scope".');
+      const params = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should reject when a client is not found.', async () => {
+      request.query.client_id = 'unknown';
+
+      const error = new InvalidClientException('Invalid Client.');
+      const params = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should reject requesting an unsupported response type.', async () => {
+      request.query.response_type = 'unknown';
+
+      const error = new UnsupportedResponseTypeException('Unsupported response_type "unknown".');
+      const params = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should reject when a client requests a response type that it is not allowed to request.', async () => {
+      request.query.response_type = 'token';
+
+      const error = new UnauthorizedClientException('This Client is not allowed to request the response_type "token".');
+      const params = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should reject when a client provides a redirect uri that it is not allowed to use.', async () => {
+      request.query.redirect_uri = 'https://bad.example.com/callback';
+
+      const error = new AccessDeniedException('Invalid Redirect URI.');
+      const params = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should reject requesting an unsupported scope.', async () => {
+      request.query.scope = 'foo unknown bar';
+
+      const error = new InvalidScopeException('Unsupported scope "unknown".');
+      const params = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should reject requesting an unsupported response mode.', async () => {
+      request.query.response_mode = 'unknown';
+
+      const error = new InvalidRequestException('Unsupported response_mode "unknown".');
+      const params = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should return a http redirect response to the login page when no authenticated user is found.', async () => {
+      delete request.user;
+
+      const redirectTo = new URL(endpoint['path'], authorizationServerOptionsMock.issuer);
+      const redirectToParams = new URLSearchParams(request.query);
+      redirectTo.search = redirectToParams.toString();
+
+      const params = new URLSearchParams({ redirect_to: redirectTo.href });
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/auth/login?${params.toString()}` },
+        statusCode: 303,
       });
 
-      responseModesMock[0].createHttpResponse.mockReset();
+      request.user = { id: 'user_id' };
     });
 
     it('should return a valid authorization response.', async () => {
-      request.user = { id: 'user_id' };
+      responseTypesMock[0].handle.mockResolvedValue({ code: 'code', state: request.query.state });
 
-      responseTypesMock[0].createAuthorizationResponse.mockResolvedValue({ code: 'code', state: request.query.state });
-
-      responseModesMock[0].createHttpResponse.mockImplementation((redirectUri: string, params: Dict) => {
+      responseModesMock[0].createHttpResponse.mockImplementation((redirectUri, params) => {
         const url = new URL(redirectUri);
-        const searchParams = new URLSearchParams(params);
-        url.search = searchParams.toString();
-        return new Response().redirect(url.href);
+        url.search = new URLSearchParams(params).toString();
+        return new HttpResponse().redirect(url);
       });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.alloc(0),
         headers: { Location: 'https://example.com/callback?code=code&state=client-state' },
-        statusCode: 302,
+        statusCode: 303,
       });
 
       responseModesMock[0].createHttpResponse.mockReset();
-      responseTypesMock[0].createAuthorizationResponse.mockReset();
+      responseTypesMock[0].handle.mockReset();
     });
   });
 });

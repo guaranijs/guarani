@@ -1,33 +1,47 @@
-import { Injectable, InjectAll } from '@guarani/ioc';
+import { Injectable, InjectAll } from '@guarani/di';
 
 import { OutgoingHttpHeaders } from 'http';
 
-import { ClientAuthentication } from '../client-authentication/client-authentication';
+import { ClientAuthenticator } from '../client-authentication/client-authenticator';
 import { Client } from '../entities/client';
-import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { UnauthorizedClientException } from '../exceptions/unauthorized-client.exception';
 import { UnsupportedGrantTypeException } from '../exceptions/unsupported-grant-type.exception';
-import { GrantType } from '../grant-types/grant-type';
-import { SupportedGrantType } from '../grant-types/types/supported-grant-type';
-import { TokenParameters } from '../grant-types/types/token.parameters';
-import { Request } from '../http/request';
-import { Response } from '../http/response';
-import { Endpoint } from './endpoint';
-import { SupportedEndpoint } from './types/supported-endpoint';
+import { IGrantType } from '../grant-types/grant-type.interface';
+import { HttpRequest } from '../http/http.request';
+import { HttpResponse } from '../http/http.response';
+import { TokenParameters } from '../models/token-parameters';
+import { Endpoint } from '../types/endpoint';
+import { GrantType } from '../types/grant-type';
+import { HttpMethod } from '../types/http-method';
+import { IEndpoint } from './endpoint.interface';
 
 /**
- * Endpoint used by the Client to exchange an Authorization Grant, or its own credentials,
- * for an Access Token that will be used to act on behalf of the Resource Owner.
+ * Implementation of the **Token** Endpoint.
+ *
+ * This endpoint is used by the Client to exchange an Authorization Grant for an Access Token
+ * that will be used to act on behalf of the Resource Owner.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-3.2
  */
 @Injectable()
-export class TokenEndpoint implements Endpoint {
+export class TokenEndpoint implements IEndpoint {
   /**
    * Name of the Endpoint.
    */
-  public readonly name: SupportedEndpoint = 'token';
+  public readonly name: Endpoint = 'token';
+
+  /**
+   * Path of the Endpoint.
+   */
+  public readonly path: string = '/oauth/token';
+
+  /**
+   * HTTP Methods of the Endpoint.
+   */
+  public readonly methods: HttpMethod[] = ['post'];
 
   /**
    * Default HTTP Headers to be included in the Response.
@@ -40,16 +54,16 @@ export class TokenEndpoint implements Endpoint {
   /**
    * Instantiates a new Token Endpoint.
    *
-   * @param clientAuthenticationMethods Client Authentication Methods registered at the Authorization Server.
-   * @param grantTypes Grant Types registered at the Authorization Server.
+   * @param clientAuthenticator Instance of the Client Authenticator.
+   * @param grantTypes Grant Types supported by the Authorization Server.
    */
   public constructor(
-    @InjectAll('ClientAuthentication') private readonly clientAuthenticationMethods: ClientAuthentication[],
-    @InjectAll('GrantType') private readonly grantTypes: GrantType[]
+    private readonly clientAuthenticator: ClientAuthenticator,
+    @InjectAll('GrantType') private readonly grantTypes: IGrantType[]
   ) {}
 
   /**
-   * Creates a HTTP JSON Token Response.
+   * Creates a HTTP JSON Access Token Response.
    *
    * This method is responsible for issuing Tokens to Clients that succeed to authenticate
    * within the Authorization Server and have the necessary consent of the Resource Owner.
@@ -65,25 +79,25 @@ export class TokenEndpoint implements Endpoint {
    * @param request HTTP Request.
    * @returns HTTP Response.
    */
-  public async handle(request: Request): Promise<Response> {
-    const params = <TokenParameters>request.body;
+  public async handle(request: HttpRequest): Promise<HttpResponse> {
+    const parameters = <TokenParameters>request.body;
 
     try {
-      this.checkParameters(params);
+      this.checkParameters(parameters);
 
-      const grantType = this.getGrantType(params.grant_type);
-      const client = await this.authenticateClient(request);
+      const grantType = this.getGrantType(parameters.grant_type);
+      const client = await this.clientAuthenticator.authenticate(request);
 
-      this.checkClientGrantType(client, grantType);
+      this.checkClientGrantType(client, grantType.name);
 
-      const accessTokenResponse = await grantType.createTokenResponse(request, client);
+      const tokenResponse = await grantType.handle(parameters, client);
 
-      return new Response().setHeaders(this.headers).json(accessTokenResponse);
+      return new HttpResponse().setHeaders(this.headers).json(tokenResponse);
     } catch (exc: any) {
-      const error = exc instanceof OAuth2Exception ? exc : new ServerErrorException({ error_description: exc.message });
+      const error = exc instanceof OAuth2Exception ? exc : new ServerErrorException(exc.message);
 
-      return new Response()
-        .status(error.statusCode)
+      return new HttpResponse()
+        .setStatus(error.statusCode)
         .setHeaders(error.headers)
         .setHeaders(this.headers)
         .json(error.toJSON());
@@ -93,13 +107,13 @@ export class TokenEndpoint implements Endpoint {
   /**
    * Checks if the Parameters of the Token Request are valid.
    *
-   * @param params Parameters of the Token Request.
+   * @param parameters Parameters of the Token Request.
    */
-  private checkParameters(params: TokenParameters): void {
-    const { grant_type } = params;
+  private checkParameters(parameters: TokenParameters): void {
+    const { grant_type } = parameters;
 
     if (typeof grant_type !== 'string') {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "grant_type".' });
+      throw new InvalidRequestException('Invalid parameter "grant_type".');
     }
   }
 
@@ -109,49 +123,25 @@ export class TokenEndpoint implements Endpoint {
    * @param name Grant Type requested by the Client.
    * @returns Grant Type.
    */
-  private getGrantType(name: SupportedGrantType): GrantType {
+  private getGrantType(name: GrantType): IGrantType {
     const grantType = this.grantTypes.find((grantType) => grantType.name === name);
 
     if (grantType === undefined) {
-      throw new UnsupportedGrantTypeException({ error_description: `Unsupported grant_type "${name}".` });
+      throw new UnsupportedGrantTypeException(`Unsupported grant_type "${name}".`);
     }
 
     return grantType;
   }
 
   /**
-   * Authenticates the Client based on the Client Authentication Methods supported by the Authorization Server.
-   *
-   * @param request HTTP Request.
-   * @returns Authenticated Client.
-   */
-  private async authenticateClient(request: Request): Promise<Client> {
-    const methods = this.clientAuthenticationMethods.filter((method) => method.hasBeenRequested(request));
-
-    if (methods.length === 0) {
-      throw new InvalidClientException({ error_description: 'No Client Authentication Method detected.' });
-    }
-
-    if (methods.length > 1) {
-      throw new InvalidClientException({ error_description: 'Multiple Client Authentication Methods detected.' });
-    }
-
-    const method = methods.pop()!;
-
-    return await method.authenticate(request);
-  }
-
-  /**
-   * Checks if the Client is allowed to use the requested Grant Type.
+   * Checks if the Client is allowed to request the provided Grant Type.
    *
    * @param client Client of the Request.
    * @param grantType Grant Type requested by the Client.
    */
   private checkClientGrantType(client: Client, grantType: GrantType): void {
-    if (!client.grantTypes.includes(grantType.name)) {
-      throw new UnauthorizedClientException({
-        error_description: `This Client is not allowed to request the grant_type "${grantType.name}".`,
-      });
+    if (!client.grantTypes.includes(grantType)) {
+      throw new UnauthorizedClientException(`This Client is not allowed to request the grant_type "${grantType}".`);
     }
   }
 }

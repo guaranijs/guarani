@@ -1,2 +1,12 @@
 export { Comparable, Hashable } from './interfaces';
-export { AbstractConstructor, Constructor, DeepReadonly, Dict, Nullable, OneOrMany, Optional } from './types';
+export {
+  AbstractConstructor,
+  Attributes,
+  Constructor,
+  ConstructorOrInstance,
+  DeepReadonly,
+  Dict,
+  Nullable,
+  OneOrMany,
+  Optional,
+} from './types';

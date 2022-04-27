@@ -1,38 +1,39 @@
-import { AccessTokenService as BaseAccessTokenService, SupportedGrantType } from '@guarani/oauth2-server';
+import { IAccessTokenService } from '@guarani/oauth2-server';
+import { Optional } from '@guarani/types';
 import { secretToken } from '@guarani/utils';
 
-import { AccessToken } from '../entities/access-token.entity';
-import { Client } from '../entities/client.entity';
-import { RefreshToken } from '../entities/refresh-token.entity';
-import { User } from '../entities/user.entity';
+import { AccessTokenEntity } from '../entities/access-token.entity';
+import { ClientEntity } from '../entities/client.entity';
+import { UserEntity } from '../entities/user.entity';
 
-export class AccessTokenService implements BaseAccessTokenService {
-  private readonly grants: Partial<Record<SupportedGrantType, number>> = {
-    authorization_code: 86400,
-  };
-
+export class AccessTokenService implements IAccessTokenService {
   public async createAccessToken(
-    grant: SupportedGrantType,
     scopes: string[],
-    client: Client,
-    user: User,
-    refreshToken: RefreshToken
-  ): Promise<AccessToken> {
-    const accessToken = new AccessToken();
-
-    Object.assign<AccessToken, Partial<AccessToken>>(accessToken, {
+    client: ClientEntity,
+    user?: Optional<UserEntity>
+  ): Promise<AccessTokenEntity> {
+    const accessToken = AccessTokenEntity.create({
       token: await secretToken(24),
       tokenType: 'Bearer',
       scopes,
-      isRevoked: false,
-      expiresAt: new Date(Date.now() + this.grants[grant]! * 1000),
+      issuedAt: new Date(),
+      expiresAt: new Date(Date.now() + client.accessTokenLifetime * 1000),
+      validAfter: new Date(),
       client,
       user,
-      refreshToken,
     });
 
     await accessToken.save();
 
     return accessToken;
+  }
+
+  public async findAccessToken(token: string): Promise<Optional<AccessTokenEntity>> {
+    return (await AccessTokenEntity.findOneBy({ token })) ?? undefined;
+  }
+
+  public async revokeAccessToken(accessToken: AccessTokenEntity): Promise<void> {
+    accessToken.isRevoked = true;
+    await accessToken.save();
   }
 }

@@ -1,180 +1,302 @@
+import { Attributes, Optional } from '@guarani/types';
+
 import { OutgoingHttpHeaders } from 'http';
 
-import { ClientAuthentication } from '../../lib/client-authentication/client-authentication';
-import { SupportedEndpoint } from '../../lib/endpoints/types/supported-endpoint';
+import { AuthorizationServerOptions } from '../../lib/authorization-server/options/authorization-server.options';
+import { ClientAuthenticator } from '../../lib/client-authentication/client-authenticator';
+import { RevocationEndpoint } from '../../lib/endpoints/revocation.endpoint';
+import { AccessToken } from '../../lib/entities/access-token';
 import { Client } from '../../lib/entities/client';
+import { RefreshToken } from '../../lib/entities/refresh-token';
 import { InvalidClientException } from '../../lib/exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
-import { GrantType } from '../../lib/grant-types/grant-type';
-import { Request } from '../../lib/http/request';
-import { Response } from '../../lib/http/response';
-import { RevocationEndpointMock } from './mocks/revocation.endpoint.mock';
+import { UnsupportedTokenTypeException } from '../../lib/exceptions/unsupported-token-type.exception';
+import { IGrantType } from '../../lib/grant-types/grant-type.interface';
+import { HttpRequest } from '../../lib/http/http.request';
+import { HttpResponse } from '../../lib/http/http.response';
+import { IAccessTokenService } from '../../lib/services/access-token.service.interface';
+import { IRefreshTokenService } from '../../lib/services/refresh-token.service.interface';
+import { Endpoint } from '../../lib/types/endpoint';
+import { HttpMethod } from '../../lib/types/http-method';
 
-const client: Client = {
-  id: 'client1',
-  secret: 'secret1',
-  redirectUris: ['https://client1.example.com/callback'],
-  authenticationMethod: 'client_secret_basic',
-  grantTypes: ['authorization_code'],
-  responseTypes: ['code'],
-  scopes: ['foo', 'bar', 'baz'],
+jest.mock('../../lib/client-authentication/client-authenticator');
+
+const clients = <Client[]>[{ id: 'client_id' }, { id: 'id_client' }];
+
+const refreshTokens = <RefreshToken[]>[
+  {
+    token: 'refresh_token',
+    client: clients[0],
+  },
+];
+
+const accessTokens = <AccessToken[]>[
+  {
+    token: 'access_token',
+    client: clients[0],
+  },
+];
+
+const clientAuthenticatorMock = jest.mocked(ClientAuthenticator.prototype, true);
+
+const grantTypesMock: jest.Mocked<IGrantType>[] = [
+  { name: 'authorization_code', handle: jest.fn() },
+  { name: 'refresh_token', handle: jest.fn() },
+];
+
+const authorizationServerOptionsMock = <AuthorizationServerOptions>{
+  enableAccessTokenRevocation: true,
 };
 
-const grantTypes: jest.Mocked<GrantType>[] = [
-  { name: 'authorization_code', createTokenResponse: jest.fn() },
-  { name: 'refresh_token', createTokenResponse: jest.fn() },
-];
+const refreshTokenServiceMock: jest.Mocked<Partial<IRefreshTokenService>> = {
+  findRefreshToken: jest.fn().mockImplementation(async (token: string): Promise<Optional<RefreshToken>> => {
+    return refreshTokens.find((refreshToken) => refreshToken.token === token);
+  }),
+  revokeRefreshToken: jest.fn(),
+};
 
-const clientAuthenticationMethodsMock: jest.Mocked<ClientAuthentication>[] = [
-  { name: 'client_secret_basic', hasBeenRequested: jest.fn(), authenticate: jest.fn() },
-  { name: 'client_secret_post', hasBeenRequested: jest.fn(), authenticate: jest.fn() },
-];
+const accessTokenServiceMock: jest.Mocked<Partial<IAccessTokenService>> = {
+  findAccessToken: jest.fn().mockImplementation(async (token: string): Promise<Optional<AccessToken>> => {
+    return accessTokens.find((accessToken) => accessToken.token === token);
+  }),
+  revokeAccessToken: jest.fn(),
+};
 
-const endpoint = new RevocationEndpointMock(grantTypes, clientAuthenticationMethodsMock);
+const endpoint = new RevocationEndpoint(
+  clientAuthenticatorMock,
+  authorizationServerOptionsMock,
+  <IRefreshTokenService>refreshTokenServiceMock,
+  grantTypesMock,
+  <IAccessTokenService>accessTokenServiceMock
+);
 
 describe('Revocation Endpoint', () => {
-  describe('constructor', () => {
-    it('should reject when the Authorization Server does not support Refresh Tokens.', () => {
-      expect(() => new RevocationEndpointMock([], [])).toThrow(Error);
+  describe('name', () => {
+    it('should have "revocation" as its name.', () => {
+      expect(endpoint.name).toBe<Endpoint>('revocation');
     });
   });
 
-  describe('name', () => {
-    it('should have "revocation" as its name.', () => {
-      expect(endpoint.name).toBe<SupportedEndpoint>('revocation');
+  describe('path', () => {
+    it('should have "/oauth/revoke" as its default path.', () => {
+      expect(endpoint.path).toBe('/oauth/revoke');
+    });
+  });
+
+  describe('methods', () => {
+    it('should have "[\'post\']" as its methods.', () => {
+      expect(endpoint.methods).toStrictEqual<HttpMethod[]>(['post']);
     });
   });
 
   describe('headers', () => {
-    it('should have a default headers object for the HTTP Response.', () => {
-      // @ts-expect-error Testing a protected attribute.
-      expect(endpoint.headers).toMatchObject<OutgoingHttpHeaders>({ 'Cache-Control': 'no-store', Pragma: 'no-cache' });
-    });
-  });
-
-  describe('checkParameters()', () => {
-    it('should reject not providing a "token" parameter.', () => {
-      // @ts-expect-error Testing a protected method.
-      expect(() => endpoint.checkParameters({})).toThrow(InvalidRequestException);
-    });
-
-    it('should reject when providing an unsupported "token_type_hint".', () => {
-      // @ts-expect-error Testing a protected method; unsupported token type hint.
-      expect(() => endpoint.checkParameters({ token: 'refresh_token', token_type_hint: 'unknown' })).toThrow(
-        InvalidRequestException
-      );
-    });
-
-    it('should not reject when providing a valid parameters object.', () => {
-      // @ts-expect-error Testing a protected method.
-      expect(() => endpoint.checkParameters({ token: 'refresh_token' })).not.toThrow();
-    });
-  });
-
-  describe('authenticateClient()', () => {
-    const request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
-
-    afterEach(() => {
-      clientAuthenticationMethodsMock.forEach((method) => {
-        method.hasBeenRequested.mockReset();
-        method.authenticate.mockReset();
+    it('should have a default "headers" object for the http response.', () => {
+      expect(endpoint['headers']).toMatchObject<OutgoingHttpHeaders>({
+        'Cache-Control': 'no-store',
+        Pragma: 'no-cache',
       });
     });
+  });
 
-    it('should reject not using a Client Authentication Method.', async () => {
-      clientAuthenticationMethodsMock.forEach((method) => method.hasBeenRequested.mockReturnValue(false));
-
-      // @ts-expect-error Testing a private method.
-      await expect(endpoint.authenticateClient(request)).rejects.toThrow(InvalidClientException);
+  describe('supportedTokenTypeHints', () => {
+    it('should have only the type "refresh_token" when not supporting access token revocation.', () => {
+      const opts = <AuthorizationServerOptions>{ enableAccessTokenRevocation: false };
+      const endpoint = new RevocationEndpoint(<any>{}, opts, <any>{}, grantTypesMock, <any>{});
+      expect(endpoint['supportedTokenTypeHints']).toEqual(['refresh_token']);
     });
 
-    it('should reject using multiple Client Authentication Methods.', async () => {
-      clientAuthenticationMethodsMock.forEach((method) => method.hasBeenRequested.mockReturnValue(true));
+    it('should have the types ["refresh_token", "access_token"] when supporting access token revocation.', () => {
+      const opts = <AuthorizationServerOptions>{ enableAccessTokenRevocation: true };
+      const endpoint = new RevocationEndpoint(<any>{}, opts, <any>{}, grantTypesMock, <any>{});
+      expect(endpoint['supportedTokenTypeHints']).toEqual(['refresh_token', 'access_token']);
+    });
+  });
 
-      // @ts-expect-error Testing a private method.
-      await expect(endpoint.authenticateClient(request)).rejects.toThrow(InvalidClientException);
+  describe('constructor', () => {
+    it('should reject when the authorization server does not support refresh tokens.', () => {
+      expect(() => new RevocationEndpoint(<any>{}, <any>{}, <any>{}, [], <any>{})).toThrow(Error);
+      expect(() => new RevocationEndpoint(<any>{}, <any>{}, <any>{}, undefined, <any>{})).toThrow(Error);
     });
 
-    it('should return an authenticated Client.', async () => {
-      clientAuthenticationMethodsMock[0].hasBeenRequested.mockReturnValue(true);
-      clientAuthenticationMethodsMock[0].authenticate.mockResolvedValue(client);
-
-      // @ts-expect-error Testing a private method.
-      await expect(endpoint.authenticateClient(request)).resolves.toMatchObject(client);
+    it('should reject when enabling access token revocation without an access token service.', () => {
+      const opts = <AuthorizationServerOptions>{ enableAccessTokenRevocation: true };
+      expect(() => new RevocationEndpoint(<any>{}, opts, <any>{}, grantTypesMock)).toThrow();
     });
   });
 
   describe('handle()', () => {
-    const request = new Request({ body: {}, headers: {}, method: 'post', query: {} });
+    const request = new HttpRequest({ body: {}, headers: {}, method: 'post', query: {} });
+
+    const defaultResponse = new HttpResponse().setHeaders(endpoint['headers']);
+
+    const findAccessTokenSpy = jest.spyOn(accessTokenServiceMock, 'findAccessToken');
+    const findRefreshTokenSpy = jest.spyOn(refreshTokenServiceMock, 'findRefreshToken');
+
+    const revokeAccessTokenSpy = jest.spyOn(accessTokenServiceMock, 'revokeAccessToken');
+    const revokeRefreshTokenSpy = jest.spyOn(refreshTokenServiceMock, 'revokeRefreshToken');
 
     beforeEach(() => {
-      Reflect.set(request, 'body', {});
+      Reflect.set(request, 'body', { token: 'token' });
     });
 
-    it('should return an error response when not providing a "token" parameter.', async () => {
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        body: Buffer.from(
-          JSON.stringify({ error: 'invalid_request', error_description: 'Invalid parameter "token".' }),
-          'utf8'
-        ),
-        headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
+    it('should reject not providing a "token" parameter.', async () => {
+      delete request.body.token;
+
+      const error = new InvalidRequestException('Invalid parameter "token".');
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
+        headers: endpoint['headers'],
         statusCode: 400,
       });
     });
 
-    it('should return an error response when providing an unsupported "token_type_hint".', async () => {
-      Object.assign(request.body, { token: 'token', token_type_hint: 'unknown' });
+    it('should reject providing an unsupported "token_type_hint".', async () => {
+      request.body.token_type_hint = 'unknown';
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        body: Buffer.from(
-          JSON.stringify({ error: 'invalid_request', error_description: 'Invalid parameter "token_type_hint".' }),
-          'utf8'
-        ),
-        headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
+      const error = new UnsupportedTokenTypeException('Unsupported token_type_hint "unknown".');
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
+        headers: endpoint['headers'],
         statusCode: 400,
       });
     });
 
-    it('should return an error response when the Client Authentication fails.', async () => {
-      clientAuthenticationMethodsMock[0].hasBeenRequested.mockReturnValue(true);
-      clientAuthenticationMethodsMock[0].authenticate.mockRejectedValue(
-        new InvalidClientException({ error_description: 'Invalid Credentials.' })
-      );
+    it('should reject not using a client authentication method.', async () => {
+      const error = new InvalidClientException('No Client Authentication Method detected.');
 
-      request.body.token = 'token';
+      clientAuthenticatorMock.authenticate.mockRejectedValueOnce(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        body: Buffer.from(
-          JSON.stringify({ error: 'invalid_client', error_description: 'Invalid Credentials.' }),
-          'utf8'
-        ),
-        headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
-        statusCode: 401,
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
+        headers: endpoint['headers'],
+        statusCode: error.statusCode,
       });
-
-      clientAuthenticationMethodsMock[0].hasBeenRequested.mockReset();
-      clientAuthenticationMethodsMock[0].authenticate.mockReset();
     });
 
-    it('should revoke a Token.', async () => {
-      const spy = jest.spyOn<RevocationEndpointMock, any>(endpoint, 'revokeToken');
+    it('should reject using multiple client authentication methods.', async () => {
+      const error = new InvalidClientException('Multiple Client Authentication Methods detected.');
 
-      clientAuthenticationMethodsMock[0].hasBeenRequested.mockReturnValue(true);
-      clientAuthenticationMethodsMock[0].authenticate.mockResolvedValue(client);
+      clientAuthenticatorMock.authenticate.mockRejectedValueOnce(error);
 
-      request.body.token = 'token';
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
+        headers: endpoint['headers'],
+        statusCode: error.statusCode,
+      });
+    });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<Response>>({
-        headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache' },
-        statusCode: 200,
+    it("should reject when the provided secret does not match the client's one.", async () => {
+      const error = new InvalidClientException('Invalid Credentials.').setHeaders({
+        'WWW-Authenticate': 'Basic',
       });
 
-      expect(spy).toHaveBeenCalledTimes(1);
+      clientAuthenticatorMock.authenticate.mockRejectedValueOnce(error);
 
-      clientAuthenticationMethodsMock[0].hasBeenRequested.mockReset();
-      clientAuthenticationMethodsMock[0].authenticate.mockReset();
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Attributes<HttpResponse>>({
+        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
+        headers: { ...endpoint['headers'], ...error.headers },
+        statusCode: error.statusCode,
+      });
+    });
 
-      spy.mockRestore();
+    it('should search for an access token and then a refresh token when providing an "access_token" token_type_hint.', async () => {
+      request.body.token_type_hint = 'access_token';
+
+      clientAuthenticatorMock.authenticate.mockResolvedValueOnce(clients[0]);
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+
+      expect(findAccessTokenSpy).toHaveBeenCalled();
+      expect(findRefreshTokenSpy).toHaveBeenCalled();
+
+      const findAccessTokenOrder = findAccessTokenSpy.mock.invocationCallOrder[0];
+      const findRefreshTokenOrder = findRefreshTokenSpy.mock.invocationCallOrder[0];
+
+      expect(findAccessTokenOrder).toBeLessThan(findRefreshTokenOrder);
+
+      expect(revokeAccessTokenSpy).not.toHaveBeenCalled();
+      expect(revokeRefreshTokenSpy).not.toHaveBeenCalled();
+    });
+
+    it('should search for a refresh token and then an access token when providing a "refresh_token" token_type_hint.', async () => {
+      request.body.token_type_hint = 'refresh_token';
+
+      clientAuthenticatorMock.authenticate.mockResolvedValueOnce(clients[0]);
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+
+      expect(findAccessTokenSpy).toHaveBeenCalled();
+      expect(findRefreshTokenSpy).toHaveBeenCalled();
+
+      const findAccessTokenOrder = findAccessTokenSpy.mock.invocationCallOrder[0];
+      const findRefreshTokenOrder = findRefreshTokenSpy.mock.invocationCallOrder[0];
+
+      expect(findAccessTokenOrder).toBeGreaterThan(findRefreshTokenOrder);
+
+      expect(revokeAccessTokenSpy).not.toHaveBeenCalled();
+      expect(revokeRefreshTokenSpy).not.toHaveBeenCalled();
+    });
+
+    it('should search for a refresh token and then an access token when not providing a token_type_hint.', async () => {
+      clientAuthenticatorMock.authenticate.mockResolvedValueOnce(clients[0]);
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+
+      expect(findRefreshTokenSpy).toHaveBeenCalled();
+      expect(findAccessTokenSpy).toHaveBeenCalled();
+
+      const findRefreshTokenOrder = findRefreshTokenSpy.mock.invocationCallOrder[0];
+      const findAccessTokenOrder = findAccessTokenSpy.mock.invocationCallOrder[0];
+
+      expect(findRefreshTokenOrder).toBeGreaterThan(findAccessTokenOrder);
+
+      expect(revokeRefreshTokenSpy).not.toHaveBeenCalled();
+      expect(revokeAccessTokenSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not revoke when the authorization server does not support access token revocation.', async () => {
+      Reflect.set(authorizationServerOptionsMock, 'enableAccessTokenRevocation', false);
+
+      request.body.token = 'access_token';
+      clientAuthenticatorMock.authenticate.mockResolvedValueOnce(clients[0]);
+      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+
+      Reflect.set(authorizationServerOptionsMock, 'enableAccessTokenRevocation', true);
+    });
+
+    it('should not revoke when the client is not the owner of the token.', async () => {
+      request.body.token = 'access_token';
+
+      clientAuthenticatorMock.authenticate.mockResolvedValueOnce(clients[1]);
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+
+      expect(revokeAccessTokenSpy).not.toHaveBeenCalled();
+      expect(revokeRefreshTokenSpy).not.toHaveBeenCalled();
+    });
+
+    it('should revoke an access token', async () => {
+      request.body.token = 'access_token';
+
+      clientAuthenticatorMock.authenticate.mockResolvedValueOnce(clients[0]);
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+
+      expect(revokeAccessTokenSpy).toHaveBeenCalledTimes(1);
+      expect(revokeRefreshTokenSpy).not.toHaveBeenCalled();
+    });
+
+    it('should revoke an refresh token', async () => {
+      request.body.token = 'refresh_token';
+
+      clientAuthenticatorMock.authenticate.mockResolvedValueOnce(clients[0]);
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+
+      expect(revokeAccessTokenSpy).not.toHaveBeenCalled();
+      expect(revokeRefreshTokenSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

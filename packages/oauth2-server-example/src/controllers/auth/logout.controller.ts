@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 
 class Controller {
-  public async logout(request: Request, response: Response): Promise<void> {
+  public async logout(request: Request, response: Response) {
     request.logout();
-    return response.redirect('/auth/login');
+    return response.redirect(303, '/auth/login');
   }
 }
 

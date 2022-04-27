@@ -1,62 +1,73 @@
 import {
-  ClientEntity,
-  SupportedClientAuthentication,
-  SupportedGrantType,
-  SupportedResponseType,
+  ApplicationType,
+  Client,
+  ClientAuthentication,
+  ClientType,
+  GrantType,
+  ResponseType,
 } from '@guarani/oauth2-server';
 import { Optional } from '@guarani/types';
 
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { URL } from 'url';
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+  ValueTransformer,
+} from 'typeorm';
+
+const transformer: ValueTransformer = {
+  from: (data: string): string[] => JSON.parse(data),
+  to: (data: string[]): string => JSON.stringify(data),
+};
 
 @Entity({ name: 'clients' })
-export class Client extends BaseEntity implements ClientEntity {
+export class ClientEntity extends BaseEntity implements Client {
   @PrimaryGeneratedColumn('uuid', { name: 'id' })
   public readonly id!: string;
 
-  @Column({ name: 'secret', type: 'varchar', length: 32, nullable: true, unique: true })
-  public secret?: Optional<string>;
+  @Column({ name: 'secret', type: 'varchar', unique: true })
+  public secret!: string;
 
-  @Column({
-    name: 'redirect_uris',
-    type: 'text',
-    transformer: {
-      from: (data: string): URL[] => (<string[]>JSON.parse(data)).map((redirectUri) => new URL(redirectUri)),
-      to: (data: URL[]): string => JSON.stringify(data.map((redirectUri) => redirectUri.href)),
-    },
-  })
-  public redirectUris!: URL[];
+  @Column({ name: 'name', type: 'varchar', length: 32 })
+  public name!: string;
+
+  @Column({ name: 'redirect_uris', type: 'varchar', transformer })
+  public redirectUris!: string[];
+
+  @Column({ name: 'response_types', type: 'varchar', transformer })
+  public responseTypes!: ResponseType[];
+
+  @Column({ name: 'grant_types', type: 'varchar', transformer })
+  public grantTypes!: GrantType[];
+
+  @Column({ name: 'application_type', type: 'varchar' })
+  public applicationType!: ApplicationType;
 
   @Column({ name: 'authentication_method', type: 'varchar' })
-  public authenticationMethod!: SupportedClientAuthentication;
+  public authenticationMethod!: ClientAuthentication;
 
-  @Column({
-    name: 'grant_types',
-    type: 'text',
-    transformer: {
-      from: (data: string): SupportedGrantType[] => JSON.parse(data),
-      to: (data: SupportedGrantType[]): string => JSON.stringify(data),
-    },
-  })
-  public grantTypes!: SupportedGrantType[];
-
-  @Column({
-    name: 'response_types',
-    type: 'text',
-    transformer: {
-      from: (data: string): SupportedResponseType[] => JSON.parse(data),
-      to: (data: SupportedResponseType[]): string => JSON.stringify(data),
-    },
-  })
-  public responseTypes!: SupportedResponseType[];
-
-  @Column({
-    name: 'scopes',
-    type: 'text',
-    transformer: {
-      from: (data: string): string[] => JSON.parse(data),
-      to: (data: string[]): string => JSON.stringify(data),
-    },
-  })
+  @Column({ name: 'scopes', type: 'varchar', transformer })
   public scopes!: string[];
+
+  @Column({ name: 'client_type', type: 'varchar' })
+  public clientType!: ClientType;
+
+  @Column({ name: 'access_token_lifetime', type: 'integer', default: 60 * 60 })
+  public accessTokenLifetime!: number;
+
+  @Column({ name: 'refresh_token_lifetime', type: 'integer', default: 60 * 60 * 24 })
+  public refreshTokenLifetime!: number;
+
+  @CreateDateColumn({ name: 'created_at', type: 'datetime' })
+  public readonly createdAt!: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'datetime' })
+  public readonly updatedAt!: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'datetime' })
+  public readonly deletedAt?: Optional<Date>;
 }

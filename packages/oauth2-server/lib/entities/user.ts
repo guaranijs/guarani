@@ -1,7 +1,9 @@
+import { Dict } from '@guarani/types';
+
 /**
- * Representation of the OAuth 2.0 End User.
+ * OAuth 2.0 End User Entity.
  */
-export interface User {
+export interface User extends Dict {
   /**
    * Identifier of the End User.
    */

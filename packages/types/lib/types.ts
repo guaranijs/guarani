@@ -24,6 +24,11 @@ export interface AbstractConstructor<T = any> {
 }
 
 /**
+ * Describes a Constructor or its instance.
+ */
+export type ConstructorOrInstance<T> = Constructor<T> | T;
+
+/**
  * Describes the format of a dictionary.
  */
 export type Dict<T = any> = { [key: string]: T };
@@ -42,6 +47,11 @@ export type Nullable<T> = T | null;
  * Describes an optional type.
  */
 export type Optional<T> = T | undefined;
+
+/**
+ * Describes the attributes of the type without its methods.
+ */
+export type Attributes<T> = Pick<T, { [P in keyof T]: T[P] extends Function ? never : P }[keyof T]>;
 
 /**
  * Describes a recursively readonly object.

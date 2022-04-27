@@ -1,16 +1,18 @@
 import { PlainPkceMethod } from '../../lib/pkce/plain.pkce-method';
-import { SupportedPkceMethod } from '../../lib/pkce/types/supported-pkce-method';
+import { PkceMethod } from '../../lib/types/pkce-method';
+
+const pkceMethod = new PlainPkceMethod();
 
 describe('Plain PKCE Method', () => {
   it('should have "plain" as its name.', () => {
-    expect(new PlainPkceMethod().name).toBe<SupportedPkceMethod>('plain');
+    expect(pkceMethod.name).toBe<PkceMethod>('plain');
   });
 
   it('should return false when comparing two different strings.', () => {
-    expect(new PlainPkceMethod().verify('abcxyz', 'abc123')).toBe(false);
+    expect(pkceMethod.verify('abcxyz', 'abc123')).toBe(false);
   });
 
   it('should return true when comparing the same strings.', () => {
-    expect(new PlainPkceMethod().verify('abcxyz', 'abcxyz')).toBe(true);
+    expect(pkceMethod.verify('abcxyz', 'abcxyz')).toBe(true);
   });
 });

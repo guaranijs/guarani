@@ -1,11 +1,11 @@
-import { Inject, Injectable } from '@guarani/ioc';
+import { Inject, Injectable } from '@guarani/di';
 
-import { Adapter } from '../adapter';
 import { Client } from '../entities/client';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
-import { Request } from '../http/request';
-import { ClientAuthentication } from './client-authentication';
-import { SupportedClientAuthentication } from './types/supported-client-authentication';
+import { HttpRequest } from '../http/http.request';
+import { IClientService } from '../services/client.service.interface';
+import { ClientAuthentication } from '../types/client-authentication';
+import { IClientAuthentication } from './client-authentication.interface';
 
 /**
  * Parameters passed by the Client on the HTTP Request Body.
@@ -37,25 +37,25 @@ interface ClientCredentials {
  * since it is intended to be used by Public Clients.
  */
 @Injectable()
-export class NoneClientAuthentication implements ClientAuthentication {
+export class NoneClientAuthentication implements IClientAuthentication {
   /**
    * Name of the Client Authentication Method.
    */
-  public readonly name: SupportedClientAuthentication = 'none';
+  public readonly name: ClientAuthentication = 'none';
 
   /**
    * Instantiates a new None Client Authentication Method.
    *
-   * @param adapter Instance of the Adapter.
+   * @param clientService Instance of the Client Service.
    */
-  public constructor(@Inject('Adapter') private readonly adapter: Adapter) {}
+  public constructor(@Inject('ClientService') private readonly clientService: IClientService) {}
 
   /**
    * Checks if the Client Authentication Method has been requested by the Client.
    *
    * @param request HTTP Request.
    */
-  public hasBeenRequested(request: Request): boolean {
+  public hasBeenRequested(request: HttpRequest): boolean {
     return typeof request.body.client_id === 'string' && request.body.client_secret === undefined;
   }
 
@@ -65,25 +65,21 @@ export class NoneClientAuthentication implements ClientAuthentication {
    * @param request HTTP Request.
    * @returns Authenticated Client.
    */
-  public async authenticate(request: Request): Promise<Client> {
-    const { client_id: clientId } = <ClientCredentials>request.body;
+  public async authenticate(request: HttpRequest): Promise<Client> {
+    const { client_id } = <ClientCredentials>request.body;
 
-    const client = await this.adapter.findClient(clientId);
+    const client = await this.clientService.findClient(client_id);
 
-    if (client === null) {
-      throw new InvalidClientException({ error_description: 'Invalid Credentials.' });
+    if (client === undefined) {
+      throw new InvalidClientException('Invalid Credentials.');
     }
 
-    if (client.secret !== null) {
-      throw new InvalidClientException({
-        error_description: `A Client with a Secret cannot use the Authentication Method "${this.name}".`,
-      });
+    if (client.secret !== undefined) {
+      throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
     }
 
     if (client.authenticationMethod !== this.name) {
-      throw new InvalidClientException({
-        error_description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-      });
+      throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
     }
 
     return client;

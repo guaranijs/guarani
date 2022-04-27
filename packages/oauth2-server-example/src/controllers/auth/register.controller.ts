@@ -1,47 +1,21 @@
-import argon2 from 'argon2';
-import { validate } from 'class-validator';
+import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
-import { CreateUserDto } from '../../dto/create-user.dto';
 import { User } from '../../entities/user.entity';
 
 class Controller {
   public async get(request: Request, response: Response): Promise<void> {
-    response.render('auth/register', { request, title: 'Register', csrf: request.csrfToken() });
+    return response.render('auth/register', { request, title: 'Register' });
   }
 
   public async post(request: Request, response: Response): Promise<void> {
-    const createUserDto = Object.assign<CreateUserDto, CreateUserDto>(new CreateUserDto(), request.body);
-    const errors = await validate(createUserDto);
+    const { email, password } = request.body;
 
-    if (errors.length > 0) {
-      const errorMessages = errors.map((error) => `Invalid field "${error.property}".`);
-
-      return response.render('auth/register', {
-        request,
-        title: 'Register',
-        csrf: request.body._csrf,
-        errors: errorMessages,
-      });
-    }
-
-    let user = await User.findOne({
-      where: [{ email: createUserDto.email }, { username: createUserDto.username }],
-    });
-
-    if (user !== null) {
-      return response.render('auth/register', { request, title: 'Register', error: 'User already registered.' });
-    }
-
-    user = new User();
-
-    user.email = createUserDto.email;
-    user.username = createUserDto.username;
-    user.password = await argon2.hash(createUserDto.password, { type: argon2.argon2id });
+    const user = User.create({ email, password: await bcrypt.hash(password, 10) });
 
     await user.save();
 
-    return response.redirect('/auth/login');
+    return response.redirect(303, '/auth/login');
   }
 }
 

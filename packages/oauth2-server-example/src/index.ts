@@ -1,56 +1,52 @@
+import 'reflect-metadata';
+
+import { expressProvider } from '@guarani/oauth2-server';
+
 import { TypeormStore } from 'connect-typeorm';
 import cookieParser from 'cookie-parser';
-import express from 'express';
+import dotenv from 'dotenv';
+import express, { urlencoded } from 'express';
 import session from 'express-session';
-// @ts-expect-error
-import handlebarsLayouts from 'handlebars-layouts';
-import hbs from 'hbs';
-import morgan from 'morgan';
-import path from 'path';
-import serveFavicon from 'serve-favicon';
-import { passportConfig } from './config/passport.config';
 
-import { typeormConfig } from './config/typeorm.config';
+import { configOrm } from './config/config-orm';
+import { configPassport } from './config/config-passport';
+import { configStatic } from './config/config-static';
+import { configViews } from './config/config-views';
 import { Session } from './entities/session.entity';
+import { oauthOptions } from './oauth.options';
 import { router } from './router';
 
-const secret = 'horGHmztKplp50r7Z9t2ydxnvWgHoJjE';
+dotenv.config();
+
+const PORT = Number.parseInt(process.env.PORT ?? '3000', 10);
+const SECRET = process.env.SECRET!;
 
 async function main(): Promise<void> {
   const app = express();
 
-  const dataSource = await typeormConfig();
+  const dataSource = await configOrm();
+  const sessionRepository = dataSource.getRepository(Session);
 
-  app.set('views', path.join(__dirname, 'views'));
-  app.set('view engine', 'hbs');
-
-  // @ts-expect-error
-  hbs.registerHelper(handlebarsLayouts(hbs.handlebars));
-  hbs.registerPartials(path.join(__dirname, 'views', 'partials'));
-
-  app.use(morgan('dev'));
-  app.use(express.urlencoded({ extended: false }));
-  app.use(cookieParser(secret));
+  app.use(urlencoded({ extended: false }));
+  app.use(cookieParser(SECRET));
   app.use(
     session({
+      secret: SECRET,
       name: 'guarani',
-      secret,
       resave: false,
       saveUninitialized: false,
-      store: new TypeormStore({ cleanupLimit: 2, ttl: 43200 }).connect(dataSource.getRepository(Session)),
+      store: new TypeormStore({ cleanupLimit: 2, ttl: 43200 }).connect(sessionRepository),
     })
   );
 
-  passportConfig(app);
+  configPassport(app);
+  configViews(app);
+  configStatic(app);
 
-  app.use(serveFavicon(path.join(__dirname, 'static', 'favicon.ico')));
-  app.use('/static', express.static(path.join(__dirname, 'static')));
-
+  app.use(await expressProvider(oauthOptions));
   app.use(router);
 
-  app.listen(3000, () => {
-    console.log(`Running on port "3000".`);
-  });
+  app.listen(PORT, () => console.log(`Authorization Server running at http://localhost:${PORT}`));
 }
 
 main();

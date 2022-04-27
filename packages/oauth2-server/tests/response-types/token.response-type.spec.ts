@@ -1,103 +1,103 @@
+import { AuthorizationServerOptions } from '../../lib/authorization-server/options/authorization-server.options';
 import { AccessToken } from '../../lib/entities/access-token';
 import { Client } from '../../lib/entities/client';
 import { User } from '../../lib/entities/user';
 import { InvalidRequestException } from '../../lib/exceptions/invalid-request.exception';
-import { Request } from '../../lib/http/request';
-import { SupportedResponseMode } from '../../lib/response-modes/types/supported-response-mode';
+import { ScopeHandler } from '../../lib/handlers/scope.handler';
+import { AuthorizationParameters } from '../../lib/models/authorization-parameters';
+import { TokenAuthorizationResponse } from '../../lib/models/token.authorization-response';
 import { TokenResponseType } from '../../lib/response-types/token.response-type';
-import { SupportedResponseType } from '../../lib/response-types/types/supported-response-type';
-import { AccessTokenService } from '../../lib/services/access-token.service';
-import { AccessTokenResponse } from '../../lib/types/access-token.response';
+import { IAccessTokenService } from '../../lib/services/access-token.service.interface';
+import { ResponseMode } from '../../lib/types/response-mode';
+import { ResponseType } from '../../lib/types/response-type';
 
-const accessTokenServiceMock: jest.Mocked<AccessTokenService> = {
-  createAccessToken: jest.fn(async (_grant, scopes, client, user, refreshToken): Promise<AccessToken> => {
-    return {
+const client = <Client>{ scopes: ['foo', 'bar'] };
+
+const user = <User>{};
+
+const authorizationServerOptionsMock = <AuthorizationServerOptions>{ scopes: ['foo', 'bar', 'baz', 'qux'] };
+
+const scopeHandler = new ScopeHandler(authorizationServerOptionsMock);
+
+const accessTokenServiceMock: jest.Mocked<Partial<IAccessTokenService>> = {
+  createAccessToken: jest.fn().mockImplementation(async (scopes: string[]): Promise<AccessToken> => {
+    return <AccessToken>{
       token: 'access_token',
       tokenType: 'Bearer',
       scopes,
-      audience: client.id,
-      isRevoked: false,
-      issuedAt: new Date(),
-      validAfter: new Date(),
-      expiresAt: new Date(Date.now() + 300000),
-      client,
-      user,
-      refreshToken,
+      expiresAt: new Date(Date.now() + 3600000),
     };
   }),
 };
 
-const responseType = new TokenResponseType(accessTokenServiceMock);
-
-const client: Client = {
-  id: 'client_id',
-  secret: null,
-  scopes: ['foo', 'bar', 'baz'],
-  authenticationMethod: 'none',
-  responseTypes: ['token'],
-  grantTypes: ['implicit'],
-  redirectUris: ['https://example.com/callback'],
-};
-
-const user: User = { id: 'user_id' };
+const responseType = new TokenResponseType(scopeHandler, <IAccessTokenService>accessTokenServiceMock);
 
 describe('Token Response Type', () => {
   describe('name', () => {
     it('should have "token" as its name.', () => {
-      expect(responseType.name).toBe<SupportedResponseType>('token');
+      expect(responseType.name).toBe<ResponseType>('token');
     });
   });
 
   describe('defaultResponseMode', () => {
-    it('should have "fragment" as its default Response Mode.', () => {
-      expect(responseType.defaultResponseMode).toBe<SupportedResponseMode>('fragment');
-    });
-  });
-
-  describe('checkParameters()', () => {
-    it('should reject using "query" as the "response_mode".', () => {
-      // @ts-expect-error Testing a private method.
-      expect(() => responseType.checkParameters({ response_mode: 'query' })).toThrow(InvalidRequestException);
+    it('should have "fragment" as its default response mode.', () => {
+      expect(responseType.defaultResponseMode).toBe<ResponseMode>('fragment');
     });
   });
 
   describe('createAuthorizationResponse()', () => {
-    const request = new Request({ body: {}, headers: {}, method: 'get', query: {} });
+    let parameters: AuthorizationParameters;
 
     beforeEach(() => {
-      Reflect.set(request, 'query', {});
+      parameters = { response_type: 'token', client_id: '', redirect_uri: '', scope: 'foo bar' };
     });
 
     it('should reject using "query" as the "response_mode".', async () => {
-      request.query.response_mode = 'query';
-      await expect(responseType.createAuthorizationResponse(request, client, user)).rejects.toThrow(
-        InvalidRequestException
-      );
+      Reflect.set(parameters, 'response_mode', 'query');
+      await expect(responseType.handle(parameters, client, user)).rejects.toThrow(InvalidRequestException);
     });
 
-    it('should create an Access Token Response.', async () => {
-      request.query.scope = 'foo bar';
-
-      await expect(
-        responseType.createAuthorizationResponse(request, client, user)
-      ).resolves.toMatchObject<AccessTokenResponse>({
-        access_token: expect.any(String),
+    it('should create a token response with the default scope of the client.', async () => {
+      await expect(responseType.handle(parameters, client, user)).resolves.toStrictEqual<TokenAuthorizationResponse>({
+        access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: expect.any(Number),
         scope: 'foo bar',
       });
     });
 
-    it('should create an Access Token Response and pass the State unmodified.', async () => {
-      Object.assign(request.query, { scope: 'foo bar', state: 'client-state' });
+    it('should create a token response with the default scope of the client and pass the state unmodified.', async () => {
+      Reflect.set(parameters, 'state', 'client-state');
 
-      await expect(
-        responseType.createAuthorizationResponse(request, client, user)
-      ).resolves.toMatchObject<AccessTokenResponse>({
-        access_token: expect.any(String),
+      await expect(responseType.handle(parameters, client, user)).resolves.toStrictEqual<TokenAuthorizationResponse>({
+        access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: expect.any(Number),
         scope: 'foo bar',
+        state: 'client-state',
+      });
+    });
+
+    it('should create a token response with a restricted scope.', async () => {
+      Reflect.set(parameters, 'scope', 'foo baz');
+
+      await expect(responseType.handle(parameters, client, user)).resolves.toStrictEqual<TokenAuthorizationResponse>({
+        access_token: 'access_token',
+        token_type: 'Bearer',
+        expires_in: expect.any(Number),
+        scope: 'foo',
+      });
+    });
+
+    it('should create a token response with a restricted scope and pass the state unmodified.', async () => {
+      Reflect.set(parameters, 'scope', 'foo baz');
+      Reflect.set(parameters, 'state', 'client-state');
+
+      await expect(responseType.handle(parameters, client, user)).resolves.toStrictEqual<TokenAuthorizationResponse>({
+        access_token: 'access_token',
+        token_type: 'Bearer',
+        expires_in: expect.any(Number),
+        scope: 'foo',
         state: 'client-state',
       });
     });

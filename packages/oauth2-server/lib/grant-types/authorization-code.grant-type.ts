@@ -1,57 +1,36 @@
-import { Inject, Injectable, InjectAll } from '@guarani/ioc';
+import { Inject, Injectable, InjectAll } from '@guarani/di';
 import { Optional } from '@guarani/types';
 
 import { AuthorizationCode } from '../entities/authorization-code';
 import { Client } from '../entities/client';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { Request } from '../http/request';
-import { PkceMethod } from '../pkce/pkce-method';
-import { SupportedPkceMethod } from '../pkce/types/supported-pkce-method';
-import { AccessTokenService } from '../services/access-token.service';
-import { AuthorizationCodeService } from '../services/authorization-code.service';
-import { RefreshTokenService } from '../services/refresh-token.service';
-import { AccessTokenResponse } from '../types/access-token.response';
-import { createAccessTokenResponse } from '../utils';
-import { GrantType } from './grant-type';
-import { AuthorizationCodeParameters } from './types/authorization-code.parameters';
-import { SupportedGrantType } from './types/supported-grant-type';
+import { AuthorizationCodeTokenParameters } from '../models/authorization-code.token-parameters';
+import { TokenResponse } from '../models/token-response';
+import { IPkceMethod } from '../pkce/pkce-method.interface';
+import { IAccessTokenService } from '../services/access-token.service.interface';
+import { IAuthorizationCodeService } from '../services/authorization-code.service.interface';
+import { IRefreshTokenService } from '../services/refresh-token.service.interface';
+import { GrantType } from '../types/grant-type';
+import { PkceMethod } from '../types/pkce-method';
+import { createTokenResponse } from '../utils/create-token-response';
+import { IGrantType } from './grant-type.interface';
 
 /**
- * Implementation of the Authorization Code Grant Type.
- *
- * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1
+ * Implementation of the **Authorization Code** Grant Type.
  *
  * In this Grant Type the Client obtains an Authorization Grant from the End User and exchanges it for an Access Token.
  *
  * This implementation uses PKCE by default, and enforces its use every time.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1
  */
 @Injectable()
-export class AuthorizationCodeGrantType implements GrantType {
+export class AuthorizationCodeGrantType implements IGrantType {
   /**
    * Name of the Grant Type.
    */
-  public readonly name: SupportedGrantType = 'authorization_code';
-
-  /**
-   * PKCE Methods.
-   */
-  private readonly pkceMethods: PkceMethod[];
-
-  /**
-   * Instance of the Authorization Code Service.
-   */
-  private readonly authorizationCodeService: AuthorizationCodeService;
-
-  /**
-   * Instance of the Access Token Service.
-   */
-  private readonly accessTokenService: AccessTokenService;
-
-  /**
-   * Instance of the Refresh Token Service.
-   */
-  private readonly refreshTokenService: RefreshTokenService;
+  public readonly name: GrantType = 'authorization_code';
 
   /**
    * Instantiates a new Authorization Code Grant Type.
@@ -62,19 +41,14 @@ export class AuthorizationCodeGrantType implements GrantType {
    * @param refreshTokenService Instance of the Refresh Token Service.
    */
   public constructor(
-    @InjectAll('PkceMethod') pkceMethods: PkceMethod[],
-    @Inject('AuthorizationCodeService') authorizationCodeService: AuthorizationCodeService,
-    @Inject('AccessTokenService') accessTokenService: AccessTokenService,
-    @Inject('RefreshTokenService') refreshTokenService: RefreshTokenService
+    @InjectAll('PkceMethod') private readonly pkceMethods: IPkceMethod[],
+    @Inject('AuthorizationCodeService') private readonly authorizationCodeService: IAuthorizationCodeService,
+    @Inject('AccessTokenService') private readonly accessTokenService: IAccessTokenService,
+    @Inject('RefreshTokenService', true) private readonly refreshTokenService?: Optional<IRefreshTokenService>
   ) {
-    if (pkceMethods.length === 0) {
-      throw new TypeError('Missing PKCE Methods for Code Response Type.');
+    if (this.pkceMethods.length === 0) {
+      throw new TypeError('Missing PKCE Methods for Authorization Code Grant Type.');
     }
-
-    this.pkceMethods = pkceMethods;
-    this.authorizationCodeService = authorizationCodeService;
-    this.accessTokenService = accessTokenService;
-    this.refreshTokenService = refreshTokenService;
   }
 
   /**
@@ -87,63 +61,51 @@ export class AuthorizationCodeGrantType implements GrantType {
    * Code Verifier that matches the Code Challenge presented at the Authorization Endpoint, then the Provider issues
    * an Access Token and, if allowed to the Client, a Refresh Token.
    *
-   * @param request HTTP Request.
-   * @param client OAuth 2.0 Client of the Request.
+   * @param parameters Parameters of the Token Request.
+   * @param client Client of the Request.
    * @returns Access Token Response.
    */
-  public async createTokenResponse(request: Request, client: Client): Promise<AccessTokenResponse> {
-    const params = <AuthorizationCodeParameters>request.body;
+  public async handle(parameters: AuthorizationCodeTokenParameters, client: Client): Promise<TokenResponse> {
+    this.checkParameters(parameters);
 
-    let authorizationCode: Optional<AuthorizationCode>;
+    const authorizationCode = await this.getAuthorizationCode(parameters.code);
 
     try {
-      this.checkParameters(params);
-
-      authorizationCode = await this.getAuthorizationCode(params.code);
-
-      this.checkAuthorizationCode(authorizationCode, params, client);
+      this.checkAuthorizationCode(authorizationCode, parameters, client);
 
       const { scopes, user } = authorizationCode;
 
+      const accessToken = await this.accessTokenService.createAccessToken(scopes, client, user);
+
       const refreshToken =
-        client.grantTypes.includes('refresh_token') && this.refreshTokenService !== undefined
-          ? await this.refreshTokenService.createRefreshToken(this.name, scopes, client, user)
-          : null;
+        this.refreshTokenService !== undefined && client.grantTypes.includes('refresh_token')
+          ? await this.refreshTokenService.createRefreshToken(scopes, client, user)
+          : undefined;
 
-      const accessToken = await this.accessTokenService.createAccessToken(
-        this.name,
-        scopes,
-        client,
-        user,
-        refreshToken
-      );
-
-      return createAccessTokenResponse(accessToken);
+      return createTokenResponse(accessToken, refreshToken);
     } finally {
-      if (authorizationCode !== undefined) {
-        await this.authorizationCodeService.revokeAuthorizationCode(authorizationCode);
-      }
+      await this.authorizationCodeService.revokeAuthorizationCode(authorizationCode);
     }
   }
 
   /**
    * Checks if the Parameters of the Token Request are valid.
    *
-   * @param params Parameters of the Token Request.
+   * @param parameters Parameters of the Token Request.
    */
-  private checkParameters(params: AuthorizationCodeParameters): void {
-    const { code, code_verifier, redirect_uri } = params;
+  private checkParameters(parameters: AuthorizationCodeTokenParameters): void {
+    const { code, code_verifier, redirect_uri } = parameters;
 
     if (typeof code !== 'string') {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "code".' });
+      throw new InvalidRequestException('Invalid parameter "code".');
     }
 
     if (typeof code_verifier !== 'string') {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "code_verifier".' });
+      throw new InvalidRequestException('Invalid parameter "code_verifier".');
     }
 
     if (typeof redirect_uri !== 'string') {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "redirect_uri".' });
+      throw new InvalidRequestException('Invalid parameter "redirect_uri".');
     }
   }
 
@@ -156,8 +118,8 @@ export class AuthorizationCodeGrantType implements GrantType {
   private async getAuthorizationCode(code: string): Promise<AuthorizationCode> {
     const authorizationCode = await this.authorizationCodeService.findAuthorizationCode(code);
 
-    if (authorizationCode === null) {
-      throw new InvalidGrantException({ error_description: 'Invalid Authorization Code.' });
+    if (authorizationCode === undefined) {
+      throw new InvalidGrantException('Invalid Authorization Code.');
     }
 
     return authorizationCode;
@@ -167,34 +129,38 @@ export class AuthorizationCodeGrantType implements GrantType {
    * Checks the Authorization Code against the provided data and against the Client of the Token Request.
    *
    * @param authorizationCode Authorization Code to be checked.
-   * @param params Parameters of the Token Request.
+   * @param parameters Parameters of the Token Request.
    * @param client Client of the Request.
    */
   private checkAuthorizationCode(
     authorizationCode: AuthorizationCode,
-    params: AuthorizationCodeParameters,
+    parameters: AuthorizationCodeTokenParameters,
     client: Client
   ): void {
     if (authorizationCode.client.id !== client.id) {
-      throw new InvalidGrantException({ error_description: 'Mismatching Client Identifier.' });
+      throw new InvalidGrantException('Mismatching Client Identifier.');
+    }
+
+    if (new Date() < authorizationCode.validAfter) {
+      throw new InvalidGrantException('Authorization Code not yet valid.');
     }
 
     if (new Date() > authorizationCode.expiresAt) {
-      throw new InvalidGrantException({ error_description: 'Expired Authorization Code.' });
+      throw new InvalidGrantException('Expired Authorization Code.');
     }
 
     if (authorizationCode.isRevoked) {
-      throw new InvalidGrantException({ error_description: 'Invalid Authorization Code.' });
+      throw new InvalidGrantException('Revoked Authorization Code.');
     }
 
-    if (authorizationCode.redirectUri !== params.redirect_uri) {
-      throw new InvalidGrantException({ error_description: 'Mismatching Redirect URI.' });
+    if (authorizationCode.redirectUri !== parameters.redirect_uri) {
+      throw new InvalidGrantException('Mismatching Redirect URI.');
     }
 
     const pkceMethod = this.getPkceMethod(authorizationCode.codeChallengeMethod ?? 'plain');
 
-    if (!pkceMethod.verify(authorizationCode.codeChallenge, params.code_verifier)) {
-      throw new InvalidGrantException({ error_description: 'Invalid Authorization Code.' });
+    if (!pkceMethod.verify(authorizationCode.codeChallenge, parameters.code_verifier)) {
+      throw new InvalidGrantException('Invalid PKCE Code Challenge.');
     }
   }
 
@@ -204,11 +170,11 @@ export class AuthorizationCodeGrantType implements GrantType {
    * @param codeChallengeMethod PKCE Method to be retrieved.
    * @returns Instance of the requested PKCE Method.
    */
-  private getPkceMethod(codeChallengeMethod: SupportedPkceMethod): PkceMethod {
+  private getPkceMethod(codeChallengeMethod: PkceMethod): IPkceMethod {
     const pkceMethod = this.pkceMethods.find((pkceMethod) => pkceMethod.name === codeChallengeMethod);
 
     if (pkceMethod === undefined) {
-      throw new InvalidRequestException({ error_description: `Unsupported PKCE Method "${codeChallengeMethod}".` });
+      throw new InvalidRequestException(`Unsupported PKCE Method "${codeChallengeMethod}".`);
     }
 
     return pkceMethod;

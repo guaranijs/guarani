@@ -8,10 +8,16 @@ import { RegisterController } from '../controllers/auth/register.controller';
 import { authenticated } from '../guards/authenticated.guard';
 import { unauthenticated } from '../guards/unauthenticated.guard';
 
-const AuthRouter = Router();
-const csrf = csurf({ cookie: true });
+const router = Router();
+const csrf = csurf({ cookie: true, sessionKey: 'guarani' });
 
-AuthRouter.route('/login')
+router
+  .route('/register')
+  .get(unauthenticated, csrf, RegisterController.get)
+  .post(unauthenticated, csrf, RegisterController.post);
+
+router
+  .route('/login')
   .get(unauthenticated, csrf, LoginController.get)
   .post(
     unauthenticated,
@@ -20,10 +26,6 @@ AuthRouter.route('/login')
     LoginController.post
   );
 
-AuthRouter.route('/logout').get(authenticated, LogoutController.logout).post(authenticated, LogoutController.logout);
+router.route('/logout').get(authenticated, LogoutController.logout).post(authenticated, LogoutController.logout);
 
-AuthRouter.route('/register')
-  .get(unauthenticated, csrf, RegisterController.get)
-  .post(unauthenticated, csrf, RegisterController.post);
-
-export { AuthRouter };
+export { router as AuthRouter };

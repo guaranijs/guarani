@@ -1,56 +1,104 @@
-import { Injectable, InjectAll } from '@guarani/ioc';
+import { Inject, Injectable, InjectAll } from '@guarani/di';
+import { Optional } from '@guarani/types';
 
+import { timingSafeEqual } from 'crypto';
 import { OutgoingHttpHeaders } from 'http';
 
-import { ClientAuthentication } from '../client-authentication/client-authentication';
+import { AuthorizationServerOptions } from '../authorization-server/options/authorization-server.options';
+import { ClientAuthenticator } from '../client-authentication/client-authenticator';
+import { AbstractToken } from '../entities/abstract-token';
+import { AccessToken } from '../entities/access-token';
 import { Client } from '../entities/client';
-import { InvalidClientException } from '../exceptions/invalid-client.exception';
+import { RefreshToken } from '../entities/refresh-token';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
-import { GrantType } from '../grant-types/grant-type';
-import { Request } from '../http/request';
-import { Response } from '../http/response';
-import { Endpoint } from './endpoint';
-import { RevocationParameters } from './types/revocation.parameters';
-import { SupportedEndpoint } from './types/supported-endpoint';
+import { UnsupportedTokenTypeException } from '../exceptions/unsupported-token-type.exception';
+import { IGrantType } from '../grant-types/grant-type.interface';
+import { HttpRequest } from '../http/http.request';
+import { HttpResponse } from '../http/http.response';
+import { RevocationParameters } from '../models/revocation-parameters';
+import { IAccessTokenService } from '../services/access-token.service.interface';
+import { IRefreshTokenService } from '../services/refresh-token.service.interface';
+import { Endpoint } from '../types/endpoint';
+import { HttpMethod } from '../types/http-method';
+import { TokenTypeHint } from '../types/token-type-hint';
+import { IEndpoint } from './endpoint.interface';
+
+interface FindTokenResult {
+  readonly entity: AbstractToken;
+  readonly tokenType: TokenTypeHint;
+}
 
 /**
- * Endpoint used by the Client to revoke a Token in its possession.
+ * Implementation of the **Revocation** Endpoint.
  *
- * If the Client succeeds to authenticate but provides a token that was not issued to itself,
- * the Authorization server does revoke the token, since the Client is not authorized to operate it.
+ * This endpoint is used by the Client to revoke a Token in its possession.
+ *
+ * If the Client succeeds to authenticate but provides a token that was not issued to itself, the Authorization server
+ * does not revoke the token, since the Client is not authorized to operate it.
  *
  * If the token is already invalid, does not exist within the Authorization Server or is otherwise unknown or invalid,
  * it is already considered ***revoked*** and, therefore, no further operation occurs.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc7009.html
  */
 @Injectable()
-export abstract class RevocationEndpoint implements Endpoint {
+export class RevocationEndpoint implements IEndpoint {
   /**
    * Name of the Endpoint.
    */
-  public readonly name: SupportedEndpoint = 'revocation';
+  public readonly name: Endpoint = 'revocation';
+
+  /**
+   * Path of the Endpoint.
+   */
+  public readonly path: string = '/oauth/revoke';
+
+  /**
+   * HTTP Methods of the Endpoint.
+   */
+  public readonly methods: HttpMethod[] = ['post'];
 
   /**
    * Default HTTP Headers to be included in the Response.
    */
-  protected readonly headers: OutgoingHttpHeaders = {
+  private readonly headers: OutgoingHttpHeaders = {
     'Cache-Control': 'no-store',
     Pragma: 'no-cache',
   };
 
   /**
+   * Token Type Hints supported by the Revocation Endpoint.
+   */
+  private readonly supportedTokenTypeHints: TokenTypeHint[] = ['refresh_token'];
+
+  /**
    * Instantiates a new Revocation Endpoint.
    *
-   * @param grantTypes Grant Types registered at the Authorization Server.
-   * @param clientAuthenticationMethods Client Authentication Methods registered at the Authorization Server.
+   * @param clientAuthenticator Instance of the Client Authenticator.
+   * @param authorizationServerOptions Configuration Parameters of the Authorization Server.
+   * @param refreshTokenService Instance of the Refresh Token Service.
+   * @param grantTypes Grant Types supported by the Authorization Server.
+   * @param accessTokenService Instance of the Access Token Service.
    */
   public constructor(
-    @InjectAll('GrantType') grantTypes: GrantType[],
-    @InjectAll('ClientAuthentication') private readonly clientAuthenticationMethods: ClientAuthentication[]
+    private readonly clientAuthenticator: ClientAuthenticator,
+    @Inject('AuthorizationServerOptions') private readonly authorizationServerOptions: AuthorizationServerOptions,
+    @Inject('RefreshTokenService') private readonly refreshTokenService: IRefreshTokenService,
+    @InjectAll('GrantType', true) grantTypes?: Optional<IGrantType[]>,
+    @Inject('AccessTokenService', true) private readonly accessTokenService?: Optional<IAccessTokenService>
   ) {
-    if (!grantTypes.find((grantType) => grantType.name === 'refresh_token')) {
+    if (grantTypes?.find((grantType) => grantType.name === 'refresh_token') === undefined) {
       throw new Error('The Authorization Server does not support Refresh Tokens.');
+    }
+
+    if (this.authorizationServerOptions.enableAccessTokenRevocation) {
+      if (this.accessTokenService === undefined) {
+        throw new Error('Cannot enable Access Token Revocation without an Access Token Service.');
+      }
+
+      this.supportedTokenTypeHints.push('access_token');
     }
   }
 
@@ -70,22 +118,22 @@ export abstract class RevocationEndpoint implements Endpoint {
    * @param request HTTP Request.
    * @returns HTTP Response.
    */
-  public async handle(request: Request): Promise<Response> {
-    const params = <RevocationParameters>request.body;
+  public async handle(request: HttpRequest): Promise<HttpResponse> {
+    const parameters = <RevocationParameters>request.body;
 
     try {
-      this.checkParameters(params);
+      this.checkParameters(parameters);
 
-      const client = await this.authenticateClient(request);
+      const client = await this.clientAuthenticator.authenticate(request);
 
-      await this.revokeToken(request, client);
+      await this.revokeToken(parameters, client);
 
-      return new Response().setHeaders(this.headers).json();
+      return new HttpResponse().setHeaders(this.headers);
     } catch (exc: any) {
-      const error = exc instanceof OAuth2Exception ? exc : new ServerErrorException({ error_description: exc.message });
+      const error = exc instanceof OAuth2Exception ? exc : new ServerErrorException(exc.message);
 
-      return new Response()
-        .status(error.statusCode)
+      return new HttpResponse()
+        .setStatus(error.statusCode)
         .setHeaders(error.headers)
         .setHeaders(this.headers)
         .json(error.toJSON());
@@ -95,47 +143,102 @@ export abstract class RevocationEndpoint implements Endpoint {
   /**
    * Checks if the Parameters of the Revocation Request are valid.
    *
-   * @param params Parameters of the Revocation Request.
+   * @param parameters Parameters of the Revocation Request.
    */
-  protected checkParameters(params: RevocationParameters): void {
-    const { token, token_type_hint } = params;
+  protected checkParameters(parameters: RevocationParameters): void {
+    const { token, token_type_hint } = parameters;
 
     if (typeof token !== 'string') {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "token".' });
+      throw new InvalidRequestException('Invalid parameter "token".');
     }
 
-    if (token_type_hint !== undefined && !['access_token', 'refresh_token'].includes(token_type_hint)) {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "token_type_hint".' });
+    if (token_type_hint !== undefined && !this.supportedTokenTypeHints.includes(token_type_hint)) {
+      throw new UnsupportedTokenTypeException(`Unsupported token_type_hint "${token_type_hint}".`);
     }
-  }
-
-  /**
-   * Authenticates the Client based on the Client Authentication Methods supported by the Authorization Server.
-   *
-   * @param request HTTP Request.
-   * @returns Authenticated Client.
-   */
-  private async authenticateClient(request: Request): Promise<Client> {
-    const methods = this.clientAuthenticationMethods.filter((method) => method.hasBeenRequested(request));
-
-    if (methods.length === 0) {
-      throw new InvalidClientException({ error_description: 'No Client Authentication Method detected.' });
-    }
-
-    if (methods.length > 1) {
-      throw new InvalidClientException({ error_description: 'Multiple Client Authentication Methods detected.' });
-    }
-
-    const method = methods.pop()!;
-
-    return await method.authenticate(request);
   }
 
   /**
    * Revokes the provided Token from the application's storage.
    *
-   * @param request Revocation Request.
-   * @param client Authenticated Client.
+   * @param parameters Parameters of the Revocation Request.
+   * @param client Client of the Request.
    */
-  protected abstract revokeToken(request: Request, client: Client): Promise<void>;
+  private async revokeToken(parameters: RevocationParameters, client: Client): Promise<void> {
+    const { token, token_type_hint } = parameters;
+
+    const { entity, tokenType } = (await this.findTokenEntity(token, token_type_hint)) ?? {};
+
+    if (entity === undefined || tokenType === undefined) {
+      return;
+    }
+
+    const clientId = Buffer.from(client.id, 'utf8');
+    const tokenClientId = Buffer.from(entity.client.id, 'utf8');
+
+    if (clientId.length !== tokenClientId.length || !timingSafeEqual(clientId, tokenClientId)) {
+      return;
+    }
+
+    switch (tokenType) {
+      case 'access_token':
+        // This is not undefined because an Access Token was found.
+        return await this.accessTokenService!.revokeAccessToken(<AccessToken>entity);
+
+      case 'refresh_token':
+        return await this.refreshTokenService.revokeRefreshToken(<RefreshToken>entity);
+    }
+  }
+
+  /**
+   * Searches the application's storage for a Token Entity that satisfies the Token provided by the Client.
+   *
+   * @param token Token provided by the Client.
+   * @param tokenTypeHint Optional hint about the type of the Token.
+   * @returns Resulting Token Entity and its type.
+   */
+  private async findTokenEntity(
+    token: string,
+    tokenTypeHint?: Optional<TokenTypeHint>
+  ): Promise<Optional<FindTokenResult>> {
+    switch (tokenTypeHint) {
+      case 'refresh_token':
+        return (await this.findRefreshToken(token)) ?? (await this.findAccessToken(token));
+
+      case 'access_token':
+      default:
+        return (await this.findAccessToken(token)) ?? (await this.findRefreshToken(token));
+    }
+  }
+
+  /**
+   * Searches the application's storage for an Access Token.
+   *
+   * @param token Token provided by the Client.
+   * @returns Result of the search.
+   */
+  private async findAccessToken(token: string): Promise<Optional<FindTokenResult>> {
+    if (!this.authorizationServerOptions.enableAccessTokenRevocation) {
+      return;
+    }
+
+    const entity = await this.accessTokenService!.findAccessToken(token);
+
+    if (entity !== undefined) {
+      return { entity, tokenType: 'access_token' };
+    }
+  }
+
+  /**
+   * Searches the application's storage for a Refresh Token.
+   *
+   * @param token Token provided by the Client.
+   * @returns Result of the search.
+   */
+  private async findRefreshToken(token: string): Promise<Optional<FindTokenResult>> {
+    const entity = await this.refreshTokenService.findRefreshToken(token);
+
+    if (entity !== undefined) {
+      return { entity, tokenType: 'refresh_token' };
+    }
+  }
 }

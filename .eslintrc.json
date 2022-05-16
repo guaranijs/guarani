@@ -19,6 +19,7 @@
     "no-redeclare": "off",
     "no-useless-constructor": "off",
     "space-before-function-paren": "off",
+    "dot-notation": "off",
     "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": "error",
     "no-use-before-define": "off",

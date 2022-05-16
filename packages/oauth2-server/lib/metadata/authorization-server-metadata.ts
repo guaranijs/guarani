@@ -1,27 +1,53 @@
+import { AuthorizationServerOptions } from '../authorization-server/options/authorization-server.options';
+import { AuthorizationServerMetadataOptions } from './authorization-server-metadata.options';
 import { defineMetadata } from './helpers/define-metadata';
-import { MetadataToken } from './metadata-token';
-import { AuthorizationServerMetadataParameters } from './types/authorization-server-metadata.parameters';
+import {
+  ACCESS_TOKEN_SERVICE,
+  AUTHORIZATION_CODE_SERVICE,
+  AUTHORIZATION_SERVER_OPTIONS,
+  CLIENT_AUTHENTICATION,
+  CLIENT_SERVICE,
+  GRANT_TYPE,
+  ORIGINAL_METADATA,
+  PKCE_METHOD,
+  REFRESH_TOKEN_SERVICE,
+  RESPONSE_MODE,
+  RESPONSE_TYPE,
+  USER_SERVICE,
+} from './injectable-tokens';
 
 /**
- * Decorates an Authorization Server class by providing its necessary metadata.
+ * Defines the Configuration options of the Authorization Server.
  *
- * @param metadata Parameters of the Authorization Server Metadata.
+ * @param options Configuration options of the Authorization Server.
  */
-export function AuthorizationServerMetadata(metadata: AuthorizationServerMetadataParameters): ClassDecorator {
+export function AuthorizationServerMetadata(options: AuthorizationServerMetadataOptions): ClassDecorator {
   return function (target: Function): void {
-    defineMetadata(MetadataToken.Issuer, metadata.issuer, target);
-    defineMetadata(MetadataToken.Scopes, metadata.scopes, target);
-    defineMetadata(MetadataToken.ClientAuthentication, metadata.clientAuthenticationMethods, target);
-    defineMetadata(MetadataToken.Endpoints, metadata.endpoints, target);
-    defineMetadata(MetadataToken.ErrorUrl, metadata.errorUrl, target);
-    defineMetadata(MetadataToken.GrantTypes, metadata.grantTypes, target);
-    defineMetadata(MetadataToken.ResponseTypes, metadata.responseTypes, target);
-    defineMetadata(MetadataToken.ResponseModes, metadata.responseModes, target);
-    defineMetadata(MetadataToken.PkceMethods, metadata.pkceMethods, target);
-    defineMetadata(MetadataToken.ClientService, metadata.clientService, target);
-    defineMetadata(MetadataToken.AccessTokenService, metadata.accessTokenService, target);
-    defineMetadata(MetadataToken.UserService, metadata.userService, target);
-    defineMetadata(MetadataToken.AuthorizationCodeService, metadata.authorizationCodeService, target);
-    defineMetadata(MetadataToken.RefreshTokenService, metadata.refreshTokenService, target);
+    defineMetadata(CLIENT_AUTHENTICATION, options.clientAuthenticationMethods, target);
+    defineMetadata(GRANT_TYPE, options.grantTypes, target);
+    defineMetadata(PKCE_METHOD, options.pkceMethods, target);
+    defineMetadata(RESPONSE_MODE, options.responseModes, target);
+    defineMetadata(RESPONSE_TYPE, options.responseTypes, target);
+
+    defineMetadata<AuthorizationServerOptions>(
+      AUTHORIZATION_SERVER_OPTIONS,
+      {
+        issuer: options.issuer,
+        scopes: options.scopes,
+        userInteraction: options.userInteraction,
+        enableAccessTokenRevocation: options.enableAccessTokenRevocation ?? true,
+        enableRefreshTokenIntrospection: options.enableRefreshTokenIntrospection ?? false,
+        enableRefreshTokenRotation: options.enableRefreshTokenRotation ?? false,
+      },
+      target
+    );
+
+    defineMetadata(ACCESS_TOKEN_SERVICE, options.accessTokenService, target);
+    defineMetadata(CLIENT_SERVICE, options.clientService, target);
+    defineMetadata(AUTHORIZATION_CODE_SERVICE, options.authorizationCodeService, target);
+    defineMetadata(REFRESH_TOKEN_SERVICE, options.refreshTokenService, target);
+    defineMetadata(USER_SERVICE, options.userService, target);
+
+    defineMetadata<AuthorizationServerMetadataOptions>(ORIGINAL_METADATA, options, target);
   };
 }

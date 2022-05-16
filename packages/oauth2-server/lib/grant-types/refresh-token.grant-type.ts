@@ -1,57 +1,49 @@
-import { Inject, Injectable } from '@guarani/ioc';
+import { Inject, Injectable } from '@guarani/di';
 import { Optional } from '@guarani/types';
 
+import { AuthorizationServerOptions } from '../authorization-server/options/authorization-server.options';
 import { Client } from '../entities/client';
 import { RefreshToken } from '../entities/refresh-token';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { Request } from '../http/request';
-import { AccessTokenService } from '../services/access-token.service';
-import { RefreshTokenService } from '../services/refresh-token.service';
-import { AccessTokenResponse } from '../types/access-token.response';
-import { createAccessTokenResponse } from '../utils';
-import { GrantType } from './grant-type';
-import { RefreshTokenParameters } from './types/refresh-token.parameters';
-import { SupportedGrantType } from './types/supported-grant-type';
+import { ScopeHandler } from '../handlers/scope.handler';
+import { RefreshTokenTokenParameters } from '../models/refresh-token.token-parameters';
+import { TokenResponse } from '../models/token-response';
+import { IAccessTokenService } from '../services/access-token.service.interface';
+import { IRefreshTokenService } from '../services/refresh-token.service.interface';
+import { GrantType } from '../types/grant-type';
+import { createTokenResponse } from '../utils/create-token-response';
+import { IGrantType } from './grant-type.interface';
 
 /**
- * Implementation of the Authorization Code Grant Type.
- *
- * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-6
+ * Implementation of the **Refresh Token** Grant Type.
  *
  * In this Grant Type the Client requests the Authorization Server for the issuance of a new Access Token
  * without the need to repeat the User Consent process.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-6
  */
 @Injectable()
-export class RefreshTokenGrantType implements GrantType {
+export class RefreshTokenGrantType implements IGrantType {
   /**
    * Name of the Grant Type.
    */
-  public readonly name: SupportedGrantType = 'refresh_token';
-
-  /**
-   * Instance of the Access Token Service.
-   */
-  private readonly accessTokenService: AccessTokenService;
-
-  /**
-   * Instance of the Refresh Token Service.
-   */
-  private readonly refreshTokenService: RefreshTokenService;
+  public readonly name: GrantType = 'refresh_token';
 
   /**
    * Instantiates a new Refresh Token Grant Type.
    *
+   * @param authorizationServerOptions Configuration Parameters of the Authorization Server.
+   * @param scopeHandler Scope Handler of the Authorization Server.
    * @param accessTokenService Instance of the Access Token Service.
    * @param refreshTokenService Instance of the Refresh Token Service.
    */
   public constructor(
-    @Inject('AccessTokenService') accessTokenService: AccessTokenService,
-    @Inject('RefreshTokenService') refreshTokenService: RefreshTokenService
-  ) {
-    this.accessTokenService = accessTokenService;
-    this.refreshTokenService = refreshTokenService;
-  }
+    @Inject('AuthorizationServerOptions') private readonly authorizationServerOptions: AuthorizationServerOptions,
+    private readonly scopeHandler: ScopeHandler,
+    @Inject('AccessTokenService') private readonly accessTokenService: IAccessTokenService,
+    @Inject('RefreshTokenService') private readonly refreshTokenService: IRefreshTokenService
+  ) {}
 
   /**
    * Creates the Access Token Response with the Access Token issued to the Client.
@@ -63,41 +55,44 @@ export class RefreshTokenGrantType implements GrantType {
    *
    * If **Refresh Token Rotation** is enabled, it issues a new Refresh Token and revokes the provided Refresh Token.
    *
-   * @param request HTTP Request.
-   * @param client OAuth 2.0 Client of the Request.
+   * @param parameters Parameters of the Token Request.
+   * @param client Client of the Request.
    * @returns Access Token Response.
    */
-  public async createTokenResponse(request: Request, client: Client): Promise<AccessTokenResponse> {
-    const params = <RefreshTokenParameters>request.body;
+  public async handle(parameters: RefreshTokenTokenParameters, client: Client): Promise<TokenResponse> {
+    this.checkParameters(parameters);
 
-    this.checkParameters(params);
-
-    const refreshToken = await this.getRefreshToken(params.refresh_token);
+    let refreshToken = await this.getRefreshToken(parameters.refresh_token);
 
     this.checkRefreshToken(refreshToken, client);
 
-    const scopes = this.getScopes(refreshToken, params.scope);
+    const scopes = this.getScopes(refreshToken, parameters.scope);
 
-    const { grant, user } = refreshToken;
+    const { user } = refreshToken;
 
-    // TODO: Add Refresh Token Rotation.
-    const accessToken = await this.accessTokenService.createAccessToken(grant, scopes, client, user, refreshToken);
+    const accessToken = await this.accessTokenService.createAccessToken(scopes, client, user);
 
-    // TODO: Add policy to revoke the access tokens when using the refresh token.
-    return createAccessTokenResponse(accessToken);
+    if (this.authorizationServerOptions.enableRefreshTokenRotation) {
+      await this.refreshTokenService.revokeRefreshToken(refreshToken);
+      refreshToken = await this.refreshTokenService.createRefreshToken(refreshToken.scopes, client, user);
+    }
+
+    return createTokenResponse(accessToken, refreshToken);
   }
 
   /**
    * Checks if the Parameters of the Token Request are valid.
    *
-   * @param params Parameters of the Token Request.
+   * @param parameters Parameters of the Token Request.
    */
-  private checkParameters(params: RefreshTokenParameters): void {
-    const { refresh_token } = params;
+  private checkParameters(parameters: RefreshTokenTokenParameters): void {
+    const { refresh_token, scope } = parameters;
 
     if (typeof refresh_token !== 'string') {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "refresh_token".' });
+      throw new InvalidRequestException('Invalid parameter "refresh_token".');
     }
+
+    this.scopeHandler.checkRequestedScope(scope);
   }
 
   /**
@@ -109,8 +104,8 @@ export class RefreshTokenGrantType implements GrantType {
   private async getRefreshToken(token: string): Promise<RefreshToken> {
     const refreshToken = await this.refreshTokenService.findRefreshToken(token);
 
-    if (refreshToken === null) {
-      throw new InvalidGrantException({ error_description: 'Invalid Refresh Token.' });
+    if (refreshToken === undefined) {
+      throw new InvalidGrantException('Invalid Refresh Token.');
     }
 
     return refreshToken;
@@ -124,15 +119,19 @@ export class RefreshTokenGrantType implements GrantType {
    */
   private checkRefreshToken(refreshToken: RefreshToken, client: Client): void {
     if (refreshToken.client.id !== client.id) {
-      throw new InvalidGrantException({ error_description: 'Mismatching Client Identifier.' });
+      throw new InvalidGrantException('Mismatching Client Identifier.');
+    }
+
+    if (new Date() < refreshToken.validAfter) {
+      throw new InvalidGrantException('Refresh Token not yet valid.');
     }
 
     if (new Date() > refreshToken.expiresAt) {
-      throw new InvalidGrantException({ error_description: 'Expired Refresh Token.' });
+      throw new InvalidGrantException('Expired Refresh Token.');
     }
 
     if (refreshToken.isRevoked) {
-      throw new InvalidGrantException({ error_description: 'Invalid Refresh Token.' });
+      throw new InvalidGrantException('Revoked Refresh Token.');
     }
   }
 
@@ -152,9 +151,7 @@ export class RefreshTokenGrantType implements GrantType {
 
     requestedScopes.forEach((requestedScope) => {
       if (!refreshToken.scopes.includes(requestedScope)) {
-        throw new InvalidGrantException({
-          error_description: `The scope "${requestedScope}" was not previously granted.`,
-        });
+        throw new InvalidGrantException(`The scope "${requestedScope}" was not previously granted.`);
       }
     });
 

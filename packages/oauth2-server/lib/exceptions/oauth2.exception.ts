@@ -1,19 +1,19 @@
 import { removeNullishValues } from '@guarani/objects';
-import { Dict, Optional } from '@guarani/types';
+import { Optional } from '@guarani/types';
 
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 
-import { OAuth2ExceptionParams } from './types/oauth2.exception.params';
-import { SupportedOAuth2ErrorCode } from './types/supported-oauth2-error-code';
+import { ErrorResponse } from '../models/error-response';
+import { ErrorCode } from '../types/error-code';
 
 /**
- * Sbstract Base class for the errors that may happen during the authorization process.
+ * Abstract Base Class for the errors that may happen during the authorization process.
  */
 export abstract class OAuth2Exception extends Error {
   /**
    * OAuth 2.0 Error Code.
    */
-  public abstract readonly errorCode: SupportedOAuth2ErrorCode;
+  public abstract readonly errorCode: ErrorCode;
 
   /**
    * HTTP Response Status Code of the OAuth 2.0 Exception.
@@ -28,44 +28,17 @@ export abstract class OAuth2Exception extends Error {
   /**
    * Parameters of the OAuth 2.0 Exception.
    */
-  private data!: Dict;
+  private data: Omit<ErrorResponse, 'error'> = {};
 
   /**
    * Instantiates a new OAuth 2.0 Exception.
    *
-   * @param params Parameters of the OAuth 2.0 Exception.
+   * @param description Description of the Error.
    */
-  public constructor(params: Optional<Dict> = {}) {
-    super();
+  public constructor(description?: Optional<string>) {
+    super(description);
 
-    this.message = this.getErrorMessage(params);
-    this.data = params;
-  }
-
-  /**
-   * Creates the parsed message of the Error.
-   *
-   * @param params Parameters of the OAuth 2.0 Exception.
-   * @returns Parsed Error message.
-   */
-  private getErrorMessage(params: Dict): string {
-    let message = <string>this.errorCode;
-
-    if (params.error_description !== undefined) {
-      message = `"${message}": ${params.error_description}`;
-    }
-
-    return message;
-  }
-
-  /**
-   * Sets the HTTP Response Status Code of the OAuth 2.0 Exception.
-   *
-   * @param statusCode HTTP Response Status Code.
-   */
-  public status(statusCode: number): OAuth2Exception {
-    Reflect.set(this, 'statusCode', statusCode);
-    return this;
+    this.data.error_description = description;
   }
 
   /**
@@ -90,9 +63,24 @@ export abstract class OAuth2Exception extends Error {
   }
 
   /**
+   * Sets a new entry on the data of the Error.
+   *
+   * @param name Name of the Error Parameter.
+   * @param value Value of the Error Parameter.
+   */
+  public setParameter(name: string, value: any): OAuth2Exception {
+    if (name === 'error') {
+      throw new TypeError('Cannot reset the code of the error.');
+    }
+
+    this.data[name] = value;
+    return this;
+  }
+
+  /**
    * Parameters of the OAuth 2.0 Exception.
    */
-  public toJSON(): OAuth2ExceptionParams {
-    return removeNullishValues<OAuth2ExceptionParams>({ error: this.errorCode, ...this.data });
+  public toJSON(): ErrorResponse {
+    return removeNullishValues<ErrorResponse>({ error: this.errorCode, ...this.data });
   }
 }

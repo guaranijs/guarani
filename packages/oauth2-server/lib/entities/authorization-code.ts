@@ -1,30 +1,33 @@
-import { Nullable } from '@guarani/types';
-
-import { SupportedPkceMethod } from '../pkce/types/supported-pkce-method';
+import { PkceMethod } from '../types/pkce-method';
 import { AbstractToken } from './abstract-token';
 import { User } from './user';
 
 /**
- * Representation of the OAuth 2.0 Authorization Code.
+ * OAuth 2.0 Authorization Code Entity.
  */
 export interface AuthorizationCode extends AbstractToken {
   /**
+   * Identifier of the Authorization Code.
+   */
+  code: string;
+
+  /**
    * Redirect URI provided by the Client.
    */
-  readonly redirectUri: string;
+  redirectUri: string;
 
   /**
    * Code Challenge provided by the Client.
    */
-  readonly codeChallenge: string;
+  codeChallenge: string;
 
   /**
    * Code Challenge Method used to verify the Code Challenge.
    */
-  readonly codeChallengeMethod: Nullable<SupportedPkceMethod>;
+  codeChallengeMethod: PkceMethod;
 
   /**
-   * User that granted access to the Client.
+   * End User that granted authorization to the Client.
    */
-  readonly user: User;
+  user: User;
 }

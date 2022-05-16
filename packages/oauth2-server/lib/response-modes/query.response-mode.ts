@@ -1,37 +1,37 @@
-import { Injectable } from '@guarani/ioc';
-import { Dict } from '@guarani/types';
+import { Injectable } from '@guarani/di';
 
 import { URL, URLSearchParams } from 'url';
 
-import { Response } from '../http/response';
-import { ResponseMode } from './response-mode';
-import { SupportedResponseMode } from './types/supported-response-mode';
+import { HttpResponse } from '../http/http.response';
+import { AuthorizationResponse } from '../models/authorization-response';
+import { ResponseMode } from '../types/response-mode';
+import { IResponseMode } from './response-mode.interface';
 
 /**
- * Implementation of the **Query Response Mode**.
+ * Implementation of the **Query** Response Mode.
  *
  * @see https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html#ResponseModes
  */
 @Injectable()
-export class QueryResponseMode implements ResponseMode {
+export class QueryResponseMode implements IResponseMode {
   /**
    * Name of the Response Mode.
    */
-  public readonly name: SupportedResponseMode = 'query';
+  public readonly name: ResponseMode = 'query';
 
   /**
    * Creates a Redirect Response to the provided Redirect URI with the provided Parameters at the Query of the URI.
    *
    * @param redirectUri Redirect URI that the User-Agent will be redirected to.
-   * @param params Authorization Response Parameters that will be returned to the Client Application.
+   * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns HTTP Response containing the Authorization Response Parameters.
    */
-  public createHttpResponse(redirectUri: string, params: Dict): Response {
+  public createHttpResponse(redirectUri: string, parameters: AuthorizationResponse): HttpResponse {
     const url = new URL(redirectUri);
-    const searchParams = new URLSearchParams(params);
+    const searchParams = new URLSearchParams(parameters);
 
     url.search = searchParams.toString();
 
-    return new Response().redirect(url.href);
+    return new HttpResponse().redirect(url.href);
   }
 }

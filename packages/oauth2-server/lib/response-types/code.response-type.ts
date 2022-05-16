@@ -1,20 +1,19 @@
-import { Inject, Injectable, InjectAll } from '@guarani/ioc';
+import { Inject, Injectable, InjectAll } from '@guarani/di';
 import { removeNullishValues } from '@guarani/objects';
 
 import { Client } from '../entities/client';
 import { User } from '../entities/user';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { PkceMethod } from '../pkce/pkce-method';
-import { SupportedResponseMode } from '../response-modes/types/supported-response-mode';
-import { AuthorizationCodeService } from '../services/authorization-code.service';
-import { checkRequestedScope } from '../utils';
-import { ResponseType } from './response-type';
-import { AuthorizationCodeParameters } from './types/authorization-code.parameters';
-import { AuthorizationCodeResponse } from './types/authorization-code.response';
-import { SupportedResponseType } from './types/supported-response-type';
+import { CodeAuthorizationParameters } from '../models/code.authorization-parameters';
+import { CodeAuthorizationResponse } from '../models/code.authorization-response';
+import { IPkceMethod } from '../pkce/pkce-method.interface';
+import { IAuthorizationCodeService } from '../services/authorization-code.service.interface';
+import { ResponseMode } from '../types/response-mode';
+import { ResponseType } from '../types/response-type';
+import { IResponseType } from './response-type.interface';
 
 /**
- * Implementation of the Code Response Type.
+ * Implementation of the **Code** Response Type.
  *
  * In this Response Type the Client obtains consent from the End User and receives an Authorization Code
  * that has to be exchanged at the Token Endpoint for the Access Token.
@@ -24,26 +23,16 @@ import { SupportedResponseType } from './types/supported-response-type';
  * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1
  */
 @Injectable()
-export class CodeResponseType implements ResponseType {
+export class CodeResponseType implements IResponseType {
   /**
    * Name of the Response Type.
    */
-  public readonly name: SupportedResponseType = 'code';
+  public readonly name: ResponseType = 'code';
 
   /**
    * Default Response Mode of the Response Type.
    */
-  public readonly defaultResponseMode: SupportedResponseMode = 'query';
-
-  /**
-   * PKCE Methods.
-   */
-  private readonly pkceMethods: PkceMethod[];
-
-  /**
-   * Instance of the Authorization Code Service.
-   */
-  private readonly authorizationCodeService: AuthorizationCodeService;
+  public readonly defaultResponseMode: ResponseMode = 'query';
 
   /**
    * Instantiates a new Code Response Type.
@@ -52,15 +41,12 @@ export class CodeResponseType implements ResponseType {
    * @param authorizationCodeService Instance of the Authorization Code Service.
    */
   public constructor(
-    @InjectAll('PkceMethod') pkceMethods: PkceMethod[],
-    @Inject('AuthorizationCodeService') authorizationCodeService: AuthorizationCodeService
+    @Inject('AuthorizationCodeService') private readonly authorizationCodeService: IAuthorizationCodeService,
+    @InjectAll('PkceMethod') private readonly pkceMethods: IPkceMethod[]
   ) {
-    if (pkceMethods.length === 0) {
+    if (this.pkceMethods.length === 0) {
       throw new TypeError('Missing PKCE Methods for Code Response Type.');
     }
-
-    this.pkceMethods = pkceMethods;
-    this.authorizationCodeService = authorizationCodeService;
   }
 
   /**
@@ -81,43 +67,38 @@ export class CodeResponseType implements ResponseType {
    * Both the Code Challenge and the PKCE Method used by the Client to generate the PKCE Code Challenge are registered
    * at the application's storage together with the issued Authorization Code for verification at the Token Endpoint.
    *
-   * @param params Parameters of the Authorization Request.
-   * @param client OAuth 2.0 Client of the Request.
+   * @param parameters Parameters of the Authorization Request.
+   * @param client Client of the Request.
    * @param user End User represented by the Client.
-   * @returns Authorization Response.
+   * @returns Authorization Code Response.
    */
-  public async createAuthorizationResponse(
-    params: AuthorizationCodeParameters,
+  public async handle(
+    parameters: CodeAuthorizationParameters,
     client: Client,
     user: User
-  ): Promise<AuthorizationCodeResponse> {
-    this.checkParameters(params);
-
-    const scopes = checkRequestedScope(client, params.scope);
-    const authorizationCode = await this.authorizationCodeService.createAuthorizationCode(params, scopes, client, user);
-
-    return removeNullishValues<AuthorizationCodeResponse>({ code: authorizationCode.token, state: params.state });
+  ): Promise<CodeAuthorizationResponse> {
+    this.checkParameters(parameters);
+    const authorizationCode = await this.authorizationCodeService.createAuthorizationCode(parameters, client, user);
+    return removeNullishValues<CodeAuthorizationResponse>({ code: authorizationCode.code, state: parameters.state });
   }
 
   /**
    * Checks if the Parameters of the Authorization Request are valid.
    *
-   * @param params Parameters of the Authorization Request.
+   * @param parameters Parameters of the Authorization Request.
    */
-  private checkParameters(params: AuthorizationCodeParameters): void {
-    const { code_challenge, code_challenge_method } = params;
+  private checkParameters(parameters: CodeAuthorizationParameters): void {
+    const { code_challenge, code_challenge_method } = parameters;
 
     if (typeof code_challenge !== 'string') {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "code_challenge".' });
+      throw new InvalidRequestException('Invalid parameter "code_challenge".');
     }
 
     if (
       code_challenge_method !== undefined &&
       this.pkceMethods.find((pkceMethod) => pkceMethod.name === code_challenge_method) === undefined
     ) {
-      throw new InvalidRequestException({
-        error_description: `Unsupported code_challenge_method "${code_challenge_method}".`,
-      });
+      throw new InvalidRequestException(`Unsupported code_challenge_method "${code_challenge_method}".`);
     }
   }
 }

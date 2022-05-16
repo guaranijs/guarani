@@ -1,18 +1,32 @@
-import { UserEntity } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity({ name: 'users' })
-export class User extends BaseEntity implements UserEntity {
+export class UserEntity extends BaseEntity {
   @PrimaryGeneratedColumn('uuid', { name: 'id' })
   public readonly id!: string;
 
-  @Column({ name: 'password', type: 'text' })
-  public password!: string;
-
-  @Column({ name: 'email', type: 'varchar', length: 64, unique: true })
+  @Column({ name: 'email', type: 'varchar', length: 128, unique: true })
   public email!: string;
 
-  @Column({ name: 'username', type: 'varchar', length: 16, unique: true })
-  public username!: string;
+  @Column({ name: 'password', type: 'varchar', length: 60 })
+  public password!: string;
+
+  @CreateDateColumn({ name: 'created_at', type: 'datetime' })
+  public readonly createdAt!: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'datetime' })
+  public readonly updatedAt!: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'datetime', nullable: true })
+  public readonly deletedAt!: Nullable<Date>;
 }

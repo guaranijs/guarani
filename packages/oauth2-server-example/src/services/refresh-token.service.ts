@@ -1,26 +1,23 @@
-import { RefreshTokenService as BaseRefreshTokenService, SupportedGrantType } from '@guarani/oauth2-server';
+import { IRefreshTokenService } from '@guarani/oauth2-server';
 import { Optional } from '@guarani/types';
 import { secretToken } from '@guarani/utils';
 
-import { Client } from '../entities/client.entity';
-import { RefreshToken } from '../entities/refresh-token.entity';
-import { User } from '../entities/user.entity';
+import { ClientEntity } from '../entities/client.entity';
+import { RefreshTokenEntity } from '../entities/refresh-token.entity';
+import { UserEntity } from '../entities/user.entity';
 
-export class RefreshTokenService implements BaseRefreshTokenService {
+export class RefreshTokenService implements IRefreshTokenService {
   public async createRefreshToken(
-    grant: SupportedGrantType,
     scopes: string[],
-    client: Client,
-    user: User
-  ): Promise<RefreshToken> {
-    const refreshToken = new RefreshToken();
-
-    Object.assign<RefreshToken, Partial<RefreshToken>>(refreshToken, {
+    client: ClientEntity,
+    user: UserEntity
+  ): Promise<RefreshTokenEntity> {
+    const refreshToken = RefreshTokenEntity.create({
       token: await secretToken(16),
       scopes,
-      grant,
-      isRevoked: false,
-      expiresAt: new Date(Date.now() + 60 * 60 * 24 * 14),
+      issuedAt: new Date(),
+      expiresAt: new Date(Date.now() + client.refreshTokenLifetime * 1000),
+      validAfter: new Date(),
       client,
       user,
     });
@@ -30,7 +27,12 @@ export class RefreshTokenService implements BaseRefreshTokenService {
     return refreshToken;
   }
 
-  public async findRefreshToken(token: string): Promise<Optional<RefreshToken>> {
-    return (await RefreshToken.findOneBy({ token })) ?? undefined;
+  public async findRefreshToken(token: string): Promise<Optional<RefreshTokenEntity>> {
+    return (await RefreshTokenEntity.findOneBy({ token })) ?? undefined;
+  }
+
+  public async revokeRefreshToken(refreshToken: RefreshTokenEntity): Promise<void> {
+    refreshToken.isRevoked = true;
+    await refreshToken.save();
   }
 }

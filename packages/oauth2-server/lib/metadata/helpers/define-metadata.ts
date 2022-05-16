@@ -1,5 +1,3 @@
-import { MetadataToken } from '../metadata-token';
-
 /**
  * Defines a Metadata on the provided Authorization Server.
  *
@@ -7,6 +5,6 @@ import { MetadataToken } from '../metadata-token';
  * @param value Value of the metadata.
  * @param target Authorization Server Constructor.
  */
-export function defineMetadata(name: MetadataToken, value: any, target: Function): void {
+export function defineMetadata<T>(name: any, value: T, target: Function): void {
   Reflect.defineMetadata(name, value, target);
 }

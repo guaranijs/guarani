@@ -1,8 +1,8 @@
-import { getContainer, Inject, Injectable, InjectAll } from '@guarani/ioc';
+import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { URL } from 'url';
+import { URL, URLSearchParams } from 'url';
 
-import { Adapter } from '../adapter';
+import { AuthorizationServerOptions } from '../authorization-server/options/authorization-server.options';
 import { Client } from '../entities/client';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -11,74 +11,82 @@ import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { UnauthorizedClientException } from '../exceptions/unauthorized-client.exception';
 import { UnsupportedResponseTypeException } from '../exceptions/unsupported-response-type.exception';
-import { Request } from '../http/request';
-import { Response } from '../http/response';
-import { ResponseMode } from '../response-modes/response-mode';
-import { SupportedResponseMode } from '../response-modes/types/supported-response-mode';
-import { ResponseType } from '../response-types/response-type';
-import { AuthorizationParameters } from '../response-types/types/authorization.parameters';
-import { SupportedResponseType } from '../response-types/types/supported-response-type';
-import { checkRequestedScope } from '../utils';
-import { Endpoint } from './endpoint';
-import { ConsentParameters } from './types/consent.parameters';
-import { SupportedEndpoint } from './types/supported-endpoint';
+import { ScopeHandler } from '../handlers/scope.handler';
+import { HttpRequest } from '../http/http.request';
+import { HttpResponse } from '../http/http.response';
+import { AuthorizationParameters } from '../models/authorization-parameters';
+import { IResponseMode } from '../response-modes/response-mode.interface';
+import { IResponseType } from '../response-types/response-type.interface';
+import { IClientService } from '../services/client.service.interface';
+import { Endpoint } from '../types/endpoint';
+import { HttpMethod } from '../types/http-method';
+import { ResponseMode } from '../types/response-mode';
+import { ResponseType } from '../types/response-type';
+import { IEndpoint } from './endpoint.interface';
 
 /**
- * Endpoint used to provide an Authorization Grant for the requesting Client on behalf of the End User.
+ * Implementation of the **Authorization** Endpoint.
+ *
+ * This endpoint is used to provide an Authorization Grant for the requesting Client on behalf of the End User.
  *
  * Since the OAuth 2.0 Spec does not define the need for authentication when using this endpoint, it is left omitted.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc6749.html#section-3.1
  */
 @Injectable()
-export class AuthorizationEndpoint implements Endpoint {
+export class AuthorizationEndpoint implements IEndpoint {
   /**
    * Name of the Endpoint.
    */
-  public readonly name: SupportedEndpoint = 'authorization';
+  public readonly name: Endpoint = 'authorization';
+
+  /**
+   * Path of the Endpoint.
+   */
+  public readonly path: string = '/oauth/authorize';
+
+  /**
+   * HTTP Methods of the Endpoint.
+   */
+  public readonly methods: HttpMethod[] = ['get'];
+
+  /**
+   * URL of the Error Page.
+   */
+  private readonly errorUrl: string;
+
+  /**
+   * URL of the Error Page.
+   */
+  private readonly loginUrl: string;
 
   /**
    * Instantiates a new Authorization Endpoint.
    *
-   * @param adapter Instance of the Adapter.
    * @param responseTypes Response Types registered at the Authorization Server.
    * @param responseModes Response Modes registered at the Authorization Server.
+   * @param clientService Instance of the Client Service.
+   * @param scopeHandler Scope Handler of the Authorization Server.
+   * @param authorizationServerOptions Configuration Parameters of the Authorization Server.
    */
   public constructor(
-    @Inject('Adapter') private readonly adapter: Adapter,
-    @InjectAll('ResponseType') private readonly responseTypes: ResponseType[],
-    @InjectAll('ResponseMode') private readonly responseModes: ResponseMode[]
-  ) {}
-
-  /**
-   * Error Endpoint of the Authorization Server.
-   */
-  private get errorUrl(): string {
-    try {
-      return getContainer('oauth2').resolve<string>('ErrorUrl');
-    } catch {
-      throw new TypeError('Missing required metadata "errorUrl" for the Authorization Endpoint.');
+    @InjectAll('ResponseType') private readonly responseTypes: IResponseType[],
+    @InjectAll('ResponseMode') private readonly responseModes: IResponseMode[],
+    @Inject('ClientService') private readonly clientService: IClientService,
+    private readonly scopeHandler: ScopeHandler,
+    @Inject('AuthorizationServerOptions') private readonly authorizationServerOptions: AuthorizationServerOptions
+  ) {
+    if (this.authorizationServerOptions.userInteraction === undefined) {
+      throw new TypeError('Missing User Interaction options.');
     }
-  }
 
-  /**
-   * Returns the Parameters to be used by the application to create the Consent Screen.
-   *
-   * @param request HTTP Request.
-   * @returns Parameters of the Consent Screen.
-   */
-  public async getConsentParams(request: Request): Promise<ConsentParameters> {
-    const params = <AuthorizationParameters>request.data;
+    const {
+      issuer,
+      userInteraction: { errorUrl, loginUrl },
+    } = this.authorizationServerOptions;
 
-    this.checkParameters(params);
-
-    const client = await this.getClient(params.client_id);
-    const responseType = this.getResponseType(params.response_type);
-
-    this.checkClientResponseType(client, responseType);
-    this.checkClientRedirectUri(client, params.redirect_uri);
-
-    const scopes = checkRequestedScope(client, params.scope);
-
-    return { client, scopes };
+    this.errorUrl = new URL(errorUrl, issuer).href;
+    this.loginUrl = new URL(loginUrl, issuer).href;
   }
 
   /**
@@ -96,84 +104,86 @@ export class AuthorizationEndpoint implements Endpoint {
    * @param request HTTP Request.
    * @returns HTTP Response.
    */
-  public async handle(request: Request): Promise<Response> {
-    const params = <AuthorizationParameters>request.data;
+  public async handle(request: HttpRequest): Promise<HttpResponse> {
+    const parameters = this.getParameters(request);
 
     let client: Client;
-    let responseType: ResponseType;
-    let responseMode: ResponseMode;
+    let responseType: IResponseType;
+    let responseMode: IResponseMode;
 
     try {
-      this.checkParameters(params);
+      this.checkParameters(parameters);
 
-      client = await this.getClient(params.client_id);
-      responseType = this.getResponseType(params.response_type);
+      client = await this.getClient(parameters.client_id);
+      responseType = this.getResponseType(parameters.response_type);
 
       this.checkClientResponseType(client, responseType);
-      this.checkClientRedirectUri(client, params.redirect_uri);
+      this.checkClientRedirectUri(client, parameters.redirect_uri);
 
-      responseMode = this.getResponseMode(params.response_mode ?? responseType.defaultResponseMode);
+      this.scopeHandler.checkRequestedScope(parameters.scope);
+
+      responseMode = this.getResponseMode(parameters.response_mode ?? responseType.defaultResponseMode);
     } catch (exc: any) {
-      const error = exc instanceof OAuth2Exception ? exc : new ServerErrorException({ error_description: exc.message });
+      const error = exc instanceof OAuth2Exception ? exc : new ServerErrorException(exc.message);
       return this.handleFatalAuthorizationError(error);
     }
 
     try {
       if (request.user === undefined) {
-        const scopes = checkRequestedScope(client, params.scope);
-
-        // TODO: Check if this should be a render or a redirect.
-        return this.adapter.render('consent', { client, scopes, state: params.state });
+        return this.redirectToLoginPage(parameters);
       }
 
-      if (request.user === null) {
-        throw new AccessDeniedException({ error_description: 'Authorization denied by the End User.' });
-      }
+      // TODO: add consent page.
+      const authorizationResponse = await responseType.handle(parameters, client, request.user);
 
-      const authorizationResponse = await responseType.createAuthorizationResponse(params, client, request.user);
-
-      return responseMode.createHttpResponse(params.redirect_uri, authorizationResponse);
+      return responseMode.createHttpResponse(parameters.redirect_uri, authorizationResponse);
     } catch (exc: any) {
-      const error = exc instanceof OAuth2Exception ? exc : new ServerErrorException({ error_description: exc.message });
-      return responseMode.createHttpResponse(params.redirect_uri, error.toJSON());
+      const error = exc instanceof OAuth2Exception ? exc : new ServerErrorException(exc.message);
+      return responseMode.createHttpResponse(parameters.redirect_uri, error.toJSON());
     }
   }
 
   /**
-   * Handles a fatal OAuth 2.0 Authorization Error - that is, an error that has to be redirected
-   * to the Authorization Server's Error Endpoint instead of the Client's Redirect URI.
+   * Parses the HTTP Request for the Authorization Parameters based on the HTTP Method.
    *
-   * @param error OAuth 2.0 Exception.
-   * @returns HTTP Response.
+   * @param request HTTP Request.
+   * @returns Parameters of the Authorization Request.
    */
-  public handleFatalAuthorizationError(error: OAuth2Exception): Response {
-    const url = new URL(this.errorUrl);
-    Object.entries(error.toJSON()).forEach(([parameter, value]) => url.searchParams.set(parameter, value));
-    return new Response().redirect(url.href);
+  private getParameters(request: HttpRequest): AuthorizationParameters {
+    switch (request.method) {
+      case 'get':
+        return <AuthorizationParameters>request.query;
+
+      case 'post':
+        return <AuthorizationParameters>request.body;
+
+      default:
+        throw new TypeError(`Invalid HTTP Method "${request.method}" for the Authorization Endpoint.`);
+    }
   }
 
   /**
    * Checks if the Parameters of the Authorization Request are valid.
    *
-   * @param params Parameters of the Authorization Request.
+   * @param parameters Parameters of the Authorization Request.
    */
-  private checkParameters(params: AuthorizationParameters): void {
-    const { response_type, client_id, redirect_uri, scope } = params;
+  private checkParameters(parameters: AuthorizationParameters): void {
+    const { response_type, client_id, redirect_uri, scope } = parameters;
 
     if (typeof response_type !== 'string') {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "response_type".' });
+      throw new InvalidRequestException('Invalid parameter "response_type".');
     }
 
     if (typeof client_id !== 'string') {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "client_id".' });
+      throw new InvalidRequestException('Invalid parameter "client_id".');
     }
 
     if (typeof redirect_uri !== 'string') {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "redirect_uri".' });
+      throw new InvalidRequestException('Invalid parameter "redirect_uri".');
     }
 
     if (typeof scope !== 'string') {
-      throw new InvalidRequestException({ error_description: 'Invalid parameter "scope".' });
+      throw new InvalidRequestException('Invalid parameter "scope".');
     }
   }
 
@@ -184,10 +194,10 @@ export class AuthorizationEndpoint implements Endpoint {
    * @returns Client based on the provided Client Identifier.
    */
   private async getClient(clientId: string): Promise<Client> {
-    const client = await this.adapter.findClient(clientId);
+    const client = await this.clientService.findClient(clientId);
 
-    if (client === null) {
-      throw new InvalidClientException({ error_description: 'Invalid Client.' });
+    if (client === undefined) {
+      throw new InvalidClientException('Invalid Client.');
     }
 
     return client;
@@ -199,11 +209,11 @@ export class AuthorizationEndpoint implements Endpoint {
    * @param name Response Type requested by the Client.
    * @returns Response Type.
    */
-  private getResponseType(name: SupportedResponseType): ResponseType {
+  private getResponseType(name: ResponseType): IResponseType {
     const responseType = this.responseTypes.find((responseType) => responseType.name === name);
 
     if (responseType === undefined) {
-      throw new UnsupportedResponseTypeException({ error_description: `Unsupported response_type "${name}".` });
+      throw new UnsupportedResponseTypeException(`Unsupported response_type "${name}".`);
     }
 
     return responseType;
@@ -215,11 +225,11 @@ export class AuthorizationEndpoint implements Endpoint {
    * @param client Client of the Request.
    * @param responseType Response Type requested by the Client.
    */
-  private checkClientResponseType(client: Client, responseType: ResponseType): void {
+  private checkClientResponseType(client: Client, responseType: IResponseType): void {
     if (!client.responseTypes.includes(responseType.name)) {
-      throw new UnauthorizedClientException({
-        error_description: `This Client is not allowed to request the response_type "${responseType.name}".`,
-      });
+      throw new UnauthorizedClientException(
+        `This Client is not allowed to request the response_type "${responseType.name}".`
+      );
     }
   }
 
@@ -231,7 +241,7 @@ export class AuthorizationEndpoint implements Endpoint {
    */
   private checkClientRedirectUri(client: Client, redirectUri: string): void {
     if (!client.redirectUris.includes(redirectUri)) {
-      throw new AccessDeniedException({ error_description: 'Invalid Redirect URI.' });
+      throw new AccessDeniedException('Invalid Redirect URI.');
     }
   }
 
@@ -241,13 +251,49 @@ export class AuthorizationEndpoint implements Endpoint {
    * @param name Response Mode requested by the Client.
    * @returns Response Mode.
    */
-  private getResponseMode(name: SupportedResponseMode): ResponseMode {
+  private getResponseMode(name: ResponseMode): IResponseMode {
     const responseMode = this.responseModes.find((responseMode) => responseMode.name === name);
 
     if (responseMode === undefined) {
-      throw new InvalidRequestException({ error_description: `Unsupported response_mode "${name}".` });
+      throw new InvalidRequestException(`Unsupported response_mode "${name}".`);
     }
 
     return responseMode;
+  }
+
+  /**
+   * Handles a fatal OAuth 2.0 Authorization Error - that is, an error that has to be redirected
+   * to the Authorization Server's Error Page instead of the Client's Redirect URI.
+   *
+   * @param error OAuth 2.0 Exception.
+   * @returns HTTP Response.
+   */
+  private handleFatalAuthorizationError(error: OAuth2Exception): HttpResponse {
+    const url = new URL(this.errorUrl);
+    const parameters = new URLSearchParams(error.toJSON());
+
+    url.search = parameters.toString();
+
+    return new HttpResponse().redirect(url.href);
+  }
+
+  /**
+   * Redirects the User-Agent to the Authorization Server's Login Page for it to authenticate the User.
+   *
+   * @param parameters Parameters of the Authorization Request.
+   * @returns HTTP Redirect Response to the Login Page.
+   */
+  private redirectToLoginPage(parameters: AuthorizationParameters): HttpResponse {
+    const redirectToUrl = new URL(this.path, this.authorizationServerOptions.issuer);
+    const redirectToSearchParams = new URLSearchParams(parameters);
+
+    redirectToUrl.search = redirectToSearchParams.toString();
+
+    const url = new URL(this.loginUrl);
+    const searchParams = new URLSearchParams({ redirect_to: redirectToUrl.href });
+
+    url.search = searchParams.toString();
+
+    return new HttpResponse().redirect(url);
   }
 }

@@ -10,6 +10,6 @@ export class Session implements ISession {
   @Column({ name: 'expired_at', type: 'bigint' })
   public expiredAt: number = Date.now();
 
-  @Column({ name: 'text' })
+  @Column({ name: 'data', type: 'varchar' })
   public json!: string;
 }

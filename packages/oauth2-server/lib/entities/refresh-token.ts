@@ -1,18 +1,17 @@
-import { SupportedGrantType } from '../grant-types/types/supported-grant-type';
 import { AbstractToken } from './abstract-token';
 import { User } from './user';
 
 /**
- * Representation of the OAuth 2.0 Refresh Token.
+ * OAuth 2.0 Refresh Token Entity.
  */
 export interface RefreshToken extends AbstractToken {
   /**
-   * Grant Type that generated the Refresh Token.
+   * Identifier of the Refresh Token.
    */
-  readonly grant: SupportedGrantType;
+  token: string;
 
   /**
-   * User that granted access to the Client.
+   * End User that granted authorization to the Client.
    */
-  readonly user: User;
+  user: User;
 }

@@ -1,45 +1,41 @@
-import { OneOrMany } from '@guarani/types';
+import { Dict, Optional } from '@guarani/types';
 
 import { Client } from './client';
+import { User } from './user';
 
-export interface AbstractToken {
+export interface AbstractToken extends Dict {
   /**
-   * String representation of the Token.
+   * Scopes granted to the Client.
    */
-  readonly token: string;
+  scopes: string[];
 
   /**
-   * Scopes granted to the Token.
-   */
-  readonly scopes: string[];
-
-  /**
-   * Informs whether or not the Token is revoked.
+   * Revocation status of the Token.
    */
   isRevoked: boolean;
 
   /**
    * Issuance Date of the Token.
    */
-  readonly issuedAt: Date;
+  issuedAt: Date;
 
   /**
    * Expiration Date of the Token.
    */
-  readonly expiresAt: Date;
+  expiresAt: Date;
 
   /**
    * Date when the Token will become valid.
    */
-  readonly validAfter: Date;
-
-  /**
-   * Audience of the Token.
-   */
-  readonly audience: OneOrMany<string>;
+  validAfter: Date;
 
   /**
    * Client that requested the Token.
    */
-  readonly client: Client;
+  client: Client;
+
+  /**
+   * End User that granted authorization to the Client.
+   */
+  user?: Optional<User>;
 }

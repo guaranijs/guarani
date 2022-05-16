@@ -220,4 +220,18 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParams {
       }
     });
   }
+
+  /**
+   * Returns the JSON Encoded String of the JSON Web Token Claims.
+   */
+  public toString(): string {
+    return JSON.stringify(this);
+  }
+
+  /**
+   * Returns the Buffer representation of the JSON Encoded String of the JSON Web Token Claims.
+   */
+  public toBuffer(): Buffer {
+    return Buffer.from(this.toString(), 'utf8');
+  }
 }

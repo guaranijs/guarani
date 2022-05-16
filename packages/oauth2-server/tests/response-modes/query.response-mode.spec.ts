@@ -1,17 +1,23 @@
+import { Attributes } from '@guarani/types';
+
+import { HttpResponse } from '../../lib/http/http.response';
 import { QueryResponseMode } from '../../lib/response-modes/query.response-mode';
-import { SupportedResponseMode } from '../../lib/response-modes/types/supported-response-mode';
+import { ResponseMode } from '../../lib/types/response-mode';
+
+const responseMode = new QueryResponseMode();
 
 describe('Query Response Mode', () => {
   it('should have "query" as its name.', () => {
-    expect(new QueryResponseMode().name).toBe<SupportedResponseMode>('query');
+    expect(responseMode.name).toBe<ResponseMode>('query');
   });
 
-  it('should create a Redirect HTTP Response with a populated URI Query.', () => {
-    expect(new QueryResponseMode().createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar' })).toMatchObject(
-      {
-        statusCode: 303,
-        headers: { Location: 'https://example.com/?foo=foo&bar=bar' },
-      }
-    );
+  it('should create a redirect http response with a populated uri query.', () => {
+    expect(
+      responseMode.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })
+    ).toMatchObject<Attributes<HttpResponse>>({
+      body: Buffer.alloc(0),
+      headers: { Location: 'https://example.com/?foo=foo&bar=bar&baz=baz' },
+      statusCode: 303,
+    });
   });
 });

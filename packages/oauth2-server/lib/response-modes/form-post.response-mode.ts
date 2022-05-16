@@ -1,12 +1,12 @@
-import { Injectable } from '@guarani/ioc';
-import { Dict } from '@guarani/types';
+import { Injectable } from '@guarani/di';
 import { sanitizeHtml } from '@guarani/utils';
 
-import { Response } from '../http/response';
-import { ResponseMode } from './response-mode';
-import { SupportedResponseMode } from './types/supported-response-mode';
+import { HttpResponse } from '../http/http.response';
+import { AuthorizationResponse } from '../models/authorization-response';
+import { ResponseMode } from '../types/response-mode';
+import { IResponseMode } from './response-mode.interface';
 
-const templateFn = (redirectUri: string, params: Dict) => `
+const templateFn = (redirectUri: string, params: AuthorizationResponse) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -27,28 +27,30 @@ const templateFn = (redirectUri: string, params: Dict) => `
 `;
 
 /**
- * Implementation of the Form Post Response Mode as defined by
- * {@link https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html#FormPostResponseMode OAuth 2.0 Form Post Response Mode}.
+ * Implementation of the **Form Post** Response Mode.
+ *
+ * @see https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html#FormPostResponseMode
  */
 @Injectable()
-export class FormPostResponseMode implements ResponseMode {
+export class FormPostResponseMode implements IResponseMode {
   /**
    * Name of the Response Mode.
    */
-  public readonly name: SupportedResponseMode = 'form_post';
+  public readonly name: ResponseMode = 'form_post';
 
   /**
    * Creates an HTML form with its action as the Redirect URI and its fields as hidden inputs
-   * containing the provided Parameters.
+   * containing the provided Authorization Response Parameters.
    *
-   * This form is automatically submitted as soon as the page finishes loading.
+   * If the User-Agent supports Javascript, the form is automatically submitted as soon as the page finishes loading,
+   * otherwise, a submit button is displayed for the manual redirection.
    *
    * @param redirectUri Redirect URI that the User-Agent will be redirected to.
-   * @param params Authorization Response Parameters that will be returned to the Client Application.
+   * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns HTTP Response containing the Authorization Response Parameters.
    */
-  public createHttpResponse(redirectUri: string, params: Dict): Response {
-    const html = templateFn(redirectUri, params).slice(1, -1);
-    return new Response().html(html);
+  public createHttpResponse(redirectUri: string, parameters: AuthorizationResponse): HttpResponse {
+    const html = templateFn(redirectUri, parameters).slice(1, -1);
+    return new HttpResponse().html(html);
   }
 }

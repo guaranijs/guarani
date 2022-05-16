@@ -1,6 +1,6 @@
 {
   "name": "@guarani/utils",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Utility functionalities for usage within Guarani.",
   "license": "MIT",
   "main": "dist/index.js",
@@ -34,6 +34,6 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "@guarani/types": "0.7.0"
+    "@guarani/types": "0.8.0"
   }
 }

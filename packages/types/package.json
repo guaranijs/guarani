@@ -1,6 +1,6 @@
 {
   "name": "@guarani/types",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Types used throughout Guarani.",
   "license": "MIT",
   "main": "dist/index.js",

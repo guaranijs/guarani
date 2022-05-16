@@ -1,6 +1,6 @@
 {
   "name": "@guarani/di",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Dependency Injection Framework for Guarani.",
   "keywords": [
     "inversion",
@@ -40,10 +40,10 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@guarani/primitives": "^0.7.0",
+    "@guarani/primitives": "0.8.0",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "@guarani/types": "0.7.0"
+    "@guarani/types": "0.8.0"
   }
 }

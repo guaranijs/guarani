@@ -1,6 +1,6 @@
 {
   "name": "@guarani/uuid",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Implementation of the UUID Data Type.",
   "keywords": [
     "uuid",
@@ -41,9 +41,9 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@guarani/primitives": "0.7.0"
+    "@guarani/primitives": "0.8.0"
   },
   "devDependencies": {
-    "@guarani/types": "0.7.0"
+    "@guarani/types": "0.8.0"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@guarani/oauth2-server",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "OAuth 2.0, OpenID Connect and User-Managed Access 2.0 Authorization Server and Identity Provider implementation for Guarani.",
   "keywords": [
     "oauth",
@@ -47,15 +47,15 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@guarani/di": "^0.7.0",
-    "@guarani/jose": "^0.7.0",
-    "@guarani/objects": "^0.7.0",
-    "@guarani/primitives": "^0.7.0",
-    "@guarani/utils": "^0.7.0",
+    "@guarani/di": "0.8.0",
+    "@guarani/jose": "0.8.0",
+    "@guarani/objects": "0.8.0",
+    "@guarani/primitives": "0.8.0",
+    "@guarani/utils": "0.8.0",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "@guarani/types": "^0.7.0",
+    "@guarani/types": "0.8.0",
     "@types/express": "^4.17.13"
   }
 }

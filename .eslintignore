@@ -1,8 +1,3 @@
-/.git
-/.yarn
-package.json
-packages/*/node_modules
-packages/*/dist
-packages/*/tests/fixtures
-packages/*/tests/tmp
-**/static/*
+.git
+dist
+node_modules

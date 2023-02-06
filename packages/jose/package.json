@@ -1,0 +1,43 @@
+{
+  "name": "@guarani/jose",
+  "version": "0.8.0",
+  "description": "Implementation of the RFCs of the JOSE Working Group.",
+  "keywords": [
+    "JOSE",
+    "JSON",
+    "Web",
+    "Key",
+    "Set",
+    "KeySet",
+    "Token",
+    "Signature",
+    "Encryption",
+    "Algorithm",
+    "JWS",
+    "JWE",
+    "JWK",
+    "JWKS",
+    "JWA",
+    "JWT"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/guaranijs/guarani/tree/master/packages/jose#readme",
+  "bugs": {
+    "email": "guaranijs@gmail.com",
+    "url": "https://github.com/guaranijs/guarani/issue"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/guaranijs/guarani.git",
+    "directory": "packages/jose"
+  },
+  "author": {
+    "name": "Eduardo Ribeiro Rezende",
+    "email": "eduardorbr7@gmail.com",
+    "url": "https://github.com/revensky"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  }
+}

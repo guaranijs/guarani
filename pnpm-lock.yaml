@@ -73,6 +73,12 @@ importers:
       ts-node: 10.9.1_o3cqn7e5gjtu3y7kauu454ca2y
       typescript: 4.8.4
 
+  packages/di:
+    specifiers:
+      reflect-metadata: ^0.1.13
+    dependencies:
+      reflect-metadata: 0.1.13
+
   packages/jose:
     specifiers: {}
 
@@ -8418,7 +8424,6 @@ packages:
 
   /reflect-metadata/0.1.13:
     resolution: {integrity: sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==}
-    dev: true
 
   /regenerate-unicode-properties/10.1.0:
     resolution: {integrity: sha512-d1VudCLoIGitcU/hEg2QqvyGZQmdC0Lf8BqdOMXGFSvJP4bNV1+XqbPQeHHLD51Jh4QJJ225dlIFvY4Ly6MXmQ==}

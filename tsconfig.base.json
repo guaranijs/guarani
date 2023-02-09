@@ -25,6 +25,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
+      "@guarani/di": ["packages/di/src/index.ts"],
       "@guarani/jose": ["packages/jose/src/index.ts"]
     },
     "skipDefaultLibCheck": true,

@@ -1,0 +1,34 @@
+{
+  "name": "@guarani/di",
+  "version": "0.8.0",
+  "description": "Dependency Injection Framework for Guarani.",
+  "keywords": [
+    "inversion",
+    "control",
+    "dependency",
+    "injection"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/guaranijs/guarani/tree/master/packages/di#readme",
+  "bugs": {
+    "email": "guaranijs@gmail.com",
+    "url": "https://github.com/guaranijs/guarani/issue"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/guaranijs/guarani.git",
+    "directory": "packages/di"
+  },
+  "author": {
+    "name": "Eduardo Ribeiro Rezende",
+    "email": "eduardorbr7@gmail.com",
+    "url": "https://github.com/revensky"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "dependencies": {
+    "reflect-metadata": "^0.1.13"
+  }
+}

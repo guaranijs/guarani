@@ -26,7 +26,8 @@
     "noUnusedParameters": true,
     "paths": {
       "@guarani/di": ["packages/di/src/index.ts"],
-      "@guarani/jose": ["packages/jose/src/index.ts"]
+      "@guarani/jose": ["packages/jose/src/index.ts"],
+      "@guarani/oauth2-server": ["packages/oauth2-server/src/index.ts"]
     },
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,

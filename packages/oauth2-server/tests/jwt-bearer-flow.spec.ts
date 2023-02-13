@@ -1,9 +1,7 @@
 import {
   JsonWebKey,
   JsonWebKeyParameters,
-  JsonWebKeyType,
   JsonWebSignature,
-  JsonWebSignatureAlgorithm,
   JsonWebSignatureHeader,
   JsonWebTokenClaims,
 } from '@guarani/jose';
@@ -38,7 +36,7 @@ describe('Client Credentials Flow', () => {
   });
 
   it('POST /oauth/token', async () => {
-    const header = new JsonWebSignatureHeader({ alg: JsonWebSignatureAlgorithm.HS256, typ: 'JWT' });
+    const header = new JsonWebSignatureHeader({ alg: 'HS256', typ: 'JWT' });
     const claims = new JsonWebTokenClaims({
       iss: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
       sub: '16907c32-687b-493c-85ba-f41f2c9d4daa',
@@ -47,7 +45,7 @@ describe('Client Credentials Flow', () => {
     });
 
     const key = new JsonWebKey<JsonWebKeyParameters>({
-      kty: JsonWebKeyType.Octet,
+      kty: 'oct',
       k: Buffer.from('z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', 'utf8').toString('base64url'),
     });
 

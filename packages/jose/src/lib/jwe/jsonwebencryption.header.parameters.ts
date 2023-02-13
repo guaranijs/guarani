@@ -1,12 +1,12 @@
 import { JsonWebKeyParameters } from '../jwk/jsonwebkey.parameters';
-import { JsonWebEncryptionCompressionAlgorithm } from './jsonwebencryption-compression-algorithm.enum';
-import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-content-encryption-algorithm.enum';
-import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap-algorithm.enum';
+import { JsonWebEncryptionCompressionAlgorithm } from './jsonwebencryption-compression-algorithm.type';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-content-encryption-algorithm.type';
+import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap-algorithm.type';
 
 /**
  * Parameters of the JSON Web Encryption Header.
  */
-export interface JsonWebEncryptionHeaderParameters extends Record<string, unknown> {
+export interface JsonWebEncryptionHeaderParameters extends Record<string, any> {
   /**
    * JSON Web Encryption Key Wrap Algorithm used to Wrap and Unwrap the Content Encryption Key.
    */

@@ -1,7 +1,7 @@
 /**
  * Parameters of the JSON Web Token Claims.
  */
-export interface JsonWebTokenClaimsParameters extends Record<string, unknown> {
+export interface JsonWebTokenClaimsParameters extends Record<string, any> {
   /**
    * Identifier of the Issuer of the Token.
    */

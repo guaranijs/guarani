@@ -4,8 +4,7 @@ import { promisify } from 'util';
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
 import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-jsonwebsignature.exception';
 import { JsonWebKey } from '../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../jwk/jsonwebkey-type.enum';
-import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.enum';
+import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.type';
 import { JsonWebSignatureBackend } from './jsonwebsignature.backend';
 
 const signAsync = promisify(sign);
@@ -28,7 +27,7 @@ class RsaSsaBackend extends JsonWebSignatureBackend {
    * @param padding RSA Padding used by the JSON Web Signature RSASSA Backend to Sign and Verify Messages.
    */
   public constructor(algorithm: JsonWebSignatureAlgorithm, hash: string, padding: number) {
-    super(algorithm, hash, JsonWebKeyType.RSA);
+    super(algorithm, hash, 'RSA');
 
     this.padding = padding;
   }
@@ -73,29 +72,29 @@ class RsaSsaBackend extends JsonWebSignatureBackend {
 /**
  * RSASSA-PKCS1-v1_5 using SHA-256.
  */
-export const RS256 = new RsaSsaBackend(JsonWebSignatureAlgorithm.RS256, 'SHA256', constants.RSA_PKCS1_PADDING);
+export const RS256 = new RsaSsaBackend('RS256', 'SHA256', constants.RSA_PKCS1_PADDING);
 
 /**
  * RSASSA-PKCS1-v1_5 using SHA-384.
  */
-export const RS384 = new RsaSsaBackend(JsonWebSignatureAlgorithm.RS384, 'SHA384', constants.RSA_PKCS1_PADDING);
+export const RS384 = new RsaSsaBackend('RS384', 'SHA384', constants.RSA_PKCS1_PADDING);
 
 /**
  * RSASSA-PKCS1-v1_5 using SHA-512.
  */
-export const RS512 = new RsaSsaBackend(JsonWebSignatureAlgorithm.RS512, 'SHA512', constants.RSA_PKCS1_PADDING);
+export const RS512 = new RsaSsaBackend('RS512', 'SHA512', constants.RSA_PKCS1_PADDING);
 
 /**
  * RSASSA-PSS using SHA-256 and MGF1 with SHA-256.
  */
-export const PS256 = new RsaSsaBackend(JsonWebSignatureAlgorithm.PS256, 'SHA256', constants.RSA_PKCS1_PSS_PADDING);
+export const PS256 = new RsaSsaBackend('PS256', 'SHA256', constants.RSA_PKCS1_PSS_PADDING);
 
 /**
  * RSASSA-PSS using SHA-384 and MGF1 with SHA-384.
  */
-export const PS384 = new RsaSsaBackend(JsonWebSignatureAlgorithm.PS384, 'SHA384', constants.RSA_PKCS1_PSS_PADDING);
+export const PS384 = new RsaSsaBackend('PS384', 'SHA384', constants.RSA_PKCS1_PSS_PADDING);
 
 /**
  * RSASSA-PSS using SHA-512 and MGF1 with SHA-512.
  */
-export const PS512 = new RsaSsaBackend(JsonWebSignatureAlgorithm.PS512, 'SHA512', constants.RSA_PKCS1_PSS_PADDING);
+export const PS512 = new RsaSsaBackend('PS512', 'SHA512', constants.RSA_PKCS1_PSS_PADDING);

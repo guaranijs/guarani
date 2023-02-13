@@ -2,8 +2,8 @@ import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../../jwk/jsonwebkey-type.enum';
-import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.enum';
+import { JsonWebKeyType } from '../../../jwk/jsonwebkey-type.type';
+import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 
 /**

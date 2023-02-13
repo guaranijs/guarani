@@ -6,8 +6,6 @@ import {
   JsonWebTokenClaims,
   JsonWebTokenClaimsParameters,
   JsonWebSignatureAlgorithm,
-  JsonWebKeyType,
-  EllipticCurve,
   JsonWebKeyParameters,
 } from '@guarani/jose';
 
@@ -32,21 +30,21 @@ import { JwtBearerGrantType } from './jwt-bearer.grant-type';
 const now = Date.now();
 
 const octKey = new JsonWebKey<JsonWebKeyParameters>({
-  kty: JsonWebKeyType.Octet,
+  kty: 'oct',
   k: Buffer.from('qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ', 'utf8').toString('base64url'),
 });
 
 const eckey = new JsonWebKey<JsonWebKeyParameters>({
-  kty: JsonWebKeyType.EllipticCurve,
-  crv: EllipticCurve.P256,
+  kty: 'EC',
+  crv: 'P-256',
   x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
   y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
   d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo',
   kid: 'ec-key',
 });
 
-const octHeader: JsonWebSignatureHeaderParameters = { alg: JsonWebSignatureAlgorithm.HS256, typ: 'JWT' };
-const ecHeader: JsonWebSignatureHeaderParameters = { alg: JsonWebSignatureAlgorithm.ES256, typ: 'JWT', kid: 'ec-key' };
+const octHeader: JsonWebSignatureHeaderParameters = { alg: 'HS256', typ: 'JWT' };
+const ecHeader: JsonWebSignatureHeaderParameters = { alg: 'ES256', typ: 'JWT', kid: 'ec-key' };
 
 const claims: JsonWebTokenClaimsParameters = {
   iss: 'client_id',
@@ -92,18 +90,18 @@ describe('JWT Bearer Grant Type', () => {
   describe('algorithms', () => {
     it('should have \'["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "RS256", "RS384", "RS512"]\' as its value', () => {
       expect(grantType['algorithms']).toEqual<JsonWebSignatureAlgorithm[]>([
-        JsonWebSignatureAlgorithm.ES256,
-        JsonWebSignatureAlgorithm.ES384,
-        JsonWebSignatureAlgorithm.ES512,
-        JsonWebSignatureAlgorithm.HS256,
-        JsonWebSignatureAlgorithm.HS384,
-        JsonWebSignatureAlgorithm.HS512,
-        JsonWebSignatureAlgorithm.PS256,
-        JsonWebSignatureAlgorithm.PS384,
-        JsonWebSignatureAlgorithm.PS512,
-        JsonWebSignatureAlgorithm.RS256,
-        JsonWebSignatureAlgorithm.RS384,
-        JsonWebSignatureAlgorithm.RS512,
+        'ES256',
+        'ES384',
+        'ES512',
+        'HS256',
+        'HS384',
+        'HS512',
+        'PS256',
+        'PS384',
+        'PS512',
+        'RS256',
+        'RS384',
+        'RS512',
       ]);
     });
   });
@@ -152,10 +150,7 @@ describe('JWT Bearer Grant Type', () => {
     });
 
     it('should throw when the assertion uses the "none" json web signature algorithm.', async () => {
-      const jws = new JsonWebSignature(
-        { alg: JsonWebSignatureAlgorithm.None },
-        new JsonWebTokenClaims(claims).toBuffer()
-      );
+      const jws = new JsonWebSignature({ alg: 'none' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(octKey);
 
       Reflect.set(parameters, 'assertion', assertion);

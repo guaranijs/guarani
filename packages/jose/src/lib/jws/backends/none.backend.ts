@@ -1,6 +1,5 @@
 import { Buffer } from 'buffer';
 
-import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.enum';
 import { JsonWebSignatureBackend } from './jsonwebsignature.backend';
 
 /**
@@ -11,7 +10,7 @@ class NoneBackend extends JsonWebSignatureBackend {
    * Instantiates a new JSON Web Signature **none** Backend to Sign and Verify Messages.
    */
   public constructor() {
-    super(JsonWebSignatureAlgorithm.None);
+    super('none');
   }
 
   /**

@@ -2,8 +2,6 @@ import { Buffer } from 'buffer';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
-import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-content-encryption-algorithm.enum';
-import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap-algorithm.enum';
 import { JsonWebEncryptionHeader } from './jsonwebencryption.header';
 import { JsonWebEncryptionHeaderParameters } from './jsonwebencryption.header.parameters';
 
@@ -21,8 +19,8 @@ const invalidX5Ts: unknown[] = [...invalidJkus];
 const invalidX5TS256s: unknown[] = [...invalidJkus];
 
 const parameters: JsonWebEncryptionHeaderParameters = {
-  alg: JsonWebEncryptionKeyWrapAlgorithm.A128KW,
-  enc: JsonWebEncryptionContentEncryptionAlgorithm.A128CBC_HS256,
+  alg: 'A128KW',
+  enc: 'A128CBC-HS256',
 };
 
 describe('JSON Web Encryption Header', () => {
@@ -36,13 +34,13 @@ describe('JSON Web Encryption Header', () => {
   it.each(invalidAlgs)('should throw when the provided header parameter "alg" is invalid.', (alg) => {
     expect(() => {
       // @ts-expect-error Invalid Type
-      return new JsonWebEncryptionHeader({ alg, enc: JsonWebEncryptionContentEncryptionAlgorithm.A128GCM });
+      return new JsonWebEncryptionHeader({ alg, enc: 'A128GCM' });
     }).toThrow(new InvalidJoseHeaderException('Invalid header parameter "alg".'));
   });
 
   it.each(invalidEncs)('should throw when the provided header parameter "enc" is invalid.', (enc) => {
     // @ts-expect-error Invalid Type
-    expect(() => new JsonWebEncryptionHeader({ alg: JsonWebEncryptionKeyWrapAlgorithm.A128KW, enc })).toThrow(
+    expect(() => new JsonWebEncryptionHeader({ alg: 'A128KW', enc })).toThrow(
       new InvalidJoseHeaderException('Invalid header parameter "enc".')
     );
   });
@@ -50,8 +48,8 @@ describe('JSON Web Encryption Header', () => {
   it.each(invalidZips)('should throw when the provided header parameter "zip" is invalid.', (zip) => {
     expect(() => {
       return new JsonWebEncryptionHeader({
-        alg: JsonWebEncryptionKeyWrapAlgorithm.A128KW,
-        enc: JsonWebEncryptionContentEncryptionAlgorithm.A128GCM,
+        alg: 'A128KW',
+        enc: 'A128GCM',
         // @ts-expect-error Invalid Type
         zip,
       });

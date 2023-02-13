@@ -3,7 +3,7 @@ import { CipherGCMTypes, createCipheriv, createDecipheriv } from 'crypto';
 
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-jsonwebencryption.exception';
 import { JoseException } from '../../../exceptions/jose.exception';
-import { JsonWebEncryptionContentEncryptionAlgorithm } from '../../jsonwebencryption-content-encryption-algorithm.enum';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from '../../jsonwebencryption-content-encryption-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from './jsonwebencryption-content-encryption.backend';
 
 /**
@@ -108,14 +108,14 @@ class GcmBackend extends JsonWebEncryptionContentEncryptionBackend {
 /**
  * AES GCM using 128-bit key.
  */
-export const A128GCM = new GcmBackend(JsonWebEncryptionContentEncryptionAlgorithm.A128GCM);
+export const A128GCM = new GcmBackend('A128GCM');
 
 /**
  * AES GCM using 192-bit key.
  */
-export const A192GCM = new GcmBackend(JsonWebEncryptionContentEncryptionAlgorithm.A192GCM);
+export const A192GCM = new GcmBackend('A192GCM');
 
 /**
  * AES GCM using 256-bit key.
  */
-export const A256GCM = new GcmBackend(JsonWebEncryptionContentEncryptionAlgorithm.A256GCM);
+export const A256GCM = new GcmBackend('A256GCM');

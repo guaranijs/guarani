@@ -1,12 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
-import {
-  EllipticCurve,
-  JsonWebKey,
-  JsonWebKeySet,
-  JsonWebKeyType,
-  JsonWebSignatureHeaderParameters,
-  JsonWebSignatureAlgorithm,
-} from '@guarani/jose';
+import { JsonWebKey, JsonWebKeySet, JsonWebSignatureHeaderParameters, JsonWebSignatureAlgorithm } from '@guarani/jose';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -17,8 +10,8 @@ import { SETTINGS } from '../settings/settings.token';
 import { PrivateKeyJwtClientAuthentication } from './private-key-jwt.client-authentication';
 
 const ecKey = new JsonWebKey({
-  kty: JsonWebKeyType.EllipticCurve,
-  crv: EllipticCurve.P256,
+  kty: 'EC',
+  crv: 'P-256',
   x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
   y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
   kid: 'ec-key',
@@ -26,7 +19,7 @@ const ecKey = new JsonWebKey({
 
 const jwks = new JsonWebKeySet([ecKey]);
 
-const header: JsonWebSignatureHeaderParameters = { alg: JsonWebSignatureAlgorithm.ES256, kid: 'ec-key' };
+const header: JsonWebSignatureHeaderParameters = { alg: 'ES256', kid: 'ec-key' };
 
 describe('Private Key JWT Client Authentication Method', () => {
   let clientAuthentication: PrivateKeyJwtClientAuthentication;
@@ -50,15 +43,15 @@ describe('Private Key JWT Client Authentication Method', () => {
   describe('algorithms', () => {
     it('should have \'["ES256", "ES384", "ES512", "PS256", "PS384", "PS512", "RS256", "RS384", "RS512"]\' as its value.', () => {
       expect(clientAuthentication['algorithms']).toEqual<JsonWebSignatureAlgorithm[]>([
-        JsonWebSignatureAlgorithm.ES256,
-        JsonWebSignatureAlgorithm.ES384,
-        JsonWebSignatureAlgorithm.ES512,
-        JsonWebSignatureAlgorithm.PS256,
-        JsonWebSignatureAlgorithm.PS384,
-        JsonWebSignatureAlgorithm.PS512,
-        JsonWebSignatureAlgorithm.RS256,
-        JsonWebSignatureAlgorithm.RS384,
-        JsonWebSignatureAlgorithm.RS512,
+        'ES256',
+        'ES384',
+        'ES512',
+        'PS256',
+        'PS384',
+        'PS512',
+        'RS256',
+        'RS384',
+        'RS512',
       ]);
     });
   });

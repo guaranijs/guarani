@@ -4,11 +4,10 @@ import { randomBytes, randomInt } from 'crypto';
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
 import { OctKeyParameters } from '../../jwk/backends/oct/octkey.parameters';
 import { JsonWebKey } from '../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../jwk/jsonwebkey-type.enum';
 import { HS256, HS384, HS512 } from './hmac.backend';
 
 const generateOctKey = (size: number): JsonWebKey<OctKeyParameters> => {
-  return new JsonWebKey<OctKeyParameters>({ kty: JsonWebKeyType.Octet, k: randomBytes(size).toString('base64url') });
+  return new JsonWebKey<OctKeyParameters>({ kty: 'oct', k: randomBytes(size).toString('base64url') });
 };
 
 const message = Buffer.from('Super secret message.');

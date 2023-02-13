@@ -2,19 +2,15 @@ import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeySetException } from '../exceptions/invalid-jsonwebkeyset.exception';
 import { EcKeyParameters } from '../jwk/backends/ec/eckey.parameters';
-import { EllipticCurve } from '../jwk/backends/ec/elliptic-curve.enum';
 import { OctKeyParameters } from '../jwk/backends/oct/octkey.parameters';
 import { RsaKeyParameters } from '../jwk/backends/rsa/rsakey.parameters';
 import { JsonWebKey } from '../jwk/jsonwebkey';
-import { JsonWebKeyOperation } from '../jwk/jsonwebkey-operation.enum';
-import { JsonWebKeyType } from '../jwk/jsonwebkey-type.enum';
-import { JsonWebKeyUse } from '../jwk/jsonwebkey-use.enum';
 import { JsonWebKeySet } from './jsonwebkeyset';
 import { JsonWebKeySetParameters } from './jsonwebkeyset.parameters';
 
 const publicEllipticCurveParameters: EcKeyParameters = {
-  kty: JsonWebKeyType.EllipticCurve,
-  crv: EllipticCurve.P256,
+  kty: 'EC',
+  crv: 'P-256',
   x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
   y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
 };
@@ -22,12 +18,12 @@ const publicEllipticCurveParameters: EcKeyParameters = {
 // const privateEcParams: JsonWebKeyParameters = { ...publicEcParams, d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo' };
 
 const secretParameters: OctKeyParameters = {
-  kty: JsonWebKeyType.Octet,
+  kty: 'oct',
   k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ',
 };
 
 const publicRsaParameters: RsaKeyParameters = {
-  kty: JsonWebKeyType.RSA,
+  kty: 'RSA',
   n:
     'xjpFydzTbByzL5jhEa2yQO63dpS9d9SKaN107AR69skKiTR4uK1c4SzDt4YcurDB' +
     'yhgKNzeBo6Vq3IRrkrltp97LKWfeZdM-leGt8-UTZEWqrNf3UGOEj8kI6lbjiG-S' +
@@ -184,8 +180,8 @@ describe('JSON Web Key Set', () => {
 
   describe('find()', () => {
     const jwks = new JsonWebKeySet([
-      new JsonWebKey(publicEllipticCurveParameters, { kid: 'ec-key', use: JsonWebKeyUse.Signature }),
-      new JsonWebKey(publicRsaParameters, { kid: 'rsa-key', key_ops: [JsonWebKeyOperation.Encrypt] }),
+      new JsonWebKey(publicEllipticCurveParameters, { kid: 'ec-key', use: 'sig' }),
+      new JsonWebKey(publicRsaParameters, { kid: 'rsa-key', key_ops: ['encrypt'] }),
     ]);
 
     it('should return null when no key matches the provided predicate.', () => {
@@ -195,9 +191,7 @@ describe('JSON Web Key Set', () => {
     it('should return the key that matches the provided predicate.', () => {
       expect(jwks.find((key) => key.kid === 'ec-key')).toMatchObject(jwks.keys[0]!);
 
-      expect(jwks.find((key) => key.key_ops?.includes(JsonWebKeyOperation.Encrypt) ?? false)).toMatchObject(
-        jwks.keys[1]!
-      );
+      expect(jwks.find((key) => key.key_ops?.includes('encrypt') ?? false)).toMatchObject(jwks.keys[1]!);
     });
   });
 

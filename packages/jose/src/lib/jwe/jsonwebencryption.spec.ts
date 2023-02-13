@@ -3,10 +3,7 @@ import { Buffer } from 'buffer';
 import { InvalidJsonWebEncryptionException } from '../exceptions/invalid-jsonwebencryption.exception';
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../jwk/jsonwebkey-type.enum';
 import { JsonWebEncryption } from './jsonwebencryption';
-import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-content-encryption-algorithm.enum';
-import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap-algorithm.enum';
 import { JsonWebEncryptionHeader } from './jsonwebencryption.header';
 
 const invalidPlaintexts: unknown[] = [null, true, 1, 1.2, 1n, '', Symbol('a'), () => 1, {}, []];
@@ -19,8 +16,8 @@ const invalidKeys: unknown[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('
 const plaintext = Buffer.from('Live long and prosper.');
 
 const header = new JsonWebEncryptionHeader({
-  alg: JsonWebEncryptionKeyWrapAlgorithm.A128KW,
-  enc: JsonWebEncryptionContentEncryptionAlgorithm.A128CBC_HS256,
+  alg: 'A128KW',
+  enc: 'A128CBC-HS256',
 });
 const ek = Buffer.from('6KB707dM9YTIgHtLvtgWQ8mKwboJW3of9locizkDTHzBC2IlrT1oOQ', 'base64url');
 const iv = Buffer.from('AxY8DCtDaGlsbGljb3RoZQ', 'base64url');
@@ -28,7 +25,7 @@ const ciphertext = Buffer.from('KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY', 'b
 const tag = Buffer.from('U0m_YmjN04DJvceFICbCVQ', 'base64url');
 const aad = Buffer.from('eyJhbGciOiJBMTI4S1ciLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0', 'ascii');
 
-const wrapKey = new JsonWebKey({ kty: JsonWebKeyType.Octet, k: 'GawgguFyGrWKav7AX4VKUg' });
+const wrapKey = new JsonWebKey({ kty: 'oct', k: 'GawgguFyGrWKav7AX4VKUg' });
 
 const token =
   'eyJhbGciOiJBMTI4S1ciLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0.' +

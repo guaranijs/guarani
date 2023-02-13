@@ -12,18 +12,18 @@ export { UnsupportedAlgorithmException } from './lib/exceptions/unsupported-algo
 export { UnsupportedEllipticCurveException } from './lib/exceptions/unsupported-elliptic-curve.exception';
 
 // JSON Web Encryption
-export { JsonWebEncryptionCompressionAlgorithm } from './lib/jwe/jsonwebencryption-compression-algorithm.enum';
-export { JsonWebEncryptionContentEncryptionAlgorithm } from './lib/jwe/jsonwebencryption-content-encryption-algorithm.enum';
-export { JsonWebEncryptionKeyWrapAlgorithm } from './lib/jwe/jsonwebencryption-keywrap-algorithm.enum';
+export { JsonWebEncryptionCompressionAlgorithm } from './lib/jwe/jsonwebencryption-compression-algorithm.type';
+export { JsonWebEncryptionContentEncryptionAlgorithm } from './lib/jwe/jsonwebencryption-content-encryption-algorithm.type';
+export { JsonWebEncryptionKeyWrapAlgorithm } from './lib/jwe/jsonwebencryption-keywrap-algorithm.type';
 export { JsonWebEncryption } from './lib/jwe/jsonwebencryption';
 export { JsonWebEncryptionHeader } from './lib/jwe/jsonwebencryption.header';
 export { JsonWebEncryptionHeaderParameters } from './lib/jwe/jsonwebencryption.header.parameters';
 
 // JSON Web Key
-export { EllipticCurve } from './lib/jwk/backends/ec/elliptic-curve.enum';
-export { JsonWebKeyOperation } from './lib/jwk/jsonwebkey-operation.enum';
-export { JsonWebKeyType } from './lib/jwk/jsonwebkey-type.enum';
-export { JsonWebKeyUse } from './lib/jwk/jsonwebkey-use.enum';
+export { EllipticCurve } from './lib/jwk/backends/ec/elliptic-curve.type';
+export { JsonWebKeyOperation } from './lib/jwk/jsonwebkey-operation.type';
+export { JsonWebKeyType } from './lib/jwk/jsonwebkey-type.type';
+export { JsonWebKeyUse } from './lib/jwk/jsonwebkey-use.type';
 export { JsonWebKey } from './lib/jwk/jsonwebkey';
 export { JsonWebKeyParameters } from './lib/jwk/jsonwebkey.parameters';
 
@@ -33,7 +33,7 @@ export { JsonWebKeySetParameters } from './lib/jwks/jsonwebkeyset.parameters';
 
 // JSON Web Signature
 export { JsonWebSignature } from './lib/jws/jsonwebsignature';
-export { JsonWebSignatureAlgorithm } from './lib/jws/jsonwebsignature-algorithm.enum';
+export { JsonWebSignatureAlgorithm } from './lib/jws/jsonwebsignature-algorithm.type';
 export { JsonWebSignatureHeader } from './lib/jws/jsonwebsignature.header';
 export { JsonWebSignatureHeaderParameters } from './lib/jws/jsonwebsignature.header.parameters';
 

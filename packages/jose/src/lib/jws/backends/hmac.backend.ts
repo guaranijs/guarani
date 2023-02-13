@@ -5,8 +5,7 @@ import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.
 import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-jsonwebsignature.exception';
 import { OctKeyParameters } from '../../jwk/backends/oct/octkey.parameters';
 import { JsonWebKey } from '../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../jwk/jsonwebkey-type.enum';
-import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.enum';
+import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.type';
 import { JsonWebSignatureBackend } from './jsonwebsignature.backend';
 
 /**
@@ -26,10 +25,10 @@ class HmacBackend extends JsonWebSignatureBackend {
   public constructor(keySize: number) {
     const bitSize = keySize << 3;
 
-    const algorithm = `HS${bitSize}`;
+    const algorithm = <JsonWebSignatureAlgorithm>`HS${bitSize}`;
     const hash = `SHA${bitSize}`;
 
-    super(<JsonWebSignatureAlgorithm>algorithm, hash, JsonWebKeyType.Octet);
+    super(algorithm, hash, 'oct');
 
     this.keySize = keySize;
   }

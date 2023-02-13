@@ -1,5 +1,5 @@
 import { JsonWebKeyParameters } from '../../jsonwebkey.parameters';
-import { EllipticCurve } from './elliptic-curve.enum';
+import { EllipticCurve } from './elliptic-curve.type';
 
 /**
  * Parameters of the Elliptic Curve JSON Web Key.

@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto';
 import { promisify } from 'util';
 
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-jsonwebencryption.exception';
-import { JsonWebEncryptionContentEncryptionAlgorithm } from '../../jsonwebencryption-content-encryption-algorithm.enum';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from '../../jsonwebencryption-content-encryption-algorithm.type';
 
 const randomBytesAsync = promisify(randomBytes);
 

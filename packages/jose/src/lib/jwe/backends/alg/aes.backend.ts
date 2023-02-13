@@ -3,8 +3,7 @@ import { createCipheriv, createDecipheriv } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../../jwk/jsonwebkey-type.enum';
-import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.enum';
+import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
 
@@ -30,7 +29,7 @@ class AesBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
    */
   public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
-    super(algorithm, JsonWebKeyType.Octet);
+    super(algorithm, 'oct');
 
     this.keySize = Number.parseInt(this.algorithm.substring(1, 4));
     this.cipher = `aes${this.keySize}-wrap`;
@@ -92,14 +91,14 @@ class AesBackend extends JsonWebEncryptionKeyWrapBackend {
 /**
  * AES Key Wrap with default initial value using 128-bit key.
  */
-export const A128KW = new AesBackend(JsonWebEncryptionKeyWrapAlgorithm.A128KW);
+export const A128KW = new AesBackend('A128KW');
 
 /**
  * AES Key Wrap with default initial value using 192-bit key.
  */
-export const A192KW = new AesBackend(JsonWebEncryptionKeyWrapAlgorithm.A192KW);
+export const A192KW = new AesBackend('A192KW');
 
 /**
  * AES Key Wrap with default initial value using 256-bit key.
  */
-export const A256KW = new AesBackend(JsonWebEncryptionKeyWrapAlgorithm.A256KW);
+export const A256KW = new AesBackend('A256KW');

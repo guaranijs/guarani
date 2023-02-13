@@ -4,8 +4,7 @@ import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../../jwk/jsonwebkey-type.enum';
-import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.enum';
+import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
 
@@ -43,7 +42,7 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
    */
   public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
-    super(algorithm, JsonWebKeyType.Octet);
+    super(algorithm, 'oct');
 
     this.keySize = Number.parseInt(this.algorithm.substring(1, 4));
     this.cipher = <CipherGCMTypes>`aes-${this.keySize}-gcm`;
@@ -127,14 +126,14 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
 /**
  * Key wrapping with AES GCM using 128-bit key.
  */
-export const A128GCMKW = new GcmBackend(JsonWebEncryptionKeyWrapAlgorithm.A128GCMKW);
+export const A128GCMKW = new GcmBackend('A128GCMKW');
 
 /**
  * Key wrapping with AES GCM using 192-bit key.
  */
-export const A192GCMKW = new GcmBackend(JsonWebEncryptionKeyWrapAlgorithm.A192GCMKW);
+export const A192GCMKW = new GcmBackend('A192GCMKW');
 
 /**
  * Key wrapping with AES GCM using 256-bit key.
  */
-export const A256GCMKW = new GcmBackend(JsonWebEncryptionKeyWrapAlgorithm.A256GCMKW);
+export const A256GCMKW = new GcmBackend('A256GCMKW');

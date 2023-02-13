@@ -1,7 +1,6 @@
 import { Buffer } from 'buffer';
 
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../../jwk/jsonwebkey-type.enum';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { dir } from './dir.backend';
 
@@ -12,7 +11,7 @@ describe('JSON Web Encryption Direct Key Wrap Backend', () => {
       validateContentEncryptionKey: (_: Buffer) => undefined,
     };
 
-    const key = new JsonWebKey({ kty: JsonWebKeyType.Octet, k: 'EBESExQVFhcYGRobHB0eHw' });
+    const key = new JsonWebKey({ kty: 'oct', k: 'EBESExQVFhcYGRobHB0eHw' });
     const [cek, ek] = await dir.wrap(enc, key);
 
     expect(cek).toEqual(Buffer.from(<string>key.k, 'base64url'));

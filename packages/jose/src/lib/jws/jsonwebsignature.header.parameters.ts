@@ -1,10 +1,10 @@
 import { JsonWebKeyParameters } from '../jwk/jsonwebkey.parameters';
-import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.enum';
+import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.type';
 
 /**
  * Parameters of the JSON Web Signature Header.
  */
-export interface JsonWebSignatureHeaderParameters extends Record<string, unknown> {
+export interface JsonWebSignatureHeaderParameters extends Record<string, any> {
   /**
    * JSON Web Signature Algorithm used to Sign and Verify the Token.
    */

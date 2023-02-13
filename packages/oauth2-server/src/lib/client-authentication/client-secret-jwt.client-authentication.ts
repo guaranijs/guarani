@@ -1,4 +1,4 @@
-import { JsonWebKey, JsonWebKeyType, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import { JsonWebKey, JsonWebSignatureAlgorithm } from '@guarani/jose';
 import { Injectable } from '@guarani/di';
 
 import { Buffer } from 'buffer';
@@ -18,11 +18,7 @@ export class ClientSecretJwtClientAuthentication extends JwtBearerClientAssertio
   /**
    * JSON Web Signature Algorithms.
    */
-  protected readonly algorithms: JsonWebSignatureAlgorithm[] = [
-    JsonWebSignatureAlgorithm.HS256,
-    JsonWebSignatureAlgorithm.HS384,
-    JsonWebSignatureAlgorithm.HS512,
-  ];
+  protected readonly algorithms: JsonWebSignatureAlgorithm[] = ['HS256', 'HS384', 'HS512'];
 
   /**
    * Name of the Client Authentication Method.
@@ -42,6 +38,6 @@ export class ClientSecretJwtClientAuthentication extends JwtBearerClientAssertio
       });
     }
 
-    return new JsonWebKey({ kty: JsonWebKeyType.Octet, k: Buffer.from(client.secret, 'utf8').toString('base64url') });
+    return new JsonWebKey({ kty: 'oct', k: Buffer.from(client.secret, 'utf8').toString('base64url') });
   }
 }

@@ -2,12 +2,11 @@ import { Buffer } from 'buffer';
 import { KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
-import { JsonWebKeyType } from '../../jsonwebkey-type.enum';
 import { OctKeyBackend } from './octkey.backend';
 import { OctKeyParameters } from './octkey.parameters';
 
 const secretParameters: OctKeyParameters = {
-  kty: JsonWebKeyType.Octet,
+  kty: 'oct',
   k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ',
 };
 
@@ -24,19 +23,19 @@ describe('JSON Web Key Octet Sequence Backend', () => {
 
   describe('load()', () => {
     it('should throw when not providing the parameter "k".', () => {
-      expect(() => backend.load({ kty: JsonWebKeyType.Octet })).toThrow(
+      expect(() => backend.load({ kty: 'oct' })).toThrow(
         new InvalidJsonWebKeyException('The provided parameters do not represent a valid "oct" key.')
       );
     });
 
     it.each(invalidSecrets)('should throw when passing an invalid secret.', (k) => {
-      expect(() => backend.load({ kty: JsonWebKeyType.Octet, k })).toThrow(
+      expect(() => backend.load({ kty: 'oct', k })).toThrow(
         new InvalidJsonWebKeyException('Invalid key parameter "k".')
       );
     });
 
     it('should throw when passing an empty secret.', () => {
-      expect(() => backend.load({ kty: JsonWebKeyType.Octet, k: '' })).toThrow(
+      expect(() => backend.load({ kty: 'oct', k: '' })).toThrow(
         new InvalidJsonWebKeyException('The Secret cannot be empty.')
       );
     });

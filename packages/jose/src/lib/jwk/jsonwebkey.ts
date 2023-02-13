@@ -3,15 +3,15 @@ import { KeyObject } from 'crypto';
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { JoseException } from '../exceptions/jose.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
-import { JsonWebEncryptionKeyWrapAlgorithm } from '../jwe/jsonwebencryption-keywrap-algorithm.enum';
-import { JsonWebSignatureAlgorithm } from '../jws/jsonwebsignature-algorithm.enum';
+import { JsonWebEncryptionKeyWrapAlgorithm } from '../jwe/jsonwebencryption-keywrap-algorithm.type';
+import { JsonWebSignatureAlgorithm } from '../jws/jsonwebsignature-algorithm.type';
 import { EcKeyBackend } from './backends/ec/eckey.backend';
 import { JsonWebKeyBackend } from './backends/jsonwebkey.backend';
 import { OctKeyBackend } from './backends/oct/octkey.backend';
 import { RsaKeyBackend } from './backends/rsa/rsakey.backend';
-import { JsonWebKeyOperation } from './jsonwebkey-operation.enum';
-import { JsonWebKeyType } from './jsonwebkey-type.enum';
-import { JsonWebKeyUse } from './jsonwebkey-use.enum';
+import { JsonWebKeyOperation } from './jsonwebkey-operation.type';
+import { JsonWebKeyType } from './jsonwebkey-type.type';
+import { JsonWebKeyUse } from './jsonwebkey-use.type';
 import { JsonWebKeyParameters } from './jsonwebkey.parameters';
 
 /**
@@ -79,9 +79,9 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
    * Supported JSON Web Key Backends.
    */
   private static readonly backends: Record<JsonWebKeyType, JsonWebKeyBackend> = {
-    [JsonWebKeyType.EllipticCurve]: new EcKeyBackend(),
-    [JsonWebKeyType.Octet]: new OctKeyBackend(),
-    [JsonWebKeyType.RSA]: new RsaKeyBackend(),
+    EC: new EcKeyBackend(),
+    oct: new OctKeyBackend(),
+    RSA: new RsaKeyBackend(),
   };
 
   /**
@@ -124,7 +124,7 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
    * @param parameters Parameters of the JSON Web Key.
    */
   private static validateParameters(parameters: JsonWebKeyParameters): void {
-    if (parameters.use !== undefined && !Object.values(JsonWebKeyUse).includes(parameters.use)) {
+    if (parameters.use !== undefined && typeof parameters.use !== 'string') {
       throw new InvalidJsonWebKeyException('Invalid key parameter "use".');
     }
 
@@ -132,7 +132,7 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
       if (
         !Array.isArray(parameters.key_ops) ||
         parameters.key_ops.length === 0 ||
-        parameters.key_ops.some((keyOperation) => !Object.values(JsonWebKeyOperation).includes(keyOperation))
+        parameters.key_ops.some((keyOperation) => typeof keyOperation !== 'string')
       ) {
         throw new InvalidJsonWebKeyException('Invalid key parameter "key_ops".');
       }
@@ -143,20 +143,20 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
     }
 
     if (parameters.use !== undefined && parameters.key_ops !== undefined) {
-      const signatureOperations: JsonWebKeyOperation[] = [JsonWebKeyOperation.Sign, JsonWebKeyOperation.Verify];
+      const signatureOperations: JsonWebKeyOperation[] = ['sign', 'verify'];
       const encryptionOperations: JsonWebKeyOperation[] = [
-        JsonWebKeyOperation.Encrypt,
-        JsonWebKeyOperation.Decrypt,
-        JsonWebKeyOperation.WrapKey,
-        JsonWebKeyOperation.UnwrapKey,
-        JsonWebKeyOperation.DeriveKey,
-        JsonWebKeyOperation.DeriveBits,
+        'encrypt',
+        'decrypt',
+        'wrapKey',
+        'unwrapKey',
+        'deriveKey',
+        'deriveBits',
       ];
 
       if (
-        (parameters.use === JsonWebKeyUse.Signature &&
+        (parameters.use === 'sig' &&
           parameters.key_ops.some((keyOperation) => !signatureOperations.includes(keyOperation))) ||
-        (parameters.use === JsonWebKeyUse.Encryption &&
+        (parameters.use === 'enc' &&
           parameters.key_ops.some((keyOperation) => !encryptionOperations.includes(keyOperation)))
       ) {
         throw new InvalidJsonWebKeyException('Invalid combination of "use" and "key_ops".');

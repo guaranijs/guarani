@@ -3,9 +3,7 @@ import { Buffer } from 'buffer';
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { InvalidJsonWebSignatureException } from '../exceptions/invalid-jsonwebsignature.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../jwk/jsonwebkey-type.enum';
 import { JsonWebSignature } from './jsonwebsignature';
-import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.enum';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 
 const invalidTokens: unknown[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer.alloc(1), () => 1, {}, []];
@@ -13,11 +11,11 @@ const invalidTokenFormats: string[] = ['', 'a', '.a', '.a.b', 'a.b', 'a.b.c.d'];
 
 const invalidKeys: unknown[] = [undefined, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer.alloc(1), {}, []];
 
-const header = new JsonWebSignatureHeader({ alg: JsonWebSignatureAlgorithm.HS256 });
+const header = new JsonWebSignatureHeader({ alg: 'HS256' });
 const payload = Buffer.from('{"iat": 1723010455, "sub": "078BWDDXasdcg8"}', 'utf8');
 const signature = Buffer.from('hRqmKz7sKWQZyNM1Kw9AgqPNOedszPvEADYmNFo8foA', 'base64url');
 
-const key = new JsonWebKey({ kty: JsonWebKeyType.Octet, k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ' });
+const key = new JsonWebKey({ kty: 'oct', k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ' });
 
 const token =
   'eyJhbGciOiJIUzI1NiJ9.' +
@@ -65,7 +63,7 @@ describe('JSON Web Signature', () => {
     });
 
     it('should throw when the algorithm of the token does not match the expected algorithms.', async () => {
-      await expect(JsonWebSignature.verify(token, key, [JsonWebSignatureAlgorithm.RS256])).rejects.toThrow(
+      await expect(JsonWebSignature.verify(token, key, ['RS256'])).rejects.toThrow(
         new InvalidJsonWebSignatureException(
           'The JSON Web Signature Algorithm "HS256" does not match the expected algorithms.'
         )

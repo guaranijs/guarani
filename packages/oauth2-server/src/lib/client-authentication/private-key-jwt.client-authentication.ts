@@ -5,8 +5,6 @@ import {
   JsonWebSignatureHeaderParameters,
   JsonWebKeySet,
   InvalidJsonWebKeySetException,
-  JsonWebKeyOperation,
-  JsonWebKeyUse,
 } from '@guarani/jose';
 
 import https from 'https';
@@ -27,15 +25,15 @@ export class PrivateKeyJwtClientAuthentication extends JwtBearerClientAssertion 
    * JSON Web Signature Algorithms.
    */
   protected readonly algorithms: JsonWebSignatureAlgorithm[] = [
-    JsonWebSignatureAlgorithm.ES256,
-    JsonWebSignatureAlgorithm.ES384,
-    JsonWebSignatureAlgorithm.ES512,
-    JsonWebSignatureAlgorithm.PS256,
-    JsonWebSignatureAlgorithm.PS384,
-    JsonWebSignatureAlgorithm.PS512,
-    JsonWebSignatureAlgorithm.RS256,
-    JsonWebSignatureAlgorithm.RS384,
-    JsonWebSignatureAlgorithm.RS512,
+    'ES256',
+    'ES384',
+    'ES512',
+    'PS256',
+    'PS384',
+    'PS512',
+    'RS256',
+    'RS384',
+    'RS512',
   ];
 
   /**
@@ -68,8 +66,8 @@ export class PrivateKeyJwtClientAuthentication extends JwtBearerClientAssertion 
     const jwk = clientJwks.find((key) => {
       return (
         key.kid === header.kid &&
-        (key.key_ops?.includes(JsonWebKeyOperation.Verify) ?? true) &&
-        (key.use !== undefined ? key.use === JsonWebKeyUse.Signature : true)
+        (key.key_ops?.includes('verify') ?? true) &&
+        (key.use !== undefined ? key.use === 'sig' : true)
       );
     });
 

@@ -2,12 +2,11 @@ import { Buffer } from 'buffer';
 import { KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
-import { JsonWebKeyType } from '../../jsonwebkey-type.enum';
 import { RsaKeyBackend } from './rsakey.backend';
 import { RsaKeyParameters } from './rsakey.parameters';
 
 const publicParameters: RsaKeyParameters = {
-  kty: JsonWebKeyType.RSA,
+  kty: 'RSA',
   n:
     'xjpFydzTbByzL5jhEa2yQO63dpS9d9SKaN107AR69skKiTR4uK1c4SzDt4YcurDB' +
     'yhgKNzeBo6Vq3IRrkrltp97LKWfeZdM-leGt8-UTZEWqrNf3UGOEj8kI6lbjiG-S' +

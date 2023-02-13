@@ -3,16 +3,15 @@ import { generateKeyPairSync } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
 import { EcKeyParameters } from '../../jwk/backends/ec/eckey.parameters';
-import { EllipticCurve } from '../../jwk/backends/ec/elliptic-curve.enum';
+import { EllipticCurve } from '../../jwk/backends/ec/elliptic-curve.type';
 import { JsonWebKey } from '../../jwk/jsonwebkey';
-import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.enum';
 import { ES256, ES384, ES512 } from './ecdsa.backend';
 
 const generateEcKey = (curve: EllipticCurve): JsonWebKey<EcKeyParameters> => {
   const curves: Record<EllipticCurve, string> = {
-    [EllipticCurve.P256]: 'prime256v1',
-    [EllipticCurve.P384]: 'secp384r1',
-    [EllipticCurve.P521]: 'secp521r1',
+    'P-256': 'prime256v1',
+    'P-384': 'secp384r1',
+    'P-521': 'secp521r1',
   };
 
   const { privateKey } = generateKeyPairSync('ec', { namedCurve: curves[curve] });
@@ -24,18 +23,17 @@ const message = Buffer.from('Super secret message.');
 
 describe('JSON Web Signature Algorithm ECDSA using P-256 and SHA-256', () => {
   it('should reject a different curve.', async () => {
-    const key = generateEcKey(EllipticCurve.P384);
+    const key = generateEcKey('P-384');
 
     await expect(ES256.sign(message, key)).rejects.toThrow(
       new InvalidJsonWebKeyException(
-        `The JSON Web Signature ECDSA Algorithm "${JsonWebSignatureAlgorithm.ES256}" ` +
-          `only accepts the Elliptic Curve "${EllipticCurve.P256}".`
+        'The JSON Web Signature ECDSA Algorithm "ES256" only accepts the Elliptic Curve "P-256".'
       )
     );
   });
 
   it('should sign and verify a message.', async () => {
-    const key = generateEcKey(EllipticCurve.P256);
+    const key = generateEcKey('P-256');
     const signature = await ES256.sign(message, key);
 
     expect(signature).toEqual(expect.any(Buffer));
@@ -45,18 +43,17 @@ describe('JSON Web Signature Algorithm ECDSA using P-256 and SHA-256', () => {
 
 describe('JSON Web Signature Algorithm ECDSA using P-384 and SHA-384', () => {
   it('should reject a different curve.', async () => {
-    const key = generateEcKey(EllipticCurve.P521);
+    const key = generateEcKey('P-521');
 
     await expect(ES384.sign(message, key)).rejects.toThrow(
       new InvalidJsonWebKeyException(
-        `The JSON Web Signature ECDSA Algorithm "${JsonWebSignatureAlgorithm.ES384}" ` +
-          `only accepts the Elliptic Curve "${EllipticCurve.P384}".`
+        'The JSON Web Signature ECDSA Algorithm "ES384" only accepts the Elliptic Curve "P-384".'
       )
     );
   });
 
   it('should sign and verify a message.', async () => {
-    const key = generateEcKey(EllipticCurve.P384);
+    const key = generateEcKey('P-384');
     const signature = await ES384.sign(message, key);
 
     expect(signature).toEqual(expect.any(Buffer));
@@ -66,18 +63,17 @@ describe('JSON Web Signature Algorithm ECDSA using P-384 and SHA-384', () => {
 
 describe('JSON Web Signature Algorithm ECDSA using P-521 and SHA-512', () => {
   it('should reject a different curve.', async () => {
-    const key = generateEcKey(EllipticCurve.P256);
+    const key = generateEcKey('P-256');
 
     await expect(ES512.sign(message, key)).rejects.toThrow(
       new InvalidJsonWebKeyException(
-        `The JSON Web Signature ECDSA Algorithm "${JsonWebSignatureAlgorithm.ES512}" ` +
-          `only accepts the Elliptic Curve "${EllipticCurve.P521}".`
+        'The JSON Web Signature ECDSA Algorithm "ES512" only accepts the Elliptic Curve "P-521".'
       )
     );
   });
 
   it('should sign and verify a message.', async () => {
-    const key = generateEcKey(EllipticCurve.P521);
+    const key = generateEcKey('P-521');
     const signature = await ES512.sign(message, key);
 
     expect(signature).toEqual(expect.any(Buffer));

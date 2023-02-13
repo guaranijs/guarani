@@ -1,5 +1,4 @@
 import { getContainer } from '@guarani/di';
-import { JsonWebSignatureAlgorithm } from '@guarani/jose';
 
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
@@ -10,11 +9,6 @@ import { DiscoveryEndpoint } from './discovery.endpoint';
 import { EndpointInterface } from './endpoint.interface';
 import { ENDPOINT } from './endpoint.token';
 
-// jest.mock('@guarani/di', () => ({
-//   ...jest.requireActual('@guarani/di'),
-//   getContainer: jest.fn(),
-// }));
-
 describe('Discovery Endpoint', () => {
   let endpoint: DiscoveryEndpoint;
 
@@ -22,7 +16,7 @@ describe('Discovery Endpoint', () => {
     issuer: 'https://server.example.com',
     scopes: ['foo', 'bar', 'baz', 'qux'],
     clientAuthenticationMethods: ['client_secret_basic', 'private_key_jwt'],
-    clientAuthenticationSignatureAlgorithms: [JsonWebSignatureAlgorithm.HS256, JsonWebSignatureAlgorithm.RS256],
+    clientAuthenticationSignatureAlgorithms: ['HS256', 'RS256'],
     grantTypes: ['authorization_code', 'refresh_token'],
     responseTypes: ['code'],
     responseModes: ['query'],
@@ -91,26 +85,17 @@ describe('Discovery Endpoint', () => {
         response_modes_supported: ['query'],
         grant_types_supported: ['authorization_code', 'refresh_token'],
         token_endpoint_auth_methods_supported: ['client_secret_basic', 'private_key_jwt'],
-        token_endpoint_auth_signing_alg_values_supported: [
-          JsonWebSignatureAlgorithm.HS256,
-          JsonWebSignatureAlgorithm.RS256,
-        ],
+        token_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256'],
         // service_documentation: '',
         // ui_locales_supported: '',
         // op_policy_uri: '',
         // op_tos_uri: '',
         revocation_endpoint: 'https://server.example.com/oauth/revoke',
         revocation_endpoint_auth_methods_supported: ['client_secret_basic', 'private_key_jwt'],
-        revocation_endpoint_auth_signing_alg_values_supported: [
-          JsonWebSignatureAlgorithm.HS256,
-          JsonWebSignatureAlgorithm.RS256,
-        ],
+        revocation_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256'],
         introspection_endpoint: 'https://server.example.com/oauth/introspect',
         introspection_endpoint_auth_methods_supported: ['client_secret_basic', 'private_key_jwt'],
-        introspection_endpoint_auth_signing_alg_values_supported: [
-          JsonWebSignatureAlgorithm.HS256,
-          JsonWebSignatureAlgorithm.RS256,
-        ],
+        introspection_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256'],
         code_challenge_methods_supported: ['S256'],
         interaction_endpoint: 'https://server.example.com/oauth/interaction',
       };

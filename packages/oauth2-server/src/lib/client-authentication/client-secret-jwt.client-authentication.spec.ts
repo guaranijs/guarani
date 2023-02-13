@@ -1,5 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
-import { JsonWebKeyParameters, JsonWebKeyType, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import { JsonWebKeyParameters, JsonWebSignatureAlgorithm } from '@guarani/jose';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -30,11 +30,7 @@ describe('Client Secret JWT Client Authentication Method', () => {
 
   describe('algorithms', () => {
     it('should have \'["HS256", "HS384", "HS512"]\' as its value.', () => {
-      expect(clientAuthentication['algorithms']).toEqual<JsonWebSignatureAlgorithm[]>([
-        JsonWebSignatureAlgorithm.HS256,
-        JsonWebSignatureAlgorithm.HS384,
-        JsonWebSignatureAlgorithm.HS512,
-      ]);
+      expect(clientAuthentication['algorithms']).toEqual<JsonWebSignatureAlgorithm[]>(['HS256', 'HS384', 'HS512']);
     });
   });
 
@@ -73,7 +69,7 @@ describe('Client Secret JWT Client Authentication Method', () => {
       const client = <Client>{ id: 'client_id', secret: 'dZD9jxWOFEiSi-9AjOwmvJKaEJRUBbXl' };
 
       await expect(clientAuthentication['getClientKey'](client)).resolves.toMatchObject<JsonWebKeyParameters>({
-        kty: JsonWebKeyType.Octet,
+        kty: 'oct',
         k: 'ZFpEOWp4V09GRWlTaS05QWpPd212SkthRUpSVUJiWGw',
       });
     });

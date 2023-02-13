@@ -1,11 +1,10 @@
 import { Buffer } from 'buffer';
 
 import { JsonWebKey } from '../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../jwk/jsonwebkey-type.enum';
 import { PS256, PS384, PS512, RS256, RS384, RS512 } from './rsassa.backend';
 
 const key = new JsonWebKey({
-  kty: JsonWebKeyType.RSA,
+  kty: 'RSA',
   n:
     'xjpFydzTbByzL5jhEa2yQO63dpS9d9SKaN107AR69skKiTR4uK1c4SzDt4YcurDB' +
     'yhgKNzeBo6Vq3IRrkrltp97LKWfeZdM-leGt8-UTZEWqrNf3UGOEj8kI6lbjiG-S' +

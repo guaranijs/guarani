@@ -4,10 +4,9 @@ import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
 import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-jsonwebsignature.exception';
-import { EllipticCurve } from '../../jwk/backends/ec/elliptic-curve.enum';
+import { EllipticCurve } from '../../jwk/backends/ec/elliptic-curve.type';
 import { JsonWebKey } from '../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../jwk/jsonwebkey-type.enum';
-import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.enum';
+import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.type';
 import { JsonWebSignatureBackend } from './jsonwebsignature.backend';
 
 const signAsync = promisify(sign);
@@ -30,7 +29,7 @@ class EcdsaBackend extends JsonWebSignatureBackend {
    * @param curve Elliptic Curve used by the JSON Web Signature ECDSA Backend.
    */
   public constructor(algorithm: JsonWebSignatureAlgorithm, hash: string, curve: EllipticCurve) {
-    super(algorithm, hash, JsonWebKeyType.EllipticCurve);
+    super(algorithm, hash, 'EC');
 
     this.curve = curve;
   }
@@ -93,14 +92,14 @@ class EcdsaBackend extends JsonWebSignatureBackend {
 /**
  * ECDSA using P-256 and SHA-256.
  */
-export const ES256 = new EcdsaBackend(JsonWebSignatureAlgorithm.ES256, 'SHA256', EllipticCurve.P256);
+export const ES256 = new EcdsaBackend('ES256', 'SHA256', 'P-256');
 
 /**
  * ECDSA using P-384 and SHA-384.
  */
-export const ES384 = new EcdsaBackend(JsonWebSignatureAlgorithm.ES384, 'SHA384', EllipticCurve.P384);
+export const ES384 = new EcdsaBackend('ES384', 'SHA384', 'P-384');
 
 /**
  * ECDSA using P-521 and SHA-512.
  */
-export const ES512 = new EcdsaBackend(JsonWebSignatureAlgorithm.ES512, 'SHA512', EllipticCurve.P521);
+export const ES512 = new EcdsaBackend('ES512', 'SHA512', 'P-521');

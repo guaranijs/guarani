@@ -7,8 +7,6 @@ import {
   JsonWebSignatureHeaderParameters,
   JsonWebTokenClaims,
   JsonWebSignatureAlgorithm,
-  JsonWebKeyType,
-  JsonWebKeyOperation,
 } from '@guarani/jose';
 
 import { Buffer } from 'buffer';
@@ -46,18 +44,18 @@ export class JwtBearerGrantType implements GrantTypeInterface {
    * JSON Web Signature Algorithms.
    */
   private readonly algorithms: JsonWebSignatureAlgorithm[] = [
-    JsonWebSignatureAlgorithm.ES256,
-    JsonWebSignatureAlgorithm.ES384,
-    JsonWebSignatureAlgorithm.ES512,
-    JsonWebSignatureAlgorithm.HS256,
-    JsonWebSignatureAlgorithm.HS384,
-    JsonWebSignatureAlgorithm.HS512,
-    JsonWebSignatureAlgorithm.PS256,
-    JsonWebSignatureAlgorithm.PS384,
-    JsonWebSignatureAlgorithm.PS512,
-    JsonWebSignatureAlgorithm.RS256,
-    JsonWebSignatureAlgorithm.RS384,
-    JsonWebSignatureAlgorithm.RS512,
+    'ES256',
+    'ES384',
+    'ES512',
+    'HS256',
+    'HS384',
+    'HS512',
+    'PS256',
+    'PS384',
+    'PS512',
+    'RS256',
+    'RS384',
+    'RS512',
   ];
 
   /**
@@ -182,7 +180,7 @@ export class JwtBearerGrantType implements GrantTypeInterface {
       throw new InvalidGrantException({ description: 'The provided Assertion is invalid.' });
     }
 
-    return new JsonWebKey({ kty: JsonWebKeyType.Octet, k: Buffer.from(client.secret, 'utf8').toString('base64url') });
+    return new JsonWebKey({ kty: 'oct', k: Buffer.from(client.secret, 'utf8').toString('base64url') });
   }
 
   /**
@@ -208,7 +206,7 @@ export class JwtBearerGrantType implements GrantTypeInterface {
     const jwk = clientJwks.find((key) => {
       return (
         key.kid === header.kid &&
-        (key.key_ops?.includes(JsonWebKeyOperation.Verify) ?? true) &&
+        (key.key_ops?.includes('verify') ?? true) &&
         (key.use !== undefined ? key.use === 'sig' : true)
       );
     });

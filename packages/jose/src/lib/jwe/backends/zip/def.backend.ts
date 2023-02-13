@@ -4,7 +4,6 @@ import { deflateRaw, inflateRaw } from 'zlib';
 
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-jsonwebencryption.exception';
 import { JoseException } from '../../../exceptions/jose.exception';
-import { JsonWebEncryptionCompressionAlgorithm } from '../../jsonwebencryption-compression-algorithm.enum';
 import { JsonWebEncryptionCompressionBackend } from './jsonwebencryption-compression.backend';
 
 const deflateRawAsync = promisify(deflateRaw);
@@ -18,7 +17,7 @@ class DEFBackend extends JsonWebEncryptionCompressionBackend {
    * Instantiates a new DEFLATE JSON Web Encryption Compression Backend to Compress and Decompress a Plaintext.
    */
   public constructor() {
-    super(JsonWebEncryptionCompressionAlgorithm.DEF);
+    super('DEF');
   }
 
   /**

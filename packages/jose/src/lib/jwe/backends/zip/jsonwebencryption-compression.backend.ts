@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 
-import { JsonWebEncryptionCompressionAlgorithm } from '../../jsonwebencryption-compression-algorithm.enum';
+import { JsonWebEncryptionCompressionAlgorithm } from '../../jsonwebencryption-compression-algorithm.type';
 
 /**
  * Abstract Base Class for the JSON Web Encryption Compression Backends.

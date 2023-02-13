@@ -1,7 +1,12 @@
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
-import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.enum';
+import { ES256, ES384, ES512 } from './backends/ecdsa.backend';
+import { HS256, HS384, HS512 } from './backends/hmac.backend';
+import { JsonWebSignatureBackend } from './backends/jsonwebsignature.backend';
+import { none } from './backends/none.backend';
+import { PS256, PS384, PS512, RS256, RS384, RS512 } from './backends/rsassa.backend';
+import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.type';
 import { JsonWebSignatureHeaderParameters } from './jsonwebsignature.header.parameters';
 
 /**
@@ -71,6 +76,30 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParameters 
   readonly [parameter: string]: unknown;
 
   /**
+   * JSON Web Signature Backend.
+   */
+  public readonly backend!: JsonWebSignatureBackend;
+
+  /**
+   * Supported JSON Web Signature Backends.
+   */
+  private static readonly backends: Record<JsonWebSignatureAlgorithm, JsonWebSignatureBackend> = {
+    ES256,
+    ES384,
+    ES512,
+    HS256,
+    HS384,
+    HS512,
+    none,
+    PS256,
+    PS384,
+    PS512,
+    RS256,
+    RS384,
+    RS512,
+  };
+
+  /**
    * Instantiates a new JSON Web Signature Header based on the provided Parameters.
    *
    * @param parameters JSON Web Signature Header Parameters.
@@ -87,6 +116,8 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParameters 
     }
 
     JsonWebSignatureHeader.validateParameters(parameters);
+
+    Object.defineProperty(this, 'backend', { value: JsonWebSignatureHeader.backends[parameters.alg] });
 
     Object.assign(this, parameters);
   }
@@ -112,7 +143,7 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParameters 
       throw new InvalidJoseHeaderException('Invalid header parameter "alg".');
     }
 
-    if (!Object.values(JsonWebSignatureAlgorithm).includes(parameters.alg)) {
+    if (!Object.keys(this.backends).includes(parameters.alg)) {
       throw new UnsupportedAlgorithmException(`Unsupported JSON Web Signature Algorithm "${parameters.alg}".`);
     }
 

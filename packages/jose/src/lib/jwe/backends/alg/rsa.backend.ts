@@ -3,8 +3,7 @@ import { constants, privateDecrypt, publicEncrypt } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../../jwk/jsonwebkey-type.enum';
-import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.enum';
+import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
 
@@ -33,7 +32,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param hash Name of the Hash Algorithm.
    */
   public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm, padding: number, hash?: string) {
-    super(algorithm, JsonWebKeyType.RSA);
+    super(algorithm, 'RSA');
 
     this.padding = padding;
     this.hash = hash;
@@ -85,40 +84,24 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
 /**
  * RSAES-PKCS1-v1_5.
  */
-export const RSA1_5 = new RsaBackend(JsonWebEncryptionKeyWrapAlgorithm.RSA1_5, constants.RSA_PKCS1_PADDING);
+export const RSA1_5 = new RsaBackend('RSA1_5', constants.RSA_PKCS1_PADDING);
 
 /**
  * RSAES OAEP using default parameters.
  */
-export const RSA_OAEP = new RsaBackend(
-  JsonWebEncryptionKeyWrapAlgorithm.RSA_OAEP,
-  constants.RSA_PKCS1_OAEP_PADDING,
-  'SHA1'
-);
+export const RSA_OAEP = new RsaBackend('RSA-OAEP', constants.RSA_PKCS1_OAEP_PADDING, 'SHA1');
 
 /**
  * RSAES OAEP using SHA-256 and MGF1 with SHA-256.
  */
-export const RSA_OAEP_256 = new RsaBackend(
-  JsonWebEncryptionKeyWrapAlgorithm.RSA_OAEP_256,
-  constants.RSA_PKCS1_OAEP_PADDING,
-  'SHA256'
-);
+export const RSA_OAEP_256 = new RsaBackend('RSA-OAEP-256', constants.RSA_PKCS1_OAEP_PADDING, 'SHA256');
 
 /**
  * RSAES OAEP using SHA-384 and MGF1 with SHA-384.
  */
-export const RSA_OAEP_384 = new RsaBackend(
-  JsonWebEncryptionKeyWrapAlgorithm.RSA_OAEP_384,
-  constants.RSA_PKCS1_OAEP_PADDING,
-  'SHA384'
-);
+export const RSA_OAEP_384 = new RsaBackend('RSA-OAEP-384', constants.RSA_PKCS1_OAEP_PADDING, 'SHA384');
 
 /**
  * RSAES OAEP using SHA-512 and MGF1 with SHA-512.
  */
-export const RSA_OAEP_512 = new RsaBackend(
-  JsonWebEncryptionKeyWrapAlgorithm.RSA_OAEP_512,
-  constants.RSA_PKCS1_OAEP_PADDING,
-  'SHA512'
-);
+export const RSA_OAEP_512 = new RsaBackend('RSA-OAEP-512', constants.RSA_PKCS1_OAEP_PADDING, 'SHA512');

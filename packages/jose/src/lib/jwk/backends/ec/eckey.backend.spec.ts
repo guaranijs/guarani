@@ -3,14 +3,12 @@ import { KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { UnsupportedEllipticCurveException } from '../../../exceptions/unsupported-elliptic-curve.exception';
-import { JsonWebKeyType } from '../../jsonwebkey-type.enum';
 import { EcKeyBackend } from './eckey.backend';
 import { EcKeyParameters } from './eckey.parameters';
-import { EllipticCurve } from './elliptic-curve.enum';
 
 const publicParameters: EcKeyParameters = {
-  kty: JsonWebKeyType.EllipticCurve,
-  crv: EllipticCurve.P256,
+  kty: 'EC',
+  crv: 'P-256',
   x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
   y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
 };

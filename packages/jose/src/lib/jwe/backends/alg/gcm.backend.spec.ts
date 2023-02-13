@@ -1,7 +1,6 @@
 import { Buffer } from 'buffer';
 
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../../jwk/jsonwebkey-type.enum';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { A128GCMKW, A192GCMKW, A256GCMKW } from './gcm.backend';
 
@@ -15,7 +14,7 @@ const enc = <JsonWebEncryptionContentEncryptionBackend>{
 
 describe('JSON Web Encryption Key Wrap AES A128GCMKW Backend', () => {
   it('should wrap and unwrap a content encryption key.', async () => {
-    const key = new JsonWebKey({ kty: JsonWebKeyType.Octet, k: 'EBESExQVFhcYGRobHB0eHw' });
+    const key = new JsonWebKey({ kty: 'oct', k: 'EBESExQVFhcYGRobHB0eHw' });
     const [cek, ek, header] = await A128GCMKW.wrap(enc, key);
 
     expect(cek).toEqual(contentEncryptionKey);
@@ -28,7 +27,7 @@ describe('JSON Web Encryption Key Wrap AES A128GCMKW Backend', () => {
 
 describe('JSON Web Encryption Key Wrap AES A192GCMKW Backend', () => {
   it('should wrap and unwrap a content encryption key.', async () => {
-    const key = new JsonWebKey({ kty: JsonWebKeyType.Octet, k: 'EBESExQVFhcYGRobHB0eHyAhIiMkJSYn' });
+    const key = new JsonWebKey({ kty: 'oct', k: 'EBESExQVFhcYGRobHB0eHyAhIiMkJSYn' });
     const [cek, ek, header] = await A192GCMKW.wrap(enc, key);
 
     expect(cek).toEqual(contentEncryptionKey);
@@ -41,7 +40,7 @@ describe('JSON Web Encryption Key Wrap AES A192GCMKW Backend', () => {
 
 describe('JSON Web Encryption Key Wrap AES A256GCMKW Backend', () => {
   it('should wrap and unwrap a content encryption key.', async () => {
-    const key = new JsonWebKey({ kty: JsonWebKeyType.Octet, k: 'EBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8' });
+    const key = new JsonWebKey({ kty: 'oct', k: 'EBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8' });
     const [cek, ek, header] = await A256GCMKW.wrap(enc, key);
 
     expect(cek).toEqual(contentEncryptionKey);

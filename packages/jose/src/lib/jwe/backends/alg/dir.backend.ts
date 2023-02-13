@@ -2,8 +2,6 @@ import { Buffer } from 'buffer';
 
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-jsonwebencryption.exception';
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../../jwk/jsonwebkey-type.enum';
-import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.enum';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
 
@@ -17,7 +15,7 @@ class DirBackend extends JsonWebEncryptionKeyWrapBackend {
    * Instantiates a new JSON Web Encryption Direct Key Wrap Backend to Wrap and Unwrap Content Encryption Keys.
    */
   public constructor() {
-    super(JsonWebEncryptionKeyWrapAlgorithm.Dir, JsonWebKeyType.Octet);
+    super('dir', 'oct');
   }
 
   /**

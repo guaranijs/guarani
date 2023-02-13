@@ -2,7 +2,6 @@ import { Buffer } from 'buffer';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
-import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.enum';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 import { JsonWebSignatureHeaderParameters } from './jsonwebsignature.header.parameters';
 
@@ -17,7 +16,7 @@ const invalidX5Cs: unknown[] = [...invalidJkus];
 const invalidX5Ts: unknown[] = [...invalidJkus];
 const invalidX5TS256s: unknown[] = [...invalidJkus];
 
-const parameters: JsonWebSignatureHeaderParameters = { alg: JsonWebSignatureAlgorithm.HS256 };
+const parameters: JsonWebSignatureHeaderParameters = { alg: 'HS256' };
 
 describe('JSON Web Signature Header', () => {
   it('should throw when no "alg" is provided.', () => {
@@ -98,7 +97,6 @@ describe('JSON Web Signature Header', () => {
   });
 
   it('should throw when the header parameter defined at "crit" is not provided.', () => {
-    // @ts-expect-error Invalid Type
     expect(() => new JsonWebSignatureHeader({ alg: 'none', crit: ['kid'] })).toThrow(
       new InvalidJoseHeaderException('Missing required header parameter "kid".')
     );

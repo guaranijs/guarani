@@ -3,7 +3,7 @@ import { createCipheriv, createDecipheriv, createHmac, timingSafeEqual } from 'c
 
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-jsonwebencryption.exception';
 import { JoseException } from '../../../exceptions/jose.exception';
-import { JsonWebEncryptionContentEncryptionAlgorithm } from '../../jsonwebencryption-content-encryption-algorithm.enum';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from '../../jsonwebencryption-content-encryption-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from './jsonwebencryption-content-encryption.backend';
 
 /**
@@ -149,14 +149,14 @@ class CbcBackend extends JsonWebEncryptionContentEncryptionBackend {
 /**
  * AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm.
  */
-export const A128CBC_HS256 = new CbcBackend(JsonWebEncryptionContentEncryptionAlgorithm.A128CBC_HS256);
+export const A128CBC_HS256 = new CbcBackend('A128CBC-HS256');
 
 /**
  * AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm.
  */
-export const A192CBC_HS384 = new CbcBackend(JsonWebEncryptionContentEncryptionAlgorithm.A192CBC_HS384);
+export const A192CBC_HS384 = new CbcBackend('A192CBC-HS384');
 
 /**
  * AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm.
  */
-export const A256CBC_HS512 = new CbcBackend(JsonWebEncryptionContentEncryptionAlgorithm.A256CBC_HS512);
+export const A256CBC_HS512 = new CbcBackend('A256CBC-HS512');

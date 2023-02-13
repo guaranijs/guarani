@@ -1,13 +1,13 @@
-import { JsonWebEncryptionKeyWrapAlgorithm } from '../jwe/jsonwebencryption-keywrap-algorithm.enum';
-import { JsonWebSignatureAlgorithm } from '../jws/jsonwebsignature-algorithm.enum';
-import { JsonWebKeyOperation } from './jsonwebkey-operation.enum';
-import { JsonWebKeyType } from './jsonwebkey-type.enum';
-import { JsonWebKeyUse } from './jsonwebkey-use.enum';
+import { JsonWebEncryptionKeyWrapAlgorithm } from '../jwe/jsonwebencryption-keywrap-algorithm.type';
+import { JsonWebSignatureAlgorithm } from '../jws/jsonwebsignature-algorithm.type';
+import { JsonWebKeyOperation } from './jsonwebkey-operation.type';
+import { JsonWebKeyType } from './jsonwebkey-type.type';
+import { JsonWebKeyUse } from './jsonwebkey-use.type';
 
 /**
  * Parameters of the JSON Web Key.
  */
-export interface JsonWebKeyParameters extends Record<string, unknown> {
+export interface JsonWebKeyParameters extends Record<string, any> {
   /**
    * JSON Web Key Type.
    */

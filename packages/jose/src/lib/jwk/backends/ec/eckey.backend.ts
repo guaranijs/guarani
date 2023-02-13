@@ -5,7 +5,7 @@ import { UnsupportedEllipticCurveException } from '../../../exceptions/unsupport
 import { JsonWebKeyParameters } from '../../jsonwebkey.parameters';
 import { JsonWebKeyBackend } from '../jsonwebkey.backend';
 import { EcKeyParameters } from './eckey.parameters';
-import { EllipticCurve } from './elliptic-curve.enum';
+import { EllipticCurve } from './elliptic-curve.type';
 
 /**
  * Implementation of the **Elliptic Curve** JSON Web Key Backend.
@@ -54,7 +54,7 @@ export class EcKeyBackend implements JsonWebKeyBackend {
       throw new InvalidJsonWebKeyException('Invalid parameter "crv".');
     }
 
-    if (!Object.values(EllipticCurve).includes(parameters.crv)) {
+    if (!(<EllipticCurve[]>['P-256', 'P-384', 'P-521']).includes(parameters.crv)) {
       throw new UnsupportedEllipticCurveException(`Unsupported Elliptic Curve "${parameters.crv}".`);
     }
 

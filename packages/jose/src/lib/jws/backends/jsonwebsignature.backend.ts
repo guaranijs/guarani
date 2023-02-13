@@ -2,8 +2,8 @@ import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../jwk/jsonwebkey-type.enum';
-import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.enum';
+import { JsonWebKeyType } from '../../jwk/jsonwebkey-type.type';
+import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.type';
 
 /**
  * Abstract Base Class for the JSON Web Signature Backend.

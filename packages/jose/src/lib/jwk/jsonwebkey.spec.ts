@@ -4,22 +4,20 @@ import { KeyObject } from 'crypto';
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { EcKeyParameters } from './backends/ec/eckey.parameters';
-import { EllipticCurve } from './backends/ec/elliptic-curve.enum';
 import { OctKeyParameters } from './backends/oct/octkey.parameters';
 import { JsonWebKey } from './jsonwebkey';
-import { JsonWebKeyOperation } from './jsonwebkey-operation.enum';
-import { JsonWebKeyType } from './jsonwebkey-type.enum';
-import { JsonWebKeyUse } from './jsonwebkey-use.enum';
+import { JsonWebKeyOperation } from './jsonwebkey-operation.type';
+import { JsonWebKeyUse } from './jsonwebkey-use.type';
 import { JsonWebKeyParameters } from './jsonwebkey.parameters';
 
 const secretParameters: OctKeyParameters = {
-  kty: JsonWebKeyType.Octet,
+  kty: 'oct',
   k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ',
 };
 
 const publicParameters: EcKeyParameters = {
-  kty: JsonWebKeyType.EllipticCurve,
-  crv: EllipticCurve.P256,
+  kty: 'EC',
+  crv: 'P-256',
   x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
   y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
 };
@@ -56,16 +54,16 @@ const invalidJwkStrings: unknown[] = [
 ];
 
 const invalidUseKeyOps: [JsonWebKeyUse, JsonWebKeyOperation[]][] = [
-  [JsonWebKeyUse.Encryption, [JsonWebKeyOperation.Sign]],
-  [JsonWebKeyUse.Encryption, [JsonWebKeyOperation.Verify]],
-  [JsonWebKeyUse.Encryption, [JsonWebKeyOperation.Decrypt, JsonWebKeyOperation.Sign]],
-  [JsonWebKeyUse.Signature, [JsonWebKeyOperation.Decrypt]],
-  [JsonWebKeyUse.Signature, [JsonWebKeyOperation.DeriveBits]],
-  [JsonWebKeyUse.Signature, [JsonWebKeyOperation.DeriveKey]],
-  [JsonWebKeyUse.Signature, [JsonWebKeyOperation.Encrypt]],
-  [JsonWebKeyUse.Signature, [JsonWebKeyOperation.UnwrapKey]],
-  [JsonWebKeyUse.Signature, [JsonWebKeyOperation.WrapKey]],
-  [JsonWebKeyUse.Signature, [JsonWebKeyOperation.Sign, JsonWebKeyOperation.Decrypt]],
+  ['enc', ['sign']],
+  ['enc', ['verify']],
+  ['enc', ['decrypt', 'sign']],
+  ['sig', ['decrypt']],
+  ['sig', ['deriveBits']],
+  ['sig', ['deriveKey']],
+  ['sig', ['encrypt']],
+  ['sig', ['unwrapKey']],
+  ['sig', ['wrapKey']],
+  ['sig', ['sign', 'decrypt']],
 ];
 
 describe('JSON Web Key', () => {
@@ -106,14 +104,14 @@ describe('JSON Web Key', () => {
 
     it('should throw when the provided "key_ops" is not an array of strings.', () => {
       // @ts-expect-error Invalid "key_ops".
-      expect(() => new JsonWebKey(secretParameters, { key_ops: [JsonWebKeyOperation.Sign, 123] })).toThrow(
+      expect(() => new JsonWebKey(secretParameters, { key_ops: ['sign', 123] })).toThrow(
         new InvalidJsonWebKeyException('Invalid key parameter "key_ops".')
       );
     });
 
     it('should throw when the provided "key_ops" array contains repeated values.', () => {
       expect(() => {
-        return new JsonWebKey(secretParameters, { key_ops: [JsonWebKeyOperation.Sign, JsonWebKeyOperation.Sign] });
+        return new JsonWebKey(secretParameters, { key_ops: ['sign', 'sign'] });
       }).toThrow(new InvalidJsonWebKeyException('Key parameter "key_ops" cannot have repeated operations.'));
     });
 

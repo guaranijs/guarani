@@ -1,10 +1,18 @@
-import { join } from 'path';
-
-import baseConfig from '../../jest.config';
+import path from 'path';
 
 export default {
-  ...baseConfig,
-  setupFilesAfterEnv: [join(__dirname, 'jest.setup.ts')],
-  rootDir: '../../',
-  testMatch: [join(__dirname, 'tests/**/*.spec.ts')],
+  displayName: '@guarani/oauth2-server',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    },
+  },
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.[tj]sx?$': 'ts-jest',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  setupFilesAfterEnv: [path.join(__dirname, 'jest.setup.ts')],
+  coverageDirectory: '../../coverage/packages/oauth2-server',
 };

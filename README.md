@@ -13,7 +13,7 @@ OpenID Connect, SAML 2.0, Json Web Tokens and the related JOSE works.
 
 **This project is not production ready, so use it with caution.**
 
-**Until the release of v1, the Public API is considered *unstable*.**
+**Until the release of v1, the Public API is considered _unstable_.**
 **Breaking changes may occur at any moment.**
 
 # Contact

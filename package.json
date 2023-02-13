@@ -1,11 +1,14 @@
 {
-  "name": "root",
+  "name": "guarani",
   "version": "0.0.0",
   "private": true,
   "description": "Guarani is a Web Security Framework aimed at providing Authentication, Authorization, Identity Management and much more.",
   "license": "MIT",
   "homepage": "https://github.com/guaranijs/guarani#readme",
-  "bugs": "https://github.com/guaranijs/guarani/issues",
+  "bugs": {
+    "email": "guaranijs@gmail.com",
+    "url": "https://github.com/guaranijs/guarani/issue"
+  },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/guaranijs/guarani.git"
@@ -16,32 +19,61 @@
     "url": "https://github.com/revensky"
   },
   "scripts": {
-    "prebuild": "lerna exec --parallel -- rimraf dist",
-    "build": "lerna run build --stream",
-    "release": "npm run build && lerna publish",
-    "test": "lerna run test --stream",
-    "lint": "eslint packages --ext ts",
-    "tsc": "tsc --skipLibCheck"
+    "nx": "nx",
+    "start": "nx serve",
+    "build": "nx build",
+    "test": "nx test",
+    "lint": "nx workspace-lint && nx lint",
+    "release": "bash tools/scripts/deploy.sh",
+    "affected:build": "nx affected:build",
+    "affected:test": "nx affected:test",
+    "affected:lint": "nx affected:lint",
+    "affected:dep-graph": "nx affected:dep-graph",
+    "affected": "nx affected",
+    "format": "nx format:write",
+    "format:write": "nx format:write",
+    "format:check": "nx format:check",
+    "update": "nx migrate latest",
+    "workspace-schematic": "nx workspace-schematic",
+    "dep-graph": "nx dep-graph",
+    "prepare": "husky install"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@types/jest": "^27.4.1",
-    "@types/node": "^17.0.21",
-    "@typescript-eslint/eslint-plugin": "^5.15.0",
-    "@typescript-eslint/parser": "^5.15.0",
-    "eslint": "^8.11.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "jest": "^27.5.1",
-    "lerna": "^4.0.0",
-    "prettier": "^2.6.0",
-    "rimraf": "^3.0.2",
-    "ts-jest": "^27.1.3",
-    "ts-node": "^10.7.0",
-    "typescript": "^4.6.2"
+    "@commitlint/cli": "^17.4.2",
+    "@commitlint/config-conventional": "^17.4.2",
+    "@jscutlery/semver": "^2.29.3",
+    "@nrwl/eslint-plugin-nx": "15.6.3",
+    "@nrwl/jest": "15.6.3",
+    "@nrwl/js": "15.6.3",
+    "@nrwl/linter": "15.6.3",
+    "@nrwl/node": "^15.6.3",
+    "@nrwl/workspace": "15.6.3",
+    "@types/jest": "28.1.1",
+    "@types/node": "16.11.7",
+    "@typescript-eslint/eslint-plugin": "^5.36.1",
+    "@typescript-eslint/parser": "^5.36.1",
+    "commitizen": "^4.3.0",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "~8.15.0",
+    "eslint-config-prettier": "8.1.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^15.6.1",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "husky": "^8.0.3",
+    "jest": "28.1.1",
+    "jest-environment-jsdom": "28.1.1",
+    "lint-staged": "^13.1.0",
+    "nx": "15.6.3",
+    "prettier": "^2.6.2",
+    "reflect-metadata": "^0.1.13",
+    "ts-jest": "28.0.5",
+    "ts-node": "10.9.1",
+    "typescript": "~4.8.2"
   },
   "keywords": [
     "Guarani",
@@ -54,8 +86,5 @@
     "Management",
     "Provider",
     "Cryptography"
-  ],
-  "workspaces": [
-    "packages/*"
   ]
 }

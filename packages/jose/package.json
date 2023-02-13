@@ -21,10 +21,11 @@
     "JWT"
   ],
   "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "homepage": "https://github.com/guaranijs/guarani/tree/master/packages/jose#readme",
-  "bugs": "https://github.com/guaranijs/guarani/issues",
+  "bugs": {
+    "email": "guaranijs@gmail.com",
+    "url": "https://github.com/guaranijs/guarani/issue"
+  },
   "repository": {
     "type": "git",
     "url": "git@github.com/guaranijs/guarani.git",
@@ -35,27 +36,8 @@
     "email": "eduardorbr7@gmail.com",
     "url": "https://github.com/revensky"
   },
-  "directories": {
-    "lib": "lib",
-    "test": "tests"
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "prebuild": "rimraf dist",
-    "build": "tsc -p tsconfig.build.json",
-    "test": "jest"
-  },
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
-  "dependencies": {
-    "@guarani/objects": "0.8.0",
-    "@guarani/primitives": "0.8.0"
-  },
-  "devDependencies": {
-    "@guarani/types": "0.8.0"
+    "registry": "https://registry.npmjs.org"
   }
 }

@@ -1,0 +1,24 @@
+{
+  "name": "GuaraniJS",
+  "build": {
+    "context": "..",
+    "dockerfile": "../Dockerfile"
+  },
+  "forwardPorts": [3000],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "dotenv.dotenv-vscode",
+        "editorconfig.editorconfig",
+        "dbaeumer.vscode-eslint",
+        "eamodio.gitlens",
+        "firsttris.vscode-jest-runner",
+        "nrwl.angular-console",
+        "esbenp.prettier-vscode",
+        "mikestead.dotenv",
+        "gruntfuggly.todo-tree"
+      ]
+    }
+  }
+}

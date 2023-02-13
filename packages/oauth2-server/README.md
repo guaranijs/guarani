@@ -1,6 +1,6 @@
-# `@guarani/oauth2-server`
+# OAuth 2.0 Authorization Server
 
-The OAuth 2.0 Authorization Server allows a web application to provide Authorization and Authentication to Clients based on the OAuth 2.0 Specification and its profile OpenID Connect.
+The OAuth 2.0 Authorization Server allows a web application to provide Authorization and Authentication to Clients based on the OAuth 2.0 Specification and its profiles OpenID Connect and User-Managed Access 2.0.
 
 ## Integrations
 
@@ -18,7 +18,9 @@ The currently implemented Middlewares are:
 
 The next level of integration comes in the form of Providers.
 
-A Provider is an implementation of the [AuthorizationServer](lib/authorization-server/authorization-server.ts) abstract class for the various web frameworks of NodeJS. It has helper methods for creating [HttpRequests](lib/http/http.request.ts) based on the request object of the web framework and for parsing a [HttpResponse](lib/http/http.response.ts) into the response object of the web framework. It can also provide custom properties or methods for the specific web framework, such as the ExpressJS Router in the [ExpressProvider](lib/integration/express/express.provider.ts).
+A Provider is an implementation of the [AuthorizationServer](src/lib/authorization-server/authorization-server.ts) abstract class for the various web frameworks of NodeJS. It has helper methods for creating [OAuth 2.0 Requests](src/lib/http/request.ts) based on the request object of the web framework and for parsing an [OAuth 2.0 Response](src/lib/http/response.ts) into the response object of the web framework. It can also provide custom properties or methods for the specific web framework, such as the ExpressJS Router in the [ExpressProvider](src/lib/integration/express/express.provider.ts).
+
+Providers need to be decorated with the [AuthorizationServerMetadata](src/lib/metadata/authorization-server-metadata.ts) decorator.
 
 The currently implemented Providers are:
 
@@ -26,9 +28,9 @@ The currently implemented Providers are:
 
 ### Authorization Server Abstract Class
 
-The next level of integration is represented by the [AuthorizationServer](lib/authorization-server/authorization-server.ts). It provides the barebones structure for a functioning implementation of the OAuth 2.0 Authorization Server by exposing the endpoints injected during its creation.
+The next level of integration is represented by the [AuthorizationServer](src/lib/authorization-server/authorization-server.ts). It provides the barebones structure for a functioning implementation of the OAuth 2.0 Authorization Server by exposing the endpoints injected during its creation.
 
-The `AuthorizationServer` class needs to be decorated with the [AuthorizationServerMetadata](lib/metadata/authorization-server-metadata.ts) decorator. This decorator receives an object containing the Configuration of the OAuth 2.0 Authorization Server and injects their implementations into the created instance.
+The `AuthorizationServer` class needs to be decorated with the [AuthorizationServerMetadata](src/lib/metadata/authorization-server-metadata.ts) decorator. This decorator receives an object containing the Configuration of the OAuth 2.0 Authorization Server and injects their implementations into the created instance.
 
 ### Low level implementations
 

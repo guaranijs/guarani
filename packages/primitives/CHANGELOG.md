@@ -7,10 +7,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 **Note:** Version bump only for package @guarani/primitives
 
-
-
-
-
 # [0.7.0](https://github.com/guaranijs/guarani/compare/v0.6.1...v0.7.0) (2022-04-05)
 
 **Note:** Version bump only for package @guarani/primitives

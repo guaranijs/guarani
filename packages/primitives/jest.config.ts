@@ -1,9 +1,15 @@
-import { join } from 'path';
-
-import baseConfig from '../../jest.config';
-
 export default {
-  ...baseConfig,
-  rootDir: '../../',
-  testMatch: [join(__dirname, 'tests/**/*.spec.ts')],
+  displayName: '@guarani/primitives',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    },
+  },
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.[tj]sx?$': 'ts-jest',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/packages/primitives',
 };

@@ -1,4 +1,4 @@
-import { JsonWebSignatureAlgorithm } from '@guarani/jose';
+import { JsonWebKeySet, JsonWebSignatureAlgorithm } from '@guarani/jose';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { GrantType } from '../grant-types/grant-type.type';
@@ -60,6 +60,11 @@ export interface Settings {
    * @default ['S256']
    */
   readonly pkceMethods: PkceMethod[];
+
+  /**
+   * JSON Web Key Set of the Authorization Server.
+   */
+  readonly jwks?: JsonWebKeySet;
 
   /**
    * Defines the Parameters of the User Interaction.

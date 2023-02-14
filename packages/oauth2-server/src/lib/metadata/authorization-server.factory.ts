@@ -1,4 +1,5 @@
 import { Constructor, getContainer } from '@guarani/di';
+import { JsonWebKeySet } from '@guarani/jose';
 
 import { AuthorizationServer } from '../authorization-server';
 import { ClientAuthenticationInterface } from '../client-authentication/client-authentication.interface';
@@ -102,6 +103,7 @@ export class AuthorizationServerFactory {
     this.setResponseTypes();
     this.setResponseModes();
     this.setPkceMethods();
+    this.setJsonWebKeySet();
     this.setEndpoints();
     this.setHandlers();
     this.setAccessTokenService();
@@ -230,6 +232,19 @@ export class AuthorizationServerFactory {
       const constructor = <Constructor<PkceInterface>>pkceRegistry[pkceMethod];
       this.container.bind<PkceInterface>(PKCE).toClass(constructor).asSingleton();
     });
+  }
+
+  /**
+   * Defines the JSON Web Key Set of the Authorization Server.
+   */
+  private static setJsonWebKeySet(): void {
+    const { jwks } = this.settings;
+
+    if (jwks === undefined) {
+      return;
+    }
+
+    this.container.bind(JsonWebKeySet).toValue(jwks);
   }
 
   /**

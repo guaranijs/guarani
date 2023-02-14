@@ -27,6 +27,7 @@ describe('Discovery Endpoint', () => {
     jest.mocked<Partial<EndpointInterface>>({ name: 'authorization', path: '/oauth/authorize' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'interaction', path: '/oauth/interaction' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'introspection', path: '/oauth/introspect' }),
+    jest.mocked<Partial<EndpointInterface>>({ name: 'jwks', path: '/oauth/jwks' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'revocation', path: '/oauth/revoke' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'token', path: '/oauth/token' }),
   ];
@@ -79,7 +80,7 @@ describe('Discovery Endpoint', () => {
         issuer: 'https://server.example.com',
         authorization_endpoint: 'https://server.example.com/oauth/authorize',
         token_endpoint: 'https://server.example.com/oauth/token',
-        // jwks_uri: '',
+        jwks_uri: 'http://server.example.com/oauth/jwks',
         scopes_supported: ['foo', 'bar', 'baz', 'qux'],
         response_types_supported: ['code'],
         response_modes_supported: ['query'],

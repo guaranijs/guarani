@@ -1,6 +1,7 @@
 import { getContainer, Inject, Injectable } from '@guarani/di';
 
 import { URL } from 'url';
+
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
@@ -50,7 +51,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
       issuer: this.settings.issuer,
       authorization_endpoint: this.getEndpointPath('authorization'),
       token_endpoint: this.getEndpointPath('token'),
-      jwks_uri: undefined,
+      jwks_uri: this.getEndpointPath('jwks'),
       scopes_supported: this.settings.scopes,
       response_types_supported: this.settings.responseTypes,
       response_modes_supported: this.settings.responseModes,

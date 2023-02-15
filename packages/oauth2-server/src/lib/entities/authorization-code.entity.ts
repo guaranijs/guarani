@@ -1,5 +1,6 @@
 import { PkceMethod } from '../pkce/pkce-method.type';
 import { Client } from './client.entity';
+import { Consent } from './consent.entity';
 import { User } from './user.entity';
 
 /**
@@ -60,4 +61,9 @@ export interface AuthorizationCode extends Record<string, any> {
    * End User that granted authorization to the Client.
    */
   readonly user: User;
+
+  /**
+   * Consent granted by the Authenticated User.
+   */
+  readonly consent: Consent;
 }

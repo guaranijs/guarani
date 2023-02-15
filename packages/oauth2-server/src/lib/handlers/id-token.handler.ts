@@ -5,8 +5,7 @@ import { createHash, randomInt } from 'crypto';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
-import { Client } from '../entities/client.entity';
-import { User } from '../entities/user.entity';
+import { Consent } from '../entities/consent.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
@@ -38,16 +37,13 @@ export class IdTokenHandler {
   /**
    * Generates an ID Token to be used by the Client for authentication purposes.
    *
-   * @param client Client requesting authentication.
-   * @param user End User represented by the Client.
+   * @param consent Consent granted by the Authenticated User.
    * @param accessToken Access Token issued to the Client.
    * @param authorizationCode Authorization Code issued to the Client.
    * @returns Generated ID Token.
    */
   public async generateIdToken(
-    scopes: string[],
-    client: Client,
-    user: User,
+    consent: Consent,
     accessToken?: AccessToken,
     authorizationCode?: AuthorizationCode
   ): Promise<string> {
@@ -59,6 +55,8 @@ export class IdTokenHandler {
     }
 
     const now = Math.ceil(Date.now() / 1000);
+
+    const { client, scopes, user } = consent;
 
     const userinfo = await this.userService.getUserinfo!(user, scopes);
 

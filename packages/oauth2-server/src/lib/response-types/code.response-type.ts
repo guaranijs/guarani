@@ -71,15 +71,11 @@ export class CodeResponseType implements ResponseTypeInterface {
    * @returns Authorization Code Response.
    */
   public async handle(consent: Consent): Promise<CodeAuthorizationResponse> {
-    const { client, parameters, user } = consent;
+    const { parameters } = consent;
 
     this.checkParameters(<CodeAuthorizationRequest>parameters);
 
-    const authorizationCode = await this.authorizationCodeService.create(
-      <CodeAuthorizationRequest>parameters,
-      client,
-      user
-    );
+    const authorizationCode = await this.authorizationCodeService.create(consent);
 
     return { code: authorizationCode.code, state: parameters.state };
   }

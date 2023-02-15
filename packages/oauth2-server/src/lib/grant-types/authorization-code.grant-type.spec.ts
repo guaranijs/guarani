@@ -144,7 +144,9 @@ describe('Authorization Code Grant Type', () => {
 
     it('should throw on a mismatching client identifier.', async () => {
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(<AuthorizationCode>{
-        client: { id: 'another_client_id' },
+        consent: {
+          client: { id: 'another_client_id' },
+        },
       });
 
       const client = <Client>{ id: 'client_id' };
@@ -159,7 +161,9 @@ describe('Authorization Code Grant Type', () => {
     it('should throw on an authorization code not yet valid.', async () => {
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(<AuthorizationCode>{
         validAfter: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
+        consent: {
+          client: { id: 'client_id' },
+        },
       });
 
       const client = <Client>{ id: 'client_id' };
@@ -174,7 +178,9 @@ describe('Authorization Code Grant Type', () => {
     it('should throw on an expired authorization code.', async () => {
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(<AuthorizationCode>{
         expiresAt: new Date(Date.now() - 300000),
-        client: { id: 'client_id' },
+        consent: {
+          client: { id: 'client_id' },
+        },
       });
 
       const client = <Client>{ id: 'client_id' };
@@ -190,7 +196,9 @@ describe('Authorization Code Grant Type', () => {
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(<AuthorizationCode>{
         isRevoked: true,
         expiresAt: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
+        consent: {
+          client: { id: 'client_id' },
+        },
       });
 
       const client = <Client>{ id: 'client_id' };
@@ -204,10 +212,12 @@ describe('Authorization Code Grant Type', () => {
 
     it('should throw on a mismatching redirect uri.', async () => {
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(<AuthorizationCode>{
-        redirectUri: 'https://bad.example.com/callback',
         isRevoked: false,
         expiresAt: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
+        consent: {
+          client: { id: 'client_id' },
+          parameters: { redirect_uri: 'https://bad.example.com/callback' },
+        },
       });
 
       const client = <Client>{ id: 'client_id', redirectUris: ['https://example.com/callback'] };
@@ -221,11 +231,16 @@ describe('Authorization Code Grant Type', () => {
 
     it('should throw when using an unsupported pkce method.', async () => {
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(<AuthorizationCode>{
-        redirectUri: 'https://example.com/callback',
-        codeChallengeMethod: <PkceMethod>'unknown',
         isRevoked: false,
         expiresAt: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
+        consent: {
+          client: { id: 'client_id' },
+          // TODO: Check why this and following needs a Record<string, any> type.
+          parameters: <Record<string, any>>{
+            redirect_uri: 'https://example.com/callback',
+            code_challenge_method: <PkceMethod>'unknown',
+          },
+        },
       });
 
       const client = <Client>{ id: 'client_id', redirectUris: ['https://example.com/callback'] };
@@ -239,12 +254,16 @@ describe('Authorization Code Grant Type', () => {
 
     it('should throw on a mismatching pkce code challenge.', async () => {
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(<AuthorizationCode>{
-        redirectUri: 'https://example.com/callback',
-        codeChallenge: 'code_challenge',
-        codeChallengeMethod: 'plain',
         isRevoked: false,
         expiresAt: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
+        consent: {
+          client: { id: 'client_id' },
+          parameters: <Record<string, any>>{
+            redirect_uri: 'https://example.com/callback',
+            code_challenge: 'code_challenge',
+            code_challenge_method: 'plain',
+          },
+        },
       });
 
       pkceMethodsMocks[1]!.verify.mockReturnValueOnce(false);
@@ -262,13 +281,17 @@ describe('Authorization Code Grant Type', () => {
       const now = Date.now();
 
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(<AuthorizationCode>{
-        scopes: ['foo', 'bar'],
-        redirectUri: 'https://example.com/callback',
-        codeChallenge: 'code_challenge',
-        codeChallengeMethod: 'plain',
         isRevoked: false,
         expiresAt: new Date(now + 3600000),
-        client: { id: 'client_id' },
+        consent: {
+          scopes: ['foo', 'bar'],
+          client: { id: 'client_id' },
+          parameters: <Record<string, any>>{
+            redirect_uri: 'https://example.com/callback',
+            code_challenge: 'code_challenge',
+            code_challenge_method: 'plain',
+          },
+        },
       });
 
       accessTokenServiceMock.create.mockResolvedValueOnce(<AccessToken>{
@@ -300,13 +323,17 @@ describe('Authorization Code Grant Type', () => {
       const now = Date.now();
 
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(<AuthorizationCode>{
-        scopes: ['foo', 'bar'],
-        redirectUri: 'https://example.com/callback',
-        codeChallenge: 'code_challenge',
-        codeChallengeMethod: 'plain',
         isRevoked: false,
         expiresAt: new Date(now + 3600000),
-        client: { id: 'client_id' },
+        consent: {
+          scopes: ['foo', 'bar'],
+          client: { id: 'client_id' },
+          parameters: <Record<string, any>>{
+            redirect_uri: 'https://example.com/callback',
+            code_challenge: 'code_challenge',
+            code_challenge_method: 'plain',
+          },
+        },
       });
 
       accessTokenServiceMock.create.mockResolvedValueOnce(<AccessToken>{
@@ -336,13 +363,17 @@ describe('Authorization Code Grant Type', () => {
       const now = Date.now();
 
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(<AuthorizationCode>{
-        scopes: ['foo', 'bar'],
-        redirectUri: 'https://example.com/callback',
-        codeChallenge: 'code_challenge',
-        codeChallengeMethod: 'plain',
         isRevoked: false,
         expiresAt: new Date(now + 3600000),
-        client: { id: 'client_id' },
+        consent: {
+          scopes: ['foo', 'bar'],
+          client: { id: 'client_id' },
+          parameters: <Record<string, any>>{
+            redirect_uri: 'https://example.com/callback',
+            code_challenge: 'code_challenge',
+            code_challenge_method: 'plain',
+          },
+        },
       });
 
       accessTokenServiceMock.create.mockResolvedValueOnce(<AccessToken>{
@@ -374,13 +405,17 @@ describe('Authorization Code Grant Type', () => {
       const now = Date.now();
 
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(<AuthorizationCode>{
-        scopes: ['openid', 'foo', 'bar'],
-        redirectUri: 'https://example.com/callback',
-        codeChallenge: 'code_challenge',
-        codeChallengeMethod: 'plain',
         isRevoked: false,
         expiresAt: new Date(now + 3600000),
-        client: { id: 'client_id' },
+        consent: {
+          scopes: ['openid', 'foo', 'bar'],
+          client: { id: 'client_id' },
+          parameters: <Record<string, any>>{
+            redirect_uri: 'https://example.com/callback',
+            code_challenge: 'code_challenge',
+            code_challenge_method: 'plain',
+          },
+        },
       });
 
       accessTokenServiceMock.create.mockResolvedValueOnce(<AccessToken>{

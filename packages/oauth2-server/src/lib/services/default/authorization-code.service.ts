@@ -17,20 +17,12 @@ export class AuthorizationCodeService implements AuthorizationCodeServiceInterfa
   public async create(consent: Consent): Promise<AuthorizationCode> {
     const now = Date.now();
 
-    const { client, parameters, scopes, user } = consent;
-
     const authorizationCode: AuthorizationCode = {
       code: randomUUID(),
-      scopes,
-      redirectUri: parameters.redirect_uri,
-      codeChallenge: parameters.code_challenge,
-      codeChallengeMethod: parameters.code_challenge_method ?? 'plain',
       isRevoked: false,
       issuedAt: new Date(now),
       expiresAt: new Date(now + 300000),
       validAfter: new Date(now),
-      client,
-      user,
       consent,
     };
 

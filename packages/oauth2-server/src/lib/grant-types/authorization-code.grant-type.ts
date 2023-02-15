@@ -82,7 +82,8 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
     try {
       this.checkAuthorizationCode(authorizationCode, parameters, client);
 
-      const { consent, scopes, user } = authorizationCode;
+      const { consent } = authorizationCode;
+      const { scopes, user } = consent;
 
       const accessToken = await this.accessTokenService.create(scopes, client, user);
 
@@ -151,7 +152,9 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
     parameters: AuthorizationCodeTokenRequest,
     client: Client
   ): void {
-    const authorizationCodeClientIdBuffer = Buffer.from(authorizationCode.client.id, 'utf8');
+    const { consent } = authorizationCode;
+
+    const authorizationCodeClientIdBuffer = Buffer.from(consent.client.id, 'utf8');
     const clientIdBuffer = Buffer.from(client.id, 'utf8');
 
     if (
@@ -173,7 +176,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
       throw new InvalidGrantException({ description: 'Revoked Authorization Code.' });
     }
 
-    const authorizationCodeRedirectUriBuffer = Buffer.from(authorizationCode.redirectUri, 'utf8');
+    const authorizationCodeRedirectUriBuffer = Buffer.from(consent.parameters.redirect_uri, 'utf8');
     const redirectUriBuffer = Buffer.from(parameters.redirect_uri, 'utf8');
 
     if (
@@ -183,9 +186,9 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
       throw new InvalidGrantException({ description: 'Mismatching Redirect URI.' });
     }
 
-    const pkceMethod = this.getPkceMethod(authorizationCode.codeChallengeMethod ?? 'plain');
+    const pkceMethod = this.getPkceMethod(consent.parameters.code_challenge_method ?? 'plain');
 
-    if (!pkceMethod.verify(authorizationCode.codeChallenge, parameters.code_verifier)) {
+    if (!pkceMethod.verify(consent.parameters.code_challenge, parameters.code_verifier)) {
       throw new InvalidGrantException({ description: 'Invalid PKCE Code Challenge.' });
     }
   }

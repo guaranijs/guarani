@@ -13,6 +13,7 @@ import { IdTokenHandler } from './id-token.handler';
 
 const consent = <Consent>{
   client: { id: 'client_id' },
+  parameters: { nonce: 'nonce' },
   scopes: ['openid', 'profile', 'email', 'phone', 'address'],
   user: { id: 'user_id' },
 };

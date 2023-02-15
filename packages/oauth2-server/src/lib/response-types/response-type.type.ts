@@ -1,4 +1,4 @@
 /**
  * Response Types supported by Guarani.
  */
-export type ResponseType = 'code' | 'token';
+export type ResponseType = 'code' | 'id_token' | 'token';

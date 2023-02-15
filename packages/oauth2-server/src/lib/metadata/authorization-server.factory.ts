@@ -18,6 +18,7 @@ import { GrantTypeInterface } from '../grant-types/grant-type.interface';
 import { grantTypeRegistry } from '../grant-types/grant-type.registry';
 import { GRANT_TYPE } from '../grant-types/grant-type.token';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
+import { IdTokenHandler } from '../handlers/id-token.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { interactionTypeRegistry } from '../interaction-types/interaction-type.registry';
@@ -292,6 +293,7 @@ export class AuthorizationServerFactory {
    */
   private static setHandlers(): void {
     this.container.bind(ClientAuthenticationHandler).toSelf().asSingleton();
+    this.container.bind(IdTokenHandler).toSelf().asSingleton();
     this.container.bind(ScopeHandler).toSelf().asSingleton();
   }
 

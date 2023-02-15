@@ -56,7 +56,7 @@ export class IdTokenHandler {
 
     const now = Math.ceil(Date.now() / 1000);
 
-    const { client, scopes, user } = consent;
+    const { client, parameters, scopes, user } = consent;
 
     const userinfo = await this.userService.getUserinfo!(user, scopes);
 
@@ -66,6 +66,7 @@ export class IdTokenHandler {
       aud: client.id,
       exp: now + 86400,
       iat: now,
+      nonce: parameters.nonce,
       ...userinfo,
     });
 

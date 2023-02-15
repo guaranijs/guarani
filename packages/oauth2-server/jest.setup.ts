@@ -33,7 +33,7 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
     'refresh_token',
     'urn:ietf:params:oauth:grant-type:jwt-bearer',
   ],
-  responseTypes: ['code', 'token'],
+  responseTypes: ['code', 'id_token', 'token'],
   responseModes: ['form_post', 'fragment', 'query'],
   pkceMethods: ['S256', 'plain'],
   jwks: {

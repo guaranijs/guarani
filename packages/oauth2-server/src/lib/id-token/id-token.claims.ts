@@ -15,65 +15,65 @@ export class IdTokenClaims extends JsonWebTokenClaims implements IdTokenClaimsPa
   /**
    * Identifier of the Issuer of the ID Token.
    */
-  public override readonly iss!: string;
+  public override iss!: string;
 
   /**
-   * Subject represented by theID  Token.
+   * Subject represented by the ID Token.
    */
-  public override readonly sub!: string;
+  public override sub!: string;
 
   /**
    * Identifier of the Audience the ID Token is intended to.
    */
-  public override readonly aud!: string | string[];
+  public override aud!: string | string[];
 
   /**
    * UTC time denoting the Expiration Time of the ID Token.
    */
-  public override readonly exp!: number;
+  public override exp!: number;
 
   /**
    * UTC time denoting the moment when the ID Token was created.
    */
-  public override readonly iat!: number;
+  public override iat!: number;
 
   /**
    * Time when the End-User was authenticated.
    */
-  public readonly auth_time?: number;
+  public auth_time?: number;
 
   /**
    * Value provided at the Authentication Request to be passed unmodified to the ID Token.
    */
-  public readonly nonce?: string;
+  public nonce?: string;
 
   /**
    * Authentication Context Class Reference value that identifies the Authentication Context Class
    * that the authentication performed satisfied.
    */
-  public readonly acr?: string;
+  public acr?: string;
 
   /**
    * Authentication Methods References.
    */
-  public readonly amr?: string[];
+  public amr?: string[];
 
   /**
    * Authorized party to which the ID Token was issued.
    */
-  public readonly azp?: string;
+  public azp?: string;
 
   /**
    * Base64Url encoding of the left-most half of the hash of the octets of the ASCII **access_token**,
    * where the hash algorithm is the one used in the **alg** JSON Web Signature Header Parameter of the ID Token.
    */
-  public readonly at_hash?: string;
+  public at_hash?: string;
 
   /**
    * Base64Url encoding of the left-most half of the hash of the octets of the ASCII **code**,
    * where the hash algorithm is the one used in the **alg** JSON Web Signature Header Parameter of the ID Token.
    */
-  public readonly c_hash?: string;
+  public c_hash?: string;
 
   /**
    * Instantiates a new ID Token.

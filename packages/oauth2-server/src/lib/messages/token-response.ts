@@ -26,4 +26,9 @@ export interface TokenResponse extends Record<string, any> {
    * Refresh Token issued to the Client.
    */
   readonly refresh_token?: string;
+
+  /**
+   * ID Token issued to the Client.
+   */
+  id_token?: string;
 }

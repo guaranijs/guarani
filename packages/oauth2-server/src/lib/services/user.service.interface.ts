@@ -1,4 +1,5 @@
 import { User } from '../entities/user.entity';
+import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
 
 /**
  * Interface of the User Service.
@@ -29,4 +30,13 @@ export interface UserServiceInterface {
    * @returns User based on the provided Username.
    */
   findByResourceOwnerCredentials?(username: string, password: string): Promise<User | null>;
+
+  /**
+   * Retrieves claims about the provided User based on the provided scopes.
+   *
+   * @param user End User to have it's information gathered.
+   * @param scopes Scopes requested by the Client.
+   * @returns Claims about the provided User.
+   */
+  getUserinfo?(user: User, scopes: string[]): Promise<UserinfoClaimsParameters>;
 }

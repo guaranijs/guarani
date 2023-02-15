@@ -4,7 +4,7 @@ global.console.warn = jest.fn();
 
 Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   issuer: 'http://localhost:3000',
-  scopes: ['foo', 'bar', 'baz', 'qux'],
+  scopes: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
   clientAuthenticationMethods: [
     'client_secret_basic',
     'client_secret_jwt',
@@ -36,6 +36,20 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   responseTypes: ['code', 'token'],
   responseModes: ['form_post', 'fragment', 'query'],
   pkceMethods: ['S256', 'plain'],
+  jwks: {
+    keys: [
+      {
+        kty: 'EC',
+        crv: 'P-256',
+        x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
+        y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
+        d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo',
+        alg: 'ES256',
+        kid: 'ec-key',
+        use: 'sig',
+      },
+    ],
+  },
   userInteraction: {
     consentUrl: '/oauth/consent',
     errorUrl: '/oauth/error',

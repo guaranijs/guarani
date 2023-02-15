@@ -7,6 +7,7 @@ import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
+import { IdTokenHandler } from '../handlers/id-token.handler';
 import { AuthorizationCodeTokenRequest } from '../messages/authorization-code.token-request';
 import { TokenResponse } from '../messages/token-response';
 import { PkceMethod } from '../pkce/pkce-method.type';
@@ -45,12 +46,14 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
    * @param authorizationCodeService Instance of the Authorization Code Service.
    * @param accessTokenService Instance of the Access Token Service.
    * @param refreshTokenService Instance of the Refresh Token Service.
+   * @param idTokenHandler Instance of the ID Token Handler.
    */
   public constructor(
     @InjectAll(PKCE) private readonly pkces: PkceInterface[],
     @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
-    @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface
+    @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface,
+    @Optional() private readonly idTokenHandler?: IdTokenHandler
   ) {
     if (this.pkces.length === 0) {
       throw new TypeError('Missing PKCE Methods for Authorization Code Grant Type.');
@@ -87,7 +90,13 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
         ? await this.refreshTokenService?.create(scopes, client, user, accessToken)
         : undefined;
 
-      return createTokenResponse(accessToken, refreshToken);
+      const response = createTokenResponse(accessToken, refreshToken);
+
+      if (scopes.includes('openid')) {
+        response.id_token = await this.idTokenHandler!.generateIdToken(scopes, client, user);
+      }
+
+      return response;
     } finally {
       await this.authorizationCodeService.revoke(authorizationCode);
     }

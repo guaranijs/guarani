@@ -11,6 +11,7 @@ import { EndpointInterface } from '../endpoints/endpoint.interface';
 import { ENDPOINT } from '../endpoints/endpoint.token';
 import { InteractionEndpoint } from '../endpoints/interaction.endpoint';
 import { IntrospectionEndpoint } from '../endpoints/introspection.endpoint';
+import { JsonWebKeySetEndpoint } from '../endpoints/jsonwebkeyset.endpoint';
 import { RevocationEndpoint } from '../endpoints/revocation.endpoint';
 import { TokenEndpoint } from '../endpoints/token.endpoint';
 import { GrantTypeInterface } from '../grant-types/grant-type.interface';
@@ -131,6 +132,10 @@ export class AuthorizationServerFactory {
       pkceMethods: this.authorizationServerOptions.pkceMethods ?? ['S256'],
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
+      jwks:
+        this.authorizationServerOptions.jwks !== undefined
+          ? JsonWebKeySet.load(this.authorizationServerOptions.jwks)
+          : undefined,
       userInteraction: this.authorizationServerOptions.userInteraction,
       enableRefreshTokenRotation: this.authorizationServerOptions.enableRefreshTokenRotation ?? false,
       enableAccessTokenRevocation: this.authorizationServerOptions.enableAccessTokenRevocation ?? true,
@@ -273,6 +278,10 @@ export class AuthorizationServerFactory {
 
     if (this.authorizationServerOptions.enableIntrospectionEndpoint !== false) {
       this.container.bind<EndpointInterface>(ENDPOINT).toClass(IntrospectionEndpoint).asSingleton();
+    }
+
+    if (this.settings.jwks instanceof JsonWebKeySet) {
+      this.container.bind<EndpointInterface>(ENDPOINT).toClass(JsonWebKeySetEndpoint).asSingleton();
     }
 
     this.container.bind<EndpointInterface>(ENDPOINT).toClass(DiscoveryEndpoint).asSingleton();

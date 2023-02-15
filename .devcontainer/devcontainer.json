@@ -9,7 +9,6 @@
     "vscode": {
       "extensions": [
         "ms-azuretools.vscode-docker",
-        "dotenv.dotenv-vscode",
         "editorconfig.editorconfig",
         "dbaeumer.vscode-eslint",
         "eamodio.gitlens",

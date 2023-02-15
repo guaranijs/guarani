@@ -80,7 +80,7 @@ describe('Discovery Endpoint', () => {
         issuer: 'https://server.example.com',
         authorization_endpoint: 'https://server.example.com/oauth/authorize',
         token_endpoint: 'https://server.example.com/oauth/token',
-        jwks_uri: 'http://server.example.com/oauth/jwks',
+        jwks_uri: 'https://server.example.com/oauth/jwks',
         scopes_supported: ['foo', 'bar', 'baz', 'qux'],
         response_types_supported: ['code'],
         response_modes_supported: ['query'],

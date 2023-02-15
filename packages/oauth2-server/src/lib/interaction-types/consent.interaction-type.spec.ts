@@ -96,10 +96,10 @@ describe('Consent Interaction Type', () => {
       consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
         id: 'consent_id',
         scopes: <string[]>[],
+        loginChallenge: 'session_id',
         parameters: consentParameters,
         client: { id: 'client_id' },
         user: { id: 'user_id' },
-        session: { id: 'session_id' },
       });
 
       const urlParameters = new URLSearchParams(consentParameters);

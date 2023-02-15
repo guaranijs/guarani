@@ -1,9 +1,10 @@
 import { Injectable } from '@guarani/di';
 
 import { randomUUID } from 'crypto';
+import { Client } from '../../entities/client.entity';
 
 import { Consent } from '../../entities/consent.entity';
-import { Session } from '../../entities/session.entity';
+import { User } from '../../entities/user.entity';
 import { AuthorizationRequest } from '../../messages/authorization-request';
 import { ConsentServiceInterface } from '../consent.service.interface';
 
@@ -15,15 +16,20 @@ export class ConsentService implements ConsentServiceInterface {
     console.warn('Using default Consent Service. This is only recommended for development.');
   }
 
-  public async create(parameters: AuthorizationRequest, session: Session): Promise<Consent> {
+  public async create(
+    parameters: AuthorizationRequest,
+    loginChallenge: string,
+    client: Client,
+    user: User
+  ): Promise<Consent> {
     const consent: Consent = {
       id: randomUUID(),
       scopes: [],
+      loginChallenge,
       parameters,
       createdAt: new Date(),
-      client: session.client,
-      user: session.user!,
-      session,
+      client,
+      user,
     };
 
     this.consents.push(consent);

@@ -1,6 +1,5 @@
 import { AuthorizationRequest } from '../messages/authorization-request';
 import { Client } from './client.entity';
-import { Session } from './session.entity';
 import { User } from './user.entity';
 
 /**
@@ -16,6 +15,11 @@ export interface Consent extends Record<string, any> {
    * Scopes granted by the Authenticated End User.
    */
   scopes: string[];
+
+  /**
+   * Login Challenge used to generate the Consent.
+   */
+  readonly loginChallenge: string;
 
   /**
    * Parameters of the Authorization Request.
@@ -43,9 +47,4 @@ export interface Consent extends Record<string, any> {
    * Authenticated End User.
    */
   readonly user: User;
-
-  /**
-   * Session containing the Login Interaction result.
-   */
-  readonly session: Session;
 }

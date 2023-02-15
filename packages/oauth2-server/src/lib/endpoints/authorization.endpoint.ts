@@ -425,7 +425,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @returns Http Redirect Response to the Consent Page.
    */
   private async redirectToConsentPage(parameters: AuthorizationRequest, session: Session): Promise<HttpResponse> {
-    const consent = await this.consentService.create(parameters, session);
+    const consent = await this.consentService.create(parameters, session.id, session.client, session.user!);
 
     const redirectUrl = new URL(this.consentUrl);
     const searchParams = new URLSearchParams({ consent_challenge: consent.id });

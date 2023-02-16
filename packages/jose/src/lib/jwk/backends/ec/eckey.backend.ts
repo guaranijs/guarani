@@ -14,6 +14,11 @@ import { EllipticCurve } from './elliptic-curve.type';
  */
 export class EcKeyBackend implements JsonWebKeyBackend {
   /**
+   * Required Parameters of the JSON Web Key Elliptic Curve Backend.
+   */
+  public readonly requiredParameters: string[] = ['kty', 'crv', 'x', 'y'];
+
+  /**
    * Private Parameters of the JSON Web Key Elliptic Curve Backend.
    */
   public readonly privateParameters: string[] = ['d'];

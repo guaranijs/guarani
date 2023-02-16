@@ -7,6 +7,11 @@ import { JsonWebKeyParameters } from '../jsonwebkey.parameters';
  */
 export interface JsonWebKeyBackend {
   /**
+   * Required Parameters of the JSON Web Key.
+   */
+  readonly requiredParameters: string[];
+
+  /**
    * Private Parameters of the JSON Web Key.
    */
   readonly privateParameters: string[];

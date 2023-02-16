@@ -1,4 +1,4 @@
-import { KeyObject } from 'crypto';
+import { createHash, KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { JoseException } from '../exceptions/jose.exception';
@@ -28,42 +28,42 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
   /**
    * Indicates whether a Public JSON Web Key is used for Plaintext Encryption or Signature Verification.
    */
-  public readonly use?: JsonWebKeyUse;
+  public use?: JsonWebKeyUse;
 
   /**
    * Operations for which the JSON Web Key are intended to be used.
    */
-  public readonly key_ops?: JsonWebKeyOperation[];
+  public key_ops?: JsonWebKeyOperation[];
 
   /**
    * JSON Web Encryption Key Wrap Algorithm or JSON Web Signature Algorithm allowed to use this JSON Web Key.
    */
-  public readonly alg?: JsonWebEncryptionKeyWrapAlgorithm | JsonWebSignatureAlgorithm;
+  public alg?: JsonWebEncryptionKeyWrapAlgorithm | JsonWebSignatureAlgorithm;
 
   /**
    * Identifier of the JSON Web Key.
    */
-  public readonly kid?: string;
+  public kid?: string;
 
   /**
    * URL of the X.509 certificate of the JSON Web Key.
    */
-  public readonly x5u?: string;
+  public x5u?: string;
 
   /**
    * Chain of X.509 certificates of the JSON Web Key.
    */
-  public readonly x5c?: string[];
+  public x5c?: string[];
 
   /**
    * SHA-1 Thumbprint of the X.509 certificate of the JSON Web Key.
    */
-  public readonly x5t?: string;
+  public x5t?: string;
 
   /**
    * SHA-256 Thumbprint of the X.509 certificate of the JSON Web Key.
    */
-  public readonly 'x5t#S256'?: string;
+  public 'x5t#S256'?: string;
 
   /**
    * Additional JSON Web Key Parameters.
@@ -83,6 +83,25 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
     oct: new OctKeyBackend(),
     RSA: new RsaKeyBackend(),
   };
+
+  /**
+   * Thumbprint of the JSON Web Key according to **RFC 7638 JSON Web Key (JWK) Thumbprint**.
+   *
+   * The hash algorithm **SHA-256** is used to generate the thumbprint.
+   *
+   * @see https://www.rfc-editor.org/rfc/rfc7638.html
+   */
+  public get thumbprint(): Buffer {
+    const backend = JsonWebKey.backends[this.kty];
+
+    const entries: [string, any][] = (<string[]>JSON.parse(JSON.stringify(backend.requiredParameters)))
+      .sort()
+      .map((parameter) => [parameter, this[parameter]]);
+
+    const parameters = <JsonWebKeyParameters>Object.fromEntries(entries);
+
+    return createHash('sha256').update(JSON.stringify(parameters), 'utf8').digest();
+  }
 
   /**
    * Instantiates a new JSON Web Key based on the provided Parameters.

@@ -123,16 +123,23 @@ describe('JSON Web Key Set', () => {
       expect(() => new JsonWebKeySet(keySet)).toThrow(new TypeError('Invalid parameter "keys".'));
     });
 
-    it('should reject a set containing a json web key without a key identifier.', () => {
-      expect(() => new JsonWebKeySet([new JsonWebKey(publicRsaParameters)])).toThrow(
-        new InvalidJsonWebKeySetException('The JSON Web Key at position #0 does not have an Identifier.')
-      );
-    });
-
     it('should reject a set containing json web keys with duplicate key identifiers.', () => {
       expect(() => new JsonWebKeySet(jwkSetWithRepeatedKeyIdentifiers)).toThrow(
         new InvalidJsonWebKeySetException('The use of duplicate Key Identifiers is forbidden.')
       );
+    });
+
+    it('should ensure all json web keys have identifiers.', () => {
+      let jwks!: JsonWebKeySet;
+
+      expect(() => {
+        return (jwks = new JsonWebKeySet([
+          new JsonWebKey(publicEllipticCurveParameters),
+          new JsonWebKey(publicRsaParameters),
+        ]));
+      }).not.toThrow();
+
+      jwks.keys.forEach((jwk) => expect(typeof jwk.kid).toBe('string'));
     });
   });
 

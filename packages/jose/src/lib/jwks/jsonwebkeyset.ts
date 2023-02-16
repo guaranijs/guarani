@@ -24,13 +24,9 @@ export class JsonWebKeySet implements JsonWebKeySetParameters {
       throw new TypeError('Invalid parameter "keys".');
     }
 
-    const identifiers = keys.map((key) => key.kid);
+    keys.forEach((key) => (key.kid ??= key.thumbprint.toString('base64url')));
 
-    identifiers.forEach((identifier, index) => {
-      if (identifier === undefined) {
-        throw new InvalidJsonWebKeySetException(`The JSON Web Key at position #${index} does not have an Identifier.`);
-      }
-    });
+    const identifiers = keys.map((key) => key.kid);
 
     if (new Set(identifiers).size !== identifiers.length) {
       throw new InvalidJsonWebKeySetException('The use of duplicate Key Identifiers is forbidden.');

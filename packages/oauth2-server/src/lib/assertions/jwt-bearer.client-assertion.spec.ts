@@ -7,13 +7,14 @@ import {
   JsonWebTokenClaimsParameters,
 } from '@guarani/jose';
 
-import { Client } from '../../entities/client.entity';
-import { InvalidClientException } from '../../exceptions/invalid-client.exception';
-import { HttpRequest } from '../../http/http.request';
-import { ClientServiceInterface } from '../../services/client.service.interface';
-import { CLIENT_SERVICE } from '../../services/client.service.token';
-import { Settings } from '../../settings/settings';
-import { SETTINGS } from '../../settings/settings.token';
+import { Client } from '../entities/client.entity';
+import { InvalidClientException } from '../exceptions/invalid-client.exception';
+import { HttpRequest } from '../http/http.request';
+import { ClientServiceInterface } from '../services/client.service.interface';
+import { CLIENT_SERVICE } from '../services/client.service.token';
+import { Settings } from '../settings/settings';
+import { SETTINGS } from '../settings/settings.token';
+import { ClientAssertion } from './client-assertion.type';
 import { JwtBearerClientAssertion } from './jwt-bearer.client-assertion';
 
 const now = Math.floor(Date.now() / 1000);
@@ -63,7 +64,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
   describe('clientAssertionType', () => {
     it('should have "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" as its value.', () => {
-      expect(clientAssertion.clientAssertionType).toBe('urn:ietf:params:oauth:client-assertion-type:jwt-bearer');
+      expect(clientAssertion.clientAssertionType).toEqual<ClientAssertion>(
+        'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
+      );
     });
   });
 

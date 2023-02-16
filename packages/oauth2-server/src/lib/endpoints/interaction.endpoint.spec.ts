@@ -11,6 +11,7 @@ import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
+import { Endpoint } from './endpoint.type';
 import { InteractionEndpoint } from './interaction.endpoint';
 
 describe('Interaction Endpoint', () => {
@@ -39,25 +40,25 @@ describe('Interaction Endpoint', () => {
 
   describe('name', () => {
     it('should have "interaction" as its name.', () => {
-      expect(endpoint.name).toBe('interaction');
+      expect(endpoint.name).toEqual<Endpoint>('interaction');
     });
   });
 
   describe('path', () => {
     it('should have "/oauth/interaction" as its default path.', () => {
-      expect(endpoint.path).toBe('/oauth/interaction');
+      expect(endpoint.path).toEqual('/oauth/interaction');
     });
   });
 
   describe('httpMethods', () => {
     it('should have \'["GET", "POST"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual(['GET', 'POST']);
+      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['GET', 'POST']);
     });
   });
 
   describe('headers', () => {
     it('should have a default "headers" object for the http response.', () => {
-      expect(endpoint['headers']).toMatchObject<OutgoingHttpHeaders>({
+      expect(endpoint['headers']).toStrictEqual<OutgoingHttpHeaders>({
         'Cache-Control': 'no-store',
         Pragma: 'no-cache',
       });
@@ -83,7 +84,7 @@ describe('Interaction Endpoint', () => {
       });
     });
 
-    it.each(['get', 'post'])(
+    it.each(['GET', 'POST'])(
       'should return an error response when not providing an "interaction_type" parameter.',
       async (method) => {
         Reflect.set(request, 'method', method);
@@ -99,8 +100,8 @@ describe('Interaction Endpoint', () => {
     );
 
     it.each([
-      ['get', 'query'],
-      ['post', 'body'],
+      ['GET', 'query'],
+      ['POST', 'body'],
     ])('should return an error response when requesting an unsupported interaction type.', async (method, data) => {
       Reflect.set(request, 'method', method);
       Reflect.set(request, data, { interaction_type: 'unknown' });

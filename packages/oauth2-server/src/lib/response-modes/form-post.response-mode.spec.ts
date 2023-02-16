@@ -4,6 +4,7 @@ import { Buffer } from 'buffer';
 
 import { HttpResponse } from '../http/http.response';
 import { FormPostResponseMode } from './form-post.response-mode';
+import { ResponseMode } from './response-mode.type';
 
 const body = `<!DOCTYPE html>
 <html>
@@ -35,7 +36,7 @@ describe('Form Post Response Mode', () => {
   });
 
   it('should have "form_post" as its name.', () => {
-    expect(responseMode.name).toBe('form_post');
+    expect(responseMode.name).toEqual<ResponseMode>('form_post');
   });
 
   it('should create a http response with a populated html body.', () => {

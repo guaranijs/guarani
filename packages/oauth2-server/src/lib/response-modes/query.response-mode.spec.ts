@@ -4,6 +4,7 @@ import { Buffer } from 'buffer';
 
 import { HttpResponse } from '../http/http.response';
 import { QueryResponseMode } from './query.response-mode';
+import { ResponseMode } from './response-mode.type';
 
 describe('Query Response Mode', () => {
   let responseMode: QueryResponseMode;
@@ -17,7 +18,7 @@ describe('Query Response Mode', () => {
   });
 
   it('should have "query" as its name.', () => {
-    expect(responseMode.name).toBe('query');
+    expect(responseMode.name).toEqual<ResponseMode>('query');
   });
 
   it('should create a redirect http response with a populated uri query.', () => {

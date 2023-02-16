@@ -81,7 +81,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
       requested_scope: consent.parameters.scope,
       subject: consent.user.id,
       request_url: url.href,
-      login_challenge: consent.session.id,
+      login_challenge: consent.loginChallenge,
       client: consent.client,
       context: {},
     };

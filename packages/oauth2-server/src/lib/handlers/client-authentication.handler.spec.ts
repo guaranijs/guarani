@@ -47,7 +47,7 @@ describe('Client Authentication Handler', () => {
     jest.resetAllMocks();
   });
 
-  it('should reject not using a client authentication method.', async () => {
+  it('should throw when not using a client authentication method.', async () => {
     clientAuthenticationMethodsMocks.forEach((method) => method.hasBeenRequested.mockReturnValueOnce(false));
 
     await expect(clientAuthenticationHandler.authenticate(request)).rejects.toThrow(
@@ -55,7 +55,7 @@ describe('Client Authentication Handler', () => {
     );
   });
 
-  it('should reject using multiple client authentication methods.', async () => {
+  it('should throw when using multiple client authentication methods.', async () => {
     clientAuthenticationMethodsMocks.forEach((method) => method.hasBeenRequested.mockReturnValueOnce(true));
 
     await expect(clientAuthenticationHandler.authenticate(request)).rejects.toThrow(

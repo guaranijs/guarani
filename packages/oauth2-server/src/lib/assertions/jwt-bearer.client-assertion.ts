@@ -10,31 +10,18 @@ import {
 
 import { URL } from 'url';
 
-import { ClientAuthentication } from '../../client-authentication/client-authentication.type';
-import { ClientAuthenticationInterface } from '../../client-authentication/client-authentication.interface';
-import { Client } from '../../entities/client.entity';
-import { InvalidClientException } from '../../exceptions/invalid-client.exception';
-import { OAuth2Exception } from '../../exceptions/oauth2.exception';
-import { HttpRequest } from '../../http/http.request';
-import { ClientServiceInterface } from '../../services/client.service.interface';
-import { CLIENT_SERVICE } from '../../services/client.service.token';
-import { Settings } from '../../settings/settings';
-import { SETTINGS } from '../../settings/settings.token';
-
-/**
- * Interface of the parameters expected from the POST body.
- */
-interface AssertionParameters {
-  /**
-   * Client Assertion provided by the Client.
-   */
-  readonly client_assertion: string;
-
-  /**
-   * Client Assertion Type requested by the Client.
-   */
-  readonly client_assertion_type: string;
-}
+import { ClientAuthentication } from '../client-authentication/client-authentication.type';
+import { ClientAuthenticationInterface } from '../client-authentication/client-authentication.interface';
+import { Client } from '../entities/client.entity';
+import { InvalidClientException } from '../exceptions/invalid-client.exception';
+import { OAuth2Exception } from '../exceptions/oauth2.exception';
+import { HttpRequest } from '../http/http.request';
+import { ClientServiceInterface } from '../services/client.service.interface';
+import { CLIENT_SERVICE } from '../services/client.service.token';
+import { Settings } from '../settings/settings';
+import { SETTINGS } from '../settings/settings.token';
+import { ClientAssertionParameters } from './client-assertion.parameters';
+import { ClientAssertion } from './client-assertion.type';
 
 /**
  * Implementation of the JWT Bearer Client Assertion as described in RFC 7523.
@@ -56,7 +43,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
   /**
    * Name of the Client Assertion Type.
    */
-  public readonly clientAssertionType: string = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+  public readonly clientAssertionType: ClientAssertion = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
 
   /**
    * Instantiates a new JWT Bearer Client Authentication Method.
@@ -105,7 +92,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @returns Authenticated Client.
    */
   public async authenticate(request: HttpRequest): Promise<Client> {
-    const { client_assertion: clientAssertion } = <AssertionParameters>request.body;
+    const { client_assertion: clientAssertion } = <ClientAssertionParameters>request.body;
 
     try {
       const [header, claims] = this.getClientAssertionComponents(clientAssertion, request);

@@ -68,7 +68,7 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
   /**
    * Additional JSON Web Key Parameters.
    */
-  readonly [parameter: string]: unknown;
+  [parameter: string]: unknown;
 
   /**
    * NodeJS Crypto Key.

@@ -4,6 +4,7 @@ import { Buffer } from 'buffer';
 
 import { HttpResponse } from '../http/http.response';
 import { FragmentResponseMode } from './fragment.response-mode';
+import { ResponseMode } from './response-mode.type';
 
 describe('Fragment Response Mode', () => {
   let responseMode: FragmentResponseMode;
@@ -17,7 +18,7 @@ describe('Fragment Response Mode', () => {
   });
 
   it('should have "fragment" as its name.', () => {
-    expect(responseMode.name).toBe('fragment');
+    expect(responseMode.name).toEqual<ResponseMode>('fragment');
   });
 
   it('should create a redirect http response with a populated uri fragment.', () => {

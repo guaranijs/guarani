@@ -1,6 +1,4 @@
-import { PkceMethod } from '../pkce/pkce-method.type';
-import { Client } from './client.entity';
-import { User } from './user.entity';
+import { Consent } from './consent.entity';
 
 /**
  * OAuth 2.0 Authorization Code Entity.
@@ -10,26 +8,6 @@ export interface AuthorizationCode extends Record<string, any> {
    * Identifier of the Authorization Code.
    */
   readonly code: string;
-
-  /**
-   * Scopes granted to the Client.
-   */
-  readonly scopes: string[];
-
-  /**
-   * Redirect URI provided by the Client.
-   */
-  readonly redirectUri: string;
-
-  /**
-   * Code Challenge provided by the Client.
-   */
-  readonly codeChallenge: string;
-
-  /**
-   * PKCE Code Challenge Method used to verify the Code Challenge.
-   */
-  readonly codeChallengeMethod: PkceMethod;
 
   /**
    * Revocation status of the Authorization Code.
@@ -52,12 +30,7 @@ export interface AuthorizationCode extends Record<string, any> {
   readonly validAfter: Date;
 
   /**
-   * Client that requested the Authorization Code.
+   * Consent granted by the Authenticated User.
    */
-  readonly client: Client;
-
-  /**
-   * End User that granted authorization to the Client.
-   */
-  readonly user: User;
+  readonly consent: Consent;
 }

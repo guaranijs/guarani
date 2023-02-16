@@ -1,5 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
+import { PkceMethod } from './pkce-method.type';
 import { S256Pkce } from './S256.pkce';
 
 describe('S256 PKCE Method', () => {
@@ -14,7 +15,7 @@ describe('S256 PKCE Method', () => {
   });
 
   it('should have "S256" as its name.', () => {
-    expect(pkceMethod.name).toBe('S256');
+    expect(pkceMethod.name).toEqual<PkceMethod>('S256');
   });
 
   it('should return false when comparing a challenge to a different verifier.', () => {

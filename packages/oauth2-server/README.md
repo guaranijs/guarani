@@ -14,26 +14,26 @@ The currently implemented Middlewares are:
 
 - [x] ExpressJS
 
-### Providers
+### Backends
 
-The next level of integration comes in the form of Providers.
+The next level of integration comes in the form of Backends.
 
-A Provider is an implementation of the [AuthorizationServer](src/lib/authorization-server/authorization-server.ts) abstract class for the various web frameworks of NodeJS. It has helper methods for creating [OAuth 2.0 Requests](src/lib/http/request.ts) based on the request object of the web framework and for parsing an [OAuth 2.0 Response](src/lib/http/response.ts) into the response object of the web framework. It can also provide custom properties or methods for the specific web framework, such as the ExpressJS Router in the [ExpressProvider](src/lib/integration/express/express.provider.ts).
+A Backend is an extension of the [AuthorizationServer](src/lib/authorization-server.ts) class for the various web frameworks of NodeJS. It has helper methods for creating [OAuth 2.0 Requests](src/lib/http/http.request.ts) based on the request object of the web framework and for parsing an [OAuth 2.0 Response](src/lib/http/http.response.ts) into the response object of the web framework. It can also provide custom properties or methods for the specific web framework, such as the ExpressJS Router in the [ExpressBackend](src/lib/backends/express/express.backend.ts).
 
-Providers need to be decorated with the [AuthorizationServerMetadata](src/lib/metadata/authorization-server-metadata.ts) decorator.
+Providers need to be created with an [AuthorizationServerOptions](src/lib/metadata/authorization-server.options.ts) object.
 
-The currently implemented Providers are:
+The currently implemented Backends are:
 
 - [x] ExpressJS
 
-### Authorization Server Abstract Class
+### Authorization Server Class
 
-The next level of integration is represented by the [AuthorizationServer](src/lib/authorization-server/authorization-server.ts). It provides the barebones structure for a functioning implementation of the OAuth 2.0 Authorization Server by exposing the endpoints injected during its creation.
+The next level of integration is represented by the [AuthorizationServer](src/lib/authorization-server.ts). It provides the barebones structure for a functioning implementation of the OAuth 2.0 Authorization Server by exposing the endpoints injected during its creation.
 
-The `AuthorizationServer` class needs to be decorated with the [AuthorizationServerMetadata](src/lib/metadata/authorization-server-metadata.ts) decorator. This decorator receives an object containing the Configuration of the OAuth 2.0 Authorization Server and injects their implementations into the created instance.
+The `AuthorizationServerFactory` uses an implementation of the `AuthorizationServer` class to create an instance of the Authorization Server. The method [AuthorizationServerFactory.create()](src/lib/metadata/authorization-server.factory.ts#L85) needs to be supplied with an [AuthorizationServerOptions](src/lib/metadata/authorization-server.options.ts) object that defines the configuration parameters of the Authorization Server instance.
 
 ### Low level implementations
 
 The last level of integration is defined as using the low-level implementations directly into your code.
 
-Venturing into this level is a double-edged sword, since, on one hand, it provides a high level of freedom for customizing the behaviour of the OAuth 2.0 Authorization Server, but, on the other hand, it also means that there is a lot of room for misconfiguration, logic breaks and overall effort to put together all the pieces of the OAuth 2.0 Specification into one cohesive deployment.
+Venturing into this level is a double-edged sword, since, on one hand, it provides a high level of freedom for customizing the behaviour of the Authorization Server, but, on the other hand, it also means that there is a lot of room for misconfiguration, logic breaks and overall effort to put together all the pieces of the OAuth 2.0 Specification into one cohesive deployment.

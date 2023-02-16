@@ -5,6 +5,7 @@ import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
+import { ClientAuthentication } from './client-authentication.type';
 import { NoneClientAuthentication } from './none.client-authentication';
 
 describe('None Client Authentication Method', () => {
@@ -25,7 +26,7 @@ describe('None Client Authentication Method', () => {
 
   describe('name', () => {
     it('should have "none" as its name.', () => {
-      expect(clientAuthentication.name).toBe('none');
+      expect(clientAuthentication.name).toEqual<ClientAuthentication>('none');
     });
   });
 
@@ -63,7 +64,7 @@ describe('None Client Authentication Method', () => {
       };
     });
 
-    it('should reject when a client is not found.', async () => {
+    it('should throw when a client is not found.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -71,7 +72,7 @@ describe('None Client Authentication Method', () => {
       );
     });
 
-    it('should reject a client with a secret.', async () => {
+    it('should throw when requesting with a client with a secret.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{ id: 'client_id', secret: 'client_secret' });
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -81,7 +82,7 @@ describe('None Client Authentication Method', () => {
       );
     });
 
-    it('should reject a client not authorized to use this authentication method.', async () => {
+    it('should throw when requesting with a client not authorized to use this authentication method.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         authenticationMethod: <any>'unknown',

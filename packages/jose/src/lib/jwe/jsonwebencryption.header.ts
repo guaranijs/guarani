@@ -90,7 +90,7 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParameter
   /**
    * Additional JSON Web Encryption Header Parameters.
    */
-  readonly [parameter: string]: unknown;
+  [parameter: string]: unknown;
 
   /**
    * JSON Web Encryption Key Wrap Backend.

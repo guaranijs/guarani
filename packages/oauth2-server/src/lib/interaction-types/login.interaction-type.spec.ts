@@ -4,6 +4,7 @@ import { URLSearchParams } from 'url';
 
 import { Client } from '../entities/client.entity';
 import { Session } from '../entities/session.entity';
+import { User } from '../entities/user.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { AuthorizationRequest } from '../messages/authorization-request';
@@ -17,6 +18,7 @@ import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { InteractionType } from './interaction-type.type';
 import { LoginDecision } from './login-decision.type';
 import { LoginInteractionType } from './login.interaction-type';
 
@@ -53,7 +55,7 @@ describe('Login Interaction Type', () => {
 
   describe('name', () => {
     it('should have "login" as its name.', () => {
-      expect(interactionType.name).toBe('login');
+      expect(interactionType.name).toEqual<InteractionType>('login');
     });
   });
 
@@ -61,7 +63,7 @@ describe('Login Interaction Type', () => {
     let parameters: LoginContextInteractionRequest;
 
     beforeEach(() => {
-      parameters = { interaction_type: 'login', login_challenge: '' };
+      parameters = { interaction_type: 'login', login_challenge: 'login_challenge' };
     });
 
     it('should throw when the parameter "login_challenge" is not provided.', async () => {
@@ -110,7 +112,7 @@ describe('Login Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(sessionParameters);
 
-      await expect(interactionType.handleContext(parameters)).resolves.toMatchObject<LoginContextInteractionResponse>({
+      await expect(interactionType.handleContext(parameters)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: <Client>{ id: 'client_id' },
@@ -137,7 +139,7 @@ describe('Login Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(sessionParameters);
 
-      await expect(interactionType.handleContext(parameters)).resolves.toMatchObject<LoginContextInteractionResponse>({
+      await expect(interactionType.handleContext(parameters)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: <Client>{ id: 'client_id' },
@@ -150,7 +152,7 @@ describe('Login Interaction Type', () => {
     let parameters: LoginDecisionInteractionRequest;
 
     beforeEach(() => {
-      parameters = { interaction_type: 'login', login_challenge: '', decision: <LoginDecision>'' };
+      parameters = { interaction_type: 'login', login_challenge: 'login_challenge', decision: <LoginDecision>'' };
     });
 
     it('should throw when the parameter "login_challenge" is not provided.', async () => {
@@ -234,18 +236,18 @@ describe('Login Interaction Type', () => {
       };
 
       const session = <Session>{ id: 'session_id', parameters: sessionParameters };
+      const user = <User>{ id: 'user_id' };
 
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
-
-      userServiceMock.findOne.mockResolvedValueOnce({ id: 'user_id' });
+      userServiceMock.findOne.mockResolvedValueOnce(user);
 
       const urlParameters = new URLSearchParams(sessionParameters);
 
-      await expect(interactionType.handleDecision(parameters)).resolves.toMatchObject<LoginDecisionInteractionResponse>(
+      await expect(interactionType.handleDecision(parameters)).resolves.toStrictEqual<LoginDecisionInteractionResponse>(
         { redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}` }
       );
 
-      expect(session.user).toStrictEqual({ id: 'user_id' });
+      expect(session.user).toStrictEqual(user);
       expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
     });
 
@@ -286,7 +288,7 @@ describe('Login Interaction Type', () => {
         error_description: parameters.error_description,
       });
 
-      await expect(interactionType.handleDecision(parameters)).resolves.toMatchObject<LoginDecisionInteractionResponse>(
+      await expect(interactionType.handleDecision(parameters)).resolves.toStrictEqual<LoginDecisionInteractionResponse>(
         { redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}` }
       );
 

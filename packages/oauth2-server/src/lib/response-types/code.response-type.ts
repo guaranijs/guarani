@@ -71,15 +71,11 @@ export class CodeResponseType implements ResponseTypeInterface {
    * @returns Authorization Code Response.
    */
   public async handle(consent: Consent): Promise<CodeAuthorizationResponse> {
-    const { client, parameters, user } = consent;
+    const { parameters } = consent;
 
     this.checkParameters(<CodeAuthorizationRequest>parameters);
 
-    const authorizationCode = await this.authorizationCodeService.create(
-      <CodeAuthorizationRequest>parameters,
-      client,
-      user
-    );
+    const authorizationCode = await this.authorizationCodeService.create(consent);
 
     return { code: authorizationCode.code, state: parameters.state };
   }
@@ -93,12 +89,16 @@ export class CodeResponseType implements ResponseTypeInterface {
     const { code_challenge: codeChallenge, code_challenge_method: codeChallengeMethod } = parameters;
 
     if (typeof codeChallenge !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "code_challenge".' });
+      throw new InvalidRequestException({
+        description: 'Invalid parameter "code_challenge".',
+        state: parameters.state,
+      });
     }
 
     if (codeChallengeMethod !== undefined && !this.pkce.map((pkce) => pkce.name).includes(codeChallengeMethod)) {
       throw new InvalidRequestException({
         description: `Unsupported code_challenge_method "${codeChallengeMethod}".`,
+        state: parameters.state,
       });
     }
   }

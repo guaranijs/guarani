@@ -69,7 +69,10 @@ export class TokenResponseType implements ResponseTypeInterface {
     const { response_mode: responseMode } = parameters;
 
     if (responseMode === 'query') {
-      throw new InvalidRequestException({ description: 'Invalid response_mode "query" for response_type "token".' });
+      throw new InvalidRequestException({
+        description: 'Invalid response_mode "query" for response_type "token".',
+        state: parameters.state,
+      });
     }
   }
 }

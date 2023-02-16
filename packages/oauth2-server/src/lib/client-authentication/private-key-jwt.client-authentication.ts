@@ -9,7 +9,7 @@ import {
 
 import https from 'https';
 
-import { JwtBearerClientAssertion } from '../assertions/client-authentication/jwt-bearer.client-assertion';
+import { JwtBearerClientAssertion } from '../assertions/jwt-bearer.client-assertion';
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { ClientAuthentication } from './client-authentication.type';

@@ -73,7 +73,7 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParameters 
   /**
    * Additional JSON Web Signature Header Parameters.
    */
-  readonly [parameter: string]: unknown;
+  [parameter: string]: unknown;
 
   /**
    * JSON Web Signature Backend.

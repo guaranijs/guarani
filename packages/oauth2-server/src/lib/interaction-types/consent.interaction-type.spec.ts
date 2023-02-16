@@ -16,6 +16,7 @@ import { SETTINGS } from '../settings/settings.token';
 import { ConsentDecisionInteractionResponse } from './consent-decision.interaction-response';
 import { ConsentDecision } from './consent-decision.type';
 import { ConsentInteractionType } from './consent.interaction-type';
+import { InteractionType } from './interaction-type.type';
 
 describe('Consent Interaction Type', () => {
   let interactionType: ConsentInteractionType;
@@ -45,7 +46,7 @@ describe('Consent Interaction Type', () => {
 
   describe('name', () => {
     it('should have "consent" as its name.', () => {
-      expect(interactionType.name).toBe('consent');
+      expect(interactionType.name).toEqual<InteractionType>('consent');
     });
   });
 
@@ -53,7 +54,7 @@ describe('Consent Interaction Type', () => {
     let parameters: ConsentContextInteractionRequest;
 
     beforeEach(() => {
-      parameters = { interaction_type: 'consent', consent_challenge: '' };
+      parameters = { interaction_type: 'consent', consent_challenge: 'consent_challenge' };
     });
 
     it('should throw when the parameter "consent_challenge" is not provided.', async () => {
@@ -96,15 +97,15 @@ describe('Consent Interaction Type', () => {
       consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
         id: 'consent_id',
         scopes: <string[]>[],
+        loginChallenge: 'session_id',
         parameters: consentParameters,
         client: { id: 'client_id' },
         user: { id: 'user_id' },
-        session: { id: 'session_id' },
       });
 
       const urlParameters = new URLSearchParams(consentParameters);
 
-      await expect(interactionType.handleContext(parameters)).resolves.toMatchObject<ConsentContextInteractionResponse>(
+      await expect(interactionType.handleContext(parameters)).resolves.toStrictEqual<ConsentContextInteractionResponse>(
         {
           skip: false,
           requested_scope: 'foo bar baz',
@@ -122,7 +123,11 @@ describe('Consent Interaction Type', () => {
     let parameters: ConsentDecisionInteractionRequest;
 
     beforeEach(() => {
-      parameters = { interaction_type: 'consent', consent_challenge: '', decision: <ConsentDecision>'' };
+      parameters = {
+        interaction_type: 'consent',
+        consent_challenge: 'consent_challenge',
+        decision: <ConsentDecision>'',
+      };
     });
 
     it('should throw when the parameter "consent_challenge" is not provided.', async () => {
@@ -215,7 +220,7 @@ describe('Consent Interaction Type', () => {
 
       await expect(
         interactionType.handleDecision(parameters)
-      ).resolves.toMatchObject<ConsentDecisionInteractionResponse>({
+      ).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
@@ -260,7 +265,7 @@ describe('Consent Interaction Type', () => {
 
       await expect(
         interactionType.handleDecision(parameters)
-      ).resolves.toMatchObject<ConsentDecisionInteractionResponse>({
+      ).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,
       });
 

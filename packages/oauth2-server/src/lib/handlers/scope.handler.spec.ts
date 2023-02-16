@@ -22,18 +22,18 @@ describe('Scope Handler', () => {
   });
 
   describe('checkRequestedScope()', () => {
-    it('should not reject when not requesting any scope.', () => {
+    it('should not throw when not requesting any scope.', () => {
       expect(() => scopeHandler.checkRequestedScope()).not.toThrow();
     });
 
-    it('should reject when requesting an unsupported Scope.', () => {
+    it('should throw when requesting an unsupported Scope.', () => {
       expect(() => scopeHandler.checkRequestedScope('foo unknown qux')).toThrow(
         new InvalidScopeException({ description: 'Unsupported scope "unknown".' })
       );
     });
 
     it.each(['foo', 'bar baz', 'foo bar baz', 'foo baz bar'])(
-      'should not reject when requesting supported scopes.',
+      'should not throw when requesting supported scopes.',
       (scope) => {
         expect(() => scopeHandler.checkRequestedScope(scope)).not.toThrow();
       }

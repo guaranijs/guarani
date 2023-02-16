@@ -60,6 +60,9 @@ export { HttpMethod } from './lib/http/http-method.type';
 export { HttpRequest } from './lib/http/http.request';
 export { HttpResponse } from './lib/http/http.response';
 
+// ID Token
+export { IdTokenClaimsParameters } from './lib/id-token/id-token.claims.parameters';
+
 // Interaction Types
 export { ConsentDecisionInteractionResponse } from './lib/interaction-types/consent-decision.interaction-response';
 export { ConsentDecision } from './lib/interaction-types/consent-decision.type';

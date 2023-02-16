@@ -1,5 +1,6 @@
 import { getContainer } from '@guarani/di';
 
+import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { DiscoveryResponse } from '../messages/discovery-response';
@@ -8,6 +9,7 @@ import { SETTINGS } from '../settings/settings.token';
 import { DiscoveryEndpoint } from './discovery.endpoint';
 import { EndpointInterface } from './endpoint.interface';
 import { ENDPOINT } from './endpoint.token';
+import { Endpoint } from './endpoint.type';
 
 describe('Discovery Endpoint', () => {
   let endpoint: DiscoveryEndpoint;
@@ -27,6 +29,7 @@ describe('Discovery Endpoint', () => {
     jest.mocked<Partial<EndpointInterface>>({ name: 'authorization', path: '/oauth/authorize' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'interaction', path: '/oauth/interaction' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'introspection', path: '/oauth/introspect' }),
+    jest.mocked<Partial<EndpointInterface>>({ name: 'jwks', path: '/oauth/jwks' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'revocation', path: '/oauth/revoke' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'token', path: '/oauth/token' }),
   ];
@@ -44,19 +47,19 @@ describe('Discovery Endpoint', () => {
 
   describe('name', () => {
     it('should have "discovery" as its name.', () => {
-      expect(endpoint.name).toBe('discovery');
+      expect(endpoint.name).toEqual<Endpoint>('discovery');
     });
   });
 
   describe('path', () => {
     it('should have "/.well-known/openid-configuration" as its default path.', () => {
-      expect(endpoint.path).toBe('/.well-known/openid-configuration');
+      expect(endpoint.path).toEqual('/.well-known/openid-configuration');
     });
   });
 
   describe('httpMethods', () => {
     it('should have \'["GET"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual(['GET']);
+      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['GET']);
     });
   });
 
@@ -79,7 +82,7 @@ describe('Discovery Endpoint', () => {
         issuer: 'https://server.example.com',
         authorization_endpoint: 'https://server.example.com/oauth/authorize',
         token_endpoint: 'https://server.example.com/oauth/token',
-        // jwks_uri: '',
+        jwks_uri: 'https://server.example.com/oauth/jwks',
         scopes_supported: ['foo', 'bar', 'baz', 'qux'],
         response_types_supported: ['code'],
         response_modes_supported: ['query'],

@@ -1,7 +1,5 @@
 import { AuthorizationCode } from '../entities/authorization-code.entity';
-import { Client } from '../entities/client.entity';
-import { User } from '../entities/user.entity';
-import { CodeAuthorizationRequest } from '../messages/code.authorization-request';
+import { Consent } from '../entities/consent.entity';
 
 /**
  * Interface of the Authorization Code Service.
@@ -12,12 +10,10 @@ export interface AuthorizationCodeServiceInterface {
   /**
    * Creates an Authorization Code to be exchanged by the Client at the Token Endpoint for an Access Token.
    *
-   * @param parameters Parameters of the **Code** Response Type.
-   * @param client Client requesting authorization.
-   * @param user End User that granted authorization.
+   * @param consent Consent granted by the Authenticated User.
    * @returns Issued Authorization Code.
    */
-  create(parameters: CodeAuthorizationRequest, client: Client, user: User): Promise<AuthorizationCode>;
+  create(consent: Consent): Promise<AuthorizationCode>;
 
   /**
    * Searches the application's storage for an Authorization Code containing the provided Code.

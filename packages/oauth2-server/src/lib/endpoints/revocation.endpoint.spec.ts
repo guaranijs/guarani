@@ -12,6 +12,7 @@ import { UnsupportedTokenTypeException } from '../exceptions/unsupported-token-t
 import { GrantTypeInterface } from '../grant-types/grant-type.interface';
 import { GRANT_TYPE } from '../grant-types/grant-type.token';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
+import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
@@ -20,6 +21,7 @@ import { RefreshTokenServiceInterface } from '../services/refresh-token.service.
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { Endpoint } from './endpoint.type';
 import { RevocationEndpoint } from './revocation.endpoint';
 
 jest.mock('../handlers/client-authentication.handler');
@@ -69,25 +71,25 @@ describe('Revocation Endpoint', () => {
 
   describe('name', () => {
     it('should have "revocation" as its name.', () => {
-      expect(endpoint.name).toBe('revocation');
+      expect(endpoint.name).toEqual<Endpoint>('revocation');
     });
   });
 
   describe('path', () => {
     it('should have "/oauth/revoke" as its default path.', () => {
-      expect(endpoint.path).toBe('/oauth/revoke');
+      expect(endpoint.path).toEqual('/oauth/revoke');
     });
   });
 
   describe('httpMethods', () => {
     it('should have \'["POST"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual(['POST']);
+      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['POST']);
     });
   });
 
   describe('headers', () => {
     it('should have a default "headers" object for the http response.', () => {
-      expect(endpoint['headers']).toMatchObject<OutgoingHttpHeaders>({
+      expect(endpoint['headers']).toStrictEqual<OutgoingHttpHeaders>({
         'Cache-Control': 'no-store',
         Pragma: 'no-cache',
       });
@@ -97,14 +99,26 @@ describe('Revocation Endpoint', () => {
   describe('supportedTokenTypeHints', () => {
     it('should have only the type "refresh_token" when not supporting access token revocation.', () => {
       const opts = <Settings>{ enableAccessTokenRevocation: false };
-      const endpoint = new RevocationEndpoint(<any>{}, opts, <any>{}, <any>{}, grantTypesMocks);
+      const endpoint = new RevocationEndpoint(
+        clientAuthenticationHandlerMock,
+        opts,
+        refreshTokenServiceMock,
+        accessTokenServiceMock,
+        grantTypesMocks
+      );
 
       expect(endpoint['supportedTokenTypeHints']).toEqual(['refresh_token']);
     });
 
     it('should have the types ["refresh_token", "access_token"] when supporting access token revocation.', () => {
       const opts = <Settings>{ enableAccessTokenRevocation: true };
-      const endpoint = new RevocationEndpoint(<any>{}, opts, <any>{}, <any>{}, grantTypesMocks);
+      const endpoint = new RevocationEndpoint(
+        clientAuthenticationHandlerMock,
+        opts,
+        refreshTokenServiceMock,
+        accessTokenServiceMock,
+        grantTypesMocks
+      );
 
       expect(endpoint['supportedTokenTypeHints']).toEqual(['refresh_token', 'access_token']);
     });
@@ -112,14 +126,29 @@ describe('Revocation Endpoint', () => {
 
   describe('constructor', () => {
     it('should reject when the authorization server does not support refresh tokens.', () => {
-      expect(() => new RevocationEndpoint(<any>{}, <any>{}, <any>{}, <any>{}, [])).toThrow(Error);
-      expect(() => new RevocationEndpoint(<any>{}, <any>{}, <any>{}, undefined, <any>{})).toThrow(Error);
+      expect(() => {
+        return new RevocationEndpoint(
+          clientAuthenticationHandlerMock,
+          settings,
+          refreshTokenServiceMock,
+          accessTokenServiceMock,
+          <GrantTypeInterface[]>[]
+        );
+      }).toThrow(new Error('The Authorization Server does not support using Refresh Tokens.'));
     });
 
     it('should reject when enabling access token revocation without an access token service.', () => {
       const opts = <Settings>{ enableAccessTokenRevocation: true };
 
-      expect(() => new RevocationEndpoint(<any>{}, opts, <any>{}, undefined, grantTypesMocks)).toThrow();
+      expect(() => {
+        return new RevocationEndpoint(
+          clientAuthenticationHandlerMock,
+          opts,
+          refreshTokenServiceMock,
+          undefined,
+          grantTypesMocks
+        );
+      }).toThrow();
     });
   });
 
@@ -139,7 +168,7 @@ describe('Revocation Endpoint', () => {
       };
     });
 
-    it('should reject not providing a "token" parameter.', async () => {
+    it('should return an error response when not providing a "token" parameter.', async () => {
       delete request.body.token;
 
       const error = new InvalidRequestException({ description: 'Invalid parameter "token".' });
@@ -151,7 +180,7 @@ describe('Revocation Endpoint', () => {
       });
     });
 
-    it('should reject providing an unsupported "token_type_hint".', async () => {
+    it('should return an error response when providing an unsupported "token_type_hint".', async () => {
       request.body.token_type_hint = 'unknown';
 
       const error = new UnsupportedTokenTypeException({ description: 'Unsupported token_type_hint "unknown".' });
@@ -163,7 +192,7 @@ describe('Revocation Endpoint', () => {
       });
     });
 
-    it('should reject not using a client authentication method.', async () => {
+    it('should return an error response when not using a client authentication method.', async () => {
       const error = new InvalidClientException({ description: 'No Client Authentication Method detected.' });
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
@@ -175,7 +204,7 @@ describe('Revocation Endpoint', () => {
       });
     });
 
-    it('should reject using multiple client authentication methods.', async () => {
+    it('should return an error response when using multiple client authentication methods.', async () => {
       const error = new InvalidClientException({ description: 'Multiple Client Authentication Methods detected.' });
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
@@ -187,7 +216,7 @@ describe('Revocation Endpoint', () => {
       });
     });
 
-    it("should reject when the provided secret does not match the client's one.", async () => {
+    it("should return an error response when when the provided secret does not match the client's one.", async () => {
       const error = new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders({
         'WWW-Authenticate': 'Basic',
       });
@@ -294,7 +323,7 @@ describe('Revocation Endpoint', () => {
       expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
     });
 
-    it('should revoke an access token', async () => {
+    it('should revoke an access token.', async () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
 
       accessTokenServiceMock.findOne.mockResolvedValueOnce(<AccessToken>{
@@ -310,7 +339,7 @@ describe('Revocation Endpoint', () => {
       expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
     });
 
-    it('should revoke a refresh token', async () => {
+    it('should revoke a refresh token.', async () => {
       request.body.token = 'refresh_token';
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });

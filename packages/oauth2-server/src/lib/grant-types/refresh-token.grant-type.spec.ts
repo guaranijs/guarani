@@ -15,6 +15,7 @@ import { RefreshTokenServiceInterface } from '../services/refresh-token.service.
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { GrantType } from './grant-type.type';
 import { RefreshTokenGrantType } from './refresh-token.grant-type';
 
 describe('Refresh Token Grant Type', () => {
@@ -52,7 +53,7 @@ describe('Refresh Token Grant Type', () => {
 
   describe('name', () => {
     it('should have "refresh_token" as its name.', () => {
-      expect(grantType.name).toBe('refresh_token');
+      expect(grantType.name).toEqual<GrantType>('refresh_token');
     });
   });
 
@@ -63,7 +64,7 @@ describe('Refresh Token Grant Type', () => {
       parameters = { grant_type: 'refresh_token', refresh_token: 'refresh_token' };
     });
 
-    it('should reject not providing a "refresh_token" parameter.', async () => {
+    it('should throw when not providing a "refresh_token" parameter.', async () => {
       Reflect.deleteProperty(parameters, 'refresh_token');
 
       const client = <Client>{ id: 'client_id' };
@@ -73,7 +74,7 @@ describe('Refresh Token Grant Type', () => {
       );
     });
 
-    it('should reject requesting an unsupported scope.', async () => {
+    it('should throw when requesting an unsupported scope.', async () => {
       Reflect.set(parameters, 'scope', 'foo unknown bar');
 
       const client = <Client>{ id: 'client_id' };
@@ -83,7 +84,7 @@ describe('Refresh Token Grant Type', () => {
       );
     });
 
-    it('should reject when a refresh token is not found.', async () => {
+    it('should throw when a refresh token is not found.', async () => {
       const client = <Client>{ id: 'client_id' };
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
@@ -93,7 +94,7 @@ describe('Refresh Token Grant Type', () => {
       );
     });
 
-    it('should reject a mismathching client identifier.', async () => {
+    it('should throw when providing a mismathching client identifier.', async () => {
       const client = <Client>{ id: 'client_id' };
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
@@ -106,7 +107,7 @@ describe('Refresh Token Grant Type', () => {
       );
     });
 
-    it('should reject a refresh token not yet valid.', async () => {
+    it('should throw when a refresh token not yet valid.', async () => {
       const client = <Client>{ id: 'client_id' };
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
@@ -120,7 +121,7 @@ describe('Refresh Token Grant Type', () => {
       );
     });
 
-    it('should reject an expired refresh token.', async () => {
+    it('should throw when using an expired refresh token.', async () => {
       const client = <Client>{ id: 'client_id' };
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
@@ -134,7 +135,7 @@ describe('Refresh Token Grant Type', () => {
       );
     });
 
-    it('should reject a revoked refresh token.', async () => {
+    it('should throw when using a revoked refresh token.', async () => {
       const client = <Client>{ id: 'client_id' };
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
@@ -149,7 +150,7 @@ describe('Refresh Token Grant Type', () => {
       );
     });
 
-    it('should reject requesting a scope not previously granted.', async () => {
+    it('should throw when requesting a scope not previously granted.', async () => {
       Reflect.set(parameters, 'scope', 'foo bar baz');
 
       const client = <Client>{ id: 'client_id' };

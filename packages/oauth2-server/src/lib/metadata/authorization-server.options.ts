@@ -1,5 +1,5 @@
 import { Constructor } from '@guarani/di';
-import { JsonWebSignatureAlgorithm } from '@guarani/jose';
+import { JsonWebKeySetParameters, JsonWebSignatureAlgorithm } from '@guarani/jose';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { GrantType } from '../grant-types/grant-type.type';
@@ -37,6 +37,11 @@ export interface AuthorizationServerOptions {
   readonly clientAuthenticationMethods?: ClientAuthentication[];
 
   /**
+   * JSON Web Signature Algoithms for Client Authentication to be registered at the Authorization Server.
+   */
+  readonly clientAuthenticationSignatureAlgorithms?: JsonWebSignatureAlgorithm[];
+
+  /**
    * Grant Types to be registered at the Authorization Server.
    *
    * @default ['authorization_code']
@@ -65,9 +70,9 @@ export interface AuthorizationServerOptions {
   readonly pkceMethods?: PkceMethod[];
 
   /**
-   * JSON Web Signature Algoithms for Client Authentication to be registered at the Authorization Server.
+   * JSON Web Key Set of the Authorization Server.
    */
-  readonly clientAuthenticationSignatureAlgorithms?: JsonWebSignatureAlgorithm[];
+  readonly jwks?: JsonWebKeySetParameters;
 
   /**
    * Defines the Parameters of the User Interaction.

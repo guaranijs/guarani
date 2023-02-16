@@ -133,7 +133,7 @@ describe('Code ID Token Response Type', () => {
       );
     });
 
-    it('should create a code authorization response and an id token response.', async () => {
+    it('should create a code id token authorization response.', async () => {
       const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
 
       authorizationCodeServiceMock.create.mockResolvedValueOnce(<AuthorizationCode>{ code: 'authorization_code' });
@@ -144,7 +144,7 @@ describe('Code ID Token Response Type', () => {
       >({
         code: 'authorization_code',
         id_token: 'id_token',
-        state: 'client_state',
+        state: parameters.state,
       });
     });
   });

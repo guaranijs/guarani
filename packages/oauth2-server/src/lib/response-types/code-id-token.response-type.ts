@@ -1,4 +1,5 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
+
 import { Consent } from '../entities/consent.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';

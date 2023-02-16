@@ -9,6 +9,7 @@ import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { UnsupportedTokenTypeException } from '../exceptions/unsupported-token-type.exception';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
+import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { IntrospectionResponse } from '../messages/introspection-response';
@@ -18,6 +19,7 @@ import { RefreshTokenServiceInterface } from '../services/refresh-token.service.
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { Endpoint } from './endpoint.type';
 import { IntrospectionEndpoint } from './introspection.endpoint';
 
 jest.mock('../handlers/client-authentication.handler');
@@ -55,25 +57,25 @@ describe('Introspection Endpoint', () => {
 
   describe('name', () => {
     it('should have "introspection" as its name.', () => {
-      expect(endpoint.name).toBe('introspection');
+      expect(endpoint.name).toEqual<Endpoint>('introspection');
     });
   });
 
   describe('path', () => {
     it('should have "/oauth/introspect" as its default path.', () => {
-      expect(endpoint.path).toBe('/oauth/introspect');
+      expect(endpoint.path).toEqual('/oauth/introspect');
     });
   });
 
   describe('httpMethods', () => {
     it('should have \'["POST"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual(['POST']);
+      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['POST']);
     });
   });
 
   describe('headers', () => {
     it('should have a default "headers" object for the http response.', () => {
-      expect(endpoint['headers']).toMatchObject<OutgoingHttpHeaders>({
+      expect(endpoint['headers']).toStrictEqual<OutgoingHttpHeaders>({
         'Cache-Control': 'no-store',
         Pragma: 'no-cache',
       });
@@ -83,23 +85,36 @@ describe('Introspection Endpoint', () => {
   describe('supportedTokenTypeHints', () => {
     it('should have only the type "access_token" when not supporting refresh token introspection.', () => {
       const opts = <Settings>{ enableRefreshTokenIntrospection: false };
-      const endpoint = new IntrospectionEndpoint(<any>{}, opts, <any>{}, <any>{});
+      const endpoint = new IntrospectionEndpoint(
+        clientAuthenticationHandlerMock,
+        opts,
+        accessTokenServiceMock,
+        refreshTokenServiceMock
+      );
 
       expect(endpoint['supportedTokenTypeHints']).toEqual(['access_token']);
     });
 
     it('should have the types ["access_token", "refresh_token"] when supporting refresh token introspection.', () => {
       const opts = <Settings>{ enableRefreshTokenIntrospection: true };
-      const endpoint = new IntrospectionEndpoint(<any>{}, opts, <any>{}, <any>{});
+      const endpoint = new IntrospectionEndpoint(
+        clientAuthenticationHandlerMock,
+        opts,
+        accessTokenServiceMock,
+        refreshTokenServiceMock
+      );
 
       expect(endpoint['supportedTokenTypeHints']).toEqual(['access_token', 'refresh_token']);
     });
   });
 
   describe('constructor', () => {
-    it('should reject when enabling refresh token introspection without a refresh token service.', () => {
+    it('should throw when enabling refresh token introspection without a refresh token service.', () => {
       const opts = <Settings>{ enableRefreshTokenIntrospection: true };
-      expect(() => new IntrospectionEndpoint(<any>{}, opts, <any>{})).toThrow();
+
+      expect(() => new IntrospectionEndpoint(clientAuthenticationHandlerMock, opts, accessTokenServiceMock)).toThrow(
+        new Error('Cannot enable Refresh Token Introspection without a Refresh Token Service.')
+      );
     });
   });
 
@@ -125,7 +140,7 @@ describe('Introspection Endpoint', () => {
       jest.resetAllMocks();
     });
 
-    it('should reject not providing a "token" parameter.', async () => {
+    it('should return an error response when not providing a "token" parameter.', async () => {
       delete request.body.token;
 
       const error = new InvalidRequestException({ description: 'Invalid parameter "token".' });
@@ -137,7 +152,7 @@ describe('Introspection Endpoint', () => {
       });
     });
 
-    it('should reject providing an unsupported "token_type_hint".', async () => {
+    it('should return an error response when providing an unsupported "token_type_hint".', async () => {
       request.body.token_type_hint = 'unknown';
 
       const error = new UnsupportedTokenTypeException({ description: 'Unsupported token_type_hint "unknown".' });
@@ -149,7 +164,7 @@ describe('Introspection Endpoint', () => {
       });
     });
 
-    it('should reject not using a client authentication method.', async () => {
+    it('should return an error response when not using a client authentication method.', async () => {
       delete request.headers.authorization;
 
       const error = new InvalidClientException({ description: 'No Client Authentication Method detected.' });
@@ -163,7 +178,7 @@ describe('Introspection Endpoint', () => {
       });
     });
 
-    it('should reject using multiple client authentication methods.', async () => {
+    it('should return an error response when using multiple client authentication methods.', async () => {
       Object.assign(request.body, { client_id: 'client_id', client_secret: 'client_secret' });
 
       const error = new InvalidClientException({
@@ -179,7 +194,7 @@ describe('Introspection Endpoint', () => {
       });
     });
 
-    it("should reject when the provided secret does not match the client's one.", async () => {
+    it("should return an error response when the provided secret does not match the client's one.", async () => {
       const error = new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders({
         'WWW-Authenticate': 'Basic',
       });
@@ -201,7 +216,7 @@ describe('Introspection Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -220,7 +235,7 @@ describe('Introspection Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -237,7 +252,7 @@ describe('Introspection Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -258,7 +273,7 @@ describe('Introspection Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
 
       Reflect.set(settings, 'enableRefreshTokenIntrospection', true);
     });
@@ -274,7 +289,7 @@ describe('Introspection Endpoint', () => {
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
     });
 
     it('should return an inactive token response when the token is revoked.', async () => {
@@ -288,7 +303,7 @@ describe('Introspection Endpoint', () => {
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
     });
 
     it('should return an inactive token response when the token is not yet valid.', async () => {
@@ -303,7 +318,7 @@ describe('Introspection Endpoint', () => {
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
     });
 
     it('should return an inactive token response when the token is expired.', async () => {
@@ -319,7 +334,7 @@ describe('Introspection Endpoint', () => {
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
     });
 
     it('should return the metadata of the requested token.', async () => {

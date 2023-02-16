@@ -19,6 +19,7 @@ import { AUTHORIZATION_CODE_SERVICE } from '../services/authorization-code.servi
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { AuthorizationCodeGrantType } from './authorization-code.grant-type';
+import { GrantType } from './grant-type.type';
 
 jest.mock<IdTokenHandler>('../handlers/id-token.handler');
 
@@ -70,13 +71,21 @@ describe('Authorization Code Grant Type', () => {
 
   describe('name', () => {
     it('should have "authorization_code" as its name.', () => {
-      expect(grantType.name).toBe('authorization_code');
+      expect(grantType.name).toEqual<GrantType>('authorization_code');
     });
   });
 
   describe('constructor', () => {
-    it('should reject not providing any pkce methods.', () => {
-      expect(() => new AuthorizationCodeGrantType([], <any>{}, <any>{}, <any>{}, <any>{})).toThrow(TypeError);
+    it('should throw when not providing any pkce methods.', () => {
+      expect(() => {
+        return new AuthorizationCodeGrantType(
+          [],
+          authorizationCodeServiceMock,
+          accessTokenServiceMock,
+          refreshTokenServiceMock,
+          idTokenHandlerMock
+        );
+      }).toThrow(TypeError);
     });
   });
 

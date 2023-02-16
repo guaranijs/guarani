@@ -1,5 +1,6 @@
 import { getContainer } from '@guarani/di';
 
+import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { DiscoveryResponse } from '../messages/discovery-response';
@@ -8,6 +9,7 @@ import { SETTINGS } from '../settings/settings.token';
 import { DiscoveryEndpoint } from './discovery.endpoint';
 import { EndpointInterface } from './endpoint.interface';
 import { ENDPOINT } from './endpoint.token';
+import { Endpoint } from './endpoint.type';
 
 describe('Discovery Endpoint', () => {
   let endpoint: DiscoveryEndpoint;
@@ -45,19 +47,19 @@ describe('Discovery Endpoint', () => {
 
   describe('name', () => {
     it('should have "discovery" as its name.', () => {
-      expect(endpoint.name).toBe('discovery');
+      expect(endpoint.name).toEqual<Endpoint>('discovery');
     });
   });
 
   describe('path', () => {
     it('should have "/.well-known/openid-configuration" as its default path.', () => {
-      expect(endpoint.path).toBe('/.well-known/openid-configuration');
+      expect(endpoint.path).toEqual('/.well-known/openid-configuration');
     });
   });
 
   describe('httpMethods', () => {
     it('should have \'["GET"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual(['GET']);
+      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['GET']);
     });
   });
 

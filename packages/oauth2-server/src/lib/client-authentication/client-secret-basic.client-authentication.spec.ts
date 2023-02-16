@@ -8,6 +8,7 @@ import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
+import { ClientAuthentication } from './client-authentication.type';
 import { ClientSecretBasicClientAuthentication } from './client-secret-basic.client-authentication';
 
 describe('Client Secret Basic Authentication Method', () => {
@@ -28,13 +29,13 @@ describe('Client Secret Basic Authentication Method', () => {
 
   describe('name', () => {
     it('should have "client_secret_basic" as its name.', () => {
-      expect(clientAuthentication.name).toBe('client_secret_basic');
+      expect(clientAuthentication.name).toEqual<ClientAuthentication>('client_secret_basic');
     });
   });
 
   describe('headers', () => {
     it('should have a "WWW-Authenticate" header.', () => {
-      expect(clientAuthentication['headers']).toMatchObject<OutgoingHttpHeaders>({ 'WWW-Authenticate': 'Basic' });
+      expect(clientAuthentication['headers']).toStrictEqual<OutgoingHttpHeaders>({ 'WWW-Authenticate': 'Basic' });
     });
   });
 
@@ -70,7 +71,7 @@ describe('Client Secret Basic Authentication Method', () => {
       };
     });
 
-    it('should reject an authorization header without a token.', async () => {
+    it('should throw when providing an authorization header without a token.', async () => {
       request.headers.authorization = 'Basic';
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -78,7 +79,7 @@ describe('Client Secret Basic Authentication Method', () => {
       );
     });
 
-    it('should reject a token that is not base64 encoded.', async () => {
+    it('should throw when providing a token that is not base64 encoded.', async () => {
       request.headers.authorization = 'Basic $';
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -88,7 +89,7 @@ describe('Client Secret Basic Authentication Method', () => {
       );
     });
 
-    it('should reject a token that does not contain a semicolon.', async () => {
+    it('should throw when providing a token that does not contain a semicolon.', async () => {
       request.headers.authorization = 'Basic ' + Buffer.from('foobar', 'utf8').toString('base64');
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -98,7 +99,7 @@ describe('Client Secret Basic Authentication Method', () => {
       );
     });
 
-    it.each([':', ':secret'])('should reject a token with an empty "client_id".', async (credentials) => {
+    it.each([':', ':secret'])('should throw when providing a token with an empty "client_id".', async (credentials) => {
       request.headers.authorization = 'Basic ' + Buffer.from(credentials, 'utf8').toString('base64');
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -108,7 +109,7 @@ describe('Client Secret Basic Authentication Method', () => {
       );
     });
 
-    it('should reject a token with an empty "client_secret".', async () => {
+    it('should throw when providing a token with an empty "client_secret".', async () => {
       request.headers.authorization = 'Basic ' + Buffer.from('id:', 'utf8').toString('base64');
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -118,7 +119,7 @@ describe('Client Secret Basic Authentication Method', () => {
       );
     });
 
-    it('should reject when a client is not found.', async () => {
+    it('should throw when a client is not found.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -126,7 +127,7 @@ describe('Client Secret Basic Authentication Method', () => {
       );
     });
 
-    it('should reject when a client does not have a secret.', async () => {
+    it('should throw when a client does not have a secret.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{ id: 'client_id' });
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -136,7 +137,7 @@ describe('Client Secret Basic Authentication Method', () => {
       );
     });
 
-    it("should reject when the provided secret does not match the client's one.", async () => {
+    it("should throw when the provided secret does not match the client's one.", async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{ id: 'client_id', secret: 'invalid_secret' });
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -144,7 +145,7 @@ describe('Client Secret Basic Authentication Method', () => {
       );
     });
 
-    it('should reject a client with an expired secret.', async () => {
+    it('should throw when requesting with a client with an expired secret.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         secret: 'client_secret',
@@ -156,7 +157,7 @@ describe('Client Secret Basic Authentication Method', () => {
       );
     });
 
-    it('should reject a client not authorized to use this authentication method.', async () => {
+    it('should throw when requesting with a client not authorized to use this authentication method.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         secret: 'client_secret',

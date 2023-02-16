@@ -13,6 +13,7 @@ import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
 import { UnauthorizedClientException } from '../exceptions/unauthorized-client.exception';
 import { UnsupportedResponseTypeException } from '../exceptions/unsupported-response-type.exception';
 import { ScopeHandler } from '../handlers/scope.handler';
+import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
@@ -28,6 +29,7 @@ import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { AuthorizationEndpoint } from './authorization.endpoint';
+import { Endpoint } from './endpoint.type';
 
 describe('Authorization Endpoint', () => {
   let endpoint: AuthorizationEndpoint;
@@ -92,43 +94,53 @@ describe('Authorization Endpoint', () => {
 
   describe('name', () => {
     it('should have "authorization" as its name.', () => {
-      expect(endpoint.name).toBe('authorization');
+      expect(endpoint.name).toEqual<Endpoint>('authorization');
     });
   });
 
   describe('path', () => {
     it('should have "/oauth/authorize" as its default path.', () => {
-      expect(endpoint.path).toBe('/oauth/authorize');
+      expect(endpoint.path).toEqual('/oauth/authorize');
     });
   });
 
   describe('httpMethods', () => {
     it('should have \'["GET"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual(['GET']);
+      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['GET']);
     });
   });
 
   describe('consentUrl', () => {
     it('should be defined based on the provided user interaction.', () => {
-      expect(endpoint['consentUrl']).toBe('https://server.example.com/auth/consent');
+      expect(endpoint['consentUrl']).toEqual('https://server.example.com/auth/consent');
     });
   });
 
   describe('errorUrl', () => {
     it('should be defined based on the provided user interaction.', () => {
-      expect(endpoint['errorUrl']).toBe('https://server.example.com/oauth/error');
+      expect(endpoint['errorUrl']).toEqual('https://server.example.com/oauth/error');
     });
   });
 
   describe('loginUrl', () => {
     it('should be defined based on the provided user interaction.', () => {
-      expect(endpoint['loginUrl']).toBe('https://server.example.com/auth/login');
+      expect(endpoint['loginUrl']).toEqual('https://server.example.com/auth/login');
     });
   });
 
   describe('constructor', () => {
     it('should throw when not providing a user interaction object.', () => {
-      expect(() => new AuthorizationEndpoint(<any>{}, [], [], <any>{}, <any>{}, <any>{}, <any>{})).toThrow(TypeError);
+      expect(() => {
+        return new AuthorizationEndpoint(
+          <ScopeHandler>{},
+          responseTypesMocks,
+          responseModesMocks,
+          <Settings>{},
+          clientServiceMock,
+          sessionServiceMock,
+          consentServiceMock
+        );
+      }).toThrow(new TypeError('Missing User Interaction options.'));
     });
   });
 
@@ -155,12 +167,16 @@ describe('Authorization Endpoint', () => {
     it('should return an error response when not providing a "response_type" parameter.', async () => {
       delete request.query.response_type;
 
-      const error = new InvalidRequestException({ description: 'Invalid parameter "response_type".' });
-      const params = new URLSearchParams(error.toJSON());
+      const error = new InvalidRequestException({
+        description: 'Invalid parameter "response_type".',
+        state: 'client_state',
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -168,12 +184,16 @@ describe('Authorization Endpoint', () => {
     it('should return an error response when not providing a "client_id" parameter.', async () => {
       delete request.query.client_id;
 
-      const error = new InvalidRequestException({ description: 'Invalid parameter "client_id".' });
-      const params = new URLSearchParams(error.toJSON());
+      const error = new InvalidRequestException({
+        description: 'Invalid parameter "client_id".',
+        state: 'client_state',
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -181,12 +201,16 @@ describe('Authorization Endpoint', () => {
     it('should return an error response when not providing a "redirect_uri" parameter.', async () => {
       delete request.query.redirect_uri;
 
-      const error = new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".' });
-      const params = new URLSearchParams(error.toJSON());
+      const error = new InvalidRequestException({
+        description: 'Invalid parameter "redirect_uri".',
+        state: 'client_state',
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -194,12 +218,12 @@ describe('Authorization Endpoint', () => {
     it('should return an error response when not providing a "scope" parameter.', async () => {
       delete request.query.scope;
 
-      const error = new InvalidRequestException({ description: 'Invalid parameter "scope".' });
-      const params = new URLSearchParams(error.toJSON());
+      const error = new InvalidRequestException({ description: 'Invalid parameter "scope".', state: 'client_state' });
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -207,12 +231,12 @@ describe('Authorization Endpoint', () => {
     it('should return an error response when a client is not found.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 
-      const error = new InvalidClientException({ description: 'Invalid Client.' });
-      const params = new URLSearchParams(error.toJSON());
+      const error = new InvalidClientException({ description: 'Invalid Client.', state: 'client_state' });
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -222,12 +246,16 @@ describe('Authorization Endpoint', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{ id: 'client_id' });
 
-      const error = new UnsupportedResponseTypeException({ description: 'Unsupported response_type "unknown".' });
-      const params = new URLSearchParams(error.toJSON());
+      const error = new UnsupportedResponseTypeException({
+        description: 'Unsupported response_type "unknown".',
+        state: 'client_state',
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -237,13 +265,14 @@ describe('Authorization Endpoint', () => {
 
       const error = new UnauthorizedClientException({
         description: 'This Client is not allowed to request the response_type "code".',
+        state: 'client_state',
       });
 
-      const params = new URLSearchParams(error.toJSON());
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -255,12 +284,12 @@ describe('Authorization Endpoint', () => {
         responseTypes: ['code'],
       });
 
-      const error = new AccessDeniedException({ description: 'Invalid Redirect URI.' });
-      const params = new URLSearchParams(error.toJSON());
+      const error = new AccessDeniedException({ description: 'Invalid Redirect URI.', state: 'client_state' });
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -275,12 +304,12 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      const error = new InvalidScopeException({ description: 'Unsupported scope "unknown".' });
-      const params = new URLSearchParams(error.toJSON());
+      const error = new InvalidScopeException({ description: 'Unsupported scope "unknown".', state: 'client_state' });
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -295,12 +324,16 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      const error = new InvalidRequestException({ description: 'Unsupported response_mode "unknown".' });
-      const params = new URLSearchParams(error.toJSON());
+      const error = new InvalidRequestException({
+        description: 'Unsupported response_mode "unknown".',
+        state: 'client_state',
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${params.toString()}` },
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -317,12 +350,12 @@ describe('Authorization Endpoint', () => {
 
       sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id' });
 
-      const params = new URLSearchParams({ login_challenge: 'session_id' });
+      const parameters = new URLSearchParams({ login_challenge: 'session_id' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
         cookies: { 'guarani:session': 'session_id' },
-        headers: { Location: `https://server.example.com/auth/login?${params.toString()}` },
+        headers: { Location: `https://server.example.com/auth/login?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -338,12 +371,12 @@ describe('Authorization Endpoint', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(null);
       sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id' });
 
-      const params = new URLSearchParams({ login_challenge: 'session_id' });
+      const parameters = new URLSearchParams({ login_challenge: 'session_id' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
         cookies: { 'guarani:session': 'session_id' },
-        headers: { Location: `https://server.example.com/auth/login?${params.toString()}` },
+        headers: { Location: `https://server.example.com/auth/login?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -363,12 +396,12 @@ describe('Authorization Endpoint', () => {
 
       sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id' });
 
-      const params = new URLSearchParams({ login_challenge: 'session_id' });
+      const parameters = new URLSearchParams({ login_challenge: 'session_id' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
         cookies: { 'guarani:session': 'session_id' },
-        headers: { Location: `https://server.example.com/auth/login?${params.toString()}` },
+        headers: { Location: `https://server.example.com/auth/login?${parameters.toString()}` },
         statusCode: 303,
       });
 
@@ -386,12 +419,12 @@ describe('Authorization Endpoint', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id', user: null });
       sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id' });
 
-      const params = new URLSearchParams({ login_challenge: 'session_id' });
+      const parameters = new URLSearchParams({ login_challenge: 'session_id' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
         cookies: { 'guarani:session': 'session_id' },
-        headers: { Location: `https://server.example.com/auth/login?${params.toString()}` },
+        headers: { Location: `https://server.example.com/auth/login?${parameters.toString()}` },
         statusCode: 303,
       });
 
@@ -422,13 +455,14 @@ describe('Authorization Endpoint', () => {
 
       const error = new InvalidRequestException({
         description: 'One or more parameters changed since the initial request.',
+        state: 'client_state',
       });
 
-      const params = new URLSearchParams(error.toJSON());
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://example.com/callback?${params.toString()}` },
+        headers: { Location: `https://example.com/callback?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -451,12 +485,12 @@ describe('Authorization Endpoint', () => {
 
       consentServiceMock.create.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
 
-      const params = new URLSearchParams({ consent_challenge: 'consent_id' });
+      const parameters = new URLSearchParams({ consent_challenge: 'consent_id' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
         cookies: { 'guarani:consent': 'consent_id' },
-        headers: { Location: `https://server.example.com/auth/consent?${params.toString()}` },
+        headers: { Location: `https://server.example.com/auth/consent?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -478,12 +512,12 @@ describe('Authorization Endpoint', () => {
       consentServiceMock.findOne.mockResolvedValueOnce(null);
       consentServiceMock.create.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
 
-      const params = new URLSearchParams({ consent_challenge: 'consent_id' });
+      const parameters = new URLSearchParams({ consent_challenge: 'consent_id' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
         cookies: { 'guarani:consent': 'consent_id' },
-        headers: { Location: `https://server.example.com/auth/consent?${params.toString()}` },
+        headers: { Location: `https://server.example.com/auth/consent?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -509,12 +543,12 @@ describe('Authorization Endpoint', () => {
 
       consentServiceMock.create.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
 
-      const params = new URLSearchParams({ consent_challenge: 'consent_id' });
+      const parameters = new URLSearchParams({ consent_challenge: 'consent_id' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
         cookies: { 'guarani:consent': 'consent_id' },
-        headers: { Location: `https://server.example.com/auth/consent?${params.toString()}` },
+        headers: { Location: `https://server.example.com/auth/consent?${parameters.toString()}` },
         statusCode: 303,
       });
 
@@ -531,7 +565,11 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id', user: { id: 'user_id' } });
+      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
+        id: 'session_id',
+        parameters: { ...request.query, state: 'client_state' },
+        user: { id: 'user_id' },
+      });
 
       consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
         id: 'consent_id',
@@ -546,13 +584,14 @@ describe('Authorization Endpoint', () => {
 
       const error = new InvalidRequestException({
         description: 'One or more parameters changed since the initial request.',
+        state: 'client_state',
       });
 
-      const params = new URLSearchParams(error.toJSON());
+      const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: `https://example.com/callback?${params.toString()}` },
+        headers: { Location: `https://example.com/callback?${parameters.toString()}` },
         statusCode: 303,
       });
     });
@@ -573,7 +612,7 @@ describe('Authorization Endpoint', () => {
 
       consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
 
-      responseTypesMocks[0]!.handle.mockResolvedValueOnce({ code: 'code', state: request.query.state });
+      responseTypesMocks[0]!.handle.mockResolvedValueOnce({ code: 'code', state: 'client_state' });
 
       responseModesMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
         const url = new URL(redirectUri);

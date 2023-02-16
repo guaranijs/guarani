@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
@@ -11,11 +12,13 @@ import { CodeAuthorizationResponse } from '../messages/code.authorization-respon
 import { TokenAuthorizationResponse } from '../messages/token.authorization-response';
 import { PkceInterface } from '../pkce/pkce.interface';
 import { PKCE } from '../pkce/pkce.token';
+import { ResponseMode } from '../response-modes/response-mode.type';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { AuthorizationCodeServiceInterface } from '../services/authorization-code.service.interface';
 import { AUTHORIZATION_CODE_SERVICE } from '../services/authorization-code.service.token';
 import { CodeTokenResponseType } from './code-token.response-type';
+import { ResponseType } from './response-type.type';
 
 describe('Code Token Response Type', () => {
   let responseType: CodeTokenResponseType;
@@ -49,7 +52,7 @@ describe('Code Token Response Type', () => {
   });
 
   describe('constructor', () => {
-    it('should reject not providing any pkce methods.', () => {
+    it('should throw when not providing any pkce methods.', () => {
       expect(() => new CodeTokenResponseType(accessTokenServiceMock, authorizationCodeServiceMock, [])).toThrow(
         new TypeError('Missing PKCE Methods for response_type "code token".')
       );
@@ -58,13 +61,13 @@ describe('Code Token Response Type', () => {
 
   describe('name', () => {
     it('should have "code token" as its name.', () => {
-      expect(responseType.name).toBe('code token');
+      expect(responseType.name).toEqual<ResponseType>('code token');
     });
   });
 
   describe('defaultResponseMode', () => {
     it('should have "fragment" as its default response mode.', () => {
-      expect(responseType.defaultResponseMode).toBe('fragment');
+      expect(responseType.defaultResponseMode).toEqual<ResponseMode>('fragment');
     });
   });
 
@@ -151,7 +154,7 @@ describe('Code Token Response Type', () => {
         scope: 'foo bar',
         refresh_token: undefined,
         code: 'authorization_code',
-        state: 'client_state',
+        state: parameters.state,
       });
     });
   });

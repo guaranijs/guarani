@@ -134,21 +134,24 @@ export class AuthorizationEndpoint implements EndpointInterface {
     try {
       this.checkParameters(parameters);
 
-      client = await this.getClient(parameters.client_id);
-      responseType = this.getResponseType(parameters.response_type);
+      client = await this.getClient(parameters.client_id, parameters.state);
+      responseType = this.getResponseType(parameters.response_type, parameters.state);
 
-      this.checkClientResponseType(client, responseType);
-      this.checkClientRedirectUri(client, parameters.redirect_uri);
-      this.checkClientScope(client, parameters.scope);
+      this.checkClientResponseType(client, responseType, parameters.state);
+      this.checkClientRedirectUri(client, parameters.redirect_uri, parameters.state);
+      this.checkClientScope(client, parameters.scope, parameters.state);
 
-      responseMode = this.getResponseMode(parameters.response_mode ?? responseType.defaultResponseMode);
+      responseMode = this.getResponseMode(
+        parameters.response_mode ?? responseType.defaultResponseMode,
+        parameters.state
+      );
     } catch (exc: unknown) {
       let error: OAuth2Exception;
 
       if (exc instanceof OAuth2Exception) {
         error = exc;
       } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
+        error = new ServerErrorException({ description: 'An unexpected error occurred.', state: parameters.state });
         error.cause = exc;
       }
 
@@ -183,7 +186,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
       if (exc instanceof OAuth2Exception) {
         error = exc;
       } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
+        error = new ServerErrorException({ description: 'An unexpected error occurred.', state: parameters.state });
         error.cause = exc;
       }
 
@@ -200,19 +203,19 @@ export class AuthorizationEndpoint implements EndpointInterface {
     const { response_type: responseType, client_id: clientId, redirect_uri: redirectUri, scope } = parameters;
 
     if (typeof responseType !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "response_type".' });
+      throw new InvalidRequestException({ description: 'Invalid parameter "response_type".', state: parameters.state });
     }
 
     if (typeof clientId !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "client_id".' });
+      throw new InvalidRequestException({ description: 'Invalid parameter "client_id".', state: parameters.state });
     }
 
     if (typeof redirectUri !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".' });
+      throw new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".', state: parameters.state });
     }
 
     if (typeof scope !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "scope".' });
+      throw new InvalidRequestException({ description: 'Invalid parameter "scope".', state: parameters.state });
     }
   }
 
@@ -220,13 +223,14 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * Fetches a Client from the application's storage based on the provided Client Identifier.
    *
    * @param clientId Identifier of the Client.
+   * @param state Client State prior to the Authorization Request.
    * @returns Client based on the provided Client Identifier.
    */
-  private async getClient(clientId: string): Promise<Client> {
+  private async getClient(clientId: string, state?: string): Promise<Client> {
     const client = await this.clientService.findOne(clientId);
 
     if (client === null) {
-      throw new InvalidClientException({ description: 'Invalid Client.' });
+      throw new InvalidClientException({ description: 'Invalid Client.', state });
     }
 
     return client;
@@ -236,13 +240,14 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * Retrieves the Response Type based on the **response_type** requested by the Client.
    *
    * @param name Response Type requested by the Client.
+   * @param state Client State prior to the Authorization Request.
    * @returns Response Type.
    */
-  private getResponseType(name: ResponseType): ResponseTypeInterface {
+  private getResponseType(name: ResponseType, state?: string): ResponseTypeInterface {
     const responseType = this.responseTypes.find((responseType) => responseType.name === name);
 
     if (responseType === undefined) {
-      throw new UnsupportedResponseTypeException({ description: `Unsupported response_type "${name}".` });
+      throw new UnsupportedResponseTypeException({ description: `Unsupported response_type "${name}".`, state });
     }
 
     return responseType;
@@ -253,11 +258,13 @@ export class AuthorizationEndpoint implements EndpointInterface {
    *
    * @param client Client of the Request.
    * @param responseType Response Type requested by the Client.
+   * @param state Client State prior to the Authorization Request.
    */
-  private checkClientResponseType(client: Client, responseType: ResponseTypeInterface): void {
+  private checkClientResponseType(client: Client, responseType: ResponseTypeInterface, state?: string): void {
     if (!client.responseTypes.includes(responseType.name)) {
       throw new UnauthorizedClientException({
         description: `This Client is not allowed to request the response_type "${responseType.name}".`,
+        state,
       });
     }
   }
@@ -267,10 +274,11 @@ export class AuthorizationEndpoint implements EndpointInterface {
    *
    * @param client Client of the Request.
    * @param redirectUri Redirect URI provided by the Client.
+   * @param state Client State prior to the Authorization Request.
    */
-  private checkClientRedirectUri(client: Client, redirectUri: string): void {
+  private checkClientRedirectUri(client: Client, redirectUri: string, state?: string): void {
     if (!client.redirectUris.includes(redirectUri)) {
-      throw new AccessDeniedException({ description: 'Invalid Redirect URI.' });
+      throw new AccessDeniedException({ description: 'Invalid Redirect URI.', state });
     }
   }
 
@@ -279,14 +287,16 @@ export class AuthorizationEndpoint implements EndpointInterface {
    *
    * @param client Client of the Request.
    * @param scope Scope requested by the Client.
+   * @param state Client State prior to the Authorization Request.
    */
-  private checkClientScope(client: Client, scope: string): void {
-    this.scopeHandler.checkRequestedScope(scope);
+  private checkClientScope(client: Client, scope: string, state?: string): void {
+    this.scopeHandler.checkRequestedScope(scope, state);
 
     scope.split(' ').forEach((requestedScope) => {
       if (!client.scopes.includes(requestedScope)) {
         throw new AccessDeniedException({
           description: `The Client is not allowed to request the scope "${requestedScope}".`,
+          state,
         });
       }
     });
@@ -296,13 +306,14 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * Retrieves the Response Mode based on the **response_mode** requested by the Client.
    *
    * @param name Response Mode requested by the Client.
+   * @param state Client State prior to the Authorization Request.
    * @returns Response Mode.
    */
-  private getResponseMode(name: ResponseMode): ResponseModeInterface {
+  private getResponseMode(name: ResponseMode, state?: string): ResponseModeInterface {
     const responseMode = this.responseModes.find((responseMode) => responseMode.name === name);
 
     if (responseMode === undefined) {
-      throw new InvalidRequestException({ description: `Unsupported response_mode "${name}".` });
+      throw new InvalidRequestException({ description: `Unsupported response_mode "${name}".`, state });
     }
 
     return responseMode;
@@ -386,7 +397,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
     sessionParameters: AuthorizationRequest
   ): void {
     if (!isDeepStrictEqual(requestParameters, sessionParameters)) {
-      throw new InvalidRequestException({ description: 'One or more parameters changed since the initial request.' });
+      throw new InvalidRequestException({
+        description: 'One or more parameters changed since the initial request.',
+        state: sessionParameters.state,
+      });
     }
   }
 
@@ -447,7 +461,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
     consentParameters: AuthorizationRequest
   ): void {
     if (!isDeepStrictEqual(requestParameters, consentParameters)) {
-      throw new InvalidRequestException({ description: 'One or more parameters changed since the initial request.' });
+      throw new InvalidRequestException({
+        description: 'One or more parameters changed since the initial request.',
+        state: consentParameters.state,
+      });
     }
   }
 }

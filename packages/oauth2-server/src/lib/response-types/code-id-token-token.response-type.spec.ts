@@ -149,7 +149,7 @@ describe('Code ID Token Token Response Type', () => {
       );
     });
 
-    it('should create a code authorization response and an id token response.', async () => {
+    it('should create a code id token token authorization response.', async () => {
       const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
 
       accessTokenServiceMock.create.mockImplementationOnce(async (scopes) => {

@@ -17,6 +17,7 @@ import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { GrantType } from './grant-type.type';
 import { ResourceOwnerPasswordCredentialsGrantType } from './resource-owner-password-credentials.grant-type';
 
 describe('Resource Owner Password Credentials Grant Type', () => {
@@ -57,15 +58,21 @@ describe('Resource Owner Password Credentials Grant Type', () => {
     grantType = container.resolve(ResourceOwnerPasswordCredentialsGrantType);
   });
 
-  describe('name', () => {
-    it('should have "password" as its name.', () => {
-      expect(grantType.name).toBe('password');
+  describe('constructor', () => {
+    it(`should reject not implementing user service's "findByResourceOwnerCredentials()".`, () => {
+      expect(() => {
+        return new ResourceOwnerPasswordCredentialsGrantType(<ScopeHandler>{}, accessTokenServiceMock, <any>{});
+      }).toThrow(
+        new TypeError(
+          'Missing implementation of required method "UserServiceInterface.findByResourceOwnerCredentials".'
+        )
+      );
     });
   });
 
-  describe('constructor', () => {
-    it(`should reject not implementing user service's "findByResourceOwnerCredentials()".`, () => {
-      expect(() => new ResourceOwnerPasswordCredentialsGrantType(<any>{}, <any>{}, <any>{})).toThrow(TypeError);
+  describe('name', () => {
+    it('should have "password" as its name.', () => {
+      expect(grantType.name).toEqual<GrantType>('password');
     });
   });
 
@@ -76,7 +83,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
       parameters = { grant_type: 'password', username: 'username', password: 'password' };
     });
 
-    it('should reject not providing a "username" parameter.', async () => {
+    it('should throw when not providing a "username" parameter.', async () => {
       Reflect.deleteProperty(parameters, 'username');
 
       const client = <Client>{
@@ -90,7 +97,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
       );
     });
 
-    it('should reject not providing a "password" parameter.', async () => {
+    it('should throw when not providing a "password" parameter.', async () => {
       Reflect.deleteProperty(parameters, 'password');
 
       const client = <Client>{
@@ -104,7 +111,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
       );
     });
 
-    it('should reject requesting an unsupported scope.', async () => {
+    it('should throw when requesting an unsupported scope.', async () => {
       Reflect.set(parameters, 'scope', 'foo unknown bar');
 
       const client = <Client>{
@@ -118,7 +125,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
       );
     });
 
-    it('should reject when an end-user is not found.', async () => {
+    it('should throw when an end-user is not found.', async () => {
       const client = <Client>{
         id: 'client_id',
         grantTypes: ['password', 'refresh_token'],

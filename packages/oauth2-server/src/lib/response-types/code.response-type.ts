@@ -89,12 +89,16 @@ export class CodeResponseType implements ResponseTypeInterface {
     const { code_challenge: codeChallenge, code_challenge_method: codeChallengeMethod } = parameters;
 
     if (typeof codeChallenge !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "code_challenge".' });
+      throw new InvalidRequestException({
+        description: 'Invalid parameter "code_challenge".',
+        state: parameters.state,
+      });
     }
 
     if (codeChallengeMethod !== undefined && !this.pkce.map((pkce) => pkce.name).includes(codeChallengeMethod)) {
       throw new InvalidRequestException({
         description: `Unsupported code_challenge_method "${codeChallengeMethod}".`,
+        state: parameters.state,
       });
     }
   }

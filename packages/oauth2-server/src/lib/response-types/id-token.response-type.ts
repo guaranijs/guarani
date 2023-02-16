@@ -71,10 +71,7 @@ export class IdTokenResponseType implements ResponseTypeInterface {
     const { nonce, response_mode: responseMode } = parameters;
 
     if (nonce === undefined) {
-      throw new InvalidRequestException({
-        description: 'Missing required parameter "nonce".',
-        state: parameters.state,
-      });
+      throw new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: parameters.state });
     }
 
     if (responseMode === 'query') {

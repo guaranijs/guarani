@@ -25,6 +25,7 @@ import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { GrantType } from './grant-type.type';
 import { JwtBearerGrantType } from './jwt-bearer.grant-type';
 
 const now = Date.now();
@@ -108,7 +109,7 @@ describe('JWT Bearer Grant Type', () => {
 
   describe('name', () => {
     it('should have "urn:ietf:params:oauth:grant-type:jwt-bearer" as its value.', () => {
-      expect(grantType.name).toBe('urn:ietf:params:oauth:grant-type:jwt-bearer');
+      expect(grantType.name).toEqual<GrantType>('urn:ietf:params:oauth:grant-type:jwt-bearer');
     });
   });
 
@@ -339,11 +340,12 @@ describe('JWT Bearer Grant Type', () => {
       Reflect.set(parameters, 'assertion', assertion);
       Reflect.set(parameters, 'scope', 'foo qux baz');
 
-      await expect(grantType.handle(parameters, client)).resolves.toMatchObject<TokenResponse>({
+      await expect(grantType.handle(parameters, client)).resolves.toStrictEqual<TokenResponse>({
         access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo baz',
+        refresh_token: undefined,
       });
 
       expect(accessTokenServiceMock.create).toHaveBeenCalledTimes(1);
@@ -368,11 +370,12 @@ describe('JWT Bearer Grant Type', () => {
       Reflect.set(parameters, 'assertion', assertion);
       Reflect.set(parameters, 'scope', 'baz foo');
 
-      await expect(grantType.handle(parameters, client)).resolves.toMatchObject<TokenResponse>({
+      await expect(grantType.handle(parameters, client)).resolves.toStrictEqual<TokenResponse>({
         access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'baz foo',
+        refresh_token: undefined,
       });
 
       expect(accessTokenServiceMock.create).toHaveBeenCalledTimes(1);
@@ -396,11 +399,12 @@ describe('JWT Bearer Grant Type', () => {
 
       Reflect.set(parameters, 'assertion', assertion);
 
-      await expect(grantType.handle(parameters, client)).resolves.toMatchObject<TokenResponse>({
+      await expect(grantType.handle(parameters, client)).resolves.toStrictEqual<TokenResponse>({
         access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo bar baz',
+        refresh_token: undefined,
       });
 
       expect(accessTokenServiceMock.create).toHaveBeenCalledTimes(1);

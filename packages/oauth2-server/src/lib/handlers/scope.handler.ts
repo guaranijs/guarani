@@ -21,15 +21,16 @@ export class ScopeHandler {
    * Checks if the scope requested by the Client is supported by the Authorization Server.
    *
    * @param scope Scope requested by the Client.
+   * @param state Client State prior to the Authorization Request.
    */
-  public checkRequestedScope(scope?: string): void {
+  public checkRequestedScope(scope?: string, state?: string): void {
     if (scope === undefined) {
       return;
     }
 
     scope.split(' ').forEach((requestedScope) => {
       if (!this.settings.scopes.includes(requestedScope)) {
-        throw new InvalidScopeException({ description: `Unsupported scope "${requestedScope}".` });
+        throw new InvalidScopeException({ description: `Unsupported scope "${requestedScope}".`, state });
       }
     });
   }

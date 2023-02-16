@@ -1,4 +1,5 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
+
 import { Consent } from '../entities/consent.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { CodeAuthorizationRequest } from '../messages/code.authorization-request';
@@ -91,24 +92,26 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
       code_challenge: codeChallenge,
       code_challenge_method: codeChallengeMethod,
       response_mode: responseMode,
-      state,
     } = parameters;
 
     if (typeof codeChallenge !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state });
+      throw new InvalidRequestException({
+        description: 'Invalid parameter "code_challenge".',
+        state: parameters.state,
+      });
     }
 
     if (codeChallengeMethod !== undefined && !this.pkce.map((pkce) => pkce.name).includes(codeChallengeMethod)) {
       throw new InvalidRequestException({
         description: `Unsupported code_challenge_method "${codeChallengeMethod}".`,
-        state,
+        state: parameters.state,
       });
     }
 
     if (responseMode === 'query') {
       throw new InvalidRequestException({
         description: 'Invalid response_mode "query" for response_type "code token".',
-        state,
+        state: parameters.state,
       });
     }
   }

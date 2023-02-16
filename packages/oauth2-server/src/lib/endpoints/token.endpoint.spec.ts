@@ -11,9 +11,11 @@ import { UnsupportedGrantTypeException } from '../exceptions/unsupported-grant-t
 import { GrantTypeInterface } from '../grant-types/grant-type.interface';
 import { GRANT_TYPE } from '../grant-types/grant-type.token';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
+import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { TokenResponse } from '../messages/token-response';
+import { Endpoint } from './endpoint.type';
 import { TokenEndpoint } from './token.endpoint';
 
 jest.mock('../handlers/client-authentication.handler');
@@ -41,25 +43,25 @@ describe('Token Endpoint', () => {
 
   describe('name', () => {
     it('should have "token" as its name.', () => {
-      expect(endpoint.name).toBe('token');
+      expect(endpoint.name).toEqual<Endpoint>('token');
     });
   });
 
   describe('path', () => {
     it('should have "/oauth/token" as its default path.', () => {
-      expect(endpoint.path).toBe('/oauth/token');
+      expect(endpoint.path).toEqual('/oauth/token');
     });
   });
 
   describe('httpMethods', () => {
     it('should have \'["POST"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual(['POST']);
+      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['POST']);
     });
   });
 
   describe('headers', () => {
     it('should have a default "headers" object for the http response.', () => {
-      expect(endpoint['headers']).toMatchObject<OutgoingHttpHeaders>({
+      expect(endpoint['headers']).toStrictEqual<OutgoingHttpHeaders>({
         'Cache-Control': 'no-store',
         Pragma: 'no-cache',
       });
@@ -80,7 +82,7 @@ describe('Token Endpoint', () => {
       };
     });
 
-    it('should throw when not providing a "grant_type" parameter.', async () => {
+    it('should return an error response when not providing a "grant_type" parameter.', async () => {
       delete request.body.grant_type;
 
       const error = new InvalidRequestException({ description: 'Invalid parameter "grant_type".' });
@@ -92,7 +94,7 @@ describe('Token Endpoint', () => {
       });
     });
 
-    it('should throw when requesting an unsupported grant type.', async () => {
+    it('should return an error response when requesting an unsupported grant type.', async () => {
       request.body.grant_type = 'unknown';
 
       const error = new UnsupportedGrantTypeException({ description: 'Unsupported grant_type "unknown".' });
@@ -104,7 +106,7 @@ describe('Token Endpoint', () => {
       });
     });
 
-    it('should throw when not using a client authentication method.', async () => {
+    it('should return an error response when not using a client authentication method.', async () => {
       const error = new InvalidClientException({ description: 'No Client Authentication Method detected.' });
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValue(error);
@@ -116,10 +118,8 @@ describe('Token Endpoint', () => {
       });
     });
 
-    it('should throw when using multiple client authentication methods.', async () => {
-      const error = new InvalidClientException({
-        description: 'Multiple Client Authentication Methods detected.',
-      });
+    it('should return an error response when using multiple client authentication methods.', async () => {
+      const error = new InvalidClientException({ description: 'Multiple Client Authentication Methods detected.' });
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValue(error);
 
@@ -130,7 +130,7 @@ describe('Token Endpoint', () => {
       });
     });
 
-    it("should throw when the provided secret does not match the client's one.", async () => {
+    it("should return an error response when the provided secret does not match the client's one.", async () => {
       const error = new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders({
         'WWW-Authenticate': 'Basic',
       });
@@ -144,7 +144,7 @@ describe('Token Endpoint', () => {
       });
     });
 
-    it('should throw when a client requests a grant type not allowed to itself.', async () => {
+    it('should return an error response when a client requests a grant type not allowed to itself.', async () => {
       const error = new UnauthorizedClientException({
         description: 'This Client is not allowed to request the grant_type "authorization_code".',
       });

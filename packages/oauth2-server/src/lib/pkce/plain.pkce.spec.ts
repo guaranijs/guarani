@@ -1,5 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
+import { PkceMethod } from './pkce-method.type';
 import { PlainPkce } from './plain.pkce';
 
 describe('Plain PKCE Method', () => {
@@ -14,7 +15,7 @@ describe('Plain PKCE Method', () => {
   });
 
   it('should have "plain" as its name.', () => {
-    expect(pkceMethod.name).toBe('plain');
+    expect(pkceMethod.name).toEqual<PkceMethod>('plain');
   });
 
   it('should return false when comparing two different strings.', () => {

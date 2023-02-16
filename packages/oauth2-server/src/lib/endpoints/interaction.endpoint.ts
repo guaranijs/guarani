@@ -11,6 +11,7 @@ import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
+import { InteractionType } from '../interaction-types/interaction-type.type';
 import { InteractionRequest } from '../messages/interaction-request';
 import { EndpointInterface } from './endpoint.interface';
 
@@ -64,15 +65,15 @@ export class InteractionEndpoint implements EndpointInterface {
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
     try {
-      switch (request.method.toLowerCase()) {
-        case 'get':
+      switch (request.method) {
+        case 'GET':
           return await this.handleContext(request);
 
-        case 'post':
+        case 'POST':
           return await this.handleDecision(request);
 
         default:
-          throw new TypeError(`Unsupported Http Method "${request.method.toUpperCase()}" for Interaction Endpoint.`);
+          throw new TypeError(`Unsupported Http Method "${request.method}" for Interaction Endpoint.`);
       }
     } catch (exc: unknown) {
       let error: OAuth2Exception;
@@ -145,7 +146,7 @@ export class InteractionEndpoint implements EndpointInterface {
    * @param name Interaction Type requested by the Client.
    * @returns Interaction Type.
    */
-  private getInteractionType(name: string): InteractionTypeInterface {
+  private getInteractionType(name: InteractionType): InteractionTypeInterface {
     const interactionType = this.interactionTypes.find((interactionType) => interactionType.name === name);
 
     if (interactionType === undefined) {

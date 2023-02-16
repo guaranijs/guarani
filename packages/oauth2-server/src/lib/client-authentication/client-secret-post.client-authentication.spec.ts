@@ -5,6 +5,7 @@ import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
+import { ClientAuthentication } from './client-authentication.type';
 import { ClientSecretPostClientAuthentication } from './client-secret-post.client-authentication';
 
 describe('Client Secret Post Authentication Method', () => {
@@ -25,7 +26,7 @@ describe('Client Secret Post Authentication Method', () => {
 
   describe('name', () => {
     it('should have "client_secret_post" as its name.', () => {
-      expect(clientAuthentication.name).toBe('client_secret_post');
+      expect(clientAuthentication.name).toEqual<ClientAuthentication>('client_secret_post');
     });
   });
 
@@ -63,7 +64,7 @@ describe('Client Secret Post Authentication Method', () => {
       };
     });
 
-    it('should reject when a client is not found.', async () => {
+    it('should throw when a client is not found.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -71,7 +72,7 @@ describe('Client Secret Post Authentication Method', () => {
       );
     });
 
-    it('should reject when a client does not have a secret.', async () => {
+    it('should throw when a client does not have a secret.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{ id: 'client_id' });
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -81,7 +82,7 @@ describe('Client Secret Post Authentication Method', () => {
       );
     });
 
-    it("should reject when the provided secret does not match the client's one.", async () => {
+    it("should throw when the provided secret does not match the client's one.", async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{ id: 'client_id', secret: 'invalid_secret' });
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
@@ -89,7 +90,7 @@ describe('Client Secret Post Authentication Method', () => {
       );
     });
 
-    it('should reject a client with an expired secret.', async () => {
+    it('should throw when requesting with a client with an expired secret.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         secret: 'client_secret',
@@ -101,7 +102,7 @@ describe('Client Secret Post Authentication Method', () => {
       );
     });
 
-    it('should reject a client not authorized to use this authentication Method.', async () => {
+    it('should throw when requesting with a client not authorized to use this authentication Method.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         secret: 'client_secret',

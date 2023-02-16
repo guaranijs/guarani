@@ -7,12 +7,11 @@ import { User } from '../entities/user.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { AuthorizationRequest } from '../messages/authorization-request';
 import { TokenAuthorizationResponse } from '../messages/token.authorization-response';
+import { ResponseMode } from '../response-modes/response-mode.type';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
+import { ResponseType } from './response-type.type';
 import { TokenResponseType } from './token.response-type';
-
-const client = <Client>{ id: 'client_id' };
-const user = <User>{ id: 'user_id' };
 
 describe('Token Response Type', () => {
   let responseType: TokenResponseType;
@@ -34,33 +33,44 @@ describe('Token Response Type', () => {
 
   describe('name', () => {
     it('should have "token" as its name.', () => {
-      expect(responseType.name).toBe('token');
+      expect(responseType.name).toEqual<ResponseType>('token');
     });
   });
 
   describe('defaultResponseMode', () => {
     it('should have "fragment" as its default response mode.', () => {
-      expect(responseType.defaultResponseMode).toBe('fragment');
+      expect(responseType.defaultResponseMode).toEqual<ResponseMode>('fragment');
     });
   });
 
-  describe('createAuthorizationResponse()', () => {
+  describe('handle()', () => {
     let parameters: AuthorizationRequest;
 
     beforeEach(() => {
-      parameters = { response_type: 'token', client_id: '', redirect_uri: '', scope: 'foo bar' };
+      parameters = <AuthorizationRequest>{ response_type: 'token', scope: 'foo bar', state: 'client_state' };
     });
 
-    it('should reject using "query" as the "response_mode".', async () => {
+    it('should throw when using "query" as the "response_mode".', async () => {
       Reflect.set(parameters, 'response_mode', 'query');
 
-      const consent = <Partial<Consent>>{ client, parameters, scopes: ['foo', 'bar'], user };
+      const client = <Client>{ id: 'client_id' };
+      const user = <User>{ id: 'user_id' };
 
-      await expect(responseType.handle(<Consent>consent)).rejects.toThrow(InvalidRequestException);
+      const consent = <Consent>{ client, parameters, scopes: ['foo', 'bar'], user };
+
+      await expect(responseType.handle(consent)).rejects.toThrow(
+        new InvalidRequestException({
+          description: 'Invalid response_mode "query" for response_type "token".',
+          state: parameters.state,
+        })
+      );
     });
 
-    it('should create a token response with the default scope of the client.', async () => {
-      const consent = <Partial<Consent>>{ client, parameters, scopes: ['foo', 'bar'], user };
+    it('should create a token authorization response.', async () => {
+      const client = <Client>{ id: 'client_id' };
+      const user = <User>{ id: 'user_id' };
+
+      const consent = <Consent>{ client, parameters, scopes: ['foo', 'bar'], user };
 
       accessTokenServiceMock.create.mockImplementationOnce(async (scopes) => {
         return <AccessToken>{
@@ -70,30 +80,7 @@ describe('Token Response Type', () => {
         };
       });
 
-      await expect(responseType.handle(<Consent>consent)).resolves.toMatchObject<TokenAuthorizationResponse>({
-        access_token: 'access_token',
-        token_type: 'Bearer',
-        expires_in: 3600,
-        scope: 'foo bar',
-        refresh_token: undefined,
-        state: undefined,
-      });
-    });
-
-    it('should create a token response with the default scope of the client and pass the state unmodified.', async () => {
-      Reflect.set(parameters, 'state', 'client_state');
-
-      const consent = <Partial<Consent>>{ client, parameters, scopes: ['foo', 'bar'], user };
-
-      accessTokenServiceMock.create.mockImplementationOnce(async (scopes) => {
-        return <AccessToken>{
-          handle: 'access_token',
-          scopes,
-          expiresAt: new Date(Date.now() + 3600000),
-        };
-      });
-
-      await expect(responseType.handle(<Consent>consent)).resolves.toMatchObject<TokenAuthorizationResponse>({
+      await expect(responseType.handle(consent)).resolves.toStrictEqual<TokenAuthorizationResponse>({
         access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: 3600,

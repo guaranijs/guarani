@@ -7,6 +7,7 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { ClientAuthentication } from './client-authentication.type';
 import { ClientSecretJwtClientAuthentication } from './client-secret-jwt.client-authentication';
 
 describe('Client Secret JWT Client Authentication Method', () => {
@@ -36,7 +37,7 @@ describe('Client Secret JWT Client Authentication Method', () => {
 
   describe('name', () => {
     it('should have "client_secret_jwt" as its name.', () => {
-      expect(clientAuthentication.name).toBe('client_secret_jwt');
+      expect(clientAuthentication.name).toEqual<ClientAuthentication>('client_secret_jwt');
     });
   });
 

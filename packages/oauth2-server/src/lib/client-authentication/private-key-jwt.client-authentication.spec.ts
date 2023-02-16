@@ -7,6 +7,7 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { ClientAuthentication } from './client-authentication.type';
 import { PrivateKeyJwtClientAuthentication } from './private-key-jwt.client-authentication';
 
 const ecKey = new JsonWebKey({
@@ -58,7 +59,7 @@ describe('Private Key JWT Client Authentication Method', () => {
 
   describe('name', () => {
     it('should have "private_key_jwt" as its name.', () => {
-      expect(clientAuthentication.name).toBe('private_key_jwt');
+      expect(clientAuthentication.name).toEqual<ClientAuthentication>('private_key_jwt');
     });
   });
 

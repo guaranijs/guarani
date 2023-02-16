@@ -103,6 +103,12 @@ describe('ID Token Handler', () => {
     jest.resetAllMocks();
   });
 
+  it(`should reject not implementing user service's "getUserInfo()".`, () => {
+    expect(() => {
+      return new IdTokenHandler(jwks, settings, <any>{});
+    }).toThrow(new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".'));
+  });
+
   it('should generate an id token with the default claims.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 

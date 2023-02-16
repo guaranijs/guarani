@@ -1,8 +1,10 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 import { JsonWebKey, JsonWebKeySet } from '@guarani/jose';
 
+import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { Endpoint } from './endpoint.type';
 import { JsonWebKeySetEndpoint } from './jsonwebkeyset.endpoint';
 
 const ecKey = new JsonWebKey({
@@ -42,19 +44,19 @@ describe('JSON Web Key Set Endpoint', () => {
 
   describe('name', () => {
     it('should have "jwks" as its name.', () => {
-      expect(endpoint.name).toBe('jwks');
+      expect(endpoint.name).toEqual<Endpoint>('jwks');
     });
   });
 
   describe('path', () => {
     it('should have "/oauth/jwks" as its default path.', () => {
-      expect(endpoint.path).toBe('/oauth/jwks');
+      expect(endpoint.path).toEqual('/oauth/jwks');
     });
   });
 
   describe('httpMethods', () => {
     it('should have \'["GET"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual(['GET']);
+      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['GET']);
     });
   });
 

@@ -22,6 +22,12 @@ const invalidPrivateValues: unknown[] = [null, true, 1, 1.2, 1n, Buffer.alloc(1)
 const backend = new EcKeyBackend();
 
 describe('JSON Web Key Elliptic Curve Backend', () => {
+  describe('requiredParameters', () => {
+    it('should have ["kty", "crv", "x", "y"] as its value.', () => {
+      expect(backend.requiredParameters).toEqual(['kty', 'crv', 'x', 'y']);
+    });
+  });
+
   describe('privateParameters', () => {
     it('should have ["d"] as its value.', () => {
       expect(backend.privateParameters).toEqual(['d']);

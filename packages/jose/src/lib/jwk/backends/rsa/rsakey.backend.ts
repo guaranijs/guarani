@@ -13,6 +13,11 @@ import { RsaKeyParameters } from './rsakey.parameters';
  */
 export class RsaKeyBackend implements JsonWebKeyBackend {
   /**
+   * Required Parameters of the JSON Web Key RSA Backend.
+   */
+  public readonly requiredParameters: string[] = ['kty', 'n', 'e'];
+
+  /**
    * Private Parameters of the JSON Web Key RSA Backend.
    */
   public readonly privateParameters: string[] = ['d', 'p', 'q', 'dp', 'dq', 'qi'];

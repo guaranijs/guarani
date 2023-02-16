@@ -15,6 +15,12 @@ const invalidSecrets: unknown[] = [undefined, null, true, 1, 1.2, 1n, Buffer.all
 const backend = new OctKeyBackend();
 
 describe('JSON Web Key Octet Sequence Backend', () => {
+  describe('requiredParameters', () => {
+    it('should have ["kty", "k"] as its value.', () => {
+      expect(backend.requiredParameters).toEqual(['kty', 'k']);
+    });
+  });
+
   describe('privateParameters', () => {
     it('should have ["k"] as its value.', () => {
       expect(backend.privateParameters).toEqual(['k']);

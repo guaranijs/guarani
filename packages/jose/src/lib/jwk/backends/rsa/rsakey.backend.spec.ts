@@ -54,6 +54,12 @@ const invalidPrivate: unknown[] = [null, true, 1, 1.2, 1n, Buffer.alloc(1), Symb
 const backend = new RsaKeyBackend();
 
 describe('JSON Web Key RSA Backend', () => {
+  describe('requiredParameters', () => {
+    it('should have ["kty", "n", "e"] as its value.', () => {
+      expect(backend.requiredParameters).toEqual(['kty', 'n', 'e']);
+    });
+  });
+
   describe('privateParameters', () => {
     it('should have ["d", "p", "q", "dp", "dq", "qi"] as its value.', () => {
       expect(backend.privateParameters).toEqual(['d', 'p', 'q', 'dp', 'dq', 'qi']);

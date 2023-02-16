@@ -13,6 +13,11 @@ import { OctKeyParameters } from './octkey.parameters';
  */
 export class OctKeyBackend implements JsonWebKeyBackend {
   /**
+   * Required Parameters of the JSON Web Key Octet Sequence Backend.
+   */
+  public readonly requiredParameters: string[] = ['kty', 'k'];
+
+  /**
    * Private Parameters of the JSON Web Key Octet Sequence Backend.
    */
   public readonly privateParameters: string[] = ['k'];

@@ -70,6 +70,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
       introspection_endpoint_auth_signing_alg_values_supported: this.settings.clientAuthenticationSignatureAlgorithms,
       code_challenge_methods_supported: this.settings.pkceMethods,
       interaction_endpoint: this.getEndpointPath('interaction'),
+      device_authorization_endpoint: this.getEndpointPath('device_authorization'),
     };
 
     return new HttpResponse().json(discoveryResponse);

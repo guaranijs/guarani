@@ -24,13 +24,16 @@ export { AccessToken } from './lib/entities/access-token.entity';
 export { AuthorizationCode } from './lib/entities/authorization-code.entity';
 export { Client } from './lib/entities/client.entity';
 export { Consent } from './lib/entities/consent.entity';
+export { DeviceCode } from './lib/entities/device-code.entity';
 export { RefreshToken } from './lib/entities/refresh-token.entity';
 export { Session } from './lib/entities/session.entity';
 export { User } from './lib/entities/user.entity';
 
 // Exceptions
 export { AccessDeniedException } from './lib/exceptions/access-denied.exception';
+export { AuthorizationPendingException } from './lib/exceptions/authorization-pending.exception';
 export { ErrorCode } from './lib/exceptions/error-code.type';
+export { ExpiredTokenException } from './lib/exceptions/expired-token.exception';
 export { InvalidClientException } from './lib/exceptions/invalid-client.exception';
 export { InvalidGrantException } from './lib/exceptions/invalid-grant.exception';
 export { InvalidRequestException } from './lib/exceptions/invalid-request.exception';
@@ -39,6 +42,7 @@ export { OAuth2Exception } from './lib/exceptions/oauth2.exception';
 export { OAuth2ExceptionParameters } from './lib/exceptions/oauth2.exception.parameters';
 export { OAuth2ExceptionResponse } from './lib/exceptions/oauth2.exception.response';
 export { ServerErrorException } from './lib/exceptions/server-error.exception';
+export { SlowDownException } from './lib/exceptions/slow-down.exception';
 export { TemporarilyUnavailableException } from './lib/exceptions/temporarily-unavailable.exception';
 export { UnauthorizedClientException } from './lib/exceptions/unauthorized-client.exception';
 export { UnsupportedGrantTypeException } from './lib/exceptions/unsupported-grant-type.exception';
@@ -53,6 +57,7 @@ export { GrantType } from './lib/grant-types/grant-type.type';
 
 // Handlers
 export { ClientAuthenticationHandler } from './lib/handlers/client-authentication.handler';
+export { IdTokenHandler } from './lib/handlers/id-token.handler';
 export { ScopeHandler } from './lib/handlers/scope.handler';
 
 // Http
@@ -61,7 +66,9 @@ export { HttpRequest } from './lib/http/http.request';
 export { HttpResponse } from './lib/http/http.response';
 
 // ID Token
+export { AddressClaimParameters } from './lib/id-token/address.claim.parameters';
 export { IdTokenClaimsParameters } from './lib/id-token/id-token.claims.parameters';
+export { UserinfoClaimsParameters } from './lib/id-token/userinfo.claims.parameters';
 
 // Interaction Types
 export { ConsentDecisionInteractionResponse } from './lib/interaction-types/consent-decision.interaction-response';
@@ -83,6 +90,9 @@ export { ConsentContextInteractionResponse } from './lib/messages/consent-contex
 export { ConsentDecisionAcceptInteractionRequest } from './lib/messages/consent-decision-accept.interaction-request';
 export { ConsentDecisionDenyInteractionRequest } from './lib/messages/consent-decision-deny.interaction-request';
 export { ConsentDecisionInteractionRequest } from './lib/messages/consent-decision.interaction-request';
+export { DeviceAuthorizationRequest } from './lib/messages/device-authorization-request';
+export { DeviceAuthorizationResponse } from './lib/messages/device-authorization-response';
+export { DeviceCodeTokenRequest } from './lib/messages/device-code.token-request';
 export { InteractionRequest } from './lib/messages/interaction-request';
 export { IntrospectionRequest } from './lib/messages/introspection-request';
 export { IntrospectionResponse } from './lib/messages/introspection-response';
@@ -124,6 +134,7 @@ export { AccessTokenService } from './lib/services/default/access-token.service'
 export { AuthorizationCodeService } from './lib/services/default/authorization-code.service';
 export { ClientService } from './lib/services/default/client.service';
 export { ConsentService } from './lib/services/default/consent.service';
+export { DeviceCodeService } from './lib/services/default/device-code.service';
 export { RefreshTokenService } from './lib/services/default/refresh-token.service';
 export { SessionService } from './lib/services/default/session.service';
 export { UserService } from './lib/services/default/user.service';
@@ -135,6 +146,8 @@ export { ClientServiceInterface } from './lib/services/client.service.interface'
 export { CLIENT_SERVICE } from './lib/services/client.service.token';
 export { ConsentServiceInterface } from './lib/services/consent.service.interface';
 export { CONSENT_SERVICE } from './lib/services/consent.service.token';
+export { DeviceCodeServiceInterface } from './lib/services/device-code.service.interface';
+export { DEVICE_CODE_SERVICE } from './lib/services/device-code.service.token';
 export { RefreshTokenServiceInterface } from './lib/services/refresh-token.service.interface';
 export { REFRESH_TOKEN_SERVICE } from './lib/services/refresh-token.service.token';
 export { SessionServiceInterface } from './lib/services/session.service.interface';

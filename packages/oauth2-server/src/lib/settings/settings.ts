@@ -91,4 +91,9 @@ export interface Settings {
    * @default false
    */
   readonly enableRefreshTokenIntrospection: boolean;
+
+  /**
+   * Polling interval of the Device Authorization Grant.
+   */
+  readonly devicePollingInterval: number;
 }

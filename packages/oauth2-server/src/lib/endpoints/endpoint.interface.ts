@@ -1,6 +1,7 @@
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { Endpoint } from './endpoint.type';
 
 /**
  * Interface for the Endpoints of the OAuth 2.0 Authorization Server.
@@ -11,7 +12,7 @@ export interface EndpointInterface {
   /**
    * Name of the Endpoint.
    */
-  readonly name: string;
+  readonly name: Endpoint;
 
   /**
    * Path of the Endpoint.

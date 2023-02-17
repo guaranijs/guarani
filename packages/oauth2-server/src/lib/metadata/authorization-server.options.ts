@@ -10,6 +10,7 @@ import { AccessTokenServiceInterface } from '../services/access-token.service.in
 import { AuthorizationCodeServiceInterface } from '../services/authorization-code.service.interface';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
+import { DeviceCodeServiceInterface } from '../services/device-code.service.interface';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { UserServiceInterface } from '../services/user.service.interface';
@@ -115,6 +116,11 @@ export interface AuthorizationServerOptions {
   readonly enableRefreshTokenIntrospection?: boolean;
 
   /**
+   * Polling interval of the Device Authorization Grant.
+   */
+  readonly devicePollingInterval?: number;
+
+  /**
    * Access Token Service.
    */
   readonly accessTokenService?: AccessTokenServiceInterface | Constructor<AccessTokenServiceInterface>;
@@ -135,6 +141,11 @@ export interface AuthorizationServerOptions {
    * Consent Service.
    */
   readonly consentService?: ConsentServiceInterface | Constructor<ConsentServiceInterface>;
+
+  /**
+   * Device Code Service.
+   */
+  readonly deviceCodeService?: DeviceCodeServiceInterface | Constructor<DeviceCodeServiceInterface>;
 
   /**
    * Session Service.

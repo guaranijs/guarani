@@ -27,6 +27,7 @@ describe('Discovery Endpoint', () => {
 
   const endpoints = <jest.MockedObject<EndpointInterface>[]>[
     jest.mocked<Partial<EndpointInterface>>({ name: 'authorization', path: '/oauth/authorize' }),
+    jest.mocked<Partial<EndpointInterface>>({ name: 'device_authorization', path: '/oauth/device_authorization' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'interaction', path: '/oauth/interaction' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'introspection', path: '/oauth/introspect' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'jwks', path: '/oauth/jwks' }),
@@ -101,6 +102,7 @@ describe('Discovery Endpoint', () => {
         introspection_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256'],
         code_challenge_methods_supported: ['S256'],
         interaction_endpoint: 'https://server.example.com/oauth/interaction',
+        device_authorization_endpoint: 'https://server.example.com/oauth/device_authorization',
       };
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({

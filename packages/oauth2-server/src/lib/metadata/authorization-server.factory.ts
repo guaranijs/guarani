@@ -6,6 +6,7 @@ import { ClientAuthenticationInterface } from '../client-authentication/client-a
 import { clientAuthenticationRegistry } from '../client-authentication/client-authentication.registry';
 import { CLIENT_AUTHENTICATION } from '../client-authentication/client-authentication.token';
 import { AuthorizationEndpoint } from '../endpoints/authorization.endpoint';
+import { DeviceAuthorizationEndpoint } from '../endpoints/device-authorization.endpoint';
 import { DiscoveryEndpoint } from '../endpoints/discovery.endpoint';
 import { EndpointInterface } from '../endpoints/endpoint.interface';
 import { ENDPOINT } from '../endpoints/endpoint.token';
@@ -44,9 +45,12 @@ import { AccessTokenService } from '../services/default/access-token.service';
 import { AuthorizationCodeService } from '../services/default/authorization-code.service';
 import { ClientService } from '../services/default/client.service';
 import { ConsentService } from '../services/default/consent.service';
+import { DeviceCodeService } from '../services/default/device-code.service';
 import { RefreshTokenService } from '../services/default/refresh-token.service';
 import { SessionService } from '../services/default/session.service';
 import { UserService } from '../services/default/user.service';
+import { DeviceCodeServiceInterface } from '../services/device-code.service.interface';
+import { DEVICE_CODE_SERVICE } from '../services/device-code.service.token';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
@@ -89,9 +93,9 @@ export class AuthorizationServerFactory {
     Reflect.set(this, 'authorizationServerOptions', options);
 
     this.configure();
-    this.container.bind<AuthorizationServer>('AuthorizationServer').toClass(server).asSingleton();
+    this.container.bind(AuthorizationServer).toClass(server).asSingleton();
 
-    return this.container.resolve<T>('AuthorizationServer');
+    return <T>this.container.resolve(AuthorizationServer);
   }
 
   /**
@@ -112,6 +116,7 @@ export class AuthorizationServerFactory {
     this.setAuthorizationCodeService();
     this.setClientService();
     this.setConsentService();
+    this.setDeviceCodeService();
     this.setRefreshTokenService();
     this.setSessionService();
     this.setUserService();
@@ -141,6 +146,7 @@ export class AuthorizationServerFactory {
       enableRefreshTokenRotation: this.authorizationServerOptions.enableRefreshTokenRotation ?? false,
       enableAccessTokenRevocation: this.authorizationServerOptions.enableAccessTokenRevocation ?? true,
       enableRefreshTokenIntrospection: this.authorizationServerOptions.enableRefreshTokenIntrospection ?? false,
+      devicePollingInterval: this.authorizationServerOptions.devicePollingInterval ?? 5,
     };
 
     this.container.bind<Settings>(SETTINGS).toValue(settings);
@@ -285,6 +291,10 @@ export class AuthorizationServerFactory {
       this.container.bind<EndpointInterface>(ENDPOINT).toClass(JsonWebKeySetEndpoint).asSingleton();
     }
 
+    if (this.settings.grantTypes.includes('urn:ietf:params:oauth:grant-type:device_code')) {
+      this.container.bind<EndpointInterface>(ENDPOINT).toClass(DeviceAuthorizationEndpoint).asSingleton();
+    }
+
     this.container.bind<EndpointInterface>(ENDPOINT).toClass(DiscoveryEndpoint).asSingleton();
   }
 
@@ -346,6 +356,19 @@ export class AuthorizationServerFactory {
     typeof consentService === 'function'
       ? binding.toClass(consentService).asSingleton()
       : binding.toValue(consentService);
+  }
+
+  /**
+   * Defines the Device Code Service used by the Authorization Server.
+   */
+  private static setDeviceCodeService(): void {
+    const deviceCodeService = this.authorizationServerOptions.deviceCodeService ?? DeviceCodeService;
+
+    const binding = this.container.bind<DeviceCodeServiceInterface>(DEVICE_CODE_SERVICE);
+
+    typeof deviceCodeService === 'function'
+      ? binding.toClass(deviceCodeService).asSingleton()
+      : binding.toValue(deviceCodeService);
   }
 
   /**

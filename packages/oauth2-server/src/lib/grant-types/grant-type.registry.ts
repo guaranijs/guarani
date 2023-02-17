@@ -2,6 +2,7 @@ import { Constructor } from '@guarani/di';
 
 import { AuthorizationCodeGrantType } from './authorization-code.grant-type';
 import { ClientCredentialsGrantType } from './client-credentials.grant-type';
+import { DeviceCodeGrantType } from './device-code.grant-type';
 import { GrantTypeInterface } from './grant-type.interface';
 import { GrantType } from './grant-type.type';
 import { JwtBearerGrantType } from './jwt-bearer.grant-type';
@@ -16,5 +17,6 @@ export const grantTypeRegistry: Record<GrantType, Constructor<GrantTypeInterface
   client_credentials: ClientCredentialsGrantType,
   password: ResourceOwnerPasswordCredentialsGrantType,
   refresh_token: RefreshTokenGrantType,
+  'urn:ietf:params:oauth:grant-type:device_code': DeviceCodeGrantType,
   'urn:ietf:params:oauth:grant-type:jwt-bearer': JwtBearerGrantType,
 };

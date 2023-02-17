@@ -3,6 +3,7 @@
  */
 export type Endpoint =
   | 'authorization'
+  | 'device_authorization'
   | 'discovery'
   | 'interaction'
   | 'introspection'

@@ -119,4 +119,9 @@ export interface DiscoveryResponse extends Record<string, any> {
    * Url of the Interaction Endpoint.
    */
   readonly interaction_endpoint?: string;
+
+  /**
+   * Url of the Device Authorization Endpoint.
+   */
+  readonly device_authorization_endpoint?: string;
 }

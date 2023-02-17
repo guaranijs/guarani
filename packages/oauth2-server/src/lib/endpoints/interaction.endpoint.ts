@@ -14,6 +14,7 @@ import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
 import { InteractionType } from '../interaction-types/interaction-type.type';
 import { InteractionRequest } from '../messages/interaction-request';
 import { EndpointInterface } from './endpoint.interface';
+import { Endpoint } from './endpoint.type';
 
 /**
  * Implementation of the custom **Interaction** Endpoint.
@@ -30,7 +31,7 @@ export class InteractionEndpoint implements EndpointInterface {
   /**
    * Name of the Endpoint.
    */
-  public readonly name: string = 'interaction';
+  public readonly name: Endpoint = 'interaction';
 
   /**
    * Path of the Endpoint.

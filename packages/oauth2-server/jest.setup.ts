@@ -31,6 +31,7 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
     'client_credentials',
     'password',
     'refresh_token',
+    'urn:ietf:params:oauth:grant-type:device_code',
     'urn:ietf:params:oauth:grant-type:jwt-bearer',
   ],
   responseTypes: ['code', 'id_token', 'token', 'code id_token', 'code token', 'id_token token', 'code id_token token'],

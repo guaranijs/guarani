@@ -33,7 +33,7 @@ export abstract class OAuth2Exception extends Error {
    *
    * @param parameters Parameters of the OAuth 2.0 Exception.
    */
-  public constructor(parameters: OAuth2ExceptionParameters) {
+  public constructor(parameters: OAuth2ExceptionParameters = {}) {
     super(parameters.description);
 
     this.parameters = parameters;

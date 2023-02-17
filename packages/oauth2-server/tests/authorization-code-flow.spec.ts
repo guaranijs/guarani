@@ -157,14 +157,15 @@ describe('Authorization Code Flow', () => {
 
     const callbackUrl = new URL(authorizationResponse.headers.location);
 
-    authorizationCode = callbackUrl.searchParams.get('code')!;
-
     expect(authorizationResponse.status).toBe(303);
 
     expect(Object.fromEntries(callbackUrl.searchParams.entries())).toStrictEqual<CodeAuthorizationResponse>({
       code: expect.any(String),
       state: authorizationRequestData.state,
+      iss: 'http://localhost:3000',
     });
+
+    authorizationCode = callbackUrl.searchParams.get('code')!;
     // #endregion
   });
 

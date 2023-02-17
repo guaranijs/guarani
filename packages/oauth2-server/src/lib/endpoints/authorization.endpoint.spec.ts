@@ -597,6 +597,8 @@ describe('Authorization Endpoint', () => {
     });
 
     it('should return a valid authorization response.', async () => {
+      Reflect.set(settings, 'enableAuthorizationResponseIssuerIdentifier', true);
+
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         redirectUris: ['https://example.com/callback'],
@@ -622,9 +624,13 @@ describe('Authorization Endpoint', () => {
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        headers: { Location: 'https://example.com/callback?code=code&state=client_state' },
+        headers: {
+          Location: 'https://example.com/callback?code=code&state=client_state&iss=https%3A%2F%2Fserver.example.com',
+        },
         statusCode: 303,
       });
+
+      Reflect.deleteProperty(settings, 'enableAuthorizationResponseIssuerIdentifier');
     });
   });
 });

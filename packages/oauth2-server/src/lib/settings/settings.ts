@@ -96,4 +96,9 @@ export interface Settings {
    * Polling interval of the Device Authorization Grant.
    */
   readonly devicePollingInterval: number;
+
+  /**
+   * Enables Authorization Response Issuer Identifier in Authorization and Token Responses.
+   */
+  readonly enableAuthorizationResponseIssuerIdentifier: boolean;
 }

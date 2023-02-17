@@ -155,6 +155,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
         error.cause = exc;
       }
 
+      if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
+        error.setParameter('iss', this.settings.issuer);
+      }
+
       return this.handleFatalAuthorizationError(error);
     }
 
@@ -179,6 +183,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
       const authorizationResponse = await responseType.handle(consent);
 
+      if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
+        authorizationResponse.iss = this.settings.issuer;
+      }
+
       return responseMode.createHttpResponse(parameters.redirect_uri, authorizationResponse);
     } catch (exc: unknown) {
       let error: OAuth2Exception;
@@ -188,6 +196,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
       } else {
         error = new ServerErrorException({ description: 'An unexpected error occurred.', state: parameters.state });
         error.cause = exc;
+      }
+
+      if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
+        error.setParameter('iss', this.settings.issuer);
       }
 
       return responseMode.createHttpResponse(parameters.redirect_uri, error.toJSON());

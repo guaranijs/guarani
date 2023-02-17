@@ -147,6 +147,8 @@ export class AuthorizationServerFactory {
       enableAccessTokenRevocation: this.authorizationServerOptions.enableAccessTokenRevocation ?? true,
       enableRefreshTokenIntrospection: this.authorizationServerOptions.enableRefreshTokenIntrospection ?? false,
       devicePollingInterval: this.authorizationServerOptions.devicePollingInterval ?? 5,
+      enableAuthorizationResponseIssuerIdentifier:
+        this.authorizationServerOptions.enableAuthorizationResponseIssuerIdentifier ?? false,
     };
 
     this.container.bind<Settings>(SETTINGS).toValue(settings);

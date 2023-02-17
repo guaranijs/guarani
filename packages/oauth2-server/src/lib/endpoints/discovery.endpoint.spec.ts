@@ -23,6 +23,7 @@ describe('Discovery Endpoint', () => {
     responseTypes: ['code'],
     responseModes: ['query'],
     pkceMethods: ['S256'],
+    enableAuthorizationResponseIssuerIdentifier: true,
   };
 
   const endpoints = <jest.MockedObject<EndpointInterface>[]>[
@@ -103,6 +104,7 @@ describe('Discovery Endpoint', () => {
         code_challenge_methods_supported: ['S256'],
         interaction_endpoint: 'https://server.example.com/oauth/interaction',
         device_authorization_endpoint: 'https://server.example.com/oauth/device_authorization',
+        authorization_response_iss_parameter_supported: true,
       };
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({

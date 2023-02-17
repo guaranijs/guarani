@@ -23,4 +23,9 @@ export interface OAuth2ExceptionResponse extends Record<string, any> {
    * State of the Client Application prior to the OAuth 2.0 Request.
    */
   state?: string;
+
+  /**
+   * Authorization Server Issuer Identifier.
+   */
+  iss?: string;
 }

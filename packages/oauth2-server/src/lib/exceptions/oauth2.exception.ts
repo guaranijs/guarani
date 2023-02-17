@@ -61,6 +61,27 @@ export abstract class OAuth2Exception extends Error {
   }
 
   /**
+   * Sets an OAuth 2.0 Exception Parameter.
+   *
+   * @param parameter Name of the OAuth 2.0 Exception Parameter.
+   * @param value Value of the OAuth 2.0 Exception Parameter.
+   */
+  public setParameter(parameter: keyof OAuth2ExceptionParameters, value: any): OAuth2Exception {
+    this.parameters[parameter] = value;
+    return this;
+  }
+
+  /**
+   * Sets multiple OAuth 2.0 Exception Parameters.
+   *
+   * @param parameters OAuth 2.0 Exception Parameters.
+   */
+  public setParameters(parameters: OAuth2ExceptionParameters): OAuth2Exception {
+    Object.assign(this.parameters, parameters);
+    return this;
+  }
+
+  /**
    * Body of the OAuth 2.0 Error Response.
    */
   public toJSON(): OAuth2ExceptionResponse {
@@ -69,6 +90,7 @@ export abstract class OAuth2Exception extends Error {
       error_description: this.parameters.description,
       error_uri: this.parameters.uri,
       state: this.parameters.state,
+      iss: this.parameters.iss,
     };
   }
 }

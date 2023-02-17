@@ -71,6 +71,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
       code_challenge_methods_supported: this.settings.pkceMethods,
       interaction_endpoint: this.getEndpointPath('interaction'),
       device_authorization_endpoint: this.getEndpointPath('device_authorization'),
+      authorization_response_iss_parameter_supported: this.settings.enableAuthorizationResponseIssuerIdentifier,
     };
 
     return new HttpResponse().json(discoveryResponse);

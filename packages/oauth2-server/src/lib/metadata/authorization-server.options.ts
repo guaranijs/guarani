@@ -121,6 +121,13 @@ export interface AuthorizationServerOptions {
   readonly devicePollingInterval?: number;
 
   /**
+   * Enables Authorization Response Issuer Identifier in Authorization and Token Responses.
+   *
+   * @default false
+   */
+  readonly enableAuthorizationResponseIssuerIdentifier?: boolean;
+
+  /**
    * Access Token Service.
    */
   readonly accessTokenService?: AccessTokenServiceInterface | Constructor<AccessTokenServiceInterface>;

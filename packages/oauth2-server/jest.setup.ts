@@ -56,4 +56,5 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
     errorUrl: '/oauth/error',
     loginUrl: '/auth/login',
   },
+  enableAuthorizationResponseIssuerIdentifier: true,
 });

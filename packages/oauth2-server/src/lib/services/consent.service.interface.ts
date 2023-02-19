@@ -28,6 +28,14 @@ export interface ConsentServiceInterface {
   findOne(id: string): Promise<Consent | null>;
 
   /**
+   * Searches the application's storage for a Consent containing the provided Consent Challenge.
+   *
+   * @param consentChallenge Consent Challenge of the Consent.
+   * @returns Consent based on the provided Consent Challenge.
+   */
+  findOneByConsentChallenge(consentChallenge: string): Promise<Consent | null>;
+
+  /**
    * Persists the provided Consent into the application's storage.
    *
    * @param consent Consent to be persisted.

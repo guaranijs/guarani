@@ -75,7 +75,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
   public async handleContext(parameters: LoginContextInteractionRequest): Promise<LoginContextInteractionResponse> {
     this.checkContextParameters(parameters);
 
-    const session = await this.getSession(parameters.login_challenge);
+    const session = await this.getSessionByLoginChallenge(parameters.login_challenge);
 
     await this.checkSession(session);
 
@@ -116,7 +116,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
   public async handleDecision(parameters: LoginDecisionInteractionRequest): Promise<LoginDecisionInteractionResponse> {
     this.checkDecisionParameters(parameters);
 
-    const session = await this.getSession(parameters.login_challenge);
+    const session = await this.getSessionByLoginChallenge(parameters.login_challenge);
 
     await this.checkSession(session);
 
@@ -235,14 +235,14 @@ export class LoginInteractionType implements InteractionTypeInterface {
   /**
    * Fetches the requested Session from the application's storage.
    *
-   * @param id Identifier provided by the Client.
-   * @returns Session based on the provided Identifier.
+   * @param loginChallenge Login Challenge provided by the Client.
+   * @returns Session based on the provided Login Challenge.
    */
-  private async getSession(id: string): Promise<Session> {
-    const session = await this.sessionService.findOne(id);
+  private async getSessionByLoginChallenge(loginChallenge: string): Promise<Session> {
+    const session = await this.sessionService.findOneByLoginChallenge(loginChallenge);
 
     if (session === null) {
-      throw new AccessDeniedException({ description: 'Invalid Session.' });
+      throw new AccessDeniedException({ description: 'Invalid Login Challenge.' });
     }
 
     return session;

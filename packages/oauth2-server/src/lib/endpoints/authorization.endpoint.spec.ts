@@ -41,6 +41,7 @@ describe('Authorization Endpoint', () => {
   const sessionServiceMock = jest.mocked<SessionServiceInterface>({
     create: jest.fn(),
     findOne: jest.fn(),
+    findOneByLoginChallenge: jest.fn(),
     remove: jest.fn(),
     save: jest.fn(),
   });
@@ -48,6 +49,7 @@ describe('Authorization Endpoint', () => {
   const consentServiceMock = jest.mocked<ConsentServiceInterface>({
     create: jest.fn(),
     findOne: jest.fn(),
+    findOneByConsentChallenge: jest.fn(),
     remove: jest.fn(),
     save: jest.fn(),
   });
@@ -348,9 +350,9 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id' });
+      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id', loginChallenge: 'login_challenge' });
 
-      const parameters = new URLSearchParams({ login_challenge: 'session_id' });
+      const parameters = new URLSearchParams({ login_challenge: 'login_challenge' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
@@ -369,9 +371,9 @@ describe('Authorization Endpoint', () => {
       });
 
       sessionServiceMock.findOne.mockResolvedValueOnce(null);
-      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id' });
+      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id', loginChallenge: 'login_challenge' });
 
-      const parameters = new URLSearchParams({ login_challenge: 'session_id' });
+      const parameters = new URLSearchParams({ login_challenge: 'login_challenge' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
@@ -391,12 +393,13 @@ describe('Authorization Endpoint', () => {
 
       sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
         id: 'session_id',
+        loginChallenge: 'old_login_challenge',
         expiresAt: new Date(Date.now() - 3600000),
       });
 
-      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id' });
+      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id', loginChallenge: 'login_challenge' });
 
-      const parameters = new URLSearchParams({ login_challenge: 'session_id' });
+      const parameters = new URLSearchParams({ login_challenge: 'login_challenge' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
@@ -416,10 +419,15 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id', user: null });
-      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id' });
+      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
+        id: 'session_id',
+        loginChallenge: 'old_login_challenge',
+        user: null,
+      });
 
-      const parameters = new URLSearchParams({ login_challenge: 'session_id' });
+      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id', loginChallenge: 'login_challenge' });
+
+      const parameters = new URLSearchParams({ login_challenge: 'login_challenge' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
@@ -443,6 +451,7 @@ describe('Authorization Endpoint', () => {
 
       sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
         id: 'session_id',
+        loginChallenge: 'login_challenge',
         parameters: { ...request.query, state: 'client_state' },
         user: { id: 'user_id' },
       });
@@ -479,13 +488,18 @@ describe('Authorization Endpoint', () => {
 
       sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
         id: 'session_id',
+        loginChallenge: 'login_challenge',
         parameters: request.query,
         user: { id: 'user_id' },
       });
 
-      consentServiceMock.create.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
+      consentServiceMock.create.mockResolvedValueOnce(<Consent>{
+        id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
+      });
 
-      const parameters = new URLSearchParams({ consent_challenge: 'consent_id' });
+      const parameters = new URLSearchParams({ consent_challenge: 'consent_challenge' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
@@ -505,14 +519,19 @@ describe('Authorization Endpoint', () => {
 
       sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
         id: 'session_id',
+        loginChallenge: 'login_challenge',
         parameters: request.query,
         user: { id: 'user_id' },
       });
 
       consentServiceMock.findOne.mockResolvedValueOnce(null);
-      consentServiceMock.create.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
+      consentServiceMock.create.mockResolvedValueOnce(<Consent>{
+        id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
+      });
 
-      const parameters = new URLSearchParams({ consent_challenge: 'consent_id' });
+      const parameters = new URLSearchParams({ consent_challenge: 'consent_challenge' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
@@ -532,18 +551,25 @@ describe('Authorization Endpoint', () => {
 
       sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
         id: 'session_id',
+        loginChallenge: 'login_challenge',
         parameters: request.query,
         user: { id: 'user_id' },
       });
 
       consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
         id: 'consent_id',
+        loginChallenge: 'old_login_challenge',
+        consentChallenge: 'old_consent_challenge',
         expiresAt: new Date(Date.now() - 3600000),
       });
 
-      consentServiceMock.create.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
+      consentServiceMock.create.mockResolvedValueOnce(<Consent>{
+        id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
+      });
 
-      const parameters = new URLSearchParams({ consent_challenge: 'consent_id' });
+      const parameters = new URLSearchParams({ consent_challenge: 'consent_challenge' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
@@ -567,12 +593,15 @@ describe('Authorization Endpoint', () => {
 
       sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
         id: 'session_id',
+        loginChallenge: 'login_challenge',
         parameters: { ...request.query, state: 'client_state' },
         user: { id: 'user_id' },
       });
 
       consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
         id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
         parameters: { ...request.query, state: 'client_state' },
       });
 
@@ -608,11 +637,16 @@ describe('Authorization Endpoint', () => {
 
       sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
         id: 'session_id',
+        loginChallenge: 'login_challenge',
         parameters: request.query,
         user: { id: 'user_id' },
       });
 
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
+      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
+        id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
+      });
 
       responseTypesMocks[0]!.handle.mockResolvedValueOnce({ code: 'code', state: 'client_state' });
 

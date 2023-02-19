@@ -67,7 +67,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
   public async handleContext(parameters: ConsentContextInteractionRequest): Promise<ConsentContextInteractionResponse> {
     this.checkContextParameters(parameters);
 
-    const consent = await this.getConsent(parameters.consent_challenge);
+    const consent = await this.getConsentByConsentChallenge(parameters.consent_challenge);
 
     await this.checkConsent(consent);
 
@@ -114,7 +114,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
   ): Promise<ConsentDecisionInteractionResponse> {
     this.checkDecisionParameters(parameters);
 
-    const consent = await this.getConsent(parameters.consent_challenge);
+    const consent = await this.getConsentByConsentChallenge(parameters.consent_challenge);
 
     await this.checkConsent(consent);
 
@@ -248,14 +248,14 @@ export class ConsentInteractionType implements InteractionTypeInterface {
   /**
    * Fetches the requested Consent from the application's storage.
    *
-   * @param id Identifier of the Consent provided by the Client.
-   * @returns Consent based on the provided Identifier.
+   * @param consentChallenge Consent Challenge of the Consent provided by the Client.
+   * @returns Consent based on the provided Consent Challenge.
    */
-  private async getConsent(id: string): Promise<Consent> {
-    const consent = await this.consentService.findOne(id);
+  private async getConsentByConsentChallenge(consentChallenge: string): Promise<Consent> {
+    const consent = await this.consentService.findOneByConsentChallenge(consentChallenge);
 
     if (consent === null) {
-      throw new AccessDeniedException({ description: 'Invalid Consent.' });
+      throw new AccessDeniedException({ description: 'Invalid Consent Challenge.' });
     }
 
     return consent;

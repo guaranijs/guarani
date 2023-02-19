@@ -28,6 +28,7 @@ describe('Login Interaction Type', () => {
   const sessionServiceMock = jest.mocked<SessionServiceInterface>({
     create: jest.fn(),
     findOne: jest.fn(),
+    findOneByLoginChallenge: jest.fn(),
     remove: jest.fn(),
     save: jest.fn(),
   });
@@ -75,16 +76,17 @@ describe('Login Interaction Type', () => {
     });
 
     it('should throw when no session is found.', async () => {
-      sessionServiceMock.findOne.mockResolvedValueOnce(null);
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
       await expect(interactionType.handleContext(parameters)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Session.' })
+        new AccessDeniedException({ description: 'Invalid Login Challenge.' })
       );
     });
 
     it('should throw when the session is expired.', async () => {
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
         id: 'session_id',
+        loginChallenge: 'login_challenge',
         expiresAt: new Date(Date.now() - 3600000),
       });
 
@@ -103,8 +105,9 @@ describe('Login Interaction Type', () => {
         response_mode: 'query',
       };
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
         id: 'session_id',
+        loginChallenge: 'login_challenge',
         parameters: sessionParameters,
         client: { id: 'client_id' },
         user: null,
@@ -130,8 +133,9 @@ describe('Login Interaction Type', () => {
         response_mode: 'query',
       };
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
         id: 'session_id',
+        loginChallenge: 'login_challenge',
         parameters: sessionParameters,
         client: { id: 'client_id' },
         user: { id: 'user_id' },
@@ -172,16 +176,17 @@ describe('Login Interaction Type', () => {
     });
 
     it('should throw when no session is found.', async () => {
-      sessionServiceMock.findOne.mockResolvedValueOnce(null);
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Session.' })
+        new AccessDeniedException({ description: 'Invalid Login Challenge.' })
       );
     });
 
     it('should throw when the session is expired.', async () => {
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
         id: 'session_id',
+        loginChallenge: 'login_challenge',
         expiresAt: new Date(Date.now() - 3600000),
       });
 
@@ -193,7 +198,10 @@ describe('Login Interaction Type', () => {
     it('should throw when providing an invalid decision.', async () => {
       Reflect.set(parameters, 'decision', 'unknown');
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id' });
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
+        id: 'session_id',
+        loginChallenge: 'login_challenge',
+      });
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
         new InvalidRequestException({ description: 'Unsupported decision "unknown".' })
@@ -203,7 +211,10 @@ describe('Login Interaction Type', () => {
     it('should throw when the parameter "subject" is not provided.', async () => {
       Reflect.set(parameters, 'decision', 'accept');
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id' });
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
+        id: 'session_id',
+        loginChallenge: 'login_challenge',
+      });
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "subject".' })
@@ -214,7 +225,11 @@ describe('Login Interaction Type', () => {
       Reflect.set(parameters, 'decision', 'accept');
       Reflect.set(parameters, 'subject', 'user_id');
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id' });
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
+        id: 'session_id',
+        loginChallenge: 'login_challenge',
+      });
+
       userServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
@@ -235,10 +250,10 @@ describe('Login Interaction Type', () => {
         response_mode: 'query',
       };
 
-      const session = <Session>{ id: 'session_id', parameters: sessionParameters };
+      const session = <Session>{ id: 'session_id', loginChallenge: 'login_challenge', parameters: sessionParameters };
       const user = <User>{ id: 'user_id' };
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(session);
       userServiceMock.findOne.mockResolvedValueOnce(user);
 
       const urlParameters = new URLSearchParams(sessionParameters);
@@ -254,7 +269,10 @@ describe('Login Interaction Type', () => {
     it('should throw when the parameter "error" is not provided.', async () => {
       Reflect.set(parameters, 'decision', 'deny');
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id' });
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
+        id: 'session_id',
+        loginChallenge: 'login_challenge',
+      });
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "error".' })
@@ -267,7 +285,10 @@ describe('Login Interaction Type', () => {
 
       Reflect.deleteProperty(parameters, 'error_description');
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id' });
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
+        id: 'session_id',
+        loginChallenge: 'login_challenge',
+      });
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "error_description".' })
@@ -279,7 +300,10 @@ describe('Login Interaction Type', () => {
       Reflect.set(parameters, 'error', 'custom_error');
       Reflect.set(parameters, 'error_description', 'Custom error description.');
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id' });
+      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
+        id: 'session_id',
+        loginChallenge: 'login_challenge',
+      });
 
       userServiceMock.findOne.mockResolvedValueOnce({ id: 'user_id' });
 

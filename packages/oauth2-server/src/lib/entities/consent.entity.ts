@@ -22,6 +22,11 @@ export interface Consent extends Record<string, any> {
   readonly loginChallenge: string;
 
   /**
+   * Consent Challenge of the Consent.
+   */
+  readonly consentChallenge: string;
+
+  /**
    * Parameters of the Authorization Request.
    */
   readonly parameters: AuthorizationRequest;

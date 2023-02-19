@@ -1,6 +1,6 @@
 import { Injectable } from '@guarani/di';
 
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 
 import { Client } from '../../entities/client.entity';
 import { Session } from '../../entities/session.entity';
@@ -18,6 +18,7 @@ export class SessionService implements SessionServiceInterface {
   public async create(parameters: AuthorizationRequest, client: Client): Promise<Session> {
     const session: Session = {
       id: randomUUID(),
+      loginChallenge: randomBytes(16).toString('hex'),
       parameters,
       createdAt: new Date(),
       client,
@@ -31,6 +32,10 @@ export class SessionService implements SessionServiceInterface {
 
   public async findOne(id: string): Promise<Session | null> {
     return this.sessions.find((session) => session.id === id) ?? null;
+  }
+
+  public async findOneByLoginChallenge(loginChallenge: string): Promise<Session | null> {
+    return this.sessions.find((session) => session.loginChallenge === loginChallenge) ?? null;
   }
 
   public async save(session: Session): Promise<void> {

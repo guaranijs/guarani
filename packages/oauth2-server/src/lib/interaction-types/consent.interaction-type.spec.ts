@@ -24,6 +24,7 @@ describe('Consent Interaction Type', () => {
   const consentServiceMock = jest.mocked<ConsentServiceInterface>({
     create: jest.fn(),
     findOne: jest.fn(),
+    findOneByConsentChallenge: jest.fn(),
     remove: jest.fn(),
     save: jest.fn(),
   });
@@ -66,16 +67,18 @@ describe('Consent Interaction Type', () => {
     });
 
     it('should throw when no consent is found.', async () => {
-      consentServiceMock.findOne.mockResolvedValueOnce(null);
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(null);
 
       await expect(interactionType.handleContext(parameters)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Consent.' })
+        new AccessDeniedException({ description: 'Invalid Consent Challenge.' })
       );
     });
 
     it('should throw when the consent is expired.', async () => {
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Consent>{
         id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
         expiresAt: new Date(Date.now() - 3600000),
       });
 
@@ -94,10 +97,11 @@ describe('Consent Interaction Type', () => {
         response_mode: 'query',
       };
 
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Consent>{
         id: 'consent_id',
         scopes: <string[]>[],
-        loginChallenge: 'session_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
         parameters: consentParameters,
         client: { id: 'client_id' },
         user: { id: 'user_id' },
@@ -111,7 +115,7 @@ describe('Consent Interaction Type', () => {
           requested_scope: 'foo bar baz',
           subject: 'user_id',
           request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
-          login_challenge: 'session_id',
+          login_challenge: 'login_challenge',
           client: <Client>{ id: 'client_id' },
           context: {},
         }
@@ -147,16 +151,18 @@ describe('Consent Interaction Type', () => {
     });
 
     it('should throw when no consent is found.', async () => {
-      consentServiceMock.findOne.mockResolvedValueOnce(null);
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(null);
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Consent.' })
+        new AccessDeniedException({ description: 'Invalid Consent Challenge.' })
       );
     });
 
     it('should throw when the consent is expired.', async () => {
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Consent>{
         id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
         expiresAt: new Date(Date.now() - 3600000),
       });
 
@@ -168,7 +174,11 @@ describe('Consent Interaction Type', () => {
     it('should throw when providing an invalid decision.', async () => {
       Reflect.set(parameters, 'decision', 'unknown');
 
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Consent>{
+        id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
+      });
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
         new InvalidRequestException({ description: 'Unsupported decision "unknown".' })
@@ -178,7 +188,11 @@ describe('Consent Interaction Type', () => {
     it('should throw when the parameter "grant_scope" is not provided.', async () => {
       Reflect.set(parameters, 'decision', 'accept');
 
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Consent>{
+        id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
+      });
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "grant_scope".' })
@@ -189,8 +203,10 @@ describe('Consent Interaction Type', () => {
       Reflect.set(parameters, 'decision', 'accept');
       Reflect.set(parameters, 'grant_scope', 'foo bar qux');
 
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Consent>{
         id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
         parameters: { scope: 'foo bar baz' },
       });
 
@@ -212,9 +228,14 @@ describe('Consent Interaction Type', () => {
         response_mode: 'query',
       };
 
-      const consent = <Consent>{ id: 'consent_id', parameters: consentParameters };
+      const consent = <Consent>{
+        id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
+        parameters: consentParameters,
+      };
 
-      consentServiceMock.findOne.mockResolvedValueOnce(consent);
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(consent);
 
       const urlParameters = new URLSearchParams(consentParameters);
 
@@ -231,7 +252,11 @@ describe('Consent Interaction Type', () => {
     it('should throw when the parameter "error" is not provided.', async () => {
       Reflect.set(parameters, 'decision', 'deny');
 
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Consent>{
+        id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
+      });
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "error".' })
@@ -244,7 +269,11 @@ describe('Consent Interaction Type', () => {
 
       Reflect.deleteProperty(parameters, 'error_description');
 
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Consent>{
+        id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
+      });
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "error_description".' })
@@ -256,7 +285,11 @@ describe('Consent Interaction Type', () => {
       Reflect.set(parameters, 'error', 'custom_error');
       Reflect.set(parameters, 'error_description', 'Custom error description.');
 
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
+      consentServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Consent>{
+        id: 'consent_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
+      });
 
       const urlParameters = new URLSearchParams({
         error: parameters.error,

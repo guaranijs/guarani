@@ -12,6 +12,11 @@ export interface Session {
   readonly id: string;
 
   /**
+   * Login Challenge of the Session.
+   */
+  readonly loginChallenge: string;
+
+  /**
    * Parameters of the Authorization Request.
    */
   readonly parameters: AuthorizationRequest;

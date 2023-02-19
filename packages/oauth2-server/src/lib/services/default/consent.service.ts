@@ -1,6 +1,6 @@
 import { Injectable } from '@guarani/di';
 
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { Client } from '../../entities/client.entity';
 
 import { Consent } from '../../entities/consent.entity';
@@ -26,6 +26,7 @@ export class ConsentService implements ConsentServiceInterface {
       id: randomUUID(),
       scopes: [],
       loginChallenge,
+      consentChallenge: randomBytes(16).toString('hex'),
       parameters,
       createdAt: new Date(),
       client,
@@ -39,6 +40,10 @@ export class ConsentService implements ConsentServiceInterface {
 
   public async findOne(id: string): Promise<Consent | null> {
     return this.consents.find((consent) => consent.id === id) ?? null;
+  }
+
+  public async findOneByConsentChallenge(consentChallenge: string): Promise<Consent | null> {
+    return this.consents.find((consent) => consent.consentChallenge === consentChallenge) ?? null;
   }
 
   public async save(consent: Consent): Promise<void> {

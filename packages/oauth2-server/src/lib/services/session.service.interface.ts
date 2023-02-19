@@ -25,6 +25,14 @@ export interface SessionServiceInterface {
   findOne(id: string): Promise<Session | null>;
 
   /**
+   * Searches the application's storage for a Session containing the provided Login Challenge.
+   *
+   * @param loginChallenge Login Challenge of the Session.
+   * @returns Session based on the provided Login Challenge.
+   */
+  findOneByLoginChallenge(loginChallenge: string): Promise<Session | null>;
+
+  /**
    * Persists the provided Session into the application's storage.
    *
    * @param session Session to be persisted.

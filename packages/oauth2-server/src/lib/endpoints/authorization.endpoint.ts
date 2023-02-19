@@ -390,7 +390,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
     const session = await this.sessionService.create(parameters, client);
 
     const redirectUrl = new URL(this.loginUrl);
-    const searchParameters = new URLSearchParams({ login_challenge: session.id });
+    const searchParameters = new URLSearchParams({ login_challenge: session.loginChallenge });
 
     redirectUrl.search = searchParameters.toString();
 
@@ -451,10 +451,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @returns Http Redirect Response to the Consent Page.
    */
   private async redirectToConsentPage(parameters: AuthorizationRequest, session: Session): Promise<HttpResponse> {
-    const consent = await this.consentService.create(parameters, session.id, session.client, session.user!);
+    const consent = await this.consentService.create(parameters, session.loginChallenge, session.client, session.user!);
 
     const redirectUrl = new URL(this.consentUrl);
-    const searchParams = new URLSearchParams({ consent_challenge: consent.id });
+    const searchParams = new URLSearchParams({ consent_challenge: consent.consentChallenge });
 
     redirectUrl.search = searchParams.toString();
 

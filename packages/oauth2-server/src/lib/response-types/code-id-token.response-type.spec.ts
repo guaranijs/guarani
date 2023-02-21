@@ -2,6 +2,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
+import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { AuthorizationRequest } from '../messages/authorization-request';
@@ -82,9 +83,10 @@ describe('Code ID Token Response Type', () => {
     it('should throw when not providing a "code_challenge" parameter.', async () => {
       Reflect.deleteProperty(parameters, 'code_challenge');
 
+      const session = <Session>{};
       const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
 
-      await expect(responseType.handle(consent)).rejects.toThrow(
+      await expect(responseType.handle(session, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: parameters.state })
       );
     });
@@ -92,9 +94,10 @@ describe('Code ID Token Response Type', () => {
     it('should throw when providing an unsupported "code_challenge_challenge" parameter.', async () => {
       Reflect.set(parameters, 'code_challenge_method', 'unknown');
 
+      const session = <Session>{};
       const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
 
-      await expect(responseType.handle(consent)).rejects.toThrow(
+      await expect(responseType.handle(session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Unsupported code_challenge_method "unknown".',
           state: parameters.state,
@@ -105,9 +108,10 @@ describe('Code ID Token Response Type', () => {
     it('should throw when requesting "query" as the "response_mode".', async () => {
       Reflect.set(parameters, 'response_mode', 'query');
 
+      const session = <Session>{};
       const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
 
-      await expect(responseType.handle(consent)).rejects.toThrow(
+      await expect(responseType.handle(session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Invalid response_mode "query" for response_type "code id_token".',
           state: parameters.state,
@@ -118,28 +122,31 @@ describe('Code ID Token Response Type', () => {
     it('should throw when not providing a "nonce" parameter.', async () => {
       Reflect.deleteProperty(parameters, 'nonce');
 
+      const session = <Session>{};
       const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
 
-      await expect(responseType.handle(consent)).rejects.toThrow(
+      await expect(responseType.handle(session, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: parameters.state })
       );
     });
 
     it('should throw if the scope "openid" is not provided.', async () => {
+      const session = <Session>{};
       const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['foo', 'bar'] };
 
-      await expect(responseType.handle(consent)).rejects.toThrow(
+      await expect(responseType.handle(session, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state })
       );
     });
 
     it('should create a code id token authorization response.', async () => {
+      const session = <Session>{};
       const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
 
       authorizationCodeServiceMock.create.mockResolvedValueOnce(<AuthorizationCode>{ code: 'authorization_code' });
       idTokenHandlerMock.generateIdToken.mockResolvedValueOnce('id_token');
 
-      await expect(responseType.handle(consent)).resolves.toStrictEqual<
+      await expect(responseType.handle(session, consent)).resolves.toStrictEqual<
         CodeAuthorizationResponse & IdTokenAuthorizationResponse
       >({
         code: 'authorization_code',

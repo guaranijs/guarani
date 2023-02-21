@@ -235,7 +235,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
         }
       }
 
-      const authorizationResponse = await responseType.handle(consent);
+      const authorizationResponse = await responseType.handle(session, consent);
 
       if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
         authorizationResponse.iss = this.settings.issuer;

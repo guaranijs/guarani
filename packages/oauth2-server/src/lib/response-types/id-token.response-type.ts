@@ -1,6 +1,7 @@
 import { Injectable } from '@guarani/di';
 
 import { Consent } from '../entities/consent.entity';
+import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { AuthorizationRequest } from '../messages/authorization-request';
@@ -45,10 +46,11 @@ export class IdTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns an ID Token Response to the Client.
    *
+   * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns ID Token Response.
    */
-  public async handle(consent: Consent): Promise<IdTokenAuthorizationResponse> {
+  public async handle(session: Session, consent: Consent): Promise<IdTokenAuthorizationResponse> {
     const { parameters, scopes } = consent;
 
     this.checkParameters(parameters);
@@ -57,7 +59,7 @@ export class IdTokenResponseType implements ResponseTypeInterface {
       throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
     }
 
-    const idToken = await this.idTokenHandler.generateIdToken(consent);
+    const idToken = await this.idTokenHandler.generateIdToken(session, consent);
 
     return { id_token: idToken, state: parameters.state };
   }

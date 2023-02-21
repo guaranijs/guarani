@@ -1,4 +1,5 @@
 import { Consent } from './consent.entity';
+import { Session } from './session.entity';
 
 /**
  * OAuth 2.0 Authorization Code Entity.
@@ -13,6 +14,11 @@ export interface AuthorizationCode extends Record<string, any> {
    * Revocation status of the Authorization Code.
    */
   isRevoked: boolean;
+
+  /**
+   * Authentication Date of the End User.
+   */
+  readonly authTime: Date;
 
   /**
    * Issuance Date of the Authorization Code.
@@ -30,7 +36,12 @@ export interface AuthorizationCode extends Record<string, any> {
   readonly validAfter: Date;
 
   /**
-   * Consent granted by the Authenticated User.
+   * Session with the Authentication information of the End User.
+   */
+  readonly session: Session;
+
+  /**
+   * Consent with the scopes granted by the End User.
    */
   readonly consent: Consent;
 }

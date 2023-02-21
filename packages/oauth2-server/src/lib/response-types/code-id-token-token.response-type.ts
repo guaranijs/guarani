@@ -1,5 +1,7 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
+
 import { Consent } from '../entities/consent.entity';
+import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { CodeAuthorizationRequest } from '../messages/code.authorization-request';
@@ -66,23 +68,25 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns a Code Authorization Response and an Access Token and ID Token Response to the Client.
    *
+   * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Code Authorization Response and Access Token and ID Token Response.
    */
   public async handle(
+    session: Session,
     consent: Consent
   ): Promise<CodeAuthorizationResponse & IdTokenAuthorizationResponse & TokenAuthorizationResponse> {
-    const { client, parameters, scopes, user } = consent;
+    const { client, parameters, scopes, user } = <Consent & { parameters: CodeAuthorizationRequest }>consent;
 
-    this.checkParameters(<CodeAuthorizationRequest>parameters);
+    this.checkParameters(parameters);
 
     if (!scopes.includes('openid')) {
       throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
-    const authorizationCode = await this.authorizationCodeService.create(consent);
-    const idToken = await this.idTokenHandler.generateIdToken(consent, accessToken, authorizationCode);
+    const authorizationCode = await this.authorizationCodeService.create(session, consent);
+    const idToken = await this.idTokenHandler.generateIdToken(session, consent, accessToken, authorizationCode);
 
     const token = createTokenResponse(accessToken);
 

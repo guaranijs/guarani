@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@guarani/di';
 
 import { Consent } from '../entities/consent.entity';
+import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { AuthorizationRequest } from '../messages/authorization-request';
@@ -53,10 +54,14 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns an Access Token and ID Token Response to the Client.
    *
+   * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Access Token and ID Token Response.
    */
-  public async handle(consent: Consent): Promise<TokenAuthorizationResponse & IdTokenAuthorizationResponse> {
+  public async handle(
+    session: Session,
+    consent: Consent
+  ): Promise<TokenAuthorizationResponse & IdTokenAuthorizationResponse> {
     const { client, parameters, scopes, user } = consent;
 
     this.checkParameters(parameters);
@@ -66,7 +71,7 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
-    const idToken = await this.idTokenHandler.generateIdToken(consent, accessToken);
+    const idToken = await this.idTokenHandler.generateIdToken(session, consent, accessToken);
 
     const token = createTokenResponse(accessToken);
 

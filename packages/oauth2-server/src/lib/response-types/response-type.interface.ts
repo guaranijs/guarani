@@ -1,4 +1,5 @@
 import { Consent } from '../entities/consent.entity';
+import { Session } from '../entities/session.entity';
 import { AuthorizationResponse } from '../messages/authorization-response';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { ResponseType } from './response-type.type';
@@ -22,8 +23,9 @@ export interface ResponseTypeInterface {
   /**
    * Creates the Authorization Response with the Authorization Grant used by the Client on behalf of the End User.
    *
+   * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Authorization Response.
    */
-  handle(consent: Consent): Promise<AuthorizationResponse>;
+  handle(session: Session, consent: Consent): Promise<AuthorizationResponse>;
 }

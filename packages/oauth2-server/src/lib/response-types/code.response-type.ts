@@ -11,6 +11,7 @@ import { AuthorizationCodeServiceInterface } from '../services/authorization-cod
 import { AUTHORIZATION_CODE_SERVICE } from '../services/authorization-code.service.token';
 import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
+import { Session } from '../entities/session.entity';
 
 /**
  * Implementation of the **Code** Response Type.
@@ -67,15 +68,16 @@ export class CodeResponseType implements ResponseTypeInterface {
    * Both the Code Challenge and the PKCE Method used by the Client to generate the PKCE Code Challenge are registered
    * at the application's storage together with the issued Authorization Code for verification at the Token Endpoint.
    *
+   * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Authorization Code Response.
    */
-  public async handle(consent: Consent): Promise<CodeAuthorizationResponse> {
-    const { parameters } = consent;
+  public async handle(session: Session, consent: Consent): Promise<CodeAuthorizationResponse> {
+    const { parameters } = <Consent & { parameters: CodeAuthorizationRequest }>consent;
 
-    this.checkParameters(<CodeAuthorizationRequest>parameters);
+    this.checkParameters(parameters);
 
-    const authorizationCode = await this.authorizationCodeService.create(consent);
+    const authorizationCode = await this.authorizationCodeService.create(session, consent);
 
     return { code: authorizationCode.code, state: parameters.state };
   }

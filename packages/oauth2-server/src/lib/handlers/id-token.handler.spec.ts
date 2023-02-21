@@ -4,12 +4,15 @@ import { JsonWebKey, JsonWebKeySet, JsonWebSignature } from '@guarani/jose';
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
+import { Session } from '../entities/session.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { IdTokenHandler } from './id-token.handler';
+
+const session = <Session>{ createdAt: new Date() };
 
 const consent = <Consent>{
   client: { id: 'client_id' },
@@ -112,7 +115,7 @@ describe('ID Token Handler', () => {
   it('should generate an id token with the default claims.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(consent);
+    const idToken = await idTokenHandler.generateIdToken(session, consent);
 
     expect(idToken).toEqual(expect.any(String));
 
@@ -124,7 +127,7 @@ describe('ID Token Handler', () => {
   it('should generate an id token with the default claims and the "at_hash" claim.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(consent, accessToken);
+    const idToken = await idTokenHandler.generateIdToken(session, consent, accessToken);
 
     expect(idToken).toEqual(expect.any(String));
 
@@ -142,7 +145,7 @@ describe('ID Token Handler', () => {
   it('should generate an id token with the default claims and the "c_hash" claim.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(consent, undefined, authorizationCode);
+    const idToken = await idTokenHandler.generateIdToken(session, consent, undefined, authorizationCode);
 
     expect(idToken).toEqual(expect.any(String));
 
@@ -160,7 +163,7 @@ describe('ID Token Handler', () => {
   it('should generate an id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(consent, accessToken, authorizationCode);
+    const idToken = await idTokenHandler.generateIdToken(session, consent, accessToken, authorizationCode);
 
     expect(idToken).toEqual(expect.any(String));
 

@@ -3,6 +3,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
+import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { AuthorizationRequest } from '../messages/authorization-request';
@@ -79,9 +80,10 @@ describe('Code Response Type', () => {
       const client = <Client>{ id: 'client_id' };
       const user = <User>{ id: 'user_id' };
 
+      const session = <Session>{};
       const consent = <Consent>{ client, parameters: <AuthorizationRequest>parameters, user };
 
-      await expect(responseType.handle(consent)).rejects.toThrow(
+      await expect(responseType.handle(session, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: parameters.state })
       );
     });
@@ -92,9 +94,10 @@ describe('Code Response Type', () => {
       const client = <Client>{ id: 'client_id' };
       const user = <User>{ id: 'user_id' };
 
+      const session = <Session>{};
       const consent = <Consent>{ client, parameters: <AuthorizationRequest>parameters, user };
 
-      await expect(responseType.handle(consent)).rejects.toThrow(
+      await expect(responseType.handle(session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Unsupported code_challenge_method "unknown".',
           state: parameters.state,
@@ -106,11 +109,12 @@ describe('Code Response Type', () => {
       const client = <Client>{ id: 'client_id' };
       const user = <User>{ id: 'user_id' };
 
+      const session = <Session>{};
       const consent = <Consent>{ client, parameters: <AuthorizationRequest>parameters, user };
 
       authorizationCodeServiceMock.create.mockResolvedValueOnce(<AuthorizationCode>{ code: 'authorization_code' });
 
-      await expect(responseType.handle(consent)).resolves.toStrictEqual<CodeAuthorizationResponse>({
+      await expect(responseType.handle(session, consent)).resolves.toStrictEqual<CodeAuthorizationResponse>({
         code: 'authorization_code',
         state: parameters.state,
       });

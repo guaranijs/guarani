@@ -6,6 +6,7 @@ import { createHash, randomInt } from 'crypto';
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
+import { Session } from '../entities/session.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
@@ -37,12 +38,14 @@ export class IdTokenHandler {
   /**
    * Generates an ID Token to be used by the Client for authentication purposes.
    *
+   * @param session Session with the Authentication information of the End User.
    * @param consent Consent granted by the Authenticated User.
    * @param accessToken Access Token issued to the Client.
    * @param authorizationCode Authorization Code issued to the Client.
    * @returns Generated ID Token.
    */
   public async generateIdToken(
+    session: Session,
     consent: Consent,
     accessToken?: AccessToken,
     authorizationCode?: AuthorizationCode
@@ -67,6 +70,7 @@ export class IdTokenHandler {
       exp: now + 86400,
       iat: now,
       nonce: parameters.nonce,
+      auth_time: Math.ceil(session.createdAt.getTime() / 1000),
       ...userinfo,
     });
 

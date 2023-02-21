@@ -1,6 +1,7 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { Consent } from '../entities/consent.entity';
+import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { CodeAuthorizationRequest } from '../messages/code.authorization-request';
 import { CodeAuthorizationResponse } from '../messages/code.authorization-response';
@@ -63,16 +64,21 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns an Authorization Code and Access Token Response to the Client.
    *
+   * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Authorization Code and Access Token Response.
    */
-  public async handle(consent: Consent): Promise<CodeAuthorizationResponse & TokenAuthorizationResponse> {
-    const { client, parameters, scopes, user } = consent;
+  public async handle(
+    session: Session,
+    consent: Consent
+  ): Promise<CodeAuthorizationResponse & TokenAuthorizationResponse> {
+    const { client, parameters, scopes, user } = <Consent & { parameters: CodeAuthorizationRequest }>consent;
 
-    this.checkParameters(<CodeAuthorizationRequest>parameters);
+    this.checkParameters(parameters);
 
-    const authorizationCode = await this.authorizationCodeService.create(consent);
+    const authorizationCode = await this.authorizationCodeService.create(session, consent);
     const accessToken = await this.accessTokenService.create(scopes, client, user);
+
     const token = createTokenResponse(accessToken);
 
     return <CodeAuthorizationResponse & TokenAuthorizationResponse>{

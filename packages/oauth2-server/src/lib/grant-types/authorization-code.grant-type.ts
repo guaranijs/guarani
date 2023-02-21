@@ -9,6 +9,7 @@ import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { AuthorizationCodeTokenRequest } from '../messages/authorization-code.token-request';
+import { CodeAuthorizationRequest } from '../messages/code.authorization-request';
 import { TokenResponse } from '../messages/token-response';
 import { PkceMethod } from '../pkce/pkce-method.type';
 import { PkceInterface } from '../pkce/pkce.interface';
@@ -82,7 +83,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
     try {
       this.checkAuthorizationCode(authorizationCode, parameters, client);
 
-      const { consent } = authorizationCode;
+      const { consent, session } = authorizationCode;
       const { scopes, user } = consent;
 
       const accessToken = await this.accessTokenService.create(scopes, client, user);
@@ -94,7 +95,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
       const response = createTokenResponse(accessToken, refreshToken);
 
       if (scopes.includes('openid')) {
-        response.id_token = await this.idTokenHandler!.generateIdToken(consent);
+        response.id_token = await this.idTokenHandler!.generateIdToken(session, consent);
       }
 
       return response;
@@ -152,7 +153,8 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
     parameters: AuthorizationCodeTokenRequest,
     client: Client
   ): void {
-    const { consent } = authorizationCode;
+    const consent = authorizationCode.consent;
+    const consentParameters = <CodeAuthorizationRequest>consent.parameters;
 
     const authorizationCodeClientIdBuffer = Buffer.from(consent.client.id, 'utf8');
     const clientIdBuffer = Buffer.from(client.id, 'utf8');
@@ -176,7 +178,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
       throw new InvalidGrantException({ description: 'Revoked Authorization Code.' });
     }
 
-    const authorizationCodeRedirectUriBuffer = Buffer.from(consent.parameters.redirect_uri, 'utf8');
+    const authorizationCodeRedirectUriBuffer = Buffer.from(consentParameters.redirect_uri, 'utf8');
     const redirectUriBuffer = Buffer.from(parameters.redirect_uri, 'utf8');
 
     if (
@@ -186,9 +188,9 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
       throw new InvalidGrantException({ description: 'Mismatching Redirect URI.' });
     }
 
-    const pkceMethod = this.getPkceMethod(consent.parameters.code_challenge_method ?? 'plain');
+    const pkceMethod = this.getPkceMethod(consentParameters.code_challenge_method ?? 'plain');
 
-    if (!pkceMethod.verify(consent.parameters.code_challenge, parameters.code_verifier)) {
+    if (!pkceMethod.verify(consentParameters.code_challenge, parameters.code_verifier)) {
       throw new InvalidGrantException({ description: 'Invalid PKCE Code Challenge.' });
     }
   }

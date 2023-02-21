@@ -63,7 +63,10 @@ describe('Authorization Code Flow', () => {
     const loginChallenge = loginUrl.searchParams.get('login_challenge')!;
 
     expect(loginAuthorizationResponse.status).toBe(303);
-    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+
+    expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toBeUndefined();
+    expect(agent.jar.getCookie('guarani:consent', CookieAccessInfo.All)?.value).toBeUndefined();
     // #endregion
 
     // #region Create the Session within the Authorization Server.
@@ -108,7 +111,10 @@ describe('Authorization Code Flow', () => {
     const consentChallenge = consentUrl.searchParams.get('consent_challenge')!;
 
     expect(consentAuthorizationResponse.status).toBe(303);
-    expect(agent.jar.getCookie('guarani:consent', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+
+    expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+    expect(agent.jar.getCookie('guarani:consent', CookieAccessInfo.All)?.value).toBeUndefined();
     // #endregion
 
     // # Create the Consent within the Authorization Server.
@@ -158,6 +164,10 @@ describe('Authorization Code Flow', () => {
     const callbackUrl = new URL(authorizationResponse.headers.location);
 
     expect(authorizationResponse.status).toBe(303);
+
+    expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toBeUndefined();
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+    expect(agent.jar.getCookie('guarani:consent', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
 
     expect(Object.fromEntries(callbackUrl.searchParams.entries())).toStrictEqual<CodeAuthorizationResponse>({
       code: expect.any(String),

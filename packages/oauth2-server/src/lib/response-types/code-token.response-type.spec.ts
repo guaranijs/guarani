@@ -4,6 +4,7 @@ import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
+import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { AuthorizationRequest } from '../messages/authorization-request';
@@ -90,9 +91,10 @@ describe('Code Token Response Type', () => {
       const client = <Client>{ id: 'client_id' };
       const user = <User>{ id: 'user_id' };
 
+      const session = <Session>{};
       const consent = <Consent>{ client, parameters: <AuthorizationRequest>parameters, user };
 
-      await expect(responseType.handle(consent)).rejects.toThrow(
+      await expect(responseType.handle(session, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: parameters.state })
       );
     });
@@ -103,9 +105,10 @@ describe('Code Token Response Type', () => {
       const client = <Client>{ id: 'client_id' };
       const user = <User>{ id: 'user_id' };
 
+      const session = <Session>{};
       const consent = <Consent>{ client, parameters: <AuthorizationRequest>parameters, user };
 
-      await expect(responseType.handle(consent)).rejects.toThrow(
+      await expect(responseType.handle(session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Unsupported code_challenge_method "unknown".',
           state: parameters.state,
@@ -119,9 +122,10 @@ describe('Code Token Response Type', () => {
       const client = <Client>{ id: 'client_id' };
       const user = <User>{ id: 'user_id' };
 
+      const session = <Session>{};
       const consent = <Consent>{ client, parameters: <AuthorizationRequest>parameters, user };
 
-      await expect(responseType.handle(<Consent>consent)).rejects.toThrow(
+      await expect(responseType.handle(session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Invalid response_mode "query" for response_type "code token".',
           state: parameters.state,
@@ -133,6 +137,7 @@ describe('Code Token Response Type', () => {
       const client = <Client>{ id: 'client_id' };
       const user = <User>{ id: 'user_id' };
 
+      const session = <Session>{};
       const consent = <Consent>{ client, parameters: <AuthorizationRequest>parameters, scopes: ['foo', 'bar'], user };
 
       authorizationCodeServiceMock.create.mockResolvedValueOnce(<AuthorizationCode>{ code: 'authorization_code' });
@@ -145,7 +150,7 @@ describe('Code Token Response Type', () => {
         };
       });
 
-      await expect(responseType.handle(consent)).resolves.toStrictEqual<
+      await expect(responseType.handle(session, consent)).resolves.toStrictEqual<
         CodeAuthorizationResponse & TokenAuthorizationResponse
       >({
         access_token: 'access_token',

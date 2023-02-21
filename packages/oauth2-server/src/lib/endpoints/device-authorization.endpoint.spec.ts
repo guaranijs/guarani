@@ -1,5 +1,7 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+
 import { OutgoingHttpHeaders } from 'http';
+
 import { Client } from '../entities/client.entity';
 import { DeviceCode } from '../entities/device-code.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';

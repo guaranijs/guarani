@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@guarani/di';
 
 import { URL, URLSearchParams } from 'url';
 
-import { Session } from '../entities/session.entity';
+import { Grant } from '../entities/grant.entity';
 import { User } from '../entities/user.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
@@ -12,6 +12,8 @@ import { LoginDecisionAcceptInteractionRequest } from '../messages/login-decisio
 import { LoginDecisionDenyInteractionRequest } from '../messages/login-decision-deny.interaction-request';
 import { LoginDecisionInteractionRequest } from '../messages/login-decision.interaction-request';
 import { LoginDecisionInteractionResponse } from '../messages/login-decision.interaction-response';
+import { GrantServiceInterface } from '../services/grant.service.interface';
+import { GRANT_SERVICE } from '../services/grant.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { UserServiceInterface } from '../services/user.service.interface';
@@ -53,11 +55,13 @@ export class LoginInteractionType implements InteractionTypeInterface {
    *
    * @param settings Settings of the Authorization Server.
    * @param sessionService Instance of the Session Service.
+   * @param grantService Instance of the Grant Service.
    * @param userService Instance of the User Service.
    */
   public constructor(
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
+    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
     @Inject(USER_SERVICE) private readonly userService: UserServiceInterface
   ) {}
 
@@ -75,19 +79,19 @@ export class LoginInteractionType implements InteractionTypeInterface {
   public async handleContext(parameters: LoginContextInteractionRequest): Promise<LoginContextInteractionResponse> {
     this.checkContextParameters(parameters);
 
-    const session = await this.getSessionByLoginChallenge(parameters.login_challenge);
+    const grant = await this.getGrantByLoginChallenge(parameters.login_challenge);
 
-    await this.checkSession(session);
+    await this.checkGrant(grant);
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(session.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters);
 
     url.search = searchParameters.toString();
 
     return {
-      skip: session.user !== null,
+      skip: grant.session != null,
       request_url: url.href,
-      client: session.client,
+      client: grant.client,
       context: {},
     };
   }
@@ -116,16 +120,16 @@ export class LoginInteractionType implements InteractionTypeInterface {
   public async handleDecision(parameters: LoginDecisionInteractionRequest): Promise<LoginDecisionInteractionResponse> {
     this.checkDecisionParameters(parameters);
 
-    const session = await this.getSessionByLoginChallenge(parameters.login_challenge);
+    const grant = await this.getGrantByLoginChallenge(parameters.login_challenge);
 
-    await this.checkSession(session);
+    await this.checkGrant(grant);
 
     switch (parameters.decision) {
       case 'accept':
-        return await this.acceptLogin(<LoginDecisionAcceptInteractionRequest>parameters, session);
+        return await this.acceptLogin(<LoginDecisionAcceptInteractionRequest>parameters, grant);
 
       case 'deny':
-        return await this.denyLogin(<LoginDecisionDenyInteractionRequest>parameters, session);
+        return await this.denyLogin(<LoginDecisionDenyInteractionRequest>parameters, grant);
 
       default:
         throw new InvalidRequestException({ description: `Unsupported decision "${parameters.decision}".` });
@@ -154,23 +158,26 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * to continue the Authorization Process.
    *
    * @param parameters Parameters of the Login Accept Decision Interaction Request.
-   * @param session Session of the Login Interaction.
+   * @param grant Grant of the Login Interaction.
    * @returns Redirect Url for the User-Agent to continue the Authorization Process.
    */
   private async acceptLogin(
     parameters: LoginDecisionAcceptInteractionRequest,
-    session: Session
+    grant: Grant
   ): Promise<LoginDecisionInteractionResponse> {
     this.checkAcceptDecisionParameters(parameters);
 
-    const user = await this.getUser(parameters.subject);
+    if (grant.session == null) {
+      const user = await this.getUser(parameters.subject);
+      const session = await this.sessionService.create(user);
 
-    session.user = user;
+      grant.session = session;
 
-    await this.sessionService.save(session);
+      await this.grantService.save(grant);
+    }
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(session.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters);
 
     url.search = searchParameters.toString();
 
@@ -194,16 +201,16 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * Denies the authentication performed by the application and redirects the User-Agent to display the Error details.
    *
    * @param parameters Parameters of the Login Deny Decision Interaction Request.
-   * @param session Session of the Login Interaction.
+   * @param grant Grant of the Login Interaction.
    * @returns Redirect Url for the User-Agent to abort the Authorization Process.
    */
   private async denyLogin(
     parameters: LoginDecisionDenyInteractionRequest,
-    session: Session
+    grant: Grant
   ): Promise<LoginDecisionInteractionResponse> {
     this.checkDenyDecisionParameters(parameters);
 
-    await this.sessionService.remove(session);
+    await this.grantService.remove(grant);
 
     const { error, error_description: errorDescription } = parameters;
 
@@ -233,33 +240,33 @@ export class LoginInteractionType implements InteractionTypeInterface {
   }
 
   /**
-   * Fetches the requested Session from the application's storage.
+   * Fetches the requested Grant from the application's storage.
    *
    * @param loginChallenge Login Challenge provided by the Client.
-   * @returns Session based on the provided Login Challenge.
+   * @returns Grant based on the provided Login Challenge.
    */
-  private async getSessionByLoginChallenge(loginChallenge: string): Promise<Session> {
-    const session = await this.sessionService.findOneByLoginChallenge(loginChallenge);
+  private async getGrantByLoginChallenge(loginChallenge: string): Promise<Grant> {
+    const grant = await this.grantService.findOneByLoginChallenge(loginChallenge);
 
-    if (session === null) {
+    if (grant === null) {
       throw new AccessDeniedException({ description: 'Invalid Login Challenge.' });
     }
 
-    return session;
+    return grant;
   }
 
   /**
-   * Checks the validity of the Session.
+   * Checks the validity of the Grant.
    *
-   * @param session Session to be checked.
+   * @param grant Grant to be checked.
    */
-  private async checkSession(session: Session): Promise<void> {
+  private async checkGrant(grant: Grant): Promise<void> {
     try {
-      if (session.expiresAt != null && new Date() > session.expiresAt) {
-        throw new AccessDeniedException({ description: 'Expired Session.' });
+      if (grant.expiresAt != null && new Date() > grant.expiresAt) {
+        throw new AccessDeniedException({ description: 'Expired Grant.' });
       }
     } catch (exc: unknown) {
-      await this.sessionService.remove(session);
+      await this.grantService.remove(grant);
       throw exc;
     }
   }

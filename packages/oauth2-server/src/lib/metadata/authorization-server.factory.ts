@@ -46,11 +46,14 @@ import { AuthorizationCodeService } from '../services/default/authorization-code
 import { ClientService } from '../services/default/client.service';
 import { ConsentService } from '../services/default/consent.service';
 import { DeviceCodeService } from '../services/default/device-code.service';
+import { GrantService } from '../services/default/grant.service';
 import { RefreshTokenService } from '../services/default/refresh-token.service';
 import { SessionService } from '../services/default/session.service';
 import { UserService } from '../services/default/user.service';
 import { DeviceCodeServiceInterface } from '../services/device-code.service.interface';
 import { DEVICE_CODE_SERVICE } from '../services/device-code.service.token';
+import { GrantServiceInterface } from '../services/grant.service.interface';
+import { GRANT_SERVICE } from '../services/grant.service.token';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
@@ -117,6 +120,7 @@ export class AuthorizationServerFactory {
     this.setClientService();
     this.setConsentService();
     this.setDeviceCodeService();
+    this.setGrantService();
     this.setRefreshTokenService();
     this.setSessionService();
     this.setUserService();
@@ -371,6 +375,17 @@ export class AuthorizationServerFactory {
     typeof deviceCodeService === 'function'
       ? binding.toClass(deviceCodeService).asSingleton()
       : binding.toValue(deviceCodeService);
+  }
+
+  /**
+   * Defines the Grant Service used by the Authorization Server.
+   */
+  private static setGrantService(): void {
+    const grantService = this.authorizationServerOptions.grantService ?? GrantService;
+
+    const binding = this.container.bind<GrantServiceInterface>(GRANT_SERVICE);
+
+    typeof grantService === 'function' ? binding.toClass(grantService).asSingleton() : binding.toValue(grantService);
   }
 
   /**

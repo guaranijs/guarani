@@ -1,6 +1,7 @@
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { User } from '../entities/user.entity';
+import { AuthorizationRequest } from '../messages/authorization-request';
 
 /**
  * Interface of the Consent Service.
@@ -9,31 +10,24 @@ import { User } from '../entities/user.entity';
  */
 export interface ConsentServiceInterface {
   /**
-   * Creates a Consent representing the consent given to the Client by the End-User.
+   * Creates a Consent representing the consent given to the Client by the End User.
    *
    * @param parameters Parameters of the Authorization Request.
-   * @param loginChallenge Login Challenge used to generate the Consent.
+   * @param scopes Scopes granted to the Client by the End User.
    * @param client Client requesting authorization.
    * @param user Authenticated User granting authorization.
    * @returns Generated Consent.
    */
-  create(parameters: Record<string, any>, loginChallenge: string, client: Client, user: User): Promise<Consent>;
+  create(parameters: AuthorizationRequest, scopes: string[], client: Client, user: User): Promise<Consent>;
 
   /**
-   * Searches the application's storage for a Consent containing the provided Identifier.
+   * Searches the application's storage for a Consent containing the provided Client and User Identifiers.
    *
-   * @param id Identifier of the Consent.
-   * @returns Consent based on the provided Identifier.
+   * @param clientId Identifier of the Client.
+   * @param userId Identifier of the User.
+   * @returns Consent based on the provided Client and User Identifiers.
    */
-  findOne(id: string): Promise<Consent | null>;
-
-  /**
-   * Searches the application's storage for a Consent containing the provided Consent Challenge.
-   *
-   * @param consentChallenge Consent Challenge of the Consent.
-   * @returns Consent based on the provided Consent Challenge.
-   */
-  findOneByConsentChallenge(consentChallenge: string): Promise<Consent | null>;
+  findOne(clientId: string, userId: string): Promise<Consent | null>;
 
   /**
    * Persists the provided Consent into the application's storage.

@@ -1,5 +1,5 @@
-import { Client } from '../entities/client.entity';
 import { Session } from '../entities/session.entity';
+import { User } from '../entities/user.entity';
 
 /**
  * Interface of the Session Service.
@@ -8,13 +8,12 @@ import { Session } from '../entities/session.entity';
  */
 export interface SessionServiceInterface {
   /**
-   * Creates a Session representing the consent given to the Client by the End-User.
+   * Creates a Session representing the End User's Authentication.
    *
-   * @param parameters Parameters of the Authorization Request.
-   * @param client Client requesting authorization.
+   * @param user Authenticated End User.
    * @returns Generated Session.
    */
-  create(parameters: Record<string, any>, client: Client): Promise<Session>;
+  create(user: User): Promise<Session>;
 
   /**
    * Searches the application's storage for a Session containing the provided Identifier.
@@ -23,14 +22,6 @@ export interface SessionServiceInterface {
    * @returns Session based on the provided Identifier.
    */
   findOne(id: string): Promise<Session | null>;
-
-  /**
-   * Searches the application's storage for a Session containing the provided Login Challenge.
-   *
-   * @param loginChallenge Login Challenge of the Session.
-   * @returns Session based on the provided Login Challenge.
-   */
-  findOneByLoginChallenge(loginChallenge: string): Promise<Session | null>;
 
   /**
    * Persists the provided Session into the application's storage.

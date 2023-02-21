@@ -251,7 +251,6 @@ export class AuthorizationEndpoint implements EndpointInterface {
         'guarani:consent': consent.id,
       });
     } catch (exc: unknown) {
-      console.error(exc);
       let error: OAuth2Exception;
 
       if (exc instanceof OAuth2Exception) {

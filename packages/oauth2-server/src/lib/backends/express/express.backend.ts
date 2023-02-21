@@ -1,7 +1,6 @@
 import { Injectable } from '@guarani/di';
 
 import { Request, RequestHandler, Response, Router } from 'express';
-import { OutgoingHttpHeader } from 'http';
 
 import { AuthorizationServer } from '../../authorization-server';
 import { HttpMethod } from '../../http/http-method.type';
@@ -71,8 +70,13 @@ export class ExpressBackend extends AuthorizationServer {
   private _parseOAuth2Response(oauth2Response: HttpResponse, response: Response): void {
     const { body, cookies, headers, statusCode } = oauth2Response;
 
-    Object.entries(headers).forEach(([name, value]) => response.setHeader(name, <OutgoingHttpHeader>value));
-    Object.entries(cookies).forEach(([name, value]) => response.cookie(name, value));
+    Object.entries(headers).forEach(([name, value]) => {
+      response.setHeader(name, value!);
+    });
+
+    Object.entries(cookies).forEach(([name, value]) => {
+      value === null ? response.clearCookie(name) : response.cookie(name, value);
+    });
 
     response.status(statusCode).send(body);
   }

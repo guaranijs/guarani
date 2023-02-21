@@ -3,6 +3,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { URLSearchParams } from 'url';
 
 import { Client } from '../entities/client.entity';
+import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
@@ -12,6 +13,8 @@ import { LoginContextInteractionRequest } from '../messages/login-context.intera
 import { LoginContextInteractionResponse } from '../messages/login-context.interaction-response';
 import { LoginDecisionInteractionRequest } from '../messages/login-decision.interaction-request';
 import { LoginDecisionInteractionResponse } from '../messages/login-decision.interaction-response';
+import { GrantServiceInterface } from '../services/grant.service.interface';
+import { GRANT_SERVICE } from '../services/grant.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { UserServiceInterface } from '../services/user.service.interface';
@@ -28,6 +31,14 @@ describe('Login Interaction Type', () => {
   const sessionServiceMock = jest.mocked<SessionServiceInterface>({
     create: jest.fn(),
     findOne: jest.fn(),
+    remove: jest.fn(),
+    save: jest.fn(),
+  });
+
+  const grantServiceMock = jest.mocked<GrantServiceInterface>({
+    create: jest.fn(),
+    findOne: jest.fn(),
+    findOneByConsentChallenge: jest.fn(),
     findOneByLoginChallenge: jest.fn(),
     remove: jest.fn(),
     save: jest.fn(),
@@ -44,6 +55,7 @@ describe('Login Interaction Type', () => {
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
+    container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind<UserServiceInterface>(USER_SERVICE).toValue(userServiceMock);
     container.bind(LoginInteractionType).toSelf().asSingleton();
 
@@ -75,28 +87,30 @@ describe('Login Interaction Type', () => {
       );
     });
 
-    it('should throw when no session is found.', async () => {
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
+    it('should throw when no grant is found.', async () => {
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
       await expect(interactionType.handleContext(parameters)).rejects.toThrow(
         new AccessDeniedException({ description: 'Invalid Login Challenge.' })
       );
     });
 
-    it('should throw when the session is expired.', async () => {
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
+    it('should throw when the grant is expired.', async () => {
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
         expiresAt: new Date(Date.now() - 3600000),
       });
 
       await expect(interactionType.handleContext(parameters)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Session.' })
+        new AccessDeniedException({ description: 'Expired Grant.' })
       );
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
     });
 
     it('should return a valid first time login context response.', async () => {
-      const sessionParameters = <AuthorizationRequest>{
+      const authorizationParameters = <AuthorizationRequest>{
         response_type: 'code',
         client_id: 'client_id',
         redirect_uri: 'https://client.example.com/callback',
@@ -105,15 +119,14 @@ describe('Login Interaction Type', () => {
         response_mode: 'query',
       };
 
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
-        parameters: sessionParameters,
+        parameters: authorizationParameters,
         client: { id: 'client_id' },
-        user: null,
       });
 
-      const urlParameters = new URLSearchParams(sessionParameters);
+      const urlParameters = new URLSearchParams(authorizationParameters);
 
       await expect(interactionType.handleContext(parameters)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
@@ -123,8 +136,8 @@ describe('Login Interaction Type', () => {
       });
     });
 
-    it('should return a valid subsequent login context response.', async () => {
-      const sessionParameters = <AuthorizationRequest>{
+    it('should return a valid skip login context response.', async () => {
+      const authorizationParameters = <AuthorizationRequest>{
         response_type: 'code',
         client_id: 'client_id',
         redirect_uri: 'https://client.example.com/callback',
@@ -133,15 +146,15 @@ describe('Login Interaction Type', () => {
         response_mode: 'query',
       };
 
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
-        parameters: sessionParameters,
+        parameters: authorizationParameters,
         client: { id: 'client_id' },
-        user: { id: 'user_id' },
+        session: { id: 'session_id' },
       });
 
-      const urlParameters = new URLSearchParams(sessionParameters);
+      const urlParameters = new URLSearchParams(authorizationParameters);
 
       await expect(interactionType.handleContext(parameters)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: true,
@@ -175,31 +188,33 @@ describe('Login Interaction Type', () => {
       );
     });
 
-    it('should throw when no session is found.', async () => {
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
+    it('should throw when no grant is found.', async () => {
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
         new AccessDeniedException({ description: 'Invalid Login Challenge.' })
       );
     });
 
-    it('should throw when the session is expired.', async () => {
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
+    it('should throw when the grant is expired.', async () => {
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
         expiresAt: new Date(Date.now() - 3600000),
       });
 
       await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Session.' })
+        new AccessDeniedException({ description: 'Expired Grant.' })
       );
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
     });
 
     it('should throw when providing an invalid decision.', async () => {
       Reflect.set(parameters, 'decision', 'unknown');
 
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
       });
 
@@ -211,8 +226,8 @@ describe('Login Interaction Type', () => {
     it('should throw when the parameter "subject" is not provided.', async () => {
       Reflect.set(parameters, 'decision', 'accept');
 
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
       });
 
@@ -225,8 +240,8 @@ describe('Login Interaction Type', () => {
       Reflect.set(parameters, 'decision', 'accept');
       Reflect.set(parameters, 'subject', 'user_id');
 
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
       });
 
@@ -237,11 +252,11 @@ describe('Login Interaction Type', () => {
       );
     });
 
-    it('should return a valid login accept decision interaction response.', async () => {
+    it('should return a valid first time login accept decision interaction response.', async () => {
       Reflect.set(parameters, 'decision', 'accept');
       Reflect.set(parameters, 'subject', 'user_id');
 
-      const sessionParameters = <AuthorizationRequest>{
+      const authorizationParameters = <AuthorizationRequest>{
         response_type: 'code',
         client_id: 'client_id',
         redirect_uri: 'https://client.example.com/callback',
@@ -250,27 +265,73 @@ describe('Login Interaction Type', () => {
         response_mode: 'query',
       };
 
-      const session = <Session>{ id: 'session_id', loginChallenge: 'login_challenge', parameters: sessionParameters };
+      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge', parameters: authorizationParameters };
       const user = <User>{ id: 'user_id' };
+      const session = <Session>{ id: 'session_id', user };
 
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(session);
       userServiceMock.findOne.mockResolvedValueOnce(user);
+      sessionServiceMock.create.mockResolvedValueOnce(session);
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
-      const urlParameters = new URLSearchParams(sessionParameters);
+      const urlParameters = new URLSearchParams(authorizationParameters);
 
       await expect(interactionType.handleDecision(parameters)).resolves.toStrictEqual<LoginDecisionInteractionResponse>(
         { redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}` }
       );
 
-      expect(session.user).toStrictEqual(user);
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(grant.session).toStrictEqual(session);
+
+      expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: authorizationParameters,
+        session,
+      });
+    });
+
+    it('should return a valid subsequent login accept decision interaction response.', async () => {
+      Reflect.set(parameters, 'decision', 'accept');
+      Reflect.set(parameters, 'subject', 'user_id');
+
+      const authorizationParameters = <AuthorizationRequest>{
+        response_type: 'code',
+        client_id: 'client_id',
+        redirect_uri: 'https://client.example.com/callback',
+        scope: 'foo bar baz',
+        state: 'client_state',
+        response_mode: 'query',
+      };
+
+      const user = <User>{ id: 'user_id' };
+      const session = <Session>{ id: 'session_id', user };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: authorizationParameters,
+        session,
+      };
+
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
+
+      const urlParameters = new URLSearchParams(authorizationParameters);
+
+      await expect(interactionType.handleDecision(parameters)).resolves.toStrictEqual<LoginDecisionInteractionResponse>(
+        { redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}` }
+      );
+
+      expect(grant.session).toStrictEqual(session);
+
+      expect(userServiceMock.findOne).not.toHaveBeenCalled();
+      expect(sessionServiceMock.create).not.toHaveBeenCalled();
+      expect(grantServiceMock.save).not.toHaveBeenCalled();
     });
 
     it('should throw when the parameter "error" is not provided.', async () => {
       Reflect.set(parameters, 'decision', 'deny');
 
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
       });
 
@@ -285,8 +346,8 @@ describe('Login Interaction Type', () => {
 
       Reflect.deleteProperty(parameters, 'error_description');
 
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
       });
 
@@ -300,12 +361,11 @@ describe('Login Interaction Type', () => {
       Reflect.set(parameters, 'error', 'custom_error');
       Reflect.set(parameters, 'error_description', 'Custom error description.');
 
-      sessionServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
-        loginChallenge: 'login_challenge',
-      });
+      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+      const user = <User>{ id: 'user_id' };
 
-      userServiceMock.findOne.mockResolvedValueOnce({ id: 'user_id' });
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
+      userServiceMock.findOne.mockResolvedValueOnce(user);
 
       const urlParameters = new URLSearchParams({
         error: parameters.error,
@@ -316,7 +376,7 @@ describe('Login Interaction Type', () => {
         { redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}` }
       );
 
-      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
     });
   });
 });

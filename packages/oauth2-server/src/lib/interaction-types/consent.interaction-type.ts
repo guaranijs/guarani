@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 
-import { Consent } from '../entities/consent.entity';
+import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
@@ -11,6 +11,8 @@ import { ConsentDecisionDenyInteractionRequest } from '../messages/consent-decis
 import { ConsentDecisionInteractionRequest } from '../messages/consent-decision.interaction-request';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
+import { GrantServiceInterface } from '../services/grant.service.interface';
+import { GRANT_SERVICE } from '../services/grant.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { ConsentDecisionInteractionResponse } from './consent-decision.interaction-response';
@@ -47,10 +49,12 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    *
    * @param settings Settings of the Authorization Server.
    * @param consentService Instance of the Consent Service.
+   * @param grantService Instance of the Grant Service.
    */
   public constructor(
     @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(CONSENT_SERVICE) private readonly consentService: ConsentServiceInterface
+    @Inject(CONSENT_SERVICE) private readonly consentService: ConsentServiceInterface,
+    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface
   ) {}
 
   /**
@@ -67,22 +71,22 @@ export class ConsentInteractionType implements InteractionTypeInterface {
   public async handleContext(parameters: ConsentContextInteractionRequest): Promise<ConsentContextInteractionResponse> {
     this.checkContextParameters(parameters);
 
-    const consent = await this.getConsentByConsentChallenge(parameters.consent_challenge);
+    const grant = await this.getGrantByConsentChallenge(parameters.consent_challenge);
 
-    await this.checkConsent(consent);
+    await this.checkGrant(grant);
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(consent.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters);
 
     url.search = searchParameters.toString();
 
     return {
-      skip: consent.scopes.length !== 0,
-      requested_scope: consent.parameters.scope,
-      subject: consent.user.id,
+      skip: grant.consent != null,
+      requested_scope: grant.parameters.scope,
+      subject: grant.session!.user.id,
       request_url: url.href,
-      login_challenge: consent.loginChallenge,
-      client: consent.client,
+      login_challenge: grant.loginChallenge,
+      client: grant.client,
       context: {},
     };
   }
@@ -114,16 +118,16 @@ export class ConsentInteractionType implements InteractionTypeInterface {
   ): Promise<ConsentDecisionInteractionResponse> {
     this.checkDecisionParameters(parameters);
 
-    const consent = await this.getConsentByConsentChallenge(parameters.consent_challenge);
+    const grant = await this.getGrantByConsentChallenge(parameters.consent_challenge);
 
-    await this.checkConsent(consent);
+    await this.checkGrant(grant);
 
     switch (parameters.decision) {
       case 'accept':
-        return await this.acceptConsent(<ConsentDecisionAcceptInteractionRequest>parameters, consent);
+        return await this.acceptConsent(<ConsentDecisionAcceptInteractionRequest>parameters, grant);
 
       case 'deny':
-        return await this.denyConsent(<ConsentDecisionDenyInteractionRequest>parameters, consent);
+        return await this.denyConsent(<ConsentDecisionDenyInteractionRequest>parameters, grant);
 
       default:
         throw new InvalidRequestException({ description: `Unsupported decision "${parameters.decision}".` });
@@ -151,25 +155,31 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * Accepts the consent performed by the application and redirects the User-Agent to continue the Authorization Process.
    *
    * @param parameters Parameters of the Consent Accept Decision Interaction Request.
-   * @param consent Grant of the Consent Interaction.
+   * @param grant Grant of the Consent Interaction.
    * @returns Redirect Url for the User-Agent to continue the Authorization Process.
    */
   private async acceptConsent(
     parameters: ConsentDecisionAcceptInteractionRequest,
-    consent: Consent
+    grant: Grant
   ): Promise<ConsentDecisionInteractionResponse> {
     this.checkAcceptDecisionParameters(parameters);
 
-    const grantedScopes = parameters.grant_scope.split(' ');
+    if (grant.consent == null) {
+      const grantedScopes = parameters.grant_scope.split(' ');
 
-    this.checkGrantedScopes(consent, grantedScopes);
+      this.checkGrantedScopes(grant, grantedScopes);
 
-    consent.scopes = grantedScopes;
+      const { client, parameters: consentParameters, session } = grant;
 
-    await this.consentService.save(consent);
+      const consent = await this.consentService.create(consentParameters, grantedScopes, client, session!.user);
+
+      grant.consent = consent;
+
+      await this.grantService.save(grant);
+    }
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(consent.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters);
 
     url.search = searchParameters.toString();
 
@@ -190,13 +200,13 @@ export class ConsentInteractionType implements InteractionTypeInterface {
   }
 
   /**
-   * Checks if the scopes granted by the End User are valid and updates the Consent with them.
+   * Checks if the scopes granted by the End User are valid.
    *
-   * @param consent Consent being checked.
+   * @param grant Grant being checked.
    * @param grantedScopes Scopes granted by the End User.
    */
-  private checkGrantedScopes(consent: Consent, grantedScopes: string[]): void {
-    const requestedScopes = consent.parameters.scope.split(' ');
+  private checkGrantedScopes(grant: Grant, grantedScopes: string[]): void {
+    const requestedScopes = grant.parameters.scope.split(' ');
 
     if (grantedScopes.some((grantedScope) => !requestedScopes.includes(grantedScope))) {
       throw new InvalidScopeException({ description: 'The granted scope was not requested by the Client.' });
@@ -207,16 +217,16 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * Denies the consent performed by the application and redirects the User-Agent to display the Error details.
    *
    * @param parameters Parameters of the Consent Deny Decision Interaction Request.
-   * @param consent Grant of the Consent Interaction.
+   * @param grant Grant of the Consent Interaction.
    * @returns Redirect Url for the User-Agent to abort the Authorization Process.
    */
   private async denyConsent(
     parameters: ConsentDecisionDenyInteractionRequest,
-    consent: Consent
+    grant: Grant
   ): Promise<ConsentDecisionInteractionResponse> {
     this.checkDenyDecisionParameters(parameters);
 
-    await this.consentService.remove(consent);
+    await this.grantService.remove(grant);
 
     const { error, error_description: errorDescription } = parameters;
 
@@ -246,13 +256,13 @@ export class ConsentInteractionType implements InteractionTypeInterface {
   }
 
   /**
-   * Fetches the requested Consent from the application's storage.
+   * Fetches the requested Grant from the application's storage.
    *
-   * @param consentChallenge Consent Challenge of the Consent provided by the Client.
-   * @returns Consent based on the provided Consent Challenge.
+   * @param consentChallenge Consent Challenge of the Grant provided by the Client.
+   * @returns Grant based on the provided Consent Challenge.
    */
-  private async getConsentByConsentChallenge(consentChallenge: string): Promise<Consent> {
-    const consent = await this.consentService.findOneByConsentChallenge(consentChallenge);
+  private async getGrantByConsentChallenge(consentChallenge: string): Promise<Grant> {
+    const consent = await this.grantService.findOneByConsentChallenge(consentChallenge);
 
     if (consent === null) {
       throw new AccessDeniedException({ description: 'Invalid Consent Challenge.' });
@@ -262,17 +272,17 @@ export class ConsentInteractionType implements InteractionTypeInterface {
   }
 
   /**
-   * Checks the validity of the Consent.
+   * Checks the validity of the Grant.
    *
-   * @param consent Consent to be checked.
+   * @param grant Grant to be checked.
    */
-  private async checkConsent(consent: Consent): Promise<void> {
+  private async checkGrant(grant: Grant): Promise<void> {
     try {
-      if (consent.expiresAt != null && new Date() > consent.expiresAt) {
-        throw new AccessDeniedException({ description: 'Expired Consent.' });
+      if (grant.expiresAt != null && new Date() > grant.expiresAt) {
+        throw new AccessDeniedException({ description: 'Expired Grant.' });
       }
     } catch (exc: unknown) {
-      await this.consentService.remove(consent);
+      await this.grantService.remove(grant);
       throw exc;
     }
   }

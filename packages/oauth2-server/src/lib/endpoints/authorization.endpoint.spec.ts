@@ -5,6 +5,7 @@ import { URL, URLSearchParams } from 'url';
 
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
+import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -24,6 +25,8 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
+import { GrantServiceInterface } from '../services/grant.service.interface';
+import { GRANT_SERVICE } from '../services/grant.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
@@ -41,7 +44,6 @@ describe('Authorization Endpoint', () => {
   const sessionServiceMock = jest.mocked<SessionServiceInterface>({
     create: jest.fn(),
     findOne: jest.fn(),
-    findOneByLoginChallenge: jest.fn(),
     remove: jest.fn(),
     save: jest.fn(),
   });
@@ -49,7 +51,15 @@ describe('Authorization Endpoint', () => {
   const consentServiceMock = jest.mocked<ConsentServiceInterface>({
     create: jest.fn(),
     findOne: jest.fn(),
+    remove: jest.fn(),
+    save: jest.fn(),
+  });
+
+  const grantServiceMock = jest.mocked<GrantServiceInterface>({
+    create: jest.fn(),
+    findOne: jest.fn(),
     findOneByConsentChallenge: jest.fn(),
+    findOneByLoginChallenge: jest.fn(),
     remove: jest.fn(),
     save: jest.fn(),
   });
@@ -77,12 +87,14 @@ describe('Authorization Endpoint', () => {
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
     container.bind<ConsentServiceInterface>(CONSENT_SERVICE).toValue(consentServiceMock);
+    container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind(ScopeHandler).toSelf().asSingleton();
     container.bind(AuthorizationEndpoint).toSelf().asSingleton();
 
     responseTypesMocks.forEach((responseType) => {
       container.bind<ResponseTypeInterface>(RESPONSE_TYPE).toValue(responseType);
     });
+
     responseModesMocks.forEach((responseMode) => {
       container.bind<ResponseModeInterface>(RESPONSE_MODE).toValue(responseMode);
     });
@@ -140,7 +152,8 @@ describe('Authorization Endpoint', () => {
           <Settings>{},
           clientServiceMock,
           sessionServiceMock,
-          consentServiceMock
+          consentServiceMock,
+          grantServiceMock
         );
       }).toThrow(new TypeError('Missing User Interaction options.'));
     });
@@ -152,7 +165,7 @@ describe('Authorization Endpoint', () => {
     beforeEach(() => {
       request = {
         body: {},
-        cookies: { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' },
+        cookies: {},
         headers: {},
         method: 'GET',
         path: '/oauth/authorize',
@@ -340,9 +353,7 @@ describe('Authorization Endpoint', () => {
       });
     });
 
-    it('should return a redirect response to the login page when no session is found at the cookies.', async () => {
-      delete request.cookies['guarani:session'];
-
+    it('should return a redirect response to the login page when no grant is found at the cookies (session).', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         redirectUris: ['https://example.com/callback'],
@@ -350,19 +361,23 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id', loginChallenge: 'login_challenge' });
+      grantServiceMock.findOne.mockResolvedValueOnce(null);
+
+      grantServiceMock.create.mockResolvedValueOnce(<Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' });
 
       const parameters = new URLSearchParams({ login_challenge: 'login_challenge' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        cookies: { 'guarani:session': 'session_id' },
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': null },
         headers: { Location: `https://server.example.com/auth/login?${parameters.toString()}` },
         statusCode: 303,
       });
     });
 
-    it('should return a redirect response to the login page when no session is found with the id at the cookies.', async () => {
+    it('should return a redirect response to the login page when no grant is found at the storage (session).', async () => {
+      Reflect.set(request.cookies, 'guarani:grant', 'grant_id');
+
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         redirectUris: ['https://example.com/callback'],
@@ -371,19 +386,78 @@ describe('Authorization Endpoint', () => {
       });
 
       sessionServiceMock.findOne.mockResolvedValueOnce(null);
-      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id', loginChallenge: 'login_challenge' });
+      grantServiceMock.findOne.mockResolvedValueOnce(null);
+
+      grantServiceMock.create.mockResolvedValueOnce(<Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' });
 
       const parameters = new URLSearchParams({ login_challenge: 'login_challenge' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        cookies: { 'guarani:session': 'session_id' },
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': null },
+        headers: { Location: `https://server.example.com/auth/login?${parameters.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should return a redirect response to the login page when the grant is expired (session).', async () => {
+      Reflect.set(request.cookies, 'guarani:grant', 'old_grant_id');
+
+      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
+        id: 'client_id',
+        redirectUris: ['https://example.com/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar'],
+      });
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(null);
+
+      grantServiceMock.findOne.mockResolvedValueOnce(<Grant>{
+        id: 'old_grant_id',
+        expiresAt: new Date(Date.now() - 300000),
+      });
+
+      grantServiceMock.create.mockResolvedValueOnce(<Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' });
+
+      const parameters = new URLSearchParams({ login_challenge: 'login_challenge' });
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.alloc(0),
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': null },
+        headers: { Location: `https://server.example.com/auth/login?${parameters.toString()}` },
+        statusCode: 303,
+      });
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return a redirect response to the login page when the grant has no session.', async () => {
+      Reflect.set(request.cookies, 'guarani:grant', 'grant_id');
+
+      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
+        id: 'client_id',
+        redirectUris: ['https://example.com/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar'],
+      });
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(null);
+      grantServiceMock.findOne.mockResolvedValueOnce(<Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' });
+
+      const parameters = new URLSearchParams({ login_challenge: 'login_challenge' });
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.alloc(0),
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': null },
         headers: { Location: `https://server.example.com/auth/login?${parameters.toString()}` },
         statusCode: 303,
       });
     });
 
     it('should return a redirect response to the login page when the session is expired.', async () => {
+      Reflect.set(request.cookies, 'guarani:session', 'session_id');
+      Reflect.set(request.cookies, 'guarani:grant', 'grant_id');
+
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         redirectUris: ['https://example.com/callback'],
@@ -391,19 +465,24 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
-        loginChallenge: 'old_login_challenge',
-        expiresAt: new Date(Date.now() - 3600000),
+      sessionServiceMock.findOne.mockResolvedValueOnce(null);
+
+      grantServiceMock.findOne.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        session: {
+          id: 'session_id',
+          expiresAt: new Date(Date.now() - 300000),
+        },
       });
 
-      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id', loginChallenge: 'login_challenge' });
+      grantServiceMock.create.mockResolvedValueOnce(<Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' });
 
       const parameters = new URLSearchParams({ login_challenge: 'login_challenge' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        cookies: { 'guarani:session': 'session_id' },
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': null },
         headers: { Location: `https://server.example.com/auth/login?${parameters.toString()}` },
         statusCode: 303,
       });
@@ -411,36 +490,9 @@ describe('Authorization Endpoint', () => {
       expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
     });
 
-    it('should return a redirect response to the login page when the session does not have a user.', async () => {
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
-        id: 'client_id',
-        redirectUris: ['https://example.com/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar'],
-      });
-
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
-        loginChallenge: 'old_login_challenge',
-        user: null,
-      });
-
-      sessionServiceMock.create.mockResolvedValueOnce(<Session>{ id: 'session_id', loginChallenge: 'login_challenge' });
-
-      const parameters = new URLSearchParams({ login_challenge: 'login_challenge' });
-
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        cookies: { 'guarani:session': 'session_id' },
-        headers: { Location: `https://server.example.com/auth/login?${parameters.toString()}` },
-        statusCode: 303,
-      });
-
-      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
-    });
-
-    it('should return an error response when the parameters of the request and session do not match.', async () => {
-      request.query.state = 'bad_client_state';
+    it('should return a redirect response to the consent page when no grant is found (consent).', async () => {
+      Reflect.set(request.cookies, 'guarani:session', 'session_id');
+      Reflect.set(request.cookies, 'guarani:grant', 'grant_id');
 
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
@@ -449,52 +501,12 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
-        loginChallenge: 'login_challenge',
-        parameters: { ...request.query, state: 'client_state' },
-        user: { id: 'user_id' },
-      });
+      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id', user: { id: 'user_id' } });
+      consentServiceMock.findOne.mockResolvedValueOnce(null);
+      grantServiceMock.findOne.mockResolvedValueOnce(null);
 
-      responseModesMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        const url = new URL(redirectUri);
-        url.search = new URLSearchParams(parameters).toString();
-        return new HttpResponse().redirect(url);
-      });
-
-      const error = new InvalidRequestException({
-        description: 'One or more parameters changed since the initial request.',
-        state: 'client_state',
-      });
-
-      const parameters = new URLSearchParams(error.toJSON());
-
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://example.com/callback?${parameters.toString()}` },
-        statusCode: 303,
-      });
-    });
-
-    it('should return a redirect response to the consent page when no consent is found at the cookies.', async () => {
-      delete request.cookies['guarani:consent'];
-
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
-        id: 'client_id',
-        redirectUris: ['https://example.com/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar'],
-      });
-
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
-        loginChallenge: 'login_challenge',
-        parameters: request.query,
-        user: { id: 'user_id' },
-      });
-
-      consentServiceMock.create.mockResolvedValueOnce(<Consent>{
-        id: 'consent_id',
+      grantServiceMock.create.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
         consentChallenge: 'consent_challenge',
       });
@@ -503,13 +515,18 @@ describe('Authorization Endpoint', () => {
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        cookies: { 'guarani:consent': 'consent_id' },
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id', 'guarani:consent': null },
         headers: { Location: `https://server.example.com/auth/consent?${parameters.toString()}` },
         statusCode: 303,
       });
+
+      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
     });
 
-    it('should return a redirect response to the consent page when no consent is found with the id at the cookies.', async () => {
+    it('should return a redirect response to the consent page when the grant has no consent.', async () => {
+      Reflect.set(request.cookies, 'guarani:session', 'session_id');
+      Reflect.set(request.cookies, 'guarani:grant', 'grant_id');
+
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         redirectUris: ['https://example.com/callback'],
@@ -517,16 +534,10 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
-        loginChallenge: 'login_challenge',
-        parameters: request.query,
-        user: { id: 'user_id' },
-      });
-
+      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id', user: { id: 'user_id' } });
       consentServiceMock.findOne.mockResolvedValueOnce(null);
-      consentServiceMock.create.mockResolvedValueOnce(<Consent>{
-        id: 'consent_id',
+      grantServiceMock.findOne.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
         consentChallenge: 'consent_challenge',
       });
@@ -535,13 +546,16 @@ describe('Authorization Endpoint', () => {
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        cookies: { 'guarani:consent': 'consent_id' },
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id', 'guarani:consent': null },
         headers: { Location: `https://server.example.com/auth/consent?${parameters.toString()}` },
         statusCode: 303,
       });
     });
 
     it('should return a redirect response to the consent page when the consent is expired.', async () => {
+      Reflect.set(request.cookies, 'guarani:session', 'session_id');
+      Reflect.set(request.cookies, 'guarani:grant', 'grant_id');
+
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         redirectUris: ['https://example.com/callback'],
@@ -549,31 +563,20 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
-        loginChallenge: 'login_challenge',
-        parameters: request.query,
-        user: { id: 'user_id' },
-      });
-
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
-        id: 'consent_id',
-        loginChallenge: 'old_login_challenge',
-        consentChallenge: 'old_consent_challenge',
-        expiresAt: new Date(Date.now() - 3600000),
-      });
-
-      consentServiceMock.create.mockResolvedValueOnce(<Consent>{
-        id: 'consent_id',
+      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id', user: { id: 'user_id' } });
+      consentServiceMock.findOne.mockResolvedValueOnce(null);
+      grantServiceMock.findOne.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
         consentChallenge: 'consent_challenge',
+        consent: { id: 'consent_id', expiresAt: new Date(Date.now() - 300000) },
       });
 
       const parameters = new URLSearchParams({ consent_challenge: 'consent_challenge' });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        cookies: { 'guarani:consent': 'consent_id' },
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id', 'guarani:consent': null },
         headers: { Location: `https://server.example.com/auth/consent?${parameters.toString()}` },
         statusCode: 303,
       });
@@ -581,53 +584,12 @@ describe('Authorization Endpoint', () => {
       expect(consentServiceMock.remove).toHaveBeenCalledTimes(1);
     });
 
-    it('should return an error response when the parameters of the request and consent do not match.', async () => {
-      request.query.state = 'bad_client_state';
-
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
-        id: 'client_id',
-        redirectUris: ['https://example.com/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar'],
-      });
-
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
-        loginChallenge: 'login_challenge',
-        parameters: { ...request.query, state: 'client_state' },
-        user: { id: 'user_id' },
-      });
-
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
-        id: 'consent_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        parameters: { ...request.query, state: 'client_state' },
-      });
-
-      responseModesMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        const url = new URL(redirectUri);
-        url.search = new URLSearchParams(parameters).toString();
-        return new HttpResponse().redirect(url);
-      });
-
-      const error = new InvalidRequestException({
-        description: 'One or more parameters changed since the initial request.',
-        state: 'client_state',
-      });
-
-      const parameters = new URLSearchParams(error.toJSON());
-
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://example.com/callback?${parameters.toString()}` },
-        statusCode: 303,
-      });
-    });
-
     it('should return a valid authorization response.', async () => {
       Reflect.set(settings, 'enableAuthorizationResponseIssuerIdentifier', true);
 
+      Reflect.set(request.cookies, 'guarani:session', 'session_id');
+      Reflect.set(request.cookies, 'guarani:consent', 'consent_id');
+
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         redirectUris: ['https://example.com/callback'],
@@ -635,17 +597,15 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{
-        id: 'session_id',
-        loginChallenge: 'login_challenge',
-        parameters: request.query,
-        user: { id: 'user_id' },
-      });
+      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id', user: { id: 'user_id' } });
 
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{
-        id: 'consent_id',
+      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
+
+      grantServiceMock.findOne.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
         loginChallenge: 'login_challenge',
         consentChallenge: 'consent_challenge',
+        consent: { id: 'consent_id' },
       });
 
       responseTypesMocks[0]!.handle.mockResolvedValueOnce({ code: 'code', state: 'client_state' });

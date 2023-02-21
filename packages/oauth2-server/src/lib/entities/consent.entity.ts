@@ -14,17 +14,7 @@ export interface Consent extends Record<string, any> {
   /**
    * Scopes granted by the Authenticated End User.
    */
-  scopes: string[];
-
-  /**
-   * Login Challenge used to generate the Consent.
-   */
-  readonly loginChallenge: string;
-
-  /**
-   * Consent Challenge of the Consent.
-   */
-  readonly consentChallenge: string;
+  readonly scopes: string[];
 
   /**
    * Parameters of the Authorization Request.

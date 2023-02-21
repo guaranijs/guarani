@@ -1,8 +1,8 @@
 import { Injectable } from '@guarani/di';
 
-import { randomBytes, randomUUID } from 'crypto';
-import { Client } from '../../entities/client.entity';
+import { randomUUID } from 'crypto';
 
+import { Client } from '../../entities/client.entity';
 import { Consent } from '../../entities/consent.entity';
 import { User } from '../../entities/user.entity';
 import { AuthorizationRequest } from '../../messages/authorization-request';
@@ -18,15 +18,13 @@ export class ConsentService implements ConsentServiceInterface {
 
   public async create(
     parameters: AuthorizationRequest,
-    loginChallenge: string,
+    scopes: string[],
     client: Client,
     user: User
   ): Promise<Consent> {
     const consent: Consent = {
       id: randomUUID(),
-      scopes: [],
-      loginChallenge,
-      consentChallenge: randomBytes(16).toString('hex'),
+      scopes,
       parameters,
       createdAt: new Date(),
       client,
@@ -38,12 +36,8 @@ export class ConsentService implements ConsentServiceInterface {
     return consent;
   }
 
-  public async findOne(id: string): Promise<Consent | null> {
-    return this.consents.find((consent) => consent.id === id) ?? null;
-  }
-
-  public async findOneByConsentChallenge(consentChallenge: string): Promise<Consent | null> {
-    return this.consents.find((consent) => consent.consentChallenge === consentChallenge) ?? null;
+  public async findOne(clientId: string, userId: string): Promise<Consent | null> {
+    return this.consents.find((consent) => consent.client.id === clientId && consent.user.id === userId) ?? null;
   }
 
   public async save(consent: Consent): Promise<void> {

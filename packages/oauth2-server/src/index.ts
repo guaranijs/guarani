@@ -25,6 +25,7 @@ export { AuthorizationCode } from './lib/entities/authorization-code.entity';
 export { Client } from './lib/entities/client.entity';
 export { Consent } from './lib/entities/consent.entity';
 export { DeviceCode } from './lib/entities/device-code.entity';
+export { Grant } from './lib/entities/grant.entity';
 export { RefreshToken } from './lib/entities/refresh-token.entity';
 export { Session } from './lib/entities/session.entity';
 export { User } from './lib/entities/user.entity';
@@ -135,6 +136,7 @@ export { AuthorizationCodeService } from './lib/services/default/authorization-c
 export { ClientService } from './lib/services/default/client.service';
 export { ConsentService } from './lib/services/default/consent.service';
 export { DeviceCodeService } from './lib/services/default/device-code.service';
+export { GrantService } from './lib/services/default/grant.service';
 export { RefreshTokenService } from './lib/services/default/refresh-token.service';
 export { SessionService } from './lib/services/default/session.service';
 export { UserService } from './lib/services/default/user.service';
@@ -148,6 +150,8 @@ export { ConsentServiceInterface } from './lib/services/consent.service.interfac
 export { CONSENT_SERVICE } from './lib/services/consent.service.token';
 export { DeviceCodeServiceInterface } from './lib/services/device-code.service.interface';
 export { DEVICE_CODE_SERVICE } from './lib/services/device-code.service.token';
+export { GrantServiceInterface } from './lib/services/grant.service.interface';
+export { GRANT_SERVICE } from './lib/services/grant.service.token';
 export { RefreshTokenServiceInterface } from './lib/services/refresh-token.service.interface';
 export { REFRESH_TOKEN_SERVICE } from './lib/services/refresh-token.service.token';
 export { SessionServiceInterface } from './lib/services/session.service.interface';

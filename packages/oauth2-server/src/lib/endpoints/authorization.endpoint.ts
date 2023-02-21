@@ -1,10 +1,9 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { URL, URLSearchParams } from 'url';
-import { isDeepStrictEqual } from 'util';
 
 import { Client } from '../entities/client.entity';
-import { Consent } from '../entities/consent.entity';
+import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -28,6 +27,8 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
+import { GrantServiceInterface } from '../services/grant.service.interface';
+import { GRANT_SERVICE } from '../services/grant.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
@@ -86,6 +87,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param clientService Instance of the Client Service.
    * @param sessionService Instance of the Session Service.
    * @param consentService Instance of the Consent Service.
+   * @param grantService Instance of the Grant Service.
    */
   public constructor(
     private readonly scopeHandler: ScopeHandler,
@@ -94,7 +96,8 @@ export class AuthorizationEndpoint implements EndpointInterface {
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(CLIENT_SERVICE) private readonly clientService: ClientServiceInterface,
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
-    @Inject(CONSENT_SERVICE) private readonly consentService: ConsentServiceInterface
+    @Inject(CONSENT_SERVICE) private readonly consentService: ConsentServiceInterface,
+    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface
   ) {
     if (this.settings.userInteraction === undefined) {
       throw new TypeError('Missing User Interaction options.');
@@ -162,24 +165,75 @@ export class AuthorizationEndpoint implements EndpointInterface {
       return this.handleFatalAuthorizationError(error);
     }
 
+    // TODO: Check the entities' parameters against the request's parameters.
     try {
+      let grant: Grant | null = null;
+
       const { cookies } = request;
 
-      const session = await this.findSession(cookies);
+      let session = await this.findSession(cookies);
 
       if (session === null) {
-        return this.redirectToLoginPage(parameters, client);
+        grant = await this.findGrant(cookies);
+
+        // Starting from scratch.
+        if (grant === null) {
+          grant = await this.grantService.create(parameters, client);
+          return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
+        }
+
+        // Hit the login endpoint but didn't go through with it.
+        if (grant.session == null) {
+          return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
+        }
+
+        session = grant.session;
+
+        if (session.expiresAt != null && new Date() > session.expiresAt) {
+          await this.sessionService.remove(session);
+          return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
+        }
       }
 
-      this.checkSessionParameters(parameters, session.parameters);
+      const { user } = session;
 
-      const consent = await this.findConsent(cookies);
+      let consent = await this.consentService.findOne(client.id, user.id);
 
       if (consent === null) {
-        return this.redirectToConsentPage(parameters, session);
-      }
+        grant = await this.findGrant(cookies);
 
-      this.checkConsentParameters(parameters, session.parameters);
+        // Consent was revoked and we need to get it once again.
+        if (grant === null) {
+          grant = await this.grantService.create(parameters, client);
+
+          return this.redirectToConsentPage(grant).setCookies({
+            'guarani:grant': grant.id,
+            'guarani:session': session.id,
+            'guarani:consent': null,
+          });
+        }
+
+        // Hit the consent endpoint but didn't go through with it.
+        if (grant.consent == null) {
+          return this.redirectToConsentPage(grant).setCookies({
+            'guarani:grant': grant.id,
+            'guarani:session': session.id,
+            'guarani:consent': null,
+          });
+        }
+
+        consent = grant.consent;
+
+        if (consent.expiresAt != null && new Date() > consent.expiresAt) {
+          await this.consentService.remove(consent);
+
+          return this.redirectToConsentPage(grant).setCookies({
+            'guarani:grant': grant.id,
+            'guarani:session': session.id,
+            'guarani:consent': null,
+          });
+        }
+      }
 
       const authorizationResponse = await responseType.handle(consent);
 
@@ -187,8 +241,17 @@ export class AuthorizationEndpoint implements EndpointInterface {
         authorizationResponse.iss = this.settings.issuer;
       }
 
-      return responseMode.createHttpResponse(parameters.redirect_uri, authorizationResponse);
+      if (grant !== null) {
+        await this.grantService.remove(grant);
+      }
+
+      return responseMode.createHttpResponse(parameters.redirect_uri, authorizationResponse).setCookies({
+        'guarani:grant': null,
+        'guarani:session': session.id,
+        'guarani:consent': consent.id,
+      });
     } catch (exc: unknown) {
+      console.error(exc);
       let error: OAuth2Exception;
 
       if (exc instanceof OAuth2Exception) {
@@ -366,117 +429,63 @@ export class AuthorizationEndpoint implements EndpointInterface {
       return null;
     }
 
-    if (session.expiresAt != null && new Date() > session.expiresAt) {
-      await this.sessionService.remove(session);
-      return null;
-    }
-
-    if (session.user === null) {
-      await this.sessionService.remove(session);
-      return null;
-    }
-
     return session;
+  }
+
+  /**
+   * Searches the application's storage for a Grant based on the Identifier in the Cookies of the Http Request.
+   *
+   * @param cookies Cookies of the Http Request.
+   * @returns Grant based on the Cookies.
+   */
+  private async findGrant(cookies: Record<string, any>): Promise<Grant | null> {
+    const grantId: string | undefined = cookies['guarani:grant'];
+
+    if (grantId === undefined) {
+      return null;
+    }
+
+    const grant = await this.grantService.findOne(grantId);
+
+    if (grant === null) {
+      return null;
+    }
+
+    if (grant.expiresAt != null && new Date() > grant.expiresAt) {
+      await this.grantService.remove(grant);
+      return null;
+    }
+
+    return grant;
   }
 
   /**
    * Redirects the User-Agent to the Authorization Server's Login Page for it to authenticate the User.
    *
-   * @param parameters Parameters of the Authorization Request.
-   * @param client Client of the Request.
+   * @param grant Grant of the Request.
    * @returns Http Redirect Response to the Login Page.
    */
-  private async redirectToLoginPage(parameters: AuthorizationRequest, client: Client): Promise<HttpResponse> {
-    const session = await this.sessionService.create(parameters, client);
-
+  private redirectToLoginPage(grant: Grant): HttpResponse {
     const redirectUrl = new URL(this.loginUrl);
-    const searchParameters = new URLSearchParams({ login_challenge: session.loginChallenge });
+    const searchParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
     redirectUrl.search = searchParameters.toString();
 
-    return new HttpResponse().setCookie('guarani:session', session.id).redirect(redirectUrl);
-  }
-
-  /**
-   * Checks if the parameters of the current authorization request matches the parameters
-   * of the original authorization request.
-   *
-   * @param requestParameters Parameters of the current Authorization Request.
-   * @param sessionParameters Parameters of the original Authorization Request.
-   */
-  private checkSessionParameters(
-    requestParameters: AuthorizationRequest,
-    sessionParameters: AuthorizationRequest
-  ): void {
-    if (!isDeepStrictEqual(requestParameters, sessionParameters)) {
-      throw new InvalidRequestException({
-        description: 'One or more parameters changed since the initial request.',
-        state: sessionParameters.state,
-      });
-    }
-  }
-
-  /**
-   * Searches the application's storage for a Consent based on the Identifier in the Cookies of the Http Request.
-   *
-   * @param cookies Cookies of the Http Request.
-   * @returns Consent based on the Cookies.
-   */
-  private async findConsent(cookies: Record<string, any>): Promise<Consent | null> {
-    const consentId: string | undefined = cookies['guarani:consent'];
-
-    if (consentId === undefined) {
-      return null;
-    }
-
-    const consent = await this.consentService.findOne(consentId);
-
-    if (consent === null) {
-      return null;
-    }
-
-    if (consent.expiresAt != null && new Date() > consent.expiresAt) {
-      await this.consentService.remove(consent);
-      return null;
-    }
-
-    return consent;
+    return new HttpResponse().redirect(redirectUrl);
   }
 
   /**
    * Redirects the User-Agent to the Authorization Server's Consent Page for it to authenticate the User.
    *
-   * @param parameters Parameters of the Authorization Request.
-   * @param session Session of the Request.
+   * @param grant Grant of the Request.
    * @returns Http Redirect Response to the Consent Page.
    */
-  private async redirectToConsentPage(parameters: AuthorizationRequest, session: Session): Promise<HttpResponse> {
-    const consent = await this.consentService.create(parameters, session.loginChallenge, session.client, session.user!);
-
+  private redirectToConsentPage(grant: Grant): HttpResponse {
     const redirectUrl = new URL(this.consentUrl);
-    const searchParams = new URLSearchParams({ consent_challenge: consent.consentChallenge });
+    const searchParams = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
     redirectUrl.search = searchParams.toString();
 
-    return new HttpResponse().setCookie('guarani:consent', consent.id).redirect(redirectUrl);
-  }
-
-  /**
-   * Checks if the parameters of the current authorization request matches the parameters
-   * of the original authorization request.
-   *
-   * @param requestParameters Parameters of the current Authorization Request.
-   * @param consentParameters Parameters of the original Authorization Request.
-   */
-  private checkConsentParameters(
-    requestParameters: AuthorizationRequest,
-    consentParameters: AuthorizationRequest
-  ): void {
-    if (!isDeepStrictEqual(requestParameters, consentParameters)) {
-      throw new InvalidRequestException({
-        description: 'One or more parameters changed since the initial request.',
-        state: consentParameters.state,
-      });
-    }
+    return new HttpResponse().redirect(redirectUrl);
   }
 }

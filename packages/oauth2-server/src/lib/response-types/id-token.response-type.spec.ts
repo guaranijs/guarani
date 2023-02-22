@@ -59,9 +59,9 @@ describe('ID Token Response Type', () => {
       const user = <User>{ id: 'user_id' };
 
       const session = <Session>{};
-      const consent = <Consent>{ client, parameters, scopes: ['openid', 'foo', 'bar'], user };
+      const consent = <Consent>{ client, scopes: ['openid', 'foo', 'bar'], user };
 
-      await expect(responseType.handle(session, consent)).rejects.toThrow(
+      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Invalid response_mode "query" for response_type "id_token".',
           state: parameters.state,
@@ -76,9 +76,9 @@ describe('ID Token Response Type', () => {
       const user = <User>{ id: 'user_id' };
 
       const session = <Session>{};
-      const consent = <Consent>{ client, parameters, scopes: ['foo', 'bar'], user };
+      const consent = <Consent>{ client, scopes: ['foo', 'bar'], user };
 
-      await expect(responseType.handle(session, consent)).rejects.toThrow(
+      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state })
       );
     });
@@ -90,9 +90,9 @@ describe('ID Token Response Type', () => {
       const user = <User>{ id: 'user_id' };
 
       const session = <Session>{};
-      const consent = <Consent>{ client, parameters, scopes: ['openid', 'foo', 'bar'], user };
+      const consent = <Consent>{ client, scopes: ['openid', 'foo', 'bar'], user };
 
-      await expect(responseType.handle(session, consent)).rejects.toThrow(
+      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: parameters.state })
       );
     });
@@ -102,11 +102,13 @@ describe('ID Token Response Type', () => {
       const user = <User>{ id: 'user_id' };
 
       const session = <Session>{};
-      const consent = <Consent>{ client, parameters, scopes: ['openid', 'foo', 'bar'], user };
+      const consent = <Consent>{ client, scopes: ['openid', 'foo', 'bar'], user };
 
       idTokenHandlerMock.generateIdToken.mockResolvedValueOnce('id_token');
 
-      await expect(responseType.handle(session, consent)).resolves.toStrictEqual<IdTokenAuthorizationResponse>({
+      await expect(
+        responseType.handle(parameters, session, consent)
+      ).resolves.toStrictEqual<IdTokenAuthorizationResponse>({
         id_token: 'id_token',
         state: parameters.state,
       });

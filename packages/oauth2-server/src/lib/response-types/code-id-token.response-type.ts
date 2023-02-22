@@ -62,15 +62,17 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns a Code Authorization Response and ID Token Response to the Client.
    *
+   * @param parameters Parameters of the Authorization Request.
    * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Code Authorization Response and ID Token Response.
    */
   public async handle(
+    parameters: CodeAuthorizationRequest,
     session: Session,
     consent: Consent
   ): Promise<CodeAuthorizationResponse & IdTokenAuthorizationResponse> {
-    const { parameters, scopes } = <Consent & { parameters: CodeAuthorizationRequest }>consent;
+    const { scopes } = consent;
 
     this.checkParameters(parameters);
 
@@ -78,9 +80,10 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
       throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
     }
 
-    const authorizationCode = await this.authorizationCodeService.create(session, consent);
-
-    const idToken = await this.idTokenHandler.generateIdToken(session, consent, undefined, authorizationCode);
+    const authorizationCode = await this.authorizationCodeService.create(parameters, session, consent);
+    const idToken = await this.idTokenHandler.generateIdToken(session, consent, null, authorizationCode, {
+      nonce: parameters.nonce,
+    });
 
     return { code: authorizationCode.code, id_token: idToken, state: parameters.state };
   }

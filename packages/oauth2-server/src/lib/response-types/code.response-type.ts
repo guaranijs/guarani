@@ -1,6 +1,7 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { Consent } from '../entities/consent.entity';
+import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { CodeAuthorizationRequest } from '../messages/code.authorization-request';
 import { CodeAuthorizationResponse } from '../messages/code.authorization-response';
@@ -11,7 +12,6 @@ import { AuthorizationCodeServiceInterface } from '../services/authorization-cod
 import { AUTHORIZATION_CODE_SERVICE } from '../services/authorization-code.service.token';
 import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
-import { Session } from '../entities/session.entity';
 
 /**
  * Implementation of the **Code** Response Type.
@@ -68,16 +68,19 @@ export class CodeResponseType implements ResponseTypeInterface {
    * Both the Code Challenge and the PKCE Method used by the Client to generate the PKCE Code Challenge are registered
    * at the application's storage together with the issued Authorization Code for verification at the Token Endpoint.
    *
+   * @param parameters Parameters of the Authorization Request.
    * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Authorization Code Response.
    */
-  public async handle(session: Session, consent: Consent): Promise<CodeAuthorizationResponse> {
-    const { parameters } = <Consent & { parameters: CodeAuthorizationRequest }>consent;
-
+  public async handle(
+    parameters: CodeAuthorizationRequest,
+    session: Session,
+    consent: Consent
+  ): Promise<CodeAuthorizationResponse> {
     this.checkParameters(parameters);
 
-    const authorizationCode = await this.authorizationCodeService.create(session, consent);
+    const authorizationCode = await this.authorizationCodeService.create(parameters, session, consent);
 
     return { code: authorizationCode.code, state: parameters.state };
   }

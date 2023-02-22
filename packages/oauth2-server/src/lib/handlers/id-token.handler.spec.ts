@@ -16,7 +16,6 @@ const session = <Session>{ createdAt: new Date() };
 
 const consent = <Consent>{
   client: { id: 'client_id' },
-  parameters: { nonce: 'nonce' },
   scopes: ['openid', 'profile', 'email', 'phone', 'address'],
   user: { id: 'user_id' },
 };
@@ -115,7 +114,7 @@ describe('ID Token Handler', () => {
   it('should generate an id token with the default claims.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(session, consent);
+    const idToken = await idTokenHandler.generateIdToken(session, consent, null, null, { nonce: 'nonce' });
 
     expect(idToken).toEqual(expect.any(String));
 
@@ -127,7 +126,7 @@ describe('ID Token Handler', () => {
   it('should generate an id token with the default claims and the "at_hash" claim.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(session, consent, accessToken);
+    const idToken = await idTokenHandler.generateIdToken(session, consent, accessToken, null, { nonce: 'nonce' });
 
     expect(idToken).toEqual(expect.any(String));
 
@@ -145,7 +144,7 @@ describe('ID Token Handler', () => {
   it('should generate an id token with the default claims and the "c_hash" claim.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(session, consent, undefined, authorizationCode);
+    const idToken = await idTokenHandler.generateIdToken(session, consent, null, authorizationCode, { nonce: 'nonce' });
 
     expect(idToken).toEqual(expect.any(String));
 
@@ -163,7 +162,9 @@ describe('ID Token Handler', () => {
   it('should generate an id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(session, consent, accessToken, authorizationCode);
+    const idToken = await idTokenHandler.generateIdToken(session, consent, accessToken, authorizationCode, {
+      nonce: 'nonce',
+    });
 
     expect(idToken).toEqual(expect.any(String));
 

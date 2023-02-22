@@ -169,9 +169,13 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
       this.checkGrantedScopes(grant, grantedScopes);
 
-      const { client, parameters: consentParameters, session } = grant;
+      const { client, session } = grant;
 
-      const consent = await this.consentService.create(consentParameters, grantedScopes, client, session!.user);
+      if (session == null) {
+        throw new AccessDeniedException({ description: 'No active session found for this consent.' });
+      }
+
+      const consent = await this.consentService.create(grantedScopes, client, session.user);
 
       grant.consent = consent;
 

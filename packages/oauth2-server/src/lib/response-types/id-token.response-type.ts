@@ -46,12 +46,17 @@ export class IdTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns an ID Token Response to the Client.
    *
+   * @param parameters Parameters of the Authorization Request.
    * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns ID Token Response.
    */
-  public async handle(session: Session, consent: Consent): Promise<IdTokenAuthorizationResponse> {
-    const { parameters, scopes } = consent;
+  public async handle(
+    parameters: AuthorizationRequest,
+    session: Session,
+    consent: Consent
+  ): Promise<IdTokenAuthorizationResponse> {
+    const { scopes } = consent;
 
     this.checkParameters(parameters);
 
@@ -59,7 +64,9 @@ export class IdTokenResponseType implements ResponseTypeInterface {
       throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
     }
 
-    const idToken = await this.idTokenHandler.generateIdToken(session, consent);
+    const idToken = await this.idTokenHandler.generateIdToken(session, consent, null, null, {
+      nonce: parameters.nonce,
+    });
 
     return { id_token: idToken, state: parameters.state };
   }

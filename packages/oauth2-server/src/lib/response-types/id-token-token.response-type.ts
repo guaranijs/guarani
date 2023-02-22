@@ -54,15 +54,17 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns an Access Token and ID Token Response to the Client.
    *
+   * @param parameters Parameters of the Authorization Request.
    * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Access Token and ID Token Response.
    */
   public async handle(
+    parameters: AuthorizationRequest,
     session: Session,
     consent: Consent
   ): Promise<TokenAuthorizationResponse & IdTokenAuthorizationResponse> {
-    const { client, parameters, scopes, user } = consent;
+    const { client, scopes, user } = consent;
 
     this.checkParameters(parameters);
 
@@ -71,7 +73,9 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
-    const idToken = await this.idTokenHandler.generateIdToken(session, consent, accessToken);
+    const idToken = await this.idTokenHandler.generateIdToken(session, consent, accessToken, null, {
+      nonce: parameters.nonce,
+    });
 
     const token = createTokenResponse(accessToken);
 

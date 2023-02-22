@@ -1,3 +1,4 @@
+import { CodeAuthorizationRequest } from '../messages/code.authorization-request';
 import { Consent } from './consent.entity';
 import { Session } from './session.entity';
 
@@ -16,9 +17,9 @@ export interface AuthorizationCode extends Record<string, any> {
   isRevoked: boolean;
 
   /**
-   * Authentication Date of the End User.
+   * Parameters of the Authorization Request.
    */
-  readonly authTime: Date;
+  readonly parameters: CodeAuthorizationRequest;
 
   /**
    * Issuance Date of the Authorization Code.

@@ -1,4 +1,3 @@
-import { AuthorizationRequest } from '../messages/authorization-request';
 import { Client } from './client.entity';
 import { User } from './user.entity';
 
@@ -15,11 +14,6 @@ export interface Consent extends Record<string, any> {
    * Scopes granted by the Authenticated End User.
    */
   readonly scopes: string[];
-
-  /**
-   * Parameters of the Authorization Request.
-   */
-  readonly parameters: AuthorizationRequest;
 
   /**
    * Creation Date of the Consent.

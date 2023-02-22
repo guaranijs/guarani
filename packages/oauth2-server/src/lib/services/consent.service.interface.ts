@@ -1,7 +1,6 @@
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { User } from '../entities/user.entity';
-import { AuthorizationRequest } from '../messages/authorization-request';
 
 /**
  * Interface of the Consent Service.
@@ -12,13 +11,12 @@ export interface ConsentServiceInterface {
   /**
    * Creates a Consent representing the consent given to the Client by the End User.
    *
-   * @param parameters Parameters of the Authorization Request.
    * @param scopes Scopes granted to the Client by the End User.
    * @param client Client requesting authorization.
    * @param user Authenticated User granting authorization.
    * @returns Generated Consent.
    */
-  create(parameters: AuthorizationRequest, scopes: string[], client: Client, user: User): Promise<Consent>;
+  create(scopes: string[], client: Client, user: User): Promise<Consent>;
 
   /**
    * Searches the application's storage for a Consent containing the provided Client and User Identifiers.

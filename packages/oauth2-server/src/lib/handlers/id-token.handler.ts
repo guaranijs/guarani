@@ -8,6 +8,7 @@ import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
+import { IdTokenClaimsParameters } from '../id-token/id-token.claims.parameters';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
@@ -47,8 +48,9 @@ export class IdTokenHandler {
   public async generateIdToken(
     session: Session,
     consent: Consent,
-    accessToken?: AccessToken,
-    authorizationCode?: AuthorizationCode
+    accessToken: AccessToken | null,
+    authorizationCode: AuthorizationCode | null,
+    parameters?: Partial<IdTokenClaimsParameters>
   ): Promise<string> {
     const keys = this.jwks.keys.filter((jwk) => jwk.alg !== undefined && jwk.use === 'sig');
     const key = keys[randomInt(keys.length)]!;
@@ -59,7 +61,7 @@ export class IdTokenHandler {
 
     const now = Math.ceil(Date.now() / 1000);
 
-    const { client, parameters, scopes, user } = consent;
+    const { client, scopes, user } = consent;
 
     const userinfo = await this.userService.getUserinfo!(user, scopes);
 
@@ -69,16 +71,16 @@ export class IdTokenHandler {
       aud: client.id,
       exp: now + 86400,
       iat: now,
-      nonce: parameters.nonce,
+      nonce: parameters?.nonce,
       auth_time: Math.ceil(session.createdAt.getTime() / 1000),
       ...userinfo,
     });
 
-    if (accessToken !== undefined) {
+    if (accessToken !== null) {
       claims.at_hash = this.getLeftHash(accessToken.handle, header.alg);
     }
 
-    if (authorizationCode !== undefined) {
+    if (authorizationCode !== null) {
       claims.c_hash = this.getLeftHash(authorizationCode.code, header.alg);
     }
 

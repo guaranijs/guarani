@@ -47,12 +47,17 @@ export class TokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns an Access Token Response to the Client.
    *
+   * @param parameters Parameters of the Authorization Request.
    * @param _session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Access Token Response.
    */
-  public async handle(_session: Session, consent: Consent): Promise<TokenAuthorizationResponse> {
-    const { client, parameters, scopes, user } = consent;
+  public async handle(
+    parameters: AuthorizationRequest,
+    _session: Session,
+    consent: Consent
+  ): Promise<TokenAuthorizationResponse> {
+    const { client, scopes, user } = consent;
 
     this.checkParameters(parameters);
 

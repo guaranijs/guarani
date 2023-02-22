@@ -6,7 +6,6 @@ import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
-import { AuthorizationRequest } from '../messages/authorization-request';
 import { CodeAuthorizationRequest } from '../messages/code.authorization-request';
 import { CodeAuthorizationResponse } from '../messages/code.authorization-response';
 import { IdTokenAuthorizationResponse } from '../messages/id-token.authorization-response';
@@ -100,9 +99,9 @@ describe('Code ID Token Token Response Type', () => {
       Reflect.deleteProperty(parameters, 'code_challenge');
 
       const session = <Session>{};
-      const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
+      const consent = <Consent>{ scopes: ['openid', 'foo', 'bar'] };
 
-      await expect(responseType.handle(session, consent)).rejects.toThrow(
+      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: parameters.state })
       );
     });
@@ -111,9 +110,9 @@ describe('Code ID Token Token Response Type', () => {
       Reflect.set(parameters, 'code_challenge_method', 'unknown');
 
       const session = <Session>{};
-      const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
+      const consent = <Consent>{ scopes: ['openid', 'foo', 'bar'] };
 
-      await expect(responseType.handle(session, consent)).rejects.toThrow(
+      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Unsupported code_challenge_method "unknown".',
           state: parameters.state,
@@ -125,9 +124,9 @@ describe('Code ID Token Token Response Type', () => {
       Reflect.set(parameters, 'response_mode', 'query');
 
       const session = <Session>{};
-      const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
+      const consent = <Consent>{ scopes: ['openid', 'foo', 'bar'] };
 
-      await expect(responseType.handle(session, consent)).rejects.toThrow(
+      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Invalid response_mode "query" for response_type "code id_token token".',
           state: parameters.state,
@@ -139,25 +138,25 @@ describe('Code ID Token Token Response Type', () => {
       Reflect.deleteProperty(parameters, 'nonce');
 
       const session = <Session>{};
-      const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
+      const consent = <Consent>{ scopes: ['openid', 'foo', 'bar'] };
 
-      await expect(responseType.handle(session, consent)).rejects.toThrow(
+      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: parameters.state })
       );
     });
 
     it('should throw if the scope "openid" is not provided.', async () => {
       const session = <Session>{};
-      const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['foo', 'bar'] };
+      const consent = <Consent>{ scopes: ['foo', 'bar'] };
 
-      await expect(responseType.handle(session, consent)).rejects.toThrow(
+      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state })
       );
     });
 
     it('should create a code id token token authorization response.', async () => {
       const session = <Session>{};
-      const consent = <Consent>{ parameters: <AuthorizationRequest>parameters, scopes: ['openid', 'foo', 'bar'] };
+      const consent = <Consent>{ scopes: ['openid', 'foo', 'bar'] };
 
       accessTokenServiceMock.create.mockImplementationOnce(async (scopes) => {
         return <AccessToken>{
@@ -171,7 +170,7 @@ describe('Code ID Token Token Response Type', () => {
 
       idTokenHandlerMock.generateIdToken.mockResolvedValueOnce('id_token');
 
-      await expect(responseType.handle(session, consent)).resolves.toStrictEqual<
+      await expect(responseType.handle(parameters, session, consent)).resolves.toStrictEqual<
         CodeAuthorizationResponse & IdTokenAuthorizationResponse & TokenAuthorizationResponse
       >({
         access_token: 'access_token',

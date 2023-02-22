@@ -68,15 +68,17 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns a Code Authorization Response and an Access Token and ID Token Response to the Client.
    *
+   * @param parameters Parameters of the Authorization Request.
    * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Code Authorization Response and Access Token and ID Token Response.
    */
   public async handle(
+    parameters: CodeAuthorizationRequest,
     session: Session,
     consent: Consent
   ): Promise<CodeAuthorizationResponse & IdTokenAuthorizationResponse & TokenAuthorizationResponse> {
-    const { client, parameters, scopes, user } = <Consent & { parameters: CodeAuthorizationRequest }>consent;
+    const { client, scopes, user } = consent;
 
     this.checkParameters(parameters);
 
@@ -85,8 +87,10 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
-    const authorizationCode = await this.authorizationCodeService.create(session, consent);
-    const idToken = await this.idTokenHandler.generateIdToken(session, consent, accessToken, authorizationCode);
+    const authorizationCode = await this.authorizationCodeService.create(parameters, session, consent);
+    const idToken = await this.idTokenHandler.generateIdToken(session, consent, accessToken, authorizationCode, {
+      nonce: parameters.nonce,
+    });
 
     const token = createTokenResponse(accessToken);
 

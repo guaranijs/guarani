@@ -267,6 +267,22 @@ describe('Consent Interaction Type', () => {
       );
     });
 
+    it('should throw when no session is found associated to the current grant.', async () => {
+      Reflect.set(parameters, 'decision', 'accept');
+      Reflect.set(parameters, 'grant_scope', 'foo bar');
+
+      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        consentChallenge: 'consent_challenge',
+        parameters: { scope: 'foo bar baz' },
+      });
+
+      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
+        new AccessDeniedException({ description: 'No active session found for this consent.' })
+      );
+    });
+
     it('should return a valid first time consent accept decision interaction response.', async () => {
       Reflect.set(parameters, 'decision', 'accept');
       Reflect.set(parameters, 'grant_scope', 'foo bar');
@@ -291,7 +307,7 @@ describe('Consent Interaction Type', () => {
       };
 
       const session = <Session>{ id: 'session_id', user };
-      const consent = <Consent>{ id: 'consent_id', parameters: authorizationParameters, scopes: ['foo', 'bar'], user };
+      const consent = <Consent>{ id: 'consent_id', scopes: ['foo', 'bar'], user };
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
       consentServiceMock.create.mockResolvedValueOnce(consent);

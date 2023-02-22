@@ -58,9 +58,9 @@ describe('Token Response Type', () => {
       const user = <User>{ id: 'user_id' };
 
       const session = <Session>{};
-      const consent = <Consent>{ client, parameters, scopes: ['foo', 'bar'], user };
+      const consent = <Consent>{ client, scopes: ['foo', 'bar'], user };
 
-      await expect(responseType.handle(session, consent)).rejects.toThrow(
+      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Invalid response_mode "query" for response_type "token".',
           state: parameters.state,
@@ -73,7 +73,7 @@ describe('Token Response Type', () => {
       const user = <User>{ id: 'user_id' };
 
       const session = <Session>{};
-      const consent = <Consent>{ client, parameters, scopes: ['foo', 'bar'], user };
+      const consent = <Consent>{ client, scopes: ['foo', 'bar'], user };
 
       accessTokenServiceMock.create.mockImplementationOnce(async (scopes) => {
         return <AccessToken>{
@@ -83,7 +83,9 @@ describe('Token Response Type', () => {
         };
       });
 
-      await expect(responseType.handle(session, consent)).resolves.toStrictEqual<TokenAuthorizationResponse>({
+      await expect(
+        responseType.handle(parameters, session, consent)
+      ).resolves.toStrictEqual<TokenAuthorizationResponse>({
         access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: 3600,

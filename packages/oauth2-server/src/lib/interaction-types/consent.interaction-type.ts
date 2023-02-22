@@ -282,7 +282,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    */
   private async checkGrant(grant: Grant): Promise<void> {
     try {
-      if (grant.expiresAt != null && new Date() > grant.expiresAt) {
+      if (new Date() > grant.expiresAt) {
         throw new AccessDeniedException({ description: 'Expired Grant.' });
       }
     } catch (exc: unknown) {

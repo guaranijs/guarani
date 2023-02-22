@@ -1,8 +1,11 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
+import { timingSafeEqual } from 'crypto';
 import { URL, URLSearchParams } from 'url';
+import { isDeepStrictEqual } from 'util';
 
 import { Client } from '../entities/client.entity';
+import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
@@ -134,6 +137,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
     let responseType: ResponseTypeInterface;
     let responseMode: ResponseModeInterface;
 
+    // #region Authorization Parameters validation
     try {
       this.checkParameters(parameters);
 
@@ -149,29 +153,20 @@ export class AuthorizationEndpoint implements EndpointInterface {
         parameters.state
       );
     } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.', state: parameters.state });
-        error.cause = exc;
-      }
-
-      if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
-        error.setParameter('iss', this.settings.issuer);
-      }
-
+      const error = this.asOAuth2Exception(exc, parameters);
       return this.handleFatalAuthorizationError(error);
     }
+    // #endregion
 
-    // TODO: Check the entities' parameters against the request's parameters.
+    let grant: Grant | null = null;
+    let session: Session | null = null;
+    let consent: Consent | null = null;
+
+    const { cookies } = request;
+
+    // #region Session validation
     try {
-      let grant: Grant | null = null;
-
-      const { cookies } = request;
-
-      let session = await this.findSession(cookies);
+      session = await this.findSession(cookies);
 
       if (session === null) {
         grant = await this.findGrant(cookies);
@@ -181,6 +176,8 @@ export class AuthorizationEndpoint implements EndpointInterface {
           grant = await this.grantService.create(parameters, client);
           return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
         }
+
+        await this.checkGrant(grant, client, parameters);
 
         // Hit the login endpoint but didn't go through with it.
         if (grant.session == null) {
@@ -194,13 +191,22 @@ export class AuthorizationEndpoint implements EndpointInterface {
           return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
         }
       }
+    } catch (exc: unknown) {
+      const error = this.asOAuth2Exception(exc, parameters);
+      return this.handleFatalAuthorizationError(error).setCookies({ 'guarani:grant': null, 'guarani:session': null });
+    }
+    // #endregion
 
+    // #region Consent validation
+    try {
       const { user } = session;
 
-      let consent = await this.consentService.findOne(client.id, user.id);
+      consent = await this.consentService.findOne(client.id, user.id);
 
       if (consent === null) {
-        grant = await this.findGrant(cookies);
+        if (grant === null) {
+          grant = await this.findGrant(cookies);
+        }
 
         // Consent was revoked and we need to get it once again.
         if (grant === null) {
@@ -212,6 +218,8 @@ export class AuthorizationEndpoint implements EndpointInterface {
             'guarani:consent': null,
           });
         }
+
+        await this.checkGrant(grant, client, parameters);
 
         // Hit the consent endpoint but didn't go through with it.
         if (grant.consent == null) {
@@ -234,7 +242,19 @@ export class AuthorizationEndpoint implements EndpointInterface {
           });
         }
       }
+    } catch (exc: unknown) {
+      const error = this.asOAuth2Exception(exc, parameters);
 
+      return this.handleFatalAuthorizationError(error).setCookies({
+        'guarani:grant': null,
+        'guarani:session': null,
+        'guarani:consent': null,
+      });
+    }
+    // #endregion
+
+    // #region Response Type handling
+    try {
       const authorizationResponse = await responseType.handle(parameters, session, consent);
 
       if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
@@ -251,21 +271,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
         'guarani:consent': consent.id,
       });
     } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.', state: parameters.state });
-        error.cause = exc;
-      }
-
-      if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
-        error.setParameter('iss', this.settings.issuer);
-      }
-
+      const error = this.asOAuth2Exception(exc, parameters);
       return responseMode.createHttpResponse(parameters.redirect_uri, error.toJSON());
     }
+    // #endregion
   }
 
   /**
@@ -444,18 +453,44 @@ export class AuthorizationEndpoint implements EndpointInterface {
       return null;
     }
 
-    const grant = await this.grantService.findOne(grantId);
+    return await this.grantService.findOne(grantId);
+  }
 
-    if (grant === null) {
-      return null;
-    }
+  /**
+   * Checks if the provided Grant is valid.
+   *
+   * @param grant Grant of the Request.
+   * @param client Client requesting authorization.
+   * @param parameters Parameters of the Authorization Request.
+   */
+  private async checkGrant(grant: Grant, client: Client, parameters: AuthorizationRequest): Promise<void> {
+    const { client: grantClient, parameters: grantParameters } = grant;
 
-    if (grant.expiresAt != null && new Date() > grant.expiresAt) {
+    const clientIdBuffer = Buffer.from(client.id, 'utf8');
+    const grantClientIdBuffer = Buffer.from(grantClient.id, 'utf8');
+
+    try {
+      if (
+        clientIdBuffer.length !== grantClientIdBuffer.length ||
+        !timingSafeEqual(clientIdBuffer, grantClientIdBuffer)
+      ) {
+        throw new InvalidRequestException({ description: 'Mismatching Client Identifier.', state: parameters.state });
+      }
+
+      if (new Date() > grant.expiresAt) {
+        throw new InvalidRequestException({ description: 'Expired Grant.', state: parameters.state });
+      }
+
+      if (!isDeepStrictEqual(parameters, grantParameters)) {
+        throw new InvalidRequestException({
+          description: 'One or more parameters changed since the initial request.',
+          state: parameters.state,
+        });
+      }
+    } catch (exc: unknown) {
       await this.grantService.remove(grant);
-      return null;
+      throw exc;
     }
-
-    return grant;
   }
 
   /**
@@ -486,5 +521,29 @@ export class AuthorizationEndpoint implements EndpointInterface {
     redirectUrl.search = searchParams.toString();
 
     return new HttpResponse().redirect(redirectUrl);
+  }
+
+  /**
+   * Treats the caught exception into a valid OAuth 2.0 Exception.
+   *
+   * @param exc Exception caught.
+   * @param parameters Parameters of the Authorization Request.
+   * @returns Treated OAuth 2.0 Exception.
+   */
+  private asOAuth2Exception(exc: unknown, parameters: AuthorizationRequest): OAuth2Exception {
+    let error: OAuth2Exception;
+
+    if (exc instanceof OAuth2Exception) {
+      error = exc;
+    } else {
+      error = new ServerErrorException({ description: 'An unexpected error occurred.', state: parameters.state });
+      error.cause = exc;
+    }
+
+    if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
+      error.setParameter('iss', this.settings.issuer);
+    }
+
+    return error;
   }
 }

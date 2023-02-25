@@ -229,6 +229,10 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
     data: unknown,
     additionalParameters: Partial<T> = {}
   ): Promise<JsonWebKey<T>> {
+    if (data instanceof JsonWebKey<T>) {
+      return data;
+    }
+
     if (typeof data !== 'object' || data === null) {
       throw new InvalidJsonWebKeyException('The provided data is invalid.');
     }

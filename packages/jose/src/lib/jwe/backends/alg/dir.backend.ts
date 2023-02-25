@@ -22,43 +22,46 @@ class DirBackend extends JsonWebEncryptionKeyWrapBackend {
   /**
    * Returns an empty Buffer as the Wrapped Key since the Backend does not Wrap the provided Content Encryption Key.
    *
-   * @param enc JSON Web Encryption Content Encryption Backend.
-   * @param key JSON Web Key to be used as the Content Encryption Key used to Encrypt the Plaintext.
+   * @param contentEncryptionBackend JSON Web Encryption Content Encryption Backend.
+   * @param wrapKey JSON Web Key to be used as the Content Encryption Key used to Encrypt the Plaintext.
    * @returns Wrap Key as the Content Encryption Key and an empty Buffer as the Wrapped Content Encryption Key.
    */
-  public async wrap(enc: JsonWebEncryptionContentEncryptionBackend, key: OctetSequenceKey): Promise<[Buffer, Buffer]> {
-    this.validateJsonWebKey(key);
+  public async wrap(
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    wrapKey: OctetSequenceKey
+  ): Promise<[Buffer, Buffer]> {
+    this.validateJsonWebKey(wrapKey);
 
-    const cek = key.cryptoKey.export();
-    const ek = Buffer.alloc(0);
+    const contentEncryptionKey = wrapKey.cryptoKey.export();
+    const wrappedKey = Buffer.alloc(0);
 
-    enc.validateContentEncryptionKey(cek);
+    contentEncryptionBackend.validateContentEncryptionKey(contentEncryptionKey);
 
-    return [cek, ek];
+    return [contentEncryptionKey, wrappedKey];
   }
 
   /**
    * Returns the provided JSON Web Key as the Content Encryption Key.
    *
-   * @param enc JSON Web Encryption Content Encryption Algorithm.
-   * @param key JSON Web Key used as the Content Encryption Key.
-   * @param ek ~Wrapped Content Encryption Key~.
+   * @param contentEncryptionBackend JSON Web Encryption Content Encryption Algorithm.
+   * @param unwrapKey JSON Web Key used as the Content Encryption Key.
+   * @param wrappedKey ~Wrapped Content Encryption Key~.
    * @returns Provided JSON Web Key as the Content Encryption Key.
    */
   public async unwrap(
-    enc: JsonWebEncryptionContentEncryptionBackend,
-    key: OctetSequenceKey,
-    ek: Buffer
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    unwrapKey: OctetSequenceKey,
+    wrappedKey: Buffer
   ): Promise<Buffer> {
-    if (ek.length !== 0) {
+    if (wrappedKey.length !== 0) {
       throw new InvalidJsonWebEncryptionException('Expected the Encrypted Content Encryption Key to be empty.');
     }
 
-    const cek = key.cryptoKey.export();
+    const contentEncryptionKey = unwrapKey.cryptoKey.export();
 
-    enc.validateContentEncryptionKey(cek);
+    contentEncryptionBackend.validateContentEncryptionKey(contentEncryptionKey);
 
-    return cek;
+    return contentEncryptionKey;
   }
 
   /**

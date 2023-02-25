@@ -16,7 +16,7 @@ const verifyAsync = promisify(verify);
  */
 class EddsaBackend extends JsonWebSignatureBackend {
   /**
-   * Elliptic Curve used by the JSON Web Signature EdDSA Backend.
+   * Elliptic Curves used by the JSON Web Signature EdDSA Backend.
    */
   protected readonly curves: Extract<EllipticCurve, 'Ed25519' | 'Ed448'>[] = ['Ed25519', 'Ed448'];
 

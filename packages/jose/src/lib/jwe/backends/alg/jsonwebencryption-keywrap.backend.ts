@@ -31,31 +31,31 @@ export abstract class JsonWebEncryptionKeyWrapBackend {
   /**
    * Wraps the provided Content Encryption Key using the provide JSON Web Key.
    *
-   * @param enc JSON Web Encryption Content Encryption Backend.
-   * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
+   * @param contentEncryptionBackend JSON Web Encryption Content Encryption Backend.
+   * @param wrapKey JSON Web Key used to Wrap the provided Content Encryption Key.
    * @param header Optional JSON Web Encryption Header containing the additional Parameters.
    * @returns Generated Content Encryption Key, Wrapped Content Encryption Key and optional JSON Web Encryption Header.
    */
   public abstract wrap(
-    enc: JsonWebEncryptionContentEncryptionBackend,
-    key: JsonWebKey,
-    header?: Record<string, unknown>
-  ): Promise<[Buffer, Buffer, Record<string, unknown>?]>;
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    wrapKey: JsonWebKey,
+    header?: Record<string, any>
+  ): Promise<[Buffer, Buffer, Record<string, any>?]>;
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param enc JSON Web Encrytpion Content Encryption Backend.
-   * @param key JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
-   * @param ek Wrapped Content Encryption Key.
+   * @param contentEncryptionBackend JSON Web Encrytpion Content Encryption Backend.
+   * @param unwrapKey JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
+   * @param wrappedKey Wrapped Content Encryption Key.
    * @param header Optional JSON Web Encryption Header containing the additional Parameters.
    * @returns Unwrapped Content Encryption Key.
    */
   public abstract unwrap(
-    enc: JsonWebEncryptionContentEncryptionBackend,
-    key: JsonWebKey,
-    ek: Buffer,
-    header?: Record<string, unknown>
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    unwrapKey: JsonWebKey,
+    wrappedKey: Buffer,
+    header?: Record<string, any>
   ): Promise<Buffer>;
 
   /**

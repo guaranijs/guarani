@@ -12,7 +12,7 @@ import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.bac
  *
  * @see https://www.rfc-editor.org/rfc/rfc7518.html#section-4.4
  */
-class AesBackend extends JsonWebEncryptionKeyWrapBackend {
+export class AesBackend extends JsonWebEncryptionKeyWrapBackend {
   /**
    * Size of the Content Encryption Key in bits.
    */
@@ -38,41 +38,44 @@ class AesBackend extends JsonWebEncryptionKeyWrapBackend {
   /**
    * Wraps the provided Content Encryption Key using the provide JSON Web Key.
    *
-   * @param enc JSON Web Encryption Content Encryption Backend.
-   * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
+   * @param contentEncryptionBackend JSON Web Encryption Content Encryption Backend.
+   * @param wrapKey JSON Web Key used to Wrap the provided Content Encryption Key.
    * @returns Generated Content Encryption Key, Wrapped Content Encryption Key and optional JSON Web Encryption Header.
    */
-  public async wrap(enc: JsonWebEncryptionContentEncryptionBackend, key: OctetSequenceKey): Promise<[Buffer, Buffer]> {
-    this.validateJsonWebKey(key);
+  public async wrap(
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    wrapKey: OctetSequenceKey
+  ): Promise<[Buffer, Buffer]> {
+    this.validateJsonWebKey(wrapKey);
 
-    const cipher = createCipheriv(this.cipher, key.cryptoKey, Buffer.alloc(8, 0xa6));
-    const cek = await enc.generateContentEncryptionKey();
-    const ek = Buffer.concat([cipher.update(cek), cipher.final()]);
+    const cipher = createCipheriv(this.cipher, wrapKey.cryptoKey, Buffer.alloc(8, 0xa6));
+    const contentEncryptionKey = await contentEncryptionBackend.generateContentEncryptionKey();
+    const wrappedKey = Buffer.concat([cipher.update(contentEncryptionKey), cipher.final()]);
 
-    return [cek, ek];
+    return [contentEncryptionKey, wrappedKey];
   }
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param enc JSON Web Encrytpion Content Encryption Backend.
-   * @param key JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
-   * @param ek Wrapped Content Encryption Key.
+   * @param contentEncryptionBackend JSON Web Encrytpion Content Encryption Backend.
+   * @param unwrapKey JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
+   * @param wrappedKey Wrapped Content Encryption Key.
    * @returns Unwrapped Content Encryption Key.
    */
   public async unwrap(
-    enc: JsonWebEncryptionContentEncryptionBackend,
-    key: OctetSequenceKey,
-    ek: Buffer
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    unwrapKey: OctetSequenceKey,
+    wrappedKey: Buffer
   ): Promise<Buffer> {
-    this.validateJsonWebKey(key);
+    this.validateJsonWebKey(unwrapKey);
 
-    const decipher = createDecipheriv(this.cipher, key.cryptoKey, Buffer.alloc(8, 0xa6));
-    const cek = Buffer.concat([decipher.update(ek), decipher.final()]);
+    const decipher = createDecipheriv(this.cipher, unwrapKey.cryptoKey, Buffer.alloc(8, 0xa6));
+    const contentEncryptionKey = Buffer.concat([decipher.update(wrappedKey), decipher.final()]);
 
-    enc.validateContentEncryptionKey(cek);
+    contentEncryptionBackend.validateContentEncryptionKey(contentEncryptionKey);
 
-    return cek;
+    return contentEncryptionKey;
   }
 
   /**

@@ -51,7 +51,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
   /**
    * Additional JSON Web Token Claims.
    */
-  [claim: string]: unknown;
+  [claim: string]: any;
 
   /**
    * Instantiates a new JSON Web Token Claims for usage with JSON Web Tokens.

@@ -2,7 +2,6 @@ import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../../jwk/jsonwebkey-type.type';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 
@@ -20,19 +19,13 @@ export abstract class JsonWebEncryptionKeyWrapBackend {
   protected readonly algorithm: JsonWebEncryptionKeyWrapAlgorithm;
 
   /**
-   * JSON Web Key Type supported by this JSON Web Encryption Key Wrap Backend.
-   */
-  protected readonly keyType: JsonWebKeyType;
-
-  /**
    * Instantiates a new JSON Web Encryption Key Wrap Backend to Wrap and Unwrap Content Encryption Keys.
    *
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
    * @param keyType Type of JSON Web Key supported by this JSON Web Encryption Key Wrap Backend.
    */
-  public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm, keyType: JsonWebKeyType) {
+  public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
     this.algorithm = algorithm;
-    this.keyType = keyType;
   }
 
   /**
@@ -78,12 +71,6 @@ export abstract class JsonWebEncryptionKeyWrapBackend {
 
     if (key.alg !== undefined && key.alg !== this.algorithm) {
       throw new InvalidJsonWebKeyException(`This JSON Web Key is intended to be used by the Algorithm "${key.alg}".`);
-    }
-
-    if (key.kty !== this.keyType) {
-      throw new InvalidJsonWebKeyException(
-        `This JSON Web Encryption Key Wrap Algorithm only accepts "${this.keyType}" JSON Web Keys.`
-      );
     }
   }
 }

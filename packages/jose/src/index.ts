@@ -20,7 +20,15 @@ export { JsonWebEncryptionHeader } from './lib/jwe/jsonwebencryption.header';
 export { JsonWebEncryptionHeaderParameters } from './lib/jwe/jsonwebencryption.header.parameters';
 
 // JSON Web Key
-export { EllipticCurve } from './lib/jwk/backends/ec/elliptic-curve.type';
+export { EllipticCurveKey } from './lib/jwk/backends/elliptic-curve/elliptic-curve.key';
+export { EllipticCurveKeyParameters } from './lib/jwk/backends/elliptic-curve/elliptic-curve.key.parameters';
+export { EllipticCurve } from './lib/jwk/backends/elliptic-curve.type';
+export { OctetKeyPairKey } from './lib/jwk/backends/octet-key-pair/octet-key-pair.key';
+export { OctetKeyPairKeyParameters } from './lib/jwk/backends/octet-key-pair/octet-key-pair.key.parameters';
+export { OctetSequenceKey } from './lib/jwk/backends/octet-sequence/octet-sequence.key';
+export { OctetSequenceKeyParameters } from './lib/jwk/backends/octet-sequence/octet-sequence.key.parameters';
+export { RsaKey } from './lib/jwk/backends/rsa/rsa.key';
+export { RsaKeyParameters } from './lib/jwk/backends/rsa/rsa.key.parameters';
 export { JsonWebKeyOperation } from './lib/jwk/jsonwebkey-operation.type';
 export { JsonWebKeyType } from './lib/jwk/jsonwebkey-type.type';
 export { JsonWebKeyUse } from './lib/jwk/jsonwebkey-use.type';

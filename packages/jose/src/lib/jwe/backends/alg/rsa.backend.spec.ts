@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 
-import { JsonWebKey } from '../../../jwk/jsonwebkey';
+import { RsaKey } from '../../../jwk/backends/rsa/rsa.key';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { RSA1_5, RSA_OAEP, RSA_OAEP_256, RSA_OAEP_384, RSA_OAEP_512 } from './rsa.backend';
 
@@ -12,7 +12,7 @@ const enc = <JsonWebEncryptionContentEncryptionBackend>{
   validateContentEncryptionKey: (_: Buffer): void => undefined,
 };
 
-const key = new JsonWebKey({
+const key = new RsaKey({
   kty: 'RSA',
   n:
     'xjpFydzTbByzL5jhEa2yQO63dpS9d9SKaN107AR69skKiTR4uK1c4SzDt4YcurDB' +

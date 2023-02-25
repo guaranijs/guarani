@@ -1,5 +1,4 @@
-import { KeyObject } from 'crypto';
-
+import { JsonWebKey } from '../jsonwebkey';
 import { JsonWebKeyParameters } from '../jsonwebkey.parameters';
 
 /**
@@ -7,20 +6,25 @@ import { JsonWebKeyParameters } from '../jsonwebkey.parameters';
  */
 export interface JsonWebKeyBackend {
   /**
-   * Required Parameters of the JSON Web Key.
-   */
-  readonly requiredParameters: string[];
-
-  /**
-   * Private Parameters of the JSON Web Key.
-   */
-  readonly privateParameters: string[];
-
-  /**
-   * Loads the provided JSON Web Key Parameters into a NodeJS Crypto Key.
+   * Loads the provided JSON Web Key Parameters into a JSON Web Key.
    *
    * @param parameters JSON Web Key Parameters.
-   * @returns NodeJS Crypto Key object.
+   * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
+   * @returns JSON Web Key.
    */
-  load(parameters: JsonWebKeyParameters): KeyObject;
+  load(
+    parameters: JsonWebKeyParameters,
+    additionalParameters?: Partial<JsonWebKeyParameters>
+  ): Promise<JsonWebKey<JsonWebKeyParameters>>;
+
+  /**
+   * Generates a new JSON Web Key on the fly based on the provided options.
+   *
+   * @param options Options used to generate the JSON Web Key.
+   * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
+   */
+  generate(
+    options: Record<string, any>,
+    additionalParameters?: Partial<JsonWebKeyParameters>
+  ): Promise<JsonWebKey<JsonWebKeyParameters>>;
 }

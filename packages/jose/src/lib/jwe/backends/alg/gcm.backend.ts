@@ -3,7 +3,7 @@ import { CipherGCMTypes, createCipheriv, createDecipheriv, randomBytes } from 'c
 import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
-import { JsonWebKey } from '../../../jwk/jsonwebkey';
+import { OctetSequenceKey } from '../../../jwk/backends/octet-sequence/octet-sequence.key';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
@@ -42,7 +42,7 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
    */
   public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
-    super(algorithm, 'oct');
+    super(algorithm);
 
     this.keySize = Number.parseInt(this.algorithm.substring(1, 4));
     this.cipher = <CipherGCMTypes>`aes-${this.keySize}-gcm`;
@@ -57,7 +57,7 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
    */
   public async wrap(
     enc: JsonWebEncryptionContentEncryptionBackend,
-    key: JsonWebKey
+    key: OctetSequenceKey
   ): Promise<[Buffer, Buffer, Record<string, unknown>]> {
     this.validateJsonWebKey(key);
 
@@ -85,7 +85,7 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
    */
   public async unwrap(
     enc: JsonWebEncryptionContentEncryptionBackend,
-    key: JsonWebKey,
+    key: OctetSequenceKey,
     ek: Buffer,
     header: Record<string, unknown>
   ): Promise<Buffer> {
@@ -107,13 +107,19 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
   }
 
   /**
-   * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption AES-GCM Key Wrap Backend.
+   * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption Key Wrap Backend.
    *
    * @param key JSON Web Key to be checked.
    * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
    */
-  protected override validateJsonWebKey(key: JsonWebKey): void {
+  protected override validateJsonWebKey(key: OctetSequenceKey): void {
     super.validateJsonWebKey(key);
+
+    if (key.kty !== 'oct') {
+      throw new InvalidJsonWebKeyException(
+        'This JSON Web Encryption Key Wrap Algorithm only accepts "oct" JSON Web Keys.'
+      );
+    }
 
     const exportedKey = key.cryptoKey.export();
 

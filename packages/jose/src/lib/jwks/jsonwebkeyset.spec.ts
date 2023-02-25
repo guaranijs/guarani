@@ -1,14 +1,15 @@
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeySetException } from '../exceptions/invalid-jsonwebkeyset.exception';
-import { EcKeyParameters } from '../jwk/backends/ec/eckey.parameters';
-import { OctKeyParameters } from '../jwk/backends/oct/octkey.parameters';
-import { RsaKeyParameters } from '../jwk/backends/rsa/rsakey.parameters';
+import { EllipticCurveKey } from '../jwk/backends/elliptic-curve/elliptic-curve.key';
+import { EllipticCurveKeyParameters } from '../jwk/backends/elliptic-curve/elliptic-curve.key.parameters';
+import { RsaKey } from '../jwk/backends/rsa/rsa.key';
+import { RsaKeyParameters } from '../jwk/backends/rsa/rsa.key.parameters';
 import { JsonWebKey } from '../jwk/jsonwebkey';
 import { JsonWebKeySet } from './jsonwebkeyset';
 import { JsonWebKeySetParameters } from './jsonwebkeyset.parameters';
 
-const publicEllipticCurveParameters: EcKeyParameters = {
+const publicEllipticCurveParameters: EllipticCurveKeyParameters = {
   kty: 'EC',
   crv: 'P-256',
   x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
@@ -16,11 +17,6 @@ const publicEllipticCurveParameters: EcKeyParameters = {
 };
 
 // const privateEcParams: JsonWebKeyParameters = { ...publicEcParams, d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo' };
-
-const secretParameters: OctKeyParameters = {
-  kty: 'oct',
-  k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ',
-};
 
 const publicRsaParameters: RsaKeyParameters = {
   kty: 'RSA',
@@ -65,7 +61,7 @@ const publicRsaParameters: RsaKeyParameters = {
     '6590ySgbH81pEM8FQW1JBATz0MYtUNZAt8N360vayE4',
 }; */
 
-const invalidJwkSets: unknown[] = [
+const invalidJwkSets: any[] = [
   undefined,
   null,
   true,
@@ -73,6 +69,7 @@ const invalidJwkSets: unknown[] = [
   1.2,
   1n,
   'a',
+  Buffer,
   Buffer.alloc(0),
   Symbol('a'),
   () => 1,
@@ -81,13 +78,7 @@ const invalidJwkSets: unknown[] = [
   ['a'],
 ];
 
-const jwkSetWithRepeatedKeyIdentifiers: JsonWebKey[] = [
-  new JsonWebKey(publicEllipticCurveParameters, { kid: 'static-id' }),
-  new JsonWebKey(secretParameters, { kid: 'static-id' }),
-  new JsonWebKey(publicRsaParameters, { kid: 'static-id' }),
-];
-
-const invalidParameters: unknown[] = [
+const invalidParameters: any[] = [
   undefined,
   null,
   true,
@@ -95,31 +86,23 @@ const invalidParameters: unknown[] = [
   1.2,
   1n,
   'a',
+  Buffer,
   /* Buffer.alloc(0) */
   Symbol('a'),
   () => 1,
   /* [] */
 ];
 
-const invalidKeysParameters: unknown[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  'a',
-  Buffer.alloc(0),
-  Symbol('a'),
-  () => 1,
-  {},
-  [],
+const invalidKeysParameters: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Buffer, Symbol('a'), () => 1, []];
+
+const jwkSetWithRepeatedKeyIdentifiers: JsonWebKey[] = [
+  new EllipticCurveKey(publicEllipticCurveParameters, { kid: 'static-id' }),
+  new RsaKey(publicRsaParameters, { kid: 'static-id' }),
 ];
 
 describe('JSON Web Key Set', () => {
   describe('constructor', () => {
     it.each(invalidJwkSets)('should reject an invalid set of json web keys.', (keySet) => {
-      // @ts-expect-error Invalid Type
       expect(() => new JsonWebKeySet(keySet)).toThrow(new TypeError('Invalid parameter "keys".'));
     });
 
@@ -134,8 +117,8 @@ describe('JSON Web Key Set', () => {
 
       expect(() => {
         return (jwks = new JsonWebKeySet([
-          new JsonWebKey(publicEllipticCurveParameters),
-          new JsonWebKey(publicRsaParameters),
+          new EllipticCurveKey(publicEllipticCurveParameters),
+          new RsaKey(publicRsaParameters),
         ]));
       }).not.toThrow();
 
@@ -144,51 +127,49 @@ describe('JSON Web Key Set', () => {
   });
 
   describe('load()', () => {
-    it.each(invalidParameters)('should reject an invalid "parameters".', (invalidParameters) => {
-      // @ts-expect-error Invalid Type
-      expect(() => JsonWebKeySet.load(invalidParameters)).toThrow(new InvalidJsonWebKeySetException());
+    it.each(invalidParameters)('should reject an invalid "parameters".', async (invalidParameters) => {
+      await expect(JsonWebKeySet.load(invalidParameters)).rejects.toThrow(new InvalidJsonWebKeySetException());
     });
 
-    it.each(invalidKeysParameters)('should reject an invalid "keys" json web key set parameter.', (keys) => {
-      // @ts-expect-error Invalid Type
-      expect(() => JsonWebKeySet.load({ keys })).toThrow(
+    it.each(invalidKeysParameters)('should reject an invalid "keys" json web key set parameter.', async (keys) => {
+      await expect(JsonWebKeySet.load({ keys })).rejects.toThrow(
         new InvalidJsonWebKeySetException('Invalid JSON Web Key Set parameter "keys".')
       );
     });
 
     it.each(invalidKeysParameters)(
       'should throw when the "keys" json web key set parameter is an array of invalid values.',
-      (keyParameter) => {
-        // @ts-expect-error Invalid Type
-        expect(() => JsonWebKeySet.load({ keys: [keyParameter] })).toThrow(
+      async (keyParameter) => {
+        await expect(JsonWebKeySet.load({ keys: [keyParameter] })).rejects.toThrow(
           new InvalidJsonWebKeySetException('The item at position #0 is not a valid JSON Web Key.')
         );
       }
     );
 
-    it('should create a json web key set based on valid parameters.', () => {
+    it('should create a json web key set based on valid parameters.', async () => {
       const parameters: JsonWebKeySetParameters = { keys: [{ ...publicEllipticCurveParameters, kid: 'foo' }] };
+      const jwks = await JsonWebKeySet.load(parameters);
 
-      expect(() => JsonWebKeySet.load(parameters)).not.toThrow();
-      expect(JsonWebKeySet.load(parameters).toJSON()).toMatchObject(parameters);
+      expect(jwks.toJSON()).toMatchObject(parameters);
     });
   });
 
   describe('parse()', () => {
-    it('should parse a json encoded json web key set.', () => {
+    it('should parse a json encoded json web key set.', async () => {
       const parameters: JsonWebKeySetParameters = { keys: [{ ...publicEllipticCurveParameters, kid: 'foo' }] };
       const jsonEncoded =
         '{"keys":[{"kty":"EC","crv":"P-256","x":"4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og","y":"mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8","kid":"foo"}]}';
 
-      expect(() => JsonWebKeySet.parse(jsonEncoded)).not.toThrow();
-      expect(JsonWebKeySet.parse(jsonEncoded).toJSON()).toMatchObject(parameters);
+      const jwks = await JsonWebKeySet.parse(jsonEncoded);
+
+      expect(jwks.toJSON()).toMatchObject(parameters);
     });
   });
 
   describe('find()', () => {
     const jwks = new JsonWebKeySet([
-      new JsonWebKey(publicEllipticCurveParameters, { kid: 'ec-key', use: 'sig' }),
-      new JsonWebKey(publicRsaParameters, { kid: 'rsa-key', key_ops: ['encrypt'] }),
+      new EllipticCurveKey(publicEllipticCurveParameters, { kid: 'ec-key', use: 'sig' }),
+      new RsaKey(publicRsaParameters, { kid: 'rsa-key', key_ops: ['encrypt'] }),
     ]);
 
     it('should return null when no key matches the provided predicate.', () => {
@@ -197,7 +178,6 @@ describe('JSON Web Key Set', () => {
 
     it('should return the key that matches the provided predicate.', () => {
       expect(jwks.find((key) => key.kid === 'ec-key')).toMatchObject(jwks.keys[0]!);
-
       expect(jwks.find((key) => key.key_ops?.includes('encrypt') ?? false)).toMatchObject(jwks.keys[1]!);
     });
   });

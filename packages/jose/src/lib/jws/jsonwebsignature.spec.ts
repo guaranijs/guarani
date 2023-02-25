@@ -2,7 +2,7 @@ import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { InvalidJsonWebSignatureException } from '../exceptions/invalid-jsonwebsignature.exception';
-import { JsonWebKey } from '../jwk/jsonwebkey';
+import { OctetSequenceKey } from '../jwk/backends/octet-sequence/octet-sequence.key';
 import { JsonWebSignature } from './jsonwebsignature';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 
@@ -15,7 +15,7 @@ const header = new JsonWebSignatureHeader({ alg: 'HS256' });
 const payload = Buffer.from('{"iat": 1723010455, "sub": "078BWDDXasdcg8"}', 'utf8');
 const signature = Buffer.from('hRqmKz7sKWQZyNM1Kw9AgqPNOedszPvEADYmNFo8foA', 'base64url');
 
-const key = new JsonWebKey({ kty: 'oct', k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ' });
+const key = new OctetSequenceKey({ kty: 'oct', k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ' });
 
 const token =
   'eyJhbGciOiJIUzI1NiJ9.' +
@@ -48,7 +48,7 @@ describe('JSON Web Signature', () => {
     });
 
     it('should throw when the header of the token is not a valid json object.', () => {
-      expect(() => JsonWebSignature.decode('a.b.c')).toThrow(InvalidJsonWebSignatureException);
+      expect(() => JsonWebSignature.decode('a.b.c')).toThrow(new InvalidJsonWebSignatureException());
     });
 
     it('should decode the data of a valid token.', () => {

@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 
-import { JsonWebKey } from '../../../jwk/jsonwebkey';
+import { OctetSequenceKey } from '../../../jwk/backends/octet-sequence/octet-sequence.key';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { A128KW, A192KW, A256KW } from './aes.backend';
 
@@ -14,7 +14,7 @@ const enc = <JsonWebEncryptionContentEncryptionBackend>{
 
 describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value using 128-bit key Backend', () => {
   it('should wrap and unwrap a content encryption key.', async () => {
-    const key = new JsonWebKey({ kty: 'oct', k: 'EBESExQVFhcYGRobHB0eHw' });
+    const key = new OctetSequenceKey({ kty: 'oct', k: 'EBESExQVFhcYGRobHB0eHw' });
     const [cek, ek] = await A128KW.wrap(enc, key);
 
     expect(cek).toEqual(contentEncryptionKey);
@@ -26,7 +26,7 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
 
 describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value using 192-bit key Backend', () => {
   it('should wrap and unwrap a content encryption key.', async () => {
-    const key = new JsonWebKey({ kty: 'oct', k: 'EBESExQVFhcYGRobHB0eHyAhIiMkJSYn' });
+    const key = new OctetSequenceKey({ kty: 'oct', k: 'EBESExQVFhcYGRobHB0eHyAhIiMkJSYn' });
     const [cek, ek] = await A192KW.wrap(enc, key);
 
     expect(cek).toEqual(contentEncryptionKey);
@@ -38,7 +38,7 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
 
 describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value using 256-bit key Backend', () => {
   it('should wrap and unwrap a content encryption key.', async () => {
-    const key = new JsonWebKey({ kty: 'oct', k: 'EBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8' });
+    const key = new OctetSequenceKey({ kty: 'oct', k: 'EBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8' });
     const [cek, ek] = await A256KW.wrap(enc, key);
 
     expect(cek).toEqual(contentEncryptionKey);

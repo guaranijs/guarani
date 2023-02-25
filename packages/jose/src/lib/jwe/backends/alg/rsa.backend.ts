@@ -2,7 +2,7 @@ import { Buffer } from 'buffer';
 import { constants, privateDecrypt, publicEncrypt } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
-import { JsonWebKey } from '../../../jwk/jsonwebkey';
+import { RsaKey } from '../../../jwk/backends/rsa/rsa.key';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
@@ -32,7 +32,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param hash Name of the Hash Algorithm.
    */
   public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm, padding: number, hash?: string) {
-    super(algorithm, 'RSA');
+    super(algorithm);
 
     this.padding = padding;
     this.hash = hash;
@@ -45,7 +45,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
    * @returns Generated Content Encryption Key, Wrapped Content Encryption Key and optional JSON Web Encryption Header.
    */
-  public async wrap(enc: JsonWebEncryptionContentEncryptionBackend, key: JsonWebKey): Promise<[Buffer, Buffer]> {
+  public async wrap(enc: JsonWebEncryptionContentEncryptionBackend, key: RsaKey): Promise<[Buffer, Buffer]> {
     this.validateJsonWebKey(key);
 
     const cek = await enc.generateContentEncryptionKey();
@@ -62,7 +62,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param ek Wrapped Content Encryption Key.
    * @returns Unwrapped Content Encryption Key.
    */
-  public async unwrap(enc: JsonWebEncryptionContentEncryptionBackend, key: JsonWebKey, ek: Buffer): Promise<Buffer> {
+  public async unwrap(enc: JsonWebEncryptionContentEncryptionBackend, key: RsaKey, ek: Buffer): Promise<Buffer> {
     this.validateJsonWebKey(key);
 
     const { cryptoKey } = key;
@@ -78,6 +78,22 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
     enc.validateContentEncryptionKey(cek);
 
     return cek;
+  }
+
+  /**
+   * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption Key Wrap Backend.
+   *
+   * @param key JSON Web Key to be checked.
+   * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
+   */
+  protected override validateJsonWebKey(key: RsaKey): void {
+    super.validateJsonWebKey(key);
+
+    if (key.kty !== 'RSA') {
+      throw new InvalidJsonWebKeyException(
+        'This JSON Web Encryption Key Wrap Algorithm only accepts "RSA" JSON Web Keys.'
+      );
+    }
   }
 }
 

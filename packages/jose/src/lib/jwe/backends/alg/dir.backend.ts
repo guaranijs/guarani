@@ -1,7 +1,8 @@
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-jsonwebencryption.exception';
-import { JsonWebKey } from '../../../jwk/jsonwebkey';
+import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
+import { OctetSequenceKey } from '../../../jwk/backends/octet-sequence/octet-sequence.key';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
 
@@ -15,7 +16,7 @@ class DirBackend extends JsonWebEncryptionKeyWrapBackend {
    * Instantiates a new JSON Web Encryption Direct Key Wrap Backend to Wrap and Unwrap Content Encryption Keys.
    */
   public constructor() {
-    super('dir', 'oct');
+    super('dir');
   }
 
   /**
@@ -25,7 +26,7 @@ class DirBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param key JSON Web Key to be used as the Content Encryption Key used to Encrypt the Plaintext.
    * @returns Wrap Key as the Content Encryption Key and an empty Buffer as the Wrapped Content Encryption Key.
    */
-  public async wrap(enc: JsonWebEncryptionContentEncryptionBackend, key: JsonWebKey): Promise<[Buffer, Buffer]> {
+  public async wrap(enc: JsonWebEncryptionContentEncryptionBackend, key: OctetSequenceKey): Promise<[Buffer, Buffer]> {
     this.validateJsonWebKey(key);
 
     const cek = key.cryptoKey.export();
@@ -44,7 +45,11 @@ class DirBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param ek ~Wrapped Content Encryption Key~.
    * @returns Provided JSON Web Key as the Content Encryption Key.
    */
-  public async unwrap(enc: JsonWebEncryptionContentEncryptionBackend, key: JsonWebKey, ek: Buffer): Promise<Buffer> {
+  public async unwrap(
+    enc: JsonWebEncryptionContentEncryptionBackend,
+    key: OctetSequenceKey,
+    ek: Buffer
+  ): Promise<Buffer> {
     if (ek.length !== 0) {
       throw new InvalidJsonWebEncryptionException('Expected the Encrypted Content Encryption Key to be empty.');
     }
@@ -54,6 +59,22 @@ class DirBackend extends JsonWebEncryptionKeyWrapBackend {
     enc.validateContentEncryptionKey(cek);
 
     return cek;
+  }
+
+  /**
+   * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption Key Wrap Backend.
+   *
+   * @param key JSON Web Key to be checked.
+   * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
+   */
+  protected override validateJsonWebKey(key: OctetSequenceKey): void {
+    super.validateJsonWebKey(key);
+
+    if (key.kty !== 'oct') {
+      throw new InvalidJsonWebKeyException(
+        'This JSON Web Encryption Key Wrap Algorithm only accepts "oct" JSON Web Keys.'
+      );
+    }
   }
 }
 

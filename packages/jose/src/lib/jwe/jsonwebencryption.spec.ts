@@ -2,7 +2,7 @@ import { Buffer } from 'buffer';
 
 import { InvalidJsonWebEncryptionException } from '../exceptions/invalid-jsonwebencryption.exception';
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
-import { JsonWebKey } from '../jwk/jsonwebkey';
+import { OctetSequenceKey } from '../jwk/backends/octet-sequence/octet-sequence.key';
 import { JsonWebEncryption } from './jsonwebencryption';
 import { JsonWebEncryptionHeader } from './jsonwebencryption.header';
 
@@ -25,7 +25,7 @@ const ciphertext = Buffer.from('KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY', 'b
 const tag = Buffer.from('U0m_YmjN04DJvceFICbCVQ', 'base64url');
 const aad = Buffer.from('eyJhbGciOiJBMTI4S1ciLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0', 'ascii');
 
-const wrapKey = new JsonWebKey({ kty: 'oct', k: 'GawgguFyGrWKav7AX4VKUg' });
+const wrapKey = new OctetSequenceKey({ kty: 'oct', k: 'GawgguFyGrWKav7AX4VKUg' });
 
 const token =
   'eyJhbGciOiJBMTI4S1ciLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0.' +

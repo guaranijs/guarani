@@ -70,7 +70,6 @@ describe('JSON Web Token Claims', () => {
         public override validateCustomClaims(_claims: Record<string, unknown>): void {}
       }
 
-      // @ts-expect-error The method actually exists
       const validateCustomClaimsSpy = jest.spyOn(CustomClaims.prototype, 'validateCustomClaims');
 
       expect(() => new CustomClaims({})).not.toThrow();

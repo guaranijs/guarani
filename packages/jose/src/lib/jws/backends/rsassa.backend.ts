@@ -15,6 +15,11 @@ const verifyAsync = promisify(verify);
  */
 class RsaSsaBackend extends JsonWebSignatureBackend {
   /**
+   * Hash Algorithm used to Sign and Verify Messages.
+   */
+  protected readonly hash: string;
+
+  /**
    * RSA Padding used by the JSON Web Signature RSASSA Backend to Sign and Verify Messages.
    */
   protected readonly padding: number;
@@ -27,8 +32,9 @@ class RsaSsaBackend extends JsonWebSignatureBackend {
    * @param padding RSA Padding used by the JSON Web Signature RSASSA Backend to Sign and Verify Messages.
    */
   public constructor(algorithm: JsonWebSignatureAlgorithm, hash: string, padding: number) {
-    super(algorithm, hash, 'RSA');
+    super(algorithm);
 
+    this.hash = hash;
     this.padding = padding;
   }
 

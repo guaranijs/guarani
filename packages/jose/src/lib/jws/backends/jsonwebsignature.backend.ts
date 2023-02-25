@@ -2,7 +2,6 @@ import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../jwk/jsonwebkey-type.type';
 import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.type';
 
 /**
@@ -19,26 +18,12 @@ export abstract class JsonWebSignatureBackend {
   protected readonly algorithm: JsonWebSignatureAlgorithm;
 
   /**
-   * Hash Algorithm used to Sign and Verify Messages.
-   */
-  protected readonly hash?: string;
-
-  /**
-   * JSON Web Key Type supported by the Backend.
-   */
-  protected readonly keyType?: JsonWebKeyType;
-
-  /**
    * Instantiates a new JSON Web Signature Backend to Sign and Verify Messages.
    *
    * @param algorithm Name of the JSON Web Signature Algorithm used by the Backend.
-   * @param hash Hash Algorithm used to Sign and Verify Messages.
-   * @param keyType Type of JSON Web Key supported by this JSON Web Signature Backend.
    */
-  public constructor(algorithm: JsonWebSignatureAlgorithm, hash?: string, keyType?: JsonWebKeyType) {
+  public constructor(algorithm: JsonWebSignatureAlgorithm) {
     this.algorithm = algorithm;
-    this.hash = hash;
-    this.keyType = keyType;
   }
 
   /**
@@ -72,12 +57,6 @@ export abstract class JsonWebSignatureBackend {
 
     if (key.alg !== undefined && key.alg !== this.algorithm) {
       throw new InvalidJsonWebKeyException(`This JSON Web Key is intended to be used by the Algorithm "${key.alg}".`);
-    }
-
-    if (this.keyType !== undefined && key.kty !== this.keyType) {
-      throw new InvalidJsonWebKeyException(
-        `This JSON Web Signature Algorithm only accepts "${this.keyType}" JSON Web Keys.`
-      );
     }
   }
 }

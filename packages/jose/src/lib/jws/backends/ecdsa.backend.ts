@@ -4,7 +4,7 @@ import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
 import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-jsonwebsignature.exception';
-import { EllipticCurve } from '../../jwk/backends/ec/elliptic-curve.type';
+import { EllipticCurve } from '../../jwk/backends/elliptic-curve.type';
 import { JsonWebKey } from '../../jwk/jsonwebkey';
 import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.type';
 import { JsonWebSignatureBackend } from './jsonwebsignature.backend';
@@ -16,6 +16,11 @@ const verifyAsync = promisify(verify);
  * Implementation of the JSON Web Signature ECDSA Backend.
  */
 class EcdsaBackend extends JsonWebSignatureBackend {
+  /**
+   * Hash Algorithm used to Sign and Verify Messages.
+   */
+  protected readonly hash: string;
+
   /**
    * Elliptic Curve used by the JSON Web Signature ECDSA Backend.
    */
@@ -29,8 +34,9 @@ class EcdsaBackend extends JsonWebSignatureBackend {
    * @param curve Elliptic Curve used by the JSON Web Signature ECDSA Backend.
    */
   public constructor(algorithm: JsonWebSignatureAlgorithm, hash: string, curve: EllipticCurve) {
-    super(algorithm, hash, 'EC');
+    super(algorithm);
 
+    this.hash = hash;
     this.curve = curve;
   }
 

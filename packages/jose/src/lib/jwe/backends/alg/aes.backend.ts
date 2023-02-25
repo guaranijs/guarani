@@ -2,7 +2,7 @@ import { Buffer } from 'buffer';
 import { createCipheriv, createDecipheriv } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
-import { JsonWebKey } from '../../../jwk/jsonwebkey';
+import { OctetSequenceKey } from '../../../jwk/backends/octet-sequence/octet-sequence.key';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
@@ -29,7 +29,7 @@ class AesBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
    */
   public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
-    super(algorithm, 'oct');
+    super(algorithm);
 
     this.keySize = Number.parseInt(this.algorithm.substring(1, 4));
     this.cipher = `aes${this.keySize}-wrap`;
@@ -42,7 +42,7 @@ class AesBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
    * @returns Generated Content Encryption Key, Wrapped Content Encryption Key and optional JSON Web Encryption Header.
    */
-  public async wrap(enc: JsonWebEncryptionContentEncryptionBackend, key: JsonWebKey): Promise<[Buffer, Buffer]> {
+  public async wrap(enc: JsonWebEncryptionContentEncryptionBackend, key: OctetSequenceKey): Promise<[Buffer, Buffer]> {
     this.validateJsonWebKey(key);
 
     const cipher = createCipheriv(this.cipher, key.cryptoKey, Buffer.alloc(8, 0xa6));
@@ -60,7 +60,11 @@ class AesBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param ek Wrapped Content Encryption Key.
    * @returns Unwrapped Content Encryption Key.
    */
-  public async unwrap(enc: JsonWebEncryptionContentEncryptionBackend, key: JsonWebKey, ek: Buffer): Promise<Buffer> {
+  public async unwrap(
+    enc: JsonWebEncryptionContentEncryptionBackend,
+    key: OctetSequenceKey,
+    ek: Buffer
+  ): Promise<Buffer> {
     this.validateJsonWebKey(key);
 
     const decipher = createDecipheriv(this.cipher, key.cryptoKey, Buffer.alloc(8, 0xa6));
@@ -72,13 +76,19 @@ class AesBackend extends JsonWebEncryptionKeyWrapBackend {
   }
 
   /**
-   * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption AES Key Wrap Backend.
+   * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption Key Wrap Backend.
    *
    * @param key JSON Web Key to be checked.
    * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
    */
-  protected override validateJsonWebKey(key: JsonWebKey): void {
+  protected override validateJsonWebKey(key: OctetSequenceKey): void {
     super.validateJsonWebKey(key);
+
+    if (key.kty !== 'oct') {
+      throw new InvalidJsonWebKeyException(
+        'This JSON Web Encryption Key Wrap Algorithm only accepts "oct" JSON Web Keys.'
+      );
+    }
 
     const exportedKey = key.cryptoKey.export();
 

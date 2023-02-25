@@ -2,13 +2,13 @@ import { Buffer } from 'buffer';
 import { generateKeyPairSync } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
-import { EcKeyParameters } from '../../jwk/backends/ec/eckey.parameters';
-import { EllipticCurve } from '../../jwk/backends/ec/elliptic-curve.type';
-import { JsonWebKey } from '../../jwk/jsonwebkey';
+import { EllipticCurve } from '../../jwk/backends/elliptic-curve.type';
+import { EllipticCurveKey } from '../../jwk/backends/elliptic-curve/elliptic-curve.key';
+import { EllipticCurveKeyParameters } from '../../jwk/backends/elliptic-curve/elliptic-curve.key.parameters';
 import { ES256, ES384, ES512 } from './ecdsa.backend';
 
-const generateEcKey = (curve: EllipticCurve): JsonWebKey<EcKeyParameters> => {
-  const curves: Record<EllipticCurve, string> = {
+const generateEcKey = (curve: Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521'>): EllipticCurveKey => {
+  const curves: Record<Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521'>, string> = {
     'P-256': 'prime256v1',
     'P-384': 'secp384r1',
     'P-521': 'secp521r1',
@@ -16,7 +16,7 @@ const generateEcKey = (curve: EllipticCurve): JsonWebKey<EcKeyParameters> => {
 
   const { privateKey } = generateKeyPairSync('ec', { namedCurve: curves[curve] });
 
-  return new JsonWebKey(<EcKeyParameters>privateKey.export({ format: 'jwk' }));
+  return new EllipticCurveKey(<EllipticCurveKeyParameters>privateKey.export({ format: 'jwk' }));
 };
 
 const message = Buffer.from('Super secret message.');

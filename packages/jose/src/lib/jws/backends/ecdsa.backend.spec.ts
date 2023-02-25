@@ -21,13 +21,13 @@ const generateEcKey = (curve: Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521'
 
 const message = Buffer.from('Super secret message.');
 
-describe('JSON Web Signature Algorithm ECDSA using P-256 and SHA-256', () => {
+describe('JSON Web Signature ECDSA using P-256 and SHA-256 Backend', () => {
   it('should reject a different curve.', async () => {
     const key = generateEcKey('P-384');
 
     await expect(ES256.sign(message, key)).rejects.toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Signature ECDSA Algorithm "ES256" only accepts the Elliptic Curve "P-256".'
+        'The JSON Web Signature ECDSA Backend "ES256" only accepts the Elliptic Curve "P-256".'
       )
     );
   });
@@ -41,13 +41,13 @@ describe('JSON Web Signature Algorithm ECDSA using P-256 and SHA-256', () => {
   });
 });
 
-describe('JSON Web Signature Algorithm ECDSA using P-384 and SHA-384', () => {
+describe('JSON Web Signature ECDSA using P-384 and SHA-384 Backend', () => {
   it('should reject a different curve.', async () => {
     const key = generateEcKey('P-521');
 
     await expect(ES384.sign(message, key)).rejects.toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Signature ECDSA Algorithm "ES384" only accepts the Elliptic Curve "P-384".'
+        'The JSON Web Signature ECDSA Backend "ES384" only accepts the Elliptic Curve "P-384".'
       )
     );
   });
@@ -61,13 +61,13 @@ describe('JSON Web Signature Algorithm ECDSA using P-384 and SHA-384', () => {
   });
 });
 
-describe('JSON Web Signature Algorithm ECDSA using P-521 and SHA-512', () => {
+describe('JSON Web Signature ECDSA using P-521 and SHA-512 Backend', () => {
   it('should reject a different curve.', async () => {
     const key = generateEcKey('P-256');
 
     await expect(ES512.sign(message, key)).rejects.toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Signature ECDSA Algorithm "ES512" only accepts the Elliptic Curve "P-521".'
+        'The JSON Web Signature ECDSA Backend "ES512" only accepts the Elliptic Curve "P-521".'
       )
     );
   });

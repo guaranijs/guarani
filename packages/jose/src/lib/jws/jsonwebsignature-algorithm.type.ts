@@ -5,6 +5,7 @@ export type JsonWebSignatureAlgorithm =
   | 'ES256'
   | 'ES384'
   | 'ES512'
+  | 'EdDSA'
   | 'HS256'
   | 'HS384'
   | 'HS512'

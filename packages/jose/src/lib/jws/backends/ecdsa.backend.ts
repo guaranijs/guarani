@@ -5,7 +5,7 @@ import { promisify } from 'util';
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
 import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-jsonwebsignature.exception';
 import { EllipticCurve } from '../../jwk/backends/elliptic-curve.type';
-import { JsonWebKey } from '../../jwk/jsonwebkey';
+import { EllipticCurveKey } from '../../jwk/backends/elliptic-curve/elliptic-curve.key';
 import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.type';
 import { JsonWebSignatureBackend } from './jsonwebsignature.backend';
 
@@ -24,7 +24,7 @@ class EcdsaBackend extends JsonWebSignatureBackend {
   /**
    * Elliptic Curve used by the JSON Web Signature ECDSA Backend.
    */
-  protected readonly curve: EllipticCurve;
+  protected readonly curve: Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521'>;
 
   /**
    * Instantiates a new JSON Web Signature ECDSA Backend to Sign and Verify Messages.
@@ -33,7 +33,11 @@ class EcdsaBackend extends JsonWebSignatureBackend {
    * @param hash Hash Algorithm used to Sign and Verify Messages.
    * @param curve Elliptic Curve used by the JSON Web Signature ECDSA Backend.
    */
-  public constructor(algorithm: JsonWebSignatureAlgorithm, hash: string, curve: EllipticCurve) {
+  public constructor(
+    algorithm: JsonWebSignatureAlgorithm,
+    hash: string,
+    curve: Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521'>
+  ) {
     super(algorithm);
 
     this.hash = hash;
@@ -47,7 +51,7 @@ class EcdsaBackend extends JsonWebSignatureBackend {
    * @param key JSON Web Key used to Sign the provided Message.
    * @returns Resulting Signature of the provided Message.
    */
-  public async sign(message: Buffer, key: JsonWebKey): Promise<Buffer> {
+  public async sign(message: Buffer, key: EllipticCurveKey): Promise<Buffer> {
     this.validateJsonWebKey(key);
 
     const { cryptoKey } = key;
@@ -68,7 +72,7 @@ class EcdsaBackend extends JsonWebSignatureBackend {
    * @param message Message to be matched against the provided Signature.
    * @param key JSON Web Key used to verify the Signature and Message.
    */
-  public async verify(signature: Buffer, message: Buffer, key: JsonWebKey): Promise<void> {
+  public async verify(signature: Buffer, message: Buffer, key: EllipticCurveKey): Promise<void> {
     this.validateJsonWebKey(key);
 
     const result = await verifyAsync(this.hash, message, key.cryptoKey, signature);
@@ -79,17 +83,21 @@ class EcdsaBackend extends JsonWebSignatureBackend {
   }
 
   /**
-   * Checks if the provided JSON Web Key can be used by the JSON Web Signature ECDSA Algorithm.
+   * Checks if the provided JSON Web Key can be used by the JSON Web Signature ECDSA Backend.
    *
    * @param key JSON Web Key to be checked.
    * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
    */
-  protected override validateJsonWebKey(key: JsonWebKey): void {
+  protected override validateJsonWebKey(key: EllipticCurveKey): void {
     super.validateJsonWebKey(key);
+
+    if (key.kty !== 'EC') {
+      throw new InvalidJsonWebKeyException('This JSON Web Signature Backend only accepts "EC" JSON Web Keys.');
+    }
 
     if (key.crv !== this.curve) {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Signature ECDSA Algorithm "${this.algorithm}" only accepts the Elliptic Curve "${this.curve}".`
+        `The JSON Web Signature ECDSA Backend "${this.algorithm}" only accepts the Elliptic Curve "${this.curve}".`
       );
     }
   }

@@ -70,7 +70,7 @@ export class HmacBackend extends JsonWebSignatureBackend {
   }
 
   /**
-   * Checks if the provided JSON Web Key can be used by the JSON Web Signature HMAC Algorithm.
+   * Checks if the provided JSON Web Key can be used by the JSON Web Signature HMAC Backend.
    *
    * @param key JSON Web Key to be checked.
    * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
@@ -79,11 +79,13 @@ export class HmacBackend extends JsonWebSignatureBackend {
     super.validateJsonWebKey(key);
 
     if (key.kty !== 'oct') {
-      throw new InvalidJsonWebKeyException('This JSON Web Signature Algorithm only accepts "oct" JSON Web Keys.');
+      throw new InvalidJsonWebKeyException('This JSON Web Signature Backend only accepts "oct" JSON Web Keys.');
     }
 
     if (Buffer.byteLength(key.k, 'base64url') < this.keySize) {
-      throw new InvalidJsonWebKeyException(`The size of the OctKey Secret must be at least ${this.keySize} bytes.`);
+      throw new InvalidJsonWebKeyException(
+        `The size of the Octet Sequence Key Secret must be at least ${this.keySize} bytes.`
+      );
     }
   }
 }

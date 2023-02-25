@@ -44,7 +44,7 @@ const key = new RsaKey({
 
 const message = Buffer.from('Super secret message.');
 
-describe('JSON Web Signature Algorithm RSASSA-PSS using SHA-256 and MGF1 with SHA-256', () => {
+describe('JSON Web Signature RSASSA-PSS using SHA-256 and MGF1 with SHA-256 Backend', () => {
   it('should sign and verify a message.', async () => {
     const signature = await PS256.sign(message, key);
 
@@ -53,7 +53,7 @@ describe('JSON Web Signature Algorithm RSASSA-PSS using SHA-256 and MGF1 with SH
   });
 });
 
-describe('JSON Web Signature Algorithm RSASSA-PSS using SHA-384 and MGF1 with SHA-384', () => {
+describe('JSON Web Signature RSASSA-PSS using SHA-384 and MGF1 with SHA-384 Backend', () => {
   it('should sign and verify a message.', async () => {
     const signature = await PS384.sign(message, key);
 
@@ -62,7 +62,7 @@ describe('JSON Web Signature Algorithm RSASSA-PSS using SHA-384 and MGF1 with SH
   });
 });
 
-describe('JSON Web Signature Algorithm RSASSA-PSS using SHA-512 and MGF1 with SHA-512', () => {
+describe('JSON Web Signature RSASSA-PSS using SHA-512 and MGF1 with SHA-512 Backend', () => {
   it('should sign and verify a message.', async () => {
     const signature = await PS512.sign(message, key);
 
@@ -71,7 +71,7 @@ describe('JSON Web Signature Algorithm RSASSA-PSS using SHA-512 and MGF1 with SH
   });
 });
 
-describe('JSON Web Signature Algorithm RSASSA-PKCS1-v1_5 using SHA-256', () => {
+describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-256 Backend', () => {
   it('should sign and verify a message.', async () => {
     const signature = await RS256.sign(message, key);
 
@@ -80,7 +80,7 @@ describe('JSON Web Signature Algorithm RSASSA-PKCS1-v1_5 using SHA-256', () => {
   });
 });
 
-describe('JSON Web Signature Algorithm RSASSA-PKCS1-v1_5 using SHA-384', () => {
+describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-384 Backend', () => {
   it('should sign and verify a message.', async () => {
     const signature = await RS384.sign(message, key);
 
@@ -89,7 +89,7 @@ describe('JSON Web Signature Algorithm RSASSA-PKCS1-v1_5 using SHA-384', () => {
   });
 });
 
-describe('JSON Web Signature Algorithm RSASSA-PKCS1-v1_5 using SHA-512', () => {
+describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-512 Backend', () => {
   it('should sign and verify a message.', async () => {
     const signature = await RS512.sign(message, key);
 

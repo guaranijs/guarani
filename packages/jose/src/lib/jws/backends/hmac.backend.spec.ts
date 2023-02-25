@@ -16,7 +16,7 @@ describe('JSON Web Signature HMAC using SHA-256 Backend', () => {
     const key = generateOctKey(randomInt(1, 32));
 
     await expect(HS256.sign(message, key)).rejects.toThrow(
-      new InvalidJsonWebKeyException(`The size of the OctKey Secret must be at least 32 bytes.`)
+      new InvalidJsonWebKeyException(`The size of the Octet Sequence Key Secret must be at least 32 bytes.`)
     );
   });
 
@@ -33,7 +33,7 @@ describe('JSON Web Signature HMAC using SHA-384 Backend', () => {
   it('should reject a small secret.', async () => {
     const key = generateOctKey(randomInt(1, 48));
     await expect(HS384.sign(message, key)).rejects.toThrow(
-      new InvalidJsonWebKeyException(`The size of the OctKey Secret must be at least 48 bytes.`)
+      new InvalidJsonWebKeyException(`The size of the Octet Sequence Key Secret must be at least 48 bytes.`)
     );
   });
 
@@ -50,7 +50,7 @@ describe('JSON Web Signature HMAC using SHA-512 Backend', () => {
   it('should reject a small secret.', async () => {
     const key = generateOctKey(randomInt(1, 64));
     await expect(HS512.sign(message, key)).rejects.toThrow(
-      new InvalidJsonWebKeyException(`The size of the OctKey Secret must be at least 64 bytes.`)
+      new InvalidJsonWebKeyException(`The size of the Octet Sequence Key Secret must be at least 64 bytes.`)
     );
   });
 

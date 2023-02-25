@@ -3,7 +3,7 @@ import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
 import { InvalidJsonWebSignatureException } from '../../exceptions/invalid-jsonwebsignature.exception';
-import { JsonWebKey } from '../../jwk/jsonwebkey';
+import { RsaKey } from '../../jwk/backends/rsa/rsa.key';
 import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.type';
 import { JsonWebSignatureBackend } from './jsonwebsignature.backend';
 
@@ -45,7 +45,7 @@ class RsaSsaBackend extends JsonWebSignatureBackend {
    * @param key JSON Web Key used to Sign the provided Message.
    * @returns Resulting Signature of the provided Message.
    */
-  public async sign(message: Buffer, key: JsonWebKey): Promise<Buffer> {
+  public async sign(message: Buffer, key: RsaKey): Promise<Buffer> {
     this.validateJsonWebKey(key);
 
     const { cryptoKey } = key;
@@ -64,13 +64,27 @@ class RsaSsaBackend extends JsonWebSignatureBackend {
    * @param message Message to be matched against the provided Signature.
    * @param key JSON Web Key used to verify the Signature and Message.
    */
-  public async verify(signature: Buffer, message: Buffer, key: JsonWebKey): Promise<void> {
+  public async verify(signature: Buffer, message: Buffer, key: RsaKey): Promise<void> {
     this.validateJsonWebKey(key);
 
     const result = await verifyAsync(this.hash, message, { key: key.cryptoKey, padding: this.padding }, signature);
 
     if (!result) {
       throw new InvalidJsonWebSignatureException();
+    }
+  }
+
+  /**
+   * Checks if the provided JSON Web Key can be used by the JSON Web Signature RSASSA Backend.
+   *
+   * @param key JSON Web Key to be checked.
+   * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
+   */
+  protected override validateJsonWebKey(key: RsaKey): void {
+    super.validateJsonWebKey(key);
+
+    if (key.kty !== 'RSA') {
+      throw new InvalidJsonWebKeyException('This JSON Web Signature Backend only accepts "RSA" JSON Web Keys.');
     }
   }
 }

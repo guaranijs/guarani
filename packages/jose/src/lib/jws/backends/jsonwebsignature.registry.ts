@@ -1,5 +1,6 @@
 import { JsonWebSignatureAlgorithm } from '../jsonwebsignature-algorithm.type';
 import { ES256, ES384, ES512 } from './ecdsa.backend';
+import { EdDSA } from './eddsa.backend';
 import { HS256, HS384, HS512 } from './hmac.backend';
 import { JsonWebSignatureBackend } from './jsonwebsignature.backend';
 import { none } from './none.backend';
@@ -12,6 +13,7 @@ export const JSONWEBSIGNATURE_REGISTRY: Record<JsonWebSignatureAlgorithm, JsonWe
   ES256,
   ES384,
   ES512,
+  EdDSA,
   HS256,
   HS384,
   HS512,

@@ -4,6 +4,8 @@ import { JsonWebSignatureBackend } from './jsonwebsignature.backend';
 
 /**
  * Implementation of the JSON Web Signature none Backend.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc7518.html#section-3.6
  */
 class NoneBackend extends JsonWebSignatureBackend {
   /**

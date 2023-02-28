@@ -6,10 +6,10 @@ import { OctetSequenceKey } from '../jwk/backends/octet-sequence/octet-sequence.
 import { JsonWebSignature } from './jsonwebsignature';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 
-const invalidTokens: unknown[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer.alloc(1), () => 1, {}, []];
+const invalidTokens: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
 const invalidTokenFormats: string[] = ['', 'a', '.a', '.a.b', 'a.b', 'a.b.c.d'];
 
-const invalidKeys: unknown[] = [undefined, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer.alloc(1), {}, []];
+const invalidKeys: any[] = [undefined, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer.alloc(1), {}, []];
 
 const header = new JsonWebSignatureHeader({ alg: 'HS256' });
 const payload = Buffer.from('{"iat": 1723010455, "sub": "078BWDDXasdcg8"}', 'utf8');
@@ -39,7 +39,6 @@ describe('JSON Web Signature', () => {
 
   describe('decode()', () => {
     it.each(invalidTokens)('should throw when the provided token is invalid.', (invalidToken) => {
-      // @ts-expect-error Invalid Type
       expect(() => JsonWebSignature.decode(invalidToken)).toThrow(new InvalidJsonWebSignatureException());
     });
 
@@ -58,7 +57,6 @@ describe('JSON Web Signature', () => {
 
   describe('verify()', () => {
     it.each(invalidKeys)('should throw when the provided json web key is invalid.', async (invalidKey) => {
-      // @ts-expect-error Invalid Type
       await expect(JsonWebSignature.verify(token, invalidKey)).rejects.toThrow(new InvalidJsonWebKeyException());
     });
 
@@ -78,7 +76,7 @@ describe('JSON Web Signature', () => {
   describe('sign()', () => {
     it('should sign a json web signature object into a compact token.', async () => {
       const jws = new JsonWebSignature(header, payload);
-      await expect(jws.sign(key)).resolves.toBe(token);
+      await expect(jws.sign(key)).resolves.toEqual(token);
     });
   });
 });

@@ -14,6 +14,8 @@ const verifyAsync = promisify(verify);
 
 /**
  * Implementation of the JSON Web Signature ECDSA Backend.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc7518.html#section-3.4
  */
 class EcdsaBackend extends JsonWebSignatureBackend {
   /**
@@ -57,7 +59,9 @@ class EcdsaBackend extends JsonWebSignatureBackend {
     const { cryptoKey } = key;
 
     if (cryptoKey.type !== 'private') {
-      throw new InvalidJsonWebKeyException('A Private Key is needed to Sign a JSON Web Signature Message.');
+      throw new InvalidJsonWebKeyException(
+        'The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'
+      );
     }
 
     const signature = await signAsync(this.hash, message, cryptoKey);
@@ -92,12 +96,14 @@ class EcdsaBackend extends JsonWebSignatureBackend {
     super.validateJsonWebKey(key);
 
     if (key.kty !== 'EC') {
-      throw new InvalidJsonWebKeyException('This JSON Web Signature Backend only accepts "EC" JSON Web Keys.');
+      throw new InvalidJsonWebKeyException(
+        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "EC" JSON Web Keys.`
+      );
     }
 
     if (key.crv !== this.curve) {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Signature ECDSA Backend "${this.algorithm}" only accepts the Elliptic Curve "${this.curve}".`
+        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts the Elliptic Curve "${this.curve}".`
       );
     }
   }

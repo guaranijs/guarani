@@ -3,7 +3,7 @@ import { Buffer } from 'buffer';
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-jsonwebencryption.exception';
 import { JsonWebEncryptionContentEncryptionBackend } from './jsonwebencryption-content-encryption.backend';
 
-const invalidCeks: unknown[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol.for('foo'), () => 1, {}, []];
+const invalidCeks: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol.for('foo'), Buffer, () => 1, {}, []];
 
 const algorithm: JsonWebEncryptionContentEncryptionBackend = Reflect.construct(
   JsonWebEncryptionContentEncryptionBackend,
@@ -20,7 +20,6 @@ describe('JSON Web Encryption Content Encryption Algorithm', () => {
   });
 
   it.each(invalidCeks)('should throw when validating a content encryption key that is not a buffer.', (invalidCek) => {
-    // @ts-expect-error Invalid Type
     expect(() => algorithm.validateContentEncryptionKey(invalidCek)).toThrow(new InvalidJsonWebEncryptionException());
   });
 

@@ -27,26 +27,26 @@ describe('Octet Sequence Key', () => {
     it('should throw when providing a "kty" different than "oct".', () => {
       // @ts-expect-error Invalid JSON Web Key Type.
       expect(() => new OctetSequenceKey({ kty: 'unknown' })).toThrow(
-        new InvalidJsonWebKeyException('Unexpected JSON Web Key Type "unknown" for OctetSequenceKey.')
+        new TypeError('Unexpected JSON Web Key Type "unknown" for OctetSequenceKey.')
       );
     });
 
     it('should throw when not providing the parameter "k".', () => {
       // @ts-expect-error Missing required parameter "k".
       expect(() => new OctetSequenceKey({ kty: 'oct' })).toThrow(
-        new InvalidJsonWebKeyException('Invalid key parameter "k".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "k".')
       );
     });
 
     it.each(invalidSecrets)('should throw when passing an invalid secret.', (k) => {
       expect(() => new OctetSequenceKey({ kty: 'oct', k })).toThrow(
-        new InvalidJsonWebKeyException('Invalid key parameter "k".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "k".')
       );
     });
 
     it('should throw when passing an empty secret.', () => {
       expect(() => new OctetSequenceKey({ kty: 'oct', k: '' })).toThrow(
-        new InvalidJsonWebKeyException('Invalid key parameter "k".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "k".')
       );
     });
 

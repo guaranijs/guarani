@@ -1,4 +1,3 @@
-import { UnsupportedEllipticCurveException } from '../../../exceptions/unsupported-elliptic-curve.exception';
 import { EllipticCurve } from '../elliptic-curve.type';
 import { OctetKeyPairBackend } from './octet-key-pair.backend';
 import { OctetKeyPairKey } from './octet-key-pair.key';
@@ -36,7 +35,7 @@ describe('Octet Key Pair JSON Web Key Backend', () => {
     it('should throw when passing an unsupported elliptic curve.', async () => {
       // @ts-expect-error Unsupported Elliptic Curve.
       await expect(backend.generate({ curve: 'P-256' })).rejects.toThrow(
-        new UnsupportedEllipticCurveException('Unsupported Elliptic Curve "P-256" for JSON Web Key Type "OKP".')
+        new TypeError('Unsupported Elliptic Curve "P-256" for JSON Web Key Type "OKP".')
       );
     });
 

@@ -13,6 +13,8 @@ const verifyAsync = promisify(verify);
 
 /**
  * Implementation of the JSON Web Signature EdDSA Backend.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc8037.html#section-3.1
  */
 class EddsaBackend extends JsonWebSignatureBackend {
   /**
@@ -40,7 +42,9 @@ class EddsaBackend extends JsonWebSignatureBackend {
     const { cryptoKey } = key;
 
     if (cryptoKey.type !== 'private') {
-      throw new InvalidJsonWebKeyException('A Private Key is needed to Sign a JSON Web Signature Message.');
+      throw new InvalidJsonWebKeyException(
+        'The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'
+      );
     }
 
     const signature = await signAsync(null, message, cryptoKey);
@@ -75,13 +79,14 @@ class EddsaBackend extends JsonWebSignatureBackend {
     super.validateJsonWebKey(key);
 
     if (key.kty !== 'OKP') {
-      throw new InvalidJsonWebKeyException('This JSON Web Signature Backend only accepts "OKP" JSON Web Keys.');
+      throw new InvalidJsonWebKeyException(
+        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "OKP" JSON Web Keys.`
+      );
     }
 
     if (!this.curves.includes(<Extract<EllipticCurve, 'Ed25519' | 'Ed448'>>key.crv)) {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Signature EdDSA Backend "${this.algorithm}" ` +
-          `only accepts the Elliptic Curves ["${this.curves.join('", "')}"].`
+        `The JSON Web Signature Algorithm "EdDSA" only accepts the Elliptic Curves ["${this.curves.join('", "')}"].`
       );
     }
   }

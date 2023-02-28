@@ -5,35 +5,35 @@ export interface JsonWebTokenClaimsParameters extends Record<string, any> {
   /**
    * Identifier of the Issuer of the Token.
    */
-  readonly iss?: string;
+  iss?: string;
 
   /**
    * Subject represented by the Token.
    */
-  readonly sub?: string;
+  sub?: string;
 
   /**
    * Identifier of the Audience the Token is intended to.
    */
-  readonly aud?: string | string[];
+  aud?: string | string[];
 
   /**
    * UTC time denoting the Expiration Time of the Token.
    */
-  readonly exp?: number;
+  exp?: number;
 
   /**
    * UTC time denoting the moment when the Token will become valid.
    */
-  readonly nbf?: number;
+  nbf?: number;
 
   /**
    * UTC time denoting the moment when the Token was created.
    */
-  readonly iat?: number;
+  iat?: number;
 
   /**
    * Identifier of the Token.
    */
-  readonly jti?: string;
+  jti?: string;
 }

@@ -1,8 +1,6 @@
 import { Buffer } from 'buffer';
 import { CipherGCMTypes, createCipheriv, createDecipheriv } from 'crypto';
 
-import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-jsonwebencryption.exception';
-import { JoseException } from '../../../exceptions/jose.exception';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from '../../jsonwebencryption-content-encryption-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from './jsonwebencryption-content-encryption.backend';
 
@@ -45,28 +43,17 @@ class GcmBackend extends JsonWebEncryptionContentEncryptionBackend {
    * @returns Resulting Ciphertext and Authentication Tag.
    */
   public async encrypt(plaintext: Buffer, aad: Buffer, iv: Buffer, key: Buffer): Promise<[Buffer, Buffer]> {
-    try {
-      this.validateInitializationVector(iv);
-      this.validateContentEncryptionKey(key);
+    this.validateInitializationVector(iv);
+    this.validateContentEncryptionKey(key);
 
-      const cipher = createCipheriv(this.cipher, key, iv, { authTagLength: this.authTagLength });
+    const cipher = createCipheriv(this.cipher, key, iv, { authTagLength: this.authTagLength });
 
-      cipher.setAAD(aad);
+    cipher.setAAD(aad);
 
-      const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-      const tag = cipher.getAuthTag();
+    const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+    const tag = cipher.getAuthTag();
 
-      return [ciphertext, tag];
-    } catch (exc: unknown) {
-      if (exc instanceof JoseException) {
-        throw exc;
-      }
-
-      const exception = new InvalidJsonWebEncryptionException();
-      exception.cause = exc;
-
-      throw exception;
-    }
+    return [ciphertext, tag];
   }
 
   /**
@@ -80,28 +67,17 @@ class GcmBackend extends JsonWebEncryptionContentEncryptionBackend {
    * @returns Resulting Plaintext.
    */
   public async decrypt(ciphertext: Buffer, aad: Buffer, iv: Buffer, tag: Buffer, key: Buffer): Promise<Buffer> {
-    try {
-      this.validateInitializationVector(iv);
-      this.validateContentEncryptionKey(key);
+    this.validateInitializationVector(iv);
+    this.validateContentEncryptionKey(key);
 
-      const decipher = createDecipheriv(this.cipher, key, iv, { authTagLength: this.authTagLength });
+    const decipher = createDecipheriv(this.cipher, key, iv, { authTagLength: this.authTagLength });
 
-      decipher.setAAD(aad);
-      decipher.setAuthTag(tag);
+    decipher.setAAD(aad);
+    decipher.setAuthTag(tag);
 
-      const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 
-      return decrypted;
-    } catch (exc: unknown) {
-      if (exc instanceof JoseException) {
-        throw exc;
-      }
-
-      const exception = new InvalidJsonWebEncryptionException();
-      exception.cause = exc;
-
-      throw exception;
-    }
+    return decrypted;
   }
 }
 

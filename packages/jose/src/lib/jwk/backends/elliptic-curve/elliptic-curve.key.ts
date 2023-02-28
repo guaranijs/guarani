@@ -75,28 +75,28 @@ export class EllipticCurveKey extends JsonWebKey<EllipticCurveKeyParameters> imp
    */
   protected override validateParameters(parameters: EllipticCurveKeyParameters): void {
     if (parameters.kty !== 'EC') {
-      throw new InvalidJsonWebKeyException(`Unexpected JSON Web Key Type "${parameters.kty}" for EllipticCurveKey.`);
+      throw new TypeError(`Unexpected JSON Web Key Type "${parameters.kty}" for EllipticCurveKey.`);
     }
 
     if (typeof parameters.crv !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid parameter "crv".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "crv".');
     }
 
     if (!this.supportedEllipticCurves.includes(parameters.crv)) {
-      throw new UnsupportedEllipticCurveException(`Unsupported Elliptic Curve "${parameters.crv}".`);
+      throw new UnsupportedEllipticCurveException('Invalid jwk parameter "crv".');
     }
 
     if (typeof parameters.x !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid key parameter "x".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "x".');
     }
 
     if (typeof parameters.y !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid key parameter "y".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "y".');
     }
 
     if (parameters.d !== undefined) {
       if (typeof parameters.d !== 'string') {
-        throw new InvalidJsonWebKeyException('Invalid key parameter "d".');
+        throw new InvalidJsonWebKeyException('Invalid jwk parameter "d".');
       }
     }
 

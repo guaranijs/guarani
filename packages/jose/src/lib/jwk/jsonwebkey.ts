@@ -90,7 +90,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
   /**
    * NodeJS Crypto Key.
    */
-  #cryptoKey!: KeyObject;
+  readonly #cryptoKey!: KeyObject;
 
   /**
    * Thumbprint of the JSON Web Key according to **RFC 7638 JSON Web Key (JWK) Thumbprint**.
@@ -155,7 +155,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
    */
   protected validateParameters(parameters: T): void {
     if (parameters.use !== undefined && typeof parameters.use !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid key parameter "use".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "use".');
     }
 
     if (parameters.key_ops !== undefined) {
@@ -164,11 +164,11 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
         parameters.key_ops.length === 0 ||
         parameters.key_ops.some((keyOperation) => typeof keyOperation !== 'string')
       ) {
-        throw new InvalidJsonWebKeyException('Invalid key parameter "key_ops".');
+        throw new InvalidJsonWebKeyException('Invalid jwk parameter "key_ops".');
       }
 
       if (new Set(parameters.key_ops).size !== parameters.key_ops.length) {
-        throw new InvalidJsonWebKeyException('Key parameter "key_ops" cannot have repeated operations.');
+        throw new InvalidJsonWebKeyException('JWK parameter "key_ops" cannot have repeated operations.');
       }
     }
 
@@ -194,27 +194,27 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
     }
 
     if (parameters.alg !== undefined && typeof parameters.alg !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid key parameter "alg".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "alg".');
     }
 
     if (parameters.kid !== undefined && typeof parameters.kid !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid key parameter "kid".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "kid".');
     }
 
     if (parameters.x5u !== undefined) {
-      throw new InvalidJsonWebKeyException('Unsupported key parameter "x5u".');
+      throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5u".');
     }
 
     if (parameters.x5c !== undefined) {
-      throw new InvalidJsonWebKeyException('Unsupported key parameter "x5c".');
+      throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5c".');
     }
 
     if (parameters.x5t !== undefined) {
-      throw new InvalidJsonWebKeyException('Unsupported key parameter "x5t".');
+      throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5t".');
     }
 
     if (parameters['x5t#S256'] !== undefined) {
-      throw new InvalidJsonWebKeyException('Unsupported key parameter "x5t#S256".');
+      throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5t#S256".');
     }
   }
 
@@ -234,7 +234,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
     }
 
     if (typeof data !== 'object' || data === null) {
-      throw new InvalidJsonWebKeyException('The provided data is invalid.');
+      throw new InvalidJsonWebKeyException('The provided data is not a valid JSON Web Key object.');
     }
 
     if (!Object.hasOwn(data, 'kty')) {
@@ -342,7 +342,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
     additionalParameters: Partial<T> = {}
   ): Promise<JsonWebKey<T>> {
     if (!Object.hasOwn(JSONWEBKEY_REGISTRY, keyType)) {
-      throw new UnsupportedAlgorithmException(`Unsupported JSON Web Key Type "${keyType}".`);
+      throw new TypeError(`Unsupported JSON Web Key Type "${keyType}".`);
     }
 
     const backend = JSONWEBKEY_REGISTRY[keyType];

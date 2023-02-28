@@ -87,44 +87,44 @@ export class RsaKey extends JsonWebKey<RsaKeyParameters> implements RsaKeyParame
    */
   protected override validateParameters(parameters: RsaKeyParameters): void {
     if (parameters.kty !== 'RSA') {
-      throw new InvalidJsonWebKeyException(`Unexpected JSON Web Key Type "${parameters.kty}" for RsaKey.`);
+      throw new TypeError(`Unexpected JSON Web Key Type "${parameters.kty}" for RsaKey.`);
     }
 
     if (typeof parameters.n !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid key parameter "n".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "n".');
     }
 
     if (Buffer.byteLength(parameters.n, 'base64url') < 256) {
-      throw new InvalidJsonWebKeyException('The modulus MUST have AT LEAST 2048 bits.');
+      throw new InvalidJsonWebKeyException('The RSA Modulus MUST be at least 2048.');
     }
 
     if (typeof parameters.e !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid key parameter "e".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "e".');
     }
 
     if (this.getPrivateParameters().some((parameter) => parameters[parameter] !== undefined)) {
       if (typeof parameters.d !== 'string') {
-        throw new InvalidJsonWebKeyException('Invalid key parameter "d".');
+        throw new InvalidJsonWebKeyException('Invalid jwk parameter "d".');
       }
 
       if (typeof parameters.p !== 'string') {
-        throw new InvalidJsonWebKeyException('Invalid key parameter "p".');
+        throw new InvalidJsonWebKeyException('Invalid jwk parameter "p".');
       }
 
       if (typeof parameters.q !== 'string') {
-        throw new InvalidJsonWebKeyException('Invalid key parameter "q".');
+        throw new InvalidJsonWebKeyException('Invalid jwk parameter "q".');
       }
 
       if (typeof parameters.dp !== 'string') {
-        throw new InvalidJsonWebKeyException('Invalid key parameter "dp".');
+        throw new InvalidJsonWebKeyException('Invalid jwk parameter "dp".');
       }
 
       if (typeof parameters.dq !== 'string') {
-        throw new InvalidJsonWebKeyException('Invalid key parameter "dq".');
+        throw new InvalidJsonWebKeyException('Invalid jwk parameter "dq".');
       }
 
       if (typeof parameters.qi !== 'string') {
-        throw new InvalidJsonWebKeyException('Invalid key parameter "qi".');
+        throw new InvalidJsonWebKeyException('Invalid jwk parameter "qi".');
       }
     }
 

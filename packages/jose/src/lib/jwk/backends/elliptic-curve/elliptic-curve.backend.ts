@@ -1,7 +1,6 @@
 import { generateKeyPair } from 'crypto';
 import { promisify } from 'util';
 
-import { UnsupportedEllipticCurveException } from '../../../exceptions/unsupported-elliptic-curve.exception';
 import { EllipticCurve } from '../elliptic-curve.type';
 import { JsonWebKeyBackend } from '../jsonwebkey.backend';
 import type { EllipticCurveKey } from './elliptic-curve.key';
@@ -48,9 +47,7 @@ export class EllipticCurveBackend implements JsonWebKeyBackend {
     additionalParameters?: Partial<EllipticCurveKeyParameters>
   ): Promise<EllipticCurveKey> {
     if (!Object.hasOwn(this.curves, options.curve)) {
-      throw new UnsupportedEllipticCurveException(
-        `Unsupported Elliptic Curve "${options.curve}" for JSON Web Key Type "EC".`
-      );
+      throw new TypeError(`Unsupported Elliptic Curve "${options.curve}" for JSON Web Key Type "EC".`);
     }
 
     const { privateKey } = await generateKeyPairAsync('ec', { namedCurve: this.curves[options.curve] });

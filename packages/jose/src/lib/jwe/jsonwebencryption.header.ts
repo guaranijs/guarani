@@ -36,52 +36,52 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParameter
   /**
    * URI of a Set of Public JSON Web Keys that contains the JSON Web Key used to Encrypt the Token.
    */
-  public readonly jku?: string;
+  public jku?: string;
 
   /**
    * JSON Web Key used to Encrypt the Token.
    */
-  public readonly jwk?: JsonWebKey;
+  public jwk?: JsonWebKey;
 
   /**
    * Identifier of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly kid?: string;
+  public kid?: string;
 
   /**
    * URI of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly x5u?: string;
+  public x5u?: string;
 
   /**
    * Chain of X.509 certificates of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly x5c?: string[];
+  public x5c?: string[];
 
   /**
    * SHA-1 Thumbprint of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly x5t?: string;
+  public x5t?: string;
 
   /**
    * SHA-256 Thumbprint of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly 'x5t#S256'?: string;
+  public 'x5t#S256'?: string;
 
   /**
    * Defines the type of the Token.
    */
-  public readonly typ?: string;
+  public typ?: string;
 
   /**
    * Defines the type of the Payload of the Token.
    */
-  public readonly cty?: string;
+  public cty?: string;
 
   /**
    * Defines the parameters that MUST be present in the JSON Web Encryption Header.
    */
-  public readonly crit?: string[];
+  public crit?: string[];
 
   /**
    * Additional JSON Web Encryption Header Parameters.
@@ -91,17 +91,38 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParameter
   /**
    * JSON Web Encryption Key Wrap Backend.
    */
-  public readonly keyWrapBackend!: JsonWebEncryptionKeyWrapBackend;
+  readonly #keyWrapBackend!: JsonWebEncryptionKeyWrapBackend;
 
   /**
    * JSON Web Encryption Content Encryption Backend.
    */
-  public readonly contentEncryptionBackend!: JsonWebEncryptionContentEncryptionBackend;
+  readonly #contentEncryptionBackend!: JsonWebEncryptionContentEncryptionBackend;
 
   /**
    * JSON Web Encryption Compression Backend.
    */
-  public readonly compressionBackend?: JsonWebEncryptionCompressionBackend;
+  readonly #compressionBackend?: JsonWebEncryptionCompressionBackend;
+
+  /**
+   * JSON Web Encryption Key Wrap Backend.
+   */
+  public get keyWrapBackend(): JsonWebEncryptionKeyWrapBackend {
+    return this.#keyWrapBackend;
+  }
+
+  /**
+   * JSON Web Encryption Content Encryption Backend.
+   */
+  public get contentEncryptionBackend(): JsonWebEncryptionContentEncryptionBackend {
+    return this.#contentEncryptionBackend;
+  }
+
+  /**
+   * JSON Web Encryption Compression Backend.
+   */
+  public get compressionBackend(): JsonWebEncryptionCompressionBackend | undefined {
+    return this.#compressionBackend;
+  }
 
   /**
    * Instantiates a new JSON Web Encryption Header based on the provided Parameters.
@@ -121,18 +142,11 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParameter
 
     JsonWebEncryptionHeader.validateParameters(parameters);
 
-    Object.defineProperty(this, 'keyWrapBackend', {
-      value: JSONWEBENCRYPTION_KEYWRAP_REGISTRY[parameters.alg],
-    });
-
-    Object.defineProperty(this, 'contentEncryptionBackend', {
-      value: JSONWEBENCRYPTION_CONTENT_ENCRYPTION_REGISTRY[parameters.enc],
-    });
+    this.#keyWrapBackend = JSONWEBENCRYPTION_KEYWRAP_REGISTRY[parameters.alg];
+    this.#contentEncryptionBackend = JSONWEBENCRYPTION_CONTENT_ENCRYPTION_REGISTRY[parameters.enc];
 
     if (parameters.zip !== undefined) {
-      Object.defineProperty(this, 'compressionBackend', {
-        value: JSONWEBENCRYPTION_COMPRESSION_REGISTRY[parameters.zip],
-      });
+      this.#compressionBackend = JSONWEBENCRYPTION_COMPRESSION_REGISTRY[parameters.zip];
     }
 
     Object.assign(this, parameters);

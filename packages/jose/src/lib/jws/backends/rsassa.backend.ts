@@ -12,6 +12,9 @@ const verifyAsync = promisify(verify);
 
 /**
  * Implementation of the JSON Web Signature RSASSA Backend.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc7518.html#section-3.3
+ * @see https://www.rfc-editor.org/rfc/rfc7518.html#section-3.5
  */
 class RsaSsaBackend extends JsonWebSignatureBackend {
   /**
@@ -51,7 +54,9 @@ class RsaSsaBackend extends JsonWebSignatureBackend {
     const { cryptoKey } = key;
 
     if (cryptoKey.type !== 'private') {
-      throw new InvalidJsonWebKeyException('A Private Key is needed to Sign a JSON Web Signature Message.');
+      throw new InvalidJsonWebKeyException(
+        'The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'
+      );
     }
 
     return await signAsync(this.hash, message, { key: cryptoKey, padding: this.padding });
@@ -84,7 +89,9 @@ class RsaSsaBackend extends JsonWebSignatureBackend {
     super.validateJsonWebKey(key);
 
     if (key.kty !== 'RSA') {
-      throw new InvalidJsonWebKeyException('This JSON Web Signature Backend only accepts "RSA" JSON Web Keys.');
+      throw new InvalidJsonWebKeyException(
+        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "RSA" JSON Web Keys.`
+      );
     }
   }
 }

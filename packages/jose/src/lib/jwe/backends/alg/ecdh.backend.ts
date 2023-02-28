@@ -18,6 +18,7 @@ import { JSONWEBENCRYPTION_KEYWRAP_REGISTRY } from './jsonwebencryption-keywrap.
  * Implementation of the JSON Web Encryption ECDH-ES Key Wrap Backend to Wrap and Unwrap Content Encryption Keys.
  *
  * @see https://www.rfc-editor.org/rfc/rfc7518.html#section-4.6
+ * @see https://www.rfc-editor.org/rfc/rfc8037.html#section-3.2
  */
 class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
   /**

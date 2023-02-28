@@ -9,7 +9,7 @@ import { OctetKeyPairKeyParameters } from './octet-key-pair.key.parameters';
 /**
  * Implementation of an Octet Key Pair JSON Web Key.
  *
- * @see https://www.rfc-editor.org/rfc/rfc8037.html
+ * @see https://www.rfc-editor.org/rfc/rfc8037.html#section-2
  */
 export class OctetKeyPairKey extends JsonWebKey<OctetKeyPairKeyParameters> implements OctetKeyPairKeyParameters {
   /**
@@ -70,24 +70,24 @@ export class OctetKeyPairKey extends JsonWebKey<OctetKeyPairKeyParameters> imple
    */
   protected override validateParameters(parameters: OctetKeyPairKeyParameters): void {
     if (parameters.kty !== 'OKP') {
-      throw new InvalidJsonWebKeyException(`Unexpected JSON Web Key Type "${parameters.kty}" for OctetKeyPairKey.`);
+      throw new TypeError(`Unexpected JSON Web Key Type "${parameters.kty}" for OctetKeyPairKey.`);
     }
 
     if (typeof parameters.crv !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid parameter "crv".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "crv".');
     }
 
     if (!this.supportedEllipticCurves.includes(parameters.crv)) {
-      throw new UnsupportedEllipticCurveException(`Unsupported Elliptic Curve "${parameters.crv}".`);
+      throw new UnsupportedEllipticCurveException('Invalid jwk parameter "crv".');
     }
 
     if (typeof parameters.x !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid key parameter "x".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "x".');
     }
 
     if (parameters.d !== undefined) {
       if (typeof parameters.d !== 'string') {
-        throw new InvalidJsonWebKeyException('Invalid key parameter "d".');
+        throw new InvalidJsonWebKeyException('Invalid jwk parameter "d".');
       }
     }
 

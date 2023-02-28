@@ -56,38 +56,38 @@ describe('Elliptic Curve Key', () => {
     it('should throw when providing a "kty" different than "EC".', () => {
       // @ts-expect-error Invalid JSON Web Key Type.
       expect(() => new EllipticCurveKey({ kty: 'unknown' })).toThrow(
-        new InvalidJsonWebKeyException('Unexpected JSON Web Key Type "unknown" for EllipticCurveKey.')
+        new TypeError('Unexpected JSON Web Key Type "unknown" for EllipticCurveKey.')
       );
     });
 
     it.each(invalidCurves)('should throw when passing an invalid curve type.', (crv) => {
       expect(() => new EllipticCurveKey({ ...publicParameters, crv })).toThrow(
-        new InvalidJsonWebKeyException('Invalid parameter "crv".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "crv".')
       );
     });
 
     it('should throw when passing an unsupported curve.', () => {
       // @ts-expect-error Invalid parameter "crv".
       expect(() => new EllipticCurveKey({ ...publicParameters, crv: 'unknown' })).toThrow(
-        new UnsupportedEllipticCurveException('Unsupported Elliptic Curve "unknown".')
+        new UnsupportedEllipticCurveException('Invalid jwk parameter "crv".')
       );
     });
 
     it.each(invalidCoords)('should throw when passing an invalid x coordinate.', (x) => {
       expect(() => new EllipticCurveKey({ ...publicParameters, x })).toThrow(
-        new InvalidJsonWebKeyException('Invalid key parameter "x".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "x".')
       );
     });
 
     it.each(invalidCoords)('should throw when passing an invalid y coordinate.', (y) => {
       expect(() => new EllipticCurveKey({ ...publicParameters, y })).toThrow(
-        new InvalidJsonWebKeyException('Invalid key parameter "y".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "y".')
       );
     });
 
     it.each(invalidPrivateValues)('should throw when passing an invalid private value.', (d) => {
       expect(() => new EllipticCurveKey({ ...privateParameters, d })).toThrow(
-        new InvalidJsonWebKeyException('Invalid key parameter "d".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "d".')
       );
     });
 

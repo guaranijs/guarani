@@ -16,7 +16,10 @@ const publicEllipticCurveParameters: EllipticCurveKeyParameters = {
   y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
 };
 
-// const privateEcParams: JsonWebKeyParameters = { ...publicEcParams, d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo' };
+const privateEllipticCurveParameters: EllipticCurveKeyParameters = {
+  ...publicEllipticCurveParameters,
+  d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo',
+};
 
 const publicRsaParameters: RsaKeyParameters = {
   kty: 'RSA',
@@ -30,8 +33,8 @@ const publicRsaParameters: RsaKeyParameters = {
   e: 'AQAB',
 };
 
-/* const privateRsaParams: JsonWebKeyParameters = {
-  ...publicRsaParams,
+const privateRsaParameters: RsaKeyParameters = {
+  ...publicRsaParameters,
   d:
     'cc2YrWia9LGRad0SMe0PrlmeeHSyRe5-u--QJcP4uF_5LYYzXIsjDJ9_iYh0S_YY' +
     'e6bLjqHOSp44OHvJqoXMX5j3-ECKnNjnUHMtRB2awXGBqBOhB8TqoQXgmXDi1jx_' +
@@ -59,7 +62,7 @@ const publicRsaParameters: RsaKeyParameters = {
     'C4q9uIi-1fYhE0NTWVNzdhSi7fA3uznTWaW1X5LWBF4gBOcWvMMTfOZEaPjtY2WP' +
     'XaTWU4bdVN0GgktVLUDPLrSj533W1cOQZb_mm_7BFNrleelruT87bZhWPYQ979kl' +
     '6590ySgbH81pEM8FQW1JBATz0MYtUNZAt8N360vayE4',
-}; */
+};
 
 const invalidJwkSets: any[] = [
   undefined,
@@ -133,7 +136,7 @@ describe('JSON Web Key Set', () => {
 
     it.each(invalidKeysParameters)('should reject an invalid "keys" json web key set parameter.', async (keys) => {
       await expect(JsonWebKeySet.load({ keys })).rejects.toThrow(
-        new InvalidJsonWebKeySetException('Invalid JSON Web Key Set parameter "keys".')
+        new InvalidJsonWebKeySetException('Invalid jwks parameter "keys".')
       );
     });
 
@@ -141,7 +144,7 @@ describe('JSON Web Key Set', () => {
       'should throw when the "keys" json web key set parameter is an array of invalid values.',
       async (keyParameter) => {
         await expect(JsonWebKeySet.load({ keys: [keyParameter] })).rejects.toThrow(
-          new InvalidJsonWebKeySetException('The item at position #0 is not a valid JSON Web Key.')
+          new InvalidJsonWebKeySetException('The provided data is not a valid JSON Web Key Set object.')
         );
       }
     );
@@ -183,6 +186,46 @@ describe('JSON Web Key Set', () => {
   });
 
   describe('toJSON()', () => {
-    it.todo('needs tests.');
+    it('should return the public keys\' parameters when not providing "exportPublic".', () => {
+      const jwks = new JsonWebKeySet([
+        new EllipticCurveKey(publicEllipticCurveParameters, { kid: 'ec-key', use: 'sig' }),
+        new RsaKey(privateRsaParameters, { kid: 'rsa-key', use: 'sig' }),
+      ]);
+
+      expect(jwks.toJSON()).toStrictEqual<JsonWebKeySetParameters>({
+        keys: [
+          { ...publicEllipticCurveParameters, kid: 'ec-key', use: 'sig' },
+          { ...publicRsaParameters, kid: 'rsa-key', use: 'sig' },
+        ],
+      });
+    });
+
+    it('should return the public keys\' parameters when "exportPublic" is "true".', () => {
+      const jwks = new JsonWebKeySet([
+        new EllipticCurveKey(publicEllipticCurveParameters, { kid: 'ec-key', use: 'sig' }),
+        new RsaKey(privateRsaParameters, { kid: 'rsa-key', use: 'sig' }),
+      ]);
+
+      expect(jwks.toJSON(true)).toStrictEqual<JsonWebKeySetParameters>({
+        keys: [
+          { ...publicEllipticCurveParameters, kid: 'ec-key', use: 'sig' },
+          { ...publicRsaParameters, kid: 'rsa-key', use: 'sig' },
+        ],
+      });
+    });
+
+    it('should return the keys\' parameters when "exportPublic" is "false".', () => {
+      const jwks = new JsonWebKeySet([
+        new EllipticCurveKey(privateEllipticCurveParameters, { kid: 'ec-key', use: 'sig' }),
+        new RsaKey(publicRsaParameters, { kid: 'rsa-key', use: 'sig' }),
+      ]);
+
+      expect(jwks.toJSON(false)).toStrictEqual<JsonWebKeySetParameters>({
+        keys: [
+          { ...privateEllipticCurveParameters, kid: 'ec-key', use: 'sig' },
+          { ...publicRsaParameters, kid: 'rsa-key', use: 'sig' },
+        ],
+      });
+    });
   });
 });

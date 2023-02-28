@@ -47,16 +47,16 @@ export class JsonWebKeySet implements JsonWebKeySetParameters {
     }
 
     if (!Array.isArray(parameters.keys) || parameters.keys.length === 0) {
-      throw new InvalidJsonWebKeySetException('Invalid JSON Web Key Set parameter "keys".');
+      throw new InvalidJsonWebKeySetException('Invalid jwks parameter "keys".');
     }
 
     const keys = await Promise.all(
-      parameters.keys.map(async (keyParameters, index) => {
+      parameters.keys.map(async (keyParameters) => {
         try {
           return await JsonWebKey.load(keyParameters);
         } catch (exc: unknown) {
           const exception = new InvalidJsonWebKeySetException(
-            `The item at position #${index} is not a valid JSON Web Key.`
+            'The provided data is not a valid JSON Web Key Set object.'
           );
 
           exception.cause = exc;

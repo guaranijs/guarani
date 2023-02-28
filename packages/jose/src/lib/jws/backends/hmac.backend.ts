@@ -9,6 +9,8 @@ import { JsonWebSignatureBackend } from './jsonwebsignature.backend';
 
 /**
  * Implementation of the JSON Web Signature HMAC Backend.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc7518.html#section-3.2
  */
 export class HmacBackend extends JsonWebSignatureBackend {
   /**
@@ -33,7 +35,7 @@ export class HmacBackend extends JsonWebSignatureBackend {
 
     super(algorithm);
 
-    this.hash = `sha${bitSize}`;
+    this.hash = `SHA${bitSize}`;
     this.keySize = keySize;
   }
 
@@ -79,13 +81,13 @@ export class HmacBackend extends JsonWebSignatureBackend {
     super.validateJsonWebKey(key);
 
     if (key.kty !== 'oct') {
-      throw new InvalidJsonWebKeyException('This JSON Web Signature Backend only accepts "oct" JSON Web Keys.');
+      throw new InvalidJsonWebKeyException(
+        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "oct" JSON Web Keys.`
+      );
     }
 
     if (Buffer.byteLength(key.k, 'base64url') < this.keySize) {
-      throw new InvalidJsonWebKeyException(
-        `The size of the Octet Sequence Key Secret must be at least ${this.keySize} bytes.`
-      );
+      throw new InvalidJsonWebKeyException(`The jwk parameter "k" must be at least ${this.keySize} bytes.`);
     }
   }
 }

@@ -12,10 +12,7 @@ export interface JsonWebKeyBackend {
    * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
    * @returns JSON Web Key.
    */
-  load(
-    parameters: JsonWebKeyParameters,
-    additionalParameters?: Partial<JsonWebKeyParameters>
-  ): Promise<JsonWebKey<JsonWebKeyParameters>>;
+  load(parameters: JsonWebKeyParameters, additionalParameters?: Partial<JsonWebKeyParameters>): Promise<JsonWebKey>;
 
   /**
    * Generates a new JSON Web Key on the fly based on the provided options.
@@ -23,8 +20,5 @@ export interface JsonWebKeyBackend {
    * @param options Options used to generate the JSON Web Key.
    * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
    */
-  generate(
-    options: Record<string, any>,
-    additionalParameters?: Partial<JsonWebKeyParameters>
-  ): Promise<JsonWebKey<JsonWebKeyParameters>>;
+  generate(options: Record<string, any>, additionalParameters?: Partial<JsonWebKeyParameters>): Promise<JsonWebKey>;
 }

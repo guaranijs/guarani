@@ -16,42 +16,42 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
   /**
    * Identifier of the Issuer of the Token.
    */
-  public readonly iss?: string;
+  public iss?: string;
 
   /**
    * Subject represented by the Token.
    */
-  public readonly sub?: string;
+  public sub?: string;
 
   /**
    * Identifier of the Audience the Token is intended to.
    */
-  public readonly aud?: string | string[];
+  public aud?: string | string[];
 
   /**
    * UTC time denoting the Expiration Time of the Token.
    */
-  public readonly exp?: number;
+  public exp?: number;
 
   /**
    * UTC time denoting the moment when the Token will become valid.
    */
-  public readonly nbf?: number;
+  public nbf?: number;
 
   /**
    * UTC time denoting the moment when the Token was created.
    */
-  public readonly iat?: number;
+  public iat?: number;
 
   /**
    * Identifier of the Token.
    */
-  public readonly jti?: string;
+  public jti?: string;
 
   /**
    * Additional JSON Web Token Claims.
    */
-  [claim: string]: unknown;
+  [claim: string]: any;
 
   /**
    * Instantiates a new JSON Web Token Claims for usage with JSON Web Tokens.

@@ -2,7 +2,6 @@ import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
-import { JsonWebKeyType } from '../../../jwk/jsonwebkey-type.type';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 
@@ -20,49 +19,43 @@ export abstract class JsonWebEncryptionKeyWrapBackend {
   protected readonly algorithm: JsonWebEncryptionKeyWrapAlgorithm;
 
   /**
-   * JSON Web Key Type supported by this JSON Web Encryption Key Wrap Backend.
-   */
-  protected readonly keyType: JsonWebKeyType;
-
-  /**
    * Instantiates a new JSON Web Encryption Key Wrap Backend to Wrap and Unwrap Content Encryption Keys.
    *
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
    * @param keyType Type of JSON Web Key supported by this JSON Web Encryption Key Wrap Backend.
    */
-  public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm, keyType: JsonWebKeyType) {
+  public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
     this.algorithm = algorithm;
-    this.keyType = keyType;
   }
 
   /**
    * Wraps the provided Content Encryption Key using the provide JSON Web Key.
    *
-   * @param enc JSON Web Encryption Content Encryption Backend.
-   * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
+   * @param contentEncryptionBackend JSON Web Encryption Content Encryption Backend.
+   * @param wrapKey JSON Web Key used to Wrap the provided Content Encryption Key.
    * @param header Optional JSON Web Encryption Header containing the additional Parameters.
    * @returns Generated Content Encryption Key, Wrapped Content Encryption Key and optional JSON Web Encryption Header.
    */
   public abstract wrap(
-    enc: JsonWebEncryptionContentEncryptionBackend,
-    key: JsonWebKey,
-    header?: Record<string, unknown>
-  ): Promise<[Buffer, Buffer, Record<string, unknown>?]>;
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    wrapKey: JsonWebKey,
+    header?: Record<string, any>
+  ): Promise<[Buffer, Buffer, Record<string, any>?]>;
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param enc JSON Web Encrytpion Content Encryption Backend.
-   * @param key JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
-   * @param ek Wrapped Content Encryption Key.
+   * @param contentEncryptionBackend JSON Web Encrytpion Content Encryption Backend.
+   * @param unwrapKey JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
+   * @param wrappedKey Wrapped Content Encryption Key.
    * @param header Optional JSON Web Encryption Header containing the additional Parameters.
    * @returns Unwrapped Content Encryption Key.
    */
   public abstract unwrap(
-    enc: JsonWebEncryptionContentEncryptionBackend,
-    key: JsonWebKey,
-    ek: Buffer,
-    header?: Record<string, unknown>
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    unwrapKey: JsonWebKey,
+    wrappedKey: Buffer,
+    header?: Record<string, any>
   ): Promise<Buffer>;
 
   /**
@@ -78,12 +71,6 @@ export abstract class JsonWebEncryptionKeyWrapBackend {
 
     if (key.alg !== undefined && key.alg !== this.algorithm) {
       throw new InvalidJsonWebKeyException(`This JSON Web Key is intended to be used by the Algorithm "${key.alg}".`);
-    }
-
-    if (key.kty !== this.keyType) {
-      throw new InvalidJsonWebKeyException(
-        `This JSON Web Encryption Key Wrap Algorithm only accepts "${this.keyType}" JSON Web Keys.`
-      );
     }
   }
 }

@@ -132,15 +132,17 @@ export class JsonWebSignature {
   /**
    * Serializes the JSON Web Signature into a Compact Token.
    *
-   * @param key JSON Web Key used to Sign the JSON Web Signature Token.
+   * @param keyOrKeyLoader JSON Web Key used to Sign the JSON Web Signature Token.
    * @returns JSON Web Signature Compact Token.
    */
-  public async sign(key?: JsonWebKey): Promise<string> {
+  public async sign(keyOrKeyLoader?: JsonWebKey | JsonWebKeyLoader): Promise<string> {
     try {
       const { header, payload } = this;
 
       const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
       const b64Payload = payload.toString('base64url');
+
+      const key = keyOrKeyLoader instanceof JsonWebKey ? keyOrKeyLoader : await keyOrKeyLoader?.(header);
 
       const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
       const signature = await header.backend.sign(message, key);

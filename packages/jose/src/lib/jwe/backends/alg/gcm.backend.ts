@@ -3,7 +3,7 @@ import { CipherGCMTypes, createCipheriv, createDecipheriv, randomBytes } from 'c
 import { promisify } from 'util';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
-import { JsonWebKey } from '../../../jwk/jsonwebkey';
+import { OctetSequenceKey } from '../../../jwk/backends/octet-sequence/octet-sequence.key';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
@@ -42,7 +42,7 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
    */
   public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
-    super(algorithm, 'oct');
+    super(algorithm);
 
     this.keySize = Number.parseInt(this.algorithm.substring(1, 4));
     this.cipher = <CipherGCMTypes>`aes-${this.keySize}-gcm`;
@@ -51,69 +51,83 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
   /**
    * Wraps the provided Content Encryption Key using the provide JSON Web Key.
    *
-   * @param enc JSON Web Encryption Content Encryption Backend.
-   * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
+   * @param contentEncryptionBackend JSON Web Encryption Content Encryption Backend.
+   * @param wrapKey JSON Web Key used to Wrap the provided Content Encryption Key.
    * @returns Wrapped Content Encryption Key and optional additional JSON Web Encryption Header Parameters.
    */
   public async wrap(
-    enc: JsonWebEncryptionContentEncryptionBackend,
-    key: JsonWebKey
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    wrapKey: OctetSequenceKey
   ): Promise<[Buffer, Buffer, Record<string, unknown>]> {
-    this.validateJsonWebKey(key);
+    this.validateJsonWebKey(wrapKey);
 
-    const iv = await randomBytesAsync(this.ivSize / 8);
+    const initializationVector = await randomBytesAsync(this.ivSize / 8);
 
-    const cipher = createCipheriv(this.cipher, key.cryptoKey, iv, { authTagLength: this.authTagLength });
+    const cipher = createCipheriv(this.cipher, wrapKey.cryptoKey, initializationVector, {
+      authTagLength: this.authTagLength,
+    });
 
     cipher.setAAD(Buffer.alloc(0));
 
-    const cek = await enc.generateContentEncryptionKey();
-    const ek = Buffer.concat([cipher.update(cek), cipher.final()]);
+    const contentEncryptionKey = await contentEncryptionBackend.generateContentEncryptionKey();
+    const wrappedKey = Buffer.concat([cipher.update(contentEncryptionKey), cipher.final()]);
     const tag = cipher.getAuthTag();
 
-    return [cek, ek, { iv: iv.toString('base64url'), tag: tag.toString('base64url') }];
+    return [
+      contentEncryptionKey,
+      wrappedKey,
+      { iv: initializationVector.toString('base64url'), tag: tag.toString('base64url') },
+    ];
   }
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param enc JSON Web Encryption Content Encryption Backend.
-   * @param key JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
-   * @param ek Wrapped Content Encryption Key.
+   * @param contentEncryptionBackend JSON Web Encryption Content Encryption Backend.
+   * @param unwrapKey JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
+   * @param wrappedKey Wrapped Content Encryption Key.
    * @param header JSON Web Encryption Header containing the additional Parameters.
    * @returns Unwrapped Content Encryption Key.
    */
   public async unwrap(
-    enc: JsonWebEncryptionContentEncryptionBackend,
-    key: JsonWebKey,
-    ek: Buffer,
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    unwrapKey: OctetSequenceKey,
+    wrappedKey: Buffer,
     header: Record<string, unknown>
   ): Promise<Buffer> {
-    this.validateJsonWebKey(key);
+    this.validateJsonWebKey(unwrapKey);
 
-    const iv = Buffer.from(<string>header.iv, 'base64url');
-    const tag = Buffer.from(<string>header.tag, 'base64url');
+    const initializationVector = Buffer.from(<string>header.iv, 'base64url');
+    const authTag = Buffer.from(<string>header.tag, 'base64url');
 
-    const decipher = createDecipheriv(this.cipher, key.cryptoKey, iv, { authTagLength: this.authTagLength });
+    const decipher = createDecipheriv(this.cipher, unwrapKey.cryptoKey, initializationVector, {
+      authTagLength: this.authTagLength,
+    });
 
     decipher.setAAD(Buffer.alloc(0));
-    decipher.setAuthTag(tag);
+    decipher.setAuthTag(authTag);
 
-    const cek = Buffer.concat([decipher.update(ek), decipher.final()]);
+    const contentEncryptionKey = Buffer.concat([decipher.update(wrappedKey), decipher.final()]);
 
-    enc.validateContentEncryptionKey(cek);
+    contentEncryptionBackend.validateContentEncryptionKey(contentEncryptionKey);
 
-    return cek;
+    return contentEncryptionKey;
   }
 
   /**
-   * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption AES-GCM Key Wrap Backend.
+   * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption Key Wrap Backend.
    *
    * @param key JSON Web Key to be checked.
    * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
    */
-  protected override validateJsonWebKey(key: JsonWebKey): void {
+  protected override validateJsonWebKey(key: OctetSequenceKey): void {
     super.validateJsonWebKey(key);
+
+    if (key.kty !== 'oct') {
+      throw new InvalidJsonWebKeyException(
+        'This JSON Web Encryption Key Wrap Algorithm only accepts "oct" JSON Web Keys.'
+      );
+    }
 
     const exportedKey = key.cryptoKey.export();
 

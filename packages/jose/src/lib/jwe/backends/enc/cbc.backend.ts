@@ -2,7 +2,6 @@ import { Buffer } from 'buffer';
 import { createCipheriv, createDecipheriv, createHmac, timingSafeEqual } from 'crypto';
 
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-jsonwebencryption.exception';
-import { JoseException } from '../../../exceptions/jose.exception';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from '../../jsonwebencryption-content-encryption-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from './jsonwebencryption-content-encryption.backend';
 
@@ -56,29 +55,18 @@ class CbcBackend extends JsonWebEncryptionContentEncryptionBackend {
    * @returns Resulting Ciphertext and Authentication Tag.
    */
   public async encrypt(plaintext: Buffer, aad: Buffer, iv: Buffer, key: Buffer): Promise<[Buffer, Buffer]> {
-    try {
-      this.validateInitializationVector(iv);
-      this.validateContentEncryptionKey(key);
+    this.validateInitializationVector(iv);
+    this.validateContentEncryptionKey(key);
 
-      const macKey = key.subarray(0, this.keySize >> 3);
-      const encKey = key.subarray(this.keySize >> 3);
+    const macKey = key.subarray(0, this.keySize >> 3);
+    const encKey = key.subarray(this.keySize >> 3);
 
-      const cipher = createCipheriv(this.cipher, encKey, iv);
-      const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+    const cipher = createCipheriv(this.cipher, encKey, iv);
+    const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
 
-      const tag = this.getAuthTag(ciphertext, iv, aad, macKey);
+    const tag = this.getAuthTag(ciphertext, iv, aad, macKey);
 
-      return [ciphertext, tag];
-    } catch (exc: unknown) {
-      if (exc instanceof JoseException) {
-        throw exc;
-      }
-
-      const exception = new InvalidJsonWebEncryptionException();
-      exception.cause = exc;
-
-      throw exception;
-    }
+    return [ciphertext, tag];
   }
 
   /**
@@ -92,33 +80,22 @@ class CbcBackend extends JsonWebEncryptionContentEncryptionBackend {
    * @returns Resulting Plaintext.
    */
   public async decrypt(ciphertext: Buffer, aad: Buffer, iv: Buffer, tag: Buffer, key: Buffer): Promise<Buffer> {
-    try {
-      this.validateInitializationVector(iv);
-      this.validateContentEncryptionKey(key);
+    this.validateInitializationVector(iv);
+    this.validateContentEncryptionKey(key);
 
-      const macKey = key.subarray(0, this.keySize >> 3);
-      const encKey = key.subarray(this.keySize >> 3);
+    const macKey = key.subarray(0, this.keySize >> 3);
+    const encKey = key.subarray(this.keySize >> 3);
 
-      const expectedTag = this.getAuthTag(ciphertext, iv, aad, macKey);
+    const expectedTag = this.getAuthTag(ciphertext, iv, aad, macKey);
 
-      if (tag.length !== expectedTag.length || !timingSafeEqual(tag, expectedTag)) {
-        throw new InvalidJsonWebEncryptionException();
-      }
-
-      const decipher = createDecipheriv(this.cipher, encKey, iv);
-      const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
-
-      return plaintext;
-    } catch (exc: unknown) {
-      if (exc instanceof JoseException) {
-        throw exc;
-      }
-
-      const exception = new InvalidJsonWebEncryptionException();
-      exception.cause = exc;
-
-      throw exception;
+    if (tag.length !== expectedTag.length || !timingSafeEqual(tag, expectedTag)) {
+      throw new InvalidJsonWebEncryptionException();
     }
+
+    const decipher = createDecipheriv(this.cipher, encKey, iv);
+    const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+
+    return plaintext;
   }
 
   /**

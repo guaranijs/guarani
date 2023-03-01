@@ -63,14 +63,14 @@ export class JsonWebEncryption {
     try {
       const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = splitToken;
 
-      const headerParameters = JSON.parse(Buffer.from(<string>b64Header, 'base64url').toString('utf8'));
+      const headerParameters = JSON.parse(Buffer.from(b64Header!, 'base64url').toString('utf8'));
 
       const header = new JsonWebEncryptionHeader(headerParameters);
-      const ek = Buffer.from(<string>b64Ek, 'base64url');
-      const iv = Buffer.from(<string>b64Iv, 'base64url');
-      const ciphertext = Buffer.from(<string>b64Ciphertext, 'base64url');
-      const tag = Buffer.from(<string>b64Tag, 'base64url');
-      const aad = Buffer.from(<string>b64Header, 'ascii');
+      const ek = Buffer.from(b64Ek!, 'base64url');
+      const iv = Buffer.from(b64Iv!, 'base64url');
+      const ciphertext = Buffer.from(b64Ciphertext!, 'base64url');
+      const tag = Buffer.from(b64Tag!, 'base64url');
+      const aad = Buffer.from(b64Header!, 'ascii');
 
       return [header, ek, iv, ciphertext, tag, aad];
     } catch (exc: unknown) {
@@ -102,15 +102,17 @@ export class JsonWebEncryption {
 
     const [header, ek, iv, ciphertext, tag, aad] = this.decode(token);
 
-    const key = typeof keyOrKeyLoader === 'function' ? await keyOrKeyLoader(header) : keyOrKeyLoader;
+    const { compressionBackend, contentEncryptionBackend, keyWrapBackend } = header;
 
     try {
-      const cek = await header.keyWrapBackend.unwrap(header.contentEncryptionBackend, key, ek, header);
+      const key = keyOrKeyLoader instanceof JsonWebKey ? keyOrKeyLoader : await keyOrKeyLoader(header);
 
-      let plaintext = await header.contentEncryptionBackend.decrypt(ciphertext, aad, iv, tag, cek);
+      const cek = await keyWrapBackend.unwrap(contentEncryptionBackend, key, ek, header);
 
-      if (header.compressionBackend !== undefined) {
-        plaintext = await header.compressionBackend.decompress(plaintext);
+      let plaintext = await contentEncryptionBackend.decrypt(ciphertext, aad, iv, tag, cek);
+
+      if (compressionBackend !== undefined) {
+        plaintext = await compressionBackend.decompress(plaintext);
       }
 
       return new JsonWebEncryption(header, plaintext);
@@ -129,16 +131,20 @@ export class JsonWebEncryption {
   /**
    * Serializes the JSON Web Encryption into a Compact Token.
    *
-   * @param key JSON Web Key used to Serialize the JSON Web Encryption.
+   * @param keyOrKeyLoader JSON Web Key used to Serialize the JSON Web Encryption.
    * @returns JSON Web Encryption Compact Token.
    */
-  public async encrypt(key: JsonWebKey): Promise<string> {
+  public async encrypt(keyOrKeyLoader: JsonWebKey | JsonWebKeyLoader): Promise<string> {
     try {
       let { header, plaintext } = this;
 
-      const iv = await header.contentEncryptionBackend.generateInitializationVector();
+      const { compressionBackend, contentEncryptionBackend, keyWrapBackend } = header;
 
-      const [cek, ek, additionalHeaderParams] = await header.keyWrapBackend.wrap(header.contentEncryptionBackend, key);
+      const key = keyOrKeyLoader instanceof JsonWebKey ? keyOrKeyLoader : await keyOrKeyLoader(header);
+
+      const iv = await contentEncryptionBackend.generateInitializationVector();
+
+      const [cek, ek, additionalHeaderParams] = await keyWrapBackend.wrap(contentEncryptionBackend, key);
 
       if (additionalHeaderParams !== undefined) {
         Object.assign(header, additionalHeaderParams);
@@ -147,11 +153,11 @@ export class JsonWebEncryption {
       const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
       const aad = Buffer.from(b64Header, 'ascii');
 
-      if (header.compressionBackend !== undefined) {
-        plaintext = await header.compressionBackend.compress(plaintext);
+      if (compressionBackend !== undefined) {
+        plaintext = await compressionBackend.compress(plaintext);
       }
 
-      const [ciphertext, tag] = await header.contentEncryptionBackend.encrypt(plaintext, aad, iv, cek);
+      const [ciphertext, tag] = await contentEncryptionBackend.encrypt(plaintext, aad, iv, cek);
 
       const b64Ek = ek.toString('base64url');
       const b64Iv = iv.toString('base64url');

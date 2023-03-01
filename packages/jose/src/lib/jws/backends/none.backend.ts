@@ -3,11 +3,13 @@ import { Buffer } from 'buffer';
 import { JsonWebSignatureBackend } from './jsonwebsignature.backend';
 
 /**
- * Implementation of the JSON Web Signature **none** Backend.
+ * Implementation of the JSON Web Signature none Backend.
+ *
+ * @see https://www.rfc-editor.org/rfc/rfc7518.html#section-3.6
  */
 class NoneBackend extends JsonWebSignatureBackend {
   /**
-   * Instantiates a new JSON Web Signature **none** Backend to Sign and Verify Messages.
+   * Instantiates a new JSON Web Signature none Backend to Sign and Verify Messages.
    */
   public constructor() {
     super('none');

@@ -1,16 +1,12 @@
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
-import { A128KW, A192KW, A256KW } from './backends/alg/aes.backend';
-import { dir } from './backends/alg/dir.backend';
-import { A128GCMKW, A192GCMKW, A256GCMKW } from './backends/alg/gcm.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './backends/alg/jsonwebencryption-keywrap.backend';
-import { RSA1_5, RSA_OAEP, RSA_OAEP_256, RSA_OAEP_384, RSA_OAEP_512 } from './backends/alg/rsa.backend';
-import { A128CBC_HS256, A192CBC_HS384, A256CBC_HS512 } from './backends/enc/cbc.backend';
-import { A128GCM, A192GCM, A256GCM } from './backends/enc/gcm.backend';
+import { JSONWEBENCRYPTION_KEYWRAP_REGISTRY } from './backends/alg/jsonwebencryption-keywrap.registry';
 import { JsonWebEncryptionContentEncryptionBackend } from './backends/enc/jsonwebencryption-content-encryption.backend';
-import { DEF } from './backends/zip/def.backend';
+import { JSONWEBENCRYPTION_CONTENT_ENCRYPTION_REGISTRY } from './backends/enc/jsonwebencryption-content-encryption.registry';
 import { JsonWebEncryptionCompressionBackend } from './backends/zip/jsonwebencryption-compression.backend';
+import { JSONWEBENCRYPTION_COMPRESSION_REGISTRY } from './backends/zip/jsonwebencryption-compression.registry';
 import { JsonWebEncryptionCompressionAlgorithm } from './jsonwebencryption-compression-algorithm.type';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-content-encryption-algorithm.type';
 import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap-algorithm.type';
@@ -40,116 +36,93 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParameter
   /**
    * URI of a Set of Public JSON Web Keys that contains the JSON Web Key used to Encrypt the Token.
    */
-  public readonly jku?: string;
+  public jku?: string;
 
   /**
    * JSON Web Key used to Encrypt the Token.
    */
-  public readonly jwk?: JsonWebKey;
+  public jwk?: JsonWebKey;
 
   /**
    * Identifier of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly kid?: string;
+  public kid?: string;
 
   /**
    * URI of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly x5u?: string;
+  public x5u?: string;
 
   /**
    * Chain of X.509 certificates of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly x5c?: string[];
+  public x5c?: string[];
 
   /**
    * SHA-1 Thumbprint of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly x5t?: string;
+  public x5t?: string;
 
   /**
    * SHA-256 Thumbprint of the X.509 certificate of the JSON Web Key used to Encrypt the Token.
    */
-  public readonly 'x5t#S256'?: string;
+  public 'x5t#S256'?: string;
 
   /**
    * Defines the type of the Token.
    */
-  public readonly typ?: string;
+  public typ?: string;
 
   /**
    * Defines the type of the Payload of the Token.
    */
-  public readonly cty?: string;
+  public cty?: string;
 
   /**
    * Defines the parameters that MUST be present in the JSON Web Encryption Header.
    */
-  public readonly crit?: string[];
+  public crit?: string[];
 
   /**
    * Additional JSON Web Encryption Header Parameters.
    */
-  [parameter: string]: unknown;
+  [parameter: string]: any;
 
   /**
    * JSON Web Encryption Key Wrap Backend.
    */
-  public readonly keyWrapBackend!: JsonWebEncryptionKeyWrapBackend;
+  readonly #keyWrapBackend!: JsonWebEncryptionKeyWrapBackend;
 
   /**
    * JSON Web Encryption Content Encryption Backend.
    */
-  public readonly contentEncryptionBackend!: JsonWebEncryptionContentEncryptionBackend;
+  readonly #contentEncryptionBackend!: JsonWebEncryptionContentEncryptionBackend;
 
   /**
    * JSON Web Encryption Compression Backend.
    */
-  public readonly compressionBackend?: JsonWebEncryptionCompressionBackend;
+  readonly #compressionBackend?: JsonWebEncryptionCompressionBackend;
 
   /**
-   * Supported JSON Web Encryption Key Wrap Backends.
+   * JSON Web Encryption Key Wrap Backend.
    */
-  private static readonly keyWrapBackends: Record<JsonWebEncryptionKeyWrapAlgorithm, JsonWebEncryptionKeyWrapBackend> =
-    {
-      A128GCMKW,
-      A128KW,
-      A192GCMKW,
-      A192KW,
-      A256GCMKW,
-      A256KW,
-      dir,
-      RSA1_5,
-      'RSA-OAEP': RSA_OAEP,
-      'RSA-OAEP-256': RSA_OAEP_256,
-      'RSA-OAEP-384': RSA_OAEP_384,
-      'RSA-OAEP-512': RSA_OAEP_512,
-    };
+  public get keyWrapBackend(): JsonWebEncryptionKeyWrapBackend {
+    return this.#keyWrapBackend;
+  }
 
   /**
-   * Supported JSON Web Encryption Content Encryption Backends.
+   * JSON Web Encryption Content Encryption Backend.
    */
-  private static readonly contentEncryptionBackends: Record<
-    JsonWebEncryptionContentEncryptionAlgorithm,
-    JsonWebEncryptionContentEncryptionBackend
-  > = {
-    'A128CBC-HS256': A128CBC_HS256,
-    'A192CBC-HS384': A192CBC_HS384,
-    'A256CBC-HS512': A256CBC_HS512,
-    A128GCM,
-    A192GCM,
-    A256GCM,
-  };
+  public get contentEncryptionBackend(): JsonWebEncryptionContentEncryptionBackend {
+    return this.#contentEncryptionBackend;
+  }
 
   /**
-   * Supported JSON Web Encryption Compression Backends.
+   * JSON Web Encryption Compression Backend.
    */
-  private static readonly compressionBackends: Record<
-    JsonWebEncryptionCompressionAlgorithm,
-    JsonWebEncryptionCompressionBackend
-  > = {
-    DEF,
-  };
+  public get compressionBackend(): JsonWebEncryptionCompressionBackend | undefined {
+    return this.#compressionBackend;
+  }
 
   /**
    * Instantiates a new JSON Web Encryption Header based on the provided Parameters.
@@ -169,16 +142,11 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParameter
 
     JsonWebEncryptionHeader.validateParameters(parameters);
 
-    Object.defineProperty(this, 'keyWrapBackend', { value: JsonWebEncryptionHeader.keyWrapBackends[parameters.alg] });
-
-    Object.defineProperty(this, 'contentEncryptionBackend', {
-      value: JsonWebEncryptionHeader.contentEncryptionBackends[parameters.enc],
-    });
+    this.#keyWrapBackend = JSONWEBENCRYPTION_KEYWRAP_REGISTRY[parameters.alg];
+    this.#contentEncryptionBackend = JSONWEBENCRYPTION_CONTENT_ENCRYPTION_REGISTRY[parameters.enc];
 
     if (parameters.zip !== undefined) {
-      Object.defineProperty(this, 'compressionBackend', {
-        value: JsonWebEncryptionHeader.compressionBackends[parameters.zip],
-      });
+      this.#compressionBackend = JSONWEBENCRYPTION_COMPRESSION_REGISTRY[parameters.zip];
     }
 
     Object.assign(this, parameters);
@@ -213,20 +181,20 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParameter
       throw new InvalidJoseHeaderException('Invalid header parameter "zip".');
     }
 
-    if (!Object.keys(this.keyWrapBackends).includes(parameters.alg)) {
+    if (!Object.hasOwn(JSONWEBENCRYPTION_KEYWRAP_REGISTRY, parameters.alg)) {
       throw new UnsupportedAlgorithmException(
         `Unsupported JSON Web Encryption Key Wrap Algorithm "${parameters.alg}".`
       );
     }
 
-    if (!Object.keys(this.contentEncryptionBackends).includes(parameters.enc)) {
+    if (!Object.hasOwn(JSONWEBENCRYPTION_CONTENT_ENCRYPTION_REGISTRY, parameters.enc)) {
       throw new UnsupportedAlgorithmException(
         `Unsupported JSON Web Encryption Content Encryption Algorithm "${parameters.enc}".`
       );
     }
 
     if (parameters.zip !== undefined) {
-      if (!Object.keys(this.compressionBackends).includes(parameters.zip)) {
+      if (!Object.hasOwn(JSONWEBENCRYPTION_COMPRESSION_REGISTRY, parameters.zip)) {
         throw new UnsupportedAlgorithmException(
           `Unsupported JSON Web Encryption Compression Algorithm "${parameters.zip}".`
         );

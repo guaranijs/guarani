@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { createHash, KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
@@ -5,25 +6,36 @@ import { JoseException } from '../exceptions/jose.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../jwe/jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebSignatureAlgorithm } from '../jws/jsonwebsignature-algorithm.type';
-import { EcKeyBackend } from './backends/ec/eckey.backend';
-import { JsonWebKeyBackend } from './backends/jsonwebkey.backend';
-import { OctKeyBackend } from './backends/oct/octkey.backend';
-import { RsaKeyBackend } from './backends/rsa/rsakey.backend';
+import type { EllipticCurveKey } from './backends/elliptic-curve/elliptic-curve.key';
+import { EllipticCurveKeyParameters } from './backends/elliptic-curve/elliptic-curve.key.parameters';
+import { GenerateEllipticCurveKeyOptions } from './backends/elliptic-curve/generate-elliptic-curve-key.options';
+import { JSONWEBKEY_REGISTRY } from './backends/jsonwebkey.registry';
+import { GenerateOctetKeyPairKeyOptions } from './backends/octet-key-pair/generate-octet-key-pair-key.options';
+import type { OctetKeyPairKey } from './backends/octet-key-pair/octet-key-pair.key';
+import { OctetKeyPairKeyParameters } from './backends/octet-key-pair/octet-key-pair.key.parameters';
+import { GenerateOctetSequenceKeyOptions } from './backends/octet-sequence/generate-octet-sequence-key.options';
+import type { OctetSequenceKey } from './backends/octet-sequence/octet-sequence.key';
+import { OctetSequenceKeyParameters } from './backends/octet-sequence/octet-sequence.key.parameters';
+import { GenerateRsaKeyOptions } from './backends/rsa/generate-rsa-key.options';
+import type { RsaKey } from './backends/rsa/rsa.key';
+import { RsaKeyParameters } from './backends/rsa/rsa.key.parameters';
 import { JsonWebKeyOperation } from './jsonwebkey-operation.type';
 import { JsonWebKeyType } from './jsonwebkey-type.type';
 import { JsonWebKeyUse } from './jsonwebkey-use.type';
 import { JsonWebKeyParameters } from './jsonwebkey.parameters';
 
 /**
- * Implementation of a JSON Web Key.
+ * Abstract Base Class of a JSON Web Key.
  *
  * @see https://www.rfc-editor.org/rfc/rfc7517.html#section-4
  */
-export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> implements JsonWebKeyParameters {
+export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters>
+  implements JsonWebKeyParameters
+{
   /**
    * JSON Web Key Type.
    */
-  public readonly kty!: JsonWebKeyType;
+  public abstract readonly kty: JsonWebKeyType;
 
   /**
    * Indicates whether a Public JSON Web Key is used for Plaintext Encryption or Signature Verification.
@@ -68,21 +80,17 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
   /**
    * Additional JSON Web Key Parameters.
    */
-  [parameter: string]: unknown;
+  [parameter: string]: any;
+
+  /**
+   * Thumbprint Buffer.
+   */
+  #thumbprint!: Buffer;
 
   /**
    * NodeJS Crypto Key.
    */
-  public readonly cryptoKey!: KeyObject;
-
-  /**
-   * Supported JSON Web Key Backends.
-   */
-  private static readonly backends: Record<JsonWebKeyType, JsonWebKeyBackend> = {
-    EC: new EcKeyBackend(),
-    oct: new OctKeyBackend(),
-    RSA: new RsaKeyBackend(),
-  };
+  readonly #cryptoKey!: KeyObject;
 
   /**
    * Thumbprint of the JSON Web Key according to **RFC 7638 JSON Web Key (JWK) Thumbprint**.
@@ -92,15 +100,19 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
    * @see https://www.rfc-editor.org/rfc/rfc7638.html
    */
   public get thumbprint(): Buffer {
-    const backend = JsonWebKey.backends[this.kty];
+    if (!Buffer.isBuffer(this._thumbprint)) {
+      const parameters = this.getThumbprintParameters();
+      this.#thumbprint = createHash('sha256').update(JSON.stringify(parameters), 'utf8').digest();
+    }
 
-    const entries: [string, any][] = (<string[]>JSON.parse(JSON.stringify(backend.requiredParameters)))
-      .sort()
-      .map((parameter) => [parameter, this[parameter]]);
+    return this.#thumbprint;
+  }
 
-    const parameters = <JsonWebKeyParameters>Object.fromEntries(entries);
-
-    return createHash('sha256').update(JSON.stringify(parameters), 'utf8').digest();
+  /**
+   * NodeJS Crypto Key.
+   */
+  public get cryptoKey(): KeyObject {
+    return this.#cryptoKey;
   }
 
   /**
@@ -112,39 +124,38 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
   public constructor(parameters: T, additionalParameters: Partial<T> = {}) {
     const params: T = { ...parameters, ...additionalParameters };
 
-    if (!JsonWebKey.checkIsJsonWebKey(params)) {
-      throw new InvalidJsonWebKeyException('The provided parameters do not represent a valid JSON Web Key.');
-    }
+    this.validateParameters(params);
 
-    let algorithm: JsonWebKeyBackend;
-
-    if ((algorithm = JsonWebKey.backends[params.kty]) === undefined) {
-      throw new UnsupportedAlgorithmException(`Unsupported JSON Web Key Algorithm "${params.kty}".`);
-    }
-
-    JsonWebKey.validateParameters(params);
-
-    Object.defineProperty(this, 'cryptoKey', { value: algorithm.load(params) });
     Object.assign(this, params);
+
+    this.#cryptoKey = this.getCryptoKey(params);
   }
 
   /**
-   * Checks if the provided JSON Web Key Parameters object is a valid Parameters object.
+   * Parses the Parameters of the JSON Web Key into a NodeJS Crypto Key.
    *
-   * @param parameters JSON Web Key Parameters object to be checked.
+   * @param parameters Parameters of the JSON Web Key.
    */
-  private static checkIsJsonWebKey(parameters: JsonWebKeyParameters): parameters is JsonWebKeyParameters {
-    return Object.hasOwn(parameters, 'kty');
-  }
+  protected abstract getCryptoKey(parameters: T): KeyObject;
+
+  /**
+   * Returns the parameters used to calculate the Thumbprint of the JSON Web Key in lexicographic order.
+   */
+  protected abstract getThumbprintParameters(): T;
+
+  /**
+   * Returns a list with the private parameters of the JSON Web Key.
+   */
+  protected abstract getPrivateParameters(): string[];
 
   /**
    * Validates the provided JSON Web Key Parameters.
    *
    * @param parameters Parameters of the JSON Web Key.
    */
-  private static validateParameters(parameters: JsonWebKeyParameters): void {
+  protected validateParameters(parameters: T): void {
     if (parameters.use !== undefined && typeof parameters.use !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid key parameter "use".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "use".');
     }
 
     if (parameters.key_ops !== undefined) {
@@ -153,11 +164,11 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
         parameters.key_ops.length === 0 ||
         parameters.key_ops.some((keyOperation) => typeof keyOperation !== 'string')
       ) {
-        throw new InvalidJsonWebKeyException('Invalid key parameter "key_ops".');
+        throw new InvalidJsonWebKeyException('Invalid jwk parameter "key_ops".');
       }
 
       if (new Set(parameters.key_ops).size !== parameters.key_ops.length) {
-        throw new InvalidJsonWebKeyException('Key parameter "key_ops" cannot have repeated operations.');
+        throw new InvalidJsonWebKeyException('JWK parameter "key_ops" cannot have repeated operations.');
       }
     }
 
@@ -183,28 +194,62 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
     }
 
     if (parameters.alg !== undefined && typeof parameters.alg !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid key parameter "alg".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "alg".');
     }
 
     if (parameters.kid !== undefined && typeof parameters.kid !== 'string') {
-      throw new InvalidJsonWebKeyException('Invalid key parameter "kid".');
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "kid".');
     }
 
     if (parameters.x5u !== undefined) {
-      throw new InvalidJsonWebKeyException('Unsupported key parameter "x5u".');
+      throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5u".');
     }
 
     if (parameters.x5c !== undefined) {
-      throw new InvalidJsonWebKeyException('Unsupported key parameter "x5c".');
+      throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5c".');
     }
 
     if (parameters.x5t !== undefined) {
-      throw new InvalidJsonWebKeyException('Unsupported key parameter "x5t".');
+      throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5t".');
     }
 
     if (parameters['x5t#S256'] !== undefined) {
-      throw new InvalidJsonWebKeyException('Unsupported key parameter "x5t#S256".');
+      throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5t#S256".');
     }
+  }
+
+  /**
+   * Parses a JSON Object into a JSON Web Key.
+   *
+   * @param data JSON Object representation of the JSON Web Key to be parsed.
+   * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
+   * @returns Instance of a JSON Web Key based on the provided JSON Object.
+   */
+  public static async load<T extends JsonWebKeyParameters>(
+    data: unknown,
+    additionalParameters: Partial<T> = {}
+  ): Promise<JsonWebKey<T>> {
+    if (data instanceof JsonWebKey<T>) {
+      return data;
+    }
+
+    if (typeof data !== 'object' || data === null) {
+      throw new InvalidJsonWebKeyException('The provided data is not a valid JSON Web Key object.');
+    }
+
+    if (!Object.hasOwn(data, 'kty')) {
+      throw new InvalidJsonWebKeyException('The provided data does not have a "kty" parameter.');
+    }
+
+    const kty: JsonWebKeyType = Reflect.get(data, 'kty');
+
+    if (!Object.hasOwn(JSONWEBKEY_REGISTRY, kty)) {
+      throw new UnsupportedAlgorithmException(`Unsupported JSON Web Key Type "${kty}".`);
+    }
+
+    const backend = JSONWEBKEY_REGISTRY[kty];
+
+    return (await backend.load(<T>data, additionalParameters)) as JsonWebKey<T>;
   }
 
   /**
@@ -214,12 +259,12 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
    * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
    * @returns Instance of a JSON Web Key based on the provided JSON String.
    */
-  public static parse<T extends JsonWebKeyParameters>(
+  public static async parse<T extends JsonWebKeyParameters>(
     data: string,
     additionalParameters: Partial<T> = {}
-  ): JsonWebKey<T> {
+  ): Promise<JsonWebKey<T>> {
     try {
-      return new JsonWebKey<T>(JSON.parse(data), additionalParameters);
+      return await this.load<T>(JSON.parse(data), additionalParameters);
     } catch (exc: unknown) {
       if (exc instanceof JoseException) {
         throw exc;
@@ -233,19 +278,94 @@ export class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyParameters> i
   }
 
   /**
-   * Returns the Parameters of the JSON Web Key.
+   * Generates a new Elliptic Curve JSON Web Key on the fly based on the provided options.
    *
-   * @param exportPublic Exports only the Public Parameters of the JSON Web Key.
+   * @param keyType Elliptic Curve JSON Web Key Type.
+   * @param options Options used to generate the Elliptic Curve JSON Web Key.
+   * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
    */
-  public toJSON(exportPublic = true): T {
-    if (!exportPublic) {
-      return <T>Object.create(this);
+  public static async generate(
+    keyType: 'EC',
+    options: GenerateEllipticCurveKeyOptions,
+    additionalParameters?: Partial<EllipticCurveKeyParameters>
+  ): Promise<EllipticCurveKey>;
+
+  /**
+   * Generates a new Octet Key Pair JSON Web Key on the fly based on the provided options.
+   *
+   * @param keyType Octet Key Pair JSON Web Key Type.
+   * @param options Options used to generate the Octet Key Pair JSON Web Key.
+   * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
+   */
+  public static async generate(
+    keyType: 'OKP',
+    options: GenerateOctetKeyPairKeyOptions,
+    additionalParameters?: Partial<OctetKeyPairKeyParameters>
+  ): Promise<OctetKeyPairKey>;
+
+  /**
+   * Generates a new RSA JSON Web Key on the fly based on the provided options.
+   *
+   * @param keyType RSA JSON Web Key Type.
+   * @param options Options used to generate the RSA JSON Web Key.
+   * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
+   */
+  public static async generate(
+    keyType: 'RSA',
+    options: GenerateRsaKeyOptions,
+    additionalParameters?: Partial<RsaKeyParameters>
+  ): Promise<RsaKey>;
+
+  /**
+   * Generates a new Octet Sequence JSON Web Key on the fly based on the provided options.
+   *
+   * @param keyType Octet Sequence JSON Web Key Type.
+   * @param options Options used to generate the Octet Sequence JSON Web Key.
+   * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
+   */
+  public static async generate(
+    keyType: 'oct',
+    options: GenerateOctetSequenceKeyOptions,
+    additionalParameters?: Partial<OctetSequenceKeyParameters>
+  ): Promise<OctetSequenceKey>;
+
+  /**
+   * Generates a new JSON Web Key on the fly based on the provided options.
+   *
+   * @param keyType JSON Web Key Type.
+   * @param options Options used to generate the JSON Web Key.
+   * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
+   */
+  public static async generate<T extends JsonWebKeyParameters>(
+    keyType: JsonWebKeyType,
+    options: Record<string, any>,
+    additionalParameters: Partial<T> = {}
+  ): Promise<JsonWebKey<T>> {
+    if (!Object.hasOwn(JSONWEBKEY_REGISTRY, keyType)) {
+      throw new TypeError(`Unsupported JSON Web Key Type "${keyType}".`);
     }
 
-    const { privateParameters } = JsonWebKey.backends[this.kty];
+    const backend = JSONWEBKEY_REGISTRY[keyType];
 
-    const publicParameters = Object.keys(this).filter((key) => !privateParameters.includes(key));
+    return (await backend.generate(options, additionalParameters)) as JsonWebKey<T>;
+  }
 
-    return <T>Object.fromEntries(publicParameters.map((key: string) => [key, Reflect.get(this, key)]));
+  /**
+   * Returns the Parameters of the JSON Web Key.
+   *
+   * @param exportPublic Exports only the Public Parameters of the JSON Web Key. (defaults to true)
+   */
+  public toJSON(exportPublic = true): T {
+    const privateParameters: string[] = this.getPrivateParameters();
+
+    let entries = Object.entries(this);
+
+    if (exportPublic) {
+      entries = entries.filter(([parameter]) => !privateParameters.includes(parameter));
+    }
+
+    const parameters = <T>Object.fromEntries(entries);
+
+    return parameters;
   }
 }

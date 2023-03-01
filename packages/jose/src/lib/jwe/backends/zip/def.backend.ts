@@ -2,8 +2,6 @@ import { Buffer } from 'buffer';
 import { promisify } from 'util';
 import { deflateRaw, inflateRaw } from 'zlib';
 
-import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-jsonwebencryption.exception';
-import { JoseException } from '../../../exceptions/jose.exception';
 import { JsonWebEncryptionCompressionBackend } from './jsonwebencryption-compression.backend';
 
 const deflateRawAsync = promisify(deflateRaw);
@@ -27,18 +25,7 @@ class DEFBackend extends JsonWebEncryptionCompressionBackend {
    * @returns Compressed Plaintext.
    */
   public async compress(plaintext: Buffer): Promise<Buffer> {
-    try {
-      return await deflateRawAsync(plaintext);
-    } catch (exc: unknown) {
-      if (exc instanceof JoseException) {
-        throw exc;
-      }
-
-      const exception = new InvalidJsonWebEncryptionException();
-      exception.cause = exc;
-
-      throw exception;
-    }
+    return await deflateRawAsync(plaintext);
   }
 
   /**
@@ -48,18 +35,7 @@ class DEFBackend extends JsonWebEncryptionCompressionBackend {
    * @returns Decompressed Plaintext.
    */
   public async decompress(plaintext: Buffer): Promise<Buffer> {
-    try {
-      return await inflateRawAsync(plaintext);
-    } catch (exc: unknown) {
-      if (exc instanceof JoseException) {
-        throw exc;
-      }
-
-      const exception = new InvalidJsonWebEncryptionException();
-      exception.cause = exc;
-
-      throw exception;
-    }
+    return await inflateRawAsync(plaintext);
   }
 }
 

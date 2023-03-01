@@ -41,27 +41,29 @@ export class JsonWebKeySet implements JsonWebKeySetParameters {
    * @param parameters Parameters of the JSON Web Key Set.
    * @returns JSON Web Key Set based on the provided Parameters.
    */
-  public static load(parameters: JsonWebKeySetParameters): JsonWebKeySet {
+  public static async load(parameters: JsonWebKeySetParameters): Promise<JsonWebKeySet> {
     if (typeof parameters !== 'object' || parameters === null) {
       throw new InvalidJsonWebKeySetException();
     }
 
     if (!Array.isArray(parameters.keys) || parameters.keys.length === 0) {
-      throw new InvalidJsonWebKeySetException('Invalid JSON Web Key Set parameter "keys".');
+      throw new InvalidJsonWebKeySetException('Invalid jwks parameter "keys".');
     }
 
-    const keys = parameters.keys.map((keyParameters, index) => {
-      try {
-        return new JsonWebKey(keyParameters);
-      } catch (exc: unknown) {
-        const exception = new InvalidJsonWebKeySetException(
-          `The item at position #${index} is not a valid JSON Web Key.`
-        );
+    const keys = await Promise.all(
+      parameters.keys.map(async (keyParameters) => {
+        try {
+          return await JsonWebKey.load(keyParameters);
+        } catch (exc: unknown) {
+          const exception = new InvalidJsonWebKeySetException(
+            'The provided data is not a valid JSON Web Key Set object.'
+          );
 
-        exception.cause = exc;
-        throw exception;
-      }
-    });
+          exception.cause = exc;
+          throw exception;
+        }
+      })
+    );
 
     return new JsonWebKeySet(keys);
   }
@@ -72,10 +74,14 @@ export class JsonWebKeySet implements JsonWebKeySetParameters {
    * @param data JSON String representation of the JSON Web Key Set to be parsed.
    * @returns Instance of a JSON Web Key Set based on the provided JSON String.
    */
-  public static parse(data: string): JsonWebKeySet {
+  public static async parse(data: string): Promise<JsonWebKeySet> {
     try {
-      return this.load(JSON.parse(data));
+      return await this.load(JSON.parse(data));
     } catch (exc: unknown) {
+      if (exc instanceof InvalidJsonWebKeySetException) {
+        throw exc;
+      }
+
       const exception = new InvalidJsonWebKeySetException();
       exception.cause = exc;
       throw exception;

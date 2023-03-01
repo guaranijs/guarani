@@ -5,6 +5,11 @@ import { JsonWebKeyParameters } from '../../jsonwebkey.parameters';
  */
 export interface RsaKeyParameters extends JsonWebKeyParameters {
   /**
+   * RSA JSON Web Key Type.
+   */
+  readonly kty: 'RSA';
+
+  /**
    * RSA Modulus.
    */
   readonly n: string;

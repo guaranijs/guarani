@@ -2,7 +2,7 @@ import { Buffer } from 'buffer';
 import { constants, privateDecrypt, publicEncrypt } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
-import { JsonWebKey } from '../../../jwk/jsonwebkey';
+import { RsaKey } from '../../../jwk/backends/rsa/rsa.key';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
@@ -32,7 +32,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
    * @param hash Name of the Hash Algorithm.
    */
   public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm, padding: number, hash?: string) {
-    super(algorithm, 'RSA');
+    super(algorithm);
 
     this.padding = padding;
     this.hash = hash;
@@ -41,31 +41,42 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
   /**
    * Wraps the provided Content Encryption Key using the provide JSON Web Key.
    *
-   * @param enc JSON Web Encryption Content Encryption Backend.
-   * @param key JSON Web Key used to Wrap the provided Content Encryption Key.
+   * @param contentEncryptionBackend JSON Web Encryption Content Encryption Backend.
+   * @param wrapKey JSON Web Key used to Wrap the provided Content Encryption Key.
    * @returns Generated Content Encryption Key, Wrapped Content Encryption Key and optional JSON Web Encryption Header.
    */
-  public async wrap(enc: JsonWebEncryptionContentEncryptionBackend, key: JsonWebKey): Promise<[Buffer, Buffer]> {
-    this.validateJsonWebKey(key);
+  public async wrap(
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    wrapKey: RsaKey
+  ): Promise<[Buffer, Buffer]> {
+    this.validateJsonWebKey(wrapKey);
 
-    const cek = await enc.generateContentEncryptionKey();
-    const ek = publicEncrypt({ key: key.cryptoKey, oaepHash: this.hash, padding: this.padding }, cek);
+    const contentEncryptionKey = await contentEncryptionBackend.generateContentEncryptionKey();
 
-    return [cek, ek];
+    const wrappedKey = publicEncrypt(
+      { key: wrapKey.cryptoKey, oaepHash: this.hash, padding: this.padding },
+      contentEncryptionKey
+    );
+
+    return [contentEncryptionKey, wrappedKey];
   }
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
    *
-   * @param enc JSON Web Encrytpion Content Encryption Backend.
-   * @param key JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
-   * @param ek Wrapped Content Encryption Key.
+   * @param contentEncryptionBackend JSON Web Encrytpion Content Encryption Backend.
+   * @param unwrapKey JSON Web Key used to Unwrap the Wrapped Content Encryption Key.
+   * @param wrappedKey Wrapped Content Encryption Key.
    * @returns Unwrapped Content Encryption Key.
    */
-  public async unwrap(enc: JsonWebEncryptionContentEncryptionBackend, key: JsonWebKey, ek: Buffer): Promise<Buffer> {
-    this.validateJsonWebKey(key);
+  public async unwrap(
+    contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
+    unwrapKey: RsaKey,
+    wrappedKey: Buffer
+  ): Promise<Buffer> {
+    this.validateJsonWebKey(unwrapKey);
 
-    const { cryptoKey } = key;
+    const { cryptoKey } = unwrapKey;
 
     if (cryptoKey.type !== 'private') {
       throw new InvalidJsonWebKeyException(
@@ -73,11 +84,30 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
       );
     }
 
-    const cek = privateDecrypt({ key: cryptoKey, oaepHash: this.hash, padding: this.padding }, ek);
+    const contentEncryptionKey = privateDecrypt(
+      { key: cryptoKey, oaepHash: this.hash, padding: this.padding },
+      wrappedKey
+    );
 
-    enc.validateContentEncryptionKey(cek);
+    contentEncryptionBackend.validateContentEncryptionKey(contentEncryptionKey);
 
-    return cek;
+    return contentEncryptionKey;
+  }
+
+  /**
+   * Checks if the provided JSON Web Key can be used by the requesting JSON Web Encryption Key Wrap Backend.
+   *
+   * @param key JSON Web Key to be checked.
+   * @throws {InvalidJsonWebKeyException} The provided JSON Web Key is invalid.
+   */
+  protected override validateJsonWebKey(key: RsaKey): void {
+    super.validateJsonWebKey(key);
+
+    if (key.kty !== 'RSA') {
+      throw new InvalidJsonWebKeyException(
+        'This JSON Web Encryption Key Wrap Algorithm only accepts "RSA" JSON Web Keys.'
+      );
+    }
   }
 }
 

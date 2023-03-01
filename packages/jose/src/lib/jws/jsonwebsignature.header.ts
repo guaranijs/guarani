@@ -1,11 +1,8 @@
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
-import { ES256, ES384, ES512 } from './backends/ecdsa.backend';
-import { HS256, HS384, HS512 } from './backends/hmac.backend';
 import { JsonWebSignatureBackend } from './backends/jsonwebsignature.backend';
-import { none } from './backends/none.backend';
-import { PS256, PS384, PS512, RS256, RS384, RS512 } from './backends/rsassa.backend';
+import { JSONWEBSIGNATURE_REGISTRY } from './backends/jsonwebsignature.registry';
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.type';
 import { JsonWebSignatureHeaderParameters } from './jsonwebsignature.header.parameters';
 
@@ -23,81 +20,69 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParameters 
   /**
    * URI of a Set of Public JSON Web Keys that contains the JSON Web Key used to Sign the Token.
    */
-  public readonly jku?: string;
+  public jku?: string;
 
   /**
    * JSON Web Key used to Sign the Token.
    */
-  public readonly jwk?: JsonWebKey;
+  public jwk?: JsonWebKey;
 
   /**
    * Identifier of the JSON Web Key used to Sign the Token.
    */
-  public readonly kid?: string;
+  public kid?: string;
 
   /**
    * URI of the X.509 certificate of the JSON Web Key used to Sign the Token.
    */
-  public readonly x5u?: string;
+  public x5u?: string;
 
   /**
    * Chain of X.509 certificates of the JSON Web Key used to Sign the Token.
    */
-  public readonly x5c?: string[];
+  public x5c?: string[];
 
   /**
    * SHA-1 Thumbprint of the X.509 certificate of the JSON Web Key used to Sign the Token.
    */
-  public readonly x5t?: string;
+  public x5t?: string;
 
   /**
    * SHA-256 Thumbprint of the X.509 certificate of the JSON Web Key used to Sign the Token.
    */
-  public readonly 'x5t#S256'?: string;
+  public 'x5t#S256'?: string;
 
   /**
    * Defines the type of the Token.
    */
-  public readonly typ?: string;
+  public typ?: string;
 
   /**
    * Defines the type of the Payload of the Token.
    */
-  public readonly cty?: string;
+  public cty?: string;
 
   /**
    * Defines the parameters that MUST be present in the JOSE Header.
    */
-  public readonly crit?: string[];
+  public crit?: string[];
 
   /**
    * Additional JSON Web Signature Header Parameters.
    */
-  [parameter: string]: unknown;
+  [parameter: string]: any;
 
   /**
    * JSON Web Signature Backend.
    */
-  public readonly backend!: JsonWebSignatureBackend;
+  readonly #backend!: JsonWebSignatureBackend;
 
   /**
-   * Supported JSON Web Signature Backends.
+   * JSON Web Signature Backend.
    */
-  private static readonly backends: Record<JsonWebSignatureAlgorithm, JsonWebSignatureBackend> = {
-    ES256,
-    ES384,
-    ES512,
-    HS256,
-    HS384,
-    HS512,
-    none,
-    PS256,
-    PS384,
-    PS512,
-    RS256,
-    RS384,
-    RS512,
-  };
+  public get backend(): JsonWebSignatureBackend {
+    return this.#backend;
+  }
 
   /**
    * Instantiates a new JSON Web Signature Header based on the provided Parameters.
@@ -117,7 +102,7 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParameters 
 
     JsonWebSignatureHeader.validateParameters(parameters);
 
-    Object.defineProperty(this, 'backend', { value: JsonWebSignatureHeader.backends[parameters.alg] });
+    this.#backend = JSONWEBSIGNATURE_REGISTRY[parameters.alg];
 
     Object.assign(this, parameters);
   }
@@ -143,7 +128,7 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParameters 
       throw new InvalidJoseHeaderException('Invalid header parameter "alg".');
     }
 
-    if (!Object.keys(this.backends).includes(parameters.alg)) {
+    if (!Object.hasOwn(JSONWEBSIGNATURE_REGISTRY, parameters.alg)) {
       throw new UnsupportedAlgorithmException(`Unsupported JSON Web Signature Algorithm "${parameters.alg}".`);
     }
 

@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
+import { removeUndefined } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -94,14 +95,14 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
 
       const deviceCode = await this.deviceCodeService.create(scopes, client);
 
-      const deviceAuthorizationResponse: DeviceAuthorizationResponse = {
+      const deviceAuthorizationResponse = removeUndefined<DeviceAuthorizationResponse>({
         device_code: deviceCode.id,
         user_code: deviceCode.userCode,
         verification_uri: deviceCode.verificationUri,
         verification_uri_complete: deviceCode.verificationUriComplete,
         expires_in: Math.ceil((deviceCode.expiresAt.getTime() - Date.now()) / 1000),
         interval: this.settings.devicePollingInterval,
-      };
+      });
 
       return new HttpResponse().setHeaders(this.headers).json(deviceAuthorizationResponse);
     } catch (exc: unknown) {

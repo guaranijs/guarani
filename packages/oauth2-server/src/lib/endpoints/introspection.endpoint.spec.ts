@@ -359,7 +359,7 @@ describe('Introspection Endpoint', () => {
         active: true,
         scope: 'foo bar',
         client_id: 'client_id',
-        username: undefined,
+        // username: undefined,
         token_type: 'Bearer',
         exp: Math.ceil((now + 3600000) / 1000),
         iat: Math.ceil((now - 3600000) / 1000),
@@ -367,7 +367,7 @@ describe('Introspection Endpoint', () => {
         sub: 'user_id',
         aud: 'client_id',
         iss: settings.issuer,
-        jti: undefined,
+        // jti: undefined,
       };
 
       const response = await endpoint.handle(request);

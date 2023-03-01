@@ -12,6 +12,7 @@ import { AuthorizationCodeServiceInterface } from '../services/authorization-cod
 import { AUTHORIZATION_CODE_SERVICE } from '../services/authorization-code.service.token';
 import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
+import { removeUndefined } from '@guarani/primitives';
 
 /**
  * Implementation of the **Code** Response Type.
@@ -82,7 +83,7 @@ export class CodeResponseType implements ResponseTypeInterface {
 
     const authorizationCode = await this.authorizationCodeService.create(parameters, session, consent);
 
-    return { code: authorizationCode.code, state: parameters.state };
+    return removeUndefined<CodeAuthorizationResponse>({ code: authorizationCode.code, state: parameters.state });
   }
 
   /**

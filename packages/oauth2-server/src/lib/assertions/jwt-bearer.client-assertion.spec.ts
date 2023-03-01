@@ -1,10 +1,10 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 import {
-  JsonWebKey,
   JsonWebSignature,
   JsonWebSignatureHeaderParameters,
   JsonWebTokenClaims,
   JsonWebTokenClaimsParameters,
+  OctetSequenceKey,
 } from '@guarani/jose';
 
 import { Client } from '../entities/client.entity';
@@ -19,7 +19,7 @@ import { JwtBearerClientAssertion } from './jwt-bearer.client-assertion';
 
 const now = Math.floor(Date.now() / 1000);
 
-const jwk = new JsonWebKey({ kty: 'oct', k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ' });
+const jwk = new OctetSequenceKey({ kty: 'oct', k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ' });
 
 const header: JsonWebSignatureHeaderParameters = { alg: 'HS256', typ: 'JWT' };
 const claims: JsonWebTokenClaimsParameters = {

@@ -70,7 +70,6 @@ describe('Client Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo baz',
-        refresh_token: undefined,
       });
     });
 
@@ -86,7 +85,6 @@ describe('Client Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'baz foo',
-        refresh_token: undefined,
       });
     });
 
@@ -100,7 +98,6 @@ describe('Client Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo bar baz',
-        refresh_token: undefined,
       });
     });
   });

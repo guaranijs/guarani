@@ -1,4 +1,5 @@
 import { getContainer, Inject, Injectable } from '@guarani/di';
+import { removeUndefined } from '@guarani/primitives';
 
 import { URL } from 'url';
 
@@ -47,7 +48,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
   // @ts-expect-error Unused variable "request"
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async handle(request: HttpRequest): Promise<HttpResponse> {
-    const discoveryResponse = <DiscoveryResponse>{
+    const discoveryResponse = removeUndefined<DiscoveryResponse>({
       issuer: this.settings.issuer,
       authorization_endpoint: this.getEndpointPath('authorization'),
       token_endpoint: this.getEndpointPath('token'),
@@ -72,7 +73,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
       interaction_endpoint: this.getEndpointPath('interaction'),
       device_authorization_endpoint: this.getEndpointPath('device_authorization'),
       authorization_response_iss_parameter_supported: this.settings.enableAuthorizationResponseIssuerIdentifier,
-    };
+    });
 
     return new HttpResponse().json(discoveryResponse);
   }

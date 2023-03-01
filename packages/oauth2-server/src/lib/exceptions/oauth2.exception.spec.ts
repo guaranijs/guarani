@@ -78,9 +78,6 @@ describe('OAuth 2.0 Exception', () => {
     expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
       error: <any>'custom_code',
       error_description: 'Sample description.',
-      error_uri: undefined,
-      state: undefined,
-      iss: undefined,
     });
   });
 });

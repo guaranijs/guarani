@@ -54,7 +54,7 @@ export class PrivateKeyJwtClientAuthentication extends JwtBearerClientAssertion 
     if (client.jwksUri != null) {
       clientJwks = await this.getClientJwksFromUri(client.jwksUri);
     } else if (client.jwks != null) {
-      clientJwks = JsonWebKeySet.load(client.jwks);
+      clientJwks = await JsonWebKeySet.load(client.jwks);
     }
 
     if (clientJwks === null) {
@@ -86,7 +86,7 @@ export class PrivateKeyJwtClientAuthentication extends JwtBearerClientAssertion 
    * @param jwksUri URI of the JSON Web Key Set of the Client.
    * @returns JSON Web Key Set of the Client.
    */
-  private getClientJwksFromUri(jwksUri: string): Promise<JsonWebKeySet> {
+  private async getClientJwksFromUri(jwksUri: string): Promise<JsonWebKeySet> {
     return new Promise((resolve, reject) => {
       const request = https.request(jwksUri, (res) => {
         let responseBody = '';
@@ -94,9 +94,9 @@ export class PrivateKeyJwtClientAuthentication extends JwtBearerClientAssertion 
         res.setEncoding('utf8');
 
         res.on('data', (chunk) => (responseBody += chunk));
-        res.on('end', () => {
+        res.on('end', async () => {
           try {
-            resolve(JsonWebKeySet.parse(responseBody));
+            resolve(await JsonWebKeySet.parse(responseBody));
           } catch (exc: unknown) {
             const exception = new InvalidJsonWebKeySetException();
             exception.cause = exc;

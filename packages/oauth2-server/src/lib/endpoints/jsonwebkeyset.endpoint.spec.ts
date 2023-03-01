@@ -1,5 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
-import { JsonWebKey, JsonWebKeySet } from '@guarani/jose';
+import { EllipticCurveKey, JsonWebKeySet, RsaKey } from '@guarani/jose';
 
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
@@ -7,7 +7,7 @@ import { HttpResponse } from '../http/http.response';
 import { Endpoint } from './endpoint.type';
 import { JsonWebKeySetEndpoint } from './jsonwebkeyset.endpoint';
 
-const ecKey = new JsonWebKey({
+const ecKey = new EllipticCurveKey({
   kty: 'EC',
   crv: 'P-256',
   x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
@@ -15,7 +15,7 @@ const ecKey = new JsonWebKey({
   kid: 'ec-key',
 });
 
-const rsaKey = new JsonWebKey({
+const rsaKey = new RsaKey({
   kty: 'RSA',
   n:
     'xjpFydzTbByzL5jhEa2yQO63dpS9d9SKaN107AR69skKiTR4uK1c4SzDt4YcurDB' +

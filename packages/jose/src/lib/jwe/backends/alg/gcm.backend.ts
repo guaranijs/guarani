@@ -6,6 +6,7 @@ import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebk
 import { OctetSequenceKey } from '../../../jwk/backends/octet-sequence/octet-sequence.key';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
+import { GcmHeaderParameters } from './gcm.header.parameters';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
 
 const randomBytesAsync = promisify(randomBytes);
@@ -58,7 +59,7 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
   public async wrap(
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     wrapKey: OctetSequenceKey
-  ): Promise<[Buffer, Buffer, Record<string, unknown>]> {
+  ): Promise<[Buffer, Buffer, Partial<GcmHeaderParameters>]> {
     this.validateJsonWebKey(wrapKey);
 
     const initializationVector = await randomBytesAsync(this.ivSize / 8);
@@ -93,12 +94,12 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     unwrapKey: OctetSequenceKey,
     wrappedKey: Buffer,
-    header: Record<string, unknown>
+    header: GcmHeaderParameters
   ): Promise<Buffer> {
     this.validateJsonWebKey(unwrapKey);
 
-    const initializationVector = Buffer.from(<string>header.iv, 'base64url');
-    const authTag = Buffer.from(<string>header.tag, 'base64url');
+    const initializationVector = Buffer.from(header.iv, 'base64url');
+    const authTag = Buffer.from(header.tag, 'base64url');
 
     const decipher = createDecipheriv(this.cipher, unwrapKey.cryptoKey, initializationVector, {
       authTagLength: this.authTagLength,
@@ -125,7 +126,7 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
 
     if (key.kty !== 'oct') {
       throw new InvalidJsonWebKeyException(
-        'This JSON Web Encryption Key Wrap Algorithm only accepts "oct" JSON Web Keys.'
+        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts "oct" JSON Web Keys.`
       );
     }
 

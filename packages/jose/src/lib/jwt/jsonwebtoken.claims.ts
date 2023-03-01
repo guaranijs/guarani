@@ -1,3 +1,4 @@
+import { removeUndefined } from '@guarani/primitives';
 import { Buffer } from 'buffer';
 import { isDeepStrictEqual } from 'util';
 
@@ -72,7 +73,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
 
     this.validateClaimsOptions(claims, options);
 
-    Object.assign(this, claims);
+    Object.assign(this, removeUndefined<JsonWebTokenClaimsParameters>(claims));
   }
 
   /**
@@ -188,7 +189,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
    * Returns the Stringified JSON representation of the JSON Web Token Claims.
    */
   public toString(): string {
-    return JSON.stringify(this);
+    return JSON.stringify(removeUndefined<JsonWebTokenClaims>(this));
   }
 
   /**

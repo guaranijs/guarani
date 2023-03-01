@@ -3,6 +3,7 @@ import { Buffer } from 'buffer';
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../../jwk/jsonwebkey';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
+import { JsonWebEncryptionHeaderParameters } from '../../jsonwebencryption.header.parameters';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 
 /**
@@ -39,8 +40,8 @@ export abstract class JsonWebEncryptionKeyWrapBackend {
   public abstract wrap(
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     wrapKey: JsonWebKey,
-    header?: Record<string, any>
-  ): Promise<[Buffer, Buffer, Record<string, any>?]>;
+    header?: JsonWebEncryptionHeaderParameters
+  ): Promise<[Buffer, Buffer, Partial<JsonWebEncryptionHeaderParameters>?]>;
 
   /**
    * Unwraps the provided Encrypted Key using the provided JSON Web Key.
@@ -55,7 +56,7 @@ export abstract class JsonWebEncryptionKeyWrapBackend {
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     unwrapKey: JsonWebKey,
     wrappedKey: Buffer,
-    header?: Record<string, any>
+    header?: JsonWebEncryptionHeaderParameters
   ): Promise<Buffer>;
 
   /**

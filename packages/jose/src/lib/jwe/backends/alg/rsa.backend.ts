@@ -105,7 +105,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
 
     if (key.kty !== 'RSA') {
       throw new InvalidJsonWebKeyException(
-        'This JSON Web Encryption Key Wrap Algorithm only accepts "RSA" JSON Web Keys.'
+        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts "RSA" JSON Web Keys.`
       );
     }
   }

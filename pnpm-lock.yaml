@@ -85,7 +85,10 @@ importers:
       reflect-metadata: 0.1.13
 
   packages/jose:
-    specifiers: {}
+    specifiers:
+      '@guarani/primitives': link:../primitives
+    dependencies:
+      '@guarani/primitives': link:../primitives
 
   packages/oauth2-server:
     specifiers:

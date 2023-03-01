@@ -1,3 +1,4 @@
+import { removeUndefined } from '@guarani/primitives';
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
@@ -104,7 +105,7 @@ export class JsonWebSignatureHeader implements JsonWebSignatureHeaderParameters 
 
     this.#backend = JSONWEBSIGNATURE_REGISTRY[parameters.alg];
 
-    Object.assign(this, parameters);
+    Object.assign(this, removeUndefined<JsonWebSignatureHeaderParameters>(parameters));
   }
 
   /**

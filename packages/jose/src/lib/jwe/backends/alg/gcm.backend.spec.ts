@@ -3,6 +3,7 @@ import { Buffer } from 'buffer';
 import { OctetSequenceKey } from '../../../jwk/backends/octet-sequence/octet-sequence.key';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { A128GCMKW, A192GCMKW, A256GCMKW } from './gcm.backend';
+import { GcmHeaderParameters } from './gcm.header.parameters';
 
 const contentEncryptionKey = Buffer.from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
 
@@ -21,7 +22,7 @@ describe('JSON Web Encryption Key Wrap AES A128GCMKW Backend', () => {
     expect(ek).toEqual(expect.any(Buffer));
     expect(ek).toHaveLength(16);
 
-    await expect(A128GCMKW.unwrap(enc, key, ek, header)).resolves.toEqual(contentEncryptionKey);
+    await expect(A128GCMKW.unwrap(enc, key, ek, <GcmHeaderParameters>header)).resolves.toEqual(contentEncryptionKey);
   });
 });
 
@@ -34,7 +35,7 @@ describe('JSON Web Encryption Key Wrap AES A192GCMKW Backend', () => {
     expect(ek).toEqual(expect.any(Buffer));
     expect(ek).toHaveLength(16);
 
-    await expect(A192GCMKW.unwrap(enc, key, ek, header)).resolves.toEqual(contentEncryptionKey);
+    await expect(A192GCMKW.unwrap(enc, key, ek, <GcmHeaderParameters>header)).resolves.toEqual(contentEncryptionKey);
   });
 });
 
@@ -47,6 +48,6 @@ describe('JSON Web Encryption Key Wrap AES A256GCMKW Backend', () => {
     expect(ek).toEqual(expect.any(Buffer));
     expect(ek).toHaveLength(16);
 
-    await expect(A256GCMKW.unwrap(enc, key, ek, header)).resolves.toEqual(contentEncryptionKey);
+    await expect(A256GCMKW.unwrap(enc, key, ek, <GcmHeaderParameters>header)).resolves.toEqual(contentEncryptionKey);
   });
 });

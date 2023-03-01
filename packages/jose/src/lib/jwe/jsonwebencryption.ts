@@ -54,7 +54,7 @@ export class JsonWebEncryption {
       throw new InvalidJsonWebEncryptionException();
     }
 
-    const splitToken = token.split('.');
+    const splitToken = <[string, string, string, string, string]>token.split('.');
 
     if (splitToken.length !== 5) {
       throw new InvalidJsonWebEncryptionException();
@@ -63,14 +63,14 @@ export class JsonWebEncryption {
     try {
       const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = splitToken;
 
-      const headerParameters = JSON.parse(Buffer.from(b64Header!, 'base64url').toString('utf8'));
+      const headerParameters = JSON.parse(Buffer.from(b64Header, 'base64url').toString('utf8'));
 
       const header = new JsonWebEncryptionHeader(headerParameters);
-      const ek = Buffer.from(b64Ek!, 'base64url');
-      const iv = Buffer.from(b64Iv!, 'base64url');
-      const ciphertext = Buffer.from(b64Ciphertext!, 'base64url');
-      const tag = Buffer.from(b64Tag!, 'base64url');
-      const aad = Buffer.from(b64Header!, 'ascii');
+      const ek = Buffer.from(b64Ek, 'base64url');
+      const iv = Buffer.from(b64Iv, 'base64url');
+      const ciphertext = Buffer.from(b64Ciphertext, 'base64url');
+      const tag = Buffer.from(b64Tag, 'base64url');
+      const aad = Buffer.from(b64Header, 'ascii');
 
       return [header, ek, iv, ciphertext, tag, aad];
     } catch (exc: unknown) {
@@ -144,7 +144,7 @@ export class JsonWebEncryption {
 
       const iv = await contentEncryptionBackend.generateInitializationVector();
 
-      const [cek, ek, additionalHeaderParams] = await keyWrapBackend.wrap(contentEncryptionBackend, key);
+      const [cek, ek, additionalHeaderParams] = await keyWrapBackend.wrap(contentEncryptionBackend, key, header);
 
       if (additionalHeaderParams !== undefined) {
         Object.assign(header, additionalHeaderParams);

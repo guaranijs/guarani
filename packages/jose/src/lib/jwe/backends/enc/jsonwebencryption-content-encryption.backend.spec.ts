@@ -5,41 +5,41 @@ import { JsonWebEncryptionContentEncryptionBackend } from './jsonwebencryption-c
 
 const invalidCeks: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol.for('foo'), Buffer, () => 1, {}, []];
 
-const algorithm: JsonWebEncryptionContentEncryptionBackend = Reflect.construct(
+const backend: JsonWebEncryptionContentEncryptionBackend = Reflect.construct(
   JsonWebEncryptionContentEncryptionBackend,
   [null, 128, 96]
 );
 
-describe('JSON Web Encryption Content Encryption Algorithm', () => {
+describe('JSON Web Encryption Content Encryption Backend', () => {
   it('should generate a 16 bytes content encryption key.', async () => {
-    await expect(algorithm.generateContentEncryptionKey()).resolves.toHaveLength(16);
+    await expect(backend.generateContentEncryptionKey()).resolves.toHaveLength(16);
   });
 
   it('should generate a 12 bytes initialization vector.', async () => {
-    await expect(algorithm.generateInitializationVector()).resolves.toHaveLength(12);
+    await expect(backend.generateInitializationVector()).resolves.toHaveLength(12);
   });
 
   it.each(invalidCeks)('should throw when validating a content encryption key that is not a buffer.', (invalidCek) => {
-    expect(() => algorithm.validateContentEncryptionKey(invalidCek)).toThrow(new InvalidJsonWebEncryptionException());
+    expect(() => backend.validateContentEncryptionKey(invalidCek)).toThrow(new InvalidJsonWebEncryptionException());
   });
 
   it('should throw when the length of the content encryption key does not match the expected length.', () => {
-    expect(() => algorithm.validateContentEncryptionKey(Buffer.alloc(24))).toThrow(
+    expect(() => backend.validateContentEncryptionKey(Buffer.alloc(24))).toThrow(
       new InvalidJsonWebEncryptionException()
     );
   });
 
   it('should not throw when the length of the content encryption key matches the expected length.', () => {
-    expect(() => algorithm.validateContentEncryptionKey(Buffer.alloc(16))).not.toThrow();
+    expect(() => backend.validateContentEncryptionKey(Buffer.alloc(16))).not.toThrow();
   });
 
   it('should throw when the length of the initialization vector does not match the expected length.', () => {
-    expect(() => algorithm.validateInitializationVector(Buffer.alloc(16))).toThrow(
+    expect(() => backend.validateInitializationVector(Buffer.alloc(16))).toThrow(
       new InvalidJsonWebEncryptionException()
     );
   });
 
   it('should not throw when the length of the initialization vector matches the expected length.', () => {
-    expect(() => algorithm.validateInitializationVector(Buffer.alloc(12))).not.toThrow();
+    expect(() => backend.validateInitializationVector(Buffer.alloc(12))).not.toThrow();
   });
 });

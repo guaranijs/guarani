@@ -1,11 +1,12 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 import {
-  JsonWebKey,
+  EllipticCurveKey,
   JsonWebSignature,
   JsonWebSignatureHeaderParameters,
   JsonWebTokenClaims,
   JsonWebTokenClaimsParameters,
   JsonWebSignatureAlgorithm,
+  OctetSequenceKey,
   JsonWebKeyParameters,
 } from '@guarani/jose';
 
@@ -30,12 +31,12 @@ import { JwtBearerGrantType } from './jwt-bearer.grant-type';
 
 const now = Date.now();
 
-const octKey = new JsonWebKey<JsonWebKeyParameters>({
+const octKey = new OctetSequenceKey({
   kty: 'oct',
   k: Buffer.from('qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ', 'utf8').toString('base64url'),
 });
 
-const eckey = new JsonWebKey<JsonWebKeyParameters>({
+const eckey = new EllipticCurveKey({
   kty: 'EC',
   crv: 'P-256',
   x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
@@ -314,7 +315,7 @@ describe('JWT Bearer Grant Type', () => {
 
       Reflect.set(parameters, 'assertion', assertion);
 
-      const client = <Client>{ id: 'client_id', jwks: { keys: [eckey.toJSON()] } };
+      const client = <Client>{ id: 'client_id', jwks: { keys: [<JsonWebKeyParameters>eckey.toJSON()] } };
 
       await expect(grantType.handle(parameters, client)).rejects.toThrow(
         new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
@@ -345,7 +346,6 @@ describe('JWT Bearer Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo baz',
-        refresh_token: undefined,
       });
 
       expect(accessTokenServiceMock.create).toHaveBeenCalledTimes(1);
@@ -375,7 +375,6 @@ describe('JWT Bearer Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'baz foo',
-        refresh_token: undefined,
       });
 
       expect(accessTokenServiceMock.create).toHaveBeenCalledTimes(1);
@@ -404,7 +403,6 @@ describe('JWT Bearer Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo bar baz',
-        refresh_token: undefined,
       });
 
       expect(accessTokenServiceMock.create).toHaveBeenCalledTimes(1);

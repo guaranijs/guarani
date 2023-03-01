@@ -1,10 +1,4 @@
-import {
-  JsonWebKey,
-  JsonWebKeyParameters,
-  JsonWebSignature,
-  JsonWebSignatureHeader,
-  JsonWebTokenClaims,
-} from '@guarani/jose';
+import { JsonWebSignature, JsonWebSignatureHeader, JsonWebTokenClaims, OctetSequenceKey } from '@guarani/jose';
 
 import { Buffer } from 'buffer';
 import express, { Application, urlencoded } from 'express';
@@ -44,7 +38,7 @@ describe('Client Credentials Flow', () => {
       exp: Math.ceil((Date.now() + 300000) / 1000),
     });
 
-    const key = new JsonWebKey<JsonWebKeyParameters>({
+    const key = new OctetSequenceKey({
       kty: 'oct',
       k: Buffer.from('z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', 'utf8').toString('base64url'),
     });

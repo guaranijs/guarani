@@ -159,7 +159,6 @@ describe('Resource Owner Password Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'foo bar',
-        refresh_token: undefined,
       });
 
       Reflect.set(grantType, 'refreshTokenService', refreshTokenServiceMock);
@@ -186,7 +185,6 @@ describe('Resource Owner Password Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'bar foo',
-        refresh_token: undefined,
       });
 
       Reflect.set(grantType, 'refreshTokenService', refreshTokenServiceMock);
@@ -213,7 +211,6 @@ describe('Resource Owner Password Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'bar foo',
-        refresh_token: undefined,
       });
 
       Reflect.set(grantType, 'refreshTokenService', refreshTokenServiceMock);
@@ -237,7 +234,6 @@ describe('Resource Owner Password Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'bar baz',
-        refresh_token: undefined,
       });
     });
 
@@ -261,7 +257,6 @@ describe('Resource Owner Password Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'baz bar',
-        refresh_token: undefined,
       });
     });
 
@@ -285,7 +280,6 @@ describe('Resource Owner Password Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'baz bar',
-        refresh_token: undefined,
       });
     });
 

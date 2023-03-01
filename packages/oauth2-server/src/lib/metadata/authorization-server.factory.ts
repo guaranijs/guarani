@@ -95,7 +95,8 @@ export class AuthorizationServerFactory {
   ): Promise<T> {
     Reflect.set(this, 'authorizationServerOptions', options);
 
-    this.configure();
+    await this.configure();
+
     this.container.bind(AuthorizationServer).toClass(server).asSingleton();
 
     return <T>this.container.resolve(AuthorizationServer);
@@ -104,8 +105,8 @@ export class AuthorizationServerFactory {
   /**
    * Bootstraps the Configuration of the OAuth 2.0 Authorization Server.
    */
-  private static configure(): void {
-    this.setAuthorizationServerSettings();
+  private static async configure(): Promise<void> {
+    await this.setAuthorizationServerSettings();
     this.setClientAuthentication();
     this.setGrantTypes();
     this.setInteractionTypes();
@@ -129,7 +130,7 @@ export class AuthorizationServerFactory {
   /**
    * Defines the Settings of the Authorization Server.
    */
-  private static setAuthorizationServerSettings(): void {
+  private static async setAuthorizationServerSettings(): Promise<void> {
     const settings: Settings = {
       issuer: <string>this.authorizationServerOptions.issuer,
       scopes: <string[]>this.authorizationServerOptions.scopes,
@@ -144,7 +145,7 @@ export class AuthorizationServerFactory {
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
       jwks:
         this.authorizationServerOptions.jwks !== undefined
-          ? JsonWebKeySet.load(this.authorizationServerOptions.jwks)
+          ? await JsonWebKeySet.load(this.authorizationServerOptions.jwks)
           : undefined,
       userInteraction: this.authorizationServerOptions.userInteraction,
       enableRefreshTokenRotation: this.authorizationServerOptions.enableRefreshTokenRotation ?? false,

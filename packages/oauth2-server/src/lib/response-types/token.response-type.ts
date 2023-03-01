@@ -11,6 +11,7 @@ import { createTokenResponse } from '../utils/create-token-response';
 import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
 import { Session } from '../entities/session.entity';
+import { removeUndefined } from '@guarani/primitives';
 
 /**
  * Implementation of the **Token** Response Type.
@@ -64,7 +65,7 @@ export class TokenResponseType implements ResponseTypeInterface {
     const accessToken = await this.accessTokenService.create(scopes, client, user);
     const token = createTokenResponse(accessToken);
 
-    return <TokenAuthorizationResponse>{ ...token, state: parameters.state };
+    return removeUndefined<TokenAuthorizationResponse>({ ...token, state: parameters.state });
   }
 
   /**

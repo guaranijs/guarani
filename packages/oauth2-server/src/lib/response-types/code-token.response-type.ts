@@ -1,4 +1,5 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
+import { removeUndefined } from '@guarani/primitives';
 
 import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
@@ -83,11 +84,11 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
 
     const token = createTokenResponse(accessToken);
 
-    return <CodeAuthorizationResponse & TokenAuthorizationResponse>{
+    return removeUndefined<CodeAuthorizationResponse & TokenAuthorizationResponse>({
       ...token,
       code: authorizationCode.code,
       state: parameters.state,
-    };
+    });
   }
 
   /**

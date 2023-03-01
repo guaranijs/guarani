@@ -1,5 +1,10 @@
 import { DependencyInjectionContainer } from '@guarani/di';
-import { JsonWebKey, JsonWebKeySet, JsonWebSignatureHeaderParameters, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import {
+  EllipticCurveKey,
+  JsonWebKeySet,
+  JsonWebSignatureHeaderParameters,
+  JsonWebSignatureAlgorithm,
+} from '@guarani/jose';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -10,7 +15,7 @@ import { SETTINGS } from '../settings/settings.token';
 import { ClientAuthentication } from './client-authentication.type';
 import { PrivateKeyJwtClientAuthentication } from './private-key-jwt.client-authentication';
 
-const ecKey = new JsonWebKey({
+const ecKey = new EllipticCurveKey({
   kty: 'EC',
   crv: 'P-256',
   x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',

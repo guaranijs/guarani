@@ -1,5 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
-import { JsonWebKey, JsonWebKeySet, JsonWebSignature } from '@guarani/jose';
+import { EllipticCurveKey, JsonWebKeySet, JsonWebSignature, RsaKey } from '@guarani/jose';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
@@ -26,7 +26,7 @@ const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
 describe('ID Token Handler', () => {
   let idTokenHandler: IdTokenHandler;
 
-  const eckey = new JsonWebKey({
+  const eckey = new EllipticCurveKey({
     kty: 'EC',
     crv: 'P-256',
     x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
@@ -37,7 +37,7 @@ describe('ID Token Handler', () => {
     use: 'sig',
   });
 
-  const rsaKey = new JsonWebKey({
+  const rsaKey = new RsaKey({
     kty: 'RSA',
     n:
       'xjpFydzTbByzL5jhEa2yQO63dpS9d9SKaN107AR69skKiTR4uK1c4SzDt4YcurDB' +

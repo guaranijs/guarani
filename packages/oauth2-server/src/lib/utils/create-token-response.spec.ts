@@ -16,7 +16,6 @@ describe('createTokenResponse()', () => {
       token_type: 'Bearer',
       expires_in: 3600,
       scope: 'foo bar',
-      refresh_token: undefined,
     });
   });
 

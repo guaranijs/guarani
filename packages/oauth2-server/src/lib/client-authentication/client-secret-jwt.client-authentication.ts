@@ -1,4 +1,4 @@
-import { JsonWebKey, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import { JsonWebKey, JsonWebSignatureAlgorithm, OctetSequenceKey } from '@guarani/jose';
 import { Injectable } from '@guarani/di';
 
 import { Buffer } from 'buffer';
@@ -38,6 +38,6 @@ export class ClientSecretJwtClientAuthentication extends JwtBearerClientAssertio
       });
     }
 
-    return new JsonWebKey({ kty: 'oct', k: Buffer.from(client.secret, 'utf8').toString('base64url') });
+    return new OctetSequenceKey({ kty: 'oct', k: Buffer.from(client.secret, 'utf8').toString('base64url') });
   }
 }

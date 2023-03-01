@@ -37,8 +37,9 @@
     "registry": "https://registry.npmjs.org"
   },
   "dependencies": {
-    "@guarani/di": "workspace:../di",
-    "@guarani/jose": "workspace:../jose"
+    "@guarani/di": "link:../di",
+    "@guarani/jose": "link:../jose",
+    "@guarani/primitives": "link:../primitives"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.3",

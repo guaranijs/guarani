@@ -177,7 +177,6 @@ describe('Code ID Token Token Response Type', () => {
         token_type: 'Bearer',
         scope: 'openid foo bar',
         expires_in: 3600,
-        refresh_token: undefined,
         code: 'authorization_code',
         id_token: 'id_token',
         state: 'client_state',

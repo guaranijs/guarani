@@ -23,6 +23,6 @@
     "registry": "https://registry.npmjs.org"
   },
   "dependencies": {
-    "@guarani/primitives": "../primitives"
+    "@guarani/primitives": "link:../primitives"
   }
 }

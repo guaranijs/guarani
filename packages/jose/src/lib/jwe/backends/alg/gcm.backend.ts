@@ -16,7 +16,7 @@ const randomBytesAsync = promisify(randomBytes);
  *
  * @see https://www.rfc-editor.org/rfc/rfc7518.html#section-4.7
  */
-class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
+export class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
   /**
    * Size of the Initialization Vector in bits.
    */
@@ -62,7 +62,7 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
   ): Promise<[Buffer, Buffer, Partial<GcmHeaderParameters>]> {
     this.validateJsonWebKey(wrapKey);
 
-    const initializationVector = await randomBytesAsync(this.ivSize / 8);
+    const initializationVector = await this.generateInitializationVector();
 
     const cipher = createCipheriv(this.cipher, wrapKey.cryptoKey, initializationVector, {
       authTagLength: this.authTagLength,
@@ -135,6 +135,13 @@ class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
     if (exportedKey.length * 8 !== this.keySize) {
       throw new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.');
     }
+  }
+
+  /**
+   * Generates the Initialization Vector required by AES-GCM.
+   */
+  private async generateInitializationVector(): Promise<Buffer> {
+    return await randomBytesAsync(this.ivSize / 8);
   }
 }
 

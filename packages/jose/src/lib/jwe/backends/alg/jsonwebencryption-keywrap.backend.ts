@@ -23,7 +23,6 @@ export abstract class JsonWebEncryptionKeyWrapBackend {
    * Instantiates a new JSON Web Encryption Key Wrap Backend to Wrap and Unwrap Content Encryption Keys.
    *
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
-   * @param keyType Type of JSON Web Key supported by this JSON Web Encryption Key Wrap Backend.
    */
   public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
     this.algorithm = algorithm;

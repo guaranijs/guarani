@@ -62,7 +62,7 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
 
     this.validateJsonWebKey(ephemeralPublicKey);
 
-    if (wrapKey.kty !== ephemeralPublicKey.kty) {
+    if (wrapKey.kty !== ephemeralPublicKey.kty || wrapKey.crv !== ephemeralPublicKey.crv) {
       throw new InvalidJsonWebKeyException();
     }
 
@@ -108,7 +108,7 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
 
     this.validateJsonWebKey(ephemeralPublicKey);
 
-    if (unwrapKey.kty !== ephemeralPublicKey.kty) {
+    if (unwrapKey.kty !== ephemeralPublicKey.kty || unwrapKey.crv !== ephemeralPublicKey.crv) {
       throw new InvalidJsonWebKeyException();
     }
 

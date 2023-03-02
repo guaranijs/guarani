@@ -80,7 +80,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
 
     if (cryptoKey.type !== 'private') {
       throw new InvalidJsonWebKeyException(
-        'An RSA Private JSON Web Key is needed to Unwrap the provided Wrapped Content Encryption Key.'
+        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.'
       );
     }
 

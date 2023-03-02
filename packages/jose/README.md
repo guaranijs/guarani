@@ -11,4 +11,4 @@ This package implements the following RFCs.
 - [x] RFC 7519 JSON Web Token (JWT)
 - [x] RFC 7638 JSON Web Key (JWK) Thumbprint
 - [ ] RFC 7797 JSON Web Signature (JWS) Unencoded Payload Option
-- [ ] RFC 8037 CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures in JSON Object Signing and Encryption (JOSE)
+- [x] RFC 8037 CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures in JSON Object Signing and Encryption (JOSE)

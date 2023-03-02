@@ -75,7 +75,7 @@ class DirBackend extends JsonWebEncryptionKeyWrapBackend {
 
     if (key.kty !== 'oct') {
       throw new InvalidJsonWebKeyException(
-        'This JSON Web Encryption Key Wrap Algorithm only accepts "oct" JSON Web Keys.'
+        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts "oct" JSON Web Keys.`
       );
     }
   }

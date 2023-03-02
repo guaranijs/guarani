@@ -10,10 +10,19 @@ describe('JSON Web Encryption DEFLATE Compression Algorithm', () => {
     expect(DEF['algorithm']).toEqual<JsonWebEncryptionCompressionAlgorithm>('DEF');
   });
 
-  it('should compress and decompress a plaintext.', async () => {
+  it('should compress a plaintext.', async () => {
     let compressed!: Buffer;
 
-    await expect((async () => (compressed = await DEF.compress(plaintext)))()).resolves.toEqual(expect.any(Buffer));
-    await expect(DEF.decompress(compressed)).resolves.toEqual(plaintext);
+    await expect((async () => (compressed = await DEF.compress(plaintext)))()).resolves.not.toThrow();
+    expect(compressed.toString('base64url')).toEqual('Cy4tSC1SKE5NLkotUchNLS5OTE_VAwA');
+  });
+
+  it('should decompress a compressed plaintext.', async () => {
+    let decompressed!: Buffer;
+
+    const compressed = Buffer.from('Cy4tSC1SKE5NLkotUchNLS5OTE_VAwA', 'base64url');
+
+    await expect((async () => (decompressed = await DEF.decompress(compressed)))()).resolves.not.toThrow();
+    expect(decompressed).toEqual(plaintext);
   });
 });

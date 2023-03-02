@@ -1,3 +1,4 @@
+import { removeUndefined } from '@guarani/primitives';
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
@@ -149,7 +150,7 @@ export class JsonWebEncryptionHeader implements JsonWebEncryptionHeaderParameter
       this.#compressionBackend = JSONWEBENCRYPTION_COMPRESSION_REGISTRY[parameters.zip];
     }
 
-    Object.assign(this, parameters);
+    Object.assign(this, removeUndefined<JsonWebEncryptionHeaderParameters>(parameters));
   }
 
   /**

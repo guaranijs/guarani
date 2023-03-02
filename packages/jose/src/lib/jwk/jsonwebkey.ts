@@ -1,3 +1,4 @@
+import { removeUndefined } from '@guarani/primitives';
 import { Buffer } from 'buffer';
 import { createHash, KeyObject } from 'crypto';
 
@@ -122,7 +123,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
    * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
    */
   public constructor(parameters: T, additionalParameters: Partial<T> = {}) {
-    const params: T = { ...parameters, ...additionalParameters };
+    const params = removeUndefined<T>({ ...parameters, ...additionalParameters });
 
     this.validateParameters(params);
 
@@ -366,6 +367,6 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
 
     const parameters = <T>Object.fromEntries(entries);
 
-    return parameters;
+    return removeUndefined<T>(parameters);
   }
 }

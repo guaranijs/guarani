@@ -58,12 +58,11 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
 
     const { alg, apu, apv, epk } = header;
 
-    // TODO: Check the kty of key and epk for them to match.
     const ephemeralPublicKey = <EllipticCurveKey | OctetKeyPairKey>await JsonWebKey.load(epk);
 
     this.validateJsonWebKey(ephemeralPublicKey);
 
-    if (wrapKey.kty !== ephemeralPublicKey.kty) {
+    if (wrapKey.kty !== ephemeralPublicKey.kty || wrapKey.crv !== ephemeralPublicKey.crv) {
       throw new InvalidJsonWebKeyException();
     }
 
@@ -105,12 +104,11 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
 
     const { alg, epk } = header;
 
-    // TODO: Check the kty of key and epk for them to match.
     const ephemeralPublicKey = <EllipticCurveKey | OctetKeyPairKey>await JsonWebKey.load(epk);
 
     this.validateJsonWebKey(ephemeralPublicKey);
 
-    if (unwrapKey.kty !== ephemeralPublicKey.kty) {
+    if (unwrapKey.kty !== ephemeralPublicKey.kty || unwrapKey.crv !== ephemeralPublicKey.crv) {
       throw new InvalidJsonWebKeyException();
     }
 
@@ -139,13 +137,13 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
 
     if (key.kty !== 'EC' && key.kty !== 'OKP') {
       throw new InvalidJsonWebKeyException(
-        'This JSON Web Encryption Key Wrap Algorithm only accepts ["EC", "OKP"] JSON Web Keys.'
+        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts ["EC", "OKP"] JSON Web Keys.`
       );
     }
 
     if (!this.curves.includes(<Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521' | 'X25519' | 'X448'>>key.crv)) {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Encryption Key Wrap ECDH-ES Backend "${this.algorithm}" ` +
+        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" ` +
           `only accepts the Elliptic Curves ["${this.curves.join('", "')}"].`
       );
     }

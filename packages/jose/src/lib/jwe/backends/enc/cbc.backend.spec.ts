@@ -8,6 +8,22 @@ const plaintext = Buffer.from('Super secret message.');
 const aad = Buffer.alloc(0);
 
 describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 128-bits using HMAC with SHA-256 Backend', () => {
+  const generateInitializationVectorSpy = jest.spyOn(A128CBC_HS256, 'generateInitializationVector');
+  const generateContentEncryptionKeySpy = jest.spyOn(A128CBC_HS256, 'generateContentEncryptionKey');
+
+  beforeAll(() => {
+    generateInitializationVectorSpy.mockResolvedValue(Buffer.alloc(16, 0x00));
+    generateContentEncryptionKeySpy.mockResolvedValue(Buffer.from([...Array(32).keys()]));
+  });
+
+  afterAll(() => {
+    generateInitializationVectorSpy.mockReset();
+    generateInitializationVectorSpy.mockRestore();
+
+    generateContentEncryptionKeySpy.mockReset();
+    generateContentEncryptionKeySpy.mockRestore();
+  });
+
   it('should have "A128CBC-HS256" as its algorithm.', () => {
     expect(A128CBC_HS256['algorithm']).toBe<JsonWebEncryptionContentEncryptionAlgorithm>('A128CBC-HS256');
   });
@@ -48,20 +64,44 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 128-bits 
     );
   });
 
-  it('should encrypt and decrypt a message.', async () => {
+  it('should encrypt a message.', async () => {
     const iv = await A128CBC_HS256.generateInitializationVector();
     const key = await A128CBC_HS256.generateContentEncryptionKey();
 
     const [ciphertext, tag] = await A128CBC_HS256.encrypt(plaintext, aad, iv, key);
 
-    expect(ciphertext).toEqual(expect.any(Buffer));
-    expect(tag).toEqual(expect.any(Buffer));
+    expect(ciphertext.toString('base64url')).toEqual('4i7-_mXyLjinjA3Q9fx7shLG1sHyDC6SQ_9OVtZzU-M');
+    expect(tag.toString('base64url')).toEqual('DAVUFw9ZARV1ux5Y3Vi6CA');
+  });
+
+  it('should decrypt a message.', async () => {
+    const iv = await A128CBC_HS256.generateInitializationVector();
+    const key = await A128CBC_HS256.generateContentEncryptionKey();
+
+    const ciphertext = Buffer.from('4i7-_mXyLjinjA3Q9fx7shLG1sHyDC6SQ_9OVtZzU-M', 'base64url');
+    const tag = Buffer.from('DAVUFw9ZARV1ux5Y3Vi6CA', 'base64url');
 
     await expect(A128CBC_HS256.decrypt(ciphertext, aad, iv, tag, key)).resolves.toEqual(plaintext);
   });
 });
 
 describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 192-bits using HMAC with SHA-384 Backend', () => {
+  const generateInitializationVectorSpy = jest.spyOn(A192CBC_HS384, 'generateInitializationVector');
+  const generateContentEncryptionKeySpy = jest.spyOn(A192CBC_HS384, 'generateContentEncryptionKey');
+
+  beforeAll(() => {
+    generateInitializationVectorSpy.mockResolvedValue(Buffer.alloc(16, 0x00));
+    generateContentEncryptionKeySpy.mockResolvedValue(Buffer.from([...Array(48).keys()]));
+  });
+
+  afterAll(() => {
+    generateInitializationVectorSpy.mockReset();
+    generateInitializationVectorSpy.mockRestore();
+
+    generateContentEncryptionKeySpy.mockReset();
+    generateContentEncryptionKeySpy.mockRestore();
+  });
+
   it('should have "A192CBC-HS384" as its algorithm.', () => {
     expect(A192CBC_HS384['algorithm']).toBe<JsonWebEncryptionContentEncryptionAlgorithm>('A192CBC-HS384');
   });
@@ -102,20 +142,44 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 192-bits 
     );
   });
 
-  it('should encrypt and decrypt a message.', async () => {
+  it('should encrypt a message.', async () => {
     const iv = await A192CBC_HS384.generateInitializationVector();
     const key = await A192CBC_HS384.generateContentEncryptionKey();
 
     const [ciphertext, tag] = await A192CBC_HS384.encrypt(plaintext, aad, iv, key);
 
-    expect(ciphertext).toEqual(expect.any(Buffer));
-    expect(tag).toEqual(expect.any(Buffer));
+    expect(ciphertext.toString('base64url')).toEqual('Rzc-nCIBUZsK8HAjAB4KA60VXWjmnCemM30Poujlt7o');
+    expect(tag.toString('base64url')).toEqual('ckxgS8jLleWk4U7_s2z8-JdJdzcOV4ON');
+  });
+
+  it('should decrypt a message.', async () => {
+    const iv = await A192CBC_HS384.generateInitializationVector();
+    const key = await A192CBC_HS384.generateContentEncryptionKey();
+
+    const ciphertext = Buffer.from('Rzc-nCIBUZsK8HAjAB4KA60VXWjmnCemM30Poujlt7o', 'base64url');
+    const tag = Buffer.from('ckxgS8jLleWk4U7_s2z8-JdJdzcOV4ON', 'base64url');
 
     await expect(A192CBC_HS384.decrypt(ciphertext, aad, iv, tag, key)).resolves.toEqual(plaintext);
   });
 });
 
 describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 256-bits using HMAC with SHA-512 Backend', () => {
+  const generateInitializationVectorSpy = jest.spyOn(A256CBC_HS512, 'generateInitializationVector');
+  const generateContentEncryptionKeySpy = jest.spyOn(A256CBC_HS512, 'generateContentEncryptionKey');
+
+  beforeAll(() => {
+    generateInitializationVectorSpy.mockResolvedValue(Buffer.alloc(16, 0x00));
+    generateContentEncryptionKeySpy.mockResolvedValue(Buffer.from([...Array(64).keys()]));
+  });
+
+  afterAll(() => {
+    generateInitializationVectorSpy.mockReset();
+    generateInitializationVectorSpy.mockRestore();
+
+    generateContentEncryptionKeySpy.mockReset();
+    generateContentEncryptionKeySpy.mockRestore();
+  });
+
   it('should have "A256CBC-HS512" as its algorithm.', () => {
     expect(A256CBC_HS512['algorithm']).toBe<JsonWebEncryptionContentEncryptionAlgorithm>('A256CBC-HS512');
   });
@@ -156,14 +220,22 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 256-bits 
     );
   });
 
-  it('should encrypt and decrypt a message.', async () => {
+  it('should encrypt a message.', async () => {
     const iv = await A256CBC_HS512.generateInitializationVector();
     const key = await A256CBC_HS512.generateContentEncryptionKey();
 
     const [ciphertext, tag] = await A256CBC_HS512.encrypt(plaintext, aad, iv, key);
 
-    expect(ciphertext).toEqual(expect.any(Buffer));
-    expect(tag).toEqual(expect.any(Buffer));
+    expect(ciphertext.toString('base64url')).toEqual('beF1okLtAlp5RJDN84sAb7ubLkBxreRJzYQ5HHpQlbY');
+    expect(tag.toString('base64url')).toEqual('QKqpbDyl9dMstNhWZpqARnJRSKTvTZfvSfADUYAIDQo');
+  });
+
+  it('should decrypt a message.', async () => {
+    const iv = await A256CBC_HS512.generateInitializationVector();
+    const key = await A256CBC_HS512.generateContentEncryptionKey();
+
+    const ciphertext = Buffer.from('beF1okLtAlp5RJDN84sAb7ubLkBxreRJzYQ5HHpQlbY', 'base64url');
+    const tag = Buffer.from('QKqpbDyl9dMstNhWZpqARnJRSKTvTZfvSfADUYAIDQo', 'base64url');
 
     await expect(A256CBC_HS512.decrypt(ciphertext, aad, iv, tag, key)).resolves.toEqual(plaintext);
   });

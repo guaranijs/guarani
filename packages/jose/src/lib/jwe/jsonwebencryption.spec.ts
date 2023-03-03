@@ -59,7 +59,7 @@ describe('JSON Web Encryption', () => {
     });
 
     it('should decode the data of a valid token.', () => {
-      expect(JsonWebEncryption.decode(token)).toEqual([header, ek, iv, ciphertext, tag, aad]);
+      expect(JsonWebEncryption.decode(token)).toMatchObject({ header, ek, iv, ciphertext, tag, aad });
     });
   });
 

@@ -7,6 +7,7 @@ import { JsonWebKeyLoader } from '../jsonwebkey-loader.type';
 import { JsonWebKey } from '../jwk/jsonwebkey';
 import { JsonWebEncryptionHeader } from './jsonwebencryption.header';
 import { JsonWebEncryptionHeaderParameters } from './jsonwebencryption.header.parameters';
+import { JsonWebEncryptionParameters } from './jsonwebencryption.parameters';
 
 /**
  * Implementation of a JSON Web Encryption.
@@ -44,12 +45,12 @@ export class JsonWebEncryption {
    *
    * @example
    *
-   * const [header, ek, iv, ciphertext, tag, aad] = JsonWebEncryption.decode('eyJhbGciOiJBMTI4...');
+   * const { header, ek, iv, ciphertext, tag, aad } = JsonWebEncryption.decode('eyJhbGciOiJBMTI4...');
    *
    * @param token JSON Web Encryption Token to be Decoded.
    * @returns Parsed Parameters of the JSON Web Encryption Token.
    */
-  public static decode(token: string): [JsonWebEncryptionHeader, Buffer, Buffer, Buffer, Buffer, Buffer] {
+  public static decode(token: string): JsonWebEncryptionParameters {
     if (typeof token !== 'string') {
       throw new InvalidJsonWebEncryptionException();
     }
@@ -72,7 +73,7 @@ export class JsonWebEncryption {
       const tag = Buffer.from(b64Tag, 'base64url');
       const aad = Buffer.from(b64Header, 'ascii');
 
-      return [header, ek, iv, ciphertext, tag, aad];
+      return { header, ek, iv, ciphertext, tag, aad };
     } catch (exc: unknown) {
       if (exc instanceof JoseException) {
         throw exc;
@@ -100,7 +101,7 @@ export class JsonWebEncryption {
       throw new InvalidJsonWebKeyException();
     }
 
-    const [header, ek, iv, ciphertext, tag, aad] = this.decode(token);
+    const { header, ek, iv, ciphertext, tag, aad } = this.decode(token);
 
     const { compressionBackend, contentEncryptionBackend, keyWrapBackend } = header;
 

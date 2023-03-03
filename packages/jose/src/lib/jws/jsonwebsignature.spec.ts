@@ -51,7 +51,7 @@ describe('JSON Web Signature', () => {
     });
 
     it('should decode the data of a valid token.', () => {
-      expect(JsonWebSignature.decode(token)).toEqual([header, payload, signature]);
+      expect(JsonWebSignature.decode(token)).toEqual({ header, payload, signature });
     });
   });
 

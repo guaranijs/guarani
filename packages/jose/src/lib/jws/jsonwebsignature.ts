@@ -8,6 +8,7 @@ import { JsonWebKey } from '../jwk/jsonwebkey';
 import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.type';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 import { JsonWebSignatureHeaderParameters } from './jsonwebsignature.header.parameters';
+import { JsonWebSignatureParameters } from './jsonwebsignature.parameters';
 
 /**
  * Implementation of a JSON Web Signature.
@@ -48,7 +49,7 @@ export class JsonWebSignature {
    * @param token JSON Web Signature Compact Token to be decoded.
    * @returns Decoded Parameters of the JSON Web Signature Compact Token.
    */
-  public static decode(token: string): [JsonWebSignatureHeader, Buffer, Buffer] {
+  public static decode(token: string): JsonWebSignatureParameters {
     if (typeof token !== 'string') {
       throw new InvalidJsonWebSignatureException();
     }
@@ -68,7 +69,7 @@ export class JsonWebSignature {
       const payload = Buffer.from(<string>b64Payload, 'base64url');
       const signature = Buffer.from(<string>b64Signature, 'base64url');
 
-      return [header, payload, signature];
+      return { header, payload, signature };
     } catch (exc: unknown) {
       if (exc instanceof JoseException) {
         throw exc;
@@ -92,29 +93,31 @@ export class JsonWebSignature {
   public static async verify(
     token: string,
     keyOrKeyLoader: JsonWebKey | JsonWebKeyLoader | null,
-    expectedAlgorithms?: JsonWebSignatureAlgorithm[]
+    expectedAlgorithms: JsonWebSignatureAlgorithm[]
   ): Promise<JsonWebSignature> {
+    if (keyOrKeyLoader !== null && !(keyOrKeyLoader instanceof JsonWebKey) && typeof keyOrKeyLoader !== 'function') {
+      throw new InvalidJsonWebKeyException();
+    }
+
+    const { header, payload, signature } = this.decode(token);
+
+    const { backend } = header;
+
     try {
-      if (keyOrKeyLoader !== null && !(keyOrKeyLoader instanceof JsonWebKey) && typeof keyOrKeyLoader !== 'function') {
-        throw new InvalidJsonWebKeyException();
-      }
-
-      const [header, payload, signature] = this.decode(token);
-
-      const key = typeof keyOrKeyLoader === 'function' ? await keyOrKeyLoader(header) : keyOrKeyLoader;
-
-      if (Array.isArray(expectedAlgorithms) && !expectedAlgorithms.includes(header.alg)) {
+      if (!expectedAlgorithms.includes(header.alg)) {
         throw new InvalidJsonWebSignatureException(
           `The JSON Web Signature Algorithm "${header.alg}" does not match the expected algorithms.`
         );
       }
+
+      const key = typeof keyOrKeyLoader === 'function' ? await keyOrKeyLoader(header) : keyOrKeyLoader;
 
       const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
       const b64Payload = payload.toString('base64url');
 
       const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
 
-      await header.backend.verify(signature, message, key ?? undefined);
+      await backend.verify(signature, message, key ?? undefined);
 
       return new JsonWebSignature(header, payload);
     } catch (exc: unknown) {
@@ -149,7 +152,7 @@ export class JsonWebSignature {
 
       const b64Signature = signature.toString('base64url');
 
-      return `${message}.${b64Signature}`;
+      return `${b64Header}.${b64Payload}.${b64Signature}`;
     } catch (exc: unknown) {
       if (exc instanceof JoseException) {
         throw exc;

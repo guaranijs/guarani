@@ -11,6 +11,10 @@ export { JsonWebTokenNotValidYetException } from './lib/exceptions/jsonwebtoken-
 export { UnsupportedAlgorithmException } from './lib/exceptions/unsupported-algorithm.exception';
 export { UnsupportedEllipticCurveException } from './lib/exceptions/unsupported-elliptic-curve.exception';
 
+// JOSE Header
+export { JoseHeader } from './lib/jose/jose.header';
+export { JoseHeaderParameters } from './lib/jose/jose.header.parameters';
+
 // JSON Web Encryption
 export { JsonWebEncryptionCompressionAlgorithm } from './lib/jwe/jsonwebencryption-compression-algorithm.type';
 export { JsonWebEncryptionContentEncryptionAlgorithm } from './lib/jwe/jsonwebencryption-content-encryption-algorithm.type';
@@ -18,6 +22,7 @@ export { JsonWebEncryptionKeyWrapAlgorithm } from './lib/jwe/jsonwebencryption-k
 export { JsonWebEncryption } from './lib/jwe/jsonwebencryption';
 export { JsonWebEncryptionHeader } from './lib/jwe/jsonwebencryption.header';
 export { JsonWebEncryptionHeaderParameters } from './lib/jwe/jsonwebencryption.header.parameters';
+export { JsonWebEncryptionParameters } from './lib/jwe/jsonwebencryption.parameters';
 
 // JSON Web Key
 export { EllipticCurveKey } from './lib/jwk/backends/elliptic-curve/elliptic-curve.key';
@@ -44,6 +49,7 @@ export { JsonWebSignature } from './lib/jws/jsonwebsignature';
 export { JsonWebSignatureAlgorithm } from './lib/jws/jsonwebsignature-algorithm.type';
 export { JsonWebSignatureHeader } from './lib/jws/jsonwebsignature.header';
 export { JsonWebSignatureHeaderParameters } from './lib/jws/jsonwebsignature.header.parameters';
+export { JsonWebSignatureParameters } from './lib/jws/jsonwebsignature.parameters';
 
 // JSON Web Token
 export { JsonWebTokenClaimValidationOptions } from './lib/jwt/jsonwebtoken-claim-validation.options';

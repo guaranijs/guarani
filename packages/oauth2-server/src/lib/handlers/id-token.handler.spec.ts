@@ -119,7 +119,10 @@ describe('ID Token Handler', () => {
     expect(idToken).toEqual(expect.any(String));
 
     await expect(
-      JsonWebSignature.verify(idToken, async (header) => jwks.find((jwk) => jwk.kid === header.kid)!)
+      JsonWebSignature.verify(idToken, async (header) => jwks.find((jwk) => jwk.kid === header.kid)!, [
+        'ES256',
+        'RS256',
+      ])
     ).resolves.not.toThrow();
   });
 
@@ -132,7 +135,8 @@ describe('ID Token Handler', () => {
 
     const { payload } = await JsonWebSignature.verify(
       idToken,
-      async (header) => jwks.find((jwk) => jwk.kid === header.kid)!
+      async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+      ['ES256', 'RS256']
     );
 
     const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
@@ -150,7 +154,8 @@ describe('ID Token Handler', () => {
 
     const { payload } = await JsonWebSignature.verify(
       idToken,
-      async (header) => jwks.find((jwk) => jwk.kid === header.kid)!
+      async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+      ['ES256', 'RS256']
     );
 
     const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
@@ -170,7 +175,8 @@ describe('ID Token Handler', () => {
 
     const { payload } = await JsonWebSignature.verify(
       idToken,
-      async (header) => jwks.find((jwk) => jwk.kid === header.kid)!
+      async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+      ['ES256', 'RS256']
     );
 
     const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));

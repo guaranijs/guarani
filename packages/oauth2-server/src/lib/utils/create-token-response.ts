@@ -1,4 +1,5 @@
 import { removeUndefined } from '@guarani/primitives';
+
 import { AccessToken } from '../entities/access-token.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { TokenResponse } from '../messages/token-response';

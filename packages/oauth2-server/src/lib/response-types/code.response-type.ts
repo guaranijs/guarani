@@ -1,4 +1,5 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
+import { removeUndefined } from '@guarani/primitives';
 
 import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
@@ -12,7 +13,6 @@ import { AuthorizationCodeServiceInterface } from '../services/authorization-cod
 import { AUTHORIZATION_CODE_SERVICE } from '../services/authorization-code.service.token';
 import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
-import { removeUndefined } from '@guarani/primitives';
 
 /**
  * Implementation of the **Code** Response Type.

@@ -127,7 +127,7 @@ export class JwtBearerGrantType implements GrantTypeInterface {
    */
   private async getSubjectFromAssertion(assertion: string, client: Client): Promise<User> {
     try {
-      const [header, payload] = JsonWebSignature.decode(assertion);
+      const { header, payload } = JsonWebSignature.decode(assertion);
 
       if (header.alg === 'none') {
         throw new InvalidGrantException({ description: 'Invalid JSON Web Signature Algorithm "none".' });

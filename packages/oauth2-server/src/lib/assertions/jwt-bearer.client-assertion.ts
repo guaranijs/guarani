@@ -71,7 +71,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
     }
 
     try {
-      const [header] = JsonWebSignature.decode(request.body.client_assertion);
+      const { header } = JsonWebSignature.decode(request.body.client_assertion);
 
       return (
         this.algorithms.includes(header.alg) &&
@@ -141,7 +141,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
     clientAssertion: string,
     request: HttpRequest
   ): [JsonWebSignatureHeader, JsonWebTokenClaims] {
-    const [header, payload] = JsonWebSignature.decode(clientAssertion);
+    const { header, payload } = JsonWebSignature.decode(clientAssertion);
 
     if (header.alg === 'none') {
       throw new InvalidClientException({ description: 'Invalid JSON Web Signature Algorithm "none".' });

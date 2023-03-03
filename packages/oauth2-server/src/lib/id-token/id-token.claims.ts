@@ -15,27 +15,27 @@ export class IdTokenClaims extends JsonWebTokenClaims implements IdTokenClaimsPa
   /**
    * Identifier of the Issuer of the ID Token.
    */
-  public override iss!: string;
+  public override readonly iss!: string;
 
   /**
    * Subject represented by the ID Token.
    */
-  public override sub!: string;
+  public override readonly sub!: string;
 
   /**
    * Identifier of the Audience the ID Token is intended to.
    */
-  public override aud!: string | string[];
+  public override readonly aud!: string | string[];
 
   /**
    * UTC time denoting the Expiration Time of the ID Token.
    */
-  public override exp!: number;
+  public override readonly exp!: number;
 
   /**
    * UTC time denoting the moment when the ID Token was created.
    */
-  public override iat!: number;
+  public override readonly iat!: number;
 
   /**
    * Time when the End-User was authenticated.

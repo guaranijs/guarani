@@ -7,7 +7,7 @@ export interface UserinfoClaimsParameters extends Record<string, any> {
   /**
    * Identifier of the User.
    */
-  sub: string;
+  readonly sub: string;
 
   /**
    * Formatted name of the User.

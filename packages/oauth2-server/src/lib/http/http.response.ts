@@ -1,4 +1,3 @@
-import { removeUndefined } from '@guarani/primitives';
 import { Buffer } from 'buffer';
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
@@ -89,7 +88,7 @@ export class HttpResponse {
    */
   public json<T>(data: T): HttpResponse {
     this.setHeader('Content-Type', 'application/json');
-    Reflect.set(this, 'body', Buffer.from(JSON.stringify(removeUndefined(data) ?? null), 'utf8'));
+    Reflect.set(this, 'body', Buffer.from(JSON.stringify(data ?? null), 'utf8'));
     return this;
   }
 

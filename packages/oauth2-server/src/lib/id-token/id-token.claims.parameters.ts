@@ -9,27 +9,27 @@ export interface IdTokenClaimsParameters extends JsonWebTokenClaimsParameters {
   /**
    * Identifier of the Issuer of the ID Token.
    */
-  iss: string;
+  readonly iss: string;
 
   /**
    * Subject represented by the ID Token.
    */
-  sub: string;
+  readonly sub: string;
 
   /**
    * Identifier of the Audience the ID Token is intended to.
    */
-  aud: string | string[];
+  readonly aud: string | string[];
 
   /**
    * UTC time denoting the Expiration Time of the ID Token.
    */
-  exp: number;
+  readonly exp: number;
 
   /**
    * UTC time denoting the moment when the ID Token was created.
    */
-  iat: number;
+  readonly iat: number;
 
   /**
    * Time when the End-User was authenticated.

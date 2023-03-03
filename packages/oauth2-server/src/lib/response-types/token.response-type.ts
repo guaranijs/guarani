@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
+import { removeUndefined } from '@guarani/primitives';
 
 import { Consent } from '../entities/consent.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
@@ -11,7 +12,6 @@ import { createTokenResponse } from '../utils/create-token-response';
 import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
 import { Session } from '../entities/session.entity';
-import { removeUndefined } from '@guarani/primitives';
 
 /**
  * Implementation of the **Token** Response Type.

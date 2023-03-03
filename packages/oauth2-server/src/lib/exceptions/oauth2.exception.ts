@@ -1,4 +1,5 @@
 import { removeUndefined } from '@guarani/primitives';
+
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 
 import { ErrorCode } from './error-code.type';

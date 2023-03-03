@@ -163,3 +163,7 @@ export { USER_SERVICE } from './lib/services/user.service.token';
 export { Settings } from './lib/settings/settings';
 export { SETTINGS } from './lib/settings/settings.token';
 export { UserInteractionSettings } from './lib/settings/user-interaction.settings';
+
+// Types
+export { AccessTokenType } from './lib/types/access-token-type.type';
+export { TokenTypeHint } from './lib/types/token-type-hint.type';

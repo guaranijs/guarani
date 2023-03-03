@@ -24,12 +24,13 @@ import { RefreshTokenServiceInterface } from '../services/refresh-token.service.
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { TokenTypeHint } from '../types/token-type-hint.type';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 
 interface FindTokenResult {
   readonly entity: AccessToken | RefreshToken;
-  readonly tokenType: string;
+  readonly tokenType: TokenTypeHint;
 }
 
 /**
@@ -76,7 +77,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
   /**
    * Token Type Hints supported by the Introspection Endpoint.
    */
-  private readonly supportedTokenTypeHints: string[] = ['access_token'];
+  private readonly supportedTokenTypeHints: TokenTypeHint[] = ['access_token'];
 
   /**
    * Instantiates a new Introspection Endpoint.
@@ -198,7 +199,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
    * @param tokenTypeHint Optional hint about the type of the Token.
    * @returns Resulting Token Entity and its type.
    */
-  private async findTokenEntity(token: string, tokenTypeHint?: string): Promise<FindTokenResult | null> {
+  private async findTokenEntity(token: string, tokenTypeHint?: TokenTypeHint): Promise<FindTokenResult | null> {
     switch (tokenTypeHint) {
       case 'access_token':
         return (await this.findAccessToken(token)) ?? (await this.findRefreshToken(token));

@@ -19,6 +19,7 @@ import { RefreshTokenServiceInterface } from '../services/refresh-token.service.
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { TokenTypeHint } from '../types/token-type-hint.type';
 import { Endpoint } from './endpoint.type';
 import { IntrospectionEndpoint } from './introspection.endpoint';
 
@@ -92,7 +93,7 @@ describe('Introspection Endpoint', () => {
         refreshTokenServiceMock
       );
 
-      expect(endpoint['supportedTokenTypeHints']).toEqual(['access_token']);
+      expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['access_token']);
     });
 
     it('should have the types ["access_token", "refresh_token"] when supporting refresh token introspection.', () => {
@@ -104,7 +105,7 @@ describe('Introspection Endpoint', () => {
         refreshTokenServiceMock
       );
 
-      expect(endpoint['supportedTokenTypeHints']).toEqual(['access_token', 'refresh_token']);
+      expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['access_token', 'refresh_token']);
     });
   });
 

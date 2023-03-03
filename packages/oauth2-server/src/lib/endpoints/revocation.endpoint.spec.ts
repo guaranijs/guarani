@@ -21,6 +21,7 @@ import { RefreshTokenServiceInterface } from '../services/refresh-token.service.
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { TokenTypeHint } from '../types/token-type-hint.type';
 import { Endpoint } from './endpoint.type';
 import { RevocationEndpoint } from './revocation.endpoint';
 
@@ -107,7 +108,7 @@ describe('Revocation Endpoint', () => {
         grantTypesMocks
       );
 
-      expect(endpoint['supportedTokenTypeHints']).toEqual(['refresh_token']);
+      expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['refresh_token']);
     });
 
     it('should have the types ["refresh_token", "access_token"] when supporting access token revocation.', () => {
@@ -120,7 +121,7 @@ describe('Revocation Endpoint', () => {
         grantTypesMocks
       );
 
-      expect(endpoint['supportedTokenTypeHints']).toEqual(['refresh_token', 'access_token']);
+      expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['refresh_token', 'access_token']);
     });
   });
 

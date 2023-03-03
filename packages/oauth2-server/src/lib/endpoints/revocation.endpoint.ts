@@ -24,12 +24,13 @@ import { RefreshTokenServiceInterface } from '../services/refresh-token.service.
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { TokenTypeHint } from '../types/token-type-hint.type';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 
 interface FindTokenResult {
   readonly entity: AccessToken | RefreshToken;
-  readonly tokenType: string;
+  readonly tokenType: TokenTypeHint;
 }
 
 /**
@@ -70,7 +71,7 @@ export class RevocationEndpoint implements EndpointInterface {
   /**
    * Token Type Hints supported by the Revocation Endpoint.
    */
-  private readonly supportedTokenTypeHints: string[] = ['refresh_token'];
+  private readonly supportedTokenTypeHints: TokenTypeHint[] = ['refresh_token'];
 
   /**
    * Instantiates a new Revocation Endpoint.
@@ -201,7 +202,7 @@ export class RevocationEndpoint implements EndpointInterface {
    * @param tokenTypeHint Optional hint about the type of the Token.
    * @returns Resulting Token Entity and its type.
    */
-  private async findTokenEntity(token: string, tokenTypeHint?: string): Promise<FindTokenResult | null> {
+  private async findTokenEntity(token: string, tokenTypeHint?: TokenTypeHint): Promise<FindTokenResult | null> {
     switch (tokenTypeHint) {
       case 'refresh_token':
         return (await this.findRefreshToken(token)) ?? (await this.findAccessToken(token));

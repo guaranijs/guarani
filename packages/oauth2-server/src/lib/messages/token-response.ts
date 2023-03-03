@@ -1,3 +1,5 @@
+import { AccessTokenType } from '../types/access-token-type.type';
+
 /**
  * Parameters of the OAuth 2.0 Token Response.
  */
@@ -10,7 +12,7 @@ export interface TokenResponse extends Record<string, any> {
   /**
    * Type of the Access Token.
    */
-  readonly token_type: string;
+  readonly token_type: AccessTokenType;
 
   /**
    * Lifetime of the Access Token in seconds.

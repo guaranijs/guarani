@@ -57,7 +57,7 @@ describe('JSON Web Signature', () => {
 
   describe('verify()', () => {
     it.each(invalidKeys)('should throw when the provided json web key is invalid.', async (invalidKey) => {
-      await expect(JsonWebSignature.verify(token, invalidKey)).rejects.toThrow(new InvalidJsonWebKeyException());
+      await expect(JsonWebSignature.verify(token, invalidKey, [])).rejects.toThrow(new InvalidJsonWebKeyException());
     });
 
     it('should throw when the algorithm of the token does not match the expected algorithms.', async () => {
@@ -69,7 +69,7 @@ describe('JSON Web Signature', () => {
     });
 
     it('should return the decoded json web signature.', async () => {
-      await expect(JsonWebSignature.verify(token, key)).resolves.toMatchObject({ header, payload });
+      await expect(JsonWebSignature.verify(token, key, ['HS256'])).resolves.toMatchObject({ header, payload });
     });
   });
 

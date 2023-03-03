@@ -93,29 +93,31 @@ export class JsonWebSignature {
   public static async verify(
     token: string,
     keyOrKeyLoader: JsonWebKey | JsonWebKeyLoader | null,
-    expectedAlgorithms?: JsonWebSignatureAlgorithm[]
+    expectedAlgorithms: JsonWebSignatureAlgorithm[]
   ): Promise<JsonWebSignature> {
+    if (keyOrKeyLoader !== null && !(keyOrKeyLoader instanceof JsonWebKey) && typeof keyOrKeyLoader !== 'function') {
+      throw new InvalidJsonWebKeyException();
+    }
+
+    const { header, payload, signature } = this.decode(token);
+
+    const { backend } = header;
+
     try {
-      if (keyOrKeyLoader !== null && !(keyOrKeyLoader instanceof JsonWebKey) && typeof keyOrKeyLoader !== 'function') {
-        throw new InvalidJsonWebKeyException();
-      }
-
-      const { header, payload, signature } = this.decode(token);
-
-      const key = typeof keyOrKeyLoader === 'function' ? await keyOrKeyLoader(header) : keyOrKeyLoader;
-
-      if (Array.isArray(expectedAlgorithms) && !expectedAlgorithms.includes(header.alg)) {
+      if (!expectedAlgorithms.includes(header.alg)) {
         throw new InvalidJsonWebSignatureException(
           `The JSON Web Signature Algorithm "${header.alg}" does not match the expected algorithms.`
         );
       }
+
+      const key = typeof keyOrKeyLoader === 'function' ? await keyOrKeyLoader(header) : keyOrKeyLoader;
 
       const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
       const b64Payload = payload.toString('base64url');
 
       const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
 
-      await header.backend.verify(signature, message, key ?? undefined);
+      await backend.verify(signature, message, key ?? undefined);
 
       return new JsonWebSignature(header, payload);
     } catch (exc: unknown) {

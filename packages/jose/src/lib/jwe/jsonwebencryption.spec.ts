@@ -65,11 +65,32 @@ describe('JSON Web Encryption', () => {
 
   describe('decrypt()', () => {
     it.each(invalidKeys)('should throw when the provided json web key is invalid.', async (invalidKey) => {
-      await expect(JsonWebEncryption.decrypt(token, invalidKey)).rejects.toThrow(new InvalidJsonWebKeyException());
+      await expect(JsonWebEncryption.decrypt(token, invalidKey, [], [])).rejects.toThrow(
+        new InvalidJsonWebKeyException()
+      );
+    });
+
+    it('should throw when the key wrap algorithm of the token does not match the expected algorithms.', async () => {
+      await expect(JsonWebEncryption.decrypt(token, wrapKey, ['ECDH-ES'], [])).rejects.toThrow(
+        new InvalidJsonWebEncryptionException(
+          'The JSON Web Encryption Key Wrap Algorithm "A128KW" does not match the expected algorithms.'
+        )
+      );
+    });
+
+    it('should throw when the key wrap algorithm of the token does not match the expected algorithms.', async () => {
+      await expect(JsonWebEncryption.decrypt(token, wrapKey, ['A128KW'], ['A256GCM'])).rejects.toThrow(
+        new InvalidJsonWebEncryptionException(
+          'The JSON Web Encryption Content Encryption Algorithm "A128CBC-HS256" does not match the expected algorithms.'
+        )
+      );
     });
 
     it('should return the decoded json web encryption.', async () => {
-      await expect(JsonWebEncryption.decrypt(token, wrapKey)).resolves.toMatchObject({ header, plaintext });
+      await expect(JsonWebEncryption.decrypt(token, wrapKey, ['A128KW'], ['A128CBC-HS256'])).resolves.toMatchObject({
+        header,
+        plaintext,
+      });
     });
   });
 

@@ -5,6 +5,8 @@ import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exc
 import { JoseException } from '../exceptions/jose.exception';
 import { JsonWebKeyLoader } from '../jsonwebkey-loader.type';
 import { JsonWebKey } from '../jwk/jsonwebkey';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-content-encryption-algorithm.type';
+import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionHeader } from './jsonwebencryption.header';
 import { JsonWebEncryptionHeaderParameters } from './jsonwebencryption.header.parameters';
 import { JsonWebEncryptionParameters } from './jsonwebencryption.parameters';
@@ -91,11 +93,15 @@ export class JsonWebEncryption {
    *
    * @param token JSON Web Encryption Compact Token to be Deserialized.
    * @param keyOrKeyLoader JSON Web Key used to Deserialize the JSON Web Encryption Compact Token.
+   * @param expectedKeyWrapAlgorithms JSON Web Encryption Key Wrap Algorithms expected to be defined by the Header.
+   * @param expectedContentEncryptionAlgorithms JSON Web Encryption Content Encryption Algorithms expected to be defined by the Header.
    * @returns JSON Web Encryption containing the Deserialized JSON Web Encryption Header and Plaintext.
    */
   public static async decrypt(
     token: string,
-    keyOrKeyLoader: JsonWebKey | JsonWebKeyLoader
+    keyOrKeyLoader: JsonWebKey | JsonWebKeyLoader,
+    expectedKeyWrapAlgorithms: JsonWebEncryptionKeyWrapAlgorithm[],
+    expectedContentEncryptionAlgorithms: JsonWebEncryptionContentEncryptionAlgorithm[]
   ): Promise<JsonWebEncryption> {
     if (!(keyOrKeyLoader instanceof JsonWebKey) && typeof keyOrKeyLoader !== 'function') {
       throw new InvalidJsonWebKeyException();
@@ -106,6 +112,18 @@ export class JsonWebEncryption {
     const { compressionBackend, contentEncryptionBackend, keyWrapBackend } = header;
 
     try {
+      if (!expectedKeyWrapAlgorithms.includes(header.alg)) {
+        throw new InvalidJsonWebEncryptionException(
+          `The JSON Web Encryption Key Wrap Algorithm "${header.alg}" does not match the expected algorithms.`
+        );
+      }
+
+      if (!expectedContentEncryptionAlgorithms.includes(header.enc)) {
+        throw new InvalidJsonWebEncryptionException(
+          `The JSON Web Encryption Content Encryption Algorithm "${header.enc}" does not match the expected algorithms.`
+        );
+      }
+
       const key = keyOrKeyLoader instanceof JsonWebKey ? keyOrKeyLoader : await keyOrKeyLoader(header);
 
       const cek = await keyWrapBackend.unwrap(contentEncryptionBackend, key, ek, header);

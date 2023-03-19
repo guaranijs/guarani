@@ -49,6 +49,6 @@ export class JsonWebKeySetEndpoint implements EndpointInterface {
   // @ts-expect-error Unused variable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async handle(request: HttpRequest): Promise<HttpResponse> {
-    return new HttpResponse().json(this.jwks);
+    return new HttpResponse().json(this.jwks.toJSON(true));
   }
 }

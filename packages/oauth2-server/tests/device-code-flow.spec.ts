@@ -84,7 +84,7 @@ describe('Device Code Flow', () => {
       access_token: expect.any(String),
       token_type: 'Bearer',
       expires_in: 3600,
-      scope: 'foo bar baz qux',
+      scope: 'openid profile email phone address foo bar baz qux',
       refresh_token: expect.any(String),
     });
     // #endregion

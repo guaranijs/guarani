@@ -49,7 +49,7 @@ describe('Access Token Introspection', () => {
       access_token: expect.any(String),
       token_type: 'Bearer',
       expires_in: 3600,
-      scope: 'foo bar baz qux',
+      scope: 'openid profile email phone address foo bar baz qux',
       refresh_token: expect.any(String),
     });
 
@@ -69,7 +69,7 @@ describe('Access Token Introspection', () => {
 
     expect(introspectionResponse.body).toStrictEqual<IntrospectionResponse>({
       active: true,
-      scope: 'foo bar baz qux',
+      scope: 'openid profile email phone address foo bar baz qux',
       client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
       // username: undefined,
       token_type: 'Bearer',

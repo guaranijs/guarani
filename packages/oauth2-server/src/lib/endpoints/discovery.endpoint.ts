@@ -45,9 +45,14 @@ export class DiscoveryEndpoint implements EndpointInterface {
    */
   public constructor(@Inject(SETTINGS) private readonly settings: Settings) {}
 
-  // @ts-expect-error Unused variable "request"
+  /**
+   * Creates an OpenID Connect Discovery Response.
+   *
+   * @param _request Http Request.
+   * @returns Http Response.
+   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async handle(request: HttpRequest): Promise<HttpResponse> {
+  public async handle(_request: HttpRequest): Promise<HttpResponse> {
     const discoveryResponse = removeUndefined<DiscoveryResponse>({
       issuer: this.settings.issuer,
       authorization_endpoint: this.getEndpointPath('authorization'),
@@ -78,6 +83,12 @@ export class DiscoveryEndpoint implements EndpointInterface {
     return new HttpResponse().json(discoveryResponse);
   }
 
+  /**
+   * Returns the full url path of the provided endpoint.
+   *
+   * @param name Name of the Endpoint.
+   * @returns Full Url of the Endpoint.
+   */
   private getEndpointPath(name: Endpoint): string | undefined {
     const endpoints = getContainer('oauth2').resolveAll<EndpointInterface>(ENDPOINT);
     const path = endpoints.find((endpoint) => endpoint.name === name)?.path;

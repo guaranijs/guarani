@@ -288,6 +288,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
         return jwk;
       };
 
+      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
       Reflect.set(clientAssertion, 'name', 'client_secret_jwt');
       Object.assign(request.body, { client_assertion: assertion });
 
@@ -295,6 +296,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       Reflect.deleteProperty(clientAssertion, 'name');
       Reflect.deleteProperty(clientAssertion, 'getClientKey');
+      Reflect.deleteProperty(clientAssertion, 'algorithms');
     });
   });
 });

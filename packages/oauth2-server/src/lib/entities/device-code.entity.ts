@@ -29,7 +29,7 @@ export interface DeviceCode extends Record<string, any> {
    *
    * This URI does not have interactions, and **MUST** contain the `user_code` needed to proceed.
    */
-  readonly verificationUriComplete?: string;
+  readonly verificationUriComplete?: string | null;
 
   /**
    * Scopes requested by the Client.

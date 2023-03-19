@@ -1,0 +1,75 @@
+{
+  "name": "oauth2-server-example",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/oauth2-server-example/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/packages/oauth2-server-example",
+        "main": "packages/oauth2-server-example/src/main.ts",
+        "tsConfig": "packages/oauth2-server-example/tsconfig.app.json",
+        "assets": [
+          "packages/oauth2-server-example/src/assets",
+          "packages/oauth2-server-example/src/views",
+          "packages/oauth2-server-example/src/.env"
+        ],
+        "webpackConfig": "packages/oauth2-server-example/webpack.config.js"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/js:node",
+      "options": {
+        "buildTarget": "oauth2-server-example:build"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "oauth2-server-example:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/oauth2-server-example/**/*.ts"]
+      }
+    },
+    "migration:create": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "ts-node ../../node_modules/typeorm/cli.js migration:create src/migrations/{args.name}",
+        "cwd": "packages/oauth2-server-example"
+      }
+    },
+    "migration:run": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "ts-node ../../../node_modules/typeorm/cli.js migration:run --data-source data-source.migration.ts",
+        "cwd": "packages/oauth2-server-example/src"
+      }
+    },
+    "migration:revert": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "ts-node ../../../node_modules/typeorm/cli.js migration:revert --data-source data-source.migration.ts",
+        "cwd": "packages/oauth2-server-example/src"
+      }
+    }
+  },
+  "tags": []
+}

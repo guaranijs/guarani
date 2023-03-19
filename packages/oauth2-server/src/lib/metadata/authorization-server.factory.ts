@@ -5,6 +5,7 @@ import { AuthorizationServer } from '../authorization-server';
 import { ClientAuthenticationInterface } from '../client-authentication/client-authentication.interface';
 import { clientAuthenticationRegistry } from '../client-authentication/client-authentication.registry';
 import { CLIENT_AUTHENTICATION } from '../client-authentication/client-authentication.token';
+import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { AuthorizationEndpoint } from '../endpoints/authorization.endpoint';
 import { DeviceAuthorizationEndpoint } from '../endpoints/device-authorization.endpoint';
 import { DiscoveryEndpoint } from '../endpoints/discovery.endpoint';
@@ -18,21 +19,25 @@ import { TokenEndpoint } from '../endpoints/token.endpoint';
 import { GrantTypeInterface } from '../grant-types/grant-type.interface';
 import { grantTypeRegistry } from '../grant-types/grant-type.registry';
 import { GRANT_TYPE } from '../grant-types/grant-type.token';
+import { GrantType } from '../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { interactionTypeRegistry } from '../interaction-types/interaction-type.registry';
 import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
+import { PkceMethod } from '../pkce/pkce-method.type';
 import { PkceInterface } from '../pkce/pkce.interface';
 import { pkceRegistry } from '../pkce/pkce.registry';
 import { PKCE } from '../pkce/pkce.token';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { responseModeRegistry } from '../response-modes/response-mode.registry';
 import { RESPONSE_MODE } from '../response-modes/response-mode.token';
+import { ResponseMode } from '../response-modes/response-mode.type';
 import { ResponseTypeInterface } from '../response-types/response-type.interface';
 import { responseTypeRegistry } from '../response-types/response-type.registry';
 import { RESPONSE_TYPE } from '../response-types/response-type.token';
+import { ResponseType } from '../response-types/response-type.type';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { AuthorizationCodeServiceInterface } from '../services/authorization-code.service.interface';
@@ -134,13 +139,13 @@ export class AuthorizationServerFactory {
     const settings: Settings = {
       issuer: <string>this.authorizationServerOptions.issuer,
       scopes: <string[]>this.authorizationServerOptions.scopes,
-      clientAuthenticationMethods: this.authorizationServerOptions.clientAuthenticationMethods ?? [
-        'client_secret_basic',
-      ],
-      grantTypes: this.authorizationServerOptions.grantTypes ?? ['authorization_code'],
-      responseTypes: this.authorizationServerOptions.responseTypes ?? ['code'],
-      responseModes: this.authorizationServerOptions.responseModes ?? ['query'],
-      pkceMethods: this.authorizationServerOptions.pkceMethods ?? ['S256'],
+      clientAuthenticationMethods:
+        this.authorizationServerOptions.clientAuthenticationMethods ??
+        <ClientAuthentication[]>Object.keys(clientAuthenticationRegistry),
+      grantTypes: this.authorizationServerOptions.grantTypes ?? <GrantType[]>Object.keys(grantTypeRegistry),
+      responseTypes: this.authorizationServerOptions.responseTypes ?? <ResponseType[]>Object.keys(responseTypeRegistry),
+      responseModes: this.authorizationServerOptions.responseModes ?? <ResponseMode[]>Object.keys(responseModeRegistry),
+      pkceMethods: this.authorizationServerOptions.pkceMethods ?? <PkceMethod[]>Object.keys(pkceRegistry),
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
       jwks:
@@ -310,8 +315,11 @@ export class AuthorizationServerFactory {
    */
   private static setHandlers(): void {
     this.container.bind(ClientAuthenticationHandler).toSelf().asSingleton();
-    this.container.bind(IdTokenHandler).toSelf().asSingleton();
     this.container.bind(ScopeHandler).toSelf().asSingleton();
+
+    if (this.settings.scopes.includes('openid')) {
+      this.container.bind(IdTokenHandler).toSelf().asSingleton();
+    }
   }
 
   /**
@@ -331,6 +339,10 @@ export class AuthorizationServerFactory {
    * Defines the Authorization Code Service used by the Authorization Server.
    */
   private static setAuthorizationCodeService(): void {
+    if (!this.settings.grantTypes.includes('authorization_code')) {
+      return;
+    }
+
     const authorizationCodeService =
       this.authorizationServerOptions.authorizationCodeService ?? AuthorizationCodeService;
 
@@ -356,6 +368,10 @@ export class AuthorizationServerFactory {
    * Defines the Consent Service used by the Authorization Server.
    */
   private static setConsentService(): void {
+    if (this.settings.userInteraction === undefined) {
+      return;
+    }
+
     const consentService = this.authorizationServerOptions.consentService ?? ConsentService;
 
     const binding = this.container.bind<ConsentServiceInterface>(CONSENT_SERVICE);
@@ -369,6 +385,10 @@ export class AuthorizationServerFactory {
    * Defines the Device Code Service used by the Authorization Server.
    */
   private static setDeviceCodeService(): void {
+    if (!this.settings.grantTypes.includes('urn:ietf:params:oauth:grant-type:device_code')) {
+      return;
+    }
+
     const deviceCodeService = this.authorizationServerOptions.deviceCodeService ?? DeviceCodeService;
 
     const binding = this.container.bind<DeviceCodeServiceInterface>(DEVICE_CODE_SERVICE);
@@ -382,6 +402,10 @@ export class AuthorizationServerFactory {
    * Defines the Grant Service used by the Authorization Server.
    */
   private static setGrantService(): void {
+    if (this.settings.userInteraction === undefined) {
+      return;
+    }
+
     const grantService = this.authorizationServerOptions.grantService ?? GrantService;
 
     const binding = this.container.bind<GrantServiceInterface>(GRANT_SERVICE);
@@ -393,6 +417,10 @@ export class AuthorizationServerFactory {
    * Defines the Refresh Token Service used by the Authorization Server.
    */
   private static setRefreshTokenService(): void {
+    if (!this.settings.grantTypes.includes('refresh_token')) {
+      return;
+    }
+
     const refreshTokenService = this.authorizationServerOptions.refreshTokenService ?? RefreshTokenService;
 
     const binding = this.container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE);
@@ -406,6 +434,10 @@ export class AuthorizationServerFactory {
    * Defines the Session Service used by the Authorization Server.
    */
   private static setSessionService(): void {
+    if (this.settings.userInteraction === undefined) {
+      return;
+    }
+
     const sessionService = this.authorizationServerOptions.sessionService ?? SessionService;
 
     const binding = this.container.bind<SessionServiceInterface>(SESSION_SERVICE);

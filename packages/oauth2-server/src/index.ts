@@ -166,4 +166,5 @@ export { UserInteractionSettings } from './lib/settings/user-interaction.setting
 
 // Types
 export { AccessTokenType } from './lib/types/access-token-type.type';
+export { ApplicationType } from './lib/types/application-type.type';
 export { TokenTypeHint } from './lib/types/token-type-hint.type';

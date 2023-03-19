@@ -23,8 +23,6 @@ export interface Settings {
 
   /**
    * Client Authentication Methods registered at the Authorization Server.
-   *
-   * @default ['client_secret_basic']
    */
   readonly clientAuthenticationMethods: ClientAuthentication[];
 
@@ -35,29 +33,21 @@ export interface Settings {
 
   /**
    * Grant Types registered at the Authorization Server.
-   *
-   * @default ['authorization_code']
    */
   readonly grantTypes: GrantType[];
 
   /**
    * Response Types registered at the Authorization Server.
-   *
-   * @default ['code']
    */
   readonly responseTypes: ResponseType[];
 
   /**
    * Response Modes registered at the Authorization Server.
-   *
-   * @default ['query']
    */
   readonly responseModes: ResponseMode[];
 
   /**
    * PKCE Methods registered at the Authorization Server.
-   *
-   * @default ['S256']
    */
   readonly pkceMethods: PkceMethod[];
 

@@ -22,7 +22,7 @@ export class ClientService implements ClientServiceInterface {
       ],
       applicationType: 'web',
       authenticationMethod: 'client_secret_basic',
-      scopes: ['foo', 'bar', 'baz', 'qux'],
+      scopes: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
       createdAt: new Date(),
     },
   ];

@@ -3,6 +3,7 @@ import { JsonWebKeySetParameters, JsonWebSignatureAlgorithm } from '@guarani/jos
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { GrantType } from '../grant-types/grant-type.type';
 import { ResponseType } from '../response-types/response-type.type';
+import { ApplicationType } from '../types/application-type.type';
 
 /**
  * OAuth 2.0 Client Entity.
@@ -48,7 +49,7 @@ export interface Client extends Record<string, any> {
   /**
    * Application Type of the Client.
    */
-  applicationType: string;
+  applicationType: ApplicationType;
 
   /**
    * Client Authentication Method of the Client.
@@ -113,5 +114,5 @@ export interface Client extends Record<string, any> {
   /**
    * Creation Date of the Client.
    */
-  createdAt: Date;
+  readonly createdAt: Date;
 }

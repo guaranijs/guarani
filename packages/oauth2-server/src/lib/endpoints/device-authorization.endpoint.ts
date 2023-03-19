@@ -99,7 +99,7 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
         device_code: deviceCode.id,
         user_code: deviceCode.userCode,
         verification_uri: deviceCode.verificationUri,
-        verification_uri_complete: deviceCode.verificationUriComplete,
+        verification_uri_complete: deviceCode.verificationUriComplete ?? undefined,
         expires_in: Math.ceil((deviceCode.expiresAt.getTime() - Date.now()) / 1000),
         interval: this.settings.devicePollingInterval,
       });

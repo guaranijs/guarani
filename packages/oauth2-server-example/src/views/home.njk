@@ -1,0 +1,12 @@
+{% extends "base.njk" %}
+
+{% block customcss %}
+  <link rel="stylesheet" href="/static/css/_partials/navbar.css">
+  <link rel="stylesheet" href="/static/css/home.css">
+{% endblock %}
+
+{% block content %}
+  <div class="container-fluid p-0">
+    {% include "./_partials/navbar.njk" %}
+  </div>
+{% endblock %}

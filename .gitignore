@@ -168,3 +168,8 @@ Thumbs.db
 
 # Husky
 .husky/_
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3

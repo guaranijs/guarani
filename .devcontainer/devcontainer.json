@@ -4,7 +4,7 @@
     "context": "..",
     "dockerfile": "../Dockerfile"
   },
-  "forwardPorts": [3000],
+  "forwardPorts": [4000],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -16,7 +16,8 @@
         "nrwl.angular-console",
         "esbenp.prettier-vscode",
         "mikestead.dotenv",
-        "gruntfuggly.todo-tree"
+        "gruntfuggly.todo-tree",
+        "alexcvzz.vscode-sqlite"
       ]
     }
   }

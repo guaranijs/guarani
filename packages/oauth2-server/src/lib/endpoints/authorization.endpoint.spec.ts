@@ -66,12 +66,22 @@ describe('Authorization Endpoint', () => {
 
   const responseTypesMocks = [
     jest.mocked<ResponseTypeInterface>({ name: 'code', defaultResponseMode: 'query', handle: jest.fn() }),
+    jest.mocked<ResponseTypeInterface>({ name: 'code id_token', defaultResponseMode: 'fragment', handle: jest.fn() }),
+    jest.mocked<ResponseTypeInterface>({
+      name: 'code id_token token',
+      defaultResponseMode: 'fragment',
+      handle: jest.fn(),
+    }),
+    jest.mocked<ResponseTypeInterface>({ name: 'code token', defaultResponseMode: 'fragment', handle: jest.fn() }),
+    jest.mocked<ResponseTypeInterface>({ name: 'id_token', defaultResponseMode: 'fragment', handle: jest.fn() }),
+    jest.mocked<ResponseTypeInterface>({ name: 'id_token token', defaultResponseMode: 'fragment', handle: jest.fn() }),
     jest.mocked<ResponseTypeInterface>({ name: 'token', defaultResponseMode: 'fragment', handle: jest.fn() }),
   ];
 
   const responseModesMocks = [
     jest.mocked<ResponseModeInterface>({ name: 'query', createHttpResponse: jest.fn() }),
     jest.mocked<ResponseModeInterface>({ name: 'fragment', createHttpResponse: jest.fn() }),
+    jest.mocked<ResponseModeInterface>({ name: 'form_post', createHttpResponse: jest.fn() }),
   ];
 
   const settings = <Settings>{
@@ -803,18 +813,64 @@ describe('Authorization Endpoint', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id', user: { id: 'user_id' } });
       consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
 
-      responseTypesMocks[0]!.handle.mockResolvedValueOnce({ code: 'code', state: 'client_state' });
+      responseTypesMocks
+        .find((responseType) => responseType.name === 'code')!
+        .handle.mockResolvedValueOnce({ code: 'code', state: 'client_state' });
 
-      responseModesMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        const url = new URL(redirectUri);
-        url.search = new URLSearchParams(parameters).toString();
-        return new HttpResponse().redirect(url);
-      });
+      responseModesMocks
+        .find((responseMode) => responseMode.name === 'query')!
+        .createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+          const url = new URL(redirectUri);
+          url.search = new URLSearchParams(parameters).toString();
+          return new HttpResponse().redirect(url);
+        });
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
         headers: {
           Location: 'https://example.com/callback?code=code&state=client_state&iss=https%3A%2F%2Fserver.example.com',
+        },
+        statusCode: 303,
+      });
+
+      Reflect.deleteProperty(settings, 'enableAuthorizationResponseIssuerIdentifier');
+    });
+
+    it('should return a valid authorization response when the provided "response_type" is not in alphabetical order.', async () => {
+      Reflect.set(settings, 'enableAuthorizationResponseIssuerIdentifier', true);
+
+      Reflect.set(request.cookies, 'guarani:session', 'session_id');
+      Reflect.set(request.cookies, 'guarani:consent', 'consent_id');
+
+      Reflect.set(request.query, 'response_type', 'id_token code');
+
+      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
+        id: 'client_id',
+        redirectUris: ['https://example.com/callback'],
+        responseTypes: ['code', 'code id_token'],
+        scopes: ['foo', 'bar'],
+      });
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id', user: { id: 'user_id' } });
+      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
+
+      responseTypesMocks
+        .find((responseType) => responseType.name === 'code id_token')!
+        .handle.mockResolvedValueOnce({ code: 'code', state: 'client_state', id_token: 'id_token' });
+
+      responseModesMocks
+        .find((responseMode) => responseMode.name === 'fragment')!
+        .createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+          const url = new URL(redirectUri);
+          url.hash = new URLSearchParams(parameters).toString();
+          return new HttpResponse().redirect(url);
+        });
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: {
+          Location:
+            'https://example.com/callback#code=code&state=client_state&id_token=id_token&iss=https%3A%2F%2Fserver.example.com',
         },
         statusCode: 303,
       });

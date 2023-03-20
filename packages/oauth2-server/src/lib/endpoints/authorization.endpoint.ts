@@ -327,6 +327,8 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @returns Response Type.
    */
   private getResponseType(name: ResponseType, state?: string): ResponseTypeInterface {
+    name = <ResponseType>name.split(' ').sort().join(' ');
+
     const responseType = this.responseTypes.find((responseType) => responseType.name === name);
 
     if (responseType === undefined) {

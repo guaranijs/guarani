@@ -9,8 +9,10 @@ import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
+import { ConsentRequiredException } from '../exceptions/consent-required.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
+import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { UnauthorizedClientException } from '../exceptions/unauthorized-client.exception';
@@ -36,6 +38,7 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { Prompt } from '../types/prompt.type';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 
@@ -136,6 +139,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
     let client: Client;
     let responseType: ResponseTypeInterface;
     let responseMode: ResponseModeInterface;
+    let prompts: Prompt[];
 
     // #region Authorization Parameters validation
     try {
@@ -152,6 +156,8 @@ export class AuthorizationEndpoint implements EndpointInterface {
         parameters.response_mode ?? responseType.defaultResponseMode,
         parameters.state
       );
+
+      prompts = this.getPrompts(parameters.prompt, parameters.state);
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);
       return this.handleFatalAuthorizationError(error);
@@ -173,6 +179,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
         // Starting from scratch.
         if (grant === null) {
+          if (prompts.includes('none')) {
+            throw new LoginRequiredException({ state: parameters.state });
+          }
+
           grant = await this.grantService.create(parameters, client);
           return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
         }
@@ -181,17 +191,32 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
         // Hit the login endpoint but didn't go through with it.
         if (grant.session == null) {
+          if (prompts.includes('none')) {
+            throw new LoginRequiredException({ state: parameters.state });
+          }
+
           return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
         }
 
         session = grant.session;
+      }
 
-        if (session.expiresAt != null && new Date() > session.expiresAt) {
-          await this.sessionService.remove(session);
-          return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
+      if (session.expiresAt != null && new Date() > session.expiresAt) {
+        await this.sessionService.remove(session);
+
+        if (prompts.includes('none')) {
+          throw new LoginRequiredException({ state: parameters.state });
         }
+
+        grant ??= await this.grantService.create(parameters, client);
+
+        return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
       }
     } catch (exc: unknown) {
+      if (exc instanceof LoginRequiredException) {
+        return this.handleFatalAuthorizationError(exc).setCookie('guarani:session', null);
+      }
+
       const error = this.asOAuth2Exception(exc, parameters);
       return this.handleFatalAuthorizationError(error).setCookies({ 'guarani:grant': null, 'guarani:session': null });
     }
@@ -210,46 +235,52 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
         // Consent was revoked and we need to get it once again.
         if (grant === null) {
+          if (prompts.includes('none')) {
+            throw new ConsentRequiredException({ state: parameters.state });
+          }
+
           grant = await this.grantService.create(parameters, client);
 
-          return this.redirectToConsentPage(grant).setCookies({
-            'guarani:grant': grant.id,
-            'guarani:session': session.id,
-            'guarani:consent': null,
-          });
+          return this.redirectToConsentPage(grant).setCookie('guarani:grant', grant.id);
         }
 
         await this.checkGrant(grant, client, parameters);
 
         // Hit the consent endpoint but didn't go through with it.
         if (grant.consent == null) {
-          return this.redirectToConsentPage(grant).setCookies({
-            'guarani:grant': grant.id,
-            'guarani:session': session.id,
-            'guarani:consent': null,
-          });
+          if (prompts.includes('none')) {
+            throw new ConsentRequiredException({ state: parameters.state });
+          }
+
+          return this.redirectToConsentPage(grant);
         }
 
         consent = grant.consent;
+      }
 
-        if (consent.expiresAt != null && new Date() > consent.expiresAt) {
-          await this.consentService.remove(consent);
+      if (consent.expiresAt != null && new Date() > consent.expiresAt) {
+        await this.consentService.remove(consent);
 
-          return this.redirectToConsentPage(grant).setCookies({
-            'guarani:grant': grant.id,
-            'guarani:session': session.id,
-            'guarani:consent': null,
-          });
+        if (prompts.includes('none')) {
+          throw new ConsentRequiredException({ state: parameters.state });
         }
+
+        grant ??= await this.grantService.create(parameters, client);
+
+        if (grant.session == null) {
+          grant.session = session;
+          await this.grantService.save(grant);
+        }
+
+        return this.redirectToConsentPage(grant).setCookie('guarani:grant', grant.id);
       }
     } catch (exc: unknown) {
-      const error = this.asOAuth2Exception(exc, parameters);
+      if (exc instanceof ConsentRequiredException) {
+        return this.handleFatalAuthorizationError(exc);
+      }
 
-      return this.handleFatalAuthorizationError(error).setCookies({
-        'guarani:grant': null,
-        'guarani:session': null,
-        'guarani:consent': null,
-      });
+      const error = this.asOAuth2Exception(exc, parameters);
+      return this.handleFatalAuthorizationError(error).setCookies({ 'guarani:grant': null, 'guarani:session': null });
     }
     // #endregion
 
@@ -268,7 +299,6 @@ export class AuthorizationEndpoint implements EndpointInterface {
       return responseMode.createHttpResponse(parameters.redirect_uri, authorizationResponse).setCookies({
         'guarani:grant': null,
         'guarani:session': session.id,
-        'guarani:consent': consent.id,
       });
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);
@@ -402,6 +432,30 @@ export class AuthorizationEndpoint implements EndpointInterface {
     }
 
     return responseMode;
+  }
+
+  /**
+   * Returns a list of the Prompts requested by the Client.
+   *
+   * @param prompt Prompts requested by the Client.
+   * @param state Client State prior to the Authorization Request.
+   * @returns Parsed Prompt values.
+   */
+  private getPrompts(prompt: string | undefined, state: string | undefined): Prompt[] {
+    const supportedPrompts: Prompt[] = ['consent', 'login', 'none'];
+    const prompts = <Prompt[]>(prompt?.split(' ') ?? []);
+
+    prompts.forEach((prompt) => {
+      if (!supportedPrompts.includes(prompt)) {
+        throw new InvalidRequestException({ description: `Unsupported prompt "${prompt}".`, state });
+      }
+    });
+
+    if (prompts.includes('none') && prompts.length !== 1) {
+      throw new InvalidRequestException({ description: 'The prompt "none" must be used by itself.', state });
+    }
+
+    return prompts;
   }
 
   /**

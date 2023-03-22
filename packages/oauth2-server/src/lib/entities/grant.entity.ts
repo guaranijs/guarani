@@ -1,3 +1,4 @@
+import { InteractionType } from '../interaction-types/interaction-type.type';
 import { AuthorizationRequest } from '../messages/authorization-request';
 import { Client } from './client.entity';
 import { Consent } from './consent.entity';
@@ -21,6 +22,11 @@ export interface Grant extends Record<string, any> {
    * Consent Challenge of the Grant.
    */
   readonly consentChallenge: string;
+
+  /**
+   * Interactions already processed by the Grant.
+   */
+  interactions?: InteractionType[] | null;
 
   /**
    * Parameters of the Authorization Request.

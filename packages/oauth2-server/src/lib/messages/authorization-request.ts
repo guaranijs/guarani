@@ -40,4 +40,9 @@ export interface AuthorizationRequest extends Record<string, any> {
    * This value is passed unmodified from the Authorization Request to the ID Token.
    */
   readonly nonce?: string;
+
+  /**
+   * Space delimited list of Prompt values requested by the Client.
+   */
+  readonly prompt?: string;
 }

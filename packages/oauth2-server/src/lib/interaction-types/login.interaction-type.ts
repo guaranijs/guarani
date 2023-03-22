@@ -20,6 +20,7 @@ import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { Prompt } from '../types/prompt.type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 
@@ -92,7 +93,9 @@ export class LoginInteractionType implements InteractionTypeInterface {
       skip: grant.session != null,
       request_url: url.href,
       client: grant.client,
-      context: {},
+      context: {
+        prompts: <Prompt[]>(grant.parameters.prompt?.split(' ') ?? []),
+      },
     };
   }
 

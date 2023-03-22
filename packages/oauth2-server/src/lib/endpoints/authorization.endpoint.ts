@@ -212,6 +212,14 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
         return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
       }
+
+      if (prompts.includes('login')) {
+        if (grant === null) {
+          await this.sessionService.remove(session);
+          grant = await this.grantService.create(parameters, client);
+          return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
+        }
+      }
     } catch (exc: unknown) {
       if (exc instanceof LoginRequiredException) {
         return this.handleFatalAuthorizationError(exc).setCookie('guarani:session', null);
@@ -241,7 +249,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
           grant = await this.grantService.create(parameters, client);
 
-          return this.redirectToConsentPage(grant).setCookie('guarani:grant', grant.id);
+          return this.redirectToConsentPage(grant).setCookies({
+            'guarani:grant': grant.id,
+            'guarani:session': session.id,
+          });
         }
 
         await this.checkGrant(grant, client, parameters);
@@ -252,7 +263,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
             throw new ConsentRequiredException({ state: parameters.state });
           }
 
-          return this.redirectToConsentPage(grant);
+          return this.redirectToConsentPage(grant).setCookies({
+            'guarani:grant': grant.id,
+            'guarani:session': session.id,
+          });
         }
 
         consent = grant.consent;
@@ -272,7 +286,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
           await this.grantService.save(grant);
         }
 
-        return this.redirectToConsentPage(grant).setCookie('guarani:grant', grant.id);
+        return this.redirectToConsentPage(grant).setCookies({
+          'guarani:grant': grant.id,
+          'guarani:session': session.id,
+        });
       }
     } catch (exc: unknown) {
       if (exc instanceof ConsentRequiredException) {

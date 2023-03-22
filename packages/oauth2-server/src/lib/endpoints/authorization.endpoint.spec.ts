@@ -758,11 +758,33 @@ describe('Authorization Endpoint', () => {
       expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
     });
 
-    it.todo(
-      'should return a redirect response to the login page when the "prompt" is "login" and no grant is found (session).'
-    );
+    it('should return a redirect response to the login page when the "prompt" is "login".', async () => {
+      request.query.prompt = 'login';
+      request.cookies['guarani:session'] = 'session_id';
 
-    it.todo('should return a redirect response to the login page when the "prompt" is "login".');
+      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
+        id: 'client_id',
+        redirectUris: ['https://example.com/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar'],
+      });
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(<Session>{ id: 'session_id' });
+
+      grantServiceMock.create.mockResolvedValueOnce(<Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' });
+
+      const parameters = new URLSearchParams({ login_challenge: 'login_challenge' });
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.alloc(0),
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': null },
+        headers: { Location: `https://server.example.com/auth/login?${parameters.toString()}` },
+        statusCode: 303,
+      });
+
+      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
+    });
 
     it('should return an error response when the "prompt" is "none" and no grant is found (consent).', async () => {
       request.query.prompt = 'none';
@@ -816,7 +838,7 @@ describe('Authorization Endpoint', () => {
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        cookies: { 'guarani:grant': 'grant_id' },
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' },
         headers: { Location: `https://server.example.com/auth/consent?${parameters.toString()}` },
         statusCode: 303,
       });
@@ -1003,6 +1025,7 @@ describe('Authorization Endpoint', () => {
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' },
         headers: { Location: `https://server.example.com/auth/consent?${parameters.toString()}` },
         statusCode: 303,
       });
@@ -1077,7 +1100,7 @@ describe('Authorization Endpoint', () => {
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        cookies: { 'guarani:grant': 'grant_id' },
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' },
         headers: { Location: `https://server.example.com/auth/consent?${parameters.toString()}` },
         statusCode: 303,
       });
@@ -1113,7 +1136,7 @@ describe('Authorization Endpoint', () => {
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
         body: Buffer.alloc(0),
-        cookies: { 'guarani:grant': 'grant_id' },
+        cookies: { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' },
         headers: { Location: `https://server.example.com/auth/consent?${parameters.toString()}` },
         statusCode: 303,
       });

@@ -1,4 +1,4 @@
-import { AuthorizationRequest, Grant as OAuth2Grant, InteractionType } from '@guarani/oauth2-server';
+import { AuthorizationRequest, Grant as OAuth2Grant } from '@guarani/oauth2-server';
 
 import {
   BaseEntity,
@@ -34,9 +34,6 @@ export class Grant extends BaseEntity implements OAuth2Grant {
 
   @Column({ name: 'parameters', type: 'json', nullable: false })
   public readonly parameters!: AuthorizationRequest;
-
-  @Column({ name: 'interactions', type: 'varchar', array: true, nullable: true })
-  public interactions!: InteractionType[] | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', nullable: false })
   public readonly createdAt!: Date;

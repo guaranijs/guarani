@@ -22,7 +22,8 @@
         ],
         "prettier/prettier": "error",
         "no-useless-constructor": "off",
-        "dot-notation": "off"
+        "dot-notation": "off",
+        "no-labels": "off"
       }
     },
     {

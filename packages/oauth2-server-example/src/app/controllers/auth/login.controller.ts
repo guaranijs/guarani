@@ -33,7 +33,7 @@ class Controller {
         return response.redirect(303, data.request_url);
       }
 
-      if (request.isAuthenticated()) {
+      if (request.isAuthenticated() && !data.context.prompts.includes('login')) {
         const redirectTo = await this.doLogin(loginChallenge, <User>request.user);
         return response.redirect(303, redirectTo);
       }

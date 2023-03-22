@@ -27,12 +27,6 @@ export class CreateGrantsTable1678670149500 implements MigrationInterface {
           isUnique: true,
         },
         {
-          name: 'interactions',
-          type: 'varchar',
-          isArray: true,
-          isNullable: true,
-        },
-        {
           name: 'parameters',
           type: 'json',
           isNullable: false,

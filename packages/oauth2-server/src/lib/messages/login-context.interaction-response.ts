@@ -1,4 +1,5 @@
 import { Client } from '../entities/client.entity';
+import { LoginContext } from './login.context';
 
 /**
  * Parameters of the custom OAuth 2.0 Login Context Interaction Response.
@@ -22,5 +23,5 @@ export interface LoginContextInteractionResponse {
   /**
    * Context for the Login Interaction.
    */
-  readonly context: Record<string, any>;
+  readonly context: LoginContext;
 }

@@ -45,11 +45,11 @@ export class Grant extends BaseEntity implements OAuth2Grant {
   @JoinColumn({ name: 'client_id', referencedColumnName: 'id', foreignKeyConstraintName: 'clients_id_fk' })
   public readonly client!: Client;
 
-  @OneToOne(() => Session, { cascade: false, eager: true, nullable: true, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @OneToOne(() => Session, { cascade: false, eager: true, nullable: true, onDelete: 'SET NULL', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'session_id', referencedColumnName: 'id', foreignKeyConstraintName: 'sessions_id_fk' })
   public session!: Session | null;
 
-  @OneToOne(() => Consent, { cascade: false, eager: true, nullable: true, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @OneToOne(() => Consent, { cascade: false, eager: true, nullable: true, onDelete: 'SET NULL', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'consent_id', referencedColumnName: 'id', foreignKeyConstraintName: 'consents_id_fk' })
   public consent!: Consent | null;
 }

@@ -89,7 +89,7 @@ export class CreateGrantsTable1678670149500 implements MigrationInterface {
           columnNames: ['session_id'],
           referencedTableName: 'sessions',
           referencedColumnNames: ['id'],
-          onDelete: 'CASCADE',
+          onDelete: 'SET NULL',
           onUpdate: 'CASCADE',
         },
         {
@@ -97,7 +97,7 @@ export class CreateGrantsTable1678670149500 implements MigrationInterface {
           columnNames: ['consent_id'],
           referencedTableName: 'consents',
           referencedColumnNames: ['id'],
-          onDelete: 'CASCADE',
+          onDelete: 'SET NULL',
           onUpdate: 'CASCADE',
         },
       ],

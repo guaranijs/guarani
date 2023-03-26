@@ -1,4 +1,5 @@
 import { Client } from '../entities/client.entity';
+import { ConsentContext } from './consent.context';
 
 /**
  * Parameters of the custom OAuth 2.0 Consent Context Interaction Response.
@@ -35,7 +36,7 @@ export interface ConsentContextInteractionResponse {
   readonly client: Client;
 
   /**
-   * Context for the Login Interaction.
+   * Context for the Consent Interaction.
    */
-  readonly context: Record<string, any>;
+  readonly context: ConsentContext;
 }

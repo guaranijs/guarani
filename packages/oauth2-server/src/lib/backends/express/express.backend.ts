@@ -53,7 +53,7 @@ export class ExpressBackend extends AuthorizationServer {
   private _createOAuth2Request(request: Request): HttpRequest {
     return {
       body: request.body,
-      cookies: request.cookies,
+      cookies: request.signedCookies,
       headers: request.headers,
       method: <HttpMethod>request.method.toUpperCase(),
       path: request.path,
@@ -75,7 +75,7 @@ export class ExpressBackend extends AuthorizationServer {
     });
 
     Object.entries(cookies).forEach(([name, value]) => {
-      value === null ? response.clearCookie(name) : response.cookie(name, value);
+      value === null ? response.clearCookie(name, { signed: true }) : response.cookie(name, value, { signed: true });
     });
 
     response.status(statusCode).send(body);

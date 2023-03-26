@@ -132,7 +132,9 @@ describe('Login Interaction Type', () => {
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: <Client>{ id: 'client_id' },
-        context: {},
+        context: {
+          prompts: [],
+        },
       });
     });
 
@@ -160,7 +162,9 @@ describe('Login Interaction Type', () => {
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: <Client>{ id: 'client_id' },
-        context: {},
+        context: {
+          prompts: [],
+        },
       });
     });
   });

@@ -1,21 +1,11 @@
 import { Consent as OAuth2Consent } from '@guarani/oauth2-server';
 
-import {
-  BaseEntity,
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  Unique,
-} from 'typeorm';
+import { BaseEntity, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { Client } from './client.entity';
 import { User } from './user.entity';
 
 @Entity({ name: 'consents' })
-@Unique('consents_client_id_and_user_id_uq', ['client', 'user'])
 export class Consent extends BaseEntity implements OAuth2Consent {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'consents_pk' })
   public readonly id!: string;

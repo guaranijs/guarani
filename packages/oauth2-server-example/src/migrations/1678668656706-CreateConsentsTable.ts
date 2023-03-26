@@ -62,12 +62,6 @@ export class CreateConsentsTable1678668656706 implements MigrationInterface {
           onUpdate: 'CASCADE',
         },
       ],
-      uniques: [
-        {
-          name: 'consents_client_id_and_user_id_uq',
-          columnNames: ['client_id', 'user_id'],
-        },
-      ],
     });
 
     await queryRunner.createTable(table, true, true);

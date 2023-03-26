@@ -19,13 +19,12 @@ export interface ConsentServiceInterface {
   create(scopes: string[], client: Client, user: User): Promise<Consent>;
 
   /**
-   * Searches the application's storage for a Consent containing the provided Client and User Identifiers.
+   * Searches the application's storage for a Consent containing the provided Identifier.
    *
-   * @param clientId Identifier of the Client.
-   * @param userId Identifier of the User.
-   * @returns Consent based on the provided Client and User Identifiers.
+   * @param id Identifier of the Consent.
+   * @returns Consent based on the provided Identifier.
    */
-  findOne(clientId: string, userId: string): Promise<Consent | null>;
+  findOne(id: string): Promise<Consent | null>;
 
   /**
    * Persists the provided Consent into the application's storage.

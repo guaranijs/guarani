@@ -173,3 +173,7 @@ Thumbs.db
 *.db
 *.sqlite
 *.sqlite3
+
+# VSCode Dev Containers
+Dockerfile
+.devcontainer

@@ -22,6 +22,7 @@ import { GRANT_TYPE } from '../grant-types/grant-type.token';
 import { GrantType } from '../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { IdTokenHandler } from '../handlers/id-token.handler';
+import { InteractionHandler } from '../handlers/interaction.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { interactionTypeRegistry } from '../interaction-types/interaction-type.registry';
@@ -30,6 +31,9 @@ import { PkceMethod } from '../pkce/pkce-method.type';
 import { PkceInterface } from '../pkce/pkce.interface';
 import { pkceRegistry } from '../pkce/pkce.registry';
 import { PKCE } from '../pkce/pkce.token';
+import { PromptInterface } from '../prompts/prompt.interface';
+import { promptRegistry } from '../prompts/prompt.registry';
+import { PROMPT } from '../prompts/prompt.token';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { responseModeRegistry } from '../response-modes/response-mode.registry';
 import { RESPONSE_MODE } from '../response-modes/response-mode.token';
@@ -114,6 +118,7 @@ export class AuthorizationServerFactory {
     await this.setAuthorizationServerSettings();
     this.setClientAuthentication();
     this.setGrantTypes();
+    this.setPrompts();
     this.setInteractionTypes();
     this.setResponseTypes();
     this.setResponseModes();
@@ -198,6 +203,15 @@ export class AuthorizationServerFactory {
     grantTypes.forEach((grantType) => {
       const constructor = <Constructor<GrantTypeInterface>>grantTypeRegistry[grantType];
       this.container.bind<GrantTypeInterface>(GRANT_TYPE).toClass(constructor).asSingleton();
+    });
+  }
+
+  /**
+   * Defines the Prompts supported by the Authorization Server.
+   */
+  private static setPrompts(): void {
+    Object.values(promptRegistry).forEach((prompt) => {
+      this.container.bind<PromptInterface>(PROMPT).toClass(prompt).asSingleton();
     });
   }
 
@@ -316,6 +330,7 @@ export class AuthorizationServerFactory {
   private static setHandlers(): void {
     this.container.bind(ClientAuthenticationHandler).toSelf().asSingleton();
     this.container.bind(ScopeHandler).toSelf().asSingleton();
+    this.container.bind(InteractionHandler).toSelf().asSingleton();
 
     if (this.settings.scopes.includes('openid')) {
       this.container.bind(IdTokenHandler).toSelf().asSingleton();

@@ -24,7 +24,7 @@ export class GrantService implements GrantServiceInterface {
       consentChallenge: consentChallengeBuffer.toString('hex'),
       parameters,
       createdAt: new Date(now),
-      expiresAt: new Date(now + 86400000),
+      expiresAt: new Date(now + 300000),
       client,
     });
 

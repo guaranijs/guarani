@@ -22,26 +22,18 @@ class Controller {
 
     url.search = searchParams.toString();
 
-    let consent: ConsentContextInteractionResponse;
+    const { data } = await axios.get<ConsentContextInteractionResponse>(url.href);
 
-    try {
-      const { data } = await axios.get(url.href);
-      consent = data;
-    } catch (exc: any) {
-      response.json(exc.response.data);
-      return;
-    }
-
-    if (consent.skip) {
-      return response.redirect(303, consent.request_url);
+    if (data.skip) {
+      return response.redirect(303, data.request_url);
     }
 
     return response.render('auth/consent', {
       request,
       title: 'Consent',
-      consent,
+      consent: data,
       consent_challenge: consentChallenge,
-      scopes: consent.requested_scope.split(' '),
+      scopes: data.requested_scope.split(' '),
       error: request.flash('error'),
       success: request.flash('success'),
     });
@@ -56,29 +48,29 @@ class Controller {
 
     const reqBody = new URLSearchParams({ interaction_type: 'consent', consent_challenge: consentChallenge, decision });
 
-    if (decision === 'accept') {
-      reqBody.set('grant_scope', grantScope.join(' '));
-    } else if (decision === 'deny') {
-      reqBody.set('error', 'consent_denied');
-      reqBody.set('error_description', 'The user denied the requested scope.');
-    } else {
-      response.json({ error: 'Invalid parameter "decision".' });
-      return;
+    switch (decision) {
+      case 'accept':
+        reqBody.set('grant_scope', grantScope.join(' '));
+        break;
+
+      case 'deny':
+        reqBody.set('error', 'consent_denied');
+        reqBody.set('error_description', 'The user denied the requested scope.');
+        break;
+
+      default:
+        throw new Error('Invalid parameter "decision".');
     }
 
-    try {
-      const {
-        data: { redirect_to: redirectTo },
-      } = await axios.post<ConsentDecisionInteractionResponse>(
-        'http://localhost:4000/oauth/interaction',
-        reqBody.toString(),
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      );
+    const {
+      data: { redirect_to: redirectTo },
+    } = await axios.post<ConsentDecisionInteractionResponse>(
+      'http://localhost:4000/oauth/interaction',
+      reqBody.toString(),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
 
-      return response.redirect(303, redirectTo);
-    } catch (exc: any) {
-      response.json(exc.response.data);
-    }
+    return response.redirect(303, redirectTo);
   }
 }
 

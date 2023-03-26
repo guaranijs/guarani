@@ -29,8 +29,8 @@ export class ConsentService implements ConsentServiceInterface {
     return consent;
   }
 
-  public async findOne(clientId: string, userId: string): Promise<Consent | null> {
-    return this.consents.find((consent) => consent.client.id === clientId && consent.user.id === userId) ?? null;
+  public async findOne(consentId: string): Promise<Consent | null> {
+    return this.consents.find((consent) => consent.id === consentId) ?? null;
   }
 
   public async save(consent: Consent): Promise<void> {

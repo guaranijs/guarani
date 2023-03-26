@@ -12,6 +12,7 @@ import { LoginDecisionAcceptInteractionRequest } from '../messages/login-decisio
 import { LoginDecisionDenyInteractionRequest } from '../messages/login-decision-deny.interaction-request';
 import { LoginDecisionInteractionRequest } from '../messages/login-decision.interaction-request';
 import { LoginDecisionInteractionResponse } from '../messages/login-decision.interaction-response';
+import { Prompt } from '../prompts/prompt.type';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
@@ -20,7 +21,6 @@ import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
-import { Prompt } from '../types/prompt.type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 

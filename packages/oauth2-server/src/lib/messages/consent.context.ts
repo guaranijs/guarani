@@ -1,9 +1,9 @@
 import { Prompt } from '../prompts/prompt.type';
 
 /**
- * Parameters of the Login Context.
+ * Parameters of the Consent Context.
  */
-export interface LoginContext extends Record<string, any> {
+export interface ConsentContext extends Record<string, any> {
   /**
    * Prompts requested by the Client.
    */

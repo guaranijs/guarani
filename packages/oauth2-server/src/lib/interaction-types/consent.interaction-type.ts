@@ -9,6 +9,7 @@ import { ConsentContextInteractionResponse } from '../messages/consent-context.i
 import { ConsentDecisionAcceptInteractionRequest } from '../messages/consent-decision-accept.interaction-request';
 import { ConsentDecisionDenyInteractionRequest } from '../messages/consent-decision-deny.interaction-request';
 import { ConsentDecisionInteractionRequest } from '../messages/consent-decision.interaction-request';
+import { Prompt } from '../prompts/prompt.type';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -87,7 +88,9 @@ export class ConsentInteractionType implements InteractionTypeInterface {
       request_url: url.href,
       login_challenge: grant.loginChallenge,
       client: grant.client,
-      context: {},
+      context: {
+        prompts: <Prompt[]>(grant.parameters.prompt?.split(' ') ?? []),
+      },
     };
   }
 

@@ -1,3 +1,4 @@
+import { Display } from '../displays/display.type';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { ResponseType } from '../response-types/response-type.type';
 
@@ -45,4 +46,9 @@ export interface AuthorizationRequest extends Record<string, any> {
    * Space delimited list of Prompt values requested by the Client.
    */
   readonly prompt?: string;
+
+  /**
+   * Display requested by the Client.
+   */
+  readonly display?: Display;
 }

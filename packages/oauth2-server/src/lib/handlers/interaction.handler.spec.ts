@@ -3,6 +3,8 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { Buffer } from 'buffer';
 import { URLSearchParams } from 'url';
 
+import { DisplayInterface } from '../displays/display.interface';
+import { DISPLAY } from '../displays/display.token';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
@@ -31,11 +33,13 @@ type Entities = [Grant | null, Session, Consent];
 describe('Interaction Handler', () => {
   let handler: InteractionHandler;
 
-  const promptMocks = [
+  const promptsMocks = [
     jest.mocked<PromptInterface>({ name: 'none', handle: jest.fn() }),
     jest.mocked<PromptInterface>({ name: 'login', handle: jest.fn() }),
     jest.mocked<PromptInterface>({ name: 'consent', handle: jest.fn() }),
   ];
+
+  const displaysMocks = [jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() })];
 
   const settings = <Settings>{
     issuer: 'https://server.example.com',
@@ -68,7 +72,8 @@ describe('Interaction Handler', () => {
   beforeEach(() => {
     const container = new DependencyInjectionContainer();
 
-    promptMocks.forEach((promptMock) => container.bind<PromptInterface>(PROMPT).toValue(promptMock));
+    promptsMocks.forEach((promptMock) => container.bind<PromptInterface>(PROMPT).toValue(promptMock));
+    displaysMocks.forEach((displayMock) => container.bind<DisplayInterface>(DISPLAY).toValue(displayMock));
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
@@ -86,31 +91,14 @@ describe('Interaction Handler', () => {
     it('should throw when not providing a user interaction object.', () => {
       expect(() => {
         return new InteractionHandler(
-          promptMocks,
+          promptsMocks,
+          displaysMocks,
           <Settings>{},
           grantServiceMock,
           sessionServiceMock,
           consentServiceMock
         );
       }).toThrow(new TypeError('Missing User Interaction options.'));
-    });
-  });
-
-  describe('consentUrl', () => {
-    it('should be defined based on the provided user interaction.', () => {
-      expect(handler['consentUrl']).toEqual('https://server.example.com/auth/consent');
-    });
-  });
-
-  describe('errorUrl', () => {
-    it('should be defined based on the provided user interaction.', () => {
-      expect(handler['errorUrl']).toEqual('https://server.example.com/oauth/error');
-    });
-  });
-
-  describe('loginUrl', () => {
-    it('should be defined based on the provided user interaction.', () => {
-      expect(handler['loginUrl']).toEqual('https://server.example.com/auth/login');
     });
   });
 
@@ -129,7 +117,7 @@ describe('Interaction Handler', () => {
       const error = new LoginRequiredException({ state: 'client_state' });
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      promptMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
+      promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
       await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, ['none'])).resolves.toMatchObject<
         Partial<HttpResponse>
@@ -147,7 +135,7 @@ describe('Interaction Handler', () => {
       const error = new ConsentRequiredException({ state: 'client_state' });
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      promptMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
+      promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
       await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, ['none'])).resolves.toMatchObject<
         Partial<HttpResponse>
@@ -167,7 +155,7 @@ describe('Interaction Handler', () => {
 
       consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
 
-      promptMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
+      promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
       await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, ['none'])).resolves.toMatchObject<
         Partial<HttpResponse>
@@ -187,7 +175,7 @@ describe('Interaction Handler', () => {
 
       consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
 
-      promptMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
+      promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
       await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, ['none'])).resolves.toMatchObject<
         Partial<HttpResponse>
@@ -205,6 +193,10 @@ describe('Interaction Handler', () => {
       const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge', parameters, client };
 
       grantServiceMock.create.mockResolvedValueOnce(grant);
+
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
@@ -227,6 +219,10 @@ describe('Interaction Handler', () => {
       const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge', parameters, client };
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
+
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
@@ -348,6 +344,10 @@ describe('Interaction Handler', () => {
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
 
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
+
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
       await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
@@ -379,6 +379,10 @@ describe('Interaction Handler', () => {
       };
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
+
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
@@ -415,6 +419,10 @@ describe('Interaction Handler', () => {
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
+
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
@@ -480,6 +488,10 @@ describe('Interaction Handler', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       grantServiceMock.create.mockResolvedValueOnce(grant);
 
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
+
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
       await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
@@ -515,6 +527,10 @@ describe('Interaction Handler', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
+
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
       await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
@@ -530,7 +546,7 @@ describe('Interaction Handler', () => {
       expect(grantServiceMock.save).not.toHaveBeenCalled();
     });
 
-    it('should return a redirect response to the consent endpoint when previously authenticated but not authorized and the consent expired.', async () => {
+    it('should return a redirect response to the consent endpoint when previously authenticated but did not authorize and the consent expired.', async () => {
       request.cookies['guarani:grant'] = 'grant_id';
       request.cookies['guarani:session'] = 'session_id';
 
@@ -549,6 +565,10 @@ describe('Interaction Handler', () => {
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
+
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
@@ -613,6 +633,10 @@ describe('Interaction Handler', () => {
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
       grantServiceMock.create.mockResolvedValueOnce(grant);
 
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
+
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
       await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
@@ -672,6 +696,10 @@ describe('Interaction Handler', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       grantServiceMock.create.mockResolvedValueOnce(grant);
 
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
+
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
       await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
@@ -707,6 +735,10 @@ describe('Interaction Handler', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
       grantServiceMock.create.mockResolvedValueOnce(grant);
+
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 

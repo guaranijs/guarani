@@ -1,10 +1,17 @@
-import { LoginContextInteractionResponse, LoginDecisionInteractionResponse } from '@guarani/oauth2-server';
+import { Display, LoginContextInteractionResponse, LoginDecisionInteractionResponse } from '@guarani/oauth2-server';
 
 import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
 import { URL, URLSearchParams } from 'url';
 
 import { User } from '../../entities/user.entity';
+
+const popupTemplateFn = (redirectUri: string): string => `
+<script type="text/javascript">
+  window.opener.callback('${redirectUri}');
+  window.close();
+</script>
+`;
 
 class Controller {
   public async get(request: Request, response: Response): Promise<void> {
@@ -29,18 +36,24 @@ class Controller {
 
       const { data } = await axios.get<LoginContextInteractionResponse>(url.href);
 
-      if (data.skip) {
-        return response.redirect(303, data.request_url);
+      const { display, prompts } = data.context;
+
+      if (display === 'popup') {
+        response.cookie('display', 'popup');
       }
 
-      if (request.isAuthenticated() && !data.context.prompts.includes('login')) {
-        const redirectTo = await this.doLogin(loginChallenge, <User>request.user);
-        return response.redirect(303, redirectTo);
+      if (data.skip) {
+        return this.redirectOrClosePopup(response, data.request_url, display);
+      }
+
+      if (request.isAuthenticated() && !prompts.includes('login')) {
+        return await this.doLogin(request, response, loginChallenge, <User>request.user);
       }
 
       return response.render('auth/login', {
         request,
         title: 'Login',
+        display,
         login_challenge: loginChallenge,
         error: request.flash('error'),
         success: request.flash('success'),
@@ -62,12 +75,10 @@ class Controller {
       return response.redirect(303, '/');
     }
 
-    const redirectTo = await this.doLogin(loginChallenge, <User>request.user);
-
-    return response.redirect(303, redirectTo);
+    return await this.doLogin(request, response, loginChallenge, <User>request.user);
   }
 
-  private async doLogin(loginChallenge: string, user: User): Promise<string> {
+  private async doLogin(request: Request, response: Response, loginChallenge: string, user: User): Promise<void> {
     const reqBody = new URLSearchParams({
       interaction_type: 'login',
       login_challenge: loginChallenge,
@@ -83,7 +94,18 @@ class Controller {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-    return redirectTo;
+    const display = <Display>request.cookies.display;
+
+    return this.redirectOrClosePopup(response, redirectTo, display);
+  }
+
+  private redirectOrClosePopup(response: Response, url: string, display: Display | undefined): void {
+    if (display === 'popup') {
+      response.clearCookie('display').send(popupTemplateFn(url));
+      return;
+    }
+
+    return response.redirect(303, url);
   }
 }
 

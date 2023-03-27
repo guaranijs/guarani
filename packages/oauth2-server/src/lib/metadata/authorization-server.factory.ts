@@ -6,6 +6,9 @@ import { ClientAuthenticationInterface } from '../client-authentication/client-a
 import { clientAuthenticationRegistry } from '../client-authentication/client-authentication.registry';
 import { CLIENT_AUTHENTICATION } from '../client-authentication/client-authentication.token';
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
+import { DisplayInterface } from '../displays/display.interface';
+import { displayRegistry } from '../displays/display.registry';
+import { DISPLAY } from '../displays/display.token';
 import { AuthorizationEndpoint } from '../endpoints/authorization.endpoint';
 import { DeviceAuthorizationEndpoint } from '../endpoints/device-authorization.endpoint';
 import { DiscoveryEndpoint } from '../endpoints/discovery.endpoint';
@@ -119,6 +122,7 @@ export class AuthorizationServerFactory {
     this.setClientAuthentication();
     this.setGrantTypes();
     this.setPrompts();
+    this.setDisplays();
     this.setInteractionTypes();
     this.setResponseTypes();
     this.setResponseModes();
@@ -212,6 +216,15 @@ export class AuthorizationServerFactory {
   private static setPrompts(): void {
     Object.values(promptRegistry).forEach((prompt) => {
       this.container.bind<PromptInterface>(PROMPT).toClass(prompt).asSingleton();
+    });
+  }
+
+  /**
+   * Defines the Displays supported by the Authorization Server.
+   */
+  private static setDisplays(): void {
+    Object.values(displayRegistry).forEach((display) => {
+      this.container.bind<DisplayInterface>(DISPLAY).toClass(display).asSingleton();
     });
   }
 

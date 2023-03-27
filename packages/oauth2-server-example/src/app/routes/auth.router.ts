@@ -28,8 +28,8 @@ router
 
 router
   .route('/consent')
-  .get(authenticated, csrf, ConsentController.get)
-  .post(authenticated, csrf, ConsentController.post);
+  .get(authenticated, csrf, async (req, res) => await ConsentController.get(req, res))
+  .post(authenticated, csrf, async (req, res) => await ConsentController.post(req, res));
 
 router.route('/logout').get(authenticated, LogoutController.logout).post(authenticated, LogoutController.logout);
 

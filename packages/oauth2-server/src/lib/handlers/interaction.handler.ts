@@ -5,6 +5,9 @@ import { timingSafeEqual } from 'crypto';
 import { URL, URLSearchParams } from 'url';
 import { isDeepStrictEqual } from 'util';
 
+import { DisplayInterface } from '../displays/display.interface';
+import { DISPLAY } from '../displays/display.token';
+import { Display } from '../displays/display.type';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
@@ -35,24 +38,10 @@ import { SETTINGS } from '../settings/settings.token';
 @Injectable()
 export class InteractionHandler {
   /**
-   * Url of the Error Page.
-   */
-  private readonly consentUrl: string;
-
-  /**
-   * URL of the Error Page.
-   */
-  private readonly errorUrl: string;
-
-  /**
-   * URL of the Error Page.
-   */
-  private readonly loginUrl: string;
-
-  /**
    * Instantiates a new Interaction Handler.
    *
    * @param prompts Prompts registered at the Authorization Server.
+   * @param displays Displays registered at the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param grantService Instance of the Grant Service.
    * @param sessionService Instance of the Session Service.
@@ -60,6 +49,7 @@ export class InteractionHandler {
    */
   public constructor(
     @InjectAll(PROMPT) private readonly prompts: PromptInterface[],
+    @InjectAll(DISPLAY) private readonly displays: DisplayInterface[],
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
@@ -68,15 +58,6 @@ export class InteractionHandler {
     if (this.settings.userInteraction === undefined) {
       throw new TypeError('Missing User Interaction options.');
     }
-
-    const {
-      issuer,
-      userInteraction: { consentUrl, errorUrl, loginUrl },
-    } = this.settings;
-
-    this.consentUrl = new URL(consentUrl, issuer).href;
-    this.errorUrl = new URL(errorUrl, issuer).href;
-    this.loginUrl = new URL(loginUrl, issuer).href;
   }
 
   /**
@@ -98,6 +79,15 @@ export class InteractionHandler {
     client: Client,
     prompts: Prompt[]
   ): Promise<HttpResponse | [Grant | null, Session, Consent]> {
+    let display: DisplayInterface;
+
+    try {
+      display = this.getDisplay(parameters.display ?? 'page', parameters.state);
+    } catch (exc: unknown) {
+      const error = this.asOAuth2Exception(exc, parameters);
+      return this.handleFatalAuthorizationError(error);
+    }
+
     const { cookies } = request;
 
     let grant = await this.findGrant(cookies);
@@ -142,7 +132,7 @@ export class InteractionHandler {
         await this.checkGrant(grant, client, parameters);
 
         if (grant.session == null) {
-          return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
+          return this.redirectToLoginPage(grant, display);
         }
 
         session = grant.session;
@@ -151,7 +141,7 @@ export class InteractionHandler {
       if (session.expiresAt != null && new Date() > session.expiresAt) {
         await this.sessionService.remove(session);
         grant ??= await this.grantService.create(parameters, client);
-        return this.redirectToLoginPage(grant).setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
+        return this.redirectToLoginPage(grant, display);
       }
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);
@@ -172,11 +162,7 @@ export class InteractionHandler {
         await this.checkGrant(grant, client, parameters);
 
         if (grant.consent == null) {
-          return this.redirectToConsentPage(grant).setCookies({
-            'guarani:grant': grant.id,
-            'guarani:session': session.id,
-            'guarani:consent': null,
-          });
+          return this.redirectToConsentPage(grant, session, display);
         }
 
         consent = grant.consent;
@@ -192,11 +178,7 @@ export class InteractionHandler {
           await this.grantService.save(grant);
         }
 
-        return this.redirectToConsentPage(grant).setCookies({
-          'guarani:grant': grant.id,
-          'guarani:session': session.id,
-          'guarani:consent': null,
-        });
+        return this.redirectToConsentPage(grant, session, display);
       }
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);
@@ -210,6 +192,23 @@ export class InteractionHandler {
     // #endregion
 
     return [grant, session, consent];
+  }
+
+  /**
+   * Retrieves the Display based on the **display** requested by the Client.
+   *
+   * @param name Display requested by the Client.
+   * @param state Client State prior to the Authorization Request.
+   * @returns Display.
+   */
+  private getDisplay(name: Display, state: string | undefined): DisplayInterface {
+    const display = this.displays.find((display) => display.name === name);
+
+    if (display === undefined) {
+      throw new InvalidRequestException({ description: `Unsupported display "${name}".`, state });
+    }
+
+    return display;
   }
 
   /**
@@ -301,30 +300,33 @@ export class InteractionHandler {
    * Redirects the User-Agent to the Authorization Server's Login Page for it to authenticate the User.
    *
    * @param grant Grant of the Request.
+   * @param display Display requested by the Client.
    * @returns Http Redirect Response to the Login Page.
    */
-  private redirectToLoginPage(grant: Grant): HttpResponse {
-    const redirectUrl = new URL(this.loginUrl);
-    const searchParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
+  private redirectToLoginPage(grant: Grant, display: DisplayInterface): HttpResponse {
+    const url = new URL(this.settings.userInteraction!.loginUrl, this.settings.issuer);
+    const parameters: Record<string, any> = { login_challenge: grant.loginChallenge };
 
-    redirectUrl.search = searchParameters.toString();
-
-    return new HttpResponse().redirect(redirectUrl);
+    return display
+      .createHttpResponse(url.href, parameters)
+      .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
   }
 
   /**
    * Redirects the User-Agent to the Authorization Server's Consent Page for it to authenticate the User.
    *
    * @param grant Grant of the Request.
+   * @param session Session of the Request.
+   * @param display Display requested by the Client.
    * @returns Http Redirect Response to the Consent Page.
    */
-  private redirectToConsentPage(grant: Grant): HttpResponse {
-    const redirectUrl = new URL(this.consentUrl);
-    const searchParams = new URLSearchParams({ consent_challenge: grant.consentChallenge });
+  private redirectToConsentPage(grant: Grant, session: Session, display: DisplayInterface): HttpResponse {
+    const url = new URL(this.settings.userInteraction!.consentUrl, this.settings.issuer);
+    const parameters: Record<string, any> = { consent_challenge: grant.consentChallenge };
 
-    redirectUrl.search = searchParams.toString();
-
-    return new HttpResponse().redirect(redirectUrl);
+    return display
+      .createHttpResponse(url.href, parameters)
+      .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null });
   }
 
   /**
@@ -335,7 +337,7 @@ export class InteractionHandler {
    * @returns Http Response.
    */
   private handleFatalAuthorizationError(error: OAuth2Exception): HttpResponse {
-    const url = new URL(this.errorUrl);
+    const url = new URL(this.settings.userInteraction!.errorUrl, this.settings.issuer);
     const parameters = new URLSearchParams(error.toJSON());
 
     url.search = parameters.toString();

@@ -1,8 +1,15 @@
-import { ConsentContextInteractionResponse, ConsentDecisionInteractionResponse } from '@guarani/oauth2-server';
+import { ConsentContextInteractionResponse, ConsentDecisionInteractionResponse, Display } from '@guarani/oauth2-server';
 
 import axios from 'axios';
 import { Request, Response } from 'express';
 import { URL, URLSearchParams } from 'url';
+
+const popupTemplateFn = (redirectUri: string): string => `
+<script type="text/javascript">
+  window.opener.callback('${redirectUri}');
+  window.close();
+</script>
+`;
 
 class Controller {
   public async get(request: Request, response: Response): Promise<void> {
@@ -24,8 +31,14 @@ class Controller {
 
     const { data } = await axios.get<ConsentContextInteractionResponse>(url.href);
 
+    const { display } = data.context;
+
+    if (display === 'popup') {
+      response.cookie('display', 'popup');
+    }
+
     if (data.skip) {
-      return response.redirect(303, data.request_url);
+      return this.redirectOrClosePopup(response, data.request_url, display);
     }
 
     return response.render('auth/consent', {
@@ -70,7 +83,18 @@ class Controller {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-    return response.redirect(303, redirectTo);
+    const display = <Display>request.cookies.display;
+
+    return this.redirectOrClosePopup(response, redirectTo, display);
+  }
+
+  private redirectOrClosePopup(response: Response, url: string, display: Display | undefined): void {
+    if (display === 'popup') {
+      response.clearCookie('display').send(popupTemplateFn(url));
+      return;
+    }
+
+    return response.redirect(303, url);
   }
 }
 

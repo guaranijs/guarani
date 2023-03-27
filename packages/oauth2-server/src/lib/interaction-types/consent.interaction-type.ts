@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
+import { removeUndefined } from '@guarani/primitives';
 
 import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
@@ -81,7 +82,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return {
+    return removeUndefined<ConsentContextInteractionResponse>({
       skip: grant.consent != null,
       requested_scope: grant.parameters.scope,
       subject: grant.session!.user.id,
@@ -90,8 +91,9 @@ export class ConsentInteractionType implements InteractionTypeInterface {
       client: grant.client,
       context: {
         prompts: <Prompt[]>(grant.parameters.prompt?.split(' ') ?? []),
+        display: grant.parameters.display,
       },
-    };
+    });
   }
 
   /**

@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
+import { removeUndefined } from '@guarani/primitives';
 
 import { URL, URLSearchParams } from 'url';
 
@@ -89,14 +90,15 @@ export class LoginInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return {
+    return removeUndefined<LoginContextInteractionResponse>({
       skip: grant.session != null,
       request_url: url.href,
       client: grant.client,
       context: {
         prompts: <Prompt[]>(grant.parameters.prompt?.split(' ') ?? []),
+        display: grant.parameters.display,
       },
-    };
+    });
   }
 
   /**

@@ -14,6 +14,11 @@ export { ClientAuthenticationInterface } from './lib/client-authentication/clien
 export { CLIENT_AUTHENTICATION } from './lib/client-authentication/client-authentication.token';
 export { ClientAuthentication } from './lib/client-authentication/client-authentication.type';
 
+// Displays
+export { DisplayInterface } from './lib/displays/display.interface';
+export { DISPLAY } from './lib/displays/display.token';
+export { Display } from './lib/displays/display.type';
+
 // Endpoints
 export { EndpointInterface } from './lib/endpoints/endpoint.interface';
 export { ENDPOINT } from './lib/endpoints/endpoint.token';
@@ -33,12 +38,14 @@ export { User } from './lib/entities/user.entity';
 // Exceptions
 export { AccessDeniedException } from './lib/exceptions/access-denied.exception';
 export { AuthorizationPendingException } from './lib/exceptions/authorization-pending.exception';
+export { ConsentRequiredException } from './lib/exceptions/consent-required.exception';
 export { ErrorCode } from './lib/exceptions/error-code.type';
 export { ExpiredTokenException } from './lib/exceptions/expired-token.exception';
 export { InvalidClientException } from './lib/exceptions/invalid-client.exception';
 export { InvalidGrantException } from './lib/exceptions/invalid-grant.exception';
 export { InvalidRequestException } from './lib/exceptions/invalid-request.exception';
 export { InvalidScopeException } from './lib/exceptions/invalid-scope.exception';
+export { LoginRequiredException } from './lib/exceptions/login-required.exception';
 export { OAuth2Exception } from './lib/exceptions/oauth2.exception';
 export { OAuth2ExceptionParameters } from './lib/exceptions/oauth2.exception.parameters';
 export { OAuth2ExceptionResponse } from './lib/exceptions/oauth2.exception.response';
@@ -59,6 +66,7 @@ export { GrantType } from './lib/grant-types/grant-type.type';
 // Handlers
 export { ClientAuthenticationHandler } from './lib/handlers/client-authentication.handler';
 export { IdTokenHandler } from './lib/handlers/id-token.handler';
+export { InteractionHandler } from './lib/handlers/interaction.handler';
 export { ScopeHandler } from './lib/handlers/scope.handler';
 
 // Http
@@ -91,9 +99,12 @@ export { ConsentContextInteractionResponse } from './lib/messages/consent-contex
 export { ConsentDecisionAcceptInteractionRequest } from './lib/messages/consent-decision-accept.interaction-request';
 export { ConsentDecisionDenyInteractionRequest } from './lib/messages/consent-decision-deny.interaction-request';
 export { ConsentDecisionInteractionRequest } from './lib/messages/consent-decision.interaction-request';
+export { ConsentContext } from './lib/messages/consent.context';
 export { DeviceAuthorizationRequest } from './lib/messages/device-authorization-request';
 export { DeviceAuthorizationResponse } from './lib/messages/device-authorization-response';
 export { DeviceCodeTokenRequest } from './lib/messages/device-code.token-request';
+export { DiscoveryResponse } from './lib/messages/discovery-response';
+export { IdTokenAuthorizationResponse } from './lib/messages/id-token.authorization-response';
 export { InteractionRequest } from './lib/messages/interaction-request';
 export { IntrospectionRequest } from './lib/messages/introspection-request';
 export { IntrospectionResponse } from './lib/messages/introspection-response';
@@ -104,6 +115,7 @@ export { LoginDecisionAcceptInteractionRequest } from './lib/messages/login-deci
 export { LoginDecisionDenyInteractionRequest } from './lib/messages/login-decision-deny.interaction-request';
 export { LoginDecisionInteractionRequest } from './lib/messages/login-decision.interaction-request';
 export { LoginDecisionInteractionResponse } from './lib/messages/login-decision.interaction-response';
+export { LoginContext } from './lib/messages/login.context';
 export { RefreshTokenTokenRequest } from './lib/messages/refresh-token.token-request';
 export { ResourceOwnerPasswordCredentialsTokenRequest } from './lib/messages/resource-owner-password-credentials.token-request';
 export { RevocationRequest } from './lib/messages/revocation-request';
@@ -119,6 +131,11 @@ export { AuthorizationServerOptions } from './lib/metadata/authorization-server.
 export { PkceMethod } from './lib/pkce/pkce-method.type';
 export { PkceInterface } from './lib/pkce/pkce.interface';
 export { PKCE } from './lib/pkce/pkce.token';
+
+// Prompts
+export { PromptInterface } from './lib/prompts/prompt.interface';
+export { PROMPT } from './lib/prompts/prompt.token';
+export { Prompt } from './lib/prompts/prompt.type';
 
 // Response Modes
 export { ResponseModeInterface } from './lib/response-modes/response-mode.interface';

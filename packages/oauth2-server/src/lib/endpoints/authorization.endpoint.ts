@@ -167,22 +167,61 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param parameters Parameters of the Authorization Request.
    */
   private checkParameters(parameters: AuthorizationRequest): void {
-    const { response_type: responseType, client_id: clientId, redirect_uri: redirectUri, scope } = parameters;
+    const {
+      display,
+      max_age: maxAge,
+      nonce,
+      prompt,
+      response_mode: responseMode,
+      response_type: responseType,
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope,
+      state,
+    } = parameters;
+
+    if (state !== undefined && typeof state !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "state".' });
+    }
 
     if (typeof responseType !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "response_type".', state: parameters.state });
+      throw new InvalidRequestException({ description: 'Invalid parameter "response_type".', state });
     }
 
     if (typeof clientId !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "client_id".', state: parameters.state });
+      throw new InvalidRequestException({ description: 'Invalid parameter "client_id".', state });
     }
 
     if (typeof redirectUri !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".', state: parameters.state });
+      throw new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".', state });
     }
 
     if (typeof scope !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "scope".', state: parameters.state });
+      throw new InvalidRequestException({ description: 'Invalid parameter "scope".', state });
+    }
+
+    if (responseMode !== undefined && typeof responseMode !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "response_mode".', state });
+    }
+
+    if (nonce !== undefined && typeof nonce !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "nonce".', state });
+    }
+
+    if (prompt !== undefined && typeof prompt !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "prompt".', state });
+    }
+
+    if (display !== undefined && typeof display !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "display".', state });
+    }
+
+    if (
+      maxAge !== undefined &&
+      typeof maxAge !== 'number' &&
+      (typeof maxAge !== 'string' || Number.isNaN(Number.parseInt(maxAge, 10)))
+    ) {
+      throw new InvalidRequestException({ description: 'Invalid parameter "max_age".', state });
     }
   }
 

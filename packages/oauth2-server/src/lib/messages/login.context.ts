@@ -14,4 +14,9 @@ export interface LoginContext extends Record<string, any> {
    * Display requested by the Client.
    */
   readonly display?: Display;
+
+  /**
+   * Time after which the User Authentication violates the **max_age** Authorization Parameter.
+   */
+  readonly auth_exp?: number;
 }

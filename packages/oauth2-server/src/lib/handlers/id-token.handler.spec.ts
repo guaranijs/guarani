@@ -1,18 +1,17 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 import { EllipticCurveKey, JsonWebKeySet, JsonWebSignature, RsaKey } from '@guarani/jose';
 
+import { Buffer } from 'buffer';
+
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { IdTokenHandler } from './id-token.handler';
-
-const session = <Session>{ createdAt: new Date() };
 
 const consent = <Consent>{
   client: { id: 'client_id' },
@@ -112,24 +111,36 @@ describe('ID Token Handler', () => {
   });
 
   it('should generate an id token with the default claims.', async () => {
+    const authTime = Math.floor(Date.now() / 1000);
+
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(session, consent, null, null, { nonce: 'nonce' });
+    const idToken = await idTokenHandler.generateIdToken(consent, null, null, { nonce: 'nonce', auth_time: authTime });
 
     expect(idToken).toEqual(expect.any(String));
 
+    let payload!: Buffer;
+
     await expect(
-      JsonWebSignature.verify(idToken, async (header) => jwks.find((jwk) => jwk.kid === header.kid)!, [
-        'ES256',
-        'RS256',
-      ])
+      (async () => {
+        return ({ payload } = await JsonWebSignature.verify(
+          idToken,
+          async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+          ['ES256', 'RS256']
+        ));
+      })()
     ).resolves.not.toThrow();
+
+    const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+
+    expect(claims.nonce).toEqual('nonce');
+    expect(claims.auth_time).toEqual(authTime);
   });
 
   it('should generate an id token with the default claims and the "at_hash" claim.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(session, consent, accessToken, null, { nonce: 'nonce' });
+    const idToken = await idTokenHandler.generateIdToken(consent, accessToken, null, { nonce: 'nonce' });
 
     expect(idToken).toEqual(expect.any(String));
 
@@ -148,7 +159,7 @@ describe('ID Token Handler', () => {
   it('should generate an id token with the default claims and the "c_hash" claim.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(session, consent, null, authorizationCode, { nonce: 'nonce' });
+    const idToken = await idTokenHandler.generateIdToken(consent, null, authorizationCode, { nonce: 'nonce' });
 
     expect(idToken).toEqual(expect.any(String));
 
@@ -167,9 +178,7 @@ describe('ID Token Handler', () => {
   it('should generate an id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
     userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-    const idToken = await idTokenHandler.generateIdToken(session, consent, accessToken, authorizationCode, {
-      nonce: 'nonce',
-    });
+    const idToken = await idTokenHandler.generateIdToken(consent, accessToken, authorizationCode, { nonce: 'nonce' });
 
     expect(idToken).toEqual(expect.any(String));
 

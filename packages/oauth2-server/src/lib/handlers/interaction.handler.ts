@@ -143,6 +143,21 @@ export class InteractionHandler {
         grant ??= await this.grantService.create(parameters, client);
         return this.redirectToLoginPage(grant, display);
       }
+
+      if (parameters.max_age !== undefined) {
+        const maxAge = Number.parseInt(parameters.max_age, 10);
+
+        if (session.createdAt.getTime() + maxAge * 1000 <= Date.now()) {
+          grant ??= await this.grantService.create(parameters, client);
+
+          if (grant.session == null) {
+            grant.session = session;
+            await this.grantService.save(grant);
+          }
+
+          return this.redirectToLoginPage(grant, display);
+        }
+      }
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);
       return this.handleFatalAuthorizationError(error).setCookies({ 'guarani:grant': null, 'guarani:session': null });

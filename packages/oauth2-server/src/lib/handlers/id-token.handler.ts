@@ -6,7 +6,6 @@ import { createHash, randomInt } from 'crypto';
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
 import { IdTokenClaimsParameters } from '../id-token/id-token.claims.parameters';
 import { UserServiceInterface } from '../services/user.service.interface';
@@ -39,23 +38,21 @@ export class IdTokenHandler {
   /**
    * Generates an ID Token to be used by the Client for authentication purposes.
    *
-   * @param session Session with the Authentication information of the End User.
    * @param consent Consent granted by the Authenticated User.
    * @param accessToken Access Token issued to the Client.
    * @param authorizationCode Authorization Code issued to the Client.
    * @returns Generated ID Token.
    */
   public async generateIdToken(
-    session: Session,
     consent: Consent,
     accessToken: AccessToken | null,
     authorizationCode: AuthorizationCode | null,
-    parameters?: Partial<IdTokenClaimsParameters>
+    parameters: Partial<IdTokenClaimsParameters> = {}
   ): Promise<string> {
     const keys = this.jwks.keys.filter((jwk) => jwk.alg !== undefined && jwk.use === 'sig');
-    const key = keys[randomInt(keys.length)]!;
+    const key = keys[randomInt(keys.length)];
 
-    if (key === null) {
+    if (key === undefined) {
       throw new Error('The keys at the JSON Web Key Set MUST have both the "alg" and "use" parameters.');
     }
 
@@ -71,8 +68,7 @@ export class IdTokenHandler {
       aud: client.id,
       exp: now + 86400,
       iat: now,
-      nonce: parameters?.nonce,
-      auth_time: Math.ceil(session.createdAt.getTime() / 1000),
+      ...parameters,
       ...userinfo,
     });
 

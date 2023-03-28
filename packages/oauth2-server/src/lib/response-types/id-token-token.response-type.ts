@@ -74,8 +74,9 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
-    const idToken = await this.idTokenHandler.generateIdToken(session, consent, accessToken, null, {
+    const idToken = await this.idTokenHandler.generateIdToken(consent, accessToken, null, {
       nonce: parameters.nonce,
+      auth_time: parameters.max_age !== undefined ? Math.floor(session.createdAt.getTime() / 1000) : undefined,
     });
 
     const token: TokenAuthorizationResponse = createTokenResponse(accessToken);

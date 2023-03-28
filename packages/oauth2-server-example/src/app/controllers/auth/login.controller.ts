@@ -36,7 +36,7 @@ class Controller {
 
       const { data } = await axios.get<LoginContextInteractionResponse>(url.href);
 
-      const { display, prompts } = data.context;
+      const { display, auth_exp: authExp, prompts } = data.context;
 
       if (display === 'popup') {
         response.cookie('display', 'popup');
@@ -46,7 +46,11 @@ class Controller {
         return this.redirectOrClosePopup(response, data.request_url, display);
       }
 
-      if (request.isAuthenticated() && !prompts.includes('login')) {
+      if (
+        request.isAuthenticated() &&
+        !prompts.includes('login') && // no prompt login
+        (authExp === undefined || new Date() <= new Date(authExp * 1000)) // no max_age or not expired yet.
+      ) {
         return await this.doLogin(request, response, loginChallenge, <User>request.user);
       }
 

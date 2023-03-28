@@ -82,8 +82,9 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
     }
 
     const authorizationCode = await this.authorizationCodeService.create(parameters, session, consent);
-    const idToken = await this.idTokenHandler.generateIdToken(session, consent, null, authorizationCode, {
+    const idToken = await this.idTokenHandler.generateIdToken(consent, null, authorizationCode, {
       nonce: parameters.nonce,
+      auth_time: parameters.max_age !== undefined ? Math.floor(session.createdAt.getTime() / 1000) : undefined,
     });
 
     return removeUndefined<CodeAuthorizationResponse & IdTokenAuthorizationResponse>({

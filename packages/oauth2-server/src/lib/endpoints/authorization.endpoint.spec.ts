@@ -156,6 +156,19 @@ describe('Authorization Endpoint', () => {
       };
     });
 
+    it('should return an error response when providing an invalid "state" parameter.', async () => {
+      request.query.state = 123;
+
+      const error = new InvalidRequestException({ description: 'Invalid parameter "state".' });
+      const parameters = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
+        statusCode: 303,
+      });
+    });
+
     it('should return an error response when not providing a "response_type" parameter.', async () => {
       delete request.query.response_type;
 
@@ -219,6 +232,81 @@ describe('Authorization Endpoint', () => {
         statusCode: 303,
       });
     });
+
+    it('should return an error response when providing an invalid "response_mode" parameter.', async () => {
+      request.query.response_mode = 123;
+
+      const error = new InvalidRequestException({
+        description: 'Invalid parameter "response_mode".',
+        state: 'client_state',
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should return an error response when providing an invalid "nonce" parameter.', async () => {
+      request.query.nonce = 123;
+
+      const error = new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: 'client_state' });
+      const parameters = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should return an error response when providing an invalid "prompt" parameter.', async () => {
+      request.query.prompt = 123;
+
+      const error = new InvalidRequestException({ description: 'Invalid parameter "prompt".', state: 'client_state' });
+      const parameters = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it('should return an error response when providing an invalid "display" parameter.', async () => {
+      request.query.display = 123;
+
+      const error = new InvalidRequestException({ description: 'Invalid parameter "display".', state: 'client_state' });
+      const parameters = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it.each<any>([null, 'abc'])(
+      'should return an error response when providing an invalid "max_age" parameter.',
+      async (maxAge) => {
+        request.query.max_age = maxAge;
+
+        const error = new InvalidRequestException({
+          description: 'Invalid parameter "max_age".',
+          state: 'client_state',
+        });
+        const parameters = new URLSearchParams(error.toJSON());
+
+        await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+          body: Buffer.alloc(0),
+          headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
+          statusCode: 303,
+        });
+      }
+    );
 
     it('should return an error response when a client is not found.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);

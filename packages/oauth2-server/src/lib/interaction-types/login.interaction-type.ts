@@ -90,13 +90,29 @@ export class LoginInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
+    let skip = grant.session != null;
+    let authExp: number | undefined;
+
+    if (grant.session != null && grant.parameters.max_age !== undefined) {
+      const authTime = grant.session.createdAt.getTime();
+      const maxAge = Number.parseInt(grant.parameters.max_age, 10) * 1000;
+
+      skip &&= Date.now() < authTime + maxAge;
+      authExp = Math.floor((authTime + maxAge) / 1000);
+
+      if (!skip) {
+        await this.sessionService.remove(grant.session);
+      }
+    }
+
     return removeUndefined<LoginContextInteractionResponse>({
-      skip: grant.session != null,
+      skip,
       request_url: url.href,
       client: grant.client,
       context: {
         prompts: <Prompt[]>(grant.parameters.prompt?.split(' ') ?? []),
         display: grant.parameters.display,
+        auth_exp: authExp,
       },
     });
   }

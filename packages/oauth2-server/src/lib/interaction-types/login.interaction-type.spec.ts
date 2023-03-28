@@ -138,7 +138,7 @@ describe('Login Interaction Type', () => {
       });
     });
 
-    it('should return a valid skip login context response.', async () => {
+    it('should return a valid skip login context response when not providing a "max_age" authorization parameter.', async () => {
       const authorizationParameters = <AuthorizationRequest>{
         response_type: 'code',
         client_id: 'client_id',
@@ -165,6 +165,80 @@ describe('Login Interaction Type', () => {
         context: {
           prompts: [],
         },
+      });
+    });
+
+    it('should return a valid skip login context response when the session is within the elapsed "max_age" time.', async () => {
+      const authorizationParameters = <AuthorizationRequest>{
+        response_type: 'code',
+        client_id: 'client_id',
+        redirect_uri: 'https://client.example.com/callback',
+        scope: 'foo bar baz',
+        state: 'client_state',
+        response_mode: 'query',
+        max_age: '86400',
+      };
+
+      const createdAt = Date.now();
+
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: authorizationParameters,
+        client: { id: 'client_id' },
+        session: { id: 'session_id', createdAt: new Date(createdAt - 300000) },
+      });
+
+      const urlParameters = new URLSearchParams(authorizationParameters);
+
+      await expect(interactionType.handleContext(parameters)).resolves.toStrictEqual<LoginContextInteractionResponse>({
+        skip: true,
+        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        client: <Client>{ id: 'client_id' },
+        context: {
+          prompts: [],
+          auth_exp: Math.floor((createdAt - 300000 + 86400000) / 1000),
+        },
+      });
+    });
+
+    it('should return a valid skip login context response when the session is not within the elapsed "max_age" time.', async () => {
+      const authorizationParameters = <AuthorizationRequest>{
+        response_type: 'code',
+        client_id: 'client_id',
+        redirect_uri: 'https://client.example.com/callback',
+        scope: 'foo bar baz',
+        state: 'client_state',
+        response_mode: 'query',
+        max_age: '300',
+      };
+
+      const createdAt = Date.now();
+
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: authorizationParameters,
+        client: { id: 'client_id' },
+        session: { id: 'session_id', createdAt: new Date(createdAt - 86400000) },
+      });
+
+      const urlParameters = new URLSearchParams(authorizationParameters);
+
+      await expect(interactionType.handleContext(parameters)).resolves.toStrictEqual<LoginContextInteractionResponse>({
+        skip: false,
+        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        client: <Client>{ id: 'client_id' },
+        context: {
+          prompts: [],
+          auth_exp: Math.floor((createdAt - 86400000 + 300000) / 1000),
+        },
+      });
+
+      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.remove).toHaveBeenCalledWith({
+        id: 'session_id',
+        createdAt: new Date(createdAt - 86400000),
       });
     });
   });

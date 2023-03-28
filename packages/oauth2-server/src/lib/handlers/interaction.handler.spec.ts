@@ -717,6 +717,46 @@ describe('Interaction Handler', () => {
       expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
     });
 
+    it('should return a redirect response to the login endpoint if the session\'s creation date is longer than "max_age".', async () => {
+      Reflect.set(parameters, 'max_age', 300);
+
+      request.cookies['guarani:session'] = 'session_id';
+      request.cookies['guarani:consent'] = 'consent_id';
+
+      const client = <Client>{ id: 'client_id' };
+      const session = <Session>{ id: 'session_id', createdAt: new Date(Date.now() - 3600000) };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters,
+        expiresAt: new Date(Date.now() + 300000),
+        client,
+      };
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      grantServiceMock.create.mockResolvedValueOnce(grant);
+
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
+
+      const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
+
+      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+        Partial<HttpResponse>
+      >({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/auth/login?${redirectParameters.toString()}` },
+        cookies: { 'guarani:grant': grant.id, 'guarani:session': null },
+        statusCode: 303,
+      });
+
+      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
+
+      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
+    });
+
     it('should return a redirect response to the consent endpoint if the consent is expired.', async () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:consent'] = 'consent_id';

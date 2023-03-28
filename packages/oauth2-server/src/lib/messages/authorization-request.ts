@@ -51,4 +51,10 @@ export interface AuthorizationRequest extends Record<string, any> {
    * Display requested by the Client.
    */
   readonly display?: Display;
+
+  /**
+   * Number of seconds since the User's last active authentication in which the Authorization Server
+   * **MUST** actively try to re-authenticate the User.
+   */
+  readonly max_age?: string;
 }

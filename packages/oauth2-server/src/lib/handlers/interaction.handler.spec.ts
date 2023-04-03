@@ -751,8 +751,7 @@ describe('Interaction Handler', () => {
         statusCode: 303,
       });
 
-      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
+      expect(sessionServiceMock.remove).not.toHaveBeenCalled();
 
       expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
     });

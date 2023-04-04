@@ -58,7 +58,7 @@ export interface DiscoveryResponse extends Record<string, any> {
   /**
    * JSON Web Signature Algorithms supported by the Client Assertion Method of the Token Endpoint.
    */
-  readonly token_endpoint_auth_signing_alg_values_supported?: JsonWebSignatureAlgorithm[];
+  readonly token_endpoint_auth_signing_alg_values_supported?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
 
   /**
    * Url of the Human-Readable documentation of the Authorization Server.
@@ -93,7 +93,7 @@ export interface DiscoveryResponse extends Record<string, any> {
   /**
    * JSON Web Signature Algorithms supported by the Client Assertion Method of the Revocation Endpoint.
    */
-  readonly revocation_endpoint_auth_signing_alg_values_supported?: JsonWebSignatureAlgorithm[];
+  readonly revocation_endpoint_auth_signing_alg_values_supported?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
 
   /**
    * Url of the Introspection Endpoint.
@@ -108,7 +108,7 @@ export interface DiscoveryResponse extends Record<string, any> {
   /**
    * JSON Web Signature Algorithms supported by the Client Assertion Method of the Introspection Endpoint.
    */
-  readonly introspection_endpoint_auth_signing_alg_values_supported?: JsonWebSignatureAlgorithm[];
+  readonly introspection_endpoint_auth_signing_alg_values_supported?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
 
   /**
    * PKCE Code Challenge Methods supported by the Authorization Server.

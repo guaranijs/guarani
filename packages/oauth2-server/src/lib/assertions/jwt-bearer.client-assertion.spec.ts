@@ -1,5 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 import {
+  JsonWebKey,
   JsonWebSignature,
   JsonWebSignatureHeaderParameters,
   JsonWebTokenClaims,
@@ -37,6 +38,9 @@ const methodRequests: [Record<string, any>, boolean][] = [
   [{ client_assertion_type: '' }, false],
   [{ client_assertion_type: 'foo' }, false],
   [{ client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' }, false],
+  [{ client_assertion: 'foo', client_assertion_type: '' }, false],
+  [{ client_assertion: 'foo', client_assertion_type: 'foo' }, false],
+  [{ client_assertion: 'foo', client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' }, true],
 ];
 
 const invalidTokenFormats: string[] = ['', 'a', '.a', '.a.b', 'a.b', 'a.b.c.d'];
@@ -50,7 +54,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
   const settings = <Settings>{
     issuer: 'https://server.example.com',
-    clientAuthenticationSignatureAlgorithms: ['HS256'],
+    clientAuthenticationSignatureAlgorithms: ['HS256', 'RS256'],
   };
 
   beforeEach(() => {
@@ -61,6 +65,10 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
     container.bind(JwtBearerClientAssertion).toSelf().asSingleton();
 
     clientAssertion = container.resolve(JwtBearerClientAssertion);
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   describe('clientAssertionType', () => {
@@ -90,58 +98,6 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       expect(clientAssertion.hasBeenRequested(request)).toBe(expected);
     });
-
-    it.each(invalidTokenFormats)(
-      'should throw when the provided "client_assertion" is an invalid json web token.',
-      (assertion) => {
-        request.body.client_assertion = assertion;
-
-        expect(() => clientAssertion.hasBeenRequested(request)).toThrow(
-          new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' })
-        );
-      }
-    );
-
-    it('should return false when the provided token does not use an algorithm supported by the method.', async () => {
-      const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
-      const assertion = await jws.sign(jwk);
-
-      request.body.client_assertion = assertion;
-
-      Reflect.set(clientAssertion, 'algorithms', ['RS256']);
-
-      expect(clientAssertion.hasBeenRequested(request)).toBe(false);
-
-      Reflect.deleteProperty(clientAssertion, 'algorithms');
-    });
-
-    it('should return false when the provided token does not use an algorithm supported by the authorization server.', async () => {
-      const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
-      const assertion = await jws.sign(jwk);
-
-      request.body.client_assertion = assertion;
-
-      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
-      Reflect.set(settings, 'clientAuthenticationSignatureAlgorithms', ['RS256']);
-
-      expect(clientAssertion.hasBeenRequested(request)).toBe(false);
-
-      Reflect.set(settings, 'clientAuthenticationSignatureAlgorithms', ['HS256']);
-      Reflect.deleteProperty(clientAssertion, 'algorithms');
-    });
-
-    it('should return true when the provided token passes the validation of the method.', async () => {
-      const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
-      const assertion = await jws.sign(jwk);
-
-      request.body.client_assertion = assertion;
-
-      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
-
-      expect(clientAssertion.hasBeenRequested(request)).toBe(true);
-
-      Reflect.deleteProperty(clientAssertion, 'algorithms');
-    });
   });
 
   describe('authenticate()', () => {
@@ -158,6 +114,14 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       });
     });
 
+    it.each(invalidTokenFormats)('should throw when the provided token is invalid.', async (assertion) => {
+      request.body.client_assertion = assertion;
+
+      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
+        new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' })
+      );
+    });
+
     it('should throw when the header algorithm is "none".', async () => {
       const jws = new JsonWebSignature({ ...header, alg: 'none' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(jwk);
@@ -165,13 +129,47 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       request.body.client_assertion = assertion;
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Invalid JSON Web Signature Algorithm "none".' })
+        new InvalidClientException({
+          description: 'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
+        })
+      );
+    });
+
+    it("should throw when the token's jws algorithm is not supported by the authorization server.", async () => {
+      const ecKey = await JsonWebKey.generate('EC', { curve: 'P-256' });
+      const jws = new JsonWebSignature({ ...header, alg: 'ES256' }, new JsonWebTokenClaims(claims).toBuffer());
+      const assertion = await jws.sign(ecKey);
+
+      request.body.client_assertion = assertion;
+
+      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
+        new InvalidClientException({ description: 'Unsupported JSON Web Signature Algorithm "ES256".' })
+      );
+    });
+
+    it("should throw when the token's jws algorithm is not supported by the client authentication method.", async () => {
+      Reflect.set(clientAssertion, 'name', 'client_secret_jwt');
+      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
+
+      const rsaKey = await JsonWebKey.generate('RSA', { modulus: 2048 });
+      const jws = new JsonWebSignature({ ...header, alg: 'RS256' }, new JsonWebTokenClaims(claims).toBuffer());
+      const assertion = await jws.sign(rsaKey);
+
+      request.body.client_assertion = assertion;
+
+      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
+        new InvalidClientException({
+          description:
+            'Unsupported JSON Web Signature Algorithm "RS256" for Authentication Method "client_secret_jwt".',
+        })
       );
     });
 
     it.each(['iss', 'sub', 'aud', 'exp', 'jti'])(
       'should throw when a required claim is not provided.',
       async (claim) => {
+        Reflect.set(clientAssertion, 'algorithms', ['HS256']);
+
         const claimValue = claims[claim];
 
         Reflect.deleteProperty(claims, claim);
@@ -179,7 +177,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
         const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
         const assertion = await jws.sign(jwk);
 
-        Object.assign(request.body, { client_assertion: assertion });
+        request.body.client_assertion = assertion;
 
         await expect(clientAssertion.authenticate(request)).rejects.toThrow(
           new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' })
@@ -192,11 +190,14 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
     it('should throw when the "aud" claim does not point to the requested endpoint.', async () => {
       const jws = new JsonWebSignature(
         header,
-        new JsonWebTokenClaims({ ...claims, aud: 'https://server.exampĺe.com' }).toBuffer()
+        new JsonWebTokenClaims({ ...claims, aud: 'https://server.example.com' }).toBuffer()
       );
+
       const assertion = await jws.sign(jwk);
 
-      Object.assign(request.body, { client_assertion: assertion });
+      request.body.client_assertion = assertion;
+
+      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrow(
         new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' })
@@ -208,22 +209,27 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
         header,
         new JsonWebTokenClaims({ ...claims, iss: 'https://idp.example.com' }).toBuffer()
       );
+
       const assertion = await jws.sign(jwk);
 
-      Object.assign(request.body, { client_assertion: assertion });
+      request.body.client_assertion = assertion;
+
+      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrow(
         new InvalidClientException({ description: 'The values of "iss" and "sub" are different.' })
       );
     });
 
-    it('should throw when the client of the assertion is not registered.', async () => {
+    it('should throw when the client of the assertion does not exist.', async () => {
       const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(jwk);
 
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 
-      Object.assign(request.body, { client_assertion: assertion });
+      request.body.client_assertion = assertion;
+
+      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrow(
         new InvalidClientException({ description: 'Invalid Client.' })
@@ -234,26 +240,28 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(jwk);
 
+      request.body.client_assertion = assertion;
+
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         authenticationMethod: 'client_secret_basic',
       });
 
       Reflect.set(clientAssertion, 'name', 'client_secret_jwt');
-      Object.assign(request.body, { client_assertion: assertion });
+      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrow(
         new InvalidClientException({
           description: 'This Client is not allowed to use the Authentication Method "client_secret_jwt".',
         })
       );
-
-      Reflect.deleteProperty(clientAssertion, 'name');
     });
 
     it('should throw when the client of the assertion does not use the authentication signature algorithm.', async () => {
       const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(jwk);
+
+      request.body.client_assertion = assertion;
 
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
@@ -262,20 +270,20 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       });
 
       Reflect.set(clientAssertion, 'name', 'client_secret_jwt');
-      Object.assign(request.body, { client_assertion: assertion });
+      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrow(
         new InvalidClientException({
           description: 'This Client is not allowed to use the Authentication Method "client_secret_jwt".',
         })
       );
-
-      Reflect.deleteProperty(clientAssertion, 'name');
     });
 
     it('should return the client represented by the client assertion.', async () => {
       const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(jwk);
+
+      request.body.client_assertion = assertion;
 
       const client = <Client>{
         id: 'client_id',
@@ -285,19 +293,14 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
+      Reflect.set(clientAssertion, 'name', 'client_secret_jwt');
+      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
+
       clientAssertion['getClientKey'] = async function () {
         return jwk;
       };
 
-      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
-      Reflect.set(clientAssertion, 'name', 'client_secret_jwt');
-      Object.assign(request.body, { client_assertion: assertion });
-
       await expect(clientAssertion.authenticate(request)).resolves.toBe(client);
-
-      Reflect.deleteProperty(clientAssertion, 'name');
-      Reflect.deleteProperty(clientAssertion, 'getClientKey');
-      Reflect.deleteProperty(clientAssertion, 'algorithms');
     });
   });
 });

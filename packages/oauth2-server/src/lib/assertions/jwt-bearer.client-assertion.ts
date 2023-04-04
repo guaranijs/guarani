@@ -33,7 +33,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
   /**
    * JSON Web Signature Algorithms.
    */
-  protected abstract readonly algorithms: JsonWebSignatureAlgorithm[];
+  protected abstract readonly algorithms: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
 
   /**
    * Name of the Client Authentication Method.
@@ -62,27 +62,10 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest<ClientAssertionParameters>): boolean {
-    const isValidClientAssertion =
+    return (
       request.data.client_assertion_type === this.clientAssertionType &&
-      typeof request.data.client_assertion === 'string';
-
-    if (!isValidClientAssertion) {
-      return false;
-    }
-
-    try {
-      const { header } = JsonWebSignature.decode(request.data.client_assertion);
-
-      return (
-        this.algorithms.includes(header.alg) &&
-        this.settings.clientAuthenticationSignatureAlgorithms.includes(header.alg)
-      );
-    } catch (exc: unknown) {
-      const exception = new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' });
-      exception.cause = exc;
-
-      throw exception;
-    }
+      typeof request.data.client_assertion === 'string'
+    );
   }
 
   /**
@@ -107,7 +90,10 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
         });
       }
 
-      if (client.authenticationSigningAlgorithms?.includes(header.alg) !== true) {
+      if (
+        client.authenticationSigningAlgorithms?.includes(<Exclude<JsonWebSignatureAlgorithm, 'none'>>header.alg) !==
+        true
+      ) {
         throw new InvalidClientException({
           description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
         });
@@ -144,7 +130,19 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
     const { header, payload } = JsonWebSignature.decode(clientAssertion);
 
     if (header.alg === 'none') {
-      throw new InvalidClientException({ description: 'Invalid JSON Web Signature Algorithm "none".' });
+      throw new InvalidClientException({
+        description: 'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
+      });
+    }
+
+    if (!this.settings.clientAuthenticationSignatureAlgorithms.includes(header.alg)) {
+      throw new InvalidClientException({ description: `Unsupported JSON Web Signature Algorithm "${header.alg}".` });
+    }
+
+    if (!this.algorithms.includes(header.alg)) {
+      throw new InvalidClientException({
+        description: `Unsupported JSON Web Signature Algorithm "${header.alg}" for Authentication Method "${this.name}".`,
+      });
     }
 
     const claims = new JsonWebTokenClaims(JSON.parse(payload.toString('utf8')), {

@@ -1,7 +1,13 @@
 import { Inject, Injectable } from '@guarani/di';
-import { JsonWebKeySet, JsonWebSignature, JsonWebSignatureAlgorithm, JsonWebSignatureHeader } from '@guarani/jose';
+import {
+  JsonWebKey,
+  JsonWebKeySet,
+  JsonWebSignature,
+  JsonWebSignatureAlgorithm,
+  JsonWebSignatureHeader,
+} from '@guarani/jose';
 
-import { createHash, randomInt } from 'crypto';
+import { createHash } from 'crypto';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
@@ -47,14 +53,9 @@ export class IdTokenHandler {
     consent: Consent,
     accessToken: AccessToken | null,
     authorizationCode: AuthorizationCode | null,
-    parameters: Partial<IdTokenClaimsParameters> = {}
+    additionalClaims: Partial<IdTokenClaimsParameters> = {}
   ): Promise<string> {
-    const keys = this.jwks.keys.filter((jwk) => jwk.alg !== undefined && jwk.use === 'sig');
-    const key = keys[randomInt(keys.length)];
-
-    if (key === undefined) {
-      throw new Error('The keys at the JSON Web Key Set MUST have both the "alg" and "use" parameters.');
-    }
+    const jwk = this.getJsonWebKey();
 
     const now = Math.ceil(Date.now() / 1000);
 
@@ -62,13 +63,13 @@ export class IdTokenHandler {
 
     const userinfo = await this.userService.getUserinfo!(user, scopes);
 
-    const header = new JsonWebSignatureHeader({ alg: <JsonWebSignatureAlgorithm>key.alg, kid: key.kid, typ: 'JWT' });
+    const header = new JsonWebSignatureHeader({ alg: <JsonWebSignatureAlgorithm>jwk.alg, kid: jwk.kid, typ: 'JWT' });
     const claims = new IdTokenClaims({
       iss: this.settings.issuer,
       aud: client.id,
       exp: now + 86400,
       iat: now,
-      ...parameters,
+      ...additionalClaims,
       ...userinfo,
     });
 
@@ -82,7 +83,28 @@ export class IdTokenHandler {
 
     const jws = new JsonWebSignature(header, claims.toBuffer());
 
-    return await jws.sign(key);
+    return await jws.sign(jwk);
+  }
+
+  /**
+   * Gets a JSON Web Key suitable for signing an ID Token from the Authorization Server's JSON Web Key Set.
+   */
+  private getJsonWebKey(): JsonWebKey {
+    const jwk = this.jwks.find((jwk) => {
+      return (
+        jwk.alg !== undefined &&
+        jwk.alg !== 'none' &&
+        this.settings.idTokenSignatureAlgorithms.includes(<Exclude<JsonWebSignatureAlgorithm, 'none'>>jwk.alg) &&
+        jwk.use === 'sig' &&
+        (jwk.key_ops === undefined || jwk.key_ops.includes('sign'))
+      );
+    });
+
+    if (jwk === null) {
+      throw new Error('Could not find a JSON Web Key suitable for Signing an ID Token.');
+    }
+
+    return jwk;
   }
 
   /**

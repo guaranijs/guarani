@@ -1,8 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 import { EllipticCurveKey, JsonWebKeySet, JsonWebSignature, RsaKey } from '@guarani/jose';
 
-import { Buffer } from 'buffer';
-
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
@@ -79,13 +77,10 @@ describe('ID Token Handler', () => {
   });
 
   const jwks = new JsonWebKeySet([eckey, rsaKey]);
-  const settings = <Settings>{ issuer: 'https://server.example.com' };
+  const settings = <Settings>{ issuer: 'https://server.example.com', idTokenSignatureAlgorithms: ['ES256', 'RS256'] };
 
   const userServiceMock = jest.mocked<UserServiceInterface>(
-    {
-      findOne: jest.fn(),
-      getUserinfo: jest.fn(),
-    },
+    { findByResourceOwnerCredentials: jest.fn(), findOne: jest.fn(), getUserinfo: jest.fn() },
     true
   );
 
@@ -104,96 +99,180 @@ describe('ID Token Handler', () => {
     jest.resetAllMocks();
   });
 
-  it(`should reject not implementing user service's "getUserInfo()".`, () => {
-    expect(() => {
-      return new IdTokenHandler(jwks, settings, <any>{});
-    }).toThrow(new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".'));
-  });
+  describe('generateIdToken()', () => {
+    it(`should reject not implementing user service's "getUserInfo()".`, () => {
+      expect(() => {
+        return new IdTokenHandler(jwks, settings, <UserServiceInterface>{});
+      }).toThrow(new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".'));
+    });
 
-  it('should generate an id token with the default claims.', async () => {
-    const authTime = Math.floor(Date.now() / 1000);
+    it('should throw when no key has the "alg" parameter.', async () => {
+      const keysWithoutAlg = await Promise.all([
+        EllipticCurveKey.generate('EC', { curve: 'P-256' }),
+        RsaKey.generate('RSA', { modulus: 2048 }),
+      ]);
 
-    userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+      Reflect.set(jwks, 'keys', keysWithoutAlg);
 
-    const idToken = await idTokenHandler.generateIdToken(consent, null, null, { nonce: 'nonce', auth_time: authTime });
+      const authTime = Math.floor(Date.now() / 1000);
 
-    expect(idToken).toEqual(expect.any(String));
+      await expect(
+        idTokenHandler.generateIdToken(consent, null, null, { nonce: 'nonce', auth_time: authTime })
+      ).rejects.toThrow(new Error('Could not find a JSON Web Key suitable for Signing an ID Token.'));
 
-    let payload!: Buffer;
+      Reflect.set(jwks, 'keys', [eckey, rsaKey]);
+    });
 
-    await expect(
-      (async () => {
-        return ({ payload } = await JsonWebSignature.verify(
-          idToken,
-          async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-          ['ES256', 'RS256']
-        ));
-      })()
-    ).resolves.not.toThrow();
+    it('should throw when the keys have "none" as their "alg" parameter.', async () => {
+      const keysWithNoneAlg = await Promise.all([
+        EllipticCurveKey.generate('EC', { curve: 'P-256' }, { alg: 'none' }),
+        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'none' }),
+      ]);
 
-    const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+      Reflect.set(jwks, 'keys', keysWithNoneAlg);
 
-    expect(claims.nonce).toEqual('nonce');
-    expect(claims.auth_time).toEqual(authTime);
-  });
+      const authTime = Math.floor(Date.now() / 1000);
 
-  it('should generate an id token with the default claims and the "at_hash" claim.', async () => {
-    userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+      await expect(
+        idTokenHandler.generateIdToken(consent, null, null, { nonce: 'nonce', auth_time: authTime })
+      ).rejects.toThrow(new Error('Could not find a JSON Web Key suitable for Signing an ID Token.'));
 
-    const idToken = await idTokenHandler.generateIdToken(consent, accessToken, null, { nonce: 'nonce' });
+      Reflect.set(jwks, 'keys', [eckey, rsaKey]);
+    });
 
-    expect(idToken).toEqual(expect.any(String));
+    it('should throw when no key has a supported "alg" parameter.', async () => {
+      const keysWithUnsupportedAlg = await Promise.all([
+        EllipticCurveKey.generate('EC', { curve: 'P-384' }, { alg: 'ES384' }),
+        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RS384' }),
+      ]);
 
-    const { payload } = await JsonWebSignature.verify(
-      idToken,
-      async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-      ['ES256', 'RS256']
-    );
+      Reflect.set(jwks, 'keys', keysWithUnsupportedAlg);
 
-    const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+      const authTime = Math.floor(Date.now() / 1000);
 
-    expect(claims).toHaveProperty('at_hash');
-    expect(claims.at_hash).toEqual('hrOQHuo3oE6FR82RIiX1SA');
-  });
+      await expect(
+        idTokenHandler.generateIdToken(consent, null, null, { nonce: 'nonce', auth_time: authTime })
+      ).rejects.toThrow(new Error('Could not find a JSON Web Key suitable for Signing an ID Token.'));
 
-  it('should generate an id token with the default claims and the "c_hash" claim.', async () => {
-    userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+      Reflect.set(jwks, 'keys', [eckey, rsaKey]);
+    });
 
-    const idToken = await idTokenHandler.generateIdToken(consent, null, authorizationCode, { nonce: 'nonce' });
+    it('should throw when no key has "sig" as its "use" parameter.', async () => {
+      const keysWithInvalidSig = await Promise.all([
+        EllipticCurveKey.generate('EC', { curve: 'P-256' }, { alg: 'ES256' }),
+        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RS256', use: 'enc' }),
+      ]);
 
-    expect(idToken).toEqual(expect.any(String));
+      Reflect.set(jwks, 'keys', keysWithInvalidSig);
 
-    const { payload } = await JsonWebSignature.verify(
-      idToken,
-      async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-      ['ES256', 'RS256']
-    );
+      const authTime = Math.floor(Date.now() / 1000);
 
-    const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+      await expect(
+        idTokenHandler.generateIdToken(consent, null, null, { nonce: 'nonce', auth_time: authTime })
+      ).rejects.toThrow(new Error('Could not find a JSON Web Key suitable for Signing an ID Token.'));
 
-    expect(claims).toHaveProperty('c_hash');
-    expect(claims.c_hash).toEqual('pk3JJWstBOegJTRDDozDaw');
-  });
+      Reflect.set(jwks, 'keys', [eckey, rsaKey]);
+    });
 
-  it('should generate an id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
-    userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+    it('should throw when the keys have a "key_ops" parameter without "sign" included.', async () => {
+      const keysWithInvalidSig = await Promise.all([
+        EllipticCurveKey.generate('EC', { curve: 'P-256' }, { alg: 'ES256', use: 'sig', key_ops: ['verify'] }),
+        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RS256', use: 'sig', key_ops: ['verify'] }),
+      ]);
 
-    const idToken = await idTokenHandler.generateIdToken(consent, accessToken, authorizationCode, { nonce: 'nonce' });
+      Reflect.set(jwks, 'keys', keysWithInvalidSig);
 
-    expect(idToken).toEqual(expect.any(String));
+      const authTime = Math.floor(Date.now() / 1000);
 
-    const { payload } = await JsonWebSignature.verify(
-      idToken,
-      async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-      ['ES256', 'RS256']
-    );
+      await expect(
+        idTokenHandler.generateIdToken(consent, null, null, { nonce: 'nonce', auth_time: authTime })
+      ).rejects.toThrow(new Error('Could not find a JSON Web Key suitable for Signing an ID Token.'));
 
-    const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+      Reflect.set(jwks, 'keys', [eckey, rsaKey]);
+    });
 
-    expect(claims).toHaveProperty('at_hash');
-    expect(claims).toHaveProperty('c_hash');
+    it('should generate an id token with the default claims.', async () => {
+      const authTime = Math.floor(Date.now() / 1000);
 
-    expect(claims.at_hash).toEqual('hrOQHuo3oE6FR82RIiX1SA');
-    expect(claims.c_hash).toEqual('pk3JJWstBOegJTRDDozDaw');
+      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+
+      const idToken = await idTokenHandler.generateIdToken(consent, null, null, {
+        nonce: 'nonce',
+        auth_time: authTime,
+      });
+
+      expect(idToken).toEqual(expect.any(String));
+
+      const { payload } = await JsonWebSignature.verify(
+        idToken,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['ES256', 'RS256']
+      );
+
+      const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(claims.nonce).toEqual('nonce');
+      expect(claims.auth_time).toEqual(authTime);
+    });
+
+    it('should generate an id token with the default claims and the "at_hash" claim.', async () => {
+      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+
+      const idToken = await idTokenHandler.generateIdToken(consent, accessToken, null, { nonce: 'nonce' });
+
+      expect(idToken).toEqual(expect.any(String));
+
+      const { payload } = await JsonWebSignature.verify(
+        idToken,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['ES256', 'RS256']
+      );
+
+      const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(claims).toHaveProperty('at_hash');
+      expect(claims.at_hash).toEqual('hrOQHuo3oE6FR82RIiX1SA');
+    });
+
+    it('should generate an id token with the default claims and the "c_hash" claim.', async () => {
+      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+
+      const idToken = await idTokenHandler.generateIdToken(consent, null, authorizationCode, { nonce: 'nonce' });
+
+      expect(idToken).toEqual(expect.any(String));
+
+      const { payload } = await JsonWebSignature.verify(
+        idToken,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['ES256', 'RS256']
+      );
+
+      const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(claims).toHaveProperty('c_hash');
+      expect(claims.c_hash).toEqual('pk3JJWstBOegJTRDDozDaw');
+    });
+
+    it('should generate an id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
+      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+
+      const idToken = await idTokenHandler.generateIdToken(consent, accessToken, authorizationCode, { nonce: 'nonce' });
+
+      expect(idToken).toEqual(expect.any(String));
+
+      const { payload } = await JsonWebSignature.verify(
+        idToken,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['ES256', 'RS256']
+      );
+
+      const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(claims).toHaveProperty('at_hash');
+      expect(claims).toHaveProperty('c_hash');
+
+      expect(claims.at_hash).toEqual('hrOQHuo3oE6FR82RIiX1SA');
+      expect(claims.c_hash).toEqual('pk3JJWstBOegJTRDDozDaw');
+    });
   });
 });

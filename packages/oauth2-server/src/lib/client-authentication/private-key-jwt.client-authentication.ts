@@ -24,10 +24,11 @@ export class PrivateKeyJwtClientAuthentication extends JwtBearerClientAssertion 
   /**
    * JSON Web Signature Algorithms.
    */
-  protected readonly algorithms: JsonWebSignatureAlgorithm[] = [
+  protected readonly algorithms: Exclude<JsonWebSignatureAlgorithm, 'none'>[] = [
     'ES256',
     'ES384',
     'ES512',
+    'EdDSA',
     'PS256',
     'PS384',
     'PS512',

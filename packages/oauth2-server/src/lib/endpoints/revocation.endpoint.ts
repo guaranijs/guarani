@@ -1,4 +1,4 @@
-import { Inject, Injectable, InjectAll, Optional } from '@guarani/di';
+import { Inject, Injectable, Optional } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
@@ -11,8 +11,6 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { UnsupportedTokenTypeException } from '../exceptions/unsupported-token-type.exception';
-import { GrantTypeInterface } from '../grant-types/grant-type.interface';
-import { GRANT_TYPE } from '../grant-types/grant-type.token';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
@@ -71,34 +69,32 @@ export class RevocationEndpoint implements EndpointInterface {
   /**
    * Token Type Hints supported by the Revocation Endpoint.
    */
-  private readonly supportedTokenTypeHints: TokenTypeHint[] = ['refresh_token'];
+  private readonly supportedTokenTypeHints: TokenTypeHint[] = ['access_token'];
 
   /**
    * Instantiates a new Revocation Endpoint.
    *
    * @param clientAuthenticationHandler Instance of the Client Authenticator.
    * @param settings Settings of the Authorization Server.
-   * @param refreshTokenService Instance of the Refresh Token Service.
    * @param accessTokenService Instance of the Access Token Service.
-   * @param grantTypes Grant Types supported by the Authorization Server.
+   * @param refreshTokenService Instance of the Refresh Token Service.
    */
   public constructor(
     private readonly clientAuthenticationHandler: ClientAuthenticationHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: RefreshTokenServiceInterface,
-    @Optional() @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService?: AccessTokenServiceInterface,
-    @Optional() @InjectAll(GRANT_TYPE) grantTypes?: GrantTypeInterface[]
+    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
+    @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface
   ) {
-    if (grantTypes?.find((grantType) => grantType.name === 'refresh_token') === undefined) {
-      throw new Error('The Authorization Server does not support using Refresh Tokens.');
-    }
-
-    if (this.settings.enableAccessTokenRevocation) {
-      if (this.accessTokenService === undefined) {
-        throw new Error('Cannot enable Access Token Revocation without an Access Token Service.');
+    if (this.settings.enableRefreshTokenRevocation) {
+      if (!this.settings.grantTypes.includes('refresh_token')) {
+        throw new Error('The Authorization Server disabled using Refresh Tokens.');
       }
 
-      this.supportedTokenTypeHints.push('access_token');
+      if (this.refreshTokenService === undefined) {
+        throw new Error('Cannot enable Refresh Token Revocation without a Refresh Token Service.');
+      }
+
+      this.supportedTokenTypeHints.push('refresh_token');
     }
   }
 
@@ -179,19 +175,16 @@ export class RevocationEndpoint implements EndpointInterface {
       return;
     }
 
-    const clientId = Buffer.from(client.id, 'utf8');
-    const tokenClientId = Buffer.from(entity.client.id, 'utf8');
-
-    if (clientId.length !== tokenClientId.length || !timingSafeEqual(clientId, tokenClientId)) {
+    if (!this.checkEntityClient(entity, client)) {
       return;
     }
 
     switch (tokenType) {
       case 'access_token':
-        return await this.accessTokenService!.revoke(<AccessToken>entity);
+        return await this.accessTokenService.revoke(<AccessToken>entity);
 
       case 'refresh_token':
-        return await this.refreshTokenService.revoke(<RefreshToken>entity);
+        return await this.refreshTokenService?.revoke(<RefreshToken>entity);
     }
   }
 
@@ -220,12 +213,7 @@ export class RevocationEndpoint implements EndpointInterface {
    * @returns Result of the search.
    */
   private async findAccessToken(token: string): Promise<FindTokenResult | null> {
-    if (!this.settings.enableAccessTokenRevocation) {
-      return null;
-    }
-
-    const entity = await this.accessTokenService!.findOne(token);
-
+    const entity = await this.accessTokenService.findOne(token);
     return entity !== null ? { entity, tokenType: 'access_token' } : null;
   }
 
@@ -236,7 +224,21 @@ export class RevocationEndpoint implements EndpointInterface {
    * @returns Result of the search.
    */
   private async findRefreshToken(token: string): Promise<FindTokenResult | null> {
-    const entity = await this.refreshTokenService.findOne(token);
-    return entity !== null ? { entity, tokenType: 'refresh_token' } : null;
+    const entity = await this.refreshTokenService?.findOne(token);
+    return entity != null ? { entity, tokenType: 'refresh_token' } : null;
+  }
+
+  /**
+   * Checks if the Client of the Request is the same to which the Token was issued to.
+   *
+   * @param entity Instance of the Token retrieved based on the handle provided by the Client.
+   * @param client Client of the Request.
+   * @returns The Client of the Request is the same to which the Token was issued to.
+   */
+  private checkEntityClient(entity: AccessToken | RefreshToken, client: Client): boolean {
+    const clientIdBuffer = Buffer.from(client.id, 'utf8');
+    const tokenClientIdBuffer = Buffer.from(entity.client.id, 'utf8');
+
+    return clientIdBuffer.length === tokenClientIdBuffer.length && timingSafeEqual(clientIdBuffer, tokenClientIdBuffer);
   }
 }

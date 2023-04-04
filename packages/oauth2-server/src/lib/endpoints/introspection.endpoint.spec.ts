@@ -43,7 +43,11 @@ describe('Introspection Endpoint', () => {
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
 
-  const settings = <Settings>{ issuer: 'https://server.example.com', enableRefreshTokenIntrospection: true };
+  const settings = <Settings>{
+    issuer: 'https://server.example.com',
+    grantTypes: ['refresh_token'],
+    enableRefreshTokenIntrospection: true,
+  };
 
   beforeEach(() => {
     const container = new DependencyInjectionContainer();
@@ -97,11 +101,10 @@ describe('Introspection Endpoint', () => {
       expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['access_token']);
     });
 
-    it('should have the types ["access_token", "refresh_token"] when supporting refresh token introspection.', () => {
-      const opts = <Settings>{ enableRefreshTokenIntrospection: true };
+    it('should have the types ["access_token", "refresh_token"] when supporting access token introspection.', () => {
       const endpoint = new IntrospectionEndpoint(
         clientAuthenticationHandlerMock,
-        opts,
+        settings,
         accessTokenServiceMock,
         refreshTokenServiceMock
       );
@@ -111,12 +114,23 @@ describe('Introspection Endpoint', () => {
   });
 
   describe('constructor', () => {
-    it('should throw when enabling refresh token introspection without a refresh token service.', () => {
-      const opts = <Settings>{ enableRefreshTokenIntrospection: true };
+    it('should throw when allowing refresh token introspection and the authorization server disables the usage of refresh tokens.', () => {
+      const opts = <Settings>{ grantTypes: ['authorization_code'], enableRefreshTokenIntrospection: true };
 
-      expect(() => new IntrospectionEndpoint(clientAuthenticationHandlerMock, opts, accessTokenServiceMock)).toThrow(
-        new Error('Cannot enable Refresh Token Introspection without a Refresh Token Service.')
-      );
+      expect(() => {
+        return new IntrospectionEndpoint(
+          clientAuthenticationHandlerMock,
+          opts,
+          accessTokenServiceMock,
+          refreshTokenServiceMock
+        );
+      }).toThrow(new Error('The Authorization Server disabled using Refresh Tokens.'));
+    });
+
+    it('should throw when allowing refresh token introspection without a refresh token service.', () => {
+      expect(() => {
+        return new IntrospectionEndpoint(clientAuthenticationHandlerMock, settings, accessTokenServiceMock, undefined);
+      }).toThrow(new Error('Cannot enable Refresh Token Introspection without a Refresh Token Service.'));
     });
   });
 
@@ -223,10 +237,10 @@ describe('Introspection Endpoint', () => {
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
 
-      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0];
-      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0];
+      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
+      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
 
-      expect(findAccessTokenOrder).toBeLessThan(<number>findRefreshTokenOrder);
+      expect(findAccessTokenOrder).toBeLessThan(findRefreshTokenOrder);
     });
 
     it('should search for a refresh token and then an access token when providing a "refresh_token" token_type_hint.', async () => {
@@ -242,13 +256,13 @@ describe('Introspection Endpoint', () => {
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
 
-      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0];
-      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0];
+      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
+      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
 
-      expect(findRefreshTokenOrder).toBeLessThan(<number>findAccessTokenOrder);
+      expect(findRefreshTokenOrder).toBeLessThan(findAccessTokenOrder);
     });
 
-    it('should search for a refresh token and then an access token when not providing a token_type_hint.', async () => {
+    it('should search for an access token and then a refresh token when not providing a token_type_hint.', async () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
 
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
@@ -259,10 +273,10 @@ describe('Introspection Endpoint', () => {
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
 
-      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0];
-      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0];
+      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
+      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
 
-      expect(findRefreshTokenOrder).toBeLessThan(<number>findAccessTokenOrder);
+      expect(findAccessTokenOrder).toBeLessThan(findRefreshTokenOrder);
     });
 
     it('should return an inactive token response when the authorization server does not support refresh token introspection.', async () => {

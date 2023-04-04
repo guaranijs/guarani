@@ -94,6 +94,10 @@ export class IntrospectionEndpoint implements EndpointInterface {
     @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface
   ) {
     if (this.settings.enableRefreshTokenIntrospection) {
+      if (!this.settings.grantTypes.includes('refresh_token')) {
+        throw new Error('The Authorization Server disabled using Refresh Tokens.');
+      }
+
       if (this.refreshTokenService === undefined) {
         throw new Error('Cannot enable Refresh Token Introspection without a Refresh Token Service.');
       }
@@ -182,10 +186,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
       return IntrospectionEndpoint.INACTIVE_TOKEN;
     }
 
-    const clientId = Buffer.from(client.id, 'utf8');
-    const tokenClientId = Buffer.from(entity.client.id, 'utf8');
-
-    if (clientId.length !== tokenClientId.length || !timingSafeEqual(clientId, tokenClientId)) {
+    if (!this.checkEntityClient(entity, client)) {
       return IntrospectionEndpoint.INACTIVE_TOKEN;
     }
 
@@ -201,12 +202,12 @@ export class IntrospectionEndpoint implements EndpointInterface {
    */
   private async findTokenEntity(token: string, tokenTypeHint?: TokenTypeHint): Promise<FindTokenResult | null> {
     switch (tokenTypeHint) {
-      case 'access_token':
-        return (await this.findAccessToken(token)) ?? (await this.findRefreshToken(token));
-
       case 'refresh_token':
-      default:
         return (await this.findRefreshToken(token)) ?? (await this.findAccessToken(token));
+
+      case 'access_token':
+      default:
+        return (await this.findAccessToken(token)) ?? (await this.findRefreshToken(token));
     }
   }
 
@@ -228,13 +229,22 @@ export class IntrospectionEndpoint implements EndpointInterface {
    * @returns Result of the search.
    */
   private async findRefreshToken(token: string): Promise<FindTokenResult | null> {
-    if (!this.settings.enableRefreshTokenIntrospection) {
-      return null;
-    }
+    const entity = await this.refreshTokenService?.findOne(token);
+    return entity != null ? { entity, tokenType: 'refresh_token' } : null;
+  }
 
-    const entity = await this.refreshTokenService!.findOne(token);
+  /**
+   * Checks if the Client of the Request is the same to which the Token was issued to.
+   *
+   * @param entity Instance of the Token retrieved based on the handle provided by the Client.
+   * @param client Client of the Request.
+   * @returns The Client of the Request is the same to which the Token was issued to.
+   */
+  private checkEntityClient(entity: AccessToken | RefreshToken, client: Client): boolean {
+    const clientIdBuffer = Buffer.from(client.id, 'utf8');
+    const tokenClientIdBuffer = Buffer.from(entity.client.id, 'utf8');
 
-    return entity !== null ? { entity, tokenType: 'refresh_token' } : null;
+    return clientIdBuffer.length === tokenClientIdBuffer.length && timingSafeEqual(clientIdBuffer, tokenClientIdBuffer);
   }
 
   /**

@@ -98,11 +98,11 @@ export interface AuthorizationServerOptions {
   readonly enableIntrospectionEndpoint?: boolean;
 
   /**
-   * Enables Access Token Revocation on the Authorization Server.
+   * Enables Refresh Token Revocation on the Authorization Server.
    *
    * @default true
    */
-  readonly enableAccessTokenRevocation?: boolean;
+  readonly enableRefreshTokenRevocation?: boolean;
 
   /**
    * Enables Refresh Token Introspection on the Authorization Server.

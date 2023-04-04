@@ -9,8 +9,6 @@ import { RefreshToken } from '../entities/refresh-token.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { UnsupportedTokenTypeException } from '../exceptions/unsupported-token-type.exception';
-import { GrantTypeInterface } from '../grant-types/grant-type.interface';
-import { GRANT_TYPE } from '../grant-types/grant-type.token';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
@@ -43,14 +41,9 @@ describe('Revocation Endpoint', () => {
     revoke: jest.fn(),
   });
 
-  const grantTypesMocks = [
-    jest.mocked<GrantTypeInterface>({ name: 'authorization_code', handle: jest.fn() }),
-    jest.mocked<GrantTypeInterface>({ name: 'refresh_token', handle: jest.fn() }),
-  ];
-
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
 
-  const settings = <Settings>{ enableAccessTokenRevocation: true };
+  const settings = <Settings>{ grantTypes: ['refresh_token'], enableRefreshTokenRevocation: true };
 
   beforeEach(() => {
     const container = new DependencyInjectionContainer();
@@ -58,9 +51,6 @@ describe('Revocation Endpoint', () => {
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
-
-    grantTypesMocks.forEach((grantType) => container.bind<GrantTypeInterface>(GRANT_TYPE).toValue(grantType));
-
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
     container.bind(RevocationEndpoint).toSelf().asSingleton();
 
@@ -99,58 +89,48 @@ describe('Revocation Endpoint', () => {
   });
 
   describe('supportedTokenTypeHints', () => {
-    it('should have only the type "refresh_token" when not supporting access token revocation.', () => {
-      const opts = <Settings>{ enableAccessTokenRevocation: false };
+    it('should have only the type "access_token" when not supporting refresh token revocation.', () => {
+      const opts = <Settings>{ enableRefreshTokenRevocation: false };
       const endpoint = new RevocationEndpoint(
         clientAuthenticationHandlerMock,
         opts,
-        refreshTokenServiceMock,
         accessTokenServiceMock,
-        grantTypesMocks
+        refreshTokenServiceMock
       );
 
-      expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['refresh_token']);
+      expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['access_token']);
     });
 
     it('should have the types ["refresh_token", "access_token"] when supporting access token revocation.', () => {
-      const opts = <Settings>{ enableAccessTokenRevocation: true };
       const endpoint = new RevocationEndpoint(
         clientAuthenticationHandlerMock,
-        opts,
-        refreshTokenServiceMock,
+        settings,
         accessTokenServiceMock,
-        grantTypesMocks
+        refreshTokenServiceMock
       );
 
-      expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['refresh_token', 'access_token']);
+      expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['access_token', 'refresh_token']);
     });
   });
 
   describe('constructor', () => {
-    it('should reject when the authorization server does not support refresh tokens.', () => {
-      expect(() => {
-        return new RevocationEndpoint(
-          clientAuthenticationHandlerMock,
-          settings,
-          refreshTokenServiceMock,
-          accessTokenServiceMock,
-          <GrantTypeInterface[]>[]
-        );
-      }).toThrow(new Error('The Authorization Server does not support using Refresh Tokens.'));
-    });
-
-    it('should reject when enabling access token revocation without an access token service.', () => {
-      const opts = <Settings>{ enableAccessTokenRevocation: true };
+    it('should throw when allowing refresh token revocation and the authorization server disables the usage of refresh tokens.', () => {
+      const opts = <Settings>{ grantTypes: ['authorization_code'], enableRefreshTokenRevocation: true };
 
       expect(() => {
         return new RevocationEndpoint(
           clientAuthenticationHandlerMock,
           opts,
-          refreshTokenServiceMock,
-          undefined,
-          grantTypesMocks
+          accessTokenServiceMock,
+          refreshTokenServiceMock
         );
-      }).toThrow();
+      }).toThrow(new Error('The Authorization Server disabled using Refresh Tokens.'));
+    });
+
+    it('should throw when allowing refresh token revocation without a refresh token service.', () => {
+      expect(() => {
+        return new RevocationEndpoint(clientAuthenticationHandlerMock, settings, accessTokenServiceMock, undefined);
+      }).toThrow(new Error('Cannot enable Refresh Token Revocation without a Refresh Token Service.'));
     });
   });
 
@@ -245,10 +225,10 @@ describe('Revocation Endpoint', () => {
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
 
-      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0];
-      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0];
+      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
+      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
 
-      expect(findAccessTokenOrder).toBeLessThan(<number>findRefreshTokenOrder);
+      expect(findAccessTokenOrder).toBeLessThan(findRefreshTokenOrder);
 
       expect(accessTokenServiceMock.revoke).not.toHaveBeenCalled();
       expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
@@ -267,16 +247,16 @@ describe('Revocation Endpoint', () => {
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
 
-      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0];
-      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0];
+      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
+      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
 
-      expect(findRefreshTokenOrder).toBeLessThan(<number>findAccessTokenOrder);
+      expect(findRefreshTokenOrder).toBeLessThan(findAccessTokenOrder);
 
       expect(accessTokenServiceMock.revoke).not.toHaveBeenCalled();
       expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
     });
 
-    it('should search for a refresh token and then an access token when not providing a token_type_hint.', async () => {
+    it('should search for an access token and then a refresh token when not providing a token_type_hint.', async () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
 
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
@@ -287,10 +267,10 @@ describe('Revocation Endpoint', () => {
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
 
-      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0];
-      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0];
+      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
+      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
 
-      expect(findRefreshTokenOrder).toBeGreaterThan(<number>findAccessTokenOrder);
+      expect(findAccessTokenOrder).toBeLessThan(findRefreshTokenOrder);
 
       expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
       expect(accessTokenServiceMock.revoke).not.toHaveBeenCalled();

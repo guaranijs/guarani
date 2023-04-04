@@ -164,7 +164,7 @@ export class AuthorizationServerFactory {
           : undefined,
       userInteraction: this.authorizationServerOptions.userInteraction,
       enableRefreshTokenRotation: this.authorizationServerOptions.enableRefreshTokenRotation ?? false,
-      enableAccessTokenRevocation: this.authorizationServerOptions.enableAccessTokenRevocation ?? true,
+      enableRefreshTokenRevocation: this.authorizationServerOptions.enableRefreshTokenRevocation ?? true,
       enableRefreshTokenIntrospection: this.authorizationServerOptions.enableRefreshTokenIntrospection ?? false,
       devicePollingInterval: this.authorizationServerOptions.devicePollingInterval ?? 5,
       enableAuthorizationResponseIssuerIdentifier:

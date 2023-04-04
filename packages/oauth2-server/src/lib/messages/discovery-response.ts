@@ -51,6 +51,11 @@ export interface DiscoveryResponse extends Record<string, any> {
   readonly grant_types_supported?: GrantType[];
 
   /**
+   * JSON Web Signature Algorithms for ID Token Signature registered at the Authorization Server.
+   */
+  readonly id_token_signing_alg_values_supported: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
+
+  /**
    * Client Authentication Methods supported by the Token Endpoint.
    */
   readonly token_endpoint_auth_methods_supported?: ClientAuthentication[];

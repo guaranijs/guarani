@@ -62,6 +62,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
       response_types_supported: this.settings.responseTypes,
       response_modes_supported: this.settings.responseModes,
       grant_types_supported: this.settings.grantTypes,
+      id_token_signing_alg_values_supported: this.settings.idTokenSignatureAlgorithms,
       token_endpoint_auth_methods_supported: this.settings.clientAuthenticationMethods,
       token_endpoint_auth_signing_alg_values_supported: this.settings.clientAuthenticationSignatureAlgorithms,
       service_documentation: undefined,

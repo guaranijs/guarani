@@ -61,7 +61,7 @@ export class ClientSecretBasicClientAuthentication implements ClientAuthenticati
   public async authenticate(request: HttpRequest): Promise<Client> {
     const { authorization } = request.headers;
 
-    const [, token] = (<string>authorization).split(' ', 2);
+    const [, token] = authorization!.split(' ', 2);
 
     if (token === undefined) {
       throw new InvalidClientException({ description: 'Missing Token.' }).setHeaders(this.headers);

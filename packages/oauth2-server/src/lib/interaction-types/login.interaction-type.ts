@@ -110,7 +110,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
       request_url: url.href,
       client: grant.client,
       context: {
-        prompts: <Prompt[]>(grant.parameters.prompt?.split(' ') ?? []),
+        prompts: <Prompt[]>grant.parameters.prompt?.split(' '),
         display: grant.parameters.display,
         auth_exp: authExp,
       },

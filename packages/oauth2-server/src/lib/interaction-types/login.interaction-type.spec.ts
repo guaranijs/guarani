@@ -132,9 +132,7 @@ describe('Login Interaction Type', () => {
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: <Client>{ id: 'client_id' },
-        context: {
-          prompts: [],
-        },
+        context: {},
       });
     });
 
@@ -162,9 +160,7 @@ describe('Login Interaction Type', () => {
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: <Client>{ id: 'client_id' },
-        context: {
-          prompts: [],
-        },
+        context: {},
       });
     });
 
@@ -196,7 +192,6 @@ describe('Login Interaction Type', () => {
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: <Client>{ id: 'client_id' },
         context: {
-          prompts: [],
           auth_exp: Math.floor((createdAt - 300000 + 86400000) / 1000),
         },
       });
@@ -230,7 +225,6 @@ describe('Login Interaction Type', () => {
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: <Client>{ id: 'client_id' },
         context: {
-          prompts: [],
           auth_exp: Math.floor((createdAt - 86400000 + 300000) / 1000),
         },
       });

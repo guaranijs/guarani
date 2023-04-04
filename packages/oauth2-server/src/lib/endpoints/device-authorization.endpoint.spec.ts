@@ -59,7 +59,7 @@ describe('Device Authorization Endpoint', () => {
   });
 
   describe('path', () => {
-    it('should have "/oauth/device_authorization" as its default path.', () => {
+    it('should have "/oauth/device-authorization" as its default path.', () => {
       expect(endpoint.path).toEqual('/oauth/device-authorization');
     });
   });

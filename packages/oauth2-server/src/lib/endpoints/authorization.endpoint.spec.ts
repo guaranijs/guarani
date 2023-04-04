@@ -31,11 +31,13 @@ import { SETTINGS } from '../settings/settings.token';
 import { AuthorizationEndpoint } from './authorization.endpoint';
 import { Endpoint } from './endpoint.type';
 
+jest.mock('../handlers/scope.handler');
 jest.mock('../handlers/interaction.handler');
 
 describe('Authorization Endpoint', () => {
   let endpoint: AuthorizationEndpoint;
 
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
   const interactionHandlerMock = jest.mocked(InteractionHandler.prototype, true);
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
@@ -80,7 +82,7 @@ describe('Authorization Endpoint', () => {
   beforeEach(() => {
     const container = new DependencyInjectionContainer();
 
-    container.bind(ScopeHandler).toSelf().asSingleton();
+    container.bind(ScopeHandler).toValue(scopeHandlerMock);
     container.bind(InteractionHandler).toValue(interactionHandlerMock);
 
     responseTypesMocks.forEach((responseType) => {
@@ -378,6 +380,8 @@ describe('Authorization Endpoint', () => {
     it('should return an error response when the client requests an unsupported scope.', async () => {
       request.query.scope = 'foo unknown bar';
 
+      const error = new InvalidScopeException({ description: 'Unsupported scope "unknown".', state: 'client_state' });
+
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         redirectUris: ['https://example.com/callback'],
@@ -385,7 +389,34 @@ describe('Authorization Endpoint', () => {
         scopes: ['foo', 'bar'],
       });
 
-      const error = new InvalidScopeException({ description: 'Unsupported scope "unknown".', state: 'client_state' });
+      scopeHandlerMock.checkRequestedScope.mockImplementationOnce(() => {
+        throw error;
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
+        statusCode: 303,
+      });
+    });
+
+    it("should return an error response when the client requests a scope it's not allowed to.", async () => {
+      request.query.scope = 'foo bar baz';
+
+      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
+        id: 'client_id',
+        redirectUris: ['https://example.com/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar'],
+      });
+
+      const error = new AccessDeniedException({
+        description: 'The Client is not allowed to request the scope "baz".',
+        state: 'client_state',
+      });
+
       const parameters = new URLSearchParams(error.toJSON());
 
       await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({

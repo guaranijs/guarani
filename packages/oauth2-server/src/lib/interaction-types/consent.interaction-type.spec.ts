@@ -132,9 +132,7 @@ describe('Consent Interaction Type', () => {
           request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
           login_challenge: 'login_challenge',
           client: <Client>{ id: 'client_id' },
-          context: {
-            prompts: [],
-          },
+          context: {},
         }
       );
     });
@@ -169,9 +167,7 @@ describe('Consent Interaction Type', () => {
           request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
           login_challenge: 'login_challenge',
           client: <Client>{ id: 'client_id' },
-          context: {
-            prompts: [],
-          },
+          context: {},
         }
       );
     });

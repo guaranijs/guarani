@@ -90,7 +90,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
       login_challenge: grant.loginChallenge,
       client: grant.client,
       context: {
-        prompts: <Prompt[]>(grant.parameters.prompt?.split(' ') ?? []),
+        prompts: <Prompt[]>grant.parameters.prompt?.split(' '),
         display: grant.parameters.display,
       },
     });

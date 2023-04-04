@@ -126,7 +126,7 @@ export class AuthorizationServerFactory {
     this.setInteractionTypes();
     this.setResponseTypes();
     this.setResponseModes();
-    this.setPkceMethods();
+    this.setPkces();
     this.setJsonWebKeySet();
     this.setEndpoints();
     this.setHandlers();
@@ -273,7 +273,7 @@ export class AuthorizationServerFactory {
   /**
    * Defines the PKCE Methods supported by the Authorization Server.
    */
-  private static setPkceMethods(): void {
+  private static setPkces(): void {
     const { pkces } = this.settings;
 
     if (pkces.length === 0) {

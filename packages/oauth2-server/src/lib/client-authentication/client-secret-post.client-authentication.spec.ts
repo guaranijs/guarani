@@ -116,7 +116,7 @@ describe('Client Secret Post Authentication Method', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         secret: 'client_secret',
-        authenticationMethod: <any>'unknown',
+        authenticationMethod: <ClientAuthentication>'unknown',
       });
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(

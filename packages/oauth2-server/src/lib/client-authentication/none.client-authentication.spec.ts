@@ -92,7 +92,7 @@ describe('None Client Authentication Method', () => {
     it('should throw when requesting with a client not authorized to use this authentication method.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
-        authenticationMethod: <any>'unknown',
+        authenticationMethod: <ClientAuthentication>'unknown',
       });
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(

@@ -90,11 +90,12 @@ describe('JWT Bearer Grant Type', () => {
   });
 
   describe('algorithms', () => {
-    it('should have \'["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "RS256", "RS384", "RS512"]\' as its value', () => {
-      expect(grantType['algorithms']).toEqual<JsonWebSignatureAlgorithm[]>([
+    it('should have \'["ES256", "ES384", "ES512", "EdDSA", "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "RS256", "RS384", "RS512"]\' as its value', () => {
+      expect(grantType['algorithms']).toEqual<Exclude<JsonWebSignatureAlgorithm, 'none'>[]>([
         'ES256',
         'ES384',
         'ES512',
+        'EdDSA',
         'HS256',
         'HS384',
         'HS512',
@@ -160,7 +161,9 @@ describe('JWT Bearer Grant Type', () => {
       const client = <Client>{};
 
       await expect(grantType.handle(parameters, client)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Invalid JSON Web Signature Algorithm "none".' })
+        new InvalidGrantException({
+          description: 'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
+        })
       );
     });
 

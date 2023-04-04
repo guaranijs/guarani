@@ -59,7 +59,7 @@ export interface Client extends Record<string, any> {
   /**
    * JSON Web Signature Algorithms used to validate the JWT Bearer Client Assertion.
    */
-  authenticationSigningAlgorithms?: JsonWebSignatureAlgorithm[];
+  authenticationSigningAlgorithms?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
 
   /**
    * Scopes of the Client.

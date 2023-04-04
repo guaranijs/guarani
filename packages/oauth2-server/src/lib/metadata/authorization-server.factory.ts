@@ -157,6 +157,7 @@ export class AuthorizationServerFactory {
       pkceMethods: this.authorizationServerOptions.pkceMethods ?? <PkceMethod[]>Object.keys(pkceRegistry),
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
+      idTokenSignatureAlgorithms: this.authorizationServerOptions.idTokenSignatureAlgorithms ?? ['RS256'],
       jwks:
         this.authorizationServerOptions.jwks !== undefined
           ? await JsonWebKeySet.load(this.authorizationServerOptions.jwks)

@@ -29,7 +29,12 @@ export interface Settings {
   /**
    * JSON Web Signature Algoithms for Client Authentication registered at the Authorization Server.
    */
-  readonly clientAuthenticationSignatureAlgorithms: JsonWebSignatureAlgorithm[];
+  readonly clientAuthenticationSignatureAlgorithms: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
+
+  /**
+   * JSON Web Signature Algorithms for ID Token Signature registered at the Authorization Server.
+   */
+  readonly idTokenSignatureAlgorithms: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
 
   /**
    * Grant Types registered at the Authorization Server.

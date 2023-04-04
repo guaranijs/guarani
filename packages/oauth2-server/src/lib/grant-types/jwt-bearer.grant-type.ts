@@ -44,10 +44,11 @@ export class JwtBearerGrantType implements GrantTypeInterface {
   /**
    * JSON Web Signature Algorithms.
    */
-  private readonly algorithms: JsonWebSignatureAlgorithm[] = [
+  private readonly algorithms: Exclude<JsonWebSignatureAlgorithm, 'none'>[] = [
     'ES256',
     'ES384',
     'ES512',
+    'EdDSA',
     'HS256',
     'HS384',
     'HS512',
@@ -130,7 +131,9 @@ export class JwtBearerGrantType implements GrantTypeInterface {
       const { header, payload } = JsonWebSignature.decode(assertion);
 
       if (header.alg === 'none') {
-        throw new InvalidGrantException({ description: 'Invalid JSON Web Signature Algorithm "none".' });
+        throw new InvalidGrantException({
+          description: 'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
+        });
       }
 
       const claims = new JsonWebTokenClaims(JSON.parse(payload.toString('utf8')), {

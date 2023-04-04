@@ -31,7 +31,11 @@ describe('Client Secret JWT Client Authentication Method', () => {
 
   describe('algorithms', () => {
     it('should have \'["HS256", "HS384", "HS512"]\' as its value.', () => {
-      expect(clientAuthentication['algorithms']).toEqual<JsonWebSignatureAlgorithm[]>(['HS256', 'HS384', 'HS512']);
+      expect(clientAuthentication['algorithms']).toEqual<Exclude<JsonWebSignatureAlgorithm, 'none'>[]>([
+        'HS256',
+        'HS384',
+        'HS512',
+      ]);
     });
   });
 

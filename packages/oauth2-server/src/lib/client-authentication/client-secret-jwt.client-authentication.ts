@@ -18,7 +18,7 @@ export class ClientSecretJwtClientAuthentication extends JwtBearerClientAssertio
   /**
    * JSON Web Signature Algorithms.
    */
-  protected readonly algorithms: JsonWebSignatureAlgorithm[] = ['HS256', 'HS384', 'HS512'];
+  protected readonly algorithms: Exclude<JsonWebSignatureAlgorithm, 'none'>[] = ['HS256', 'HS384', 'HS512'];
 
   /**
    * Name of the Client Authentication Method.

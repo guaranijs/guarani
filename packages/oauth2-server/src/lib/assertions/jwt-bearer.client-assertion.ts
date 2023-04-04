@@ -61,17 +61,17 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    *
    * @param request Http Request.
    */
-  public hasBeenRequested(request: HttpRequest): boolean {
+  public hasBeenRequested(request: HttpRequest<ClientAssertionParameters>): boolean {
     const isValidClientAssertion =
-      request.body.client_assertion_type === this.clientAssertionType &&
-      typeof request.body.client_assertion === 'string';
+      request.data.client_assertion_type === this.clientAssertionType &&
+      typeof request.data.client_assertion === 'string';
 
     if (!isValidClientAssertion) {
       return false;
     }
 
     try {
-      const { header } = JsonWebSignature.decode(request.body.client_assertion);
+      const { header } = JsonWebSignature.decode(request.data.client_assertion);
 
       return (
         this.algorithms.includes(header.alg) &&
@@ -91,8 +91,8 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @param request Http Request.
    * @returns Authenticated Client.
    */
-  public async authenticate(request: HttpRequest): Promise<Client> {
-    const { client_assertion: clientAssertion } = <ClientAssertionParameters>request.body;
+  public async authenticate(request: HttpRequest<ClientAssertionParameters>): Promise<Client> {
+    const { client_assertion: clientAssertion } = request.data;
 
     try {
       const [header, claims] = this.getClientAssertionComponents(clientAssertion, request);
@@ -139,7 +139,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    */
   private getClientAssertionComponents(
     clientAssertion: string,
-    request: HttpRequest
+    request: HttpRequest<ClientAssertionParameters>
   ): [JsonWebSignatureHeader, JsonWebTokenClaims] {
     const { header, payload } = JsonWebSignature.decode(clientAssertion);
 

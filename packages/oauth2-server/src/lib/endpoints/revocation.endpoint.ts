@@ -118,8 +118,8 @@ export class RevocationEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = <RevocationRequest>request.body;
+  public async handle(request: HttpRequest<RevocationRequest>): Promise<HttpResponse> {
+    const parameters = request.data;
 
     try {
       this.checkParameters(parameters);

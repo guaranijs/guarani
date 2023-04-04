@@ -17,6 +17,7 @@ import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { AuthorizationRequest } from '../messages/authorization-request';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../response-modes/response-mode.token';
 import { ResponseTypeInterface } from '../response-types/response-type.interface';
@@ -137,10 +138,10 @@ describe('Authorization Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let request: HttpRequest<AuthorizationRequest>;
 
     beforeEach(() => {
-      request = {
+      request = new HttpRequest<AuthorizationRequest>({
         body: {},
         cookies: {},
         headers: {},
@@ -153,7 +154,7 @@ describe('Authorization Endpoint', () => {
           scope: 'foo bar',
           state: 'client_state',
         },
-      };
+      });
     });
 
     it('should return an error response when providing an invalid "state" parameter.', async () => {

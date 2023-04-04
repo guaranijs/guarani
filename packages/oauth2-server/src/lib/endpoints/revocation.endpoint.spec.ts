@@ -15,6 +15,7 @@ import { ClientAuthenticationHandler } from '../handlers/client-authentication.h
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { RevocationRequest } from '../messages/revocation-request';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
@@ -154,19 +155,19 @@ describe('Revocation Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let request: HttpRequest<RevocationRequest>;
 
     const defaultResponse = new HttpResponse().setHeaders({ 'Cache-Control': 'no-store', Pragma: 'no-cache' });
 
     beforeEach(() => {
-      request = {
+      request = new HttpRequest<RevocationRequest>({
         body: { token: 'access_token' },
         cookies: {},
         headers: {},
         method: 'POST',
         path: '/oauth/revoke',
         query: {},
-      };
+      });
     });
 
     it('should return an error response when not providing a "token" parameter.', async () => {

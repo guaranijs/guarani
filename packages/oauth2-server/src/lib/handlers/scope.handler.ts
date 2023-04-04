@@ -23,7 +23,7 @@ export class ScopeHandler {
    * @param scope Scope requested by the Client.
    * @param state Client State prior to the Authorization Request.
    */
-  public checkRequestedScope(scope?: string, state?: string): void {
+  public checkRequestedScope(scope: string | undefined, state?: string): void {
     if (scope === undefined) {
       return;
     }
@@ -45,7 +45,7 @@ export class ScopeHandler {
    * @param scope Scope requested by the Client.
    * @returns Scopes that the Client is allowed to use.
    */
-  public getAllowedScopes(client: Client, scope?: string): string[] {
+  public getAllowedScopes(client: Client, scope: string | undefined): string[] {
     return scope !== undefined ? scope.split(' ').filter((scope) => client.scopes.includes(scope)) : client.scopes;
   }
 }

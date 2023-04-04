@@ -13,11 +13,11 @@ export interface ResponseModeInterface {
   readonly name: ResponseMode;
 
   /**
-   * Creates and returns an HTTP Response containing the Parameters of the Authorization Response.
+   * Creates and returns a Http Response containing the Parameters of the Authorization Response.
    *
    * @param redirectUri Redirect URI that the User-Agent will be redirected to.
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
-   * @returns HTTP Response containing the Authorization Response Parameters.
+   * @returns Http Response containing the Authorization Response Parameters.
    */
   createHttpResponse(redirectUri: string, parameters: Record<string, any>): HttpResponse;
 }

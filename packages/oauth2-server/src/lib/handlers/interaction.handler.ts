@@ -17,7 +17,6 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
-import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { AuthorizationRequest } from '../messages/authorization-request';
 import { PromptInterface } from '../prompts/prompt.interface';
@@ -67,15 +66,15 @@ export class InteractionHandler {
    * a Http Response redirecting the User-Agent to either the Error Page of the Authorization Server,
    * or to an Interaction Endpoint so that the End User can continue the Authorization process.
    *
-   * @param request Http Request.
    * @param parameters Parameters of the Authorization Request.
+   * @param cookies Cookies of the Http Authorization Request.
    * @param client Client requesting authorization.
    * @param prompts Prompts requested by the Client.
    * @returns Grant, Session and Consent Entities or Http Interaction Response.
    */
   public async getEntitiesOrHttpResponse(
-    request: HttpRequest,
     parameters: AuthorizationRequest,
+    cookies: Record<string, any>,
     client: Client,
     prompts: Prompt[]
   ): Promise<HttpResponse | [Grant | null, Session, Consent]> {
@@ -87,8 +86,6 @@ export class InteractionHandler {
       const error = this.asOAuth2Exception(exc, parameters);
       return this.handleFatalAuthorizationError(error);
     }
-
-    const { cookies } = request;
 
     let grant = await this.findGrant(cookies);
     let session = await this.findSession(cookies);

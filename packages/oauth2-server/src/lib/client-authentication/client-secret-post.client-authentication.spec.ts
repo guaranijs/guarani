@@ -6,7 +6,10 @@ import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { ClientAuthentication } from './client-authentication.type';
-import { ClientSecretPostClientAuthentication } from './client-secret-post.client-authentication';
+import {
+  ClientSecretPostClientAuthentication,
+  ClientSecretPostCredentials,
+} from './client-secret-post.client-authentication';
 
 describe('Client Secret Post Authentication Method', () => {
   let clientAuthentication: ClientSecretPostClientAuthentication;
@@ -44,24 +47,31 @@ describe('Client Secret Post Authentication Method', () => {
     ];
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
-      const request: HttpRequest = { body, cookies: {}, headers: {}, method: 'POST', path: '/oauth/token', query: {} };
+      const request = new HttpRequest<ClientSecretPostCredentials>({
+        body,
+        cookies: {},
+        headers: {},
+        method: 'POST',
+        path: '/oauth/token',
+        query: {},
+      });
 
       expect(clientAuthentication.hasBeenRequested(request)).toBe(expected);
     });
   });
 
   describe('authenticate()', () => {
-    let request: HttpRequest;
+    let request: HttpRequest<ClientSecretPostCredentials>;
 
     beforeEach(() => {
-      request = {
+      request = new HttpRequest<ClientSecretPostCredentials>({
         body: { client_id: 'client_id', client_secret: 'client_secret' },
         cookies: {},
         headers: {},
         method: 'POST',
         path: '/oauth/token',
         query: {},
-      };
+      });
     });
 
     it('should throw when a client is not found.', async () => {

@@ -40,7 +40,7 @@ describe('Client Authentication Handler', () => {
 
     clientAuthenticationHandler = container.resolve(ClientAuthenticationHandler);
 
-    request = { body: {}, cookies: {}, headers: {}, method: 'POST', path: '/oauth/token', query: {} };
+    request = new HttpRequest({ body: {}, cookies: {}, headers: {}, method: 'POST', path: '/oauth/token', query: {} });
   });
 
   afterEach(() => {

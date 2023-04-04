@@ -124,7 +124,7 @@ describe('Discovery Document', () => {
       ],
       code_challenge_methods_supported: ['S256', 'plain'],
       interaction_endpoint: 'http://localhost:3000/oauth/interaction',
-      device_authorization_endpoint: 'http://localhost:3000/oauth/device_authorization',
+      device_authorization_endpoint: 'http://localhost:3000/oauth/device-authorization',
       authorization_response_iss_parameter_supported: true,
     });
   });

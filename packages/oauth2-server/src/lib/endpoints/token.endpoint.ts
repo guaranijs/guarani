@@ -77,8 +77,8 @@ export class TokenEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = <TokenRequest>request.body;
+  public async handle(request: HttpRequest<TokenRequest>): Promise<HttpResponse> {
+    const parameters = request.data;
 
     try {
       this.checkParameters(parameters);

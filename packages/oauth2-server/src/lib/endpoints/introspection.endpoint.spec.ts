@@ -12,6 +12,7 @@ import { ClientAuthenticationHandler } from '../handlers/client-authentication.h
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { IntrospectionRequest } from '../messages/introspection-request';
 import { IntrospectionResponse } from '../messages/introspection-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -120,21 +121,21 @@ describe('Introspection Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let request: HttpRequest<IntrospectionRequest>;
 
     const defaultResponse = new HttpResponse()
       .setHeaders({ 'Content-Type': 'application/json', 'Cache-Control': 'no-store', Pragma: 'no-cache' })
       .json({ active: false });
 
     beforeEach(() => {
-      request = {
+      request = new HttpRequest<IntrospectionRequest>({
         body: { token: 'access_token' },
         cookies: {},
         headers: { authorization: 'Basic ' + Buffer.from('client_id:client_secret', 'utf8').toString('base64') },
         method: 'POST',
         path: '/oauth/introspect',
         query: {},
-      };
+      });
     });
 
     afterEach(() => {

@@ -11,7 +11,7 @@ export class InvalidClientException extends OAuth2Exception {
   public override readonly code: ErrorCode = 'invalid_client';
 
   /**
-   * HTTP Response Status Code of the OAuth 2.0 Exception.
+   * Http Response Status Code of the OAuth 2.0 Exception.
    */
   public override readonly statusCode: number = 401;
 }

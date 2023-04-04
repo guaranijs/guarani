@@ -14,6 +14,7 @@ import { ClientAuthenticationHandler } from '../handlers/client-authentication.h
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { TokenRequest } from '../messages/token-request';
 import { TokenResponse } from '../messages/token-response';
 import { Endpoint } from './endpoint.type';
 import { TokenEndpoint } from './token.endpoint';
@@ -69,17 +70,17 @@ describe('Token Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let request: HttpRequest<TokenRequest>;
 
     beforeEach(() => {
-      request = {
+      request = new HttpRequest<TokenRequest>({
         body: { grant_type: 'authorization_code' },
         cookies: {},
         headers: {},
         method: 'POST',
         path: '/oauth/token',
         query: {},
-      };
+      });
     });
 
     it('should return an error response when not providing a "grant_type" parameter.', async () => {

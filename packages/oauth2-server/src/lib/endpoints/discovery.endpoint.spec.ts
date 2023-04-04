@@ -28,7 +28,7 @@ describe('Discovery Endpoint', () => {
 
   const endpoints = <jest.MockedObject<EndpointInterface>[]>[
     jest.mocked<Partial<EndpointInterface>>({ name: 'authorization', path: '/oauth/authorize' }),
-    jest.mocked<Partial<EndpointInterface>>({ name: 'device_authorization', path: '/oauth/device_authorization' }),
+    jest.mocked<Partial<EndpointInterface>>({ name: 'device_authorization', path: '/oauth/device-authorization' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'interaction', path: '/oauth/interaction' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'introspection', path: '/oauth/introspect' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'jwks', path: '/oauth/jwks' }),
@@ -69,14 +69,14 @@ describe('Discovery Endpoint', () => {
     let request: HttpRequest;
 
     beforeEach(() => {
-      request = {
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},
         method: 'GET',
         path: '/.well-known/openid-configuration',
         query: {},
-      };
+      });
     });
 
     it('should return the configuration of the authorization server at the response body.', async () => {
@@ -103,7 +103,7 @@ describe('Discovery Endpoint', () => {
         introspection_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256'],
         code_challenge_methods_supported: ['S256'],
         interaction_endpoint: 'https://server.example.com/oauth/interaction',
-        device_authorization_endpoint: 'https://server.example.com/oauth/device_authorization',
+        device_authorization_endpoint: 'https://server.example.com/oauth/device-authorization',
         authorization_response_iss_parameter_supported: true,
       };
 

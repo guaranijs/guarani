@@ -42,7 +42,7 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
   /**
    * Path of the Endpoint.
    */
-  readonly path: string = '/oauth/device_authorization';
+  readonly path: string = '/oauth/device-authorization';
 
   /**
    * Http Methods supported by the Endpoint.
@@ -83,8 +83,8 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = <DeviceAuthorizationRequest>request.body;
+  public async handle(request: HttpRequest<DeviceAuthorizationRequest>): Promise<HttpResponse> {
+    const parameters = request.data;
 
     try {
       const client = await this.clientAuthenticationHandler.authenticate(request);

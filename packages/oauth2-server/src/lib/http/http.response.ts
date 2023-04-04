@@ -10,24 +10,52 @@ import { URL } from 'url';
  */
 export class HttpResponse {
   /**
+   * Internal Status Code of the Http Response.
+   */
+  #statusCode = 200;
+
+  /**
+   * Internal Headers of the Http Response.
+   */
+  #headers: OutgoingHttpHeaders = {};
+
+  /**
+   * Internal Cookies of the Http Response.
+   */
+  #cookies: Record<string, any> = {};
+
+  /**
+   * Internal Encoded Body of the Http Response.
+   */
+  #body: Buffer = Buffer.alloc(0);
+
+  /**
    * Status Code of the Http Response.
    */
-  public readonly statusCode: number = 200;
+  public get statusCode(): number {
+    return this.#statusCode;
+  }
 
   /**
    * Headers of the Http Response.
    */
-  public readonly headers: OutgoingHttpHeaders = {};
+  public get headers(): OutgoingHttpHeaders {
+    return this.#headers;
+  }
 
   /**
    * Cookies of the Http Response.
    */
-  public readonly cookies: Record<string, any> = {};
+  public get cookies(): Record<string, any> {
+    return this.#cookies;
+  }
 
   /**
    * Encoded Body of the Http Response.
    */
-  public readonly body: Buffer = Buffer.alloc(0);
+  public get body(): Buffer {
+    return this.#body;
+  }
 
   /**
    * Defines the Status Code of the Response.
@@ -35,7 +63,7 @@ export class HttpResponse {
    * @param statusCode Status Code of the Response.
    */
   public setStatus(statusCode: number): HttpResponse {
-    Reflect.set(this, 'statusCode', statusCode);
+    this.#statusCode = statusCode;
     return this;
   }
 
@@ -46,7 +74,7 @@ export class HttpResponse {
    * @param value Value of the Header.
    */
   public setHeader(header: string, value: OutgoingHttpHeader): HttpResponse {
-    this.headers[header] = value;
+    this.#headers[header] = value;
     return this;
   }
 
@@ -56,7 +84,7 @@ export class HttpResponse {
    * @param headers Dictionary of the Headers.
    */
   public setHeaders(headers: OutgoingHttpHeaders): HttpResponse {
-    Object.assign(this.headers, headers);
+    Object.assign(this.#headers, headers);
     return this;
   }
 
@@ -67,7 +95,7 @@ export class HttpResponse {
    * @param value Value of the Cookie.
    */
   public setCookie(cookie: string, value: any): HttpResponse {
-    this.cookies[cookie] = value;
+    this.#cookies[cookie] = value;
     return this;
   }
 
@@ -77,7 +105,7 @@ export class HttpResponse {
    * @param cookies Dictionary of the Cookies.
    */
   public setCookies(cookies: Record<string, any>): HttpResponse {
-    Object.assign(this.cookies, cookies);
+    Object.assign(this.#cookies, cookies);
     return this;
   }
 
@@ -88,7 +116,7 @@ export class HttpResponse {
    */
   public json<T>(data: T): HttpResponse {
     this.setHeader('Content-Type', 'application/json');
-    Reflect.set(this, 'body', Buffer.from(JSON.stringify(data ?? null), 'utf8'));
+    this.#body = Buffer.from(JSON.stringify(data ?? null), 'utf8');
     return this;
   }
 
@@ -110,7 +138,7 @@ export class HttpResponse {
    */
   public html(html: string): HttpResponse {
     this.setHeader('Content-Type', 'text/html; charset=UTF-8');
-    Reflect.set(this, 'body', Buffer.from(html, 'utf8'));
+    this.#body = Buffer.from(html, 'utf8');
     return this;
   }
 }

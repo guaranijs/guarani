@@ -11,6 +11,7 @@ import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
+import { InteractionRequest } from '../messages/interaction-request';
 import { Endpoint } from './endpoint.type';
 import { InteractionEndpoint } from './interaction.endpoint';
 
@@ -66,10 +67,17 @@ describe('Interaction Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let request: HttpRequest<InteractionRequest>;
 
     beforeEach(() => {
-      request = { body: {}, cookies: {}, headers: {}, method: <HttpMethod>'', path: '/oauth/interaction', query: {} };
+      request = new HttpRequest<InteractionRequest>({
+        body: {},
+        cookies: {},
+        headers: {},
+        method: <HttpMethod>'GET',
+        path: '/oauth/interaction',
+        query: {},
+      });
     });
 
     it('should return an error response when providing an unsupported http method.', async () => {

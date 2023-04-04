@@ -51,7 +51,14 @@ describe('Client Secret Basic Authentication Method', () => {
     ];
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (headers, expected) => {
-      const request: HttpRequest = { body: {}, cookies: {}, headers, method: 'POST', path: '/oauth/token', query: {} };
+      const request = new HttpRequest({
+        body: {},
+        cookies: {},
+        headers,
+        method: 'POST',
+        path: '/oauth/token',
+        query: {},
+      });
 
       expect(clientAuthentication.hasBeenRequested(request)).toBe(expected);
     });
@@ -61,14 +68,14 @@ describe('Client Secret Basic Authentication Method', () => {
     let request: HttpRequest;
 
     beforeEach(() => {
-      request = {
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: { authorization: 'Basic ' + Buffer.from('client_id:client_secret', 'utf8').toString('base64') },
         method: 'POST',
         path: '/oauth/token',
         query: {},
-      };
+      });
     });
 
     it('should throw when providing an authorization header without a token.', async () => {

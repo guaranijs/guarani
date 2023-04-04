@@ -43,12 +43,11 @@ export class JsonWebKeySetEndpoint implements EndpointInterface {
    * This method is responsible for fetching the JSON Web Key Set of the Authorization Server
    * and returning it as a JSON Response to the Client.
    *
-   * @param request Http Request.
+   * @param _request Http Request.
    * @returns Http Response.
    */
-  // @ts-expect-error Unused variable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async handle(request: HttpRequest): Promise<HttpResponse> {
+  public async handle(_request: HttpRequest): Promise<HttpResponse> {
     return new HttpResponse().json(this.jwks.toJSON(true));
   }
 }

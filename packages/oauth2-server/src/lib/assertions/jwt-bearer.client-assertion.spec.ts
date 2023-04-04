@@ -14,6 +14,7 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { ClientAssertionParameters } from './client-assertion.parameters';
 import { ClientAssertion } from './client-assertion.type';
 import { JwtBearerClientAssertion } from './jwt-bearer.client-assertion';
 
@@ -71,17 +72,17 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   });
 
   describe('hasBeenRequested()', () => {
-    let request: HttpRequest;
+    let request: HttpRequest<ClientAssertionParameters>;
 
     beforeEach(() => {
-      request = {
+      request = new HttpRequest<ClientAssertionParameters>({
         body: { client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer', client_assertion: '' },
         cookies: {},
         headers: {},
         method: 'POST',
         path: '/oauth/token',
         query: {},
-      };
+      });
     });
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
@@ -144,17 +145,17 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   });
 
   describe('authenticate()', () => {
-    let request: HttpRequest;
+    let request: HttpRequest<ClientAssertionParameters>;
 
     beforeEach(() => {
-      request = {
+      request = new HttpRequest<ClientAssertionParameters>({
         body: { client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer', client_assertion: '' },
         cookies: {},
         headers: {},
         method: 'POST',
         path: '/oauth/token',
         query: {},
-      };
+      });
     });
 
     it('should throw when the header algorithm is "none".', async () => {

@@ -3,7 +3,6 @@ import { Injectable } from '@guarani/di';
 import { Request, RequestHandler, Response, Router } from 'express';
 
 import { AuthorizationServer } from '../../authorization-server';
-import { HttpMethod } from '../../http/http-method.type';
 import { HttpRequest } from '../../http/http.request';
 import { HttpResponse } from '../../http/http.response';
 
@@ -51,14 +50,14 @@ export class ExpressBackend extends AuthorizationServer {
    * @returns OAuth 2.0 Http Request.
    */
   private _createOAuth2Request(request: Request): HttpRequest {
-    return {
-      body: request.body,
-      cookies: request.signedCookies,
-      headers: request.headers,
-      method: <HttpMethod>request.method.toUpperCase(),
+    return new HttpRequest({
+      method: request.method,
       path: request.path,
       query: request.query,
-    };
+      headers: request.headers,
+      cookies: request.signedCookies,
+      body: request.body,
+    });
   }
 
   /**

@@ -64,14 +64,14 @@ describe('JSON Web Key Set Endpoint', () => {
     let request: HttpRequest;
 
     beforeEach(() => {
-      request = {
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},
         method: 'GET',
         path: '/oauth/jwks',
         query: {},
-      };
+      });
     });
 
     it('should return the json web key set containing the keys of the authorization server.', async () => {

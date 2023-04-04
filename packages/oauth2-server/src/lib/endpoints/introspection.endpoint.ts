@@ -121,8 +121,8 @@ export class IntrospectionEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = <IntrospectionRequest>request.body;
+  public async handle(request: HttpRequest<IntrospectionRequest>): Promise<HttpResponse> {
+    const parameters = request.data;
 
     try {
       this.checkParameters(parameters);

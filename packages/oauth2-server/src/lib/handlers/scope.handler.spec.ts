@@ -23,7 +23,7 @@ describe('Scope Handler', () => {
 
   describe('checkRequestedScope()', () => {
     it('should not throw when not requesting any scope.', () => {
-      expect(() => scopeHandler.checkRequestedScope()).not.toThrow();
+      expect(() => scopeHandler.checkRequestedScope(undefined)).not.toThrow();
     });
 
     it('should throw when requesting an unsupported Scope.', () => {
@@ -42,7 +42,7 @@ describe('Scope Handler', () => {
 
   describe('getAllowedScopes()', () => {
     it('should return the default scopes of the client when a scope is not requested.', () => {
-      expect(scopeHandler.getAllowedScopes(client)).toEqual(expect.arrayContaining(['foo', 'bar']));
+      expect(scopeHandler.getAllowedScopes(client, undefined)).toEqual(expect.arrayContaining(['foo', 'bar']));
     });
 
     it("should return the requested scope from the client's allowed scopes.", () => {

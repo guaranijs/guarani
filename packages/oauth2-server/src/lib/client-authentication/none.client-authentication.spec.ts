@@ -6,7 +6,7 @@ import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { ClientAuthentication } from './client-authentication.type';
-import { NoneClientAuthentication } from './none.client-authentication';
+import { NoneClientAuthentication, NoneCredentials } from './none.client-authentication';
 
 describe('None Client Authentication Method', () => {
   let clientAuthentication: NoneClientAuthentication;
@@ -44,24 +44,31 @@ describe('None Client Authentication Method', () => {
     ];
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
-      const request: HttpRequest = { body, cookies: {}, headers: {}, method: 'POST', path: '/oauth/token', query: {} };
+      const request = new HttpRequest<NoneCredentials>({
+        body,
+        cookies: {},
+        headers: {},
+        method: 'POST',
+        path: '/oauth/token',
+        query: {},
+      });
 
       expect(clientAuthentication.hasBeenRequested(request)).toBe(expected);
     });
   });
 
   describe('authenticate()', () => {
-    let request: HttpRequest;
+    let request: HttpRequest<NoneCredentials>;
 
     beforeEach(() => {
-      request = {
+      request = new HttpRequest<NoneCredentials>({
         body: { client_id: 'client_id' },
         cookies: {},
         headers: {},
         method: 'POST',
         path: '/oauth/token',
         query: {},
-      };
+      });
     });
 
     it('should throw when a client is not found.', async () => {

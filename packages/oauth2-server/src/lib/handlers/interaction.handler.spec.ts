@@ -13,7 +13,6 @@ import { ConsentRequiredException } from '../exceptions/consent-required.excepti
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
-import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { AuthorizationRequest } from '../messages/authorization-request';
 import { PromptInterface } from '../prompts/prompt.interface';
@@ -103,12 +102,12 @@ describe('Interaction Handler', () => {
   });
 
   describe('getEntitiesOrHttpResponse()', () => {
-    let request: HttpRequest;
     let parameters: AuthorizationRequest;
+    let cookies: Record<string, any>;
 
     beforeEach(() => {
-      request = <HttpRequest>{ cookies: {} };
       parameters = <AuthorizationRequest>{ state: 'client_state' };
+      cookies = {};
     });
 
     it('should return an error response when authentication is required.', async () => {
@@ -119,7 +118,7 @@ describe('Interaction Handler', () => {
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, ['none'])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, ['none'])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -137,7 +136,7 @@ describe('Interaction Handler', () => {
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, ['none'])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, ['none'])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -157,7 +156,7 @@ describe('Interaction Handler', () => {
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, ['none'])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, ['none'])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -177,7 +176,7 @@ describe('Interaction Handler', () => {
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, ['none'])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, ['none'])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -200,7 +199,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -213,7 +212,7 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the login endpoint when not authenticating at the login endpoint.', async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:grant'] = 'grant_id';
 
       const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge', parameters, client };
@@ -226,7 +225,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -239,7 +238,7 @@ describe('Interaction Handler', () => {
     });
 
     it('should return an error response if the client of the request does not match the client of the grant.', async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:grant'] = 'grant_id';
 
       const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{
@@ -258,7 +257,7 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -272,7 +271,7 @@ describe('Interaction Handler', () => {
     });
 
     it('should return an error response if the grant is expired.', async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:grant'] = 'grant_id';
 
       const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{
@@ -288,7 +287,7 @@ describe('Interaction Handler', () => {
       const error = new InvalidRequestException({ description: 'Expired Grant.', state: parameters.state });
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -302,7 +301,7 @@ describe('Interaction Handler', () => {
     });
 
     it('should return an error response if one or more parameters changed during the interactions.', async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:grant'] = 'grant_id';
 
       const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{
@@ -322,7 +321,7 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -336,7 +335,7 @@ describe('Interaction Handler', () => {
     });
 
     it("should return a redirect response to the login endpoint if the user authenticated but did not authorize before the session's expiration time.", async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:grant'] = 'grant_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id', expiresAt: new Date(Date.now() - 300000) };
@@ -350,7 +349,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -364,7 +363,7 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the consent endpoint if not previously authorized.', async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:grant'] = 'grant_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
@@ -386,7 +385,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -400,8 +399,8 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the consent enddpoint if the consent is expired.', async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
-      request.cookies['guarani:session'] = 'session_id';
+      cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:session'] = 'session_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
@@ -426,7 +425,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -443,8 +442,8 @@ describe('Interaction Handler', () => {
     });
 
     it('should return the entities of the interaction.', async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
-      request.cookies['guarani:session'] = 'session_id';
+      cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:session'] = 'session_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
@@ -463,7 +462,7 @@ describe('Interaction Handler', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toEqual<Entities>([
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toEqual<Entities>([
         grant,
         session,
         grant.consent!,
@@ -473,7 +472,7 @@ describe('Interaction Handler', () => {
 
     // #region Authenticated but not authorized.
     it('should return a redirect response to the consent endpoint when previously authenticated but not authorized.', async () => {
-      request.cookies['guarani:session'] = 'session_id';
+      cookies['guarani:session'] = 'session_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
@@ -494,7 +493,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -510,8 +509,8 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the consent endpoint when previously authenticated but did not decide at the consent endpoint.', async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
-      request.cookies['guarani:session'] = 'session_id';
+      cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:session'] = 'session_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
@@ -533,7 +532,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -547,8 +546,8 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the consent endpoint when previously authenticated but did not authorize and the consent expired.', async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
-      request.cookies['guarani:session'] = 'session_id';
+      cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:session'] = 'session_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
@@ -572,7 +571,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -589,8 +588,8 @@ describe('Interaction Handler', () => {
     });
 
     it('should return the entities of the interaction.', async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
-      request.cookies['guarani:session'] = 'session_id';
+      cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:session'] = 'session_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
@@ -608,7 +607,7 @@ describe('Interaction Handler', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toEqual<Entities>([
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toEqual<Entities>([
         grant,
         session,
         grant.consent!,
@@ -618,7 +617,7 @@ describe('Interaction Handler', () => {
 
     // #region Not authenticated but authorized.
     it('should return a redirect response to the login endpoint when not authenticated but previously authorized.', async () => {
-      request.cookies['guarani:consent'] = 'consent_id';
+      cookies['guarani:consent'] = 'consent_id';
 
       const client = <Client>{ id: 'client_id' };
       const consent = <Consent>{ id: 'consent_id' };
@@ -639,7 +638,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -652,8 +651,8 @@ describe('Interaction Handler', () => {
     });
 
     it('should return the entities of the interaction.', async () => {
-      request.cookies['guarani:grant'] = 'grant_id';
-      request.cookies['guarani:consent'] = 'consent_id';
+      cookies['guarani:grant'] = 'grant_id';
+      cookies['guarani:consent'] = 'consent_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
@@ -670,7 +669,7 @@ describe('Interaction Handler', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toEqual<Entities>([
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toEqual<Entities>([
         grant,
         grant.session!,
         consent,
@@ -680,8 +679,8 @@ describe('Interaction Handler', () => {
 
     // #region Authenticated and Authorized.
     it('should return a redirect response to the login endpoint if the session is expired.', async () => {
-      request.cookies['guarani:session'] = 'session_id';
-      request.cookies['guarani:consent'] = 'consent_id';
+      cookies['guarani:session'] = 'session_id';
+      cookies['guarani:consent'] = 'consent_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id', expiresAt: new Date(Date.now() - 3600000) };
@@ -702,7 +701,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -720,8 +719,8 @@ describe('Interaction Handler', () => {
     it('should return a redirect response to the login endpoint if the session\'s creation date is longer than "max_age".', async () => {
       Reflect.set(parameters, 'max_age', 300);
 
-      request.cookies['guarani:session'] = 'session_id';
-      request.cookies['guarani:consent'] = 'consent_id';
+      cookies['guarani:session'] = 'session_id';
+      cookies['guarani:consent'] = 'consent_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id', createdAt: new Date(Date.now() - 3600000) };
@@ -742,7 +741,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -757,8 +756,8 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the consent endpoint if the consent is expired.', async () => {
-      request.cookies['guarani:session'] = 'session_id';
-      request.cookies['guarani:consent'] = 'consent_id';
+      cookies['guarani:session'] = 'session_id';
+      cookies['guarani:consent'] = 'consent_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
@@ -781,7 +780,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toMatchObject<
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
         Partial<HttpResponse>
       >({
         body: Buffer.alloc(0),
@@ -800,8 +799,8 @@ describe('Interaction Handler', () => {
     });
 
     it('should return the entities of the interaction.', async () => {
-      request.cookies['guarani:session'] = 'session_id';
-      request.cookies['guarani:consent'] = 'consent_id';
+      cookies['guarani:session'] = 'session_id';
+      cookies['guarani:consent'] = 'consent_id';
 
       const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
@@ -810,7 +809,7 @@ describe('Interaction Handler', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
 
-      await expect(handler.getEntitiesOrHttpResponse(request, parameters, client, [])).resolves.toEqual<Entities>([
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toEqual<Entities>([
         null,
         session,
         consent,

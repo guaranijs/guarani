@@ -64,7 +64,7 @@ export class InteractionEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest): Promise<HttpResponse> {
+  public async handle(request: HttpRequest<InteractionRequest>): Promise<HttpResponse> {
     try {
       switch (request.method) {
         case 'GET':
@@ -100,8 +100,8 @@ export class InteractionEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  private async handleContext(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = <InteractionRequest>request.query;
+  private async handleContext(request: HttpRequest<InteractionRequest>): Promise<HttpResponse> {
+    const parameters = request.data;
 
     this.checkParameters(parameters);
 
@@ -117,8 +117,8 @@ export class InteractionEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  private async handleDecision(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = <InteractionRequest>request.body;
+  private async handleDecision(request: HttpRequest<InteractionRequest>): Promise<HttpResponse> {
+    const parameters = request.data;
 
     this.checkParameters(parameters);
 

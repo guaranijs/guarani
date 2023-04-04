@@ -39,8 +39,8 @@ export interface EndpointInterface {
    *
    * It is recommended to split the logic of the Endpoint into small single-responsibility methods.
    *
-   * @param request HTTP Request.
-   * @returns HTTP Response.
+   * @param request Http Request.
+   * @returns Http Response.
    */
   handle(request: HttpRequest): Promise<HttpResponse>;
 }

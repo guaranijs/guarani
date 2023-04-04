@@ -12,6 +12,7 @@ import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { DeviceAuthorizationRequest } from '../messages/device-authorization-request';
 import { DeviceAuthorizationResponse } from '../messages/device-authorization-response';
 import { DeviceCodeServiceInterface } from '../services/device-code.service.interface';
 import { DEVICE_CODE_SERVICE } from '../services/device-code.service.token';
@@ -59,7 +60,7 @@ describe('Device Authorization Endpoint', () => {
 
   describe('path', () => {
     it('should have "/oauth/device_authorization" as its default path.', () => {
-      expect(endpoint.path).toEqual('/oauth/device_authorization');
+      expect(endpoint.path).toEqual('/oauth/device-authorization');
     });
   });
 
@@ -79,14 +80,17 @@ describe('Device Authorization Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let request: HttpRequest<DeviceAuthorizationRequest>;
 
     beforeEach(() => {
-      request = <HttpRequest>{
+      request = new HttpRequest<DeviceAuthorizationRequest>({
         body: {},
+        cookies: {},
+        headers: {},
         method: 'POST',
-        path: '/oauth/device_authorization',
-      };
+        path: '/oauth/device-authorization',
+        query: {},
+      });
     });
 
     it('should return an error response when not using a client authentication method.', async () => {

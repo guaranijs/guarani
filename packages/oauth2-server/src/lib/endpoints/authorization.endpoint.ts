@@ -97,8 +97,8 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = <AuthorizationRequest>request.query;
+  public async handle(request: HttpRequest<AuthorizationRequest>): Promise<HttpResponse> {
+    const { cookies, data: parameters } = request;
 
     let client: Client;
     let responseType: ResponseTypeInterface;
@@ -127,8 +127,8 @@ export class AuthorizationEndpoint implements EndpointInterface {
     }
 
     const entitiesOrInteractionResponse = await this.interactionHandler.getEntitiesOrHttpResponse(
-      request,
       parameters,
+      cookies,
       client,
       prompts
     );

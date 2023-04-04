@@ -1,4 +1,4 @@
-import { PkceMethod } from '../pkce/pkce-method.type';
+import { Pkce } from '../pkces/pkce.type';
 import { AuthorizationRequest } from './authorization-request';
 
 /**
@@ -13,5 +13,5 @@ export interface CodeAuthorizationRequest extends AuthorizationRequest {
   /**
    * PKCE Code Challenge Method.
    */
-  readonly code_challenge_method?: PkceMethod;
+  readonly code_challenge_method?: Pkce;
 }

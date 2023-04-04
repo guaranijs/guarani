@@ -36,7 +36,7 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   ],
   responseTypes: ['code', 'id_token', 'token', 'code id_token', 'code token', 'id_token token', 'code id_token token'],
   responseModes: ['form_post', 'fragment', 'query'],
-  pkceMethods: ['S256', 'plain'],
+  pkces: ['S256', 'plain'],
   jwks: {
     keys: [
       {

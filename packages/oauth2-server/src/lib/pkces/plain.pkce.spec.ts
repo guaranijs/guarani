@@ -1,28 +1,28 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { PkceMethod } from './pkce-method.type';
+import { Pkce } from './pkce.type';
 import { PlainPkce } from './plain.pkce';
 
-describe('Plain PKCE Method', () => {
-  let pkceMethod: PlainPkce;
+describe('Plain PKCE', () => {
+  let pkce: PlainPkce;
 
   beforeEach(() => {
     const container = new DependencyInjectionContainer();
 
     container.bind(PlainPkce).toSelf().asSingleton();
 
-    pkceMethod = container.resolve(PlainPkce);
+    pkce = container.resolve(PlainPkce);
   });
 
   it('should have "plain" as its name.', () => {
-    expect(pkceMethod.name).toEqual<PkceMethod>('plain');
+    expect(pkce.name).toEqual<Pkce>('plain');
   });
 
   it('should return false when comparing two different strings.', () => {
-    expect(pkceMethod.verify('abcxyz', 'abc123')).toBe(false);
+    expect(pkce.verify('abcxyz', 'abc123')).toBe(false);
   });
 
   it('should return true when comparing the same strings.', () => {
-    expect(pkceMethod.verify('abcxyz', 'abcxyz')).toBe(true);
+    expect(pkce.verify('abcxyz', 'abcxyz')).toBe(true);
   });
 });

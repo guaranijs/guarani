@@ -3,7 +3,7 @@ import { JsonWebKeySetParameters, JsonWebSignatureAlgorithm } from '@guarani/jos
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { GrantType } from '../grant-types/grant-type.type';
-import { PkceMethod } from '../pkce/pkce-method.type';
+import { Pkce } from '../pkces/pkce.type';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { ResponseType } from '../response-types/response-type.type';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
@@ -64,7 +64,7 @@ export interface AuthorizationServerOptions {
   /**
    * PKCE Methods to be registered at the Authorization Server.
    */
-  readonly pkceMethods?: PkceMethod[];
+  readonly pkces?: Pkce[];
 
   /**
    * JSON Web Key Set of the Authorization Server.

@@ -2,7 +2,7 @@ import { JsonWebSignatureAlgorithm } from '@guarani/jose';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { GrantType } from '../grant-types/grant-type.type';
-import { PkceMethod } from '../pkce/pkce-method.type';
+import { Pkce } from '../pkces/pkce.type';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { ResponseType } from '../response-types/response-type.type';
 
@@ -113,7 +113,7 @@ export interface DiscoveryResponse extends Record<string, any> {
   /**
    * PKCE Code Challenge Methods supported by the Authorization Server.
    */
-  readonly code_challenge_methods_supported?: PkceMethod[];
+  readonly code_challenge_methods_supported?: Pkce[];
 
   /**
    * Url of the Interaction Endpoint.

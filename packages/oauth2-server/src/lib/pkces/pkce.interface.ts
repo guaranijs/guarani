@@ -1,4 +1,4 @@
-import { PkceMethod } from './pkce-method.type';
+import { Pkce } from './pkce.type';
 
 /**
  * Interface of a Proof Key for Code Exchange.
@@ -7,9 +7,9 @@ import { PkceMethod } from './pkce-method.type';
  */
 export interface PkceInterface {
   /**
-   * Name of the PKCE Method.
+   * Name of the PKCE.
    */
-  readonly name: PkceMethod;
+  readonly name: Pkce;
 
   /**
    * Checks if the Authorization Code Verifier provided by the Client at the Token Endpoint

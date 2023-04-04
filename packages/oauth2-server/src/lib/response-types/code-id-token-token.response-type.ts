@@ -9,8 +9,8 @@ import { CodeAuthorizationRequest } from '../messages/code.authorization-request
 import { CodeAuthorizationResponse } from '../messages/code.authorization-response';
 import { IdTokenAuthorizationResponse } from '../messages/id-token.authorization-response';
 import { TokenAuthorizationResponse } from '../messages/token.authorization-response';
-import { PkceInterface } from '../pkce/pkce.interface';
-import { PKCE } from '../pkce/pkce.token';
+import { PkceInterface } from '../pkces/pkce.interface';
+import { PKCE } from '../pkces/pkce.token';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -53,15 +53,15 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
    * @param idTokenHandler Instance of the ID Token Handler.
    * @param accessTokenService Instance of the Access Token Service.
    * @param authorizationCodeService Instance of the Authorization Code Service.
-   * @param pkce PKCE Methods.
+   * @param pkces PKCE Methods.
    */
   public constructor(
     private readonly idTokenHandler: IdTokenHandler,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
     @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
-    @InjectAll(PKCE) private readonly pkce: PkceInterface[]
+    @InjectAll(PKCE) private readonly pkces: PkceInterface[]
   ) {
-    if (this.pkce.length === 0) {
+    if (this.pkces.length === 0) {
       throw new TypeError('Missing PKCE Methods for response_type "code id_token token".');
     }
   }
@@ -124,7 +124,7 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
       });
     }
 
-    if (codeChallengeMethod !== undefined && !this.pkce.map((pkce) => pkce.name).includes(codeChallengeMethod)) {
+    if (codeChallengeMethod !== undefined && !this.pkces.map((pkce) => pkce.name).includes(codeChallengeMethod)) {
       throw new InvalidRequestException({
         description: `Unsupported code_challenge_method "${codeChallengeMethod}".`,
         state: parameters.state,

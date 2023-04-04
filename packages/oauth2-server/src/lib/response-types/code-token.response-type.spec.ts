@@ -10,8 +10,8 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { CodeAuthorizationRequest } from '../messages/code.authorization-request';
 import { CodeAuthorizationResponse } from '../messages/code.authorization-response';
 import { TokenAuthorizationResponse } from '../messages/token.authorization-response';
-import { PkceInterface } from '../pkce/pkce.interface';
-import { PKCE } from '../pkce/pkce.token';
+import { PkceInterface } from '../pkces/pkce.interface';
+import { PKCE } from '../pkces/pkce.token';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';

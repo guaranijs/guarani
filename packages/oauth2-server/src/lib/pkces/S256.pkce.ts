@@ -3,20 +3,20 @@ import { Injectable } from '@guarani/di';
 import { Buffer } from 'buffer';
 import { createHash, timingSafeEqual } from 'crypto';
 
-import { PkceMethod } from './pkce-method.type';
 import { PkceInterface } from './pkce.interface';
+import { Pkce } from './pkce.type';
 
 /**
- * Implementation of the **S256** PKCE Method.
+ * Implementation of the **S256** PKCE.
  *
  * @see https://www.rfc-editor.org/rfc/rfc7636.html#section-4.2
  */
 @Injectable()
 export class S256Pkce implements PkceInterface {
   /**
-   * Name of the PKCE Method.
+   * Name of the PKCE.
    */
-  public readonly name: PkceMethod = 'S256';
+  public readonly name: Pkce = 'S256';
 
   /**
    * Performs a comparison between the Authorization Code Challenge hash received at the Authorization Endpoint

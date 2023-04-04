@@ -128,9 +128,9 @@ export { AuthorizationServerFactory } from './lib/metadata/authorization-server.
 export { AuthorizationServerOptions } from './lib/metadata/authorization-server.options';
 
 // PKCE
-export { PkceMethod } from './lib/pkce/pkce-method.type';
-export { PkceInterface } from './lib/pkce/pkce.interface';
-export { PKCE } from './lib/pkce/pkce.token';
+export { PkceInterface } from './lib/pkces/pkce.interface';
+export { PKCE } from './lib/pkces/pkce.token';
+export { Pkce } from './lib/pkces/pkce.type';
 
 // Prompts
 export { PromptInterface } from './lib/prompts/prompt.interface';

@@ -74,7 +74,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
       introspection_endpoint: this.getEndpointPath('introspection'),
       introspection_endpoint_auth_methods_supported: this.settings.clientAuthenticationMethods,
       introspection_endpoint_auth_signing_alg_values_supported: this.settings.clientAuthenticationSignatureAlgorithms,
-      code_challenge_methods_supported: this.settings.pkceMethods,
+      code_challenge_methods_supported: this.settings.pkces,
       interaction_endpoint: this.getEndpointPath('interaction'),
       device_authorization_endpoint: this.getEndpointPath('device_authorization'),
       authorization_response_iss_parameter_supported: this.settings.enableAuthorizationResponseIssuerIdentifier,

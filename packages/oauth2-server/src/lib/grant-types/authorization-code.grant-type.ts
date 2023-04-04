@@ -10,9 +10,9 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { AuthorizationCodeTokenRequest } from '../messages/authorization-code.token-request';
 import { TokenResponse } from '../messages/token-response';
-import { PkceMethod } from '../pkce/pkce-method.type';
-import { PkceInterface } from '../pkce/pkce.interface';
-import { PKCE } from '../pkce/pkce.token';
+import { PkceInterface } from '../pkces/pkce.interface';
+import { PKCE } from '../pkces/pkce.token';
+import { Pkce } from '../pkces/pkce.type';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { AuthorizationCodeServiceInterface } from '../services/authorization-code.service.interface';
@@ -205,7 +205,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
    * @param codeChallengeMethod PKCE Method to be retrieved.
    * @returns Instance of the requested PKCE Method.
    */
-  private getPkceMethod(codeChallengeMethod: PkceMethod): PkceInterface {
+  private getPkceMethod(codeChallengeMethod: Pkce): PkceInterface {
     const pkceMethod = this.pkces.find((pkceMethod) => pkceMethod.name === codeChallengeMethod);
 
     if (pkceMethod === undefined) {

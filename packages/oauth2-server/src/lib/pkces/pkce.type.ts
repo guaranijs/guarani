@@ -1,4 +1,4 @@
 /**
  * PKCE Methods supported by Guarani.
  */
-export type PkceMethod = 'S256' | 'plain';
+export type Pkce = 'S256' | 'plain';

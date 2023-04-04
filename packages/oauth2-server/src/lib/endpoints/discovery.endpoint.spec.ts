@@ -22,7 +22,7 @@ describe('Discovery Endpoint', () => {
     grantTypes: ['authorization_code', 'refresh_token'],
     responseTypes: ['code'],
     responseModes: ['query'],
-    pkceMethods: ['S256'],
+    pkces: ['S256'],
     enableAuthorizationResponseIssuerIdentifier: true,
   };
 

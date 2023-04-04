@@ -30,10 +30,10 @@ import { ScopeHandler } from '../handlers/scope.handler';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { interactionTypeRegistry } from '../interaction-types/interaction-type.registry';
 import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
-import { PkceMethod } from '../pkce/pkce-method.type';
-import { PkceInterface } from '../pkce/pkce.interface';
-import { pkceRegistry } from '../pkce/pkce.registry';
-import { PKCE } from '../pkce/pkce.token';
+import { Pkce } from '../pkces/pkce.type';
+import { PkceInterface } from '../pkces/pkce.interface';
+import { pkceRegistry } from '../pkces/pkce.registry';
+import { PKCE } from '../pkces/pkce.token';
 import { PromptInterface } from '../prompts/prompt.interface';
 import { promptRegistry } from '../prompts/prompt.registry';
 import { PROMPT } from '../prompts/prompt.token';
@@ -154,7 +154,7 @@ export class AuthorizationServerFactory {
       grantTypes: this.authorizationServerOptions.grantTypes ?? <GrantType[]>Object.keys(grantTypeRegistry),
       responseTypes: this.authorizationServerOptions.responseTypes ?? <ResponseType[]>Object.keys(responseTypeRegistry),
       responseModes: this.authorizationServerOptions.responseModes ?? <ResponseMode[]>Object.keys(responseModeRegistry),
-      pkceMethods: this.authorizationServerOptions.pkceMethods ?? <PkceMethod[]>Object.keys(pkceRegistry),
+      pkces: this.authorizationServerOptions.pkces ?? <Pkce[]>Object.keys(pkceRegistry),
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
       idTokenSignatureAlgorithms: this.authorizationServerOptions.idTokenSignatureAlgorithms ?? ['RS256'],
@@ -274,14 +274,14 @@ export class AuthorizationServerFactory {
    * Defines the PKCE Methods supported by the Authorization Server.
    */
   private static setPkceMethods(): void {
-    const { pkceMethods } = this.settings;
+    const { pkces } = this.settings;
 
-    if (pkceMethods.length === 0) {
+    if (pkces.length === 0) {
       return;
     }
 
-    pkceMethods.forEach((pkceMethod) => {
-      const constructor = <Constructor<PkceInterface>>pkceRegistry[pkceMethod];
+    pkces.forEach((pkce) => {
+      const constructor = <Constructor<PkceInterface>>pkceRegistry[pkce];
       this.container.bind<PkceInterface>(PKCE).toClass(constructor).asSingleton();
     });
   }

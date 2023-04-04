@@ -9,9 +9,9 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { AuthorizationCodeTokenRequest } from '../messages/authorization-code.token-request';
 import { TokenResponse } from '../messages/token-response';
-import { PkceMethod } from '../pkce/pkce-method.type';
-import { PkceInterface } from '../pkce/pkce.interface';
-import { PKCE } from '../pkce/pkce.token';
+import { PkceInterface } from '../pkces/pkce.interface';
+import { PKCE } from '../pkces/pkce.token';
+import { Pkce } from '../pkces/pkce.type';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { AuthorizationCodeServiceInterface } from '../services/authorization-code.service.interface';
@@ -244,7 +244,7 @@ describe('Authorization Code Grant Type', () => {
         expiresAt: new Date(Date.now() + 3600000),
         parameters: {
           redirect_uri: 'https://example.com/callback',
-          code_challenge_method: <PkceMethod>'unknown',
+          code_challenge_method: <Pkce>'unknown',
         },
         consent: {
           client: { id: 'client_id' },

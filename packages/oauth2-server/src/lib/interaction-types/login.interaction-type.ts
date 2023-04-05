@@ -113,6 +113,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
         prompts: <Prompt[]>grant.parameters.prompt?.split(' '),
         display: grant.parameters.display,
         auth_exp: authExp,
+        login_hint: grant.parameters.login_hint,
       },
     });
   }

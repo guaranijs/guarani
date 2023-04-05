@@ -36,7 +36,7 @@ class Controller {
 
       const { data } = await axios.get<LoginContextInteractionResponse>(url.href);
 
-      const { display, auth_exp: authExp, prompts } = data.context;
+      const { display, auth_exp: authExp, prompts, login_hint: loginHint } = data.context;
 
       if (display === 'popup') {
         response.cookie('display', 'popup');
@@ -59,6 +59,7 @@ class Controller {
         title: 'Login',
         display,
         login_challenge: loginChallenge,
+        login_hint: loginHint,
         error: request.flash('error'),
         success: request.flash('success'),
       });

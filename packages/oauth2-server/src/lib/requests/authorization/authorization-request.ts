@@ -57,4 +57,9 @@ export interface AuthorizationRequest extends Record<string, any> {
    * **MUST** actively try to re-authenticate the User.
    */
   readonly max_age?: string;
+
+  /**
+   * Hint about the Identifier that the User might use for authentication.
+   */
+  readonly login_hint?: string;
 }

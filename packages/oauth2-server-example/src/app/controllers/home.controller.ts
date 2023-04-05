@@ -25,7 +25,7 @@ class Controller {
       state: randomUUID(),
       code_challenge: 'kRaf6IMJlerQjcqlFczEUYUcVsdwMpYonctl1yXYiiI',
       code_challenge_method: 'S256',
-      prompt: 'login',
+      prompt: 'login consent',
       display: 'popup',
     };
 

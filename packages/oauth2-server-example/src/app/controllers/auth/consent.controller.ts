@@ -56,7 +56,7 @@ class Controller {
     const { consent_challenge: consentChallenge, grant_scope: grantScope, decision } = request.body;
 
     if (typeof consentChallenge !== 'string') {
-      return response.redirect(303, '');
+      return response.redirect(303, '/');
     }
 
     const reqBody = new URLSearchParams({ interaction_type: 'consent', consent_challenge: consentChallenge, decision });

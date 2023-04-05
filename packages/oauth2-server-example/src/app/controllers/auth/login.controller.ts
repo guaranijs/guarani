@@ -48,10 +48,10 @@ class Controller {
 
       if (
         request.isAuthenticated() &&
-        !prompts.includes('login') && // no prompt login
+        prompts?.includes('login') !== true && // no prompt login
         (authExp === undefined || new Date() <= new Date(authExp * 1000)) // no max_age or not expired yet.
       ) {
-        return await this.doLogin(request, response, loginChallenge, <User>request.user);
+        return await this.doLogin(request, response, loginChallenge, <User>request.user, display);
       }
 
       return response.render('auth/login', {
@@ -82,7 +82,13 @@ class Controller {
     return await this.doLogin(request, response, loginChallenge, <User>request.user);
   }
 
-  private async doLogin(request: Request, response: Response, loginChallenge: string, user: User): Promise<void> {
+  private async doLogin(
+    request: Request,
+    response: Response,
+    loginChallenge: string,
+    user: User,
+    display?: Display
+  ): Promise<void> {
     const reqBody = new URLSearchParams({
       interaction_type: 'login',
       login_challenge: loginChallenge,
@@ -98,7 +104,7 @@ class Controller {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-    const display = <Display>request.cookies.display;
+    display ??= <Display>request.cookies.display;
 
     return this.redirectOrClosePopup(response, redirectTo, display);
   }

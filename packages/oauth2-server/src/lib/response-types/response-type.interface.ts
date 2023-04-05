@@ -1,8 +1,8 @@
 import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
-import { AuthorizationRequest } from '../messages/authorization-request';
-import { AuthorizationResponse } from '../messages/authorization-response';
+import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseMode } from '../response-modes/response-mode.type';
+import { AuthorizationResponse } from '../responses/authorization/authorization-response';
 import { ResponseType } from './response-type.type';
 
 /**

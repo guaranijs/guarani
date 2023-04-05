@@ -3,8 +3,8 @@ import request from 'supertest';
 import { URLSearchParams } from 'url';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
-import { ClientCredentialsTokenRequest } from '../src/lib/messages/client-credentials.token-request';
-import { TokenResponse } from '../src/lib/messages/token-response';
+import { ClientCredentialsTokenRequest } from '../src/lib/requests/token/client-credentials.token-request';
+import { TokenResponse } from '../src/lib/responses/token-response';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
 
 describe('Client Credentials Flow', () => {

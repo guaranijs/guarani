@@ -1,4 +1,4 @@
-import { InteractionRequest } from '../messages/interaction-request';
+import { InteractionRequest } from '../requests/interaction/interaction-request';
 import { InteractionType } from './interaction-type.type';
 
 /**

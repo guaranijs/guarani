@@ -1,6 +1,6 @@
 import { AccessToken } from '../entities/access-token.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
-import { TokenResponse } from '../messages/token-response';
+import { TokenResponse } from '../responses/token-response';
 import { createTokenResponse } from './create-token-response';
 
 describe('createTokenResponse()', () => {

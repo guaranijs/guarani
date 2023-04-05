@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@guarani/di';
 
 import { Client } from '../entities/client.entity';
 import { ScopeHandler } from '../handlers/scope.handler';
-import { ClientCredentialsTokenRequest } from '../messages/client-credentials.token-request';
-import { TokenResponse } from '../messages/token-response';
+import { ClientCredentialsTokenRequest } from '../requests/token/client-credentials.token-request';
+import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { createTokenResponse } from '../utils/create-token-response';

@@ -1,4 +1,4 @@
-import { Client } from '../entities/client.entity';
+import { Client } from '../../entities/client.entity';
 import { ConsentContext } from './consent.context';
 
 /**

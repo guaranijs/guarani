@@ -1,4 +1,4 @@
-import { CodeAuthorizationRequest } from '../messages/code.authorization-request';
+import { CodeAuthorizationRequest } from '../requests/authorization/code.authorization-request';
 import { Consent } from './consent.entity';
 import { Session } from './session.entity';
 

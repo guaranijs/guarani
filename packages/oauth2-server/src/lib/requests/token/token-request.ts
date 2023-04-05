@@ -1,4 +1,4 @@
-import { GrantType } from '../grant-types/grant-type.type';
+import { GrantType } from '../../grant-types/grant-type.type';
 
 /**
  * Parameters of the OAuth 2.0 Token Request.

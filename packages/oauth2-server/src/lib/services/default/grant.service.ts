@@ -4,7 +4,7 @@ import { randomBytes, randomUUID } from 'crypto';
 
 import { Client } from '../../entities/client.entity';
 import { Grant } from '../../entities/grant.entity';
-import { AuthorizationRequest } from '../../messages/authorization-request';
+import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { GrantServiceInterface } from '../grant.service.interface';
 
 @Injectable()

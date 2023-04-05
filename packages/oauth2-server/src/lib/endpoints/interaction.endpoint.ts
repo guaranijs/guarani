@@ -12,7 +12,7 @@ import { HttpResponse } from '../http/http.response';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
 import { InteractionType } from '../interaction-types/interaction-type.type';
-import { InteractionRequest } from '../messages/interaction-request';
+import { InteractionRequest } from '../requests/interaction/interaction-request';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 

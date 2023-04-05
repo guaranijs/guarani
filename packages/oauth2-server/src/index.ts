@@ -80,48 +80,11 @@ export { IdTokenClaimsParameters } from './lib/id-token/id-token.claims.paramete
 export { UserinfoClaimsParameters } from './lib/id-token/userinfo.claims.parameters';
 
 // Interaction Types
-export { ConsentDecisionInteractionResponse } from './lib/interaction-types/consent-decision.interaction-response';
 export { ConsentDecision } from './lib/interaction-types/consent-decision.type';
 export { InteractionTypeInterface } from './lib/interaction-types/interaction-type.interface';
 export { INTERACTION_TYPE } from './lib/interaction-types/interaction-type.token';
 export { InteractionType } from './lib/interaction-types/interaction-type.type';
 export { LoginDecision } from './lib/interaction-types/login-decision.type';
-
-// Messages
-export { AuthorizationCodeTokenRequest } from './lib/messages/authorization-code.token-request';
-export { AuthorizationRequest } from './lib/messages/authorization-request';
-export { AuthorizationResponse } from './lib/messages/authorization-response';
-export { ClientCredentialsTokenRequest } from './lib/messages/client-credentials.token-request';
-export { CodeAuthorizationRequest } from './lib/messages/code.authorization-request';
-export { CodeAuthorizationResponse } from './lib/messages/code.authorization-response';
-export { ConsentContextInteractionRequest } from './lib/messages/consent-context.interaction-request';
-export { ConsentContextInteractionResponse } from './lib/messages/consent-context.interaction-response';
-export { ConsentDecisionAcceptInteractionRequest } from './lib/messages/consent-decision-accept.interaction-request';
-export { ConsentDecisionDenyInteractionRequest } from './lib/messages/consent-decision-deny.interaction-request';
-export { ConsentDecisionInteractionRequest } from './lib/messages/consent-decision.interaction-request';
-export { ConsentContext } from './lib/messages/consent.context';
-export { DeviceAuthorizationRequest } from './lib/messages/device-authorization-request';
-export { DeviceAuthorizationResponse } from './lib/messages/device-authorization-response';
-export { DeviceCodeTokenRequest } from './lib/messages/device-code.token-request';
-export { DiscoveryResponse } from './lib/messages/discovery-response';
-export { IdTokenAuthorizationResponse } from './lib/messages/id-token.authorization-response';
-export { InteractionRequest } from './lib/messages/interaction-request';
-export { IntrospectionRequest } from './lib/messages/introspection-request';
-export { IntrospectionResponse } from './lib/messages/introspection-response';
-export { JwtBearerTokenRequest } from './lib/messages/jwt-bearer.token-request';
-export { LoginContextInteractionRequest } from './lib/messages/login-context.interaction-request';
-export { LoginContextInteractionResponse } from './lib/messages/login-context.interaction-response';
-export { LoginDecisionAcceptInteractionRequest } from './lib/messages/login-decision-accept.interaction-request';
-export { LoginDecisionDenyInteractionRequest } from './lib/messages/login-decision-deny.interaction-request';
-export { LoginDecisionInteractionRequest } from './lib/messages/login-decision.interaction-request';
-export { LoginDecisionInteractionResponse } from './lib/messages/login-decision.interaction-response';
-export { LoginContext } from './lib/messages/login.context';
-export { RefreshTokenTokenRequest } from './lib/messages/refresh-token.token-request';
-export { ResourceOwnerPasswordCredentialsTokenRequest } from './lib/messages/resource-owner-password-credentials.token-request';
-export { RevocationRequest } from './lib/messages/revocation-request';
-export { TokenRequest } from './lib/messages/token-request';
-export { TokenResponse } from './lib/messages/token-response';
-export { TokenAuthorizationResponse } from './lib/messages/token.authorization-response';
 
 // Metadata
 export { AuthorizationServerFactory } from './lib/metadata/authorization-server.factory';
@@ -137,6 +100,29 @@ export { PromptInterface } from './lib/prompts/prompt.interface';
 export { PROMPT } from './lib/prompts/prompt.token';
 export { Prompt } from './lib/prompts/prompt.type';
 
+// Requests
+export { AuthorizationRequest } from './lib/requests/authorization/authorization-request';
+export { CodeAuthorizationRequest } from './lib/requests/authorization/code.authorization-request';
+export { DeviceAuthorizationRequest } from './lib/requests/device-authorization-request';
+export { ConsentContextInteractionRequest } from './lib/requests/interaction/consent-context.interaction-request';
+export { ConsentDecisionAcceptInteractionRequest } from './lib/requests/interaction/consent-decision-accept.interaction-request';
+export { ConsentDecisionDenyInteractionRequest } from './lib/requests/interaction/consent-decision-deny.interaction-request';
+export { ConsentDecisionInteractionRequest } from './lib/requests/interaction/consent-decision.interaction-request';
+export { InteractionRequest } from './lib/requests/interaction/interaction-request';
+export { LoginContextInteractionRequest } from './lib/requests/interaction/login-context.interaction-request';
+export { LoginDecisionAcceptInteractionRequest } from './lib/requests/interaction/login-decision-accept.interaction-request';
+export { LoginDecisionDenyInteractionRequest } from './lib/requests/interaction/login-decision-deny.interaction-request';
+export { LoginDecisionInteractionRequest } from './lib/requests/interaction/login-decision.interaction-request';
+export { IntrospectionRequest } from './lib/requests/introspection-request';
+export { RevocationRequest } from './lib/requests/revocation-request';
+export { AuthorizationCodeTokenRequest } from './lib/requests/token/authorization-code.token-request';
+export { ClientCredentialsTokenRequest } from './lib/requests/token/client-credentials.token-request';
+export { DeviceCodeTokenRequest } from './lib/requests/token/device-code.token-request';
+export { JwtBearerTokenRequest } from './lib/requests/token/jwt-bearer.token-request';
+export { RefreshTokenTokenRequest } from './lib/requests/token/refresh-token.token-request';
+export { ResourceOwnerPasswordCredentialsTokenRequest } from './lib/requests/token/resource-owner-password-credentials.token-request';
+export { TokenRequest } from './lib/requests/token/token-request';
+
 // Response Modes
 export { ResponseModeInterface } from './lib/response-modes/response-mode.interface';
 export { RESPONSE_MODE } from './lib/response-modes/response-mode.token';
@@ -146,6 +132,22 @@ export { ResponseMode } from './lib/response-modes/response-mode.type';
 export { ResponseTypeInterface } from './lib/response-types/response-type.interface';
 export { RESPONSE_TYPE } from './lib/response-types/response-type.token';
 export { ResponseType } from './lib/response-types/response-type.type';
+
+// Responses
+export { AuthorizationResponse } from './lib/responses/authorization/authorization-response';
+export { CodeAuthorizationResponse } from './lib/responses/authorization/code.authorization-response';
+export { ConsentContextInteractionResponse } from './lib/responses/interaction/consent-context.interaction-response';
+export { ConsentContext } from './lib/responses/interaction/consent.context';
+export { DeviceAuthorizationResponse } from './lib/responses/device-authorization-response';
+export { DiscoveryResponse } from './lib/responses/discovery-response';
+export { IdTokenAuthorizationResponse } from './lib/responses/authorization/id-token.authorization-response';
+export { IntrospectionResponse } from './lib/responses/introspection-response';
+export { LoginContextInteractionResponse } from './lib/responses/interaction/login-context.interaction-response';
+export { LoginDecisionInteractionResponse } from './lib/responses/interaction/login-decision.interaction-response';
+export { LoginContext } from './lib/responses/interaction/login.context';
+export { TokenResponse } from './lib/responses/token-response';
+export { TokenAuthorizationResponse } from './lib/responses/authorization/token.authorization-response';
+export { ConsentDecisionInteractionResponse } from './lib/responses/interaction/consent-decision.interaction-response';
 
 // Services
 export { AccessTokenService } from './lib/services/default/access-token.service';

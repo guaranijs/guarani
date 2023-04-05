@@ -3,10 +3,10 @@ import request from 'supertest';
 import { URLSearchParams } from 'url';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
-import { IntrospectionRequest } from '../src/lib/messages/introspection-request';
-import { IntrospectionResponse } from '../src/lib/messages/introspection-response';
-import { ResourceOwnerPasswordCredentialsTokenRequest } from '../src/lib/messages/resource-owner-password-credentials.token-request';
-import { TokenResponse } from '../src/lib/messages/token-response';
+import { IntrospectionRequest } from '../src/lib/requests/introspection-request';
+import { IntrospectionResponse } from '../src/lib/responses/introspection-response';
+import { ResourceOwnerPasswordCredentialsTokenRequest } from '../src/lib/requests/token/resource-owner-password-credentials.token-request';
+import { TokenResponse } from '../src/lib/responses/token-response';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
 
 describe('Access Token Introspection', () => {

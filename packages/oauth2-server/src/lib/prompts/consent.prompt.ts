@@ -5,7 +5,7 @@ import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
 import { LoginRequiredException } from '../exceptions/login-required.exception';
-import { AuthorizationRequest } from '../messages/authorization-request';
+import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
 import { GrantServiceInterface } from '../services/grant.service.interface';

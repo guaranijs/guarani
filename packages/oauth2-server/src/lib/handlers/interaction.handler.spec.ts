@@ -14,9 +14,9 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpResponse } from '../http/http.response';
-import { AuthorizationRequest } from '../messages/authorization-request';
 import { PromptInterface } from '../prompts/prompt.interface';
 import { PROMPT } from '../prompts/prompt.token';
+import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
 import { GrantServiceInterface } from '../services/grant.service.interface';

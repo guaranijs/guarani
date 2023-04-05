@@ -3,7 +3,7 @@ import { getContainer } from '@guarani/di';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
-import { DiscoveryResponse } from '../messages/discovery-response';
+import { DiscoveryResponse } from '../responses/discovery-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { DiscoveryEndpoint } from './discovery.endpoint';

@@ -1,6 +1,6 @@
 import { Client } from '../entities/client.entity';
 import { Grant } from '../entities/grant.entity';
-import { AuthorizationRequest } from '../messages/authorization-request';
+import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 
 /**
  * Interface of the Grant Service.

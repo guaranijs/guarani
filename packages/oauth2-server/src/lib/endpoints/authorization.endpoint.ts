@@ -168,14 +168,15 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private checkParameters(parameters: AuthorizationRequest): void {
     const {
+      client_id: clientId,
       display,
+      login_hint: loginHint,
       max_age: maxAge,
       nonce,
       prompt,
+      redirect_uri: redirectUri,
       response_mode: responseMode,
       response_type: responseType,
-      client_id: clientId,
-      redirect_uri: redirectUri,
       scope,
       state,
     } = parameters;
@@ -222,6 +223,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
       (typeof maxAge !== 'string' || Number.isNaN(Number.parseInt(maxAge, 10)))
     ) {
       throw new InvalidRequestException({ description: 'Invalid parameter "max_age".', state });
+    }
+
+    if (loginHint !== undefined && typeof loginHint !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "login_hint".', state });
     }
   }
 

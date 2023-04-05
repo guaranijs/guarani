@@ -301,6 +301,7 @@ describe('Authorization Endpoint', () => {
           description: 'Invalid parameter "max_age".',
           state: 'client_state',
         });
+
         const parameters = new URLSearchParams(error.toJSON());
 
         await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
@@ -310,6 +311,23 @@ describe('Authorization Endpoint', () => {
         });
       }
     );
+
+    it('should return an error response when providing an invalid "login_hint" parameter.', async () => {
+      request.query.login_hint = 123;
+
+      const error = new InvalidRequestException({
+        description: 'Invalid parameter "login_hint".',
+        state: 'client_state',
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
+        statusCode: 303,
+      });
+    });
 
     it('should return an error response when a client is not found.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);

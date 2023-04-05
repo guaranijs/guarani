@@ -19,4 +19,9 @@ export interface LoginContext extends Record<string, any> {
    * Time after which the User Authentication violates the **max_age** Authorization Parameter.
    */
   readonly auth_exp?: number;
+
+  /**
+   * Hint about the Identifier that the User might use for authentication.
+   */
+  readonly login_hint?: string;
 }

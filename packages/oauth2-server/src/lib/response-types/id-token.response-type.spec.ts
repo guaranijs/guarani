@@ -64,7 +64,7 @@ describe('ID Token Response Type', () => {
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Invalid response_mode "query" for response_type "id_token".',
-          state: parameters.state,
+          state: 'client_state',
         })
       );
     });
@@ -79,7 +79,7 @@ describe('ID Token Response Type', () => {
       const consent = <Consent>{ client, scopes: ['foo', 'bar'], user };
 
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state })
+        new InvalidRequestException({ description: 'Missing required scope "openid".', state: 'client_state' })
       );
     });
 
@@ -93,7 +93,7 @@ describe('ID Token Response Type', () => {
       const consent = <Consent>{ client, scopes: ['openid', 'foo', 'bar'], user };
 
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: parameters.state })
+        new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: 'client_state' })
       );
     });
 
@@ -110,7 +110,7 @@ describe('ID Token Response Type', () => {
         responseType.handle(parameters, session, consent)
       ).resolves.toStrictEqual<IdTokenAuthorizationResponse>({
         id_token: 'id_token',
-        state: parameters.state,
+        state: 'client_state',
       });
     });
   });

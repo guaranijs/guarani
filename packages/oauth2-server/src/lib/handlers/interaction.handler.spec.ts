@@ -252,7 +252,7 @@ describe('Interaction Handler', () => {
 
       const error = new InvalidRequestException({
         description: 'Mismatching Client Identifier.',
-        state: parameters.state,
+        state: 'client_state',
       });
 
       const errorParameters = new URLSearchParams(error.toJSON());
@@ -284,7 +284,7 @@ describe('Interaction Handler', () => {
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
 
-      const error = new InvalidRequestException({ description: 'Expired Grant.', state: parameters.state });
+      const error = new InvalidRequestException({ description: 'Expired Grant.', state: 'client_state' });
       const errorParameters = new URLSearchParams(error.toJSON());
 
       await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
@@ -316,7 +316,7 @@ describe('Interaction Handler', () => {
 
       const error = new InvalidRequestException({
         description: 'One or more parameters changed since the initial request.',
-        state: parameters.state,
+        state: 'client_state',
       });
 
       const errorParameters = new URLSearchParams(error.toJSON());

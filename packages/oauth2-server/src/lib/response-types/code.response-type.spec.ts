@@ -83,7 +83,7 @@ describe('Code Response Type', () => {
       const consent = <Consent>{ client, user };
 
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: parameters.state })
+        new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: 'client_state' })
       );
     });
 
@@ -99,7 +99,7 @@ describe('Code Response Type', () => {
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Unsupported code_challenge_method "unknown".',
-          state: parameters.state,
+          state: 'client_state',
         })
       );
     });
@@ -116,7 +116,7 @@ describe('Code Response Type', () => {
       await expect(responseType.handle(parameters, session, consent)).resolves.toStrictEqual<CodeAuthorizationResponse>(
         {
           code: 'authorization_code',
-          state: parameters.state,
+          state: 'client_state',
         }
       );
     });

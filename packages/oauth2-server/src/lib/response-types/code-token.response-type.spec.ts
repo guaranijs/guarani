@@ -94,7 +94,7 @@ describe('Code Token Response Type', () => {
       const consent = <Consent>{ client, user };
 
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: parameters.state })
+        new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: 'client_state' })
       );
     });
 
@@ -110,7 +110,7 @@ describe('Code Token Response Type', () => {
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Unsupported code_challenge_method "unknown".',
-          state: parameters.state,
+          state: 'client_state',
         })
       );
     });
@@ -127,7 +127,7 @@ describe('Code Token Response Type', () => {
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Invalid response_mode "query" for response_type "code token".',
-          state: parameters.state,
+          state: 'client_state',
         })
       );
     });
@@ -157,7 +157,7 @@ describe('Code Token Response Type', () => {
         expires_in: 3600,
         scope: 'foo bar',
         code: 'authorization_code',
-        state: parameters.state,
+        state: 'client_state',
       });
     });
   });

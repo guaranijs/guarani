@@ -86,7 +86,7 @@ describe('Code ID Token Response Type', () => {
       const consent = <Consent>{ scopes: ['openid', 'foo', 'bar'] };
 
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: parameters.state })
+        new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: 'client_state' })
       );
     });
 
@@ -99,7 +99,7 @@ describe('Code ID Token Response Type', () => {
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Unsupported code_challenge_method "unknown".',
-          state: parameters.state,
+          state: 'client_state',
         })
       );
     });
@@ -113,7 +113,7 @@ describe('Code ID Token Response Type', () => {
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Invalid response_mode "query" for response_type "code id_token".',
-          state: parameters.state,
+          state: 'client_state',
         })
       );
     });
@@ -125,7 +125,7 @@ describe('Code ID Token Response Type', () => {
       const consent = <Consent>{ scopes: ['openid', 'foo', 'bar'] };
 
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: parameters.state })
+        new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: 'client_state' })
       );
     });
 
@@ -134,7 +134,7 @@ describe('Code ID Token Response Type', () => {
       const consent = <Consent>{ scopes: ['foo', 'bar'] };
 
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state })
+        new InvalidRequestException({ description: 'Missing required scope "openid".', state: 'client_state' })
       );
     });
 
@@ -150,7 +150,7 @@ describe('Code ID Token Response Type', () => {
       >({
         code: 'authorization_code',
         id_token: 'id_token',
-        state: parameters.state,
+        state: 'client_state',
       });
     });
   });

@@ -105,7 +105,7 @@ describe('Login Prompt', () => {
       const consent = null;
 
       await expect(prompt.handle(parameters, client, grant, session, consent)).rejects.toThrow(
-        new ConsentRequiredException({ state: parameters.state })
+        new ConsentRequiredException({ state: 'client_state' })
       );
 
       expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);

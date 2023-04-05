@@ -63,7 +63,7 @@ describe('Token Response Type', () => {
       await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
         new InvalidRequestException({
           description: 'Invalid response_mode "query" for response_type "token".',
-          state: parameters.state,
+          state: 'client_state',
         })
       );
     });

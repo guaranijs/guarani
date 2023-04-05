@@ -1,5 +1,5 @@
-import { Display } from '../displays/display.type';
-import { Prompt } from '../prompts/prompt.type';
+import { Display } from '../../displays/display.type';
+import { Prompt } from '../../prompts/prompt.type';
 
 /**
  * Parameters of the Login Context.

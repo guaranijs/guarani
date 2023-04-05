@@ -11,7 +11,7 @@ import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
-import { InteractionRequest } from '../messages/interaction-request';
+import { InteractionRequest } from '../requests/interaction/interaction-request';
 import { Endpoint } from './endpoint.type';
 import { InteractionEndpoint } from './interaction.endpoint';
 

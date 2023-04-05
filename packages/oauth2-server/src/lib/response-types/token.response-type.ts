@@ -3,9 +3,9 @@ import { removeUndefined } from '@guarani/primitives';
 
 import { Consent } from '../entities/consent.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { AuthorizationRequest } from '../messages/authorization-request';
-import { TokenAuthorizationResponse } from '../messages/token.authorization-response';
+import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseMode } from '../response-modes/response-mode.type';
+import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { createTokenResponse } from '../utils/create-token-response';

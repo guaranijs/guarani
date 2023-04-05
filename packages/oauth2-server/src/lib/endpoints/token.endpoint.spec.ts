@@ -14,8 +14,8 @@ import { ClientAuthenticationHandler } from '../handlers/client-authentication.h
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
-import { TokenRequest } from '../messages/token-request';
-import { TokenResponse } from '../messages/token-response';
+import { TokenRequest } from '../requests/token/token-request';
+import { TokenResponse } from '../responses/token-response';
 import { Endpoint } from './endpoint.type';
 import { TokenEndpoint } from './token.endpoint';
 

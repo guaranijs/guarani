@@ -1,4 +1,4 @@
-import { InteractionType } from '../interaction-types/interaction-type.type';
+import { InteractionType } from '../../interaction-types/interaction-type.type';
 
 /**
  * Parameters of the custom OAuth 2.0 Interaction Request.

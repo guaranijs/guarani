@@ -2,7 +2,7 @@ import { removeUndefined } from '@guarani/primitives';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
-import { TokenResponse } from '../messages/token-response';
+import { TokenResponse } from '../responses/token-response';
 
 /**
  * Returns a formatted Token Response based on the provided Access Token and optional Refresh Token.

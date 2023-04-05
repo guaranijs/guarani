@@ -1,6 +1,6 @@
-import { Display } from '../displays/display.type';
-import { ResponseMode } from '../response-modes/response-mode.type';
-import { ResponseType } from '../response-types/response-type.type';
+import { Display } from '../../displays/display.type';
+import { ResponseMode } from '../../response-modes/response-mode.type';
+import { ResponseType } from '../../response-types/response-type.type';
 
 /**
  * Parameters of the OAuth 2.0 Authorization Request.

@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import { AuthorizationCode } from '../../entities/authorization-code.entity';
 import { Consent } from '../../entities/consent.entity';
 import { Session } from '../../entities/session.entity';
-import { CodeAuthorizationRequest } from '../../messages/code.authorization-request';
+import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
 import { AuthorizationCodeServiceInterface } from '../authorization-code.service.interface';
 
 @Injectable()

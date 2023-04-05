@@ -5,9 +5,9 @@ import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
-import { AuthorizationRequest } from '../messages/authorization-request';
-import { IdTokenAuthorizationResponse } from '../messages/id-token.authorization-response';
+import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseMode } from '../response-modes/response-mode.type';
+import { IdTokenAuthorizationResponse } from '../responses/authorization/id-token.authorization-response';
 import { ResponseTypeInterface } from './response-type.interface';
 import { ResponseType } from './response-type.type';
 

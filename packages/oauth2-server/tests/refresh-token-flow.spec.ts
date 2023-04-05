@@ -3,9 +3,9 @@ import request from 'supertest';
 import { URLSearchParams } from 'url';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
-import { RefreshTokenTokenRequest } from '../src/lib/messages/refresh-token.token-request';
-import { ResourceOwnerPasswordCredentialsTokenRequest } from '../src/lib/messages/resource-owner-password-credentials.token-request';
-import { TokenResponse } from '../src/lib/messages/token-response';
+import { RefreshTokenTokenRequest } from '../src/lib/requests/token/refresh-token.token-request';
+import { ResourceOwnerPasswordCredentialsTokenRequest } from '../src/lib/requests/token/resource-owner-password-credentials.token-request';
+import { TokenResponse } from '../src/lib/responses/token-response';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
 
 describe('Refresh Token Flow', () => {

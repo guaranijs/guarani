@@ -5,15 +5,15 @@ import request, { SuperAgentTest } from 'supertest';
 import { URL, URLSearchParams } from 'url';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
-import { AuthorizationCodeTokenRequest } from '../src/lib/messages/authorization-code.token-request';
-import { CodeAuthorizationRequest } from '../src/lib/messages/code.authorization-request';
-import { CodeAuthorizationResponse } from '../src/lib/messages/code.authorization-response';
-import { ConsentContextInteractionRequest } from '../src/lib/messages/consent-context.interaction-request';
-import { ConsentContextInteractionResponse } from '../src/lib/messages/consent-context.interaction-response';
-import { ConsentDecisionAcceptInteractionRequest } from '../src/lib/messages/consent-decision-accept.interaction-request';
-import { LoginContextInteractionRequest } from '../src/lib/messages/login-context.interaction-request';
-import { LoginDecisionAcceptInteractionRequest } from '../src/lib/messages/login-decision-accept.interaction-request';
-import { TokenResponse } from '../src/lib/messages/token-response';
+import { AuthorizationCodeTokenRequest } from '../src/lib/requests/token/authorization-code.token-request';
+import { CodeAuthorizationRequest } from '../src/lib/requests/authorization/code.authorization-request';
+import { CodeAuthorizationResponse } from '../src/lib/responses/authorization/code.authorization-response';
+import { ConsentContextInteractionRequest } from '../src/lib/requests/interaction/consent-context.interaction-request';
+import { ConsentContextInteractionResponse } from '../src/lib/responses/interaction/consent-context.interaction-response';
+import { ConsentDecisionAcceptInteractionRequest } from '../src/lib/requests/interaction/consent-decision-accept.interaction-request';
+import { LoginContextInteractionRequest } from '../src/lib/requests/interaction/login-context.interaction-request';
+import { LoginDecisionAcceptInteractionRequest } from '../src/lib/requests/interaction/login-decision-accept.interaction-request';
+import { TokenResponse } from '../src/lib/responses/token-response';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
 
 describe('Authorization Code Flow', () => {

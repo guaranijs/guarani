@@ -17,7 +17,7 @@ import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
-import { AuthorizationRequest } from '../messages/authorization-request';
+import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../response-modes/response-mode.token';
 import { ResponseTypeInterface } from '../response-types/response-type.interface';

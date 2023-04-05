@@ -1,4 +1,4 @@
-import { Client } from '../entities/client.entity';
+import { Client } from '../../entities/client.entity';
 import { LoginContext } from './login.context';
 
 /**

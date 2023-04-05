@@ -1,4 +1,4 @@
-import { LoginDecision } from '../interaction-types/login-decision.type';
+import { LoginDecision } from '../../interaction-types/login-decision.type';
 import { InteractionRequest } from './interaction-request';
 
 /**

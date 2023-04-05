@@ -1,4 +1,4 @@
-import { ConsentDecision } from '../interaction-types/consent-decision.type';
+import { ConsentDecision } from '../../interaction-types/consent-decision.type';
 import { InteractionRequest } from './interaction-request';
 
 /**

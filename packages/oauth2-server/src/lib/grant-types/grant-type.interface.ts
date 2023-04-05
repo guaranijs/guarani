@@ -1,6 +1,6 @@
 import { Client } from '../entities/client.entity';
-import { TokenRequest } from '../messages/token-request';
-import { TokenResponse } from '../messages/token-response';
+import { TokenRequest } from '../requests/token/token-request';
+import { TokenResponse } from '../responses/token-response';
 import { GrantType } from './grant-type.type';
 
 /**

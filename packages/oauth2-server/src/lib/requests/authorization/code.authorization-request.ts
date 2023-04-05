@@ -1,4 +1,4 @@
-import { Pkce } from '../pkces/pkce.type';
+import { Pkce } from '../../pkces/pkce.type';
 import { AuthorizationRequest } from './authorization-request';
 
 /**

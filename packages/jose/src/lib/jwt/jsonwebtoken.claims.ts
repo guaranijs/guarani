@@ -5,8 +5,11 @@ import { isDeepStrictEqual } from 'util';
 
 import { ExpiredJsonWebTokenException } from '../exceptions/expired-jsonwebtoken.exception';
 import { InvalidJsonWebTokenClaimException } from '../exceptions/invalid-jsonwebtoken-claim.exception';
+import { InvalidJsonWebTokenClaimsException } from '../exceptions/invalid-jsonwebtoken-claims.exception';
+import { JoseException } from '../exceptions/jose.exception';
 import { JsonWebTokenNotValidYetException } from '../exceptions/jsonwebtoken-not-valid-yet.exception';
 import { JsonWebTokenClaimValidationOptions } from './jsonwebtoken-claim-validation.options';
+import { JsonWebTokenClaimsParseOptions } from './jsonwebtoken-claims-parse.options';
 import { JsonWebTokenClaimsParameters } from './jsonwebtoken.claims.parameters';
 
 /**
@@ -59,22 +62,44 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
    * Instantiates a new JSON Web Token Claims for usage with JSON Web Tokens.
    *
    * @param claims Defines the Claims of the JSON Web Token.
-   * @param options Validation options for the JSON Web Token Claims.
    */
-  public constructor(
-    claims: JsonWebTokenClaimsParameters,
-    options: Record<string, JsonWebTokenClaimValidationOptions> = {}
-  ) {
+  public constructor(claims: JsonWebTokenClaimsParameters) {
     if (claims instanceof JsonWebTokenClaims) {
       return claims;
     }
 
-    this.validateDefaultClaims(claims);
-    this.validateCustomClaims?.(claims);
-
-    this.validateClaimsOptions(claims, options);
-
     Object.assign(this, removeUndefined<JsonWebTokenClaimsParameters>(claims));
+  }
+
+  /**
+   * Parses a Buffer into a JSON Web Token Claims object.
+   *
+   * @param data Buffer representation of the JSON Web Token Claims to be parsed.
+   * @param options Options used to validate the JSON Web Token Claims.
+   * @returns Instance of a JSON Web Toke Claims based on the provided Buffer.
+   */
+  public static async parse(data: Buffer, options: JsonWebTokenClaimsParseOptions = {}): Promise<JsonWebTokenClaims> {
+    try {
+      const claims: JsonWebTokenClaimsParameters = JSON.parse(data.toString('utf8'));
+
+      this.validateDefaultClaims(claims, options.ignoreExpired);
+      this.validateCustomClaims?.(claims);
+
+      if (typeof options.validationOptions !== 'undefined') {
+        this.validateClaimsOptions(claims, options.validationOptions);
+      }
+
+      return new JsonWebTokenClaims(claims);
+    } catch (exc: unknown) {
+      if (exc instanceof JoseException) {
+        throw exc;
+      }
+
+      const exception = new InvalidJsonWebTokenClaimsException();
+      exception.cause = exc;
+
+      throw exception;
+    }
   }
 
   /**
@@ -82,8 +107,9 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
    * {@link https://www.rfc-editor.org/rfc/rfc7519.html#section-4 RFC 7519 Section 4}.
    *
    * @param claims JSON Web Token Claims.
+   * @param ignoreExpired Informs if the **exp** claim should be ignored.
    */
-  private validateDefaultClaims(claims: JsonWebTokenClaimsParameters): void {
+  private static validateDefaultClaims(claims: JsonWebTokenClaimsParameters, ignoreExpired = false): void {
     const now = Math.floor(Date.now() / 1000);
 
     if (claims.iss !== undefined && typeof claims.iss !== 'string') {
@@ -109,7 +135,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
         throw new InvalidJsonWebTokenClaimException('Invalid claim "exp".');
       }
 
-      if (now > claims.exp) {
+      if (now > claims.exp && !ignoreExpired) {
         throw new ExpiredJsonWebTokenException();
       }
     }
@@ -143,7 +169,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
    *
    * @param claims JSON Web Token Claims.
    */
-  protected validateCustomClaims?(claims: JsonWebTokenClaimsParameters): void;
+  protected static validateCustomClaims?(claims: JsonWebTokenClaimsParameters): void;
 
   /**
    * Validates the provided JSON Web Token Claims based on the provided Options.
@@ -151,7 +177,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
    * @param claims JSON Web Token Claims.
    * @param options Dictionary used to validate the provided JSON Web Token Claims.
    */
-  private validateClaimsOptions(
+  private static validateClaimsOptions(
     claims: JsonWebTokenClaimsParameters,
     options: Record<string, JsonWebTokenClaimValidationOptions>
   ): void {

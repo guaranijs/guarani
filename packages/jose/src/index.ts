@@ -6,6 +6,7 @@ export { InvalidJsonWebKeyException } from './lib/exceptions/invalid-jsonwebkey.
 export { InvalidJsonWebKeySetException } from './lib/exceptions/invalid-jsonwebkeyset.exception';
 export { InvalidJsonWebSignatureException } from './lib/exceptions/invalid-jsonwebsignature.exception';
 export { InvalidJsonWebTokenClaimException } from './lib/exceptions/invalid-jsonwebtoken-claim.exception';
+export { InvalidJsonWebTokenClaimsException } from './lib/exceptions/invalid-jsonwebtoken-claims.exception';
 export { JoseException } from './lib/exceptions/jose.exception';
 export { JsonWebTokenNotValidYetException } from './lib/exceptions/jsonwebtoken-not-valid-yet.exception';
 export { UnsupportedAlgorithmException } from './lib/exceptions/unsupported-algorithm.exception';

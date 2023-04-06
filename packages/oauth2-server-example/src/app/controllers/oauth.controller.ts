@@ -35,7 +35,13 @@ class Controller {
   }
 
   public async error(request: Request, response: Response): Promise<void> {
-    return response.render('oauth/error', { request, title: 'OAuth 2.0 Error', parameters: request.query });
+    const parameters = request.query;
+
+    if (parameters.error === 'login_required') {
+      request.logout(() => undefined);
+    }
+
+    return response.render('oauth/error', { request, title: 'OAuth 2.0 Error', parameters });
   }
 }
 

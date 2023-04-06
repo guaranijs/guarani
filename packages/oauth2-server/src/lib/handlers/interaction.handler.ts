@@ -30,6 +30,7 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { IdTokenHandler } from './id-token.handler';
 
 /**
  * Handler used to retrieve the Grant, Session and Consent entities for the Authorization Process.
@@ -39,6 +40,7 @@ export class InteractionHandler {
   /**
    * Instantiates a new Interaction Handler.
    *
+   * @param idTokenHandler Instance of the ID Token Handler.
    * @param prompts Prompts registered at the Authorization Server.
    * @param displays Displays registered at the Authorization Server.
    * @param settings Settings of the Authorization Server.
@@ -47,6 +49,7 @@ export class InteractionHandler {
    * @param consentService Instance of the Consent Service.
    */
   public constructor(
+    private readonly idTokenHandler: IdTokenHandler,
     @InjectAll(PROMPT) private readonly prompts: PromptInterface[],
     @InjectAll(DISPLAY) private readonly displays: DisplayInterface[],
     @Inject(SETTINGS) private readonly settings: Settings,
@@ -139,6 +142,22 @@ export class InteractionHandler {
         await this.sessionService.remove(session);
         grant ??= await this.grantService.create(parameters, client);
         return this.redirectToLoginPage(grant, display);
+      }
+
+      if (
+        parameters.id_token_hint !== undefined &&
+        !(await this.idTokenHandler.checkIdTokenHint(parameters.id_token_hint, session))
+      ) {
+        await this.sessionService.remove(session);
+
+        if (grant !== null) {
+          await this.grantService.remove(grant);
+        }
+
+        throw new LoginRequiredException({
+          description: 'The currently authenticated User is not the one expected by the ID Token Hint.',
+          state: parameters.state,
+        });
       }
 
       if (parameters.max_age !== undefined) {

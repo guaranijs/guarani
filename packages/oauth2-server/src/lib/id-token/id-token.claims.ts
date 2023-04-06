@@ -1,8 +1,4 @@
-import {
-  InvalidJsonWebTokenClaimException,
-  JsonWebTokenClaims,
-  JsonWebTokenClaimValidationOptions,
-} from '@guarani/jose';
+import { InvalidJsonWebTokenClaimException, JsonWebTokenClaims } from '@guarani/jose';
 
 import { IdTokenClaimsParameters } from './id-token.claims.parameters';
 
@@ -79,10 +75,9 @@ export class IdTokenClaims extends JsonWebTokenClaims implements IdTokenClaimsPa
    * Instantiates a new ID Token.
    *
    * @param claims Defines the claims of the ID Token.
-   * @param options Validation options for the claims.
    */
-  public constructor(claims: IdTokenClaimsParameters, options?: Record<string, JsonWebTokenClaimValidationOptions>) {
-    super(claims, options);
+  public constructor(claims: IdTokenClaimsParameters) {
+    super(claims);
   }
 
   /**
@@ -90,7 +85,7 @@ export class IdTokenClaims extends JsonWebTokenClaims implements IdTokenClaimsPa
    *
    * @param claims Claims of the ID Token.
    */
-  protected override validateCustomClaims(claims: IdTokenClaimsParameters): void {
+  protected static override validateCustomClaims(claims: IdTokenClaimsParameters): void {
     if (claims.iss === undefined) {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "iss".');
     }

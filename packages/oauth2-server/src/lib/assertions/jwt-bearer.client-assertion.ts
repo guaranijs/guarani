@@ -78,7 +78,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
     const { client_assertion: clientAssertion } = request.data;
 
     try {
-      const [header, claims] = this.getClientAssertionComponents(clientAssertion, request);
+      const [header, claims] = await this.getClientAssertionComponents(clientAssertion, request);
 
       const client = await this.getClient(claims.sub!);
 
@@ -123,10 +123,10 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @param request Http Request.
    * @returns 2-tuple with the JSON Web Signature Header and the JSON Web Token Claims of the Client Assertion.
    */
-  private getClientAssertionComponents(
+  private async getClientAssertionComponents(
     clientAssertion: string,
     request: HttpRequest<ClientAssertionParameters>
-  ): [JsonWebSignatureHeader, JsonWebTokenClaims] {
+  ): Promise<[JsonWebSignatureHeader, JsonWebTokenClaims]> {
     const { header, payload } = JsonWebSignature.decode(clientAssertion);
 
     if (header.alg === 'none') {
@@ -145,12 +145,14 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
       });
     }
 
-    const claims = new JsonWebTokenClaims(JSON.parse(payload.toString('utf8')), {
-      iss: { essential: true },
-      sub: { essential: true },
-      aud: { essential: true, value: new URL(request.path, this.settings.issuer).href },
-      exp: { essential: true },
-      jti: { essential: true },
+    const claims = await JsonWebTokenClaims.parse(payload, {
+      validationOptions: {
+        iss: { essential: true },
+        sub: { essential: true },
+        aud: { essential: true, value: new URL(request.path, this.settings.issuer).href },
+        exp: { essential: true },
+        jti: { essential: true },
+      },
     });
 
     if (claims.iss !== claims.sub) {

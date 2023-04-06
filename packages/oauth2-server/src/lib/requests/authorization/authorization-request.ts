@@ -62,4 +62,9 @@ export interface AuthorizationRequest extends Record<string, any> {
    * Hint about the Identifier that the User might use for authentication.
    */
   readonly login_hint?: string;
+
+  /**
+   * ID Token used as a hint about the User that the Client expects to be authenticated.
+   */
+  readonly id_token_hint?: string;
 }

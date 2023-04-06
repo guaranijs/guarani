@@ -86,6 +86,12 @@ describe('JSON Web Encryption', () => {
       );
     });
 
+    it('should throw when the wrap key is not found.', async () => {
+      await expect(JsonWebEncryption.decrypt(token, async () => null, ['A128KW'], ['A128CBC-HS256'])).rejects.toThrow(
+        new InvalidJsonWebEncryptionException('The provided unwrap key is invalid.')
+      );
+    });
+
     it('should return the decoded json web encryption.', async () => {
       await expect(JsonWebEncryption.decrypt(token, wrapKey, ['A128KW'], ['A128CBC-HS256'])).resolves.toMatchObject({
         header,
@@ -95,6 +101,14 @@ describe('JSON Web Encryption', () => {
   });
 
   describe('encrypt()', () => {
+    it('should throw when the wrap key is not found.', async () => {
+      const jwe = new JsonWebEncryption(header, plaintext);
+
+      await expect(jwe.encrypt(async () => null)).rejects.toThrow(
+        new InvalidJsonWebEncryptionException('The provided wrap key is invalid.')
+      );
+    });
+
     it('should encode a json web encryption object into a compact token.', async () => {
       const jwe = new JsonWebEncryption(header, plaintext);
 

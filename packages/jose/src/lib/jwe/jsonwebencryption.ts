@@ -126,6 +126,10 @@ export class JsonWebEncryption {
 
       const key = keyOrKeyLoader instanceof JsonWebKey ? keyOrKeyLoader : await keyOrKeyLoader(header);
 
+      if (key === null) {
+        throw new InvalidJsonWebEncryptionException('The provided unwrap key is invalid.');
+      }
+
       const cek = await keyWrapBackend.unwrap(contentEncryptionBackend, key, ek, header);
 
       let plaintext = await contentEncryptionBackend.decrypt(ciphertext, aad, iv, tag, cek);
@@ -160,6 +164,10 @@ export class JsonWebEncryption {
       const { compressionBackend, contentEncryptionBackend, keyWrapBackend } = header;
 
       const key = keyOrKeyLoader instanceof JsonWebKey ? keyOrKeyLoader : await keyOrKeyLoader(header);
+
+      if (key === null) {
+        throw new InvalidJsonWebEncryptionException('The provided wrap key is invalid.');
+      }
 
       const iv = await contentEncryptionBackend.generateInitializationVector();
 

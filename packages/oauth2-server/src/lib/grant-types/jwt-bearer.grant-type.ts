@@ -136,11 +136,13 @@ export class JwtBearerGrantType implements GrantTypeInterface {
         });
       }
 
-      const claims = new JsonWebTokenClaims(JSON.parse(payload.toString('utf8')), {
-        iss: { essential: true, value: client.id },
-        sub: { essential: true },
-        aud: { essential: true, value: new URL('/oauth/token', this.settings.issuer).href },
-        exp: { essential: true },
+      const claims = await JsonWebTokenClaims.parse(payload, {
+        validationOptions: {
+          iss: { essential: true, value: client.id },
+          sub: { essential: true },
+          aud: { essential: true, value: new URL('/oauth/token', this.settings.issuer).href },
+          exp: { essential: true },
+        },
       });
 
       const key = await this.getClientKey(client, header);

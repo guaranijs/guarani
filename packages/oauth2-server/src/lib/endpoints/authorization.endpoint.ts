@@ -170,6 +170,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
     const {
       client_id: clientId,
       display,
+      id_token_hint: idTokenHint,
       login_hint: loginHint,
       max_age: maxAge,
       nonce,
@@ -227,6 +228,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
     if (loginHint !== undefined && typeof loginHint !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "login_hint".', state });
+    }
+
+    if (idTokenHint !== undefined && typeof idTokenHint !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "id_token_hint".', state });
     }
   }
 

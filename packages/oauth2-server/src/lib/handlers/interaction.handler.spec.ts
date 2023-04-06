@@ -25,12 +25,17 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { IdTokenHandler } from './id-token.handler';
 import { InteractionHandler } from './interaction.handler';
+
+jest.mock('./id-token.handler');
 
 type Entities = [Grant | null, Session, Consent];
 
 describe('Interaction Handler', () => {
   let handler: InteractionHandler;
+
+  const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
 
   const promptsMocks = [
     jest.mocked<PromptInterface>({ name: 'none', handle: jest.fn() }),
@@ -71,6 +76,7 @@ describe('Interaction Handler', () => {
   beforeEach(() => {
     const container = new DependencyInjectionContainer();
 
+    container.bind(IdTokenHandler).toValue(idTokenHandlerMock);
     promptsMocks.forEach((promptMock) => container.bind<PromptInterface>(PROMPT).toValue(promptMock));
     displaysMocks.forEach((displayMock) => container.bind<DisplayInterface>(DISPLAY).toValue(displayMock));
     container.bind<Settings>(SETTINGS).toValue(settings);
@@ -90,6 +96,7 @@ describe('Interaction Handler', () => {
     it('should throw when not providing a user interaction object.', () => {
       expect(() => {
         return new InteractionHandler(
+          idTokenHandlerMock,
           promptsMocks,
           displaysMocks,
           <Settings>{},
@@ -362,6 +369,42 @@ describe('Interaction Handler', () => {
       expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
     });
 
+    it('should return an error response when the authenticated user does not match the user expected by the "id_token_hint".', async () => {
+      Reflect.set(parameters, 'id_token_hint', 'another_user_id_token');
+
+      cookies['guarani:grant'] = 'grant_id';
+
+      const client = <Client>{ id: 'client_id' };
+      const session = <Session>{ id: 'session_id', user: { id: 'user_id' } };
+      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge', parameters, client, session };
+
+      grantServiceMock.findOne.mockResolvedValueOnce(grant);
+      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
+
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
+
+      const error = new LoginRequiredException({
+        description: 'The currently authenticated User is not the one expected by the ID Token Hint.',
+        state: 'client_state',
+      });
+
+      const errorParameters = new URLSearchParams(error.toJSON());
+
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
+        Partial<HttpResponse>
+      >({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${errorParameters.toString()}` },
+        cookies: { 'guarani:grant': null, 'guarani:session': null },
+        statusCode: 303,
+      });
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
+    });
+
     it('should return a redirect response to the consent endpoint if not previously authorized.', async () => {
       cookies['guarani:grant'] = 'grant_id';
 
@@ -378,6 +421,7 @@ describe('Interaction Handler', () => {
       };
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
+      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
 
       displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
         return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
@@ -716,6 +760,43 @@ describe('Interaction Handler', () => {
       expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
     });
 
+    it('should return an error response when the authenticated user does not match the user expected by the "id_token_hint".', async () => {
+      Reflect.set(parameters, 'id_token_hint', 'another_user_id_token');
+
+      cookies['guarani:session'] = 'session_id';
+      cookies['guarani:consent'] = 'consent_id';
+
+      const client = <Client>{ id: 'client_id' };
+      const session = <Session>{ id: 'session_id', user: { id: 'user_id' } };
+      const consent = <Consent>{ id: 'consent_id' };
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      consentServiceMock.findOne.mockResolvedValueOnce(consent);
+      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
+
+      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
+        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      });
+
+      const error = new LoginRequiredException({
+        description: 'The currently authenticated User is not the one expected by the ID Token Hint.',
+        state: 'client_state',
+      });
+
+      const errorParameters = new URLSearchParams(error.toJSON());
+
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toMatchObject<
+        Partial<HttpResponse>
+      >({
+        body: Buffer.alloc(0),
+        headers: { Location: `https://server.example.com/oauth/error?${errorParameters.toString()}` },
+        cookies: { 'guarani:grant': null, 'guarani:session': null },
+        statusCode: 303,
+      });
+
+      expect(grantServiceMock.remove).not.toHaveBeenCalled();
+    });
+
     it('should return a redirect response to the login endpoint if the session\'s creation date is longer than "max_age".', async () => {
       Reflect.set(parameters, 'max_age', 300);
 
@@ -734,6 +815,7 @@ describe('Interaction Handler', () => {
 
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       grantServiceMock.create.mockResolvedValueOnce(grant);
+      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(true);
 
       displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
         return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
@@ -773,6 +855,7 @@ describe('Interaction Handler', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
       grantServiceMock.create.mockResolvedValueOnce(grant);
+      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(true);
 
       displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
         return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
@@ -808,6 +891,7 @@ describe('Interaction Handler', () => {
 
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
+      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(true);
 
       await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toEqual<Entities>([
         null,

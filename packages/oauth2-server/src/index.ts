@@ -14,6 +14,11 @@ export { ClientAuthenticationInterface } from './lib/client-authentication/clien
 export { CLIENT_AUTHENTICATION } from './lib/client-authentication/client-authentication.token';
 export { ClientAuthentication } from './lib/client-authentication/client-authentication.type';
 
+// Client Authorization
+export { ClientAuthorizationInterface } from './lib/client-authorization/client-authorization.interface';
+export { CLIENT_AUTHORIZATION } from './lib/client-authorization/client-authorization.token';
+export { ClientAuthorization } from './lib/client-authorization/client-authorization.type';
+
 // Displays
 export { DisplayInterface } from './lib/displays/display.interface';
 export { DISPLAY } from './lib/displays/display.token';
@@ -41,10 +46,12 @@ export { AuthorizationPendingException } from './lib/exceptions/authorization-pe
 export { ConsentRequiredException } from './lib/exceptions/consent-required.exception';
 export { ErrorCode } from './lib/exceptions/error-code.type';
 export { ExpiredTokenException } from './lib/exceptions/expired-token.exception';
+export { InsufficientScopeException } from './lib/exceptions/insufficient-scope.exception';
 export { InvalidClientException } from './lib/exceptions/invalid-client.exception';
 export { InvalidGrantException } from './lib/exceptions/invalid-grant.exception';
 export { InvalidRequestException } from './lib/exceptions/invalid-request.exception';
 export { InvalidScopeException } from './lib/exceptions/invalid-scope.exception';
+export { InvalidTokenException } from './lib/exceptions/invalid-token.exception';
 export { LoginRequiredException } from './lib/exceptions/login-required.exception';
 export { OAuth2Exception } from './lib/exceptions/oauth2.exception';
 export { OAuth2ExceptionParameters } from './lib/exceptions/oauth2.exception.parameters';
@@ -65,6 +72,7 @@ export { GrantType } from './lib/grant-types/grant-type.type';
 
 // Handlers
 export { ClientAuthenticationHandler } from './lib/handlers/client-authentication.handler';
+export { ClientAuthorizationHandler } from './lib/handlers/client-authorization.handler';
 export { IdTokenHandler } from './lib/handlers/id-token.handler';
 export { InteractionHandler } from './lib/handlers/interaction.handler';
 export { ScopeHandler } from './lib/handlers/scope.handler';

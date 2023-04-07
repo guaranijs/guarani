@@ -75,6 +75,11 @@ import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { AuthorizationServerOptions } from './authorization-server.options';
+import { clientAuthorizationRegistry } from '../client-authorization/client-authorization.registry';
+import { CLIENT_AUTHORIZATION } from '../client-authorization/client-authorization.token';
+import { ClientAuthorizationInterface } from '../client-authorization/client-authorization.interface';
+import { UserinfoEndpoint } from '../endpoints/userinfo.endpoint';
+import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 
 /**
  * Factory class for configuring and instantiating an OAuth 2.0 Authorization Server.
@@ -120,6 +125,7 @@ export class AuthorizationServerFactory {
   private static async configure(): Promise<void> {
     await this.setAuthorizationServerSettings();
     this.setClientAuthentication();
+    this.setClientAuthorization();
     this.setGrantTypes();
     this.setPrompts();
     this.setDisplays();
@@ -192,6 +198,18 @@ export class AuthorizationServerFactory {
       );
 
       this.container.bind<ClientAuthenticationInterface>(CLIENT_AUTHENTICATION).toClass(constructor).asSingleton();
+    });
+  }
+
+  /**
+   * Defines the Client Authorization Methods supported by the Authorization Server.
+   */
+  private static setClientAuthorization(): void {
+    Object.values(clientAuthorizationRegistry).forEach((clientAuthorization) => {
+      this.container
+        .bind<ClientAuthorizationInterface>(CLIENT_AUTHORIZATION)
+        .toClass(clientAuthorization)
+        .asSingleton();
     });
   }
 
@@ -335,6 +353,10 @@ export class AuthorizationServerFactory {
       this.container.bind<EndpointInterface>(ENDPOINT).toClass(DeviceAuthorizationEndpoint).asSingleton();
     }
 
+    if (this.settings.scopes.includes('openid')) {
+      this.container.bind<EndpointInterface>(ENDPOINT).toClass(UserinfoEndpoint).asSingleton();
+    }
+
     this.container.bind<EndpointInterface>(ENDPOINT).toClass(DiscoveryEndpoint).asSingleton();
   }
 
@@ -348,6 +370,7 @@ export class AuthorizationServerFactory {
 
     if (this.settings.scopes.includes('openid')) {
       this.container.bind(IdTokenHandler).toSelf().asSingleton();
+      this.container.bind(ClientAuthorizationHandler).toSelf().asSingleton();
     }
   }
 

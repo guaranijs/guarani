@@ -80,6 +80,7 @@ import { CLIENT_AUTHORIZATION } from '../client-authorization/client-authorizati
 import { ClientAuthorizationInterface } from '../client-authorization/client-authorization.interface';
 import { UserinfoEndpoint } from '../endpoints/userinfo.endpoint';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
+import { Display } from '../displays/display.type';
 
 /**
  * Factory class for configuring and instantiating an OAuth 2.0 Authorization Server.
@@ -161,6 +162,7 @@ export class AuthorizationServerFactory {
       responseTypes: this.authorizationServerOptions.responseTypes ?? <ResponseType[]>Object.keys(responseTypeRegistry),
       responseModes: this.authorizationServerOptions.responseModes ?? <ResponseMode[]>Object.keys(responseModeRegistry),
       pkces: this.authorizationServerOptions.pkces ?? <Pkce[]>Object.keys(pkceRegistry),
+      displays: <Display[]>Object.keys(displayRegistry),
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
       idTokenSignatureAlgorithms: this.authorizationServerOptions.idTokenSignatureAlgorithms ?? ['RS256'],

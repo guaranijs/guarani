@@ -1,6 +1,7 @@
 import { JsonWebKeySet, JsonWebSignatureAlgorithm } from '@guarani/jose';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
+import { Display } from '../displays/display.type';
 import { GrantType } from '../grant-types/grant-type.type';
 import { Pkce } from '../pkces/pkce.type';
 import { ResponseMode } from '../response-modes/response-mode.type';
@@ -55,6 +56,11 @@ export interface Settings {
    * PKCE Methods registered at the Authorization Server.
    */
   readonly pkces: Pkce[];
+
+  /**
+   * Displays registered at the Authorization Server.
+   */
+  readonly displays: Display[];
 
   /**
    * JSON Web Key Set of the Authorization Server.

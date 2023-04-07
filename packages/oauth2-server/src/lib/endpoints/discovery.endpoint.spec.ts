@@ -24,6 +24,7 @@ describe('Discovery Endpoint', () => {
     responseTypes: ['code'],
     responseModes: ['query'],
     pkces: ['S256'],
+    displays: ['page', 'popup', 'touch', 'wap'],
     enableAuthorizationResponseIssuerIdentifier: true,
   };
 
@@ -93,6 +94,7 @@ describe('Discovery Endpoint', () => {
         response_modes_supported: ['query'],
         grant_types_supported: ['authorization_code', 'refresh_token'],
         id_token_signing_alg_values_supported: ['ES256', 'RS256'],
+        display_values_supported: ['page', 'popup', 'touch', 'wap'],
         token_endpoint_auth_methods_supported: ['client_secret_basic', 'private_key_jwt'],
         token_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256'],
         // service_documentation: '',

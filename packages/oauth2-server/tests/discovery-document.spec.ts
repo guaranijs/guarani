@@ -66,6 +66,7 @@ describe('Discovery Document', () => {
         'RS384',
         'RS512',
       ],
+      display_values_supported: ['page', 'popup', 'touch', 'wap'],
       token_endpoint_auth_methods_supported: [
         'client_secret_basic',
         'client_secret_jwt',

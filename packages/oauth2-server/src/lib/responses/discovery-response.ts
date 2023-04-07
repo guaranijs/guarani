@@ -1,6 +1,7 @@
 import { JsonWebSignatureAlgorithm } from '@guarani/jose';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
+import { Display } from '../displays/display.type';
 import { GrantType } from '../grant-types/grant-type.type';
 import { Pkce } from '../pkces/pkce.type';
 import { ResponseMode } from '../response-modes/response-mode.type';
@@ -59,6 +60,11 @@ export interface DiscoveryResponse extends Record<string, any> {
    * JSON Web Signature Algorithms for ID Token Signature registered at the Authorization Server.
    */
   readonly id_token_signing_alg_values_supported: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
+
+  /**
+   * Display Methods supported by the Authorization Server.
+   */
+  readonly display_values_supported: Display[];
 
   /**
    * Client Authentication Methods supported by the Token Endpoint.

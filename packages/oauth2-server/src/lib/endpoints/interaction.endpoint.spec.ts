@@ -1,6 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { Buffer } from 'buffer';
 import { OutgoingHttpHeaders } from 'http';
 
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
@@ -85,11 +84,9 @@ describe('Interaction Endpoint', () => {
 
       const error = new ServerErrorException({ description: 'An unexpected error occurred.' });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it.each(['GET', 'POST'])(
@@ -99,11 +96,9 @@ describe('Interaction Endpoint', () => {
 
         const error = new InvalidRequestException({ description: 'Invalid parameter "interaction_type".' });
 
-        await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-          body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-          headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-          statusCode: error.statusCode,
-        });
+        await expect(endpoint.handle(request)).resolves.toStrictEqual(
+          new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+        );
       }
     );
 
@@ -116,11 +111,9 @@ describe('Interaction Endpoint', () => {
 
       const error = new UnsupportedInteractionTypeException({ description: 'Unsupported interaction_type "unknown".' });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return an interaction context response.', async () => {
@@ -132,11 +125,9 @@ describe('Interaction Endpoint', () => {
 
       interactionTypesMock[1]!.handleContext.mockResolvedValueOnce(interactionTypeResponse);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(interactionTypeResponse), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: 200,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setHeaders(endpoint['headers']).json(interactionTypeResponse)
+      );
     });
 
     it('should return an interaction decision response.', async () => {
@@ -148,11 +139,9 @@ describe('Interaction Endpoint', () => {
 
       interactionTypesMock[1]!.handleDecision.mockResolvedValueOnce(interactionTypeResponse);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(interactionTypeResponse), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: 200,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setHeaders(endpoint['headers']).json(interactionTypeResponse)
+      );
     });
   });
 });

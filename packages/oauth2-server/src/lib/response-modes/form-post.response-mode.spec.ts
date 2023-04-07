@@ -1,7 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { Buffer } from 'buffer';
-
 import { HttpResponse } from '../http/http.response';
 import { FormPostResponseMode } from './form-post.response-mode';
 import { ResponseMode } from './response-mode.type';
@@ -42,9 +40,6 @@ describe('Form Post Response Mode', () => {
   it('should create a http response with a populated html body.', () => {
     expect(
       responseMode.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })
-    ).toMatchObject<Partial<HttpResponse>>({
-      body: Buffer.from(body, 'utf8'),
-      statusCode: 200,
-    });
+    ).toStrictEqual(new HttpResponse().html(body));
   });
 });

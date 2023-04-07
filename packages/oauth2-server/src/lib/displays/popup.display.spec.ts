@@ -48,12 +48,9 @@ describe('Page Display', () => {
 
   describe('createHttpResponse()', () => {
     it('should create a http response with a populated html body.', () => {
-      expect(display.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })).toMatchObject<
-        Partial<HttpResponse>
-      >({
-        body: Buffer.from(body, 'utf8'),
-        statusCode: 200,
-      });
+      expect(display.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })).toStrictEqual(
+        new HttpResponse().html(body)
+      );
     });
   });
 });

@@ -9,4 +9,5 @@ export type Endpoint =
   | 'introspection'
   | 'jwks'
   | 'revocation'
-  | 'token';
+  | 'token'
+  | 'userinfo';

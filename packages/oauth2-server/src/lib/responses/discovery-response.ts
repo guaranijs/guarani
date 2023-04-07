@@ -26,6 +26,11 @@ export interface DiscoveryResponse extends Record<string, any> {
   readonly token_endpoint?: string;
 
   /**
+   * Url of the Userinfo Endpoint.
+   */
+  readonly userinfo_endpoint?: string;
+
+  /**
    * Url of the JSON Web Key Set of the Authorization Server.
    */
   readonly jwks_uri?: string;

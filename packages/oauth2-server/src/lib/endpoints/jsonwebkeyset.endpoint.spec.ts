@@ -75,11 +75,7 @@ describe('JSON Web Key Set Endpoint', () => {
     });
 
     it('should return the json web key set containing the keys of the authorization server.', async () => {
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(jsonWebKeySet), 'utf8'),
-        headers: { 'Content-Type': 'application/json' },
-        statusCode: 200,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(new HttpResponse().json(jsonWebKeySet));
     });
   });
 });

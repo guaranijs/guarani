@@ -161,11 +161,9 @@ describe('Introspection Endpoint', () => {
 
       const error = new InvalidRequestException({ description: 'Invalid parameter "token".' });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: 400,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return an error response when providing an unsupported "token_type_hint".', async () => {
@@ -173,11 +171,9 @@ describe('Introspection Endpoint', () => {
 
       const error = new UnsupportedTokenTypeException({ description: 'Unsupported token_type_hint "unknown".' });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: 400,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return an error response when not using a client authentication method.', async () => {
@@ -187,11 +183,9 @@ describe('Introspection Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return an error response when using multiple client authentication methods.', async () => {
@@ -203,11 +197,9 @@ describe('Introspection Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it("should return an error response when the provided secret does not match the client's one.", async () => {
@@ -217,11 +209,12 @@ describe('Introspection Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'], ...error.headers },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse()
+          .setStatus(error.statusCode)
+          .setHeaders({ ...endpoint['headers'], ...error.headers })
+          .json(error.toJSON())
+      );
     });
 
     it('should search for an access token and then a refresh token when providing an "access_token" token_type_hint.', async () => {
@@ -232,7 +225,7 @@ describe('Introspection Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -251,7 +244,7 @@ describe('Introspection Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -268,7 +261,7 @@ describe('Introspection Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -289,7 +282,7 @@ describe('Introspection Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
       Reflect.set(settings, 'enableRefreshTokenIntrospection', true);
     });
@@ -305,7 +298,7 @@ describe('Introspection Endpoint', () => {
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
     });
 
     it('should return an inactive token response when the token is revoked.', async () => {
@@ -319,7 +312,7 @@ describe('Introspection Endpoint', () => {
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
     });
 
     it('should return an inactive token response when the token is not yet valid.', async () => {
@@ -334,7 +327,7 @@ describe('Introspection Endpoint', () => {
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
     });
 
     it('should return an inactive token response when the token is expired.', async () => {
@@ -350,7 +343,7 @@ describe('Introspection Endpoint', () => {
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
     });
 
     it('should return the metadata of the requested token.', async () => {
@@ -386,13 +379,9 @@ describe('Introspection Endpoint', () => {
         // jti: undefined,
       };
 
-      const response = await endpoint.handle(request);
-
-      expect(response).toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(introspectionResponse), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: 200,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setHeaders(endpoint['headers']).json(introspectionResponse)
+      );
     });
   });
 });

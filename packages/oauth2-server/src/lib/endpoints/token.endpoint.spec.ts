@@ -1,6 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { Buffer } from 'buffer';
 import { OutgoingHttpHeaders } from 'http';
 
 import { Client } from '../entities/client.entity';
@@ -88,11 +87,9 @@ describe('Token Endpoint', () => {
 
       const error = new InvalidRequestException({ description: 'Invalid parameter "grant_type".' });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return an error response when requesting an unsupported grant type.', async () => {
@@ -100,11 +97,9 @@ describe('Token Endpoint', () => {
 
       const error = new UnsupportedGrantTypeException({ description: 'Unsupported grant_type "unknown".' });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return an error response when not using a client authentication method.', async () => {
@@ -112,11 +107,9 @@ describe('Token Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValue(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return an error response when using multiple client authentication methods.', async () => {
@@ -124,11 +117,9 @@ describe('Token Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValue(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it("should return an error response when the provided secret does not match the client's one.", async () => {
@@ -138,11 +129,12 @@ describe('Token Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValue(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'], ...error.headers },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse()
+          .setStatus(error.statusCode)
+          .setHeaders({ ...endpoint['headers'], ...error.headers })
+          .json(error.toJSON())
+      );
     });
 
     it('should return an error response when a client requests a grant type not allowed to itself.', async () => {
@@ -155,11 +147,9 @@ describe('Token Endpoint', () => {
         grantTypes: ['password'],
       });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return a token response.', async () => {
@@ -178,11 +168,9 @@ describe('Token Endpoint', () => {
 
       grantTypesMocks[0]!.handle.mockResolvedValue(accessTokenResponse);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(accessTokenResponse), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: 200,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setHeaders(endpoint['headers']).json(accessTokenResponse)
+      );
     });
   });
 });

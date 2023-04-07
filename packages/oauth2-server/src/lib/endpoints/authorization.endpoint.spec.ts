@@ -1,6 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { Buffer } from 'buffer';
 import { URL, URLSearchParams } from 'url';
 
 import { Client } from '../entities/client.entity';
@@ -165,11 +164,9 @@ describe('Authorization Endpoint', () => {
       const error = new InvalidRequestException({ description: 'Invalid parameter "state".' });
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when not providing a "response_type" parameter.', async () => {
@@ -182,11 +179,9 @@ describe('Authorization Endpoint', () => {
 
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when not providing a "client_id" parameter.', async () => {
@@ -199,11 +194,9 @@ describe('Authorization Endpoint', () => {
 
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when not providing a "redirect_uri" parameter.', async () => {
@@ -216,11 +209,9 @@ describe('Authorization Endpoint', () => {
 
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when not providing a "scope" parameter.', async () => {
@@ -229,11 +220,9 @@ describe('Authorization Endpoint', () => {
       const error = new InvalidRequestException({ description: 'Invalid parameter "scope".', state: 'client_state' });
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when providing an invalid "response_mode" parameter.', async () => {
@@ -246,11 +235,9 @@ describe('Authorization Endpoint', () => {
 
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when providing an invalid "nonce" parameter.', async () => {
@@ -259,11 +246,9 @@ describe('Authorization Endpoint', () => {
       const error = new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: 'client_state' });
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when providing an invalid "prompt" parameter.', async () => {
@@ -272,11 +257,9 @@ describe('Authorization Endpoint', () => {
       const error = new InvalidRequestException({ description: 'Invalid parameter "prompt".', state: 'client_state' });
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when providing an invalid "display" parameter.', async () => {
@@ -285,11 +268,9 @@ describe('Authorization Endpoint', () => {
       const error = new InvalidRequestException({ description: 'Invalid parameter "display".', state: 'client_state' });
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it.each<any>([null, 'abc'])(
@@ -304,11 +285,9 @@ describe('Authorization Endpoint', () => {
 
         const parameters = new URLSearchParams(error.toJSON());
 
-        await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-          body: Buffer.alloc(0),
-          headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-          statusCode: 303,
-        });
+        await expect(endpoint.handle(request)).resolves.toStrictEqual(
+          new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+        );
       }
     );
 
@@ -322,11 +301,9 @@ describe('Authorization Endpoint', () => {
 
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when a client is not found.', async () => {
@@ -335,11 +312,9 @@ describe('Authorization Endpoint', () => {
       const error = new InvalidClientException({ description: 'Invalid Client.', state: 'client_state' });
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when requesting an unsupported response type.', async () => {
@@ -354,11 +329,9 @@ describe('Authorization Endpoint', () => {
 
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when the client requests a response type that it is not allowed to request.', async () => {
@@ -371,11 +344,9 @@ describe('Authorization Endpoint', () => {
 
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when the client provides a redirect uri that it is not allowed to use.', async () => {
@@ -388,11 +359,9 @@ describe('Authorization Endpoint', () => {
       const error = new AccessDeniedException({ description: 'Invalid Redirect URI.', state: 'client_state' });
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when the client requests an unsupported scope.', async () => {
@@ -413,11 +382,9 @@ describe('Authorization Endpoint', () => {
 
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it("should return an error response when the client requests a scope it's not allowed to.", async () => {
@@ -437,11 +404,9 @@ describe('Authorization Endpoint', () => {
 
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should return an error response when requesting an unsupported response mode.', async () => {
@@ -461,11 +426,9 @@ describe('Authorization Endpoint', () => {
 
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it('should throw when requesting an unsupported prompt.', async () => {
@@ -485,11 +448,9 @@ describe('Authorization Endpoint', () => {
 
       const parameters = new URLSearchParams(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
     });
 
     it.each(['consent none', 'login none', 'none consent', 'none login'])(
@@ -511,11 +472,9 @@ describe('Authorization Endpoint', () => {
 
         const parameters = new URLSearchParams(error.toJSON());
 
-        await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-          body: Buffer.alloc(0),
-          headers: { Location: `https://server.example.com/oauth/error?${parameters.toString()}` },
-          statusCode: 303,
-        });
+        await expect(endpoint.handle(request)).resolves.toStrictEqual(
+          new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+        );
       }
     );
 
@@ -550,13 +509,11 @@ describe('Authorization Endpoint', () => {
           return new HttpResponse().redirect(url);
         });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: {
-          Location: 'https://example.com/callback?code=code&state=client_state&iss=https%3A%2F%2Fserver.example.com',
-        },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(
+          'https://example.com/callback?code=code&state=client_state&iss=https%3A%2F%2Fserver.example.com'
+        )
+      );
 
       Reflect.deleteProperty(settings, 'enableAuthorizationResponseIssuerIdentifier');
     });
@@ -594,14 +551,11 @@ describe('Authorization Endpoint', () => {
           return new HttpResponse().redirect(url);
         });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.alloc(0),
-        headers: {
-          Location:
-            'https://example.com/callback#code=code&state=client_state&id_token=id_token&iss=https%3A%2F%2Fserver.example.com',
-        },
-        statusCode: 303,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(
+          'https://example.com/callback#code=code&state=client_state&id_token=id_token&iss=https%3A%2F%2Fserver.example.com'
+        )
+      );
 
       Reflect.deleteProperty(settings, 'enableAuthorizationResponseIssuerIdentifier');
     });

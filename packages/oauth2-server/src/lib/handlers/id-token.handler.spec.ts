@@ -99,13 +99,15 @@ describe('ID Token Handler', () => {
     jest.resetAllMocks();
   });
 
-  describe('generateIdToken()', () => {
+  describe('constructor', () => {
     it(`should reject not implementing user service's "getUserInfo()".`, () => {
       expect(() => {
         return new IdTokenHandler(jwks, settings, <UserServiceInterface>{});
       }).toThrow(new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".'));
     });
+  });
 
+  describe('generateIdToken()', () => {
     it('should throw when no key has the "alg" parameter.', async () => {
       const keysWithoutAlg = await Promise.all([
         EllipticCurveKey.generate('EC', { curve: 'P-256' }),
@@ -274,5 +276,9 @@ describe('ID Token Handler', () => {
       expect(claims.at_hash).toEqual('hrOQHuo3oE6FR82RIiX1SA');
       expect(claims.c_hash).toEqual('pk3JJWstBOegJTRDDozDaw');
     });
+  });
+
+  describe('checkIdTokenHint()', () => {
+    it.todo('should add tests.');
   });
 });

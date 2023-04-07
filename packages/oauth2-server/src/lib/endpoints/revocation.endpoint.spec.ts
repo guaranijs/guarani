@@ -1,6 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { Buffer } from 'buffer';
 import { OutgoingHttpHeaders } from 'http';
 
 import { AccessToken } from '../entities/access-token.entity';
@@ -155,11 +154,9 @@ describe('Revocation Endpoint', () => {
 
       const error = new InvalidRequestException({ description: 'Invalid parameter "token".' });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: 400,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return an error response when providing an unsupported "token_type_hint".', async () => {
@@ -167,11 +164,9 @@ describe('Revocation Endpoint', () => {
 
       const error = new UnsupportedTokenTypeException({ description: 'Unsupported token_type_hint "unknown".' });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: 400,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return an error response when not using a client authentication method.', async () => {
@@ -179,11 +174,9 @@ describe('Revocation Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return an error response when using multiple client authentication methods.', async () => {
@@ -191,11 +184,9 @@ describe('Revocation Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it("should return an error response when when the provided secret does not match the client's one.", async () => {
@@ -205,11 +196,12 @@ describe('Revocation Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'], ...error.headers },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse()
+          .setStatus(error.statusCode)
+          .setHeaders({ ...endpoint['headers'], ...error.headers })
+          .json(error.toJSON())
+      );
     });
 
     it('should search for an access token and then a refresh token when providing an "access_token" token_type_hint.', async () => {
@@ -220,7 +212,7 @@ describe('Revocation Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -242,7 +234,7 @@ describe('Revocation Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -262,7 +254,7 @@ describe('Revocation Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
       expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -284,7 +276,7 @@ describe('Revocation Endpoint', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
       Reflect.set(settings, 'enableAccessTokenRevocation', true);
     });
@@ -299,7 +291,7 @@ describe('Revocation Endpoint', () => {
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
       expect(accessTokenServiceMock.revoke).not.toHaveBeenCalled();
       expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
@@ -315,7 +307,7 @@ describe('Revocation Endpoint', () => {
 
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
       expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
@@ -333,7 +325,7 @@ describe('Revocation Endpoint', () => {
         client: { id: 'client_id' },
       });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject(defaultResponse);
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
       expect(accessTokenServiceMock.revoke).not.toHaveBeenCalled();
       expect(refreshTokenServiceMock.revoke).toHaveBeenCalledTimes(1);

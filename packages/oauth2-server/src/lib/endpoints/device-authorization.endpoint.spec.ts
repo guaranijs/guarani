@@ -98,11 +98,9 @@ describe('Device Authorization Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValue(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it('should return an error response when using multiple client authentication methods.', async () => {
@@ -110,11 +108,9 @@ describe('Device Authorization Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValue(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
+      );
     });
 
     it("should return an error response when the provided secret does not match the client's one.", async () => {
@@ -124,11 +120,12 @@ describe('Device Authorization Endpoint', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockRejectedValue(error);
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'], ...error.headers },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse()
+          .setStatus(error.statusCode)
+          .setHeaders({ ...endpoint['headers'], ...error.headers })
+          .json(error.toJSON())
+      );
     });
 
     it('should return an error response when requesting an unsupported scope.', async () => {
@@ -142,11 +139,12 @@ describe('Device Authorization Endpoint', () => {
         throw error;
       });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'], ...error.headers },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse()
+          .setStatus(error.statusCode)
+          .setHeaders({ ...endpoint['headers'], ...error.headers })
+          .json(error.toJSON())
+      );
     });
 
     it("should return an error response when the client requests a scope it's not allowed to.", async () => {
@@ -163,11 +161,12 @@ describe('Device Authorization Endpoint', () => {
         throw error;
       });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(error.toJSON()), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'], ...error.headers },
-        statusCode: error.statusCode,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse()
+          .setStatus(error.statusCode)
+          .setHeaders({ ...endpoint['headers'], ...error.headers })
+          .json(error.toJSON())
+      );
     });
 
     it('should return a device authorization response.', async () => {
@@ -192,11 +191,9 @@ describe('Device Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 300000),
       });
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(deviceAuthorizationResponse), 'utf8'),
-        headers: { 'Content-Type': 'application/json', ...endpoint['headers'] },
-        statusCode: 200,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().setHeaders(endpoint['headers']).json(deviceAuthorizationResponse)
+      );
     });
   });
 });

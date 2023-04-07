@@ -27,13 +27,9 @@ describe('Touch Display', () => {
 
   describe('createHttpResponse()', () => {
     it('should create a redirect http response with a populated uri query.', () => {
-      expect(display.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })).toMatchObject<
-        Partial<HttpResponse>
-      >({
-        body: Buffer.alloc(0),
-        headers: { Location: 'https://example.com/?foo=foo&bar=bar&baz=baz' },
-        statusCode: 303,
-      });
+      expect(display.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })).toStrictEqual(
+        new HttpResponse().redirect('https://example.com/?foo=foo&bar=bar&baz=baz')
+      );
     });
   });
 });

@@ -113,11 +113,7 @@ describe('Discovery Endpoint', () => {
         authorization_response_iss_parameter_supported: true,
       };
 
-      await expect(endpoint.handle(request)).resolves.toMatchObject<Partial<HttpResponse>>({
-        body: Buffer.from(JSON.stringify(discoveryResponse), 'utf8'),
-        headers: { 'Content-Type': 'application/json' },
-        statusCode: 200,
-      });
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(new HttpResponse().json(discoveryResponse));
     });
   });
 });

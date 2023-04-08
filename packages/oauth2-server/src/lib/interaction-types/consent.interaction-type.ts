@@ -92,6 +92,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
       context: {
         prompts: <Prompt[]>grant.parameters.prompt?.split(' '),
         display: grant.parameters.display,
+        ui_locales: grant.parameters.ui_locales?.split(' '),
       },
     });
   }

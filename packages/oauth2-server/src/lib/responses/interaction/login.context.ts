@@ -24,4 +24,9 @@ export interface LoginContext extends Record<string, any> {
    * Hint about the Identifier that the User might use for authentication.
    */
   readonly login_hint?: string;
+
+  /**
+   * End-User's preferred languages and scripts for the User Interface.
+   */
+  readonly ui_locales?: string[];
 }

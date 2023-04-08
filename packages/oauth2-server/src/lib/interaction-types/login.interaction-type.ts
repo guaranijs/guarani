@@ -114,6 +114,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
         display: grant.parameters.display,
         auth_exp: authExp,
         login_hint: grant.parameters.login_hint,
+        ui_locales: grant.parameters.ui_locales?.split(' '),
       },
     });
   }

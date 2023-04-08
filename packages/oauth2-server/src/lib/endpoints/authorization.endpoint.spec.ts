@@ -306,6 +306,36 @@ describe('Authorization Endpoint', () => {
       );
     });
 
+    it('should return an error response when providing an invalid "id_token_hint" parameter.', async () => {
+      request.query.id_token_hint = 123;
+
+      const error = new InvalidRequestException({
+        description: 'Invalid parameter "id_token_hint".',
+        state: 'client_state',
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
+    });
+
+    it('should return an error response when providing an invalid "ui_locales" parameter.', async () => {
+      request.query.ui_locales = 123;
+
+      const error = new InvalidRequestException({
+        description: 'Invalid parameter "ui_locales".',
+        state: 'client_state',
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
+    });
+
     it('should return an error response when a client is not found.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 

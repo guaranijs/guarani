@@ -180,6 +180,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
       response_type: responseType,
       scope,
       state,
+      ui_locales: uiLocales,
     } = parameters;
 
     if (state !== undefined && typeof state !== 'string') {
@@ -232,6 +233,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
     if (idTokenHint !== undefined && typeof idTokenHint !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "id_token_hint".', state });
+    }
+
+    if (uiLocales !== undefined && typeof uiLocales !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "ui_locales".', state });
     }
   }
 

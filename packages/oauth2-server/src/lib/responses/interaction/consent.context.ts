@@ -14,4 +14,9 @@ export interface ConsentContext extends Record<string, any> {
    * Display requested by the Client.
    */
   readonly display?: Display;
+
+  /**
+   * End-User's preferred languages and scripts for the User Interface.
+   */
+  readonly ui_locales?: string[];
 }

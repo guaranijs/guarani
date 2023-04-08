@@ -67,4 +67,9 @@ export interface AuthorizationRequest extends Record<string, any> {
    * ID Token used as a hint about the User that the Client expects to be authenticated.
    */
   readonly id_token_hint?: string;
+
+  /**
+   * End-User's preferred languages and scripts for the User Interface.
+   */
+  readonly ui_locales?: string;
 }

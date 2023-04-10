@@ -53,6 +53,7 @@ export const authorizationServerOptions: AuthorizationServerOptions = {
   pkces: ['S256', 'plain'],
   responseModes: ['form_post', 'fragment', 'query'],
   responseTypes: ['code id_token token', 'code id_token', 'code token', 'code', 'id_token token', 'id_token', 'token'],
+  acrValues: ['urn:guarani:acr:1fa'],
   userService: UserService,
   clientService: ClientService,
   sessionService: SessionService,

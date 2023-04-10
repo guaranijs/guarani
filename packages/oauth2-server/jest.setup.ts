@@ -50,6 +50,7 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   responseTypes: ['code', 'id_token', 'token', 'code id_token', 'code token', 'id_token token', 'code id_token token'],
   responseModes: ['form_post', 'fragment', 'query'],
   pkces: ['S256', 'plain'],
+  acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
   jwks: {
     keys: [
       {

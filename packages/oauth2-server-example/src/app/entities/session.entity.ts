@@ -9,6 +9,12 @@ export class Session extends BaseEntity implements OAuth2Session {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'sessions_pk' })
   public readonly id!: string;
 
+  @Column({ name: 'amr', type: 'varchar', array: true, nullable: true })
+  public readonly amr!: string[] | null;
+
+  @Column({ name: 'acr', type: 'varchar', nullable: true })
+  public readonly acr!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', nullable: false })
   public readonly createdAt!: Date;
 

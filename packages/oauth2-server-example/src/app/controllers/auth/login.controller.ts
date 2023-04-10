@@ -1,4 +1,9 @@
-import { Display, LoginContextInteractionResponse, LoginDecisionInteractionResponse } from '@guarani/oauth2-server';
+import {
+  Display,
+  LoginContextInteractionResponse,
+  LoginDecisionAcceptInteractionRequest,
+  LoginDecisionInteractionResponse,
+} from '@guarani/oauth2-server';
 
 import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
@@ -90,12 +95,16 @@ class Controller {
     user: User,
     display?: Display
   ): Promise<void> {
-    const reqBody = new URLSearchParams({
+    const reqParameters: LoginDecisionAcceptInteractionRequest = {
       interaction_type: 'login',
       login_challenge: loginChallenge,
       decision: 'accept',
       subject: Reflect.get(user!, 'id'),
-    });
+      amr: 'pwd',
+      acr: 'urn:guarani:acr:1fa',
+    };
+
+    const reqBody = new URLSearchParams(reqParameters);
 
     const {
       data: { redirect_to: redirectTo },

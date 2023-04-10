@@ -10,6 +10,16 @@ export interface Session extends Record<string, any> {
   readonly id: string;
 
   /**
+   * Authentication Methods used in the Authentication.
+   */
+  readonly amr?: string[] | null;
+
+  /**
+   * Authentication Context Class Reference satisfied by the Authentication process.
+   */
+  readonly acr?: string | null;
+
+  /**
    * Creation Date of the Session.
    */
   readonly createdAt: Date;

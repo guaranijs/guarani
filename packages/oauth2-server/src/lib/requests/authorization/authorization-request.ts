@@ -72,4 +72,9 @@ export interface AuthorizationRequest extends Record<string, any> {
    * End-User's preferred languages and scripts for the User Interface.
    */
   readonly ui_locales?: string;
+
+  /**
+   * Space delimited list of Authentication Context Class References requested by the Client in order of preference.
+   */
+  readonly acr_values?: string;
 }

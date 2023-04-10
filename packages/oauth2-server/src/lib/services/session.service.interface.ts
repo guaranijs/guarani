@@ -11,9 +11,11 @@ export interface SessionServiceInterface {
    * Creates a Session representing the End User's Authentication.
    *
    * @param user Authenticated End User.
+   * @param amr Authentication Methods used in the Authentication.
+   * @param acr Authentication Context Class Reference satisfied by the Authentication process.
    * @returns Generated Session.
    */
-  create(user: User): Promise<Session>;
+  create(user: User, amr: string[] | undefined, acr: string | undefined): Promise<Session>;
 
   /**
    * Searches the application's storage for a Session containing the provided Identifier.

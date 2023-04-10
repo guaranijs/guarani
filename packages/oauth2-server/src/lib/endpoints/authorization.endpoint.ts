@@ -168,6 +168,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private checkParameters(parameters: AuthorizationRequest): void {
     const {
+      acr_values: acrValues,
       client_id: clientId,
       display,
       id_token_hint: idTokenHint,
@@ -237,6 +238,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
     if (uiLocales !== undefined && typeof uiLocales !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "ui_locales".', state });
+    }
+
+    if (acrValues !== undefined && typeof acrValues !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "acr_values".', state });
     }
   }
 

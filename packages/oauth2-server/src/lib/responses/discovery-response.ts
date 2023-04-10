@@ -57,6 +57,11 @@ export interface DiscoveryResponse extends Record<string, any> {
   readonly grant_types_supported?: GrantType[];
 
   /**
+   * Authentication Context Class References supported by the Authorization Server.
+   */
+  readonly acr_values_supported?: string[];
+
+  /**
    * JSON Web Signature Algorithms for ID Token Signature registered at the Authorization Server.
    */
   readonly id_token_signing_alg_values_supported: Exclude<JsonWebSignatureAlgorithm, 'none'>[];

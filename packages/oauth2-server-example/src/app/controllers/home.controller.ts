@@ -26,7 +26,7 @@ class Controller {
       code_challenge: 'kRaf6IMJlerQjcqlFczEUYUcVsdwMpYonctl1yXYiiI',
       code_challenge_method: 'S256',
       prompt: 'login consent',
-      display: 'popup',
+      acr_values: 'urn:guarani:acr:1fa',
     };
 
     const url = new URL('http://localhost:4000/oauth/authorize');

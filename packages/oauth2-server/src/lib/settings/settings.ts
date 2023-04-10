@@ -63,6 +63,11 @@ export interface Settings {
   readonly displays: Display[];
 
   /**
+   * Authentication Context Class References registered at the Authorization Server.
+   */
+  readonly acrValues?: string[];
+
+  /**
    * JSON Web Key Set of the Authorization Server.
    */
   readonly jwks?: JsonWebKeySet;

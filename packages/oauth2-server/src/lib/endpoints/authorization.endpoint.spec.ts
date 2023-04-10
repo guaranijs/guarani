@@ -336,6 +336,21 @@ describe('Authorization Endpoint', () => {
       );
     });
 
+    it('should return an error response when providing an invalid "acr_values" parameter.', async () => {
+      request.query.acr_values = 123;
+
+      const error = new InvalidRequestException({
+        description: 'Invalid parameter "acr_values".',
+        state: 'client_state',
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
+
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
+      );
+    });
+
     it('should return an error response when a client is not found.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 

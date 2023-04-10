@@ -54,6 +54,7 @@ describe('Discovery Document', () => {
         'urn:ietf:params:oauth:grant-type:device_code',
         'urn:ietf:params:oauth:grant-type:jwt-bearer',
       ],
+      acr_values_supported: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
       id_token_signing_alg_values_supported: [
         'ES256',
         'ES384',

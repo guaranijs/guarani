@@ -6,8 +6,8 @@ import { User } from '../entities/user.entity';
 
 @Injectable()
 export class SessionService implements SessionServiceInterface {
-  public async create(user: User): Promise<Session> {
-    const session = Session.create({ user });
+  public async create(user: User, amr: string[] | undefined, acr: string | undefined): Promise<Session> {
+    const session = Session.create({ amr, acr, user });
     await session.save();
     return session;
   }

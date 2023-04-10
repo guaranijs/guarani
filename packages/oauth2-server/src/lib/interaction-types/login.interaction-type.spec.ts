@@ -308,6 +308,32 @@ describe('Login Interaction Type', () => {
       );
     });
 
+    it('should throw when providing an invalid "amr" parameter.', async () => {
+      Object.assign(parameters, { decision: 'accept', subject: 'user_id', amr: 123 });
+
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+      });
+
+      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
+        new InvalidRequestException({ description: 'Invalid parameter "amr".' })
+      );
+    });
+
+    it('should throw when providing an invalid "acr" parameter.', async () => {
+      Object.assign(parameters, { decision: 'accept', subject: 'user_id', acr: 123 });
+
+      grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(<Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+      });
+
+      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
+        new InvalidRequestException({ description: 'Invalid parameter "acr".' })
+      );
+    });
+
     it('should throw when no user is found.', async () => {
       Reflect.set(parameters, 'decision', 'accept');
       Reflect.set(parameters, 'subject', 'user_id');

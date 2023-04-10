@@ -1,7 +1,9 @@
 import { Inject, Injectable } from '@guarani/di';
 import { DeviceCodeServiceInterface, SETTINGS, Settings } from '@guarani/oauth2-server';
+
 import { randomInt } from 'crypto';
 import { URL } from 'url';
+
 import { Client } from '../entities/client.entity';
 import { DeviceCode } from '../entities/device-code.entity';
 

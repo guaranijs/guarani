@@ -14,9 +14,11 @@ export class SessionService implements SessionServiceInterface {
     console.warn('Using default Session Service. This is only recommended for development.');
   }
 
-  public async create(user: User): Promise<Session> {
+  public async create(user: User, amr: string[] | undefined, acr: string | undefined): Promise<Session> {
     const session: Session = {
       id: randomUUID(),
+      amr,
+      acr,
       createdAt: new Date(),
       user,
     };

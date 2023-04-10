@@ -67,6 +67,11 @@ export interface AuthorizationServerOptions {
   readonly pkces?: Pkce[];
 
   /**
+   * Authentication Context Class References registered at the Authorization Server.
+   */
+  readonly acrValues?: string[];
+
+  /**
    * JSON Web Key Set of the Authorization Server.
    */
   readonly jwks?: JsonWebKeySetParameters;

@@ -15,6 +15,17 @@ export class CreateSessionsTable1678668644552 implements MigrationInterface {
           primaryKeyConstraintName: 'sessions_pk',
         },
         {
+          name: 'amr',
+          type: 'varchar',
+          isArray: true,
+          isNullable: true,
+        },
+        {
+          name: 'acr',
+          type: 'varchar',
+          isNullable: true,
+        },
+        {
           name: 'created_at',
           type: 'timestamp',
           default: 'CURRENT_TIMESTAMP',

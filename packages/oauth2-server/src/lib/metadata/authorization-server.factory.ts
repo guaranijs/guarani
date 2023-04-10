@@ -163,6 +163,7 @@ export class AuthorizationServerFactory {
       responseModes: this.authorizationServerOptions.responseModes ?? <ResponseMode[]>Object.keys(responseModeRegistry),
       pkces: this.authorizationServerOptions.pkces ?? <Pkce[]>Object.keys(pkceRegistry),
       displays: <Display[]>Object.keys(displayRegistry),
+      acrValues: this.authorizationServerOptions.acrValues,
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
       idTokenSignatureAlgorithms: this.authorizationServerOptions.idTokenSignatureAlgorithms ?? ['RS256'],

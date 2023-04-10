@@ -115,6 +115,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
         auth_exp: authExp,
         login_hint: grant.parameters.login_hint,
         ui_locales: grant.parameters.ui_locales?.split(' '),
+        acr_values: grant.parameters.acr_values?.split(' '),
       },
     });
   }
@@ -191,8 +192,10 @@ export class LoginInteractionType implements InteractionTypeInterface {
     this.checkAcceptDecisionParameters(parameters);
 
     if (grant.session == null) {
+      const { amr, acr } = parameters;
+
       const user = await this.getUser(parameters.subject);
-      const session = await this.sessionService.create(user);
+      const session = await this.sessionService.create(user, amr?.split(' '), acr);
 
       grant.session = session;
 
@@ -213,10 +216,18 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * @param parameters Parameters of the Login Accept Decision Interaction Request.
    */
   private checkAcceptDecisionParameters(parameters: LoginDecisionAcceptInteractionRequest): void {
-    const { subject } = parameters;
+    const { subject, amr, acr } = parameters;
 
     if (typeof subject !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "subject".' });
+    }
+
+    if (amr !== undefined && typeof amr !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "amr".' });
+    }
+
+    if (acr !== undefined && typeof acr !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "acr".' });
     }
   }
 

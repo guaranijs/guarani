@@ -72,6 +72,11 @@ export interface AuthorizationServerOptions {
   readonly acrValues?: string[];
 
   /**
+   * UI Locales registered at the Authorization Server.
+   */
+  readonly uiLocales?: string[];
+
+  /**
    * JSON Web Key Set of the Authorization Server.
    */
   readonly jwks?: JsonWebKeySetParameters;

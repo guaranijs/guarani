@@ -164,6 +164,7 @@ export class AuthorizationServerFactory {
       pkces: this.authorizationServerOptions.pkces ?? <Pkce[]>Object.keys(pkceRegistry),
       displays: <Display[]>Object.keys(displayRegistry),
       acrValues: this.authorizationServerOptions.acrValues,
+      uiLocales: this.authorizationServerOptions.uiLocales,
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
       idTokenSignatureAlgorithms: this.authorizationServerOptions.idTokenSignatureAlgorithms ?? ['RS256'],

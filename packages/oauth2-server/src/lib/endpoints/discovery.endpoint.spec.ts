@@ -26,6 +26,7 @@ describe('Discovery Endpoint', () => {
     pkces: ['S256'],
     displays: ['page', 'popup', 'touch', 'wap'],
     acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
+    uiLocales: ['en', 'es', 'pt-BR'],
     enableAuthorizationResponseIssuerIdentifier: true,
   };
 
@@ -100,7 +101,7 @@ describe('Discovery Endpoint', () => {
         token_endpoint_auth_methods_supported: ['client_secret_basic', 'private_key_jwt'],
         token_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256'],
         // service_documentation: '',
-        // ui_locales_supported: '',
+        ui_locales_supported: ['en', 'es', 'pt-BR'],
         // op_policy_uri: '',
         // op_tos_uri: '',
         revocation_endpoint: 'https://server.example.com/oauth/revoke',

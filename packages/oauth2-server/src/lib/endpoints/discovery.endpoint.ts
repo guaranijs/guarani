@@ -69,7 +69,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
       token_endpoint_auth_methods_supported: this.settings.clientAuthenticationMethods,
       token_endpoint_auth_signing_alg_values_supported: this.settings.clientAuthenticationSignatureAlgorithms,
       service_documentation: undefined,
-      ui_locales_supported: undefined,
+      ui_locales_supported: this.settings.uiLocales,
       op_policy_uri: undefined,
       op_tos_uri: undefined,
       revocation_endpoint: this.getEndpointPath('revocation'),

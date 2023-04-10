@@ -91,7 +91,7 @@ describe('Discovery Document', () => {
         'RS512',
       ],
       // service_documentation: '',
-      // ui_locales_supported: '',
+      ui_locales_supported: ['en', 'es', 'pt-BR'],
       // op_policy_uri: '',
       // op_tos_uri: '',
       revocation_endpoint: 'http://localhost:3000/oauth/revoke',

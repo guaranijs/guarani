@@ -51,6 +51,7 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   responseModes: ['form_post', 'fragment', 'query'],
   pkces: ['S256', 'plain'],
   acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
+  uiLocales: ['en', 'es', 'pt-BR'],
   jwks: {
     keys: [
       {

@@ -1,5 +1,3 @@
-import { Constructor } from '@guarani/di';
-
 import { Asn1Type } from '../asn1-type.enum';
 import { SerializationException } from '../exceptions/serialization.exception';
 import { Node } from '../nodes/node';
@@ -27,7 +25,7 @@ export abstract class Asn1Serializer<T> {
    * @param node Node to be inspected.
    * @param nodeConstructor Expected Node Constructor.
    */
-  protected ensureNodeInstance<TNode extends Node>(node: Node, nodeConstructor: Constructor<TNode>): void {
+  protected ensureNodeInstance<TNode extends Node>(node: Node, nodeConstructor: new (...args: any[]) => TNode): void {
     if (!(node instanceof nodeConstructor)) {
       throw new SerializationException(`The provided Node is not an instance of "${nodeConstructor.name}".`);
     }

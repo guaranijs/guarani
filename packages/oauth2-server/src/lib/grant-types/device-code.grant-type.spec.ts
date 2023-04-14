@@ -22,6 +22,7 @@ import { DeviceCodeGrantType } from './device-code.grant-type';
 import { GrantType } from './grant-type.type';
 
 describe('Device Code Grant Type', () => {
+  let container: DependencyInjectionContainer;
   let grantType: DeviceCodeGrantType;
 
   const deviceCodeServiceMock = jest.mocked<DeviceCodeServiceInterface>({
@@ -44,7 +45,7 @@ describe('Device Code Grant Type', () => {
   });
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<DeviceCodeServiceInterface>(DEVICE_CODE_SERVICE).toValue(deviceCodeServiceMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);

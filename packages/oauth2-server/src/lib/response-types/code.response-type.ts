@@ -45,11 +45,7 @@ export class CodeResponseType implements ResponseTypeInterface {
   public constructor(
     @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
     @InjectAll(PKCE) private readonly pkces: PkceInterface[]
-  ) {
-    if (this.pkces.length === 0) {
-      throw new TypeError('Missing PKCE Methods for response_type "code".');
-    }
-  }
+  ) {}
 
   /**
    * Creates the Authorization Response with the Authorization Grant used by the Client on behalf of the End User.

@@ -15,6 +15,7 @@ import { ResponseType } from './response-type.type';
 import { TokenResponseType } from './token.response-type';
 
 describe('Token Response Type', () => {
+  let container: DependencyInjectionContainer;
   let responseType: TokenResponseType;
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
@@ -24,7 +25,7 @@ describe('Token Response Type', () => {
   });
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind(TokenResponseType).toSelf().asSingleton();

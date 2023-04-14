@@ -12,6 +12,7 @@ import {
 } from './client-secret-post.client-authentication';
 
 describe('Client Secret Post Authentication Method', () => {
+  let container: DependencyInjectionContainer;
   let clientAuthentication: ClientSecretPostClientAuthentication;
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
@@ -19,7 +20,7 @@ describe('Client Secret Post Authentication Method', () => {
   });
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
     container.bind(ClientSecretPostClientAuthentication).toSelf().asSingleton();

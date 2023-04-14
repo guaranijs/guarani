@@ -21,6 +21,7 @@ const accessToken = <AccessToken>{ handle: 'access_token' };
 const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
 
 describe('ID Token Handler', () => {
+  let container: DependencyInjectionContainer;
   let idTokenHandler: IdTokenHandler;
 
   const eckey = new EllipticCurveKey({
@@ -85,7 +86,7 @@ describe('ID Token Handler', () => {
   );
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(JsonWebKeySet).toValue(jwks);
     container.bind<Settings>(SETTINGS).toValue(settings);
@@ -101,9 +102,15 @@ describe('ID Token Handler', () => {
 
   describe('constructor', () => {
     it(`should reject not implementing user service's "getUserInfo()".`, () => {
-      expect(() => {
-        return new IdTokenHandler(jwks, settings, <UserServiceInterface>{});
-      }).toThrow(new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".'));
+      container.delete<UserServiceInterface>(USER_SERVICE);
+      container.delete(IdTokenHandler);
+
+      container.bind<UserServiceInterface>(USER_SERVICE).toValue({ findOne: jest.fn() });
+      container.bind(IdTokenHandler).toSelf().asSingleton();
+
+      expect(() => container.resolve(IdTokenHandler)).toThrow(
+        new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".')
+      );
     });
   });
 

@@ -24,6 +24,7 @@ import { ConsentInteractionType } from './consent.interaction-type';
 import { InteractionType } from './interaction-type.type';
 
 describe('Consent Interaction Type', () => {
+  let container: DependencyInjectionContainer;
   let interactionType: ConsentInteractionType;
 
   const consentServiceMock = jest.mocked<ConsentServiceInterface>({
@@ -45,7 +46,7 @@ describe('Consent Interaction Type', () => {
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<ConsentServiceInterface>(CONSENT_SERVICE).toValue(consentServiceMock);

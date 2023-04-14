@@ -5,10 +5,11 @@ import { Display } from './display.type';
 import { WapDisplay } from './wap.display';
 
 describe('Wap Display', () => {
+  let container: DependencyInjectionContainer;
   let display: WapDisplay;
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(WapDisplay).toSelf().asSingleton();
 

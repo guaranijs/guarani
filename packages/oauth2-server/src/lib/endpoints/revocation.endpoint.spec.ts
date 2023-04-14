@@ -26,6 +26,7 @@ import { RevocationEndpoint } from './revocation.endpoint';
 jest.mock('../handlers/client-authentication.handler');
 
 describe('Revocation Endpoint', () => {
+  let container: DependencyInjectionContainer;
   let endpoint: RevocationEndpoint;
 
   const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>({
@@ -45,7 +46,7 @@ describe('Revocation Endpoint', () => {
   const settings = <Settings>{ grantTypes: ['refresh_token'], enableRefreshTokenRevocation: true };
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);
@@ -89,47 +90,48 @@ describe('Revocation Endpoint', () => {
 
   describe('supportedTokenTypeHints', () => {
     it('should have only the type "access_token" when not supporting refresh token revocation.', () => {
-      const opts = <Settings>{ enableRefreshTokenRevocation: false };
-      const endpoint = new RevocationEndpoint(
-        clientAuthenticationHandlerMock,
-        opts,
-        accessTokenServiceMock,
-        refreshTokenServiceMock
-      );
+      const settings = <Settings>{ enableRefreshTokenRevocation: false };
+
+      container.delete<Settings>(SETTINGS);
+      container.delete(RevocationEndpoint);
+
+      container.bind<Settings>(SETTINGS).toValue(settings);
+      container.bind(RevocationEndpoint).toSelf().asSingleton();
+
+      expect(() => (endpoint = container.resolve(RevocationEndpoint))).not.toThrow();
 
       expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['access_token']);
     });
 
     it('should have the types ["refresh_token", "access_token"] when supporting access token revocation.', () => {
-      const endpoint = new RevocationEndpoint(
-        clientAuthenticationHandlerMock,
-        settings,
-        accessTokenServiceMock,
-        refreshTokenServiceMock
-      );
-
       expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['access_token', 'refresh_token']);
     });
   });
 
   describe('constructor', () => {
     it('should throw when allowing refresh token revocation and the authorization server disables the usage of refresh tokens.', () => {
-      const opts = <Settings>{ grantTypes: ['authorization_code'], enableRefreshTokenRevocation: true };
+      const settings = <Settings>{ grantTypes: ['authorization_code'], enableRefreshTokenRevocation: true };
 
-      expect(() => {
-        return new RevocationEndpoint(
-          clientAuthenticationHandlerMock,
-          opts,
-          accessTokenServiceMock,
-          refreshTokenServiceMock
-        );
-      }).toThrow(new Error('The Authorization Server disabled using Refresh Tokens.'));
+      container.delete<Settings>(SETTINGS);
+      container.delete(RevocationEndpoint);
+
+      container.bind<Settings>(SETTINGS).toValue(settings);
+      container.bind(RevocationEndpoint).toSelf().asSingleton();
+
+      expect(() => container.resolve(RevocationEndpoint)).toThrow(
+        new Error('The Authorization Server disabled using Refresh Tokens.')
+      );
     });
 
     it('should throw when allowing refresh token revocation without a refresh token service.', () => {
-      expect(() => {
-        return new RevocationEndpoint(clientAuthenticationHandlerMock, settings, accessTokenServiceMock, undefined);
-      }).toThrow(new Error('Cannot enable Refresh Token Revocation without a Refresh Token Service.'));
+      container.delete<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE);
+      container.delete(RevocationEndpoint);
+
+      container.bind(RevocationEndpoint).toSelf().asSingleton();
+
+      expect(() => container.resolve(RevocationEndpoint)).toThrow(
+        new Error('Cannot enable Refresh Token Revocation without a Refresh Token Service.')
+      );
     });
   });
 

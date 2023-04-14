@@ -56,11 +56,7 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
     @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
     @InjectAll(PKCE) private readonly pkces: PkceInterface[]
-  ) {
-    if (this.pkces.length === 0) {
-      throw new TypeError('Missing PKCE Methods for response_type "code token".');
-    }
-  }
+  ) {}
 
   /**
    * Creates and returns an Authorization Code and Access Token Response to the Client.

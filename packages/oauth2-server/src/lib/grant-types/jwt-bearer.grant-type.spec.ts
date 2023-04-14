@@ -59,6 +59,7 @@ const claims: JsonWebTokenClaimsParameters = {
 const invalidTokenFormats: string[] = ['', 'a', '.a', '.a.b', 'a.b', 'a.b.c.d'];
 
 describe('JWT Bearer Grant Type', () => {
+  let container: DependencyInjectionContainer;
   let grantType: JwtBearerGrantType;
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
@@ -74,7 +75,7 @@ describe('JWT Bearer Grant Type', () => {
   const settings = <Settings>{ issuer: 'https://server.example.com', scopes: ['foo', 'bar', 'baz', 'qux'] };
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);

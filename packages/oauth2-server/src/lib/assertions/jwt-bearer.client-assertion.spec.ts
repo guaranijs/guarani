@@ -46,6 +46,7 @@ const methodRequests: [Record<string, any>, boolean][] = [
 const invalidTokenFormats: string[] = ['', 'a', '.a', '.a.b', 'a.b', 'a.b.c.d'];
 
 describe('JWT Bearer Client Assertion Client Authentication Method', () => {
+  let container: DependencyInjectionContainer;
   let clientAssertion: JwtBearerClientAssertion;
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
@@ -58,7 +59,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   };
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);

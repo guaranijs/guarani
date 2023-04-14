@@ -8,8 +8,8 @@ import { HttpRequest } from '../http/http.request';
 import { ClientAuthorizationHandler } from './client-authorization.handler';
 
 describe('Client Authorization Handler', () => {
+  let container: DependencyInjectionContainer;
   let clientAuthorizationHandler: ClientAuthorizationHandler;
-  let request: HttpRequest;
 
   const clientAuthorizationMethodsMocks = [
     jest.mocked<ClientAuthorizationInterface>({
@@ -30,7 +30,7 @@ describe('Client Authorization Handler', () => {
   ];
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     clientAuthorizationMethodsMocks.forEach((clientAuthorization) => {
       container.bind<ClientAuthorizationInterface>(CLIENT_AUTHORIZATION).toValue(clientAuthorization);
@@ -39,43 +39,49 @@ describe('Client Authorization Handler', () => {
     container.bind(ClientAuthorizationHandler).toSelf().asSingleton();
 
     clientAuthorizationHandler = container.resolve(ClientAuthorizationHandler);
-
-    request = new HttpRequest({
-      body: {},
-      cookies: {},
-      headers: {},
-      method: 'GET',
-      path: '/oauth/userinfo',
-      query: {},
-    });
   });
 
   afterEach(() => {
     jest.resetAllMocks();
   });
 
-  it('should throw when not using a client authorization method.', async () => {
-    clientAuthorizationMethodsMocks.forEach((method) => method.hasBeenRequested.mockReturnValueOnce(false));
+  describe('authorize()', () => {
+    let request: HttpRequest;
 
-    await expect(clientAuthorizationHandler.authorize(request)).rejects.toThrow(
-      new InvalidClientException({ description: 'No Client Authorization Method detected.' })
-    );
-  });
+    beforeEach(() => {
+      request = new HttpRequest({
+        body: {},
+        cookies: {},
+        headers: {},
+        method: 'GET',
+        path: '/oauth/userinfo',
+        query: {},
+      });
+    });
 
-  it('should throw when using multiple client authorization methods.', async () => {
-    clientAuthorizationMethodsMocks.forEach((method) => method.hasBeenRequested.mockReturnValueOnce(true));
+    it('should throw when not using a client authorization method.', async () => {
+      clientAuthorizationMethodsMocks.forEach((method) => method.hasBeenRequested.mockReturnValueOnce(false));
 
-    await expect(clientAuthorizationHandler.authorize(request)).rejects.toThrow(
-      new InvalidClientException({ description: 'Multiple Client Authorization Methods detected.' })
-    );
-  });
+      await expect(clientAuthorizationHandler.authorize(request)).rejects.toThrow(
+        new InvalidClientException({ description: 'No Client Authorization Method detected.' })
+      );
+    });
 
-  it('should return an authorized client.', async () => {
-    const accessToken = <AccessToken>{ handle: 'access_token' };
+    it('should throw when using multiple client authorization methods.', async () => {
+      clientAuthorizationMethodsMocks.forEach((method) => method.hasBeenRequested.mockReturnValueOnce(true));
 
-    clientAuthorizationMethodsMocks[0]!.hasBeenRequested.mockReturnValueOnce(true);
-    clientAuthorizationMethodsMocks[0]!.authorize.mockResolvedValueOnce(accessToken);
+      await expect(clientAuthorizationHandler.authorize(request)).rejects.toThrow(
+        new InvalidClientException({ description: 'Multiple Client Authorization Methods detected.' })
+      );
+    });
 
-    await expect(clientAuthorizationHandler.authorize(request)).resolves.toBe(accessToken);
+    it('should return an authorized client.', async () => {
+      const accessToken = <AccessToken>{ handle: 'access_token' };
+
+      clientAuthorizationMethodsMocks[0]!.hasBeenRequested.mockReturnValueOnce(true);
+      clientAuthorizationMethodsMocks[0]!.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(clientAuthorizationHandler.authorize(request)).resolves.toBe(accessToken);
+    });
   });
 });

@@ -28,6 +28,7 @@ const jwks = new JsonWebKeySet([ecKey]);
 const header: JsonWebSignatureHeaderParameters = { alg: 'ES256', kid: 'ec-key' };
 
 describe('Private Key JWT Client Authentication Method', () => {
+  let container: DependencyInjectionContainer;
   let clientAuthentication: PrivateKeyJwtClientAuthentication;
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
@@ -37,7 +38,7 @@ describe('Private Key JWT Client Authentication Method', () => {
   const settings = <Settings>{};
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);

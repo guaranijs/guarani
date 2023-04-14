@@ -21,6 +21,7 @@ import { TokenEndpoint } from './token.endpoint';
 jest.mock('../handlers/client-authentication.handler');
 
 describe('Token Endpoint', () => {
+  let container: DependencyInjectionContainer;
   let endpoint: TokenEndpoint;
 
   const grantTypesMocks = [
@@ -31,7 +32,7 @@ describe('Token Endpoint', () => {
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     grantTypesMocks.forEach((grantType) => container.bind<GrantTypeInterface>(GRANT_TYPE).toValue(grantType));
 

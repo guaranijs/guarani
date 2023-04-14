@@ -12,6 +12,7 @@ import { ClientAuthentication } from './client-authentication.type';
 import { ClientSecretBasicClientAuthentication } from './client-secret-basic.client-authentication';
 
 describe('Client Secret Basic Authentication Method', () => {
+  let container: DependencyInjectionContainer;
   let clientAuthentication: ClientSecretBasicClientAuthentication;
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
@@ -19,7 +20,7 @@ describe('Client Secret Basic Authentication Method', () => {
   });
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
     container.bind(ClientSecretBasicClientAuthentication).toSelf().asSingleton();

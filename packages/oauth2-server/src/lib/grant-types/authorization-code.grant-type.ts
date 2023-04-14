@@ -54,11 +54,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
     @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface,
     @Optional() private readonly idTokenHandler?: IdTokenHandler
-  ) {
-    if (this.pkces.length === 0) {
-      throw new TypeError('Missing PKCE Methods for Authorization Code Grant Type.');
-    }
-  }
+  ) {}
 
   /**
    * Creates the Access Token Response with the Access Token issued to the Client.

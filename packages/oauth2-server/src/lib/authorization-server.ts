@@ -2,6 +2,7 @@ import { Injectable, InjectAll } from '@guarani/di';
 
 import { EndpointInterface } from './endpoints/endpoint.interface';
 import { ENDPOINT } from './endpoints/endpoint.token';
+import { Endpoint } from './endpoints/endpoint.type';
 import { HttpRequest } from './http/http.request';
 import { HttpResponse } from './http/http.response';
 
@@ -23,7 +24,7 @@ export class AuthorizationServer {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async endpoint(name: string, request: HttpRequest): Promise<HttpResponse> {
+  public async endpoint(name: Endpoint, request: HttpRequest): Promise<HttpResponse> {
     const endpoint = this.endpoints.find((endpoint) => endpoint.name === name);
 
     if (endpoint === undefined) {

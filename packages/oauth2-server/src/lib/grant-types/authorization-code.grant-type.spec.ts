@@ -24,6 +24,7 @@ import { GrantType } from './grant-type.type';
 jest.mock<IdTokenHandler>('../handlers/id-token.handler');
 
 describe('Authorization Code Grant Type', () => {
+  let container: DependencyInjectionContainer;
   let grantType: AuthorizationCodeGrantType;
 
   const authorizationCodeServiceMock = jest.mocked<AuthorizationCodeServiceInterface>({
@@ -52,7 +53,7 @@ describe('Authorization Code Grant Type', () => {
   const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<AuthorizationCodeServiceInterface>(AUTHORIZATION_CODE_SERVICE).toValue(authorizationCodeServiceMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
@@ -72,20 +73,6 @@ describe('Authorization Code Grant Type', () => {
   describe('name', () => {
     it('should have "authorization_code" as its name.', () => {
       expect(grantType.name).toEqual<GrantType>('authorization_code');
-    });
-  });
-
-  describe('constructor', () => {
-    it('should throw when not providing any pkce methods.', () => {
-      expect(() => {
-        return new AuthorizationCodeGrantType(
-          [],
-          authorizationCodeServiceMock,
-          accessTokenServiceMock,
-          refreshTokenServiceMock,
-          idTokenHandlerMock
-        );
-      }).toThrow(TypeError);
     });
   });
 

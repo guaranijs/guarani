@@ -54,11 +54,7 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
     private readonly idTokenHandler: IdTokenHandler,
     @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
     @InjectAll(PKCE) private readonly pkces: PkceInterface[]
-  ) {
-    if (this.pkces.length === 0) {
-      throw new TypeError('Missing PKCE Methods for response_type "code id_token".');
-    }
-  }
+  ) {}
 
   /**
    * Creates and returns a Code Authorization Response and ID Token Response to the Client.

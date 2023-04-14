@@ -7,13 +7,14 @@ import { SETTINGS } from '../settings/settings.token';
 import { ScopeHandler } from './scope.handler';
 
 describe('Scope Handler', () => {
+  let container: DependencyInjectionContainer;
   let scopeHandler: ScopeHandler;
 
   const client = <Client>{ scopes: ['foo', 'bar'] };
   const settings = <Settings>{ scopes: ['foo', 'bar', 'baz', 'qux'] };
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind(ScopeHandler).toSelf().asSingleton();

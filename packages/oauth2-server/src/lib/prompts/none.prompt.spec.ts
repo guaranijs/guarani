@@ -54,6 +54,7 @@ const entitiesAndExpectedEntities: [Entities, Entities][] = [
 ];
 
 describe('None Prompt', () => {
+  let container: DependencyInjectionContainer;
   let prompt: NonePrompt;
 
   const sessionServiceMock = jest.mocked<SessionServiceInterface>({
@@ -71,7 +72,7 @@ describe('None Prompt', () => {
   });
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
     container.bind<ConsentServiceInterface>(CONSENT_SERVICE).toValue(consentServiceMock);

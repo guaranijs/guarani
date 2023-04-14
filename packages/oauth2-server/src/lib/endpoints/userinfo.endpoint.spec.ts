@@ -1,5 +1,7 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+
 import { OutgoingHttpHeaders } from 'http';
+
 import { AccessToken } from '../entities/access-token.entity';
 import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';

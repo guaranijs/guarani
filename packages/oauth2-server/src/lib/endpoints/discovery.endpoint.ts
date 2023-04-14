@@ -1,7 +1,8 @@
-import { getContainer, Inject, Injectable } from '@guarani/di';
+import { Inject, Injectable, LazyInject } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
 
 import { URL } from 'url';
+import { AuthorizationServer } from '../authorization-server';
 
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
@@ -10,7 +11,6 @@ import { DiscoveryResponse } from '../responses/discovery-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { EndpointInterface } from './endpoint.interface';
-import { ENDPOINT } from './endpoint.token';
 import { Endpoint } from './endpoint.type';
 
 /**
@@ -41,9 +41,13 @@ export class DiscoveryEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Discovery Endpoint.
    *
+   * @param authorizationServer Instance of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    */
-  public constructor(@Inject(SETTINGS) private readonly settings: Settings) {}
+  public constructor(
+    @LazyInject(() => AuthorizationServer) private readonly authorizationServer: AuthorizationServer,
+    @Inject(SETTINGS) private readonly settings: Settings
+  ) {}
 
   /**
    * Creates an OpenID Connect Discovery Response.
@@ -94,8 +98,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
    * @returns Full Url of the Endpoint.
    */
   private getEndpointPath(name: Endpoint): string | undefined {
-    const endpoints = getContainer('oauth2').resolveAll<EndpointInterface>(ENDPOINT);
-    const path = endpoints.find((endpoint) => endpoint.name === name)?.path;
+    const path = this.authorizationServer['endpoints'].find((endpoint) => endpoint.name === name)?.path;
 
     if (path === undefined) {
       return undefined;

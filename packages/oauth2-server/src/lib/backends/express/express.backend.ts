@@ -3,6 +3,7 @@ import { Injectable } from '@guarani/di';
 import { Request, RequestHandler, Response, Router } from 'express';
 
 import { AuthorizationServer } from '../../authorization-server';
+import { Endpoint } from '../../endpoints/endpoint.type';
 import { HttpRequest } from '../../http/http.request';
 import { HttpResponse } from '../../http/http.response';
 
@@ -34,7 +35,7 @@ export class ExpressBackend extends AuthorizationServer {
    *
    * @param endpoint Name of the Endpoint.
    */
-  private _mountEndpoint(endpoint: string): RequestHandler {
+  private _mountEndpoint(endpoint: Endpoint): RequestHandler {
     return async (request: Request, response: Response): Promise<void> => {
       const oauth2Request = this._createOAuth2Request(request);
       const oauth2Response = await this.endpoint(endpoint, oauth2Request);

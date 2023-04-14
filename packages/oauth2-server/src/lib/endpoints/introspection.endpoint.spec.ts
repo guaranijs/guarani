@@ -27,6 +27,7 @@ import { IntrospectionEndpoint } from './introspection.endpoint';
 jest.mock('../handlers/client-authentication.handler');
 
 describe('Introspection Endpoint', () => {
+  let container: DependencyInjectionContainer;
   let endpoint: IntrospectionEndpoint;
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
@@ -50,7 +51,7 @@ describe('Introspection Endpoint', () => {
   };
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
@@ -90,47 +91,48 @@ describe('Introspection Endpoint', () => {
 
   describe('supportedTokenTypeHints', () => {
     it('should have only the type "access_token" when not supporting refresh token introspection.', () => {
-      const opts = <Settings>{ enableRefreshTokenIntrospection: false };
-      const endpoint = new IntrospectionEndpoint(
-        clientAuthenticationHandlerMock,
-        opts,
-        accessTokenServiceMock,
-        refreshTokenServiceMock
-      );
+      const settings = <Settings>{ enableRefreshTokenIntrospection: false };
+
+      container.delete<Settings>(SETTINGS);
+      container.delete(IntrospectionEndpoint);
+
+      container.bind<Settings>(SETTINGS).toValue(settings);
+      container.bind(IntrospectionEndpoint).toSelf().asSingleton();
+
+      expect(() => (endpoint = container.resolve(IntrospectionEndpoint))).not.toThrow();
 
       expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['access_token']);
     });
 
     it('should have the types ["access_token", "refresh_token"] when supporting access token introspection.', () => {
-      const endpoint = new IntrospectionEndpoint(
-        clientAuthenticationHandlerMock,
-        settings,
-        accessTokenServiceMock,
-        refreshTokenServiceMock
-      );
-
       expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['access_token', 'refresh_token']);
     });
   });
 
   describe('constructor', () => {
     it('should throw when allowing refresh token introspection and the authorization server disables the usage of refresh tokens.', () => {
-      const opts = <Settings>{ grantTypes: ['authorization_code'], enableRefreshTokenIntrospection: true };
+      const settings = <Settings>{ grantTypes: ['authorization_code'], enableRefreshTokenIntrospection: true };
 
-      expect(() => {
-        return new IntrospectionEndpoint(
-          clientAuthenticationHandlerMock,
-          opts,
-          accessTokenServiceMock,
-          refreshTokenServiceMock
-        );
-      }).toThrow(new Error('The Authorization Server disabled using Refresh Tokens.'));
+      container.delete<Settings>(SETTINGS);
+      container.delete(IntrospectionEndpoint);
+
+      container.bind<Settings>(SETTINGS).toValue(settings);
+      container.bind(IntrospectionEndpoint).toSelf().asSingleton();
+
+      expect(() => container.resolve(IntrospectionEndpoint)).toThrow(
+        new Error('The Authorization Server disabled using Refresh Tokens.')
+      );
     });
 
     it('should throw when allowing refresh token introspection without a refresh token service.', () => {
-      expect(() => {
-        return new IntrospectionEndpoint(clientAuthenticationHandlerMock, settings, accessTokenServiceMock, undefined);
-      }).toThrow(new Error('Cannot enable Refresh Token Introspection without a Refresh Token Service.'));
+      container.delete<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE);
+      container.delete(IntrospectionEndpoint);
+
+      container.bind(IntrospectionEndpoint).toSelf().asSingleton();
+
+      expect(() => container.resolve(IntrospectionEndpoint)).toThrow(
+        new Error('Cannot enable Refresh Token Introspection without a Refresh Token Service.')
+      );
     });
   });
 

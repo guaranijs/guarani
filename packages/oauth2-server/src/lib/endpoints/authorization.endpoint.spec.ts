@@ -34,10 +34,17 @@ jest.mock('../handlers/scope.handler');
 jest.mock('../handlers/interaction.handler');
 
 describe('Authorization Endpoint', () => {
+  let container: DependencyInjectionContainer;
   let endpoint: AuthorizationEndpoint;
 
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
   const interactionHandlerMock = jest.mocked(InteractionHandler.prototype, true);
+
+  const settings = <Settings>{
+    issuer: 'https://server.example.com',
+    scopes: ['foo', 'bar', 'baz', 'qux'],
+    userInteraction: { consentUrl: '/auth/consent', errorUrl: '/oauth/error', loginUrl: '/auth/login' },
+  };
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
     findOne: jest.fn(),
@@ -72,17 +79,14 @@ describe('Authorization Endpoint', () => {
     jest.mocked<ResponseModeInterface>({ name: 'form_post', createHttpResponse: jest.fn() }),
   ];
 
-  const settings = <Settings>{
-    issuer: 'https://server.example.com',
-    scopes: ['foo', 'bar', 'baz', 'qux'],
-    userInteraction: { consentUrl: '/auth/consent', errorUrl: '/oauth/error', loginUrl: '/auth/login' },
-  };
-
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(ScopeHandler).toValue(scopeHandlerMock);
     container.bind(InteractionHandler).toValue(interactionHandlerMock);
+    container.bind<Settings>(SETTINGS).toValue(settings);
+    container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
+    container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
 
     responseTypesMocks.forEach((responseType) => {
       container.bind<ResponseTypeInterface>(RESPONSE_TYPE).toValue(responseType);
@@ -92,9 +96,6 @@ describe('Authorization Endpoint', () => {
       container.bind<ResponseModeInterface>(RESPONSE_MODE).toValue(responseMode);
     });
 
-    container.bind<Settings>(SETTINGS).toValue(settings);
-    container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
-    container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind(AuthorizationEndpoint).toSelf().asSingleton();
 
     endpoint = container.resolve(AuthorizationEndpoint);
@@ -124,17 +125,17 @@ describe('Authorization Endpoint', () => {
 
   describe('constructor', () => {
     it('should throw when not providing a user interaction object.', () => {
-      expect(() => {
-        return new AuthorizationEndpoint(
-          <ScopeHandler>{},
-          <InteractionHandler>{},
-          responseTypesMocks,
-          responseModesMocks,
-          <Settings>{},
-          clientServiceMock,
-          grantServiceMock
-        );
-      }).toThrow(new TypeError('Missing User Interaction options.'));
+      const settings = <Settings>{ issuer: 'https://server.example.com', scopes: ['foo', 'bar', 'baz', 'qux'] };
+
+      container.delete<Settings>(SETTINGS);
+      container.delete(AuthorizationEndpoint);
+
+      container.bind<Settings>(SETTINGS).toValue(settings);
+      container.bind(AuthorizationEndpoint).toSelf().asSingleton();
+
+      expect(() => container.resolve(AuthorizationEndpoint)).toThrow(
+        new TypeError('Missing User Interaction options.')
+      );
     });
   });
 

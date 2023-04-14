@@ -5,10 +5,11 @@ import { Display } from './display.type';
 import { TouchDisplay } from './touch.display';
 
 describe('Touch Display', () => {
+  let container: DependencyInjectionContainer;
   let display: TouchDisplay;
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(TouchDisplay).toSelf().asSingleton();
 

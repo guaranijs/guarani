@@ -17,6 +17,7 @@ import { CodeResponseType } from './code.response-type';
 import { ResponseType } from './response-type.type';
 
 describe('Code Response Type', () => {
+  let container: DependencyInjectionContainer;
   let responseType: CodeResponseType;
 
   const authorizationCodeServiceMock = jest.mocked<AuthorizationCodeServiceInterface>({
@@ -31,21 +32,13 @@ describe('Code Response Type', () => {
   ];
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<AuthorizationCodeServiceInterface>(AUTHORIZATION_CODE_SERVICE).toValue(authorizationCodeServiceMock);
     pkces.forEach((pkce) => container.bind<PkceInterface>(PKCE).toValue(pkce));
     container.bind(CodeResponseType).toSelf();
 
     responseType = container.resolve(CodeResponseType);
-  });
-
-  describe('constructor', () => {
-    it('should throw when not providing any pkce methods.', () => {
-      expect(() => new CodeResponseType(<AuthorizationCodeServiceInterface>authorizationCodeServiceMock, [])).toThrow(
-        TypeError
-      );
-    });
   });
 
   describe('name', () => {

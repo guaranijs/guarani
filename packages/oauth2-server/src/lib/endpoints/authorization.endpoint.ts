@@ -15,7 +15,6 @@ import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
-import { Prompt } from '../prompts/prompt.type';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../response-modes/response-mode.token';
@@ -103,7 +102,6 @@ export class AuthorizationEndpoint implements EndpointInterface {
     let client: Client;
     let responseType: ResponseTypeInterface;
     let responseMode: ResponseModeInterface;
-    let prompts: Prompt[];
 
     try {
       this.checkParameters(parameters);
@@ -119,8 +117,6 @@ export class AuthorizationEndpoint implements EndpointInterface {
         parameters.response_mode ?? responseType.defaultResponseMode,
         parameters.state
       );
-
-      prompts = this.getPrompts(parameters.prompt, parameters.state);
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);
       return this.handleFatalAuthorizationError(error);
@@ -129,8 +125,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
     const entitiesOrInteractionResponse = await this.interactionHandler.getEntitiesOrHttpResponse(
       parameters,
       cookies,
-      client,
-      prompts
+      client
     );
 
     if (entitiesOrInteractionResponse instanceof HttpResponse) {
@@ -349,30 +344,6 @@ export class AuthorizationEndpoint implements EndpointInterface {
     }
 
     return responseMode;
-  }
-
-  /**
-   * Returns a list of the Prompts requested by the Client.
-   *
-   * @param prompt Prompts requested by the Client.
-   * @param state Client State prior to the Authorization Request.
-   * @returns Parsed Prompt values.
-   */
-  private getPrompts(prompt: string | undefined, state: string | undefined): Prompt[] {
-    const supportedPrompts: Prompt[] = ['consent', 'login', 'none'];
-    const prompts = <Prompt[]>(prompt?.split(' ') ?? []);
-
-    prompts.forEach((prompt) => {
-      if (!supportedPrompts.includes(prompt)) {
-        throw new InvalidRequestException({ description: `Unsupported prompt "${prompt}".`, state });
-      }
-    });
-
-    if (prompts.includes('none') && prompts.length !== 1) {
-      throw new InvalidRequestException({ description: 'The prompt "none" must be used by itself.', state });
-    }
-
-    return prompts;
   }
 
   /**

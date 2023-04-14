@@ -477,53 +477,6 @@ describe('Authorization Endpoint', () => {
       );
     });
 
-    it('should throw when requesting an unsupported prompt.', async () => {
-      request.query.prompt = 'unknown';
-
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
-        id: 'client_id',
-        redirectUris: ['https://example.com/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar'],
-      });
-
-      const error = new InvalidRequestException({
-        description: 'Unsupported prompt "unknown".',
-        state: 'client_state',
-      });
-
-      const parameters = new URLSearchParams(error.toJSON());
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
-      );
-    });
-
-    it.each(['consent none', 'login none', 'none consent', 'none login'])(
-      'should return an error response when requesting an invalid "prompt" combination.',
-      async (prompt) => {
-        request.query.prompt = prompt;
-
-        clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
-          id: 'client_id',
-          redirectUris: ['https://example.com/callback'],
-          responseTypes: ['code'],
-          scopes: ['foo', 'bar'],
-        });
-
-        const error = new InvalidRequestException({
-          description: 'The prompt "none" must be used by itself.',
-          state: 'client_state',
-        });
-
-        const parameters = new URLSearchParams(error.toJSON());
-
-        await expect(endpoint.handle(request)).resolves.toStrictEqual(
-          new HttpResponse().redirect(`https://server.example.com/oauth/error?${parameters.toString()}`)
-        );
-      }
-    );
-
     it('should return a valid authorization response.', async () => {
       Reflect.set(settings, 'enableAuthorizationResponseIssuerIdentifier', true);
 

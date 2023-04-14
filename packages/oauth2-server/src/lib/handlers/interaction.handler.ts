@@ -72,18 +72,18 @@ export class InteractionHandler {
    * @param parameters Parameters of the Authorization Request.
    * @param cookies Cookies of the Http Authorization Request.
    * @param client Client requesting authorization.
-   * @param prompts Prompts requested by the Client.
    * @returns Grant, Session and Consent Entities or Http Interaction Response.
    */
   public async getEntitiesOrHttpResponse(
     parameters: AuthorizationRequest,
     cookies: Record<string, any>,
-    client: Client,
-    prompts: Prompt[]
+    client: Client
   ): Promise<HttpResponse | [Grant | null, Session, Consent]> {
     let display: DisplayInterface;
+    let prompts: PromptInterface[];
 
     try {
+      prompts = this.getPrompts(parameters.prompt, parameters.state);
       display = this.getDisplay(parameters.display ?? 'page', parameters.state);
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);
@@ -95,11 +95,7 @@ export class InteractionHandler {
     let consent = await this.findConsent(cookies);
 
     try {
-      for (const prompt of this.prompts) {
-        if (!prompts.includes(prompt.name)) {
-          continue;
-        }
-
+      for (const prompt of prompts) {
         [grant, session, consent] = await prompt.handle(parameters, client, grant, session, consent);
       }
     } catch (exc: unknown) {
@@ -240,6 +236,30 @@ export class InteractionHandler {
     }
 
     return display;
+  }
+
+  /**
+   * Returns the Prompts requested by the Client.
+   *
+   * @param prompt Prompts requested by the Client.
+   * @param state Client State prior to the Authorization Request.
+   * @returns Prompts requested by the Client.
+   */
+  private getPrompts(prompt: string | undefined, state: string | undefined): PromptInterface[] {
+    const requestedPrompts = <Prompt[]>(prompt?.split(' ') ?? []);
+    const supportedPromptsNames = this.prompts.map((prompt) => prompt.name);
+
+    requestedPrompts.forEach((prompt) => {
+      if (!supportedPromptsNames.includes(prompt)) {
+        throw new InvalidRequestException({ description: `Unsupported prompt "${prompt}".`, state });
+      }
+    });
+
+    if (requestedPrompts.includes('none') && requestedPrompts.length !== 1) {
+      throw new InvalidRequestException({ description: 'The prompt "none" must be used by itself.', state });
+    }
+
+    return this.prompts.filter((prompt) => requestedPrompts.includes(prompt.name));
   }
 
   /**

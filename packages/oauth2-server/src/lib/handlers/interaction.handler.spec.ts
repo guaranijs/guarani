@@ -123,7 +123,7 @@ describe('Interaction Handler', () => {
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, ['none'])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse().redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
       );
     });
@@ -136,7 +136,7 @@ describe('Interaction Handler', () => {
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, ['none'])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse().redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
       );
     });
@@ -151,7 +151,7 @@ describe('Interaction Handler', () => {
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, ['none'])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -168,7 +168,7 @@ describe('Interaction Handler', () => {
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, ['none'])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null, 'guarani:consent': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -188,7 +188,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -211,7 +211,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -240,7 +240,7 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -267,7 +267,7 @@ describe('Interaction Handler', () => {
       const error = new InvalidRequestException({ description: 'Expired Grant.', state: 'client_state' });
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -298,7 +298,7 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -323,7 +323,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -356,7 +356,7 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -390,7 +390,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': grant.session!.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -427,7 +427,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -461,7 +461,7 @@ describe('Interaction Handler', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toEqual<Entities>([
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toEqual<Entities>([
         grant,
         session,
         grant.consent!,
@@ -492,7 +492,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -528,7 +528,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -564,7 +564,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -597,7 +597,7 @@ describe('Interaction Handler', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toEqual<Entities>([
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toEqual<Entities>([
         grant,
         session,
         grant.consent!,
@@ -628,7 +628,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -656,7 +656,7 @@ describe('Interaction Handler', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toEqual<Entities>([
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toEqual<Entities>([
         grant,
         grant.session!,
         consent,
@@ -688,7 +688,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -725,7 +725,7 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -760,7 +760,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -797,7 +797,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -824,7 +824,7 @@ describe('Interaction Handler', () => {
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
       idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(true);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client, [])).resolves.toEqual<Entities>([
+      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toEqual<Entities>([
         null,
         session,
         consent,

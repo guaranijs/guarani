@@ -29,12 +29,13 @@ const rsaKey = new RsaKey({
 });
 
 describe('JSON Web Key Set Endpoint', () => {
+  let container: DependencyInjectionContainer;
   let endpoint: JsonWebKeySetEndpoint;
 
   const jsonWebKeySet = new JsonWebKeySet([ecKey, rsaKey]);
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(JsonWebKeySet).toValue(jsonWebKeySet);
     container.bind(JsonWebKeySetEndpoint).toSelf().asSingleton();

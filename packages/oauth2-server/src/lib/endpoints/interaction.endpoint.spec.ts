@@ -15,6 +15,7 @@ import { Endpoint } from './endpoint.type';
 import { InteractionEndpoint } from './interaction.endpoint';
 
 describe('Interaction Endpoint', () => {
+  let container: DependencyInjectionContainer;
   let endpoint: InteractionEndpoint;
 
   const interactionTypesMock = [
@@ -23,7 +24,7 @@ describe('Interaction Endpoint', () => {
   ];
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     interactionTypesMock.forEach((interactionType) => {
       container.bind<InteractionTypeInterface>(INTERACTION_TYPE).toValue(interactionType);

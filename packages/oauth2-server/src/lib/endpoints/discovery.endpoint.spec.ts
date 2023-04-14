@@ -1,4 +1,5 @@
-import { getContainer } from '@guarani/di';
+import { DependencyInjectionContainer } from '@guarani/di';
+import { AuthorizationServer } from '../authorization-server';
 
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
@@ -12,6 +13,7 @@ import { ENDPOINT } from './endpoint.token';
 import { Endpoint } from './endpoint.type';
 
 describe('Discovery Endpoint', () => {
+  let container: DependencyInjectionContainer;
   let endpoint: DiscoveryEndpoint;
 
   const settings = <Settings>{
@@ -42,11 +44,12 @@ describe('Discovery Endpoint', () => {
   ];
 
   beforeEach(() => {
-    const container = getContainer('oauth2');
+    container = new DependencyInjectionContainer();
 
     endpoints.forEach((endpoint) => container.bind<EndpointInterface>(ENDPOINT).toValue(endpoint));
 
     container.bind<Settings>(SETTINGS).toValue(settings);
+    container.bind(AuthorizationServer).toSelf().asSingleton();
     container.bind(DiscoveryEndpoint).toSelf().asSingleton();
 
     endpoint = container.resolve(DiscoveryEndpoint);

@@ -63,20 +63,20 @@ export class AuthorizationEndpoint implements EndpointInterface {
    *
    * @param scopeHandler Instance of the Scope Handler.
    * @param interactionHandler Instance of the Interaction Handler.
-   * @param responseTypes Response Types registered at the Authorization Server.
-   * @param responseModes Response Modes registered at the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param clientService Instance of the Client Service.
    * @param grantService Instance of the Grant Service.
+   * @param responseTypes Response Types registered at the Authorization Server.
+   * @param responseModes Response Modes registered at the Authorization Server.
    */
   public constructor(
     private readonly scopeHandler: ScopeHandler,
     private readonly interactionHandler: InteractionHandler,
-    @InjectAll(RESPONSE_TYPE) private readonly responseTypes: ResponseTypeInterface[],
-    @InjectAll(RESPONSE_MODE) private readonly responseModes: ResponseModeInterface[],
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(CLIENT_SERVICE) private readonly clientService: ClientServiceInterface,
-    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface
+    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
+    @InjectAll(RESPONSE_TYPE) private readonly responseTypes: ResponseTypeInterface[],
+    @InjectAll(RESPONSE_MODE) private readonly responseModes: ResponseModeInterface[]
   ) {
     if (this.settings.userInteraction === undefined) {
       throw new TypeError('Missing User Interaction options.');
@@ -252,7 +252,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param state Client State prior to the Authorization Request.
    * @returns Client based on the provided Client Identifier.
    */
-  private async getClient(clientId: string, state?: string): Promise<Client> {
+  private async getClient(clientId: string, state: string | undefined): Promise<Client> {
     const client = await this.clientService.findOne(clientId);
 
     if (client === null) {
@@ -269,7 +269,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param state Client State prior to the Authorization Request.
    * @returns Response Type.
    */
-  private getResponseType(name: ResponseType, state?: string): ResponseTypeInterface {
+  private getResponseType(name: ResponseType, state: string | undefined): ResponseTypeInterface {
     name = <ResponseType>name.split(' ').sort().join(' ');
 
     const responseType = this.responseTypes.find((responseType) => responseType.name === name);
@@ -288,7 +288,11 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param responseType Response Type requested by the Client.
    * @param state Client State prior to the Authorization Request.
    */
-  private checkClientResponseType(client: Client, responseType: ResponseTypeInterface, state?: string): void {
+  private checkClientResponseType(
+    client: Client,
+    responseType: ResponseTypeInterface,
+    state: string | undefined
+  ): void {
     if (!client.responseTypes.includes(responseType.name)) {
       throw new UnauthorizedClientException({
         description: `This Client is not allowed to request the response_type "${responseType.name}".`,
@@ -304,7 +308,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param redirectUri Redirect URI provided by the Client.
    * @param state Client State prior to the Authorization Request.
    */
-  private checkClientRedirectUri(client: Client, redirectUri: string, state?: string): void {
+  private checkClientRedirectUri(client: Client, redirectUri: string, state: string | undefined): void {
     if (!client.redirectUris.includes(redirectUri)) {
       throw new AccessDeniedException({ description: 'Invalid Redirect URI.', state });
     }
@@ -317,7 +321,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param scope Scope requested by the Client.
    * @param state Client State prior to the Authorization Request.
    */
-  private checkClientScope(client: Client, scope: string, state?: string): void {
+  private checkClientScope(client: Client, scope: string, state: string | undefined): void {
     this.scopeHandler.checkRequestedScope(scope, state);
 
     scope.split(' ').forEach((requestedScope) => {
@@ -337,7 +341,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param state Client State prior to the Authorization Request.
    * @returns Response Mode.
    */
-  private getResponseMode(name: ResponseMode, state?: string): ResponseModeInterface {
+  private getResponseMode(name: ResponseMode, state: string | undefined): ResponseModeInterface {
     const responseMode = this.responseModes.find((responseMode) => responseMode.name === name);
 
     if (responseMode === undefined) {

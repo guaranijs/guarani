@@ -4,10 +4,11 @@ import { Display } from './display.type';
 import { PageDisplay } from './page.display';
 
 describe('Page Display', () => {
+  let container: DependencyInjectionContainer;
   let display: PageDisplay;
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(PageDisplay).toSelf().asSingleton();
 

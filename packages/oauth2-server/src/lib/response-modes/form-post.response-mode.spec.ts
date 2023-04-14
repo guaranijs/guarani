@@ -23,23 +23,28 @@ const body = `<!DOCTYPE html>
 </html>`;
 
 describe('Form Post Response Mode', () => {
+  let container: DependencyInjectionContainer;
   let responseMode: FormPostResponseMode;
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(FormPostResponseMode).toSelf().asSingleton();
 
     responseMode = container.resolve(FormPostResponseMode);
   });
 
-  it('should have "form_post" as its name.', () => {
-    expect(responseMode.name).toEqual<ResponseMode>('form_post');
+  describe('name', () => {
+    it('should have "form_post" as its value.', () => {
+      expect(responseMode.name).toEqual<ResponseMode>('form_post');
+    });
   });
 
-  it('should create a http response with a populated html body.', () => {
-    expect(
-      responseMode.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })
-    ).toStrictEqual(new HttpResponse().html(body));
+  describe('createHttpResponse()', () => {
+    it('should create a http response with a populated html body.', () => {
+      expect(
+        responseMode.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })
+      ).toStrictEqual(new HttpResponse().html(body));
+    });
   });
 });

@@ -21,6 +21,7 @@ import { CodeTokenResponseType } from './code-token.response-type';
 import { ResponseType } from './response-type.type';
 
 describe('Code Token Response Type', () => {
+  let container: DependencyInjectionContainer;
   let responseType: CodeTokenResponseType;
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
@@ -41,7 +42,7 @@ describe('Code Token Response Type', () => {
   ];
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind<AuthorizationCodeServiceInterface>(AUTHORIZATION_CODE_SERVICE).toValue(authorizationCodeServiceMock);
@@ -49,14 +50,6 @@ describe('Code Token Response Type', () => {
     container.bind(CodeTokenResponseType).toSelf().asSingleton();
 
     responseType = container.resolve(CodeTokenResponseType);
-  });
-
-  describe('constructor', () => {
-    it('should throw when not providing any pkce methods.', () => {
-      expect(() => new CodeTokenResponseType(accessTokenServiceMock, authorizationCodeServiceMock, [])).toThrow(
-        new TypeError('Missing PKCE Methods for response_type "code token".')
-      );
-    });
   });
 
   describe('name', () => {

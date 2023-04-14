@@ -11,6 +11,7 @@ import { ClientAuthentication } from './client-authentication.type';
 import { ClientSecretJwtClientAuthentication } from './client-secret-jwt.client-authentication';
 
 describe('Client Secret JWT Client Authentication Method', () => {
+  let container: DependencyInjectionContainer;
   let clientAuthentication: ClientSecretJwtClientAuthentication;
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
@@ -20,7 +21,7 @@ describe('Client Secret JWT Client Authentication Method', () => {
   const settings = <Settings>{};
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);

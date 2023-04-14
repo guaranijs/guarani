@@ -26,6 +26,7 @@ import { LoginDecision } from './login-decision.type';
 import { LoginInteractionType } from './login.interaction-type';
 
 describe('Login Interaction Type', () => {
+  let container: DependencyInjectionContainer;
   let interactionType: LoginInteractionType;
 
   const sessionServiceMock = jest.mocked<SessionServiceInterface>({
@@ -51,7 +52,7 @@ describe('Login Interaction Type', () => {
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);

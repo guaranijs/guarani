@@ -16,6 +16,7 @@ import { Prompt } from './prompt.type';
 type Entities = [Grant | null, Session | null, Consent | null];
 
 describe('Login Prompt', () => {
+  let container: DependencyInjectionContainer;
   let prompt: LoginPrompt;
 
   const grantServiceMock = jest.mocked<GrantServiceInterface>({
@@ -35,7 +36,7 @@ describe('Login Prompt', () => {
   });
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);

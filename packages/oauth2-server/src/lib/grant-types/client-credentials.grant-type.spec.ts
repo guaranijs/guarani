@@ -14,6 +14,7 @@ import { ClientCredentialsGrantType } from './client-credentials.grant-type';
 import { GrantType } from './grant-type.type';
 
 describe('Client Credentials Grant Type', () => {
+  let container: DependencyInjectionContainer;
   let grantType: ClientCredentialsGrantType;
 
   const client = <Client>{ scopes: ['foo', 'bar', 'baz'] };
@@ -27,7 +28,7 @@ describe('Client Credentials Grant Type', () => {
   const settings = <Settings>{ scopes: ['foo', 'bar', 'baz', 'qux'] };
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);

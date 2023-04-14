@@ -25,6 +25,7 @@ jest.mock('../handlers/client-authentication.handler');
 jest.mock('../handlers/scope.handler');
 
 describe('Device Authorization Endpoint', () => {
+  let container: DependencyInjectionContainer;
   let endpoint: DeviceAuthorizationEndpoint;
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
@@ -41,7 +42,7 @@ describe('Device Authorization Endpoint', () => {
   const settings = <Settings>{ scopes: ['foo', 'bar', 'baz', 'qux'], devicePollingInterval: 5 };
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
     container.bind(ScopeHandler).toValue(scopeHandlerMock);

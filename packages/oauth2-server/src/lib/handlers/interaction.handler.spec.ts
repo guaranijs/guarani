@@ -32,6 +32,7 @@ jest.mock('./id-token.handler');
 type Entities = [Grant | null, Session, Consent];
 
 describe('Interaction Handler', () => {
+  let container: DependencyInjectionContainer;
   let handler: InteractionHandler;
 
   const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
@@ -73,7 +74,7 @@ describe('Interaction Handler', () => {
   });
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(IdTokenHandler).toValue(idTokenHandlerMock);
     promptsMocks.forEach((promptMock) => container.bind<PromptInterface>(PROMPT).toValue(promptMock));
@@ -93,17 +94,15 @@ describe('Interaction Handler', () => {
 
   describe('constructor', () => {
     it('should throw when not providing a user interaction object.', () => {
-      expect(() => {
-        return new InteractionHandler(
-          idTokenHandlerMock,
-          promptsMocks,
-          displaysMocks,
-          <Settings>{},
-          grantServiceMock,
-          sessionServiceMock,
-          consentServiceMock
-        );
-      }).toThrow(new TypeError('Missing User Interaction options.'));
+      const settings = <Settings>{};
+
+      container.delete<Settings>(SETTINGS);
+      container.delete(InteractionHandler);
+
+      container.bind<Settings>(SETTINGS).toValue(settings);
+      container.bind(InteractionHandler).toSelf().asSingleton();
+
+      expect(() => container.resolve(InteractionHandler)).toThrow(new TypeError('Missing User Interaction options.'));
     });
   });
 

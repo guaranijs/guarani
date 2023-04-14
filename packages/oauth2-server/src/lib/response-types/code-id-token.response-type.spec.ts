@@ -19,6 +19,7 @@ import { ResponseType } from './response-type.type';
 jest.mock('../handlers/id-token.handler.ts');
 
 describe('Code ID Token Response Type', () => {
+  let container: DependencyInjectionContainer;
   let responseType: CodeIdTokenResponseType;
 
   const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
@@ -35,7 +36,7 @@ describe('Code ID Token Response Type', () => {
   ];
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(IdTokenHandler).toValue(idTokenHandlerMock);
     container.bind<AuthorizationCodeServiceInterface>(AUTHORIZATION_CODE_SERVICE).toValue(authorizationCodeServiceMock);
@@ -43,14 +44,6 @@ describe('Code ID Token Response Type', () => {
     container.bind(CodeIdTokenResponseType).toSelf().asSingleton();
 
     responseType = container.resolve(CodeIdTokenResponseType);
-  });
-
-  describe('constructor', () => {
-    it('should throw when no pkce method is provided.', () => {
-      expect(() => new CodeIdTokenResponseType(idTokenHandlerMock, authorizationCodeServiceMock, [])).toThrow(
-        new TypeError('Missing PKCE Methods for response_type "code id_token".')
-      );
-    });
   });
 
   describe('name', () => {

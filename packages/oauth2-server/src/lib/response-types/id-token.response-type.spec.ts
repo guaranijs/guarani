@@ -15,12 +15,13 @@ import { ResponseType } from './response-type.type';
 jest.mock('../handlers/id-token.handler');
 
 describe('ID Token Response Type', () => {
+  let container: DependencyInjectionContainer;
   let responseType: IdTokenResponseType;
 
   const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(IdTokenHandler).toValue(idTokenHandlerMock);
     container.bind(IdTokenResponseType).toSelf().asSingleton();

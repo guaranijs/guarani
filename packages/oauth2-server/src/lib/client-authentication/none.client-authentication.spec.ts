@@ -9,6 +9,7 @@ import { ClientAuthentication } from './client-authentication.type';
 import { NoneClientAuthentication, NoneCredentials } from './none.client-authentication';
 
 describe('None Client Authentication Method', () => {
+  let container: DependencyInjectionContainer;
   let clientAuthentication: NoneClientAuthentication;
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
@@ -16,7 +17,7 @@ describe('None Client Authentication Method', () => {
   });
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
     container.bind(NoneClientAuthentication).toSelf().asSingleton();

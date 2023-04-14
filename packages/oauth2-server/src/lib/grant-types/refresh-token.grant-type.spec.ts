@@ -19,6 +19,7 @@ import { GrantType } from './grant-type.type';
 import { RefreshTokenGrantType } from './refresh-token.grant-type';
 
 describe('Refresh Token Grant Type', () => {
+  let container: DependencyInjectionContainer;
   let grantType: RefreshTokenGrantType;
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
@@ -36,7 +37,7 @@ describe('Refresh Token Grant Type', () => {
   const settings = <Settings>{ scopes: ['foo', 'bar', 'baz', 'qux'] };
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);

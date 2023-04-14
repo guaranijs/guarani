@@ -21,6 +21,7 @@ import { GrantType } from './grant-type.type';
 import { ResourceOwnerPasswordCredentialsGrantType } from './resource-owner-password-credentials.grant-type';
 
 describe('Resource Owner Password Credentials Grant Type', () => {
+  let container: DependencyInjectionContainer;
   let grantType: ResourceOwnerPasswordCredentialsGrantType;
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
@@ -46,7 +47,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
   const settings = <Settings>{ scopes: ['foo', 'bar', 'baz', 'qux'] };
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
@@ -60,9 +61,13 @@ describe('Resource Owner Password Credentials Grant Type', () => {
 
   describe('constructor', () => {
     it(`should reject not implementing user service's "findByResourceOwnerCredentials()".`, () => {
-      expect(() => {
-        return new ResourceOwnerPasswordCredentialsGrantType(<ScopeHandler>{}, accessTokenServiceMock, <any>{});
-      }).toThrow(
+      container.delete<UserServiceInterface>(USER_SERVICE);
+      container.delete(ResourceOwnerPasswordCredentialsGrantType);
+
+      container.bind<UserServiceInterface>(USER_SERVICE).toValue({ findOne: jest.fn() });
+      container.bind(ResourceOwnerPasswordCredentialsGrantType).toSelf().asSingleton();
+
+      expect(() => container.resolve(ResourceOwnerPasswordCredentialsGrantType)).toThrow(
         new TypeError(
           'Missing implementation of required method "UserServiceInterface.findByResourceOwnerCredentials".'
         )

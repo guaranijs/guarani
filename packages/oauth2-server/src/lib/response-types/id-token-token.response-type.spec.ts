@@ -19,6 +19,7 @@ import { ResponseType } from './response-type.type';
 jest.mock('../handlers/id-token.handler');
 
 describe('ID Token Token Response Type', () => {
+  let container: DependencyInjectionContainer;
   let responseType: IdTokenTokenResponseType;
 
   const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
@@ -30,7 +31,7 @@ describe('ID Token Token Response Type', () => {
   });
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(IdTokenHandler).toValue(idTokenHandlerMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);

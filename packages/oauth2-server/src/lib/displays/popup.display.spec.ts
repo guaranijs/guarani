@@ -26,10 +26,11 @@ const body = `
 `;
 
 describe('Page Display', () => {
+  let container: DependencyInjectionContainer;
   let display: PopupDisplay;
 
   beforeEach(() => {
-    const container = new DependencyInjectionContainer();
+    container = new DependencyInjectionContainer();
 
     container.bind(PopupDisplay).toSelf().asSingleton();
 

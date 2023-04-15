@@ -80,6 +80,8 @@ import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { AuthorizationRequestValidator } from '../validators/authorization/authorization-request.validator';
+import { authorizationRequestValidatorRegistry } from '../validators/authorization/authorization-request.validator.registry';
 import { DeviceAuthorizationRequestValidator } from '../validators/device-authorization-request.validator';
 import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
 import { RevocationRequestValidator } from '../validators/revocation-request.validator';
@@ -167,8 +169,8 @@ export class AuthorizationServerFactory {
       responseModes: this.authorizationServerOptions.responseModes ?? <ResponseMode[]>Object.keys(responseModeRegistry),
       pkces: this.authorizationServerOptions.pkces ?? <Pkce[]>Object.keys(pkceRegistry),
       displays: <Display[]>Object.keys(displayRegistry),
-      acrValues: this.authorizationServerOptions.acrValues,
-      uiLocales: this.authorizationServerOptions.uiLocales,
+      acrValues: this.authorizationServerOptions.acrValues ?? [],
+      uiLocales: this.authorizationServerOptions.uiLocales ?? [],
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
       idTokenSignatureAlgorithms: this.authorizationServerOptions.idTokenSignatureAlgorithms ?? ['RS256'],
@@ -396,6 +398,13 @@ export class AuthorizationServerFactory {
 
     if (this.settings.grantTypes.includes('urn:ietf:params:oauth:grant-type:device_code')) {
       this.container.bind(DeviceAuthorizationRequestValidator).toSelf().asSingleton();
+    }
+
+    if (this.container.isRegistered<ResponseTypeInterface>(RESPONSE_TYPE)) {
+      Object.entries(authorizationRequestValidatorRegistry)
+        .filter(([name]) => this.settings.responseTypes.includes(<ResponseType>name))
+        .map(([, validator]) => validator)
+        .forEach((validator) => this.container.bind(AuthorizationRequestValidator).toClass(validator).asSingleton());
     }
   }
 

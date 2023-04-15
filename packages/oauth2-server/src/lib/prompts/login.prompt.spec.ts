@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { Client } from '../entities/client.entity';
+import { AuthorizationContext } from '../context/authorization/authorization.context';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
@@ -11,6 +11,7 @@ import { GRANT_SERVICE } from '../services/grant.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { LoginPrompt } from './login.prompt';
+import { PromptInterface } from './prompt.interface';
 import { Prompt } from './prompt.type';
 
 type Entities = [Grant | null, Session | null, Consent | null];
@@ -56,42 +57,39 @@ describe('Login Prompt', () => {
   });
 
   describe('handle()', () => {
-    let parameters: AuthorizationRequest;
+    let context: AuthorizationContext<AuthorizationRequest>;
 
     beforeEach(() => {
-      parameters = {
-        response_type: 'code',
-        client_id: 'client_id',
-        redirect_uri: 'https://example.com/callback',
-        scope: 'foo bar',
-        state: 'client_state',
-        prompt: 'login',
+      context = <AuthorizationContext<AuthorizationRequest>>{
+        parameters: {
+          response_type: 'code',
+          client_id: 'client_id',
+          redirect_uri: 'https://example.com/callback',
+          scope: 'foo bar',
+          state: 'client_state',
+          prompt: 'login',
+        },
+        client: { id: 'client_id' },
       };
     });
 
     it.each<Consent | null>([null, <Consent>{ id: 'consent_id' }])(
-      'should return [null, null, null] when performing a fresh authentication.',
+      'should return null actors when performing a fresh authentication.',
       async (consent) => {
-        const client = <Client>{ id: 'client_id' };
         const grant = null;
         const session = null;
 
-        await expect(prompt.handle(parameters, client, grant, session, consent)).resolves.toEqual<Entities>([
-          null,
-          null,
-          consent,
-        ]);
+        await expect(prompt.handle(context, grant, session, consent)).resolves.toEqual<Entities>([null, null, consent]);
       }
     );
 
     it.each<Consent | null>([null, <Consent>{ id: 'consent_id' }])(
       'should return a simple grant when accessing the login endpoint but not authenticating.',
       async (consent) => {
-        const client = <Client>{ id: 'client_id' };
         const grant = <Grant>{ id: 'grant_id' };
         const session = null;
 
-        await expect(prompt.handle(parameters, client, grant, session, consent)).resolves.toEqual<Entities>([
+        await expect(prompt.handle(context, grant, session, consent)).resolves.toEqual<Entities>([
           grant,
           null,
           consent,
@@ -100,12 +98,11 @@ describe('Login Prompt', () => {
     );
 
     it('should throw after authenticating at the login endpoint with no previous consent.', async () => {
-      const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{ id: 'grant_id', session: { id: 'session_id' } };
       const session = null;
       const consent = null;
 
-      await expect(prompt.handle(parameters, client, grant, session, consent)).rejects.toThrow(
+      await expect(prompt.handle(context, grant, session, consent)).rejects.toThrow(
         new ConsentRequiredException({ state: 'client_state' })
       );
 
@@ -117,14 +114,18 @@ describe('Login Prompt', () => {
     });
 
     it('should not throw when authenticating with no previous consent if the client requested the prompt "login consent".', async () => {
-      Reflect.set(parameters, 'prompt', 'login consent');
+      const prompts = [
+        jest.mocked<PromptInterface>({ name: 'login', handle: jest.fn() }),
+        jest.mocked<PromptInterface>({ name: 'consent', handle: jest.fn() }),
+      ];
 
-      const client = <Client>{ id: 'client_id' };
+      Object.assign(context, { parameters: { prompt: 'login consent' }, prompts });
+
       const grant = <Grant>{ id: 'grant_id', session: { id: 'session_id' } };
       const session = null;
       const consent = null;
 
-      await expect(prompt.handle(parameters, client, grant, session, consent)).resolves.toEqual<Entities>([
+      await expect(prompt.handle(context, grant, session, consent)).resolves.toEqual<Entities>([
         grant,
         grant.session!,
         null,
@@ -136,15 +137,10 @@ describe('Login Prompt', () => {
     it.each<Consent | null>([null, <Consent>{ id: 'consent_id' }])(
       'should discard a previous authentication.',
       async (consent) => {
-        const client = <Client>{ id: 'client_id' };
         const grant = null;
         const session = <Session>{ id: 'session_id' };
 
-        await expect(prompt.handle(parameters, client, grant, session, consent)).resolves.toEqual<Entities>([
-          null,
-          null,
-          consent,
-        ]);
+        await expect(prompt.handle(context, grant, session, consent)).resolves.toEqual<Entities>([null, null, consent]);
 
         expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
         expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
@@ -152,12 +148,11 @@ describe('Login Prompt', () => {
     );
 
     it('should return an authenticated grant and a consent when authenticating at the login endpoint with a previous consent.', async () => {
-      const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{ id: 'grant_id', session: { id: 'session_id' } };
       const session = null;
       const consent = <Consent>{ id: 'consent_id' };
 
-      await expect(prompt.handle(parameters, client, grant, session, consent)).resolves.toEqual<Entities>([
+      await expect(prompt.handle(context, grant, session, consent)).resolves.toEqual<Entities>([
         grant,
         grant.session!,
         consent,

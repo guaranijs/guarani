@@ -2,9 +2,8 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { URLSearchParams } from 'url';
 
+import { AuthorizationContext } from '../context/authorization/authorization.context';
 import { DisplayInterface } from '../displays/display.interface';
-import { DISPLAY } from '../displays/display.token';
-import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
@@ -14,7 +13,6 @@ import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpResponse } from '../http/http.response';
 import { PromptInterface } from '../prompts/prompt.interface';
-import { PROMPT } from '../prompts/prompt.token';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
@@ -35,8 +33,6 @@ describe('Interaction Handler', () => {
   let container: DependencyInjectionContainer;
   let handler: InteractionHandler;
 
-  const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
-
   const promptsMocks = [
     jest.mocked<PromptInterface>({ name: 'none', handle: jest.fn() }),
     jest.mocked<PromptInterface>({ name: 'login', handle: jest.fn() }),
@@ -44,6 +40,8 @@ describe('Interaction Handler', () => {
   ];
 
   const displaysMocks = [jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() })];
+
+  const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
 
   const settings = <Settings>{
     issuer: 'https://server.example.com',
@@ -77,8 +75,6 @@ describe('Interaction Handler', () => {
     container = new DependencyInjectionContainer();
 
     container.bind(IdTokenHandler).toValue(idTokenHandlerMock);
-    promptsMocks.forEach((promptMock) => container.bind<PromptInterface>(PROMPT).toValue(promptMock));
-    displaysMocks.forEach((displayMock) => container.bind<DisplayInterface>(DISPLAY).toValue(displayMock));
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
@@ -107,42 +103,45 @@ describe('Interaction Handler', () => {
   });
 
   describe('getEntitiesOrHttpResponse()', () => {
-    let parameters: AuthorizationRequest;
-    let cookies: Record<string, any>;
+    let context: AuthorizationContext<AuthorizationRequest>;
 
     beforeEach(() => {
-      parameters = <AuthorizationRequest>{ state: 'client_state' };
-      cookies = {};
+      context = <AuthorizationContext<AuthorizationRequest>>{
+        parameters: { state: 'client_state' },
+        cookies: {},
+        client: { id: 'client_id' },
+        prompts: <PromptInterface[]>[],
+      };
     });
 
     it('should return an error response when authentication is required.', async () => {
-      const client = <Client>{ id: 'client_id' };
+      Object.assign(context, { parameters: { prompt: 'none' }, prompts: [promptsMocks[0]!] });
 
       const error = new LoginRequiredException({ state: 'client_state' });
       const errorParameters = new URLSearchParams(error.toJSON());
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse().redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
       );
     });
 
     it('should return an error response when authorization is required.', async () => {
-      const client = <Client>{ id: 'client_id' };
+      Object.assign(context, { parameters: { prompt: 'none' }, prompts: [promptsMocks[0]!] });
 
       const error = new ConsentRequiredException({ state: 'client_state' });
       const errorParameters = new URLSearchParams(error.toJSON());
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse().redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
       );
     });
 
     it('should return an error response for a generic error with a previous authorization.', async () => {
-      const client = <Client>{ id: 'client_id' };
+      Object.assign(context, { parameters: { prompt: 'none' }, prompts: [promptsMocks[0]!] });
 
       const error = new ServerErrorException({ description: 'An unexpected error occurred.', state: 'client_state' });
       const errorParameters = new URLSearchParams(error.toJSON());
@@ -151,7 +150,7 @@ describe('Interaction Handler', () => {
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -159,7 +158,7 @@ describe('Interaction Handler', () => {
     });
 
     it('should return an error response for a generic error.', async () => {
-      const client = <Client>{ id: 'client_id' };
+      Object.assign(context, { parameters: { prompt: 'none' }, prompts: [promptsMocks[0]!] });
 
       const error = new ServerErrorException({ description: 'An unexpected error occurred.', state: 'client_state' });
       const errorParameters = new URLSearchParams(error.toJSON());
@@ -168,7 +167,7 @@ describe('Interaction Handler', () => {
 
       promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null, 'guarani:consent': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -177,8 +176,12 @@ describe('Interaction Handler', () => {
 
     // #region Not authenticated and not authorized.
     it('should return a redirect response to the login endpoint when starting a fresh authorization process.', async () => {
-      const client = <Client>{ id: 'client_id' };
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge', parameters, client };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: context.parameters,
+        client: context.client,
+      };
 
       grantServiceMock.create.mockResolvedValueOnce(grant);
 
@@ -188,7 +191,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -198,10 +201,14 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the login endpoint when not authenticating at the login endpoint.', async () => {
-      cookies['guarani:grant'] = 'grant_id';
+      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
 
-      const client = <Client>{ id: 'client_id' };
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge', parameters, client };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: context.parameters,
+        client: context.client,
+      };
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
 
@@ -211,7 +218,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -221,13 +228,12 @@ describe('Interaction Handler', () => {
     });
 
     it('should return an error response if the client of the request does not match the client of the grant.', async () => {
-      cookies['guarani:grant'] = 'grant_id';
+      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
 
-      const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        parameters,
+        parameters: context.parameters,
         client: { id: 'another_client_id' },
       };
 
@@ -240,7 +246,7 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -251,15 +257,14 @@ describe('Interaction Handler', () => {
     });
 
     it('should return an error response if the grant is expired.', async () => {
-      cookies['guarani:grant'] = 'grant_id';
+      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
 
-      const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() - 300000),
-        client,
+        client: context.client,
       };
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
@@ -267,7 +272,7 @@ describe('Interaction Handler', () => {
       const error = new InvalidRequestException({ description: 'Expired Grant.', state: 'client_state' });
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -278,15 +283,14 @@ describe('Interaction Handler', () => {
     });
 
     it('should return an error response if one or more parameters changed during the interactions.', async () => {
-      cookies['guarani:grant'] = 'grant_id';
+      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
 
-      const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        parameters: { ...parameters, state: 'another_client_state' },
+        parameters: { ...context.parameters, state: 'another_client_state' },
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
       };
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
@@ -298,7 +302,7 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -309,11 +313,16 @@ describe('Interaction Handler', () => {
     });
 
     it("should return a redirect response to the login endpoint if the user authenticated but did not authorize before the session's expiration time.", async () => {
-      cookies['guarani:grant'] = 'grant_id';
+      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id', expiresAt: new Date(Date.now() - 300000) };
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge', parameters, client, session };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: context.parameters,
+        client: context.client,
+        session,
+      };
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
 
@@ -323,7 +332,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -334,13 +343,20 @@ describe('Interaction Handler', () => {
     });
 
     it('should return an error response when the authenticated user does not match the user expected by the "id_token_hint".', async () => {
-      Reflect.set(parameters, 'id_token_hint', 'another_user_id_token');
+      Object.assign(context, {
+        parameters: { id_token_hint: 'another_user_id_token' },
+        cookies: { 'guarani:grant': 'grant_id' },
+        idTokenHint: 'another_user_id_token',
+      });
 
-      cookies['guarani:grant'] = 'grant_id';
-
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id', user: { id: 'user_id' } };
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge', parameters, client, session };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: context.parameters,
+        client: context.client,
+        session,
+      };
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
@@ -356,7 +372,7 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -367,17 +383,16 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the consent endpoint if not previously authorized.', async () => {
-      cookies['guarani:grant'] = 'grant_id';
+      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         consentChallenge: 'consent_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
         session,
       };
 
@@ -390,7 +405,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': grant.session!.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -401,19 +416,17 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the consent enddpoint if the consent is expired.', async () => {
-      cookies['guarani:grant'] = 'grant_id';
-      cookies['guarani:session'] = 'session_id';
+      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' });
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
       const consent = <Consent>{ id: 'consent_id', expiresAt: new Date(Date.now() - 300000) };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         consentChallenge: 'consent_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
         session,
         consent,
       };
@@ -427,7 +440,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -441,19 +454,17 @@ describe('Interaction Handler', () => {
     });
 
     it('should return the entities of the interaction.', async () => {
-      cookies['guarani:grant'] = 'grant_id';
-      cookies['guarani:session'] = 'session_id';
+      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' });
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
       const consent = <Consent>{ id: 'consent_id' };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         consentChallenge: 'consent_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
         session,
         consent,
       };
@@ -461,7 +472,7 @@ describe('Interaction Handler', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toEqual<Entities>([
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toEqual<Entities>([
         grant,
         session,
         grant.consent!,
@@ -471,16 +482,15 @@ describe('Interaction Handler', () => {
 
     // #region Authenticated but not authorized.
     it('should return a redirect response to the consent endpoint when previously authenticated but not authorized.', async () => {
-      cookies['guarani:session'] = 'session_id';
+      Reflect.set(context.cookies, 'guarani:session', 'session_id');
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
       const grant = <Grant>{
         id: 'grant_id',
         consentChallenge: 'consent_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
       };
 
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -492,7 +502,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -505,17 +515,15 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the consent endpoint when previously authenticated but did not decide at the consent endpoint.', async () => {
-      cookies['guarani:grant'] = 'grant_id';
-      cookies['guarani:session'] = 'session_id';
+      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' });
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
       const grant = <Grant>{
         id: 'grant_id',
         consentChallenge: 'consent_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
         session,
       };
 
@@ -528,7 +536,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -539,18 +547,16 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the consent endpoint when previously authenticated but did not authorize and the consent expired.', async () => {
-      cookies['guarani:grant'] = 'grant_id';
-      cookies['guarani:session'] = 'session_id';
+      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' });
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
       const consent = <Consent>{ id: 'consent_id', expiresAt: new Date(Date.now() - 300000) };
       const grant = <Grant>{
         id: 'grant_id',
         consentChallenge: 'consent_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
         session,
         consent,
       };
@@ -564,7 +570,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -578,18 +584,16 @@ describe('Interaction Handler', () => {
     });
 
     it('should return the entities of the interaction.', async () => {
-      cookies['guarani:grant'] = 'grant_id';
-      cookies['guarani:session'] = 'session_id';
+      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' });
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
       const consent = <Consent>{ id: 'consent_id' };
       const grant = <Grant>{
         id: 'grant_id',
         consentChallenge: 'consent_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
         session,
         consent,
       };
@@ -597,7 +601,7 @@ describe('Interaction Handler', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toEqual<Entities>([
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toEqual<Entities>([
         grant,
         session,
         grant.consent!,
@@ -607,16 +611,15 @@ describe('Interaction Handler', () => {
 
     // #region Not authenticated but authorized.
     it('should return a redirect response to the login endpoint when not authenticated but previously authorized.', async () => {
-      cookies['guarani:consent'] = 'consent_id';
+      Reflect.set(context.cookies, 'guarani:consent', 'consent_id');
 
-      const client = <Client>{ id: 'client_id' };
       const consent = <Consent>{ id: 'consent_id' };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
       };
 
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
@@ -628,7 +631,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -638,25 +641,23 @@ describe('Interaction Handler', () => {
     });
 
     it('should return the entities of the interaction.', async () => {
-      cookies['guarani:grant'] = 'grant_id';
-      cookies['guarani:consent'] = 'consent_id';
+      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:consent': 'consent_id' });
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
       const consent = <Consent>{ id: 'consent_id' };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
         session,
       };
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toEqual<Entities>([
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toEqual<Entities>([
         grant,
         grant.session!,
         consent,
@@ -666,17 +667,15 @@ describe('Interaction Handler', () => {
 
     // #region Authenticated and Authorized.
     it('should return a redirect response to the login endpoint if the session is expired.', async () => {
-      cookies['guarani:session'] = 'session_id';
-      cookies['guarani:consent'] = 'consent_id';
+      Object.assign(context.cookies, { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' });
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id', expiresAt: new Date(Date.now() - 3600000) };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
       };
 
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -688,7 +687,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -701,12 +700,12 @@ describe('Interaction Handler', () => {
     });
 
     it('should return an error response when the authenticated user does not match the user expected by the "id_token_hint".', async () => {
-      Reflect.set(parameters, 'id_token_hint', 'another_user_id_token');
+      Object.assign(context, {
+        parameters: { id_token_hint: 'another_user_id_token' },
+        cookies: { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' },
+        idTokenHint: 'another_user_id_token',
+      });
 
-      cookies['guarani:session'] = 'session_id';
-      cookies['guarani:consent'] = 'consent_id';
-
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id', user: { id: 'user_id' } };
       const consent = <Consent>{ id: 'consent_id' };
 
@@ -725,7 +724,7 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': null, 'guarani:session': null })
           .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
@@ -735,19 +734,19 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the login endpoint if the session\'s creation date is longer than "max_age".', async () => {
-      Reflect.set(parameters, 'max_age', 300);
+      Object.assign(context, {
+        parameters: { max_age: '300' },
+        cookies: { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' },
+        maxAge: 300,
+      });
 
-      cookies['guarani:session'] = 'session_id';
-      cookies['guarani:consent'] = 'consent_id';
-
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id', createdAt: new Date(Date.now() - 3600000) };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
       };
 
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -760,7 +759,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
           .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
@@ -772,18 +771,16 @@ describe('Interaction Handler', () => {
     });
 
     it('should return a redirect response to the consent endpoint if the consent is expired.', async () => {
-      cookies['guarani:session'] = 'session_id';
-      cookies['guarani:consent'] = 'consent_id';
+      Object.assign(context.cookies, { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' });
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
       const consent = <Consent>{ id: 'consent_id', expiresAt: new Date(Date.now() - 3600000) };
       const grant = <Grant>{
         id: 'grant_id',
         consentChallenge: 'consent_challenge',
-        parameters,
+        parameters: context.parameters,
         expiresAt: new Date(Date.now() + 300000),
-        client,
+        client: context.client,
       };
 
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -797,7 +794,7 @@ describe('Interaction Handler', () => {
 
       const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toStrictEqual(
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
         new HttpResponse()
           .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
           .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
@@ -813,10 +810,8 @@ describe('Interaction Handler', () => {
     });
 
     it('should return the entities of the interaction.', async () => {
-      cookies['guarani:session'] = 'session_id';
-      cookies['guarani:consent'] = 'consent_id';
+      Object.assign(context.cookies, { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' });
 
-      const client = <Client>{ id: 'client_id' };
       const session = <Session>{ id: 'session_id' };
       const consent = <Consent>{ id: 'consent_id' };
 
@@ -824,11 +819,7 @@ describe('Interaction Handler', () => {
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
       idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(true);
 
-      await expect(handler.getEntitiesOrHttpResponse(parameters, cookies, client)).resolves.toEqual<Entities>([
-        null,
-        session,
-        consent,
-      ]);
+      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toEqual<Entities>([null, session, consent]);
 
       expect(grantServiceMock.create).not.toHaveBeenCalled();
     });

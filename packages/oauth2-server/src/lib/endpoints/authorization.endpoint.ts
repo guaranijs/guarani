@@ -2,32 +2,21 @@ import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { URL, URLSearchParams } from 'url';
 
-import { Client } from '../entities/client.entity';
-import { AccessDeniedException } from '../exceptions/access-denied.exception';
-import { InvalidClientException } from '../exceptions/invalid-client.exception';
+import { AuthorizationContext } from '../context/authorization/authorization.context';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
-import { UnauthorizedClientException } from '../exceptions/unauthorized-client.exception';
-import { UnsupportedResponseTypeException } from '../exceptions/unsupported-response-type.exception';
 import { InteractionHandler } from '../handlers/interaction.handler';
-import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
-import { ResponseModeInterface } from '../response-modes/response-mode.interface';
-import { RESPONSE_MODE } from '../response-modes/response-mode.token';
-import { ResponseMode } from '../response-modes/response-mode.type';
-import { ResponseTypeInterface } from '../response-types/response-type.interface';
-import { RESPONSE_TYPE } from '../response-types/response-type.token';
 import { ResponseType } from '../response-types/response-type.type';
-import { ClientServiceInterface } from '../services/client.service.interface';
-import { CLIENT_SERVICE } from '../services/client.service.token';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { AuthorizationRequestValidator } from '../validators/authorization/authorization-request.validator';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 
@@ -60,22 +49,20 @@ export class AuthorizationEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Authorization Endpoint.
    *
-   * @param scopeHandler Instance of the Scope Handler.
    * @param interactionHandler Instance of the Interaction Handler.
    * @param settings Settings of the Authorization Server.
-   * @param clientService Instance of the Client Service.
    * @param grantService Instance of the Grant Service.
-   * @param responseTypes Response Types registered at the Authorization Server.
-   * @param responseModes Response Modes registered at the Authorization Server.
+   * @param validators Authorization Request Validators registered at the Authorization Server.
    */
   public constructor(
-    private readonly scopeHandler: ScopeHandler,
     private readonly interactionHandler: InteractionHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(CLIENT_SERVICE) private readonly clientService: ClientServiceInterface,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
-    @InjectAll(RESPONSE_TYPE) private readonly responseTypes: ResponseTypeInterface[],
-    @InjectAll(RESPONSE_MODE) private readonly responseModes: ResponseModeInterface[]
+    @InjectAll(AuthorizationRequestValidator)
+    private readonly validators: AuthorizationRequestValidator<
+      AuthorizationRequest,
+      AuthorizationContext<AuthorizationRequest>
+    >[]
   ) {
     if (this.settings.userInteraction === undefined) {
       throw new TypeError('Missing User Interaction options.');
@@ -97,36 +84,19 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest<AuthorizationRequest>): Promise<HttpResponse> {
-    const { cookies, data: parameters } = request;
+    const { data: parameters } = request;
 
-    let client: Client;
-    let responseType: ResponseTypeInterface;
-    let responseMode: ResponseModeInterface;
+    let context: AuthorizationContext<AuthorizationRequest>;
 
     try {
-      this.checkParameters(parameters);
-
-      client = await this.getClient(parameters.client_id, parameters.state);
-      responseType = this.getResponseType(parameters.response_type, parameters.state);
-
-      this.checkClientResponseType(client, responseType, parameters.state);
-      this.checkClientRedirectUri(client, parameters.redirect_uri, parameters.state);
-      this.checkClientScope(client, parameters.scope, parameters.state);
-
-      responseMode = this.getResponseMode(
-        parameters.response_mode ?? responseType.defaultResponseMode,
-        parameters.state
-      );
+      const validator = this.getValidator(parameters);
+      context = await validator.validate(request);
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);
       return this.handleFatalAuthorizationError(error);
     }
 
-    const entitiesOrInteractionResponse = await this.interactionHandler.getEntitiesOrHttpResponse(
-      parameters,
-      cookies,
-      client
-    );
+    const entitiesOrInteractionResponse = await this.interactionHandler.getEntitiesOrHttpResponse(context);
 
     if (entitiesOrInteractionResponse instanceof HttpResponse) {
       return entitiesOrInteractionResponse;
@@ -135,7 +105,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
     const [grant, session, consent] = entitiesOrInteractionResponse;
 
     try {
-      const authorizationResponse = await responseType.handle(parameters, session, consent);
+      const authorizationResponse = await context.responseType.handle(parameters, session, consent);
 
       if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
         authorizationResponse.iss = this.settings.issuer;
@@ -145,205 +115,38 @@ export class AuthorizationEndpoint implements EndpointInterface {
         await this.grantService.remove(grant);
       }
 
-      return responseMode.createHttpResponse(parameters.redirect_uri, authorizationResponse).setCookies({
+      return context.responseMode.createHttpResponse(parameters.redirect_uri, authorizationResponse).setCookies({
         'guarani:grant': null,
         'guarani:session': session.id,
         'guarani:consent': consent.id,
       });
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);
-      return responseMode.createHttpResponse(parameters.redirect_uri, error.toJSON());
+      return context.responseMode.createHttpResponse(parameters.redirect_uri, error.toJSON());
     }
   }
 
   /**
-   * Checks if the Parameters of the Authorization Request are valid.
+   * Retrieves the Authorization Request Validator based on the Response Type requested by the Client.
    *
    * @param parameters Parameters of the Authorization Request.
+   * @returns Authorization Request Validator.
    */
-  private checkParameters(parameters: AuthorizationRequest): void {
-    const {
-      acr_values: acrValues,
-      client_id: clientId,
-      display,
-      id_token_hint: idTokenHint,
-      login_hint: loginHint,
-      max_age: maxAge,
-      nonce,
-      prompt,
-      redirect_uri: redirectUri,
-      response_mode: responseMode,
-      response_type: responseType,
-      scope,
-      state,
-      ui_locales: uiLocales,
-    } = parameters;
-
-    if (state !== undefined && typeof state !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "state".' });
+  private getValidator(
+    parameters: AuthorizationRequest
+  ): AuthorizationRequestValidator<AuthorizationRequest, AuthorizationContext<AuthorizationRequest>> {
+    if (typeof parameters.response_type !== 'string') {
+      throw new InvalidRequestException({ description: 'Invalid parameter "response_type".' });
     }
 
-    if (typeof responseType !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "response_type".', state });
+    const responseTypeName = <ResponseType>parameters.response_type.split(' ').sort().join(' ');
+    const validator = this.validators.find((validator) => validator.name === responseTypeName);
+
+    if (validator === undefined) {
+      throw new InvalidRequestException({ description: `Unsupported response_type "${responseTypeName}".` });
     }
 
-    if (typeof clientId !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "client_id".', state });
-    }
-
-    if (typeof redirectUri !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".', state });
-    }
-
-    if (typeof scope !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "scope".', state });
-    }
-
-    if (responseMode !== undefined && typeof responseMode !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "response_mode".', state });
-    }
-
-    if (nonce !== undefined && typeof nonce !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "nonce".', state });
-    }
-
-    if (prompt !== undefined && typeof prompt !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "prompt".', state });
-    }
-
-    if (display !== undefined && typeof display !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "display".', state });
-    }
-
-    if (
-      maxAge !== undefined &&
-      typeof maxAge !== 'number' &&
-      (typeof maxAge !== 'string' || Number.isNaN(Number.parseInt(maxAge, 10)))
-    ) {
-      throw new InvalidRequestException({ description: 'Invalid parameter "max_age".', state });
-    }
-
-    if (loginHint !== undefined && typeof loginHint !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "login_hint".', state });
-    }
-
-    if (idTokenHint !== undefined && typeof idTokenHint !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "id_token_hint".', state });
-    }
-
-    if (uiLocales !== undefined && typeof uiLocales !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "ui_locales".', state });
-    }
-
-    if (acrValues !== undefined && typeof acrValues !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "acr_values".', state });
-    }
-  }
-
-  /**
-   * Fetches a Client from the application's storage based on the provided Client Identifier.
-   *
-   * @param clientId Identifier of the Client.
-   * @param state Client State prior to the Authorization Request.
-   * @returns Client based on the provided Client Identifier.
-   */
-  private async getClient(clientId: string, state: string | undefined): Promise<Client> {
-    const client = await this.clientService.findOne(clientId);
-
-    if (client === null) {
-      throw new InvalidClientException({ description: 'Invalid Client.', state });
-    }
-
-    return client;
-  }
-
-  /**
-   * Retrieves the Response Type based on the **response_type** requested by the Client.
-   *
-   * @param name Response Type requested by the Client.
-   * @param state Client State prior to the Authorization Request.
-   * @returns Response Type.
-   */
-  private getResponseType(name: ResponseType, state: string | undefined): ResponseTypeInterface {
-    name = <ResponseType>name.split(' ').sort().join(' ');
-
-    const responseType = this.responseTypes.find((responseType) => responseType.name === name);
-
-    if (responseType === undefined) {
-      throw new UnsupportedResponseTypeException({ description: `Unsupported response_type "${name}".`, state });
-    }
-
-    return responseType;
-  }
-
-  /**
-   * Checks if the Client is allowed to use the requested Response Type.
-   *
-   * @param client Client of the Request.
-   * @param responseType Response Type requested by the Client.
-   * @param state Client State prior to the Authorization Request.
-   */
-  private checkClientResponseType(
-    client: Client,
-    responseType: ResponseTypeInterface,
-    state: string | undefined
-  ): void {
-    if (!client.responseTypes.includes(responseType.name)) {
-      throw new UnauthorizedClientException({
-        description: `This Client is not allowed to request the response_type "${responseType.name}".`,
-        state,
-      });
-    }
-  }
-
-  /**
-   * Checks the provided Redirect URI against the registered Redirect URIs of the Client.
-   *
-   * @param client Client of the Request.
-   * @param redirectUri Redirect URI provided by the Client.
-   * @param state Client State prior to the Authorization Request.
-   */
-  private checkClientRedirectUri(client: Client, redirectUri: string, state: string | undefined): void {
-    if (!client.redirectUris.includes(redirectUri)) {
-      throw new AccessDeniedException({ description: 'Invalid Redirect URI.', state });
-    }
-  }
-
-  /**
-   * Checks if the provided scope is supported by the Authorization Server and if the Client is allowed to request it.
-   *
-   * @param client Client of the Request.
-   * @param scope Scope requested by the Client.
-   * @param state Client State prior to the Authorization Request.
-   */
-  private checkClientScope(client: Client, scope: string, state: string | undefined): void {
-    this.scopeHandler.checkRequestedScope(scope, state);
-
-    scope.split(' ').forEach((requestedScope) => {
-      if (!client.scopes.includes(requestedScope)) {
-        throw new AccessDeniedException({
-          description: `The Client is not allowed to request the scope "${requestedScope}".`,
-          state,
-        });
-      }
-    });
-  }
-
-  /**
-   * Retrieves the Response Mode based on the **response_mode** requested by the Client.
-   *
-   * @param name Response Mode requested by the Client.
-   * @param state Client State prior to the Authorization Request.
-   * @returns Response Mode.
-   */
-  private getResponseMode(name: ResponseMode, state: string | undefined): ResponseModeInterface {
-    const responseMode = this.responseModes.find((responseMode) => responseMode.name === name);
-
-    if (responseMode === undefined) {
-      throw new InvalidRequestException({ description: `Unsupported response_mode "${name}".`, state });
-    }
-
-    return responseMode;
+    return validator;
   }
 
   /**

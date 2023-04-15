@@ -20,6 +20,7 @@ export { CLIENT_AUTHORIZATION } from './lib/client-authorization/client-authoriz
 export { ClientAuthorization } from './lib/client-authorization/client-authorization.type';
 
 // Context
+export { IntrospectionContext } from './lib/context/introspection.context';
 export { RevocationContext } from './lib/context/revocation.context';
 
 // Displays
@@ -199,4 +200,6 @@ export { AccessTokenType } from './lib/types/access-token-type.type';
 export { ApplicationType } from './lib/types/application-type.type';
 export { TokenTypeHint } from './lib/types/token-type-hint.type';
 
+// Validators
+export { IntrospectionRequestValidator } from './lib/validators/introspection-request.validator';
 export { RevocationRequestValidator } from './lib/validators/revocation-request.validator';

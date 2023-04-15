@@ -82,6 +82,7 @@ import { UserinfoEndpoint } from '../endpoints/userinfo.endpoint';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { Display } from '../displays/display.type';
 import { RevocationRequestValidator } from '../validators/revocation-request.validator';
+import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
 
 /**
  * Factory class for configuring and instantiating an OAuth 2.0 Authorization Server.
@@ -384,6 +385,10 @@ export class AuthorizationServerFactory {
    * Defines the Validators of the Authorization Server.
    */
   private static setValidators(): void {
+    if (this.authorizationServerOptions.enableIntrospectionEndpoint !== false) {
+      this.container.bind(IntrospectionRequestValidator).toSelf().asSingleton();
+    }
+
     if (this.authorizationServerOptions.enableRevocationEndpoint !== false) {
       this.container.bind(RevocationRequestValidator).toSelf().asSingleton();
     }

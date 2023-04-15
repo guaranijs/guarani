@@ -3,11 +3,6 @@
  */
 export interface DeviceAuthorizationRequest extends Record<string, any> {
   /**
-   * Identifier of the Client.
-   */
-  readonly client_id?: string;
-
-  /**
    * Scope requested by the Client.
    */
   readonly scope?: string;

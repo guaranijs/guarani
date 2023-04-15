@@ -19,6 +19,9 @@ export { ClientAuthorizationInterface } from './lib/client-authorization/client-
 export { CLIENT_AUTHORIZATION } from './lib/client-authorization/client-authorization.token';
 export { ClientAuthorization } from './lib/client-authorization/client-authorization.type';
 
+// Context
+export { RevocationContext } from './lib/context/revocation.context';
+
 // Displays
 export { DisplayInterface } from './lib/displays/display.interface';
 export { DISPLAY } from './lib/displays/display.token';
@@ -195,3 +198,5 @@ export { UserInteractionSettings } from './lib/settings/user-interaction.setting
 export { AccessTokenType } from './lib/types/access-token-type.type';
 export { ApplicationType } from './lib/types/application-type.type';
 export { TokenTypeHint } from './lib/types/token-type-hint.type';
+
+export { RevocationRequestValidator } from './lib/validators/revocation-request.validator';

@@ -81,6 +81,7 @@ import { ClientAuthorizationInterface } from '../client-authorization/client-aut
 import { UserinfoEndpoint } from '../endpoints/userinfo.endpoint';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { Display } from '../displays/display.type';
+import { RevocationRequestValidator } from '../validators/revocation-request.validator';
 
 /**
  * Factory class for configuring and instantiating an OAuth 2.0 Authorization Server.
@@ -137,6 +138,7 @@ export class AuthorizationServerFactory {
     this.setJsonWebKeySet();
     this.setEndpoints();
     this.setHandlers();
+    this.setValidators();
     this.setAccessTokenService();
     this.setAuthorizationCodeService();
     this.setClientService();
@@ -375,6 +377,15 @@ export class AuthorizationServerFactory {
     if (this.settings.scopes.includes('openid')) {
       this.container.bind(IdTokenHandler).toSelf().asSingleton();
       this.container.bind(ClientAuthorizationHandler).toSelf().asSingleton();
+    }
+  }
+
+  /**
+   * Defines the Validators of the Authorization Server.
+   */
+  private static setValidators(): void {
+    if (this.authorizationServerOptions.enableRevocationEndpoint !== false) {
+      this.container.bind(RevocationRequestValidator).toSelf().asSingleton();
     }
   }
 

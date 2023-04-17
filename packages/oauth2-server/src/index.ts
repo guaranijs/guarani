@@ -25,6 +25,13 @@ export { CodeAuthorizationContext } from './lib/context/authorization/code.autho
 export { DeviceAuthorizationContext } from './lib/context/device-authorization.context';
 export { IntrospectionContext } from './lib/context/introspection.context';
 export { RevocationContext } from './lib/context/revocation.context';
+export { AuthorizationCodeTokenContext } from './lib/context/token/authorization-code.token.context';
+export { ClientCredentialsTokenContext } from './lib/context/token/client-credentials.token.context';
+export { DeviceCodeTokenContext } from './lib/context/token/device-code.token.context';
+export { JwtBearerTokenContext } from './lib/context/token/jwt-bearer.token.context';
+export { RefreshTokenTokenContext } from './lib/context/token/refresh-token.token.context';
+export { ResourceOwnerPasswordCredentialsTokenContext } from './lib/context/token/resource-owner-password-credentials.token.context';
+export { TokenContext } from './lib/context/token/token.context';
 
 // Displays
 export { DisplayInterface } from './lib/displays/display.interface';
@@ -208,3 +215,4 @@ export { AuthorizationRequestValidator } from './lib/validators/authorization/au
 export { DeviceAuthorizationRequestValidator } from './lib/validators/device-authorization-request.validator';
 export { IntrospectionRequestValidator } from './lib/validators/introspection-request.validator';
 export { RevocationRequestValidator } from './lib/validators/revocation-request.validator';
+export { TokenRequestValidator } from './lib/validators/token/token-request.validator';

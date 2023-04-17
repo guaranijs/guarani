@@ -3,15 +3,13 @@ import { Inject, Injectable, Optional } from '@guarani/di';
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 
+import { DeviceCodeTokenContext } from '../context/token/device-code.token.context';
 import { Client } from '../entities/client.entity';
 import { DeviceCode } from '../entities/device-code.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { AuthorizationPendingException } from '../exceptions/authorization-pending.exception';
 import { ExpiredTokenException } from '../exceptions/expired-token.exception';
-import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { SlowDownException } from '../exceptions/slow-down.exception';
-import { DeviceCodeTokenRequest } from '../requests/token/device-code.token-request';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -63,14 +61,11 @@ export class DeviceCodeGrantType implements GrantTypeInterface {
    *
    * The means for the User to make a decision is left at the discretion of the application.
    *
-   * @param parameters Parameters of the Token Request.
-   * @param client Client of the Request.
+   * @param context Token Request Context.
    * @returns Access Token Response.
    */
-  public async handle(parameters: DeviceCodeTokenRequest, client: Client): Promise<TokenResponse> {
-    this.checkParameters(parameters);
-
-    const deviceCode = await this.getDeviceCode(parameters.device_code);
+  public async handle(context: DeviceCodeTokenContext): Promise<TokenResponse> {
+    const { client, deviceCode } = context;
 
     await this.checkDeviceCode(deviceCode, client);
 
@@ -83,35 +78,6 @@ export class DeviceCodeGrantType implements GrantTypeInterface {
       : undefined;
 
     return createTokenResponse(accessToken, refreshToken);
-  }
-
-  /**
-   * Checks if the Parameters of the Token Request are valid.
-   *
-   * @param parameters Parameters of the Token Request.
-   */
-  private checkParameters(parameters: DeviceCodeTokenRequest): void {
-    const { device_code: deviceCode } = parameters;
-
-    if (typeof deviceCode !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "device_code".' });
-    }
-  }
-
-  /**
-   * Fetches the requested Device Code from the application's storage.
-   *
-   * @param id Identifier provided by the Client.
-   * @returns Device Code based on the provided Identifier.
-   */
-  private async getDeviceCode(id: string): Promise<DeviceCode> {
-    const deviceCode = await this.deviceCodeService.findOne(id);
-
-    if (deviceCode === null) {
-      throw new InvalidGrantException({ description: 'Invalid Device Code.' });
-    }
-
-    return deviceCode;
   }
 
   /**

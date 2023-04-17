@@ -1,11 +1,9 @@
 import { Inject, Injectable } from '@guarani/di';
 
+import { RefreshTokenTokenContext } from '../context/token/refresh-token.token.context';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { ScopeHandler } from '../handlers/scope.handler';
-import { RefreshTokenTokenRequest } from '../requests/token/refresh-token.token-request';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -35,13 +33,11 @@ export class RefreshTokenGrantType implements GrantTypeInterface {
   /**
    * Instantiates a new Refresh Token Grant Type.
    *
-   * @param scopeHandler Scope Handler of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param accessTokenService Instance of the Access Token Service.
    * @param refreshTokenService Instance of the Refresh Token Service.
    */
   public constructor(
-    private readonly scopeHandler: ScopeHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
     @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: RefreshTokenServiceInterface
@@ -57,18 +53,13 @@ export class RefreshTokenGrantType implements GrantTypeInterface {
    *
    * If **Refresh Token Rotation** is enabled, it issues a new Refresh Token and revokes the provided Refresh Token.
    *
-   * @param parameters Parameters of the Token Request.
-   * @param client Client of the Request.
+   * @param context Token Request Context.
    * @returns Access Token Response.
    */
-  public async handle(parameters: RefreshTokenTokenRequest, client: Client): Promise<TokenResponse> {
-    this.checkParameters(parameters);
-
-    let refreshToken = await this.getRefreshToken(parameters.refresh_token);
+  public async handle(context: RefreshTokenTokenContext): Promise<TokenResponse> {
+    let { client, refreshToken, scopes } = context;
 
     this.checkRefreshToken(refreshToken, client);
-
-    const scopes = this.getScopes(refreshToken, parameters.scope);
 
     const { user } = refreshToken;
 
@@ -80,37 +71,6 @@ export class RefreshTokenGrantType implements GrantTypeInterface {
     }
 
     return createTokenResponse(accessToken, refreshToken);
-  }
-
-  /**
-   * Checks if the Parameters of the Token Request are valid.
-   *
-   * @param parameters Parameters of the Token Request.
-   */
-  private checkParameters(parameters: RefreshTokenTokenRequest): void {
-    const { refresh_token: refreshToken, scope } = parameters;
-
-    if (typeof refreshToken !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "refresh_token".' });
-    }
-
-    this.scopeHandler.checkRequestedScope(scope);
-  }
-
-  /**
-   * Fetches the requested Refresh Token from the application's storage.
-   *
-   * @param token Token provided by the Client.
-   * @returns Refresh Token based on the provided token.
-   */
-  private async getRefreshToken(token: string): Promise<RefreshToken> {
-    const refreshToken = await this.refreshTokenService.findOne(token);
-
-    if (refreshToken === null) {
-      throw new InvalidGrantException({ description: 'Invalid Refresh Token.' });
-    }
-
-    return refreshToken;
   }
 
   /**
@@ -135,28 +95,5 @@ export class RefreshTokenGrantType implements GrantTypeInterface {
     if (refreshToken.isRevoked) {
       throw new InvalidGrantException({ description: 'Revoked Refresh Token.' });
     }
-  }
-
-  /**
-   * Returns the original scopes of the provided Refresh Token or a subset thereof, as requested by the Client.
-   *
-   * @param refreshToken Refresh Token provided by the Client.
-   * @param scope Subset of scopes requested by the Client.
-   * @returns Scopes of the new Access Token.
-   */
-  private getScopes(refreshToken: RefreshToken, scope?: string): string[] {
-    if (scope === undefined) {
-      return refreshToken.scopes;
-    }
-
-    const requestedScopes = scope.split(' ');
-
-    requestedScopes.forEach((requestedScope) => {
-      if (!refreshToken.scopes.includes(requestedScope)) {
-        throw new InvalidGrantException({ description: `The scope "${requestedScope}" was not previously granted.` });
-      }
-    });
-
-    return requestedScopes;
   }
 }

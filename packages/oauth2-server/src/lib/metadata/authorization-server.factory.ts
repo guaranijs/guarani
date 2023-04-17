@@ -81,11 +81,13 @@ import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { AuthorizationRequestValidator } from '../validators/authorization/authorization-request.validator';
-import { authorizationRequestValidatorRegistry } from '../validators/authorization/authorization-request.validator.registry';
+import { authorizationRequestValidatorsRegistry } from '../validators/authorization/authorization-request.validator.registry';
 import { DeviceAuthorizationRequestValidator } from '../validators/device-authorization-request.validator';
 import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
 import { RevocationRequestValidator } from '../validators/revocation-request.validator';
 import { AuthorizationServerOptions } from './authorization-server.options';
+import { tokenRequestValidatorsRegistry } from '../validators/token/token-request.validator.registry';
+import { TokenRequestValidator } from '../validators/token/token-request.validator';
 
 /**
  * Factory class for configuring and instantiating an OAuth 2.0 Authorization Server.
@@ -401,10 +403,17 @@ export class AuthorizationServerFactory {
     }
 
     if (this.container.isRegistered<ResponseTypeInterface>(RESPONSE_TYPE)) {
-      Object.entries(authorizationRequestValidatorRegistry)
+      Object.entries(authorizationRequestValidatorsRegistry)
         .filter(([name]) => this.settings.responseTypes.includes(<ResponseType>name))
         .map(([, validator]) => validator)
         .forEach((validator) => this.container.bind(AuthorizationRequestValidator).toClass(validator).asSingleton());
+    }
+
+    if (this.container.isRegistered<GrantServiceInterface>(GRANT_TYPE)) {
+      Object.entries(tokenRequestValidatorsRegistry)
+        .filter(([name]) => this.settings.grantTypes.includes(<GrantType>name))
+        .map(([, validator]) => validator)
+        .forEach((validator) => this.container.bind(TokenRequestValidator).toClass(validator).asSingleton());
     }
   }
 

@@ -2,20 +2,15 @@ import { Injectable, InjectAll } from '@guarani/di';
 
 import { OutgoingHttpHeaders } from 'http';
 
-import { Client } from '../entities/client.entity';
+import { TokenContext } from '../context/token/token.context';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
-import { UnauthorizedClientException } from '../exceptions/unauthorized-client.exception';
-import { UnsupportedGrantTypeException } from '../exceptions/unsupported-grant-type.exception';
-import { GrantTypeInterface } from '../grant-types/grant-type.interface';
-import { GRANT_TYPE } from '../grant-types/grant-type.token';
-import { GrantType } from '../grant-types/grant-type.type';
-import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { TokenRequest } from '../requests/token/token-request';
+import { TokenRequestValidator } from '../validators/token/token-request.validator';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 
@@ -52,12 +47,11 @@ export class TokenEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Token Endpoint.
    *
-   * @param clientAuthenticationHandler Instance of the Client Authentication Handler.
-   * @param grantTypes Grant Types supported by the Authorization Server.
+   * @param validators Token Request Validators registered at the Authorization Server.
    */
   public constructor(
-    private readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    @InjectAll(GRANT_TYPE) private readonly grantTypes: GrantTypeInterface[]
+    @InjectAll(TokenRequestValidator)
+    private readonly validators: TokenRequestValidator<TokenRequest, TokenContext<TokenRequest>>[]
   ) {}
 
   /**
@@ -78,17 +72,13 @@ export class TokenEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest<TokenRequest>): Promise<HttpResponse> {
-    const parameters = request.data;
+    const { data: parameters } = request;
 
     try {
-      this.checkParameters(parameters);
+      const validator = this.getValidator(parameters);
 
-      const grantType = this.getGrantType(parameters.grant_type);
-      const client = await this.clientAuthenticationHandler.authenticate(request);
-
-      this.checkClientGrantType(client, grantType.name);
-
-      const tokenResponse = await grantType.handle(parameters, client);
+      const context = await validator.validate(request);
+      const tokenResponse = await context.grantType.handle(parameters, context.client);
 
       return new HttpResponse().setHeaders(this.headers).json(tokenResponse);
     } catch (exc: unknown) {
@@ -110,45 +100,22 @@ export class TokenEndpoint implements EndpointInterface {
   }
 
   /**
-   * Checks if the Parameters of the Token Request are valid.
+   * Retrieves the Token Request Validator based on the Grant Type requested by the Client.
    *
    * @param parameters Parameters of the Token Request.
+   * @returns Token Request Validator.
    */
-  private checkParameters(parameters: TokenRequest): void {
-    const { grant_type: grantType } = parameters;
-
-    if (typeof grantType !== 'string') {
+  private getValidator(parameters: TokenRequest): TokenRequestValidator<TokenRequest, TokenContext<TokenRequest>> {
+    if (typeof parameters.grant_type !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "grant_type".' });
     }
-  }
 
-  /**
-   * Retrieves the Grant Type based on the **grant_type** requested by the Client.
-   *
-   * @param name Grant Type requested by the Client.
-   * @returns Grant Type.
-   */
-  private getGrantType(name: GrantType): GrantTypeInterface {
-    const grantType = this.grantTypes.find((grantType) => grantType.name === name);
+    const validator = this.validators.find((validator) => validator.name === parameters.grant_type);
 
-    if (grantType === undefined) {
-      throw new UnsupportedGrantTypeException({ description: `Unsupported grant_type "${name}".` });
+    if (validator === undefined) {
+      throw new InvalidRequestException({ description: `Unsupported grant_type "${parameters.grant_type}".` });
     }
 
-    return grantType;
-  }
-
-  /**
-   * Checks if the Client is allowed to request the provided Grant Type.
-   *
-   * @param client Client of the Request.
-   * @param grantType Grant Type requested by the Client.
-   */
-  private checkClientGrantType(client: Client, grantType: GrantType): void {
-    if (!client.grantTypes.includes(grantType)) {
-      throw new UnauthorizedClientException({
-        description: `This Client is not allowed to request the grant_type "${grantType}".`,
-      });
-    }
+    return validator;
   }
 }

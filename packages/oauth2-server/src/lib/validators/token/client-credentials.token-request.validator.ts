@@ -30,13 +30,13 @@ export class ClientCredentialsTokenRequestValidator extends TokenRequestValidato
    * Instantiates a new Client Credentials Token Request Validator.
    *
    * @param clientAuthenticationHandler Instance of the Client Authentication Handler.
-   * @param grantTypes Grant Types registered at the Authorization Server.
    * @param scopeHandler Instance of the Scope Handler.
+   * @param grantTypes Grant Types registered at the Authorization Server.
    */
   public constructor(
     protected override readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
-    private readonly scopeHandler: ScopeHandler
+    protected readonly scopeHandler: ScopeHandler,
+    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[]
   ) {
     super(clientAuthenticationHandler, grantTypes);
   }

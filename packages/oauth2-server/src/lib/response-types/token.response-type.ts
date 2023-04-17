@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
 
 import { Consent } from '../entities/consent.entity';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
@@ -12,6 +11,7 @@ import { createTokenResponse } from '../utils/create-token-response';
 import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
 import { Session } from '../entities/session.entity';
+import { AuthorizationContext } from '../context/authorization/authorization.context';
 
 /**
  * Implementation of the **Token** Response Type.
@@ -48,39 +48,22 @@ export class TokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns an Access Token Response to the Client.
    *
-   * @param parameters Parameters of the Authorization Request.
+   * @param context Authorization Request Context.
    * @param _session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Access Token Response.
    */
   public async handle(
-    parameters: AuthorizationRequest,
+    context: AuthorizationContext<AuthorizationRequest>,
     _session: Session,
     consent: Consent
   ): Promise<TokenAuthorizationResponse> {
+    const { parameters } = context;
     const { client, scopes, user } = consent;
-
-    this.checkParameters(parameters);
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
     const token = createTokenResponse(accessToken);
 
     return removeUndefined<TokenAuthorizationResponse>({ ...token, state: parameters.state });
-  }
-
-  /**
-   * Checks if the Parameters of the Authorization Request are valid.
-   *
-   * @param parameters Parameters of the Authorization Request.
-   */
-  private checkParameters(parameters: AuthorizationRequest): void {
-    const { response_mode: responseMode } = parameters;
-
-    if (responseMode === 'query') {
-      throw new InvalidRequestException({
-        description: 'Invalid response_mode "query" for response_type "token".',
-        state: parameters.state,
-      });
-    }
   }
 }

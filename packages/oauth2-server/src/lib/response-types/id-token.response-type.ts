@@ -1,6 +1,7 @@
 import { Injectable } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
 
+import { AuthorizationContext } from '../context/authorization/authorization.context';
 import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
@@ -47,19 +48,18 @@ export class IdTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns an ID Token Response to the Client.
    *
-   * @param parameters Parameters of the Authorization Request.
+   * @param context Authorization Request Context.
    * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns ID Token Response.
    */
   public async handle(
-    parameters: AuthorizationRequest,
+    context: AuthorizationContext<AuthorizationRequest>,
     session: Session,
     consent: Consent
   ): Promise<IdTokenAuthorizationResponse> {
+    const { parameters } = context;
     const { scopes } = consent;
-
-    this.checkParameters(parameters);
 
     if (!scopes.includes('openid')) {
       throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
@@ -73,25 +73,5 @@ export class IdTokenResponseType implements ResponseTypeInterface {
     });
 
     return removeUndefined<IdTokenAuthorizationResponse>({ id_token: idToken, state: parameters.state });
-  }
-
-  /**
-   * Checks if the Parameters of the Authorization Request are valid.
-   *
-   * @param parameters Parameters of the Authorization Request.
-   */
-  private checkParameters(parameters: AuthorizationRequest): void {
-    const { nonce, response_mode: responseMode } = parameters;
-
-    if (nonce === undefined) {
-      throw new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: parameters.state });
-    }
-
-    if (responseMode === 'query') {
-      throw new InvalidRequestException({
-        description: 'Invalid response_mode "query" for response_type "id_token".',
-        state: parameters.state,
-      });
-    }
   }
 }

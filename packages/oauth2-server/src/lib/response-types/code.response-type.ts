@@ -1,12 +1,9 @@
-import { Inject, Injectable, InjectAll } from '@guarani/di';
+import { Inject, Injectable } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
 
+import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
 import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { PkceInterface } from '../pkces/pkce.interface';
-import { PKCE } from '../pkces/pkce.token';
-import { CodeAuthorizationRequest } from '../requests/authorization/code.authorization-request';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { AuthorizationCodeServiceInterface } from '../services/authorization-code.service.interface';
@@ -40,11 +37,9 @@ export class CodeResponseType implements ResponseTypeInterface {
    * Instantiates a new Code Response Type.
    *
    * @param authorizationCodeService Instance of the Authorization Code Service.
-   * @param pkces PKCE Methods.
    */
   public constructor(
-    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
-    @InjectAll(PKCE) private readonly pkces: PkceInterface[]
+    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface
   ) {}
 
   /**
@@ -65,43 +60,18 @@ export class CodeResponseType implements ResponseTypeInterface {
    * Both the Code Challenge and the PKCE Method used by the Client to generate the PKCE Code Challenge are registered
    * at the application's storage together with the issued Authorization Code for verification at the Token Endpoint.
    *
-   * @param parameters Parameters of the Authorization Request.
+   * @param context Authorization Request Context.
    * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Authorization Code Response.
    */
   public async handle(
-    parameters: CodeAuthorizationRequest,
+    context: CodeAuthorizationContext,
     session: Session,
     consent: Consent
   ): Promise<CodeAuthorizationResponse> {
-    this.checkParameters(parameters);
-
+    const { parameters } = context;
     const authorizationCode = await this.authorizationCodeService.create(parameters, session, consent);
-
     return removeUndefined<CodeAuthorizationResponse>({ code: authorizationCode.code, state: parameters.state });
-  }
-
-  /**
-   * Checks if the Parameters of the Authorization Request are valid.
-   *
-   * @param parameters Parameters of the Authorization Request.
-   */
-  private checkParameters(parameters: CodeAuthorizationRequest): void {
-    const { code_challenge: codeChallenge, code_challenge_method: codeChallengeMethod } = parameters;
-
-    if (typeof codeChallenge !== 'string') {
-      throw new InvalidRequestException({
-        description: 'Invalid parameter "code_challenge".',
-        state: parameters.state,
-      });
-    }
-
-    if (codeChallengeMethod !== undefined && !this.pkces.map((pkce) => pkce.name).includes(codeChallengeMethod)) {
-      throw new InvalidRequestException({
-        description: `Unsupported code_challenge_method "${codeChallengeMethod}".`,
-        state: parameters.state,
-      });
-    }
   }
 }

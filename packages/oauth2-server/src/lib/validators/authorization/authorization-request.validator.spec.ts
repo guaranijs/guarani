@@ -1,11 +1,8 @@
-import { DependencyInjectionContainer } from '@guarani/di';
-
 import { Buffer } from 'buffer';
 import { URL } from 'url';
 
 import { AuthorizationContext } from '../../context/authorization/authorization.context';
 import { DisplayInterface } from '../../displays/display.interface';
-import { DISPLAY } from '../../displays/display.token';
 import { Client } from '../../entities/client.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidClientException } from '../../exceptions/invalid-client.exception';
@@ -15,16 +12,11 @@ import { UnauthorizedClientException } from '../../exceptions/unauthorized-clien
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { PromptInterface } from '../../prompts/prompt.interface';
-import { PROMPT } from '../../prompts/prompt.token';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
-import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
-import { RESPONSE_TYPE } from '../../response-types/response-type.token';
 import { ClientServiceInterface } from '../../services/client.service.interface';
-import { CLIENT_SERVICE } from '../../services/client.service.token';
 import { Settings } from '../../settings/settings';
-import { SETTINGS } from '../../settings/settings.token';
 import { AuthorizationRequestValidator } from './authorization-request.validator';
 
 jest.mock('../../handlers/scope.handler');
@@ -62,7 +54,6 @@ const invalidUiLocales: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, ()
 const invalidAcrValues: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Authorization Request Validator', () => {
-  let container: DependencyInjectionContainer;
   let validator: AuthorizationRequestValidator<AuthorizationRequest, AuthorizationContext<AuthorizationRequest>>;
 
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
@@ -140,31 +131,15 @@ describe('Authorization Request Validator', () => {
   ];
 
   beforeEach(() => {
-    container = new DependencyInjectionContainer();
-
-    container.bind(ScopeHandler).toValue(scopeHandlerMock);
-    container.bind<Settings>(SETTINGS).toValue(settings);
-    container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
-
-    responseModesMocks.forEach((responseModeMock) => {
-      container.bind<ResponseModeInterface>(RESPONSE_MODE).toValue(responseModeMock);
-    });
-
-    responseTypesMocks.forEach((responseTypeMock) => {
-      container.bind<ResponseTypeInterface>(RESPONSE_TYPE).toValue(responseTypeMock);
-    });
-
-    promptsMocks.forEach((promptMock) => {
-      container.bind<PromptInterface>(PROMPT).toValue(promptMock);
-    });
-
-    displaysMocks.forEach((displayMock) => {
-      container.bind<DisplayInterface>(DISPLAY).toValue(displayMock);
-    });
-
-    container.bind(AuthorizationRequestValidator).toSelf().asSingleton();
-
-    validator = container.resolve(AuthorizationRequestValidator);
+    validator = Reflect.construct(AuthorizationRequestValidator, [
+      scopeHandlerMock,
+      settings,
+      clientServiceMock,
+      responseModesMocks,
+      responseTypesMocks,
+      promptsMocks,
+      displaysMocks,
+    ]);
   });
 
   afterEach(() => {
@@ -587,15 +562,17 @@ describe('Authorization Request Validator', () => {
     });
 
     it('should throw when requesting a ui locale with no ui locales registered at the authorization server.', async () => {
-      const noUiLocalesSettings = <Settings>{ uiLocales: <string[]>[], acrValues: <string[]>[] };
+      const settings = <Settings>{ uiLocales: <string[]>[], acrValues: <string[]>[] };
 
-      container.delete<Settings>(SETTINGS);
-      container.delete(AuthorizationRequestValidator);
-
-      container.bind<Settings>(SETTINGS).toValue(noUiLocalesSettings);
-      container.bind(AuthorizationRequestValidator).toSelf().asSingleton();
-
-      validator = container.resolve(AuthorizationRequestValidator);
+      validator = Reflect.construct(AuthorizationRequestValidator, [
+        scopeHandlerMock,
+        settings,
+        clientServiceMock,
+        responseModesMocks,
+        responseTypesMocks,
+        promptsMocks,
+        displaysMocks,
+      ]);
 
       request.query.ui_locales = 'pt-BR';
 
@@ -656,13 +633,15 @@ describe('Authorization Request Validator', () => {
     it('should throw when requesting an authentication context class reference with no authentication context class references registered at the authorization server.', async () => {
       const settings = <Settings>{ uiLocales: <string[]>['en', 'pt-BR'], acrValues: <string[]>[] };
 
-      container.delete<Settings>(SETTINGS);
-      container.delete(AuthorizationRequestValidator);
-
-      container.bind<Settings>(SETTINGS).toValue(settings);
-      container.bind(AuthorizationRequestValidator).toSelf().asSingleton();
-
-      validator = container.resolve(AuthorizationRequestValidator);
+      validator = Reflect.construct(AuthorizationRequestValidator, [
+        scopeHandlerMock,
+        settings,
+        clientServiceMock,
+        responseModesMocks,
+        responseTypesMocks,
+        promptsMocks,
+        displaysMocks,
+      ]);
 
       request.query.acr_values = 'urn:guarani:acr:2fa';
 

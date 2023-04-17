@@ -1,19 +1,19 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
+import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
+import { DisplayInterface } from '../displays/display.interface';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
-import { User } from '../entities/user.entity';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { PkceInterface } from '../pkces/pkce.interface';
-import { PKCE } from '../pkces/pkce.token';
-import { CodeAuthorizationRequest } from '../requests/authorization/code.authorization-request';
+import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { AuthorizationCodeServiceInterface } from '../services/authorization-code.service.interface';
 import { AUTHORIZATION_CODE_SERVICE } from '../services/authorization-code.service.token';
 import { CodeResponseType } from './code.response-type';
+import { ResponseTypeInterface } from './response-type.interface';
 import { ResponseType } from './response-type.type';
 
 describe('Code Response Type', () => {
@@ -26,16 +26,10 @@ describe('Code Response Type', () => {
     revoke: jest.fn(),
   });
 
-  const pkces = [
-    jest.mocked<PkceInterface>({ name: 'S256', verify: jest.fn() }),
-    jest.mocked<PkceInterface>({ name: 'plain', verify: jest.fn() }),
-  ];
-
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
     container.bind<AuthorizationCodeServiceInterface>(AUTHORIZATION_CODE_SERVICE).toValue(authorizationCodeServiceMock);
-    pkces.forEach((pkce) => container.bind<PkceInterface>(PKCE).toValue(pkce));
     container.bind(CodeResponseType).toSelf();
 
     responseType = container.resolve(CodeResponseType);
@@ -54,64 +48,53 @@ describe('Code Response Type', () => {
   });
 
   describe('handle()', () => {
-    let parameters: CodeAuthorizationRequest;
+    let context: CodeAuthorizationContext;
 
     beforeEach(() => {
-      parameters = <CodeAuthorizationRequest>{
-        response_type: 'code',
-        scope: 'foo bar',
-        code_challenge: 'code_challenge',
-        code_challenge_method: 'plain',
+      context = <CodeAuthorizationContext>{
+        parameters: {
+          response_type: 'code',
+          client_id: 'client_id',
+          redirect_uri: 'https://client.example.com/oauth/callback',
+          scope: 'foo bar',
+          code_challenge: 'code_challenge',
+          code_challenge_method: 'plain',
+          state: 'client_state',
+          nonce: 'client_nonce',
+        },
+        cookies: {},
+        responseType: jest.mocked<ResponseTypeInterface>({
+          name: 'code',
+          defaultResponseMode: 'query',
+          handle: jest.fn(),
+        }),
+        client: <Client>{ id: 'client_id' },
+        redirectUri: new URL('https://client.example.com/oauth/callback'),
+        scopes: ['foo', 'bar'],
+        codeChallenge: 'code_challenge',
+        codeChallengeMethod: jest.mocked<PkceInterface>({ name: 'plain', verify: jest.fn() }),
         state: 'client_state',
+        responseMode: jest.mocked<ResponseModeInterface>({ name: 'query', createHttpResponse: jest.fn() }),
+        nonce: 'client_nonce',
+        prompts: [],
+        display: jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
+        uiLocales: [],
+        acrValues: [],
       };
     });
 
-    it('should throw when not providing a "code_challenge" parameter.', async () => {
-      Reflect.deleteProperty(parameters, 'code_challenge');
-
-      const client = <Client>{ id: 'client_id' };
-      const user = <User>{ id: 'user_id' };
-
-      const session = <Session>{};
-      const consent = <Consent>{ client, user };
-
-      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: 'client_state' })
-      );
-    });
-
-    it('should throw when providing an unsupported "code_challenge_method".', async () => {
-      Reflect.set(parameters, 'code_challenge_method', 'unknown');
-
-      const client = <Client>{ id: 'client_id' };
-      const user = <User>{ id: 'user_id' };
-
-      const session = <Session>{};
-      const consent = <Consent>{ client, user };
-
-      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'Unsupported code_challenge_method "unknown".',
-          state: 'client_state',
-        })
-      );
-    });
-
     it('should create a code authorization response.', async () => {
-      const client = <Client>{ id: 'client_id' };
-      const user = <User>{ id: 'user_id' };
-
       const session = <Session>{};
-      const consent = <Consent>{ client, user };
+      const consent = <Consent>{ client: { id: 'client_id' }, user: { id: 'user_id' } };
 
-      authorizationCodeServiceMock.create.mockResolvedValueOnce(<AuthorizationCode>{ code: 'authorization_code' });
+      const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
 
-      await expect(responseType.handle(parameters, session, consent)).resolves.toStrictEqual<CodeAuthorizationResponse>(
-        {
-          code: 'authorization_code',
-          state: 'client_state',
-        }
-      );
+      authorizationCodeServiceMock.create.mockResolvedValueOnce(authorizationCode);
+
+      await expect(responseType.handle(context, session, consent)).resolves.toStrictEqual<CodeAuthorizationResponse>({
+        code: 'authorization_code',
+        state: 'client_state',
+      });
     });
   });
 });

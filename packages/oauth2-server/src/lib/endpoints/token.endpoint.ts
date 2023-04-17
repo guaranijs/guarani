@@ -78,7 +78,7 @@ export class TokenEndpoint implements EndpointInterface {
       const validator = this.getValidator(parameters);
 
       const context = await validator.validate(request);
-      const tokenResponse = await context.grantType.handle(parameters, context.client);
+      const tokenResponse = await context.grantType.handle(context);
 
       return new HttpResponse().setHeaders(this.headers).json(tokenResponse);
     } catch (exc: unknown) {

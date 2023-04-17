@@ -1,11 +1,8 @@
-import { DependencyInjectionContainer } from '@guarani/di';
-
 import { TokenContext } from '../../context/token/token.context';
 import { Client } from '../../entities/client.entity';
 import { InvalidClientException } from '../../exceptions/invalid-client.exception';
 import { UnauthorizedClientException } from '../../exceptions/unauthorized-client.exception';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
-import { GRANT_TYPE } from '../../grant-types/grant-type.token';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { HttpRequest } from '../../http/http.request';
 import { TokenRequest } from '../../requests/token/token-request';
@@ -14,7 +11,6 @@ import { TokenRequestValidator } from './token-request.validator';
 jest.mock('../../handlers/client-authentication.handler');
 
 describe('Token Request Validator', () => {
-  let container: DependencyInjectionContainer;
   let validator: TokenRequestValidator<TokenRequest, TokenContext<TokenRequest>>;
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
@@ -29,17 +25,7 @@ describe('Token Request Validator', () => {
   ];
 
   beforeEach(() => {
-    container = new DependencyInjectionContainer();
-
-    container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
-
-    grantTypesMocks.forEach((grantTypeMock) => {
-      container.bind<GrantTypeInterface>(GRANT_TYPE).toValue(grantTypeMock);
-    });
-
-    container.bind(TokenRequestValidator).toSelf().asSingleton();
-
-    validator = container.resolve(TokenRequestValidator);
+    validator = Reflect.construct(TokenRequestValidator, [clientAuthenticationHandlerMock, grantTypesMocks]);
   });
 
   afterEach(() => {

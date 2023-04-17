@@ -1,10 +1,7 @@
-import { Injectable, InjectAll } from '@guarani/di';
-
 import { TokenContext } from '../../context/token/token.context';
 import { Client } from '../../entities/client.entity';
 import { UnauthorizedClientException } from '../../exceptions/unauthorized-client.exception';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
-import { GRANT_TYPE } from '../../grant-types/grant-type.token';
 import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { HttpRequest } from '../../http/http.request';
@@ -13,7 +10,6 @@ import { TokenRequest } from '../../requests/token/token-request';
 /**
  * Implementation of the Token Request Validator.
  */
-@Injectable()
 export abstract class TokenRequestValidator<TRequest extends TokenRequest, TContext extends TokenContext<TRequest>> {
   /**
    * Name of the Grant Type that uses this Validator.
@@ -28,7 +24,7 @@ export abstract class TokenRequestValidator<TRequest extends TokenRequest, TCont
    */
   public constructor(
     protected readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    @InjectAll(GRANT_TYPE) protected readonly grantTypes: GrantTypeInterface[]
+    protected readonly grantTypes: GrantTypeInterface[]
   ) {}
 
   /**

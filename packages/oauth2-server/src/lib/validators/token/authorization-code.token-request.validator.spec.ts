@@ -31,6 +31,12 @@ describe('Authorization Code Token Request Validator', () => {
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
 
+  const authorizationCodeServiceMock = jest.mocked<AuthorizationCodeServiceInterface>({
+    create: jest.fn(),
+    findOne: jest.fn(),
+    revoke: jest.fn(),
+  });
+
   const grantTypesMocks = [
     jest.mocked<GrantTypeInterface>({ name: 'authorization_code', handle: jest.fn() }),
     jest.mocked<GrantTypeInterface>({ name: 'client_credentials', handle: jest.fn() }),
@@ -40,22 +46,16 @@ describe('Authorization Code Token Request Validator', () => {
     jest.mocked<GrantTypeInterface>({ name: 'urn:ietf:params:oauth:grant-type:jwt-bearer', handle: jest.fn() }),
   ];
 
-  const authorizationCodeServiceMock = jest.mocked<AuthorizationCodeServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    revoke: jest.fn(),
-  });
-
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
+    container.bind<AuthorizationCodeServiceInterface>(AUTHORIZATION_CODE_SERVICE).toValue(authorizationCodeServiceMock);
 
     grantTypesMocks.forEach((grantTypeMock) => {
       container.bind<GrantTypeInterface>(GRANT_TYPE).toValue(grantTypeMock);
     });
 
-    container.bind<AuthorizationCodeServiceInterface>(AUTHORIZATION_CODE_SERVICE).toValue(authorizationCodeServiceMock);
     container.bind(AuthorizationCodeTokenRequestValidator).toSelf().asSingleton();
 
     validator = container.resolve(AuthorizationCodeTokenRequestValidator);

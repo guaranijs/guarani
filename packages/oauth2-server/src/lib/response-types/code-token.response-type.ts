@@ -1,12 +1,9 @@
-import { Inject, Injectable, InjectAll } from '@guarani/di';
+import { Inject, Injectable } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
 
+import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
 import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { PkceInterface } from '../pkces/pkce.interface';
-import { PKCE } from '../pkces/pkce.token';
-import { CodeAuthorizationRequest } from '../requests/authorization/code.authorization-request';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
@@ -50,30 +47,27 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
    *
    * @param accessTokenService Instance of the Access Token Service.
    * @param authorizationCodeService Instance of the Authorization Code Service.
-   * @param pkces PKCE Methods.
    */
   public constructor(
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
-    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
-    @InjectAll(PKCE) private readonly pkces: PkceInterface[]
+    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface
   ) {}
 
   /**
    * Creates and returns an Authorization Code and Access Token Response to the Client.
    *
-   * @param parameters Parameters of the Authorization Request.
+   * @param context Authorization Request Context.
    * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Authorization Code and Access Token Response.
    */
   public async handle(
-    parameters: CodeAuthorizationRequest,
+    context: CodeAuthorizationContext,
     session: Session,
     consent: Consent
   ): Promise<CodeAuthorizationResponse & TokenAuthorizationResponse> {
+    const { parameters } = context;
     const { client, scopes, user } = consent;
-
-    this.checkParameters(parameters);
 
     const authorizationCode = await this.authorizationCodeService.create(parameters, session, consent);
     const accessToken = await this.accessTokenService.create(scopes, client, user);
@@ -85,39 +79,5 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
       code: authorizationCode.code,
       state: parameters.state,
     });
-  }
-
-  /**
-   * Checks if the Parameters of the Authorization Request are valid.
-   *
-   * @param parameters Parameters of the Authorization Request.
-   */
-  private checkParameters(parameters: CodeAuthorizationRequest): void {
-    const {
-      code_challenge: codeChallenge,
-      code_challenge_method: codeChallengeMethod,
-      response_mode: responseMode,
-    } = parameters;
-
-    if (typeof codeChallenge !== 'string') {
-      throw new InvalidRequestException({
-        description: 'Invalid parameter "code_challenge".',
-        state: parameters.state,
-      });
-    }
-
-    if (codeChallengeMethod !== undefined && !this.pkces.map((pkce) => pkce.name).includes(codeChallengeMethod)) {
-      throw new InvalidRequestException({
-        description: `Unsupported code_challenge_method "${codeChallengeMethod}".`,
-        state: parameters.state,
-      });
-    }
-
-    if (responseMode === 'query') {
-      throw new InvalidRequestException({
-        description: 'Invalid response_mode "query" for response_type "code token".',
-        state: parameters.state,
-      });
-    }
   }
 }

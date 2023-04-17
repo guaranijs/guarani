@@ -1,10 +1,7 @@
-import { Inject, Injectable, InjectAll } from '@guarani/di';
-
 import { URL } from 'url';
 
 import { AuthorizationContext } from '../../context/authorization/authorization.context';
 import { DisplayInterface } from '../../displays/display.interface';
-import { DISPLAY } from '../../displays/display.token';
 import { Client } from '../../entities/client.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidClientException } from '../../exceptions/invalid-client.exception';
@@ -13,23 +10,17 @@ import { UnauthorizedClientException } from '../../exceptions/unauthorized-clien
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { PromptInterface } from '../../prompts/prompt.interface';
-import { PROMPT } from '../../prompts/prompt.token';
 import { Prompt } from '../../prompts/prompt.type';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
-import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
-import { RESPONSE_TYPE } from '../../response-types/response-type.token';
 import { ResponseType } from '../../response-types/response-type.type';
 import { ClientServiceInterface } from '../../services/client.service.interface';
-import { CLIENT_SERVICE } from '../../services/client.service.token';
 import { Settings } from '../../settings/settings';
-import { SETTINGS } from '../../settings/settings.token';
 
 /**
  * Implementation of the Authorization Request Validator.
  */
-@Injectable()
 export abstract class AuthorizationRequestValidator<
   TRequest extends AuthorizationRequest,
   TContext extends AuthorizationContext<TRequest>
@@ -52,12 +43,12 @@ export abstract class AuthorizationRequestValidator<
    */
   public constructor(
     protected readonly scopeHandler: ScopeHandler,
-    @Inject(SETTINGS) protected readonly settings: Settings,
-    @Inject(CLIENT_SERVICE) protected readonly clientService: ClientServiceInterface,
-    @InjectAll(RESPONSE_MODE) protected readonly responseModes: ResponseModeInterface[],
-    @InjectAll(RESPONSE_TYPE) protected readonly responseTypes: ResponseTypeInterface[],
-    @InjectAll(PROMPT) protected readonly prompts: PromptInterface[],
-    @InjectAll(DISPLAY) protected readonly displays: DisplayInterface[]
+    protected readonly settings: Settings,
+    protected readonly clientService: ClientServiceInterface,
+    protected readonly responseModes: ResponseModeInterface[],
+    protected readonly responseTypes: ResponseTypeInterface[],
+    protected readonly prompts: PromptInterface[],
+    protected readonly displays: DisplayInterface[]
   ) {}
 
   /**

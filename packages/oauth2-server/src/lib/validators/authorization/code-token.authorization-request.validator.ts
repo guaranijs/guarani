@@ -1,10 +1,23 @@
-import { Injectable } from '@guarani/di';
+import { Inject, Injectable, InjectAll } from '@guarani/di';
 
+import { DisplayInterface } from '../../displays/display.interface';
+import { DISPLAY } from '../../displays/display.token';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
+import { ScopeHandler } from '../../handlers/scope.handler';
+import { PkceInterface } from '../../pkces/pkce.interface';
+import { PKCE } from '../../pkces/pkce.token';
+import { PromptInterface } from '../../prompts/prompt.interface';
+import { PROMPT } from '../../prompts/prompt.token';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
+import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
+import { RESPONSE_TYPE } from '../../response-types/response-type.token';
 import { ResponseType } from '../../response-types/response-type.type';
+import { ClientServiceInterface } from '../../services/client.service.interface';
+import { CLIENT_SERVICE } from '../../services/client.service.token';
+import { Settings } from '../../settings/settings';
+import { SETTINGS } from '../../settings/settings.token';
 import { CodeAuthorizationRequestValidator } from './code.authorization-request.validator';
 
 /**
@@ -16,6 +29,31 @@ export class CodeTokenAuthorizationRequestValidator extends CodeAuthorizationReq
    * Name of the Response Type that uses this Validator.
    */
   public override readonly name: ResponseType = 'code token';
+
+  /**
+   * Instantiates a new Code & Token Authorization Request Validator.
+   *
+   * @param scopeHandler Instance of the Scope Handler.
+   * @param settings Settings of the Authorization Server.
+   * @param clientService Instance of the Client Service.
+   * @param responseModes Response Modes registered at the Authorization Server.
+   * @param responseTypes Response Types registered at the Authorization Server.
+   * @param prompts Prompts registered at the Authorization Server.
+   * @param displays Displays registered at the Authorization Server.
+   * @param pkces PKCE Code Challenge Methods registered at the Authorization Server.
+   */
+  public constructor(
+    protected override readonly scopeHandler: ScopeHandler,
+    @Inject(SETTINGS) protected override readonly settings: Settings,
+    @Inject(CLIENT_SERVICE) protected override readonly clientService: ClientServiceInterface,
+    @InjectAll(RESPONSE_MODE) protected override readonly responseModes: ResponseModeInterface[],
+    @InjectAll(RESPONSE_TYPE) protected override readonly responseTypes: ResponseTypeInterface[],
+    @InjectAll(PROMPT) protected override readonly prompts: PromptInterface[],
+    @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[],
+    @InjectAll(PKCE) protected override readonly pkces: PkceInterface[]
+  ) {
+    super(scopeHandler, settings, clientService, responseModes, responseTypes, prompts, displays, pkces);
+  }
 
   /**
    * Retrieves the Response Mode requested by the Client.

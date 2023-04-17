@@ -1,19 +1,22 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
+import { AuthorizationContext } from '../context/authorization/authorization.context';
+import { DisplayInterface } from '../displays/display.interface';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
-import { User } from '../entities/user.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
+import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { IdTokenAuthorizationResponse } from '../responses/authorization/id-token.authorization-response';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { IdTokenTokenResponseType } from './id-token-token.response-type';
+import { ResponseTypeInterface } from './response-type.interface';
 import { ResponseType } from './response-type.type';
 
 jest.mock('../handlers/id-token.handler');
@@ -53,80 +56,71 @@ describe('ID Token Token Response Type', () => {
   });
 
   describe('handle()', () => {
-    let parameters: AuthorizationRequest;
+    let context: AuthorizationContext<AuthorizationRequest>;
 
     beforeEach(() => {
-      parameters = <AuthorizationRequest>{
-        response_type: 'id_token token',
-        scope: 'openid foo bar',
+      context = <AuthorizationContext<AuthorizationRequest>>{
+        parameters: {
+          response_type: 'id_token token',
+          client_id: 'client_id',
+          redirect_uri: 'https://client.example.com/oauth/callback',
+          scope: 'openid foo bar',
+          state: 'client_state',
+          nonce: 'client_nonce',
+        },
+        cookies: {},
+        responseType: jest.mocked<ResponseTypeInterface>({
+          name: 'id_token token',
+          defaultResponseMode: 'fragment',
+          handle: jest.fn(),
+        }),
+        client: <Client>{ id: 'client_id' },
+        redirectUri: new URL('https://client.example.com/oauth/callback'),
+        scopes: ['openid', 'foo', 'bar'],
         state: 'client_state',
-        nonce: 'nonce',
+        responseMode: jest.mocked<ResponseModeInterface>({ name: 'fragment', createHttpResponse: jest.fn() }),
+        nonce: 'client_nonce',
+        prompts: [],
+        display: jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
+        uiLocales: [],
+        acrValues: [],
       };
     });
 
-    it('should throw when using "query" as the "response_mode".', async () => {
-      Reflect.set(parameters, 'response_mode', 'query');
-
-      const client = <Client>{ id: 'client_id' };
-      const user = <User>{ id: 'user_id' };
-
-      const session = <Session>{};
-      const consent = <Consent>{ client, scopes: ['openid', 'foo', 'bar'], user };
-
-      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'Invalid response_mode "query" for response_type "id_token token".',
-          state: 'client_state',
-        })
-      );
-    });
-
     it('should throw when not providing the "openid" scope.', async () => {
-      Reflect.set(parameters, 'scope', 'foo bar');
-
-      const client = <Client>{ id: 'client_id' };
-      const user = <User>{ id: 'user_id' };
+      Reflect.set(context.parameters, 'scope', 'foo bar');
+      Reflect.set(context, 'scopes', ['foo', 'bar']);
 
       const session = <Session>{};
-      const consent = <Consent>{ client, scopes: ['foo', 'bar'], user };
+      const consent = <Consent>{
+        scopes: ['foo', 'bar'],
+        client: { id: 'client_id' },
+        user: { id: 'user_id' },
+      };
 
-      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
+      await expect(responseType.handle(context, session, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Missing required scope "openid".', state: 'client_state' })
       );
     });
 
-    it('should throw when not providing the "nonce" parameter.', async () => {
-      Reflect.deleteProperty(parameters, 'nonce');
-
-      const client = <Client>{ id: 'client_id' };
-      const user = <User>{ id: 'user_id' };
-
-      const session = <Session>{};
-      const consent = <Consent>{ client, scopes: ['openid', 'foo', 'bar'], user };
-
-      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: 'client_state' })
-      );
-    });
-
     it('should create an id token token authorization response.', async () => {
-      const client = <Client>{ id: 'client_id' };
-      const user = <User>{ id: 'user_id' };
-
       const session = <Session>{};
-      const consent = <Consent>{ client, scopes: ['openid', 'foo', 'bar'], user };
+      const consent = <Consent>{
+        scopes: ['openid', 'foo', 'bar'],
+        client: { id: 'client_id' },
+        user: { id: 'user_id' },
+      };
 
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: consent.scopes,
+        expiresAt: new Date(Date.now() + 3600000),
+      };
+
+      accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       idTokenHandlerMock.generateIdToken.mockResolvedValueOnce('id_token');
 
-      accessTokenServiceMock.create.mockImplementationOnce(async (scopes) => {
-        return <AccessToken>{
-          handle: 'access_token',
-          scopes,
-          expiresAt: new Date(Date.now() + 3600000),
-        };
-      });
-
-      await expect(responseType.handle(parameters, session, consent)).resolves.toStrictEqual<
+      await expect(responseType.handle(context, session, consent)).resolves.toStrictEqual<
         TokenAuthorizationResponse & IdTokenAuthorizationResponse
       >({
         access_token: 'access_token',

@@ -211,8 +211,8 @@ describe('Authorization Code Grant Type', () => {
 
       const accessToken = <AccessToken>{
         handle: 'access_token',
+        scopes: context.authorizationCode.consent.scopes,
         expiresAt: new Date(Date.now() + 86400000),
-        scopes: ['foo', 'bar', 'baz'],
       };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
@@ -233,8 +233,8 @@ describe('Authorization Code Grant Type', () => {
 
       const accessToken = <AccessToken>{
         handle: 'access_token',
+        scopes: context.authorizationCode.consent.scopes,
         expiresAt: new Date(Date.now() + 86400000),
-        scopes: ['foo', 'bar', 'baz'],
       };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
@@ -252,8 +252,8 @@ describe('Authorization Code Grant Type', () => {
     it('should create a token response with a refresh token.', async () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
+        scopes: context.authorizationCode.consent.scopes,
         expiresAt: new Date(Date.now() + 86400000),
-        scopes: ['foo', 'bar', 'baz'],
       };
 
       const refreshToken = <RefreshToken>{ handle: 'refresh_token' };
@@ -278,8 +278,8 @@ describe('Authorization Code Grant Type', () => {
 
       const accessToken = <AccessToken>{
         handle: 'access_token',
+        scopes: context.authorizationCode.consent.scopes,
         expiresAt: new Date(Date.now() + 86400000),
-        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
       };
 
       const refreshToken = <RefreshToken>{ handle: 'refresh_token' };

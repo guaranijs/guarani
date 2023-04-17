@@ -70,17 +70,17 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * Instantiates a new JWT Bearer Token Request Validator.
    *
    * @param clientAuthenticationHandler Instance of the Client Authentication Handler.
-   * @param grantTypes Grant Types registered at the Authorization Server.
    * @param scopeHandler Instance of the Scope Handler.
    * @param settings Settings of the Authorization Server.
    * @param userService Instance of the User Service.
+   * @param grantTypes Grant Types registered at the Authorization Server.
    */
   public constructor(
     protected override readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
-    private readonly scopeHandler: ScopeHandler,
+    protected readonly scopeHandler: ScopeHandler,
     @Inject(SETTINGS) protected readonly settings: Settings,
-    @Inject(USER_SERVICE) private readonly userService: UserServiceInterface
+    @Inject(USER_SERVICE) protected readonly userService: UserServiceInterface,
+    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[]
   ) {
     super(clientAuthenticationHandler, grantTypes);
   }

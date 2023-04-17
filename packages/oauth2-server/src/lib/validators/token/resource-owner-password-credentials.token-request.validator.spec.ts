@@ -32,16 +32,6 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
   let validator: ResourceOwnerPasswordCredentialsTokenRequestValidator;
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
-
-  const grantTypesMocks = [
-    jest.mocked<GrantTypeInterface>({ name: 'authorization_code', handle: jest.fn() }),
-    jest.mocked<GrantTypeInterface>({ name: 'client_credentials', handle: jest.fn() }),
-    jest.mocked<GrantTypeInterface>({ name: 'password', handle: jest.fn() }),
-    jest.mocked<GrantTypeInterface>({ name: 'refresh_token', handle: jest.fn() }),
-    jest.mocked<GrantTypeInterface>({ name: 'urn:ietf:params:oauth:grant-type:device_code', handle: jest.fn() }),
-    jest.mocked<GrantTypeInterface>({ name: 'urn:ietf:params:oauth:grant-type:jwt-bearer', handle: jest.fn() }),
-  ];
-
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
 
   const userServiceMock = jest.mocked<UserServiceInterface>(
@@ -53,17 +43,26 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
     true
   );
 
+  const grantTypesMocks = [
+    jest.mocked<GrantTypeInterface>({ name: 'authorization_code', handle: jest.fn() }),
+    jest.mocked<GrantTypeInterface>({ name: 'client_credentials', handle: jest.fn() }),
+    jest.mocked<GrantTypeInterface>({ name: 'password', handle: jest.fn() }),
+    jest.mocked<GrantTypeInterface>({ name: 'refresh_token', handle: jest.fn() }),
+    jest.mocked<GrantTypeInterface>({ name: 'urn:ietf:params:oauth:grant-type:device_code', handle: jest.fn() }),
+    jest.mocked<GrantTypeInterface>({ name: 'urn:ietf:params:oauth:grant-type:jwt-bearer', handle: jest.fn() }),
+  ];
+
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
+    container.bind(ScopeHandler).toValue(scopeHandlerMock);
+    container.bind<UserServiceInterface>(USER_SERVICE).toValue(userServiceMock);
 
     grantTypesMocks.forEach((grantTypeMock) => {
       container.bind<GrantTypeInterface>(GRANT_TYPE).toValue(grantTypeMock);
     });
 
-    container.bind(ScopeHandler).toValue(scopeHandlerMock);
-    container.bind<UserServiceInterface>(USER_SERVICE).toValue(userServiceMock);
     container.bind(ResourceOwnerPasswordCredentialsTokenRequestValidator).toSelf().asSingleton();
 
     validator = container.resolve(ResourceOwnerPasswordCredentialsTokenRequestValidator);

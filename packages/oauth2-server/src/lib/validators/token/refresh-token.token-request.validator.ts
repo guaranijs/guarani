@@ -34,15 +34,15 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<
    * Instantiates a new Refresh Token Token Request Validator.
    *
    * @param clientAuthenticationHandler Instance of the Client Authentication Handler.
-   * @param grantTypes Grant Types registered at the Authorization Server.
    * @param scopeHandler Scope Handler of the Authorization Server.
    * @param refreshTokenService Instance of the Refresh Token Service.
+   * @param grantTypes Grant Types registered at the Authorization Server.
    */
   public constructor(
     protected override readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
-    private readonly scopeHandler: ScopeHandler,
-    @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: RefreshTokenServiceInterface
+    protected readonly scopeHandler: ScopeHandler,
+    @Inject(REFRESH_TOKEN_SERVICE) protected readonly refreshTokenService: RefreshTokenServiceInterface,
+    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[]
   ) {
     super(clientAuthenticationHandler, grantTypes);
   }

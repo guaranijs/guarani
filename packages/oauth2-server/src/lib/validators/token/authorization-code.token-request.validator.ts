@@ -35,13 +35,13 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * Instantiates a new Authorization Code Token Request Validator.
    *
    * @param clientAuthenticationHandler Instance of the Client Authentication Handler.
-   * @param grantTypes Grant Types registered at the Authorization Server.
    * @param authorizationCodeService Instance of the Authorization Code Service.
+   * @param grantTypes Grant Types registered at the Authorization Server.
    */
   public constructor(
     protected override readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
-    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface
+    @Inject(AUTHORIZATION_CODE_SERVICE) protected readonly authorizationCodeService: AuthorizationCodeServiceInterface,
+    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[]
   ) {
     super(clientAuthenticationHandler, grantTypes);
   }

@@ -25,6 +25,7 @@ describe('Client Credentials Token Request Validator', () => {
   let validator: ClientCredentialsTokenRequestValidator;
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
 
   const grantTypesMocks = [
     jest.mocked<GrantTypeInterface>({ name: 'authorization_code', handle: jest.fn() }),
@@ -35,18 +36,16 @@ describe('Client Credentials Token Request Validator', () => {
     jest.mocked<GrantTypeInterface>({ name: 'urn:ietf:params:oauth:grant-type:jwt-bearer', handle: jest.fn() }),
   ];
 
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
-
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
+    container.bind(ScopeHandler).toValue(scopeHandlerMock);
 
     grantTypesMocks.forEach((grantTypeMock) => {
       container.bind<GrantTypeInterface>(GRANT_TYPE).toValue(grantTypeMock);
     });
 
-    container.bind(ScopeHandler).toValue(scopeHandlerMock);
     container.bind(ClientCredentialsTokenRequestValidator).toSelf().asSingleton();
 
     validator = container.resolve(ClientCredentialsTokenRequestValidator);

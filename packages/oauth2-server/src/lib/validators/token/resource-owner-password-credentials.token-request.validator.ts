@@ -34,15 +34,15 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * Instantiates a new Resource Owner Password Credentials Token Request Validator.
    *
    * @param clientAuthenticationHandler Instance of the Client Authentication Handler.
-   * @param grantTypes Grant Types registered at the Authorization Server.
    * @param scopeHandler Instance of the Scope Handler.
    * @param userService Instance of the User Service.
+   * @param grantTypes Grant Types registered at the Authorization Server.
    */
   public constructor(
     protected override readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
-    private readonly scopeHandler: ScopeHandler,
-    @Inject(USER_SERVICE) private readonly userService: UserServiceInterface
+    protected readonly scopeHandler: ScopeHandler,
+    @Inject(USER_SERVICE) protected readonly userService: UserServiceInterface,
+    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[]
   ) {
     super(clientAuthenticationHandler, grantTypes);
 

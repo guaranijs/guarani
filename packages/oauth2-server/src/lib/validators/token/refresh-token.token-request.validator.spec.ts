@@ -31,6 +31,13 @@ describe('Refresh Token Token Request Validator', () => {
   let validator: RefreshTokenTokenRequestValidator;
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+
+  const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>({
+    create: jest.fn(),
+    findOne: jest.fn(),
+    revoke: jest.fn(),
+  });
 
   const grantTypesMocks = [
     jest.mocked<GrantTypeInterface>({ name: 'authorization_code', handle: jest.fn() }),
@@ -41,25 +48,17 @@ describe('Refresh Token Token Request Validator', () => {
     jest.mocked<GrantTypeInterface>({ name: 'urn:ietf:params:oauth:grant-type:jwt-bearer', handle: jest.fn() }),
   ];
 
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
-
-  const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    revoke: jest.fn(),
-  });
-
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
+    container.bind(ScopeHandler).toValue(scopeHandlerMock);
+    container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);
 
     grantTypesMocks.forEach((grantTypeMock) => {
       container.bind<GrantTypeInterface>(GRANT_TYPE).toValue(grantTypeMock);
     });
 
-    container.bind(ScopeHandler).toValue(scopeHandlerMock);
-    container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);
     container.bind(RefreshTokenTokenRequestValidator).toSelf().asSingleton();
 
     validator = container.resolve(RefreshTokenTokenRequestValidator);

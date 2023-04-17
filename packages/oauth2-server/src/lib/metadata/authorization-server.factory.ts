@@ -85,9 +85,9 @@ import { authorizationRequestValidatorsRegistry } from '../validators/authorizat
 import { DeviceAuthorizationRequestValidator } from '../validators/device-authorization-request.validator';
 import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
 import { RevocationRequestValidator } from '../validators/revocation-request.validator';
-import { AuthorizationServerOptions } from './authorization-server.options';
-import { tokenRequestValidatorsRegistry } from '../validators/token/token-request.validator.registry';
 import { TokenRequestValidator } from '../validators/token/token-request.validator';
+import { tokenRequestValidatorsRegistry } from '../validators/token/token-request.validator.registry';
+import { AuthorizationServerOptions } from './authorization-server.options';
 
 /**
  * Factory class for configuring and instantiating an OAuth 2.0 Authorization Server.

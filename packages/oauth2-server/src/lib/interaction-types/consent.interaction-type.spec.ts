@@ -4,7 +4,6 @@ import { ConsentContextInteractionContext } from '../context/interaction/consent
 import { ConsentDecisionAcceptInteractionContext } from '../context/interaction/consent-decision-accept.interaction.context';
 import { ConsentDecisionDenyInteractionContext } from '../context/interaction/consent-decision-deny.interaction.context';
 import { ConsentDecisionInteractionContext } from '../context/interaction/consent-decision.interaction.context';
-import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
@@ -122,7 +121,7 @@ describe('Consent Interaction Type', () => {
         subject: 'user_id',
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         login_challenge: 'login_challenge',
-        client: <Client>{ id: 'client_id' },
+        client: 'client_id',
         context: {},
       });
     });
@@ -136,7 +135,7 @@ describe('Consent Interaction Type', () => {
         subject: 'user_id',
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         login_challenge: 'login_challenge',
-        client: <Client>{ id: 'client_id' },
+        client: 'client_id',
         context: {},
       });
     });

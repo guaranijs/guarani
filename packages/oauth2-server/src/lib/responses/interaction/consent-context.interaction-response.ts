@@ -1,4 +1,3 @@
-import { Client } from '../../entities/client.entity';
 import { ConsentContext } from './consent.context';
 
 /**
@@ -31,9 +30,9 @@ export interface ConsentContextInteractionResponse {
   readonly login_challenge: string;
 
   /**
-   * Client requesting authorization.
+   * Identifier of the Client requesting authorization.
    */
-  readonly client: Client;
+  readonly client: string;
 
   /**
    * Context for the Consent Interaction.

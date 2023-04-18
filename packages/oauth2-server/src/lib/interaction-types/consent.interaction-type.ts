@@ -85,7 +85,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
       subject: grant.session!.user.id,
       request_url: url.href,
       login_challenge: grant.loginChallenge,
-      client: grant.client, // TODO: return only the client id.
+      client: grant.client.id,
       context: {
         prompts: <Prompt[]>grant.parameters.prompt?.split(' '),
         display: grant.parameters.display,

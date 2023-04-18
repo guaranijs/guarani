@@ -2,6 +2,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { OutgoingHttpHeaders } from 'http';
 
+import { InteractionContext } from '../context/interaction/interaction.context';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { UnsupportedInteractionTypeException } from '../exceptions/unsupported-interaction-type.exception';
@@ -9,25 +10,24 @@ import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
-import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
 import { InteractionRequest } from '../requests/interaction/interaction-request';
+import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
 import { Endpoint } from './endpoint.type';
 import { InteractionEndpoint } from './interaction.endpoint';
+
+jest.mock('../validators/interaction/interaction-request.validator');
 
 describe('Interaction Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: InteractionEndpoint;
 
-  const interactionTypesMock = [
-    jest.mocked<InteractionTypeInterface>({ name: 'consent', handleContext: jest.fn(), handleDecision: jest.fn() }),
-    jest.mocked<InteractionTypeInterface>({ name: 'login', handleContext: jest.fn(), handleDecision: jest.fn() }),
-  ];
+  const validatorsMocks = [jest.mocked(InteractionRequestValidator.prototype, true)];
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
-    interactionTypesMock.forEach((interactionType) => {
-      container.bind<InteractionTypeInterface>(INTERACTION_TYPE).toValue(interactionType);
+    validatorsMocks.forEach((validatorMock) => {
+      container.bind(InteractionRequestValidator).toValue(validatorMock);
     });
 
     container.bind(InteractionEndpoint).toSelf().asSingleton();
@@ -122,12 +122,21 @@ describe('Interaction Endpoint', () => {
 
       request.query.interaction_type = 'login';
 
-      const interactionTypeResponse: Record<string, any> = { skip: true, client: { id: 'client_id' } };
+      const interactionResponse: Record<string, any> = { skip: true, client: { id: 'client_id' } };
 
-      interactionTypesMock[1]!.handleContext.mockResolvedValueOnce(interactionTypeResponse);
+      const context = <InteractionContext<InteractionRequest>>{
+        parameters: request.data,
+        interactionType: jest.mocked<InteractionTypeInterface>({
+          name: 'login',
+          handleContext: jest.fn().mockResolvedValueOnce(interactionResponse),
+          handleDecision: jest.fn(),
+        }),
+      };
+
+      validatorsMocks[0]!.validateContext.mockResolvedValueOnce(context);
 
       await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setHeaders(endpoint['headers']).json(interactionTypeResponse)
+        new HttpResponse().setHeaders(endpoint['headers']).json(interactionResponse)
       );
     });
 
@@ -136,12 +145,21 @@ describe('Interaction Endpoint', () => {
 
       request.body.interaction_type = 'login';
 
-      const interactionTypeResponse: Record<string, any> = { skip: true, client: { id: 'client_id' } };
+      const interactionResponse: Record<string, any> = { redirect_to: 'https://server.example.com/oauth/authorize' };
 
-      interactionTypesMock[1]!.handleDecision.mockResolvedValueOnce(interactionTypeResponse);
+      const context = <InteractionContext<InteractionRequest>>{
+        parameters: request.data,
+        interactionType: jest.mocked<InteractionTypeInterface>({
+          name: 'login',
+          handleContext: jest.fn(),
+          handleDecision: jest.fn().mockResolvedValueOnce(interactionResponse),
+        }),
+      };
+
+      validatorsMocks[0]!.validateDecision.mockResolvedValueOnce(context);
 
       await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setHeaders(endpoint['headers']).json(interactionTypeResponse)
+        new HttpResponse().setHeaders(endpoint['headers']).json(interactionResponse)
       );
     });
   });

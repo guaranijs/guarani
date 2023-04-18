@@ -65,6 +65,7 @@ export class RefreshTokenGrantType implements GrantTypeInterface {
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
 
+    // TODO: set new expiration to old expiration.
     if (this.settings.enableRefreshTokenRotation) {
       await this.refreshTokenService.revoke(refreshToken);
       refreshToken = await this.refreshTokenService.create(refreshToken.scopes, client, user, accessToken);

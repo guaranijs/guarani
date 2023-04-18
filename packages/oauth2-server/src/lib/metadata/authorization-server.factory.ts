@@ -83,6 +83,8 @@ import { SETTINGS } from '../settings/settings.token';
 import { AuthorizationRequestValidator } from '../validators/authorization/authorization-request.validator';
 import { authorizationRequestValidatorsRegistry } from '../validators/authorization/authorization-request.validator.registry';
 import { DeviceAuthorizationRequestValidator } from '../validators/device-authorization-request.validator';
+import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
+import { interactionRequestValidatorsRegistry } from '../validators/interaction/interaction-request.validator.registry';
 import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
 import { RevocationRequestValidator } from '../validators/revocation-request.validator';
 import { TokenRequestValidator } from '../validators/token/token-request.validator';
@@ -407,6 +409,10 @@ export class AuthorizationServerFactory {
         .filter(([name]) => this.settings.responseTypes.includes(<ResponseType>name))
         .map(([, validator]) => validator)
         .forEach((validator) => this.container.bind(AuthorizationRequestValidator).toClass(validator).asSingleton());
+
+      Object.entries(interactionRequestValidatorsRegistry)
+        .map(([, validator]) => validator)
+        .forEach((validator) => this.container.bind(InteractionRequestValidator).toClass(validator).asSingleton());
     }
 
     if (this.container.isRegistered<GrantServiceInterface>(GRANT_TYPE)) {

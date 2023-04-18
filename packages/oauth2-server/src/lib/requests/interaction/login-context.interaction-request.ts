@@ -5,7 +5,7 @@ import { InteractionRequest } from './interaction-request';
  */
 export interface LoginContextInteractionRequest extends InteractionRequest {
   /**
-   * Login Challenge.
+   * Login Challenge provided by the Client.
    */
   readonly login_challenge: string;
 }

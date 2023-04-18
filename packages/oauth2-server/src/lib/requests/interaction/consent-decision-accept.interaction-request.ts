@@ -3,7 +3,7 @@ import { ConsentDecisionInteractionRequest } from './consent-decision.interactio
 /**
  * Parameters of the custom OAuth 2.0 Consent Accept Decision Interaction Request.
  */
-export interface ConsentDecisionAcceptInteractionRequest extends ConsentDecisionInteractionRequest {
+export interface ConsentDecisionAcceptInteractionRequest extends ConsentDecisionInteractionRequest<'accept'> {
   /**
    * Scope granted by the End User.
    */

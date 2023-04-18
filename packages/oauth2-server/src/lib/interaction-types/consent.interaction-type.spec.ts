@@ -1,16 +1,14 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
+import { ConsentContextInteractionContext } from '../context/interaction/consent-context.interaction.context';
+import { ConsentDecisionAcceptInteractionContext } from '../context/interaction/consent-decision-accept.interaction.context';
+import { ConsentDecisionDenyInteractionContext } from '../context/interaction/consent-decision-deny.interaction.context';
+import { ConsentDecisionInteractionContext } from '../context/interaction/consent-decision.interaction.context';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
-import { Session } from '../entities/session.entity';
-import { User } from '../entities/user.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
-import { AuthorizationRequest } from '../requests/authorization/authorization-request';
-import { ConsentContextInteractionRequest } from '../requests/interaction/consent-context.interaction-request';
-import { ConsentDecisionInteractionRequest } from '../requests/interaction/consent-decision.interaction-request';
+import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ConsentContextInteractionResponse } from '../responses/interaction/consent-context.interaction-response';
 import { ConsentDecisionInteractionResponse } from '../responses/interaction/consent-decision.interaction-response';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
@@ -21,11 +19,14 @@ import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { ConsentDecision } from './consent-decision.type';
 import { ConsentInteractionType } from './consent.interaction-type';
+import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 
 describe('Consent Interaction Type', () => {
   let container: DependencyInjectionContainer;
   let interactionType: ConsentInteractionType;
+
+  const settings = <Settings>{ issuer: 'https://server.example.com' };
 
   const consentServiceMock = jest.mocked<ConsentServiceInterface>({
     create: jest.fn(),
@@ -42,8 +43,6 @@ describe('Consent Interaction Type', () => {
     remove: jest.fn(),
     save: jest.fn(),
   });
-
-  const settings = <Settings>{ issuer: 'https://server.example.com' };
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
@@ -67,37 +66,45 @@ describe('Consent Interaction Type', () => {
   });
 
   describe('handleContext()', () => {
-    let parameters: ConsentContextInteractionRequest;
+    let context: ConsentContextInteractionContext;
 
     beforeEach(() => {
-      parameters = { interaction_type: 'consent', consent_challenge: 'consent_challenge' };
-    });
+      const now = Date.now();
 
-    it('should throw when the parameter "consent_challenge" is not provided.', async () => {
-      Reflect.deleteProperty(parameters, 'consent_challenge');
-
-      await expect(interactionType.handleContext(parameters)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "consent_challenge".' })
-      );
-    });
-
-    it('should throw when no grant is found.', async () => {
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(null);
-
-      await expect(interactionType.handleContext(parameters)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Consent Challenge.' })
-      );
+      context = <ConsentContextInteractionContext>{
+        parameters: {
+          interaction_type: 'consent',
+          consent_challenge: 'consent_challenge',
+        },
+        interactionType: jest.mocked<InteractionTypeInterface>({
+          name: 'consent',
+          handleContext: jest.fn(),
+          handleDecision: jest.fn(),
+        }),
+        grant: <Grant>{
+          id: 'grant_id',
+          loginChallenge: 'login_challenge',
+          consentChallenge: 'consent_challenge',
+          parameters: {
+            response_type: 'code',
+            client_id: 'client_id',
+            redirect_uri: 'https://client.example.com/oauth/callback',
+            scope: 'foo bar baz',
+            state: 'client_state',
+            response_mode: 'query',
+          },
+          expiresAt: new Date(now + 300000),
+          client: { id: 'client_id' },
+          session: { id: 'session_id', user: { id: 'user_id' } },
+          consent: { id: 'consent_id' },
+        },
+      };
     });
 
     it('should throw when the grant is expired.', async () => {
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        expiresAt: new Date(Date.now() - 3600000),
-      });
+      Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleContext(parameters)).rejects.toThrow(
+      await expect(interactionType.handleContext(context)).rejects.toThrow(
         new AccessDeniedException({ description: 'Expired Grant.' })
       );
 
@@ -105,287 +112,158 @@ describe('Consent Interaction Type', () => {
     });
 
     it('should return a valid first time consent context response.', async () => {
-      const authorizationParameters = <AuthorizationRequest>{
-        response_type: 'code',
-        client_id: 'client_id',
-        redirect_uri: 'https://client.example.com/callback',
-        scope: 'foo bar baz',
-        state: 'client_state',
-        response_mode: 'query',
-      };
+      delete context.grant.consent;
 
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        parameters: authorizationParameters,
-        client: { id: 'client_id' },
-        session: { id: 'session_id', user: { id: 'user_id' } },
+      const urlParameters = new URLSearchParams(context.grant.parameters);
+
+      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<ConsentContextInteractionResponse>({
+        skip: false,
+        requested_scope: 'foo bar baz',
+        subject: 'user_id',
+        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        login_challenge: 'login_challenge',
+        client: <Client>{ id: 'client_id' },
+        context: {},
       });
-
-      const urlParameters = new URLSearchParams(authorizationParameters);
-
-      await expect(interactionType.handleContext(parameters)).resolves.toStrictEqual<ConsentContextInteractionResponse>(
-        {
-          skip: false,
-          requested_scope: 'foo bar baz',
-          subject: 'user_id',
-          request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
-          login_challenge: 'login_challenge',
-          client: <Client>{ id: 'client_id' },
-          context: {},
-        }
-      );
     });
 
     it('should return a valid skip consent context response.', async () => {
-      const authorizationParameters = <AuthorizationRequest>{
-        response_type: 'code',
-        client_id: 'client_id',
-        redirect_uri: 'https://client.example.com/callback',
-        scope: 'foo bar baz',
-        state: 'client_state',
-        response_mode: 'query',
-      };
+      const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        parameters: authorizationParameters,
-        client: { id: 'client_id' },
-        session: { id: 'session_id', user: { id: 'user_id' } },
-        consent: { id: 'consent_id' },
+      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<ConsentContextInteractionResponse>({
+        skip: true,
+        requested_scope: 'foo bar baz',
+        subject: 'user_id',
+        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        login_challenge: 'login_challenge',
+        client: <Client>{ id: 'client_id' },
+        context: {},
       });
-
-      const urlParameters = new URLSearchParams(authorizationParameters);
-
-      await expect(interactionType.handleContext(parameters)).resolves.toStrictEqual<ConsentContextInteractionResponse>(
-        {
-          skip: true,
-          requested_scope: 'foo bar baz',
-          subject: 'user_id',
-          request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
-          login_challenge: 'login_challenge',
-          client: <Client>{ id: 'client_id' },
-          context: {},
-        }
-      );
     });
   });
 
   describe('handleDecision()', () => {
-    let parameters: ConsentDecisionInteractionRequest;
+    let context: ConsentDecisionInteractionContext<ConsentDecision>;
 
     beforeEach(() => {
-      parameters = {
-        interaction_type: 'consent',
-        consent_challenge: 'consent_challenge',
+      const now = Date.now();
+
+      context = <ConsentDecisionInteractionContext<ConsentDecision>>{
+        parameters: {
+          interaction_type: 'consent',
+          consent_challenge: 'consent_challenge',
+          decision: <ConsentDecision>'',
+        },
+        interactionType: jest.mocked<InteractionTypeInterface>({
+          name: 'consent',
+          handleContext: jest.fn(),
+          handleDecision: jest.fn(),
+        }),
         decision: <ConsentDecision>'',
+        grant: <Grant>{
+          id: 'grant_id',
+          loginChallenge: 'login_challenge',
+          consentChallenge: 'consent_challenge',
+          parameters: {
+            response_type: 'code',
+            client_id: 'client_id',
+            redirect_uri: 'https://client.example.com/oauth/callback',
+            scope: 'foo bar baz',
+            state: 'client_state',
+            response_mode: 'query',
+          },
+          expiresAt: new Date(now + 300000),
+          client: { id: 'client_id' },
+          session: { id: 'session_id', user: { id: 'user_id' } },
+          consent: { id: 'consent_id', scopes: ['foo', 'bar'] },
+        },
       };
     });
 
-    it('should throw when the parameter "consent_challenge" is not provided.', async () => {
-      Reflect.deleteProperty(parameters, 'consent_challenge');
-
-      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "consent_challenge".' })
-      );
-    });
-
-    it('should throw when the parameter "decision" is not provided.', async () => {
-      Reflect.deleteProperty(parameters, 'decision');
-
-      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "decision".' })
-      );
-    });
-
-    it('should throw when no grant is found.', async () => {
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(null);
-
-      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Consent Challenge.' })
-      );
-    });
-
     it('should throw when the grant is expired.', async () => {
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        expiresAt: new Date(Date.now() - 3600000),
-      });
+      Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
+      await expect(interactionType.handleDecision(context)).rejects.toThrow(
         new AccessDeniedException({ description: 'Expired Grant.' })
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw when providing an invalid decision.', async () => {
-      Reflect.set(parameters, 'decision', 'unknown');
-
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-      });
-
-      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Unsupported decision "unknown".' })
-      );
-    });
-
-    it('should throw when the parameter "grant_scope" is not provided.', async () => {
-      Reflect.set(parameters, 'decision', 'accept');
-
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-      });
-
-      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "grant_scope".' })
-      );
-    });
-
-    it('should throw when granting a scope not requested by the client.', async () => {
-      Reflect.set(parameters, 'decision', 'accept');
-      Reflect.set(parameters, 'grant_scope', 'foo bar baz qux');
-
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        parameters: { scope: 'foo bar baz' },
-      });
-
-      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
-        new InvalidScopeException({ description: 'The granted scope was not requested by the Client.' })
-      );
-    });
-
+    // #region Accept Decision.
     it('should throw when no session is found associated to the current grant.', async () => {
-      Reflect.set(parameters, 'decision', 'accept');
-      Reflect.set(parameters, 'grant_scope', 'foo bar');
+      delete context.grant.session;
+      delete context.grant.consent;
 
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        parameters: { scope: 'foo bar baz' },
-      });
+      Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar' });
+      Object.assign(context, { decision: 'accept', grantedScopes: ['foo', 'bar'] });
 
-      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
+      await expect(interactionType.handleDecision(context)).rejects.toThrow(
         new AccessDeniedException({ description: 'No active session found for this consent.' })
       );
     });
 
     it('should return a valid first time consent accept decision interaction response.', async () => {
-      Reflect.set(parameters, 'decision', 'accept');
-      Reflect.set(parameters, 'grant_scope', 'foo bar');
+      delete context.grant.consent;
 
-      const authorizationParameters = <AuthorizationRequest>{
-        response_type: 'code',
-        client_id: 'client_id',
-        redirect_uri: 'https://client.example.com/callback',
-        scope: 'foo bar baz',
-        state: 'client_state',
-        response_mode: 'query',
-      };
+      Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar' });
+      Object.assign(context, { decision: 'accept', grantedScopes: ['foo', 'bar'] });
 
-      const user = <User>{ id: 'user_id' };
+      const { grantedScopes } = <ConsentDecisionAcceptInteractionContext>context;
 
-      const grant = <Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        parameters: authorizationParameters,
-        session: { id: 'session_id', user },
-      };
+      const consent = <Consent>{ id: 'consent_id', scopes: grantedScopes };
 
-      const session = <Session>{ id: 'session_id', user };
-      const consent = <Consent>{ id: 'consent_id', scopes: ['foo', 'bar'], user };
-
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
       consentServiceMock.create.mockResolvedValueOnce(consent);
 
-      const urlParameters = new URLSearchParams(authorizationParameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      await expect(
-        interactionType.handleDecision(parameters)
-      ).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        parameters: authorizationParameters,
-        session,
-        consent,
-      });
+      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...context.grant, consent });
     });
 
-    it('should throw when the parameter "error" is not provided.', async () => {
-      Reflect.set(parameters, 'decision', 'deny');
+    it('should return a valid subsequent consent accept decision interaction response.', async () => {
+      Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar' });
+      Object.assign(context, { decision: 'accept', grantedScopes: ['foo', 'bar'] });
 
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
+      const urlParameters = new URLSearchParams(context.grant.parameters);
+
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
+        redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
-      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "error".' })
-      );
+      expect(grantServiceMock.save).not.toHaveBeenCalled();
     });
+    // #endregion
 
-    it('should throw when the parameter "error_description" is not provided.', async () => {
-      Reflect.set(parameters, 'decision', 'deny');
-      Reflect.set(parameters, 'error', 'custom_error');
-
-      Reflect.deleteProperty(parameters, 'error_description');
-
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-      });
-
-      await expect(interactionType.handleDecision(parameters)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "error_description".' })
-      );
-    });
-
+    // #region Deny Decision.
     it('should return a valid login deny decision interaction response.', async () => {
-      Reflect.set(parameters, 'decision', 'deny');
-      Reflect.set(parameters, 'error', 'custom_error');
-      Reflect.set(parameters, 'error_description', 'Custom error description.');
-
-      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(<Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
+      Object.assign(context, {
+        parameters: Object.assign(context.parameters, {
+          decision: 'deny',
+          error: 'consent_denied',
+          error_description: 'Lorem ipsum dolor sit amet...',
+        }),
+        decision: 'deny',
+        error: Object.assign(
+          Reflect.construct(OAuth2Exception, [{ description: context.parameters.error_description }]),
+          { code: context.parameters.error }
+        ),
       });
 
-      const urlParameters = new URLSearchParams({
-        error: parameters.error,
-        error_description: parameters.error_description,
-      });
+      const { error } = <ConsentDecisionDenyInteractionContext>context;
 
-      await expect(
-        interactionType.handleDecision(parameters)
-      ).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
+      const urlParameters = new URLSearchParams(error.toJSON());
+
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,
       });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
     });
+    // #endregion
   });
 });

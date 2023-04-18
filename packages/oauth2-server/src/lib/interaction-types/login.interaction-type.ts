@@ -101,7 +101,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
     return removeUndefined<LoginContextInteractionResponse>({
       skip,
       request_url: url.href,
-      client: grant.client, // TODO: return only the client id.
+      client: grant.client.id,
       context: {
         prompts: <Prompt[]>grant.parameters.prompt?.split(' '),
         display: grant.parameters.display,

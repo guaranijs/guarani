@@ -6,7 +6,6 @@ import { LoginContextInteractionContext } from '../context/interaction/login-con
 import { LoginDecisionAcceptInteractionContext } from '../context/interaction/login-decision-accept.interaction.context';
 import { LoginDecisionDenyInteractionContext } from '../context/interaction/login-decision-deny.interaction.context';
 import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction.context';
-import { Client } from '../entities/client.entity';
 import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
@@ -119,7 +118,7 @@ describe('Login Interaction Type', () => {
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
-        client: <Client>{ id: 'client_id' },
+        client: 'client_id',
         context: {},
       });
     });
@@ -132,7 +131,7 @@ describe('Login Interaction Type', () => {
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
-        client: <Client>{ id: 'client_id' },
+        client: 'client_id',
         context: {},
       });
     });
@@ -145,7 +144,7 @@ describe('Login Interaction Type', () => {
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
-        client: <Client>{ id: 'client_id' },
+        client: 'client_id',
         context: {
           auth_exp: Math.floor((context.grant.session!.createdAt.getTime() + 86400000) / 1000),
         },
@@ -160,7 +159,7 @@ describe('Login Interaction Type', () => {
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
-        client: <Client>{ id: 'client_id' },
+        client: 'client_id',
         context: {
           auth_exp: Math.floor((context.grant.session!.createdAt.getTime() + 300000) / 1000),
         },

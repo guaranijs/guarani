@@ -1,4 +1,3 @@
-import { Client } from '../../entities/client.entity';
 import { LoginContext } from './login.context';
 
 /**
@@ -16,9 +15,9 @@ export interface LoginContextInteractionResponse {
   readonly request_url: string;
 
   /**
-   * Client requesting authorization.
+   * Identifier of the Client requesting authorization.
    */
-  readonly client: Client;
+  readonly client: string;
 
   /**
    * Context for the Login Interaction.

@@ -3,12 +3,8 @@ import { removeUndefined } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
-import { Client } from '../entities/client.entity';
-import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
-import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
-import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
@@ -18,6 +14,7 @@ import { DeviceCodeServiceInterface } from '../services/device-code.service.inte
 import { DEVICE_CODE_SERVICE } from '../services/device-code.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { DeviceAuthorizationRequestValidator } from '../validators/device-authorization-request.validator';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 
@@ -57,14 +54,12 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Device Authorization Endpoint.
    *
-   * @param clientAuthenticationHandler Instance of the Client Authentication Handler.
-   * @param scopeHandler Instance of the Scope Handler.
+   * @param validator Instance of the Device Authorization Request Validator.
    * @param deviceCodeService Instance of the Device Code Service.
    * @param settings Settings of the Authorization Server.
    */
   public constructor(
-    private readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    private readonly scopeHandler: ScopeHandler,
+    private readonly validator: DeviceAuthorizationRequestValidator,
     @Inject(DEVICE_CODE_SERVICE) private readonly deviceCodeService: DeviceCodeServiceInterface,
     @Inject(SETTINGS) private readonly settings: Settings
   ) {}
@@ -84,15 +79,8 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest<DeviceAuthorizationRequest>): Promise<HttpResponse> {
-    const parameters = request.data;
-
     try {
-      const client = await this.clientAuthenticationHandler.authenticate(request);
-
-      this.checkClientScope(client, parameters.scope);
-
-      const scopes = this.scopeHandler.getAllowedScopes(client, parameters.scope);
-
+      const { client, scopes } = await this.validator.validate(request);
       const deviceCode = await this.deviceCodeService.create(scopes, client);
 
       const deviceAuthorizationResponse = removeUndefined<DeviceAuthorizationResponse>({
@@ -121,23 +109,5 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
         .setHeaders(this.headers)
         .json(error.toJSON());
     }
-  }
-
-  /**
-   * Checks if the provided scope is supported by the Authorization Server and if the Client is allowed to request it.
-   *
-   * @param client Client of the Request.
-   * @param scope Scope requested by the Client.
-   */
-  private checkClientScope(client: Client, scope: string | undefined): void {
-    this.scopeHandler.checkRequestedScope(scope);
-
-    scope?.split(' ').forEach((requestedScope) => {
-      if (!client.scopes.includes(requestedScope)) {
-        throw new AccessDeniedException({
-          description: `The Client is not allowed to request the scope "${requestedScope}".`,
-        });
-      }
-    });
   }
 }

@@ -3,7 +3,7 @@ import { ConsentDecisionInteractionRequest } from './consent-decision.interactio
 /**
  * Parameters of the custom OAuth 2.0 Consent Decision Deny Interaction Request.
  */
-export interface ConsentDecisionDenyInteractionRequest extends ConsentDecisionInteractionRequest {
+export interface ConsentDecisionDenyInteractionRequest extends ConsentDecisionInteractionRequest<'deny'> {
   /**
    * Error Code.
    */

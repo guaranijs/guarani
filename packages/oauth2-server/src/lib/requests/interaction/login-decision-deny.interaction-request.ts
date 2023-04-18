@@ -3,7 +3,7 @@ import { LoginDecisionInteractionRequest } from './login-decision.interaction-re
 /**
  * Parameters of the custom OAuth 2.0 Login Deny Decision Interaction Request.
  */
-export interface LoginDecisionDenyInteractionRequest extends LoginDecisionInteractionRequest {
+export interface LoginDecisionDenyInteractionRequest extends LoginDecisionInteractionRequest<'deny'> {
   /**
    * Error Code.
    */

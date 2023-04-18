@@ -5,7 +5,7 @@ import { InteractionRequest } from './interaction-request';
  */
 export interface ConsentContextInteractionRequest extends InteractionRequest {
   /**
-   * Consent Challenge.
+   * Consent Challenge provided by the Client.
    */
   readonly consent_challenge: string;
 }

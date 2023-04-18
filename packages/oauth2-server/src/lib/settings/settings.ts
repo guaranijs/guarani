@@ -65,12 +65,12 @@ export interface Settings {
   /**
    * Authentication Context Class References registered at the Authorization Server.
    */
-  readonly acrValues?: string[];
+  readonly acrValues: string[];
 
   /**
    * UI Locales registered at the Authorization Server.
    */
-  readonly uiLocales?: string[];
+  readonly uiLocales: string[];
 
   /**
    * JSON Web Key Set of the Authorization Server.

@@ -1,13 +1,12 @@
-import { Inject, Injectable, InjectAll } from '@guarani/di';
+import { Inject, Injectable } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 import { URL, URLSearchParams } from 'url';
 import { isDeepStrictEqual } from 'util';
 
+import { AuthorizationContext } from '../context/authorization/authorization.context';
 import { DisplayInterface } from '../displays/display.interface';
-import { DISPLAY } from '../displays/display.token';
-import { Display } from '../displays/display.type';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
@@ -18,9 +17,6 @@ import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpResponse } from '../http/http.response';
-import { PromptInterface } from '../prompts/prompt.interface';
-import { PROMPT } from '../prompts/prompt.token';
-import { Prompt } from '../prompts/prompt.type';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
@@ -41,8 +37,6 @@ export class InteractionHandler {
    * Instantiates a new Interaction Handler.
    *
    * @param idTokenHandler Instance of the ID Token Handler.
-   * @param prompts Prompts registered at the Authorization Server.
-   * @param displays Displays registered at the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param grantService Instance of the Grant Service.
    * @param sessionService Instance of the Session Service.
@@ -50,8 +44,6 @@ export class InteractionHandler {
    */
   public constructor(
     private readonly idTokenHandler: IdTokenHandler,
-    @InjectAll(PROMPT) private readonly prompts: PromptInterface[],
-    @InjectAll(DISPLAY) private readonly displays: DisplayInterface[],
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
@@ -69,26 +61,13 @@ export class InteractionHandler {
    * a Http Response redirecting the User-Agent to either the Error Page of the Authorization Server,
    * or to an Interaction Endpoint so that the End User can continue the Authorization process.
    *
-   * @param parameters Parameters of the Authorization Request.
-   * @param cookies Cookies of the Http Authorization Request.
-   * @param client Client requesting authorization.
+   * @param context Authorization Request Context.
    * @returns Grant, Session and Consent Entities or Http Interaction Response.
    */
   public async getEntitiesOrHttpResponse(
-    parameters: AuthorizationRequest,
-    cookies: Record<string, any>,
-    client: Client
+    context: AuthorizationContext<AuthorizationRequest>
   ): Promise<HttpResponse | [Grant | null, Session, Consent]> {
-    let display: DisplayInterface;
-    let prompts: PromptInterface[];
-
-    try {
-      prompts = this.getPrompts(parameters.prompt, parameters.state);
-      display = this.getDisplay(parameters.display ?? 'page', parameters.state);
-    } catch (exc: unknown) {
-      const error = this.asOAuth2Exception(exc, parameters);
-      return this.handleFatalAuthorizationError(error);
-    }
+    const { client, cookies, display, parameters, prompts } = context;
 
     let grant = await this.findGrant(cookies);
     let session = await this.findSession(cookies);
@@ -96,7 +75,7 @@ export class InteractionHandler {
 
     try {
       for (const prompt of prompts) {
-        [grant, session, consent] = await prompt.handle(parameters, client, grant, session, consent);
+        [grant, session, consent] = await prompt.handle(context, grant, session, consent);
       }
     } catch (exc: unknown) {
       if (exc instanceof LoginRequiredException) {
@@ -219,47 +198,6 @@ export class InteractionHandler {
     // #endregion
 
     return [grant, session, consent];
-  }
-
-  /**
-   * Retrieves the Display based on the **display** requested by the Client.
-   *
-   * @param name Display requested by the Client.
-   * @param state Client State prior to the Authorization Request.
-   * @returns Display.
-   */
-  private getDisplay(name: Display, state: string | undefined): DisplayInterface {
-    const display = this.displays.find((display) => display.name === name);
-
-    if (display === undefined) {
-      throw new InvalidRequestException({ description: `Unsupported display "${name}".`, state });
-    }
-
-    return display;
-  }
-
-  /**
-   * Returns the Prompts requested by the Client.
-   *
-   * @param prompt Prompts requested by the Client.
-   * @param state Client State prior to the Authorization Request.
-   * @returns Prompts requested by the Client.
-   */
-  private getPrompts(prompt: string | undefined, state: string | undefined): PromptInterface[] {
-    const requestedPrompts = <Prompt[]>(prompt?.split(' ') ?? []);
-    const supportedPromptsNames = this.prompts.map((prompt) => prompt.name);
-
-    requestedPrompts.forEach((prompt) => {
-      if (!supportedPromptsNames.includes(prompt)) {
-        throw new InvalidRequestException({ description: `Unsupported prompt "${prompt}".`, state });
-      }
-    });
-
-    if (requestedPrompts.includes('none') && requestedPrompts.length !== 1) {
-      throw new InvalidRequestException({ description: 'The prompt "none" must be used by itself.', state });
-    }
-
-    return this.prompts.filter((prompt) => requestedPrompts.includes(prompt.name));
   }
 
   /**

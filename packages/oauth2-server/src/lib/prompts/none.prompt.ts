@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 
-import { Client } from '../entities/client.entity';
+import { AuthorizationContext } from '../context/authorization/authorization.context';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
@@ -41,20 +41,20 @@ export class NonePrompt implements PromptInterface {
    * with the respective error code, otherwise, it will return the updated Session and Consent objects for further
    * processing by the Authorization Endpoint.
    *
-   * @param parameters Parameters of the Authorization Request.
-   * @param _client Client requesting authorization.
+   * @param context Authorization Request Context.
    * @param grant Grant with the current authorization step.
    * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the Scopes granted by the End User.
-   * @returns Http Error Response or updated Session and Consent objects.
+   * @returns Updated Grant, Session and Consent objects.
    */
   public async handle(
-    parameters: AuthorizationRequest,
-    _client: Client,
+    context: AuthorizationContext<AuthorizationRequest>,
     grant: Grant | null,
     session: Session | null,
     consent: Consent | null
   ): Promise<[Grant | null, Session | null, Consent | null]> {
+    const { parameters } = context;
+
     if (session === null) {
       if (grant?.session == null) {
         throw new LoginRequiredException({ state: parameters.state });

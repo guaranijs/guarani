@@ -174,7 +174,7 @@ describe('Authorization Code Flow', () => {
     // #endregion
   });
 
-  it('POST /oauth/authorize', async () => {
+  it('POST /oauth/token', async () => {
     const requestData: AuthorizationCodeTokenRequest = {
       grant_type: 'authorization_code',
       code: authorizationCode,

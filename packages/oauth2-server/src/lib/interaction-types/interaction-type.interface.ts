@@ -1,3 +1,4 @@
+import { InteractionContext } from '../context/interaction/interaction.context';
 import { InteractionRequest } from '../requests/interaction/interaction-request';
 import { InteractionType } from './interaction-type.type';
 
@@ -13,16 +14,16 @@ export interface InteractionTypeInterface {
   /**
    * Handles the Context Flow of the Interaction.
    *
-   * @param parameters Parameters of the Interaction Context Request.
+   * @param context Interaction Context Request Context.
    * @returns Parameters of the Interaction Context Response.
    */
-  handleContext(parameters: InteractionRequest): Promise<Record<string, any>>;
+  handleContext(context: InteractionContext<InteractionRequest>): Promise<Record<string, any>>;
 
   /**
    * Handles the Decision Flow of the Interaction.
    *
-   * @param parameters Parameters of the Interaction Decision Request.
+   * @param context Interaction Decision Request Context.
    * @returns Parameters of the Interaction Decision Response.
    */
-  handleDecision(parameters: InteractionRequest): Promise<Record<string, any>>;
+  handleDecision(context: InteractionContext<InteractionRequest>): Promise<Record<string, any>>;
 }

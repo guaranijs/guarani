@@ -1,4 +1,4 @@
-import { Client } from '../entities/client.entity';
+import { TokenContext } from '../context/token/token.context';
 import { TokenRequest } from '../requests/token/token-request';
 import { TokenResponse } from '../responses/token-response';
 import { GrantType } from './grant-type.type';
@@ -17,9 +17,8 @@ export interface GrantTypeInterface {
   /**
    * Creates the Access Token Response with the Access Token issued to the Client.
    *
-   * @param parameters Parameters of the Token Request.
-   * @param client Client of the Request.
+   * @param context Token Request Context.
    * @returns Access Token Response.
    */
-  handle(parameters: TokenRequest, client: Client): Promise<TokenResponse>;
+  handle(context: TokenContext<TokenRequest>): Promise<TokenResponse>;
 }

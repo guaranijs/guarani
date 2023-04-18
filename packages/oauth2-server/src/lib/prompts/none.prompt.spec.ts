@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { Client } from '../entities/client.entity';
+import { AuthorizationContext } from '../context/authorization/authorization.context';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
@@ -92,48 +92,48 @@ describe('None Prompt', () => {
   });
 
   describe('handle()', () => {
-    let parameters: AuthorizationRequest;
+    let context: AuthorizationContext<AuthorizationRequest>;
 
     beforeEach(() => {
-      parameters = {
-        response_type: 'code',
-        client_id: 'client_id',
-        redirect_uri: 'https://example.com/callback',
-        scope: 'foo bar',
-        state: 'client_state',
-        prompt: 'none',
+      context = <AuthorizationContext<AuthorizationRequest>>{
+        parameters: {
+          response_type: 'code',
+          client_id: 'client_id',
+          redirect_uri: 'https://example.com/callback',
+          scope: 'foo bar',
+          state: 'client_state',
+          prompt: 'none',
+        },
+        client: { id: 'client_id' },
       };
     });
 
     it('should throw when the session and grant are null.', async () => {
-      const client = <Client>{ id: 'client_id' };
       const grant = null;
       const session = null;
       const consent = null;
 
-      await expect(prompt.handle(parameters, client, grant, session, consent)).rejects.toThrow(
+      await expect(prompt.handle(context, grant, session, consent)).rejects.toThrow(
         new LoginRequiredException({ state: 'client_state' })
       );
     });
 
     it('should throw when the session is null and the grant has no session.', async () => {
-      const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{ id: 'grant_id' };
       const session = null;
       const consent = null;
 
-      await expect(prompt.handle(parameters, client, grant, session, consent)).rejects.toThrow(
+      await expect(prompt.handle(context, grant, session, consent)).rejects.toThrow(
         new LoginRequiredException({ state: 'client_state' })
       );
     });
 
     it("should throw when the session is null and the grant's session is expired.", async () => {
-      const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{ id: 'grant_id', session: { id: 'session_id', expiresAt: new Date(Date.now() - 300000) } };
       const session = null;
       const consent = null;
 
-      await expect(prompt.handle(parameters, client, grant, session, consent)).rejects.toThrow(
+      await expect(prompt.handle(context, grant, session, consent)).rejects.toThrow(
         new LoginRequiredException({ state: 'client_state' })
       );
 
@@ -142,12 +142,11 @@ describe('None Prompt', () => {
     });
 
     it('should throw when the session is expired.', async () => {
-      const client = <Client>{ id: 'client_id' };
       const grant = null;
       const session = <Session>{ id: 'session_id', expiresAt: new Date(Date.now() - 300000) };
       const consent = null;
 
-      await expect(prompt.handle(parameters, client, grant, session, consent)).rejects.toThrow(
+      await expect(prompt.handle(context, grant, session, consent)).rejects.toThrow(
         new LoginRequiredException({ state: 'client_state' })
       );
 
@@ -156,34 +155,31 @@ describe('None Prompt', () => {
     });
 
     it('should throw when the consent and grant are null.', async () => {
-      const client = <Client>{ id: 'client_id' };
       const grant = null;
       const session = <Session>{ id: 'session_id' };
       const consent = null;
 
-      await expect(prompt.handle(parameters, client, grant, session, consent)).rejects.toThrow(
+      await expect(prompt.handle(context, grant, session, consent)).rejects.toThrow(
         new ConsentRequiredException({ state: 'client_state' })
       );
     });
 
     it('should throw when the consent is null and the grant has no consent.', async () => {
-      const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{ id: 'grant_id' };
       const session = <Session>{ id: 'session_id' };
       const consent = null;
 
-      await expect(prompt.handle(parameters, client, grant, session, consent)).rejects.toThrow(
+      await expect(prompt.handle(context, grant, session, consent)).rejects.toThrow(
         new ConsentRequiredException({ state: 'client_state' })
       );
     });
 
     it("should throw when the consent is null and the grant's consent is expired.", async () => {
-      const client = <Client>{ id: 'client_id' };
       const grant = <Grant>{ id: 'grant_id', consent: { id: 'consent_id', expiresAt: new Date(Date.now() - 300000) } };
       const session = <Session>{ id: 'session_id' };
       const consent = null;
 
-      await expect(prompt.handle(parameters, client, grant, session, consent)).rejects.toThrow(
+      await expect(prompt.handle(context, grant, session, consent)).rejects.toThrow(
         new ConsentRequiredException({ state: 'client_state' })
       );
 
@@ -192,12 +188,11 @@ describe('None Prompt', () => {
     });
 
     it('should throw when the consent is expired.', async () => {
-      const client = <Client>{ id: 'client_id' };
       const grant = null;
       const session = <Session>{ id: 'session_id' };
       const consent = <Consent>{ id: 'consent_id', expiresAt: new Date(Date.now() - 300000) };
 
-      await expect(prompt.handle(parameters, client, grant, session, consent)).rejects.toThrow(
+      await expect(prompt.handle(context, grant, session, consent)).rejects.toThrow(
         new ConsentRequiredException({ state: 'client_state' })
       );
 
@@ -208,9 +203,7 @@ describe('None Prompt', () => {
     it.each(entitiesAndExpectedEntities)(
       'should return a 3-tuple with the grant, session and consent entities.',
       async ([grant, session, consent], expected) => {
-        const client = <Client>{ id: 'client_id' };
-
-        await expect(prompt.handle(parameters, client, grant, session, consent)).resolves.toEqual<Entities>(expected);
+        await expect(prompt.handle(context, grant, session, consent)).resolves.toEqual<Entities>(expected);
       }
     );
   });

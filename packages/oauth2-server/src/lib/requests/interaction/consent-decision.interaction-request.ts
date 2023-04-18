@@ -4,14 +4,14 @@ import { InteractionRequest } from './interaction-request';
 /**
  * Parameters of the custom OAuth 2.0 Consent Decision Interaction Request.
  */
-export interface ConsentDecisionInteractionRequest extends InteractionRequest {
+export interface ConsentDecisionInteractionRequest<TDecision extends ConsentDecision> extends InteractionRequest {
   /**
-   * Consent Challenge.
+   * Consent Challenge provided by the Client.
    */
   readonly consent_challenge: string;
 
   /**
    * Decision regarding the Consent to the requested scope.
    */
-  readonly decision: ConsentDecision;
+  readonly decision: TDecision;
 }

@@ -4,11 +4,6 @@ import { OutgoingHttpHeaders } from 'http';
 
 import { Client } from '../entities/client.entity';
 import { DeviceCode } from '../entities/device-code.entity';
-import { AccessDeniedException } from '../exceptions/access-denied.exception';
-import { InvalidClientException } from '../exceptions/invalid-client.exception';
-import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
-import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
-import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
@@ -18,19 +13,17 @@ import { DeviceCodeServiceInterface } from '../services/device-code.service.inte
 import { DEVICE_CODE_SERVICE } from '../services/device-code.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { DeviceAuthorizationRequestValidator } from '../validators/device-authorization-request.validator';
 import { DeviceAuthorizationEndpoint } from './device-authorization.endpoint';
 import { Endpoint } from './endpoint.type';
 
-jest.mock('../handlers/client-authentication.handler');
-jest.mock('../handlers/scope.handler');
+jest.mock('../validators/device-authorization-request.validator');
 
 describe('Device Authorization Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: DeviceAuthorizationEndpoint;
 
-  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
-
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+  const validatorMock = jest.mocked(DeviceAuthorizationRequestValidator.prototype, true);
 
   const deviceCodeServiceMock = jest.mocked<DeviceCodeServiceInterface>({
     create: jest.fn(),
@@ -44,8 +37,7 @@ describe('Device Authorization Endpoint', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
-    container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
-    container.bind(ScopeHandler).toValue(scopeHandlerMock);
+    container.bind(DeviceAuthorizationRequestValidator).toValue(validatorMock);
     container.bind<DeviceCodeServiceInterface>(DEVICE_CODE_SERVICE).toValue(deviceCodeServiceMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind(DeviceAuthorizationEndpoint).toSelf().asSingleton();
@@ -94,83 +86,10 @@ describe('Device Authorization Endpoint', () => {
       });
     });
 
-    it('should return an error response when not using a client authentication method.', async () => {
-      const error = new InvalidClientException({ description: 'No Client Authentication Method detected.' });
-
-      clientAuthenticationHandlerMock.authenticate.mockRejectedValue(error);
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
-      );
-    });
-
-    it('should return an error response when using multiple client authentication methods.', async () => {
-      const error = new InvalidClientException({ description: 'Multiple Client Authentication Methods detected.' });
-
-      clientAuthenticationHandlerMock.authenticate.mockRejectedValue(error);
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
-      );
-    });
-
-    it("should return an error response when the provided secret does not match the client's one.", async () => {
-      const error = new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders({
-        'WWW-Authenticate': 'Basic',
-      });
-
-      clientAuthenticationHandlerMock.authenticate.mockRejectedValue(error);
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setStatus(error.statusCode)
-          .setHeaders({ ...endpoint['headers'], ...error.headers })
-          .json(error.toJSON())
-      );
-    });
-
-    it('should return an error response when requesting an unsupported scope.', async () => {
-      Reflect.set(request.body, 'scope', 'unknown');
-
-      const error = new InvalidScopeException({ description: 'Unsupported scope "unknown".' });
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
-
-      scopeHandlerMock.checkRequestedScope.mockImplementationOnce(() => {
-        throw error;
-      });
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setStatus(error.statusCode)
-          .setHeaders({ ...endpoint['headers'], ...error.headers })
-          .json(error.toJSON())
-      );
-    });
-
-    it("should return an error response when the client requests a scope it's not allowed to.", async () => {
-      Reflect.set(request.body, 'scope', 'qux');
-
-      const error = new AccessDeniedException({ description: 'The Client is not allowed to request the scope "qux".' });
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{
-        id: 'client_id',
-        scopes: ['foo', 'bar', 'baz'],
-      });
-
-      scopeHandlerMock.checkRequestedScope.mockImplementationOnce(() => {
-        throw error;
-      });
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setStatus(error.statusCode)
-          .setHeaders({ ...endpoint['headers'], ...error.headers })
-          .json(error.toJSON())
-      );
-    });
-
     it('should return a device authorization response.', async () => {
+      const scopes: string[] = ['foo', 'bar'];
+      const client = <Client>{ id: 'client_id', scopes };
+
       const deviceAuthorizationResponse: DeviceAuthorizationResponse = {
         device_code: 'device_code',
         user_code: 'user_code',
@@ -180,9 +99,11 @@ describe('Device Authorization Endpoint', () => {
         interval: 5,
       };
 
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
-
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
+      validatorMock.validate.mockResolvedValueOnce({
+        parameters: request.data,
+        client,
+        scopes,
+      });
 
       deviceCodeServiceMock.create.mockResolvedValueOnce(<DeviceCode>{
         id: 'device_code',

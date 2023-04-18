@@ -6,9 +6,13 @@ import { ClientAuthenticationInterface } from '../client-authentication/client-a
 import { clientAuthenticationRegistry } from '../client-authentication/client-authentication.registry';
 import { CLIENT_AUTHENTICATION } from '../client-authentication/client-authentication.token';
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
+import { clientAuthorizationRegistry } from '../client-authorization/client-authorization.registry';
+import { CLIENT_AUTHORIZATION } from '../client-authorization/client-authorization.token';
+import { ClientAuthorizationInterface } from '../client-authorization/client-authorization.interface';
 import { DisplayInterface } from '../displays/display.interface';
 import { displayRegistry } from '../displays/display.registry';
 import { DISPLAY } from '../displays/display.token';
+import { Display } from '../displays/display.type';
 import { AuthorizationEndpoint } from '../endpoints/authorization.endpoint';
 import { DeviceAuthorizationEndpoint } from '../endpoints/device-authorization.endpoint';
 import { DiscoveryEndpoint } from '../endpoints/discovery.endpoint';
@@ -19,11 +23,13 @@ import { IntrospectionEndpoint } from '../endpoints/introspection.endpoint';
 import { JsonWebKeySetEndpoint } from '../endpoints/jsonwebkeyset.endpoint';
 import { RevocationEndpoint } from '../endpoints/revocation.endpoint';
 import { TokenEndpoint } from '../endpoints/token.endpoint';
+import { UserinfoEndpoint } from '../endpoints/userinfo.endpoint';
 import { GrantTypeInterface } from '../grant-types/grant-type.interface';
 import { grantTypeRegistry } from '../grant-types/grant-type.registry';
 import { GRANT_TYPE } from '../grant-types/grant-type.token';
 import { GrantType } from '../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
+import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { InteractionHandler } from '../handlers/interaction.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
@@ -74,13 +80,16 @@ import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { AuthorizationRequestValidator } from '../validators/authorization/authorization-request.validator';
+import { authorizationRequestValidatorsRegistry } from '../validators/authorization/authorization-request.validator.registry';
+import { DeviceAuthorizationRequestValidator } from '../validators/device-authorization-request.validator';
+import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
+import { interactionRequestValidatorsRegistry } from '../validators/interaction/interaction-request.validator.registry';
+import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
+import { RevocationRequestValidator } from '../validators/revocation-request.validator';
+import { TokenRequestValidator } from '../validators/token/token-request.validator';
+import { tokenRequestValidatorsRegistry } from '../validators/token/token-request.validator.registry';
 import { AuthorizationServerOptions } from './authorization-server.options';
-import { clientAuthorizationRegistry } from '../client-authorization/client-authorization.registry';
-import { CLIENT_AUTHORIZATION } from '../client-authorization/client-authorization.token';
-import { ClientAuthorizationInterface } from '../client-authorization/client-authorization.interface';
-import { UserinfoEndpoint } from '../endpoints/userinfo.endpoint';
-import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
-import { Display } from '../displays/display.type';
 
 /**
  * Factory class for configuring and instantiating an OAuth 2.0 Authorization Server.
@@ -137,6 +146,7 @@ export class AuthorizationServerFactory {
     this.setJsonWebKeySet();
     this.setEndpoints();
     this.setHandlers();
+    this.setValidators();
     this.setAccessTokenService();
     this.setAuthorizationCodeService();
     this.setClientService();
@@ -163,8 +173,8 @@ export class AuthorizationServerFactory {
       responseModes: this.authorizationServerOptions.responseModes ?? <ResponseMode[]>Object.keys(responseModeRegistry),
       pkces: this.authorizationServerOptions.pkces ?? <Pkce[]>Object.keys(pkceRegistry),
       displays: <Display[]>Object.keys(displayRegistry),
-      acrValues: this.authorizationServerOptions.acrValues,
-      uiLocales: this.authorizationServerOptions.uiLocales,
+      acrValues: this.authorizationServerOptions.acrValues ?? [],
+      uiLocales: this.authorizationServerOptions.uiLocales ?? [],
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
       idTokenSignatureAlgorithms: this.authorizationServerOptions.idTokenSignatureAlgorithms ?? ['RS256'],
@@ -375,6 +385,41 @@ export class AuthorizationServerFactory {
     if (this.settings.scopes.includes('openid')) {
       this.container.bind(IdTokenHandler).toSelf().asSingleton();
       this.container.bind(ClientAuthorizationHandler).toSelf().asSingleton();
+    }
+  }
+
+  /**
+   * Defines the Validators of the Authorization Server.
+   */
+  private static setValidators(): void {
+    if (this.authorizationServerOptions.enableIntrospectionEndpoint !== false) {
+      this.container.bind(IntrospectionRequestValidator).toSelf().asSingleton();
+    }
+
+    if (this.authorizationServerOptions.enableRevocationEndpoint !== false) {
+      this.container.bind(RevocationRequestValidator).toSelf().asSingleton();
+    }
+
+    if (this.settings.grantTypes.includes('urn:ietf:params:oauth:grant-type:device_code')) {
+      this.container.bind(DeviceAuthorizationRequestValidator).toSelf().asSingleton();
+    }
+
+    if (this.container.isRegistered<ResponseTypeInterface>(RESPONSE_TYPE)) {
+      Object.entries(authorizationRequestValidatorsRegistry)
+        .filter(([name]) => this.settings.responseTypes.includes(<ResponseType>name))
+        .map(([, validator]) => validator)
+        .forEach((validator) => this.container.bind(AuthorizationRequestValidator).toClass(validator).asSingleton());
+
+      Object.entries(interactionRequestValidatorsRegistry)
+        .map(([, validator]) => validator)
+        .forEach((validator) => this.container.bind(InteractionRequestValidator).toClass(validator).asSingleton());
+    }
+
+    if (this.container.isRegistered<GrantServiceInterface>(GRANT_TYPE)) {
+      Object.entries(tokenRequestValidatorsRegistry)
+        .filter(([name]) => this.settings.grantTypes.includes(<GrantType>name))
+        .map(([, validator]) => validator)
+        .forEach((validator) => this.container.bind(TokenRequestValidator).toClass(validator).asSingleton());
     }
   }
 

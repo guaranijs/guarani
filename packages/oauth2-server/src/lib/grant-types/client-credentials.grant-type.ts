@@ -1,8 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 
-import { Client } from '../entities/client.entity';
-import { ScopeHandler } from '../handlers/scope.handler';
-import { ClientCredentialsTokenRequest } from '../requests/token/client-credentials.token-request';
+import { ClientCredentialsTokenContext } from '../context/token/client-credentials.token.context';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -30,13 +28,9 @@ export class ClientCredentialsGrantType implements GrantTypeInterface {
   /**
    * Instantiates a new Client Credentials Grant Type.
    *
-   * @param scopeHandler Scope Handler of the Authorization Server.
    * @param accessTokenService Instance of the Access Token Service.
    */
-  public constructor(
-    private readonly scopeHandler: ScopeHandler,
-    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface
-  ) {}
+  public constructor(@Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface) {}
 
   /**
    * Creates the Access Token Response with the Access Token issued to the Client.
@@ -47,16 +41,12 @@ export class ClientCredentialsGrantType implements GrantTypeInterface {
    * Since the Client asks for an Access Token on behalf of itself,
    * it is **RECOMMENDED** for the Access Token to have a small lifetime.
    *
-   * @param parameters Parameters of the Token Request.
-   * @param client Client of the Request.
+   * @param context Token Request Context.
    * @returns Access Token Response.
    */
-  public async handle(parameters: ClientCredentialsTokenRequest, client: Client): Promise<TokenResponse> {
-    this.scopeHandler.checkRequestedScope(parameters.scope);
-
-    const scopes = this.scopeHandler.getAllowedScopes(client, parameters.scope);
+  public async handle(context: ClientCredentialsTokenContext): Promise<TokenResponse> {
+    const { client, scopes } = context;
     const accessToken = await this.accessTokenService.create(scopes, client);
-
     return createTokenResponse(accessToken);
   }
 }

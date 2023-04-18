@@ -1,13 +1,11 @@
-import { Inject, Injectable, InjectAll } from '@guarani/di';
+import { Inject, Injectable } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
 
+import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
 import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
-import { PkceInterface } from '../pkces/pkce.interface';
-import { PKCE } from '../pkces/pkce.token';
-import { CodeAuthorizationRequest } from '../requests/authorization/code.authorization-request';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { IdTokenAuthorizationResponse } from '../responses/authorization/id-token.authorization-response';
@@ -48,30 +46,27 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
    *
    * @param idTokenHandler Instance of the ID Token Handler.
    * @param authorizationCodeService Instance of the Authorization Code Service.
-   * @param pkces PKCE Methods.
    */
   public constructor(
     private readonly idTokenHandler: IdTokenHandler,
-    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
-    @InjectAll(PKCE) private readonly pkces: PkceInterface[]
+    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface
   ) {}
 
   /**
    * Creates and returns a Code Authorization Response and ID Token Response to the Client.
    *
-   * @param parameters Parameters of the Authorization Request.
+   * @param context Authorization Request Context.
    * @param session Session with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Code Authorization Response and ID Token Response.
    */
   public async handle(
-    parameters: CodeAuthorizationRequest,
+    context: CodeAuthorizationContext,
     session: Session,
     consent: Consent
   ): Promise<CodeAuthorizationResponse & IdTokenAuthorizationResponse> {
+    const { parameters } = context;
     const { scopes } = consent;
-
-    this.checkParameters(parameters);
 
     if (!scopes.includes('openid')) {
       throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
@@ -90,44 +85,5 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
       id_token: idToken,
       state: parameters.state,
     });
-  }
-
-  /**
-   * Checks if the Parameters of the Authorization Request are valid.
-   *
-   * @param parameters Parameters of the Authorization Request.
-   */
-  private checkParameters(parameters: CodeAuthorizationRequest): void {
-    const {
-      code_challenge: codeChallenge,
-      code_challenge_method: codeChallengeMethod,
-      response_mode: responseMode,
-      nonce,
-    } = parameters;
-
-    if (typeof codeChallenge !== 'string') {
-      throw new InvalidRequestException({
-        description: 'Invalid parameter "code_challenge".',
-        state: parameters.state,
-      });
-    }
-
-    if (codeChallengeMethod !== undefined && !this.pkces.map((pkce) => pkce.name).includes(codeChallengeMethod)) {
-      throw new InvalidRequestException({
-        description: `Unsupported code_challenge_method "${codeChallengeMethod}".`,
-        state: parameters.state,
-      });
-    }
-
-    if (responseMode === 'query') {
-      throw new InvalidRequestException({
-        description: 'Invalid response_mode "query" for response_type "code id_token".',
-        state: parameters.state,
-      });
-    }
-
-    if (typeof nonce !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: parameters.state });
-    }
   }
 }

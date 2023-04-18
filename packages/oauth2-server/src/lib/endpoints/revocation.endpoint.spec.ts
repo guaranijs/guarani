@@ -5,10 +5,6 @@ import { OutgoingHttpHeaders } from 'http';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
-import { InvalidClientException } from '../exceptions/invalid-client.exception';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { UnsupportedTokenTypeException } from '../exceptions/unsupported-token-type.exception';
-import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
@@ -17,23 +13,17 @@ import { AccessTokenServiceInterface } from '../services/access-token.service.in
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
-import { Settings } from '../settings/settings';
-import { SETTINGS } from '../settings/settings.token';
-import { TokenTypeHint } from '../types/token-type-hint.type';
+import { RevocationRequestValidator } from '../validators/revocation-request.validator';
 import { Endpoint } from './endpoint.type';
 import { RevocationEndpoint } from './revocation.endpoint';
 
-jest.mock('../handlers/client-authentication.handler');
+jest.mock('../validators/revocation-request.validator');
 
 describe('Revocation Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: RevocationEndpoint;
 
-  const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    revoke: jest.fn(),
-  });
+  const validatorMock = jest.mocked(RevocationRequestValidator.prototype, true);
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
     create: jest.fn(),
@@ -41,17 +31,18 @@ describe('Revocation Endpoint', () => {
     revoke: jest.fn(),
   });
 
-  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
-
-  const settings = <Settings>{ grantTypes: ['refresh_token'], enableRefreshTokenRevocation: true };
+  const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>({
+    create: jest.fn(),
+    findOne: jest.fn(),
+    revoke: jest.fn(),
+  });
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
-    container.bind<Settings>(SETTINGS).toValue(settings);
-    container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);
+    container.bind(RevocationRequestValidator).toSelf().asSingleton();
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
-    container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
+    container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);
     container.bind(RevocationEndpoint).toSelf().asSingleton();
 
     endpoint = container.resolve(RevocationEndpoint);
@@ -88,53 +79,6 @@ describe('Revocation Endpoint', () => {
     });
   });
 
-  describe('supportedTokenTypeHints', () => {
-    it('should have only the type "access_token" when not supporting refresh token revocation.', () => {
-      const settings = <Settings>{ enableRefreshTokenRevocation: false };
-
-      container.delete<Settings>(SETTINGS);
-      container.delete(RevocationEndpoint);
-
-      container.bind<Settings>(SETTINGS).toValue(settings);
-      container.bind(RevocationEndpoint).toSelf().asSingleton();
-
-      expect(() => (endpoint = container.resolve(RevocationEndpoint))).not.toThrow();
-
-      expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['access_token']);
-    });
-
-    it('should have the types ["refresh_token", "access_token"] when supporting access token revocation.', () => {
-      expect(endpoint['supportedTokenTypeHints']).toEqual<TokenTypeHint[]>(['access_token', 'refresh_token']);
-    });
-  });
-
-  describe('constructor', () => {
-    it('should throw when allowing refresh token revocation and the authorization server disables the usage of refresh tokens.', () => {
-      const settings = <Settings>{ grantTypes: ['authorization_code'], enableRefreshTokenRevocation: true };
-
-      container.delete<Settings>(SETTINGS);
-      container.delete(RevocationEndpoint);
-
-      container.bind<Settings>(SETTINGS).toValue(settings);
-      container.bind(RevocationEndpoint).toSelf().asSingleton();
-
-      expect(() => container.resolve(RevocationEndpoint)).toThrow(
-        new Error('The Authorization Server disabled using Refresh Tokens.')
-      );
-    });
-
-    it('should throw when allowing refresh token revocation without a refresh token service.', () => {
-      container.delete<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE);
-      container.delete(RevocationEndpoint);
-
-      container.bind(RevocationEndpoint).toSelf().asSingleton();
-
-      expect(() => container.resolve(RevocationEndpoint)).toThrow(
-        new Error('Cannot enable Refresh Token Revocation without a Refresh Token Service.')
-      );
-    });
-  });
-
   describe('handle()', () => {
     let request: HttpRequest<RevocationRequest>;
 
@@ -151,147 +95,16 @@ describe('Revocation Endpoint', () => {
       });
     });
 
-    it('should return an error response when not providing a "token" parameter.', async () => {
-      delete request.body.token;
-
-      const error = new InvalidRequestException({ description: 'Invalid parameter "token".' });
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
-      );
-    });
-
-    it('should return an error response when providing an unsupported "token_type_hint".', async () => {
-      request.body.token_type_hint = 'unknown';
-
-      const error = new UnsupportedTokenTypeException({ description: 'Unsupported token_type_hint "unknown".' });
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
-      );
-    });
-
-    it('should return an error response when not using a client authentication method.', async () => {
-      const error = new InvalidClientException({ description: 'No Client Authentication Method detected.' });
-
-      clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
-      );
-    });
-
-    it('should return an error response when using multiple client authentication methods.', async () => {
-      const error = new InvalidClientException({ description: 'Multiple Client Authentication Methods detected.' });
-
-      clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
-      );
-    });
-
-    it("should return an error response when when the provided secret does not match the client's one.", async () => {
-      const error = new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders({
-        'WWW-Authenticate': 'Basic',
-      });
-
-      clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setStatus(error.statusCode)
-          .setHeaders({ ...endpoint['headers'], ...error.headers })
-          .json(error.toJSON())
-      );
-    });
-
-    it('should search for an access token and then a refresh token when providing an "access_token" token_type_hint.', async () => {
-      request.body.token_type_hint = 'access_token';
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
-
-      accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
-
-      expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
-      expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
-
-      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
-      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
-
-      expect(findAccessTokenOrder).toBeLessThan(findRefreshTokenOrder);
-
-      expect(accessTokenServiceMock.revoke).not.toHaveBeenCalled();
-      expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
-    });
-
-    it('should search for a refresh token and then an access token when providing a "refresh_token" token_type_hint.', async () => {
-      request.body.token_type_hint = 'refresh_token';
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
-
-      accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
-
-      expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
-      expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
-
-      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
-      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
-
-      expect(findRefreshTokenOrder).toBeLessThan(findAccessTokenOrder);
-
-      expect(accessTokenServiceMock.revoke).not.toHaveBeenCalled();
-      expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
-    });
-
-    it('should search for an access token and then a refresh token when not providing a token_type_hint.', async () => {
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
-
-      accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
-
-      expect(refreshTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
-      expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
-
-      const findAccessTokenOrder = accessTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
-      const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
-
-      expect(findAccessTokenOrder).toBeLessThan(findRefreshTokenOrder);
-
-      expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
-      expect(accessTokenServiceMock.revoke).not.toHaveBeenCalled();
-    });
-
-    it('should not revoke when the authorization server does not support access token revocation.', async () => {
-      Reflect.set(settings, 'enableAccessTokenRevocation', false);
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
-
-      accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
-
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
-
-      Reflect.set(settings, 'enableAccessTokenRevocation', true);
-    });
-
     it('should not revoke when the client is not the owner of the token.', async () => {
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
+      const client = <Client>{ id: 'client_id' };
+      const token = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
 
-      accessTokenServiceMock.findOne.mockResolvedValueOnce(<AccessToken>{
-        handle: 'access_token',
-        client: { id: 'another_client_id' },
+      validatorMock.validate.mockResolvedValueOnce({
+        parameters: request.data,
+        client,
+        token,
+        tokenType: 'access_token',
       });
-
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
@@ -300,14 +113,15 @@ describe('Revocation Endpoint', () => {
     });
 
     it('should revoke an access token.', async () => {
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
+      const client = <Client>{ id: 'client_id' };
+      const token = <AccessToken>{ handle: 'access_token', client };
 
-      accessTokenServiceMock.findOne.mockResolvedValueOnce(<AccessToken>{
-        handle: 'access_token',
-        client: { id: 'client_id' },
+      validatorMock.validate.mockResolvedValueOnce({
+        parameters: request.data,
+        client,
+        token,
+        tokenType: 'access_token',
       });
-
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
 
@@ -318,13 +132,14 @@ describe('Revocation Endpoint', () => {
     it('should revoke a refresh token.', async () => {
       request.body.token = 'refresh_token';
 
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(<Client>{ id: 'client_id' });
+      const client = <Client>{ id: 'client_id' };
+      const token = <RefreshToken>{ handle: 'refresh_token', client };
 
-      accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
-
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
-        handle: 'refresh_token',
-        client: { id: 'client_id' },
+      validatorMock.validate.mockResolvedValueOnce({
+        parameters: request.data,
+        client,
+        token,
+        tokenType: 'refresh_token',
       });
 
       await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);

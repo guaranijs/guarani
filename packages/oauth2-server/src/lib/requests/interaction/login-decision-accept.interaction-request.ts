@@ -3,7 +3,7 @@ import { LoginDecisionInteractionRequest } from './login-decision.interaction-re
 /**
  * Parameters of the custom OAuth 2.0 Login Accept Decision Interaction Request.
  */
-export interface LoginDecisionAcceptInteractionRequest extends LoginDecisionInteractionRequest {
+export interface LoginDecisionAcceptInteractionRequest extends LoginDecisionInteractionRequest<'accept'> {
   /**
    * Identifier of the Subject of the Authentication.
    */

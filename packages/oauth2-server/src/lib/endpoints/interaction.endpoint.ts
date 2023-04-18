@@ -9,10 +9,8 @@ import { UnsupportedInteractionTypeException } from '../exceptions/unsupported-i
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
-import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
-import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
-import { InteractionType } from '../interaction-types/interaction-type.type';
 import { InteractionRequest } from '../requests/interaction/interaction-request';
+import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 
@@ -51,9 +49,11 @@ export class InteractionEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Interaction Endpoint.
    *
-   * @param interactionTypes Interaction Types registered at the Authorization Server.
+   * @param validators Interaction Request Validators registered at the Authorization Server.
    */
-  public constructor(@InjectAll(INTERACTION_TYPE) private readonly interactionTypes: InteractionTypeInterface[]) {}
+  public constructor(
+    @InjectAll(InteractionRequestValidator) private readonly validators: InteractionRequestValidator[]
+  ) {}
 
   /**
    * Creates an Http JSON Interaction Response.
@@ -103,10 +103,10 @@ export class InteractionEndpoint implements EndpointInterface {
   private async handleContext(request: HttpRequest<InteractionRequest>): Promise<HttpResponse> {
     const parameters = request.data;
 
-    this.checkParameters(parameters);
+    const validator = this.getValidator(parameters);
 
-    const interactionType = this.getInteractionType(parameters.interaction_type);
-    const interactionResponse = await interactionType.handleContext(parameters);
+    const context = await validator.validateContext(request);
+    const interactionResponse = await context.interactionType.handleContext(context);
 
     return new HttpResponse().setHeaders(this.headers).json(interactionResponse);
   }
@@ -120,40 +120,33 @@ export class InteractionEndpoint implements EndpointInterface {
   private async handleDecision(request: HttpRequest<InteractionRequest>): Promise<HttpResponse> {
     const parameters = request.data;
 
-    this.checkParameters(parameters);
+    const validator = this.getValidator(parameters);
 
-    const interactionType = this.getInteractionType(parameters.interaction_type);
-    const interactionResponse = await interactionType.handleDecision(parameters);
+    const context = await validator.validateDecision(request);
+    const interactionResponse = await context.interactionType.handleDecision(context);
 
     return new HttpResponse().setHeaders(this.headers).json(interactionResponse);
   }
 
   /**
-   * Checks if the Parameters of the Interaction Request are valid.
+   * Retrieves the Interaction Request Validator based on the Interaction Type requested by the Client.
    *
    * @param parameters Parameters of the Interaction Request.
+   * @returns Interaction Request Validator.
    */
-  private checkParameters(parameters: InteractionRequest): void {
-    const { interaction_type: interactionType } = parameters;
-
-    if (typeof interactionType !== 'string') {
+  private getValidator(parameters: InteractionRequest): InteractionRequestValidator {
+    if (typeof parameters.interaction_type !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "interaction_type".' });
     }
-  }
 
-  /**
-   * Retrieves the Interaction Type based on the **interaction_type** requested by the Client.
-   *
-   * @param name Interaction Type requested by the Client.
-   * @returns Interaction Type.
-   */
-  private getInteractionType(name: InteractionType): InteractionTypeInterface {
-    const interactionType = this.interactionTypes.find((interactionType) => interactionType.name === name);
+    const validator = this.validators.find((validator) => validator.name === parameters.interaction_type);
 
-    if (interactionType === undefined) {
-      throw new UnsupportedInteractionTypeException({ description: `Unsupported interaction_type "${name}".` });
+    if (validator === undefined) {
+      throw new UnsupportedInteractionTypeException({
+        description: `Unsupported interaction_type "${parameters.interaction_type}".`,
+      });
     }
 
-    return interactionType;
+    return validator;
   }
 }

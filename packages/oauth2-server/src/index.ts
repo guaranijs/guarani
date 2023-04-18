@@ -19,6 +19,29 @@ export { ClientAuthorizationInterface } from './lib/client-authorization/client-
 export { CLIENT_AUTHORIZATION } from './lib/client-authorization/client-authorization.token';
 export { ClientAuthorization } from './lib/client-authorization/client-authorization.type';
 
+// Context
+export { AuthorizationContext } from './lib/context/authorization/authorization.context';
+export { CodeAuthorizationContext } from './lib/context/authorization/code.authorization.context';
+export { DeviceAuthorizationContext } from './lib/context/device-authorization.context';
+export { ConsentContextInteractionContext } from './lib/context/interaction/consent-context.interaction.context';
+export { ConsentDecisionAcceptInteractionContext } from './lib/context/interaction/consent-decision-accept.interaction.context';
+export { ConsentDecisionDenyInteractionContext } from './lib/context/interaction/consent-decision-deny.interaction.context';
+export { ConsentDecisionInteractionContext } from './lib/context/interaction/consent-decision.interaction.context';
+export { InteractionContext } from './lib/context/interaction/interaction.context';
+export { LoginContextInteractionContext } from './lib/context/interaction/login-context.interaction.context';
+export { LoginDecisionAcceptInteractionContext } from './lib/context/interaction/login-decision-accept.interaction.context';
+export { LoginDecisionDenyInteractionContext } from './lib/context/interaction/login-decision-deny.interaction.context';
+export { LoginDecisionInteractionContext } from './lib/context/interaction/login-decision.interaction.context';
+export { IntrospectionContext } from './lib/context/introspection.context';
+export { RevocationContext } from './lib/context/revocation.context';
+export { AuthorizationCodeTokenContext } from './lib/context/token/authorization-code.token.context';
+export { ClientCredentialsTokenContext } from './lib/context/token/client-credentials.token.context';
+export { DeviceCodeTokenContext } from './lib/context/token/device-code.token.context';
+export { JwtBearerTokenContext } from './lib/context/token/jwt-bearer.token.context';
+export { RefreshTokenTokenContext } from './lib/context/token/refresh-token.token.context';
+export { ResourceOwnerPasswordCredentialsTokenContext } from './lib/context/token/resource-owner-password-credentials.token.context';
+export { TokenContext } from './lib/context/token/token.context';
+
 // Displays
 export { DisplayInterface } from './lib/displays/display.interface';
 export { DISPLAY } from './lib/displays/display.token';
@@ -195,3 +218,11 @@ export { UserInteractionSettings } from './lib/settings/user-interaction.setting
 export { AccessTokenType } from './lib/types/access-token-type.type';
 export { ApplicationType } from './lib/types/application-type.type';
 export { TokenTypeHint } from './lib/types/token-type-hint.type';
+
+// Validators
+export { AuthorizationRequestValidator } from './lib/validators/authorization/authorization-request.validator';
+export { DeviceAuthorizationRequestValidator } from './lib/validators/device-authorization-request.validator';
+export { InteractionRequestValidator } from './lib/validators/interaction/interaction-request.validator';
+export { IntrospectionRequestValidator } from './lib/validators/introspection-request.validator';
+export { RevocationRequestValidator } from './lib/validators/revocation-request.validator';
+export { TokenRequestValidator } from './lib/validators/token/token-request.validator';

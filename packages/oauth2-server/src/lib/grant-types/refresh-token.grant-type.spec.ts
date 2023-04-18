@@ -1,13 +1,9 @@
 import { DependencyInjectionContainer } from '@guarani/di';
-
+import { RefreshTokenTokenContext } from '../context/token/refresh-token.token.context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
-import { ScopeHandler } from '../handlers/scope.handler';
-import { RefreshTokenTokenRequest } from '../requests/token/refresh-token.token-request';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -15,12 +11,15 @@ import { RefreshTokenServiceInterface } from '../services/refresh-token.service.
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { GrantTypeInterface } from './grant-type.interface';
 import { GrantType } from './grant-type.type';
 import { RefreshTokenGrantType } from './refresh-token.grant-type';
 
 describe('Refresh Token Grant Type', () => {
   let container: DependencyInjectionContainer;
   let grantType: RefreshTokenGrantType;
+
+  const settings = <Settings>{ enableRefreshTokenRotation: false };
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
     create: jest.fn(),
@@ -34,15 +33,12 @@ describe('Refresh Token Grant Type', () => {
     revoke: jest.fn(),
   });
 
-  const settings = <Settings>{ scopes: ['foo', 'bar', 'baz', 'qux'] };
-
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);
-    container.bind(ScopeHandler).toSelf().asSingleton();
     container.bind(RefreshTokenGrantType).toSelf().asSingleton();
 
     grantType = container.resolve(RefreshTokenGrantType);
@@ -59,186 +55,177 @@ describe('Refresh Token Grant Type', () => {
   });
 
   describe('handle()', () => {
-    let parameters: RefreshTokenTokenRequest;
+    let context: RefreshTokenTokenContext;
 
     beforeEach(() => {
-      parameters = { grant_type: 'refresh_token', refresh_token: 'refresh_token' };
-    });
+      const now = Date.now();
 
-    it('should throw when not providing a "refresh_token" parameter.', async () => {
-      Reflect.deleteProperty(parameters, 'refresh_token');
-
-      const client = <Client>{ id: 'client_id' };
-
-      await expect(grantType.handle(parameters, client)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "refresh_token".' })
-      );
-    });
-
-    it('should throw when requesting an unsupported scope.', async () => {
-      Reflect.set(parameters, 'scope', 'foo unknown bar');
-
-      const client = <Client>{ id: 'client_id' };
-
-      await expect(grantType.handle(parameters, client)).rejects.toThrow(
-        new InvalidScopeException({ description: 'Unsupported scope "unknown".' })
-      );
-    });
-
-    it('should throw when a refresh token is not found.', async () => {
-      const client = <Client>{ id: 'client_id' };
-
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
-
-      await expect(grantType.handle(parameters, client)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Invalid Refresh Token.' })
-      );
+      context = <RefreshTokenTokenContext>{
+        parameters: {
+          grant_type: 'refresh_token',
+          refresh_token: 'refresh_token',
+        },
+        grantType: jest.mocked<GrantTypeInterface>({ name: 'refresh_token', handle: jest.fn() }),
+        client: <Client>{
+          id: 'client_id',
+          grantTypes: ['authorization_code', 'refresh_token'],
+        },
+        refreshToken: <RefreshToken>{
+          handle: 'refresh_token',
+          isRevoked: false,
+          issuedAt: new Date(now),
+          expiresAt: new Date(now + 86400000),
+          validAfter: new Date(now),
+          client: {
+            id: 'client_id',
+            grantTypes: ['authorization_code', 'refresh_token'],
+          },
+        },
+        scopes: ['foo', 'bar', 'baz'],
+      };
     });
 
     it('should throw when providing a mismathching client identifier.', async () => {
-      const client = <Client>{ id: 'client_id' };
+      Reflect.set(context.refreshToken.client, 'id', 'another_client_id');
 
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
-        handle: 'refresh_token',
-        client: { id: 'another_client_id' },
-      });
-
-      await expect(grantType.handle(parameters, client)).rejects.toThrow(
+      await expect(grantType.handle(context)).rejects.toThrow(
         new InvalidGrantException({ description: 'Mismatching Client Identifier.' })
       );
     });
 
-    it('should throw when a refresh token not yet valid.', async () => {
-      const client = <Client>{ id: 'client_id' };
+    it('should throw when the refresh token not yet valid.', async () => {
+      Reflect.set(context.refreshToken, 'validAfter', new Date(Date.now() + 86400000));
 
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
-        handle: 'refresh_token',
-        validAfter: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
-      });
-
-      await expect(grantType.handle(parameters, client)).rejects.toThrow(
+      await expect(grantType.handle(context)).rejects.toThrow(
         new InvalidGrantException({ description: 'Refresh Token not yet valid.' })
       );
     });
 
-    it('should throw when using an expired refresh token.', async () => {
-      const client = <Client>{ id: 'client_id' };
+    it('should throw when the refresh token is expired.', async () => {
+      Reflect.set(context.refreshToken, 'expiresAt', new Date(Date.now() - 86400000));
 
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
-        handle: 'refresh_token',
-        expiresAt: new Date(Date.now() - 3600000),
-        client: { id: 'client_id' },
-      });
-
-      await expect(grantType.handle(parameters, client)).rejects.toThrow(
+      await expect(grantType.handle(context)).rejects.toThrow(
         new InvalidGrantException({ description: 'Expired Refresh Token.' })
       );
     });
 
-    it('should throw when using a revoked refresh token.', async () => {
-      const client = <Client>{ id: 'client_id' };
+    it('should throw when the refresh token is revoked.', async () => {
+      Reflect.set(context.refreshToken, 'isRevoked', true);
 
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
-        handle: 'refresh_token',
-        isRevoked: true,
-        expiresAt: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
-      });
-
-      await expect(grantType.handle(parameters, client)).rejects.toThrow(
+      await expect(grantType.handle(context)).rejects.toThrow(
         new InvalidGrantException({ description: 'Revoked Refresh Token.' })
       );
     });
 
-    it('should throw when requesting a scope not previously granted.', async () => {
-      Reflect.set(parameters, 'scope', 'foo bar baz');
-
-      const client = <Client>{ id: 'client_id' };
-
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
-        handle: 'refresh_token',
-        isRevoked: false,
-        scopes: ['foo', 'bar'],
-        expiresAt: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
-      });
-
-      await expect(grantType.handle(parameters, client)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The scope "baz" was not previously granted.' })
-      );
-    });
-
     it('should create a token response with the original scope and the same refresh token.', async () => {
-      const client = <Client>{ id: 'client_id' };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: context.scopes,
+        expiresAt: new Date(Date.now() + 86400000),
+      };
 
-      accessTokenServiceMock.create.mockImplementationOnce(async (scopes) => {
-        return <AccessToken>{ handle: 'access_token', scopes, expiresAt: new Date(Date.now() + 86400000) };
-      });
+      accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
-        handle: 'refresh_token',
-        isRevoked: false,
-        scopes: ['foo', 'bar'],
-        expiresAt: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
-      });
-
-      await expect(grantType.handle(parameters, client)).resolves.toStrictEqual<TokenResponse>({
+      await expect(grantType.handle(context)).resolves.toStrictEqual<TokenResponse>({
         access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: 86400,
-        scope: 'foo bar',
+        scope: 'foo bar baz',
         refresh_token: 'refresh_token',
       });
     });
 
     it('should create a token response with the requested scope and the same refresh token.', async () => {
-      Reflect.set(parameters, 'scope', 'foo');
+      Reflect.set(context, 'scopes', ['foo', 'bar']);
 
-      const client = <Client>{ id: 'client_id' };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: context.scopes,
+        expiresAt: new Date(Date.now() + 86400000),
+      };
 
-      accessTokenServiceMock.create.mockImplementationOnce(async (scopes) => {
-        return <AccessToken>{ handle: 'access_token', scopes, expiresAt: new Date(Date.now() + 86400000) };
-      });
+      accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
-        handle: 'refresh_token',
-        isRevoked: false,
-        scopes: ['foo', 'bar'],
-        expiresAt: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
-      });
-
-      await expect(grantType.handle(parameters, client)).resolves.toStrictEqual<TokenResponse>({
+      await expect(grantType.handle(context)).resolves.toStrictEqual<TokenResponse>({
         access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: 86400,
-        scope: 'foo',
+        scope: 'foo bar',
         refresh_token: 'refresh_token',
       });
     });
 
     it('should create a token response with the original scope and a new refresh token.', async () => {
-      Reflect.set(settings, 'enableRefreshTokenRotation', true);
+      const settings = <Settings>{ enableRefreshTokenRotation: true };
 
-      const client = <Client>{ id: 'client_id' };
+      container.delete<Settings>(SETTINGS);
+      container.delete(RefreshTokenGrantType);
 
-      accessTokenServiceMock.create.mockImplementationOnce(async (scopes) => {
-        return <AccessToken>{ handle: 'access_token', scopes, expiresAt: new Date(Date.now() + 86400000) };
+      container.bind<Settings>(SETTINGS).toValue(settings);
+      container.bind(RefreshTokenGrantType).toSelf().asSingleton();
+
+      grantType = container.resolve(RefreshTokenGrantType);
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: context.scopes,
+        expiresAt: new Date(Date.now() + 86400000),
+      };
+
+      const refreshToken = <RefreshToken>{ handle: 'new_refresh_token' };
+
+      accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
+      refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);
+
+      await expect(grantType.handle(context)).resolves.toStrictEqual<TokenResponse>({
+        access_token: 'access_token',
+        token_type: 'Bearer',
+        expires_in: 86400,
+        scope: 'foo bar baz',
+        refresh_token: 'new_refresh_token',
       });
 
-      refreshTokenServiceMock.create.mockResolvedValueOnce(<RefreshToken>{ handle: 'new_refresh_token' });
+      expect(refreshTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
+      expect(refreshTokenServiceMock.create).toHaveBeenCalledTimes(1);
 
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
-        handle: 'refresh_token',
-        isRevoked: false,
-        scopes: ['foo', 'bar'],
-        expiresAt: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
-      });
+      const revokeOrder = refreshTokenServiceMock.revoke.mock.invocationCallOrder[0]!;
+      const createOrder = refreshTokenServiceMock.create.mock.invocationCallOrder[0]!;
 
-      await expect(grantType.handle(parameters, client)).resolves.toStrictEqual<TokenResponse>({
+      expect(revokeOrder).toBeLessThan(createOrder);
+
+      expect(refreshTokenServiceMock.create).toHaveBeenCalledWith(
+        context.refreshToken.scopes,
+        context.client,
+        context.refreshToken.user,
+        accessToken
+      );
+    });
+
+    it('should create a token response with the requested scope and a new refresh token.', async () => {
+      const settings = <Settings>{ enableRefreshTokenRotation: true };
+
+      container.delete<Settings>(SETTINGS);
+      container.delete(RefreshTokenGrantType);
+
+      container.bind<Settings>(SETTINGS).toValue(settings);
+      container.bind(RefreshTokenGrantType).toSelf().asSingleton();
+
+      grantType = container.resolve(RefreshTokenGrantType);
+
+      Reflect.set(context, 'scopes', ['foo', 'bar']);
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: context.scopes,
+        expiresAt: new Date(Date.now() + 86400000),
+      };
+
+      const refreshToken = <RefreshToken>{ handle: 'new_refresh_token' };
+
+      accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
+      refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);
+
+      await expect(grantType.handle(context)).resolves.toStrictEqual<TokenResponse>({
         access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: 86400,
@@ -254,46 +241,12 @@ describe('Refresh Token Grant Type', () => {
 
       expect(revokeOrder).toBeLessThan(createOrder);
 
-      Reflect.deleteProperty(settings, 'enableRefreshTokenRotation');
-    });
-
-    it('should create a token response with the requested scope and a new refresh token.', async () => {
-      Reflect.set(settings, 'enableRefreshTokenRotation', true);
-      Reflect.set(parameters, 'scope', 'foo');
-
-      const client = <Client>{ id: 'client_id' };
-
-      accessTokenServiceMock.create.mockImplementationOnce(async (scopes) => {
-        return <AccessToken>{ handle: 'access_token', scopes, expiresAt: new Date(Date.now() + 86400000) };
-      });
-
-      refreshTokenServiceMock.create.mockResolvedValueOnce(<RefreshToken>{ handle: 'new_refresh_token' });
-
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(<RefreshToken>{
-        handle: 'refresh_token',
-        isRevoked: false,
-        scopes: ['foo', 'bar'],
-        expiresAt: new Date(Date.now() + 3600000),
-        client: { id: 'client_id' },
-      });
-
-      await expect(grantType.handle(parameters, client)).resolves.toStrictEqual<TokenResponse>({
-        access_token: 'access_token',
-        token_type: 'Bearer',
-        expires_in: 86400,
-        scope: 'foo',
-        refresh_token: 'new_refresh_token',
-      });
-
-      expect(refreshTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
-      expect(refreshTokenServiceMock.create).toHaveBeenCalledTimes(1);
-
-      const revokeOrder = refreshTokenServiceMock.revoke.mock.invocationCallOrder[0]!;
-      const createOrder = refreshTokenServiceMock.create.mock.invocationCallOrder[0]!;
-
-      expect(revokeOrder).toBeLessThan(createOrder);
-
-      Reflect.deleteProperty(settings, 'enableRefreshTokenRotation');
+      expect(refreshTokenServiceMock.create).toHaveBeenCalledWith(
+        context.refreshToken.scopes,
+        context.client,
+        context.refreshToken.user,
+        accessToken
+      );
     });
   });
 });

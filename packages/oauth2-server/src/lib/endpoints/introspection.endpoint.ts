@@ -1,37 +1,26 @@
-import { Inject, Injectable, Optional } from '@guarani/di';
+import { Inject, Injectable } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
 
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 import { OutgoingHttpHeaders } from 'http';
 
+import { IntrospectionContext } from '../context/introspection.context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
-import { UnsupportedTokenTypeException } from '../exceptions/unsupported-token-type.exception';
-import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { IntrospectionRequest } from '../requests/introspection-request';
 import { IntrospectionResponse } from '../responses/introspection-response';
-import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
-import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
-import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
-import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
-import { TokenTypeHint } from '../types/token-type-hint.type';
+import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
-
-interface FindTokenResult {
-  readonly entity: AccessToken | RefreshToken;
-  readonly tokenType: TokenTypeHint;
-}
 
 /**
  * Implementation of the **Introspection** Endpoint.
@@ -75,36 +64,17 @@ export class IntrospectionEndpoint implements EndpointInterface {
   private readonly headers: OutgoingHttpHeaders = { 'Cache-Control': 'no-store', Pragma: 'no-cache' };
 
   /**
-   * Token Type Hints supported by the Introspection Endpoint.
-   */
-  private readonly supportedTokenTypeHints: TokenTypeHint[] = ['access_token'];
-
-  /**
    * Instantiates a new Introspection Endpoint.
    *
-   * @param clientAuthenticationHandler Instance of the Client Authentication Handler.
+   * @param validator Instance of the Introspection Request Validator.
    * @param settings Settings of the Authorization Server.
    * @param accessTokenService Instance of the Access Token Service.
    * @param refreshTokenService Instance of the Refresh Token Service.
    */
   public constructor(
-    private readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
-    @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface
-  ) {
-    if (this.settings.enableRefreshTokenIntrospection) {
-      if (!this.settings.grantTypes.includes('refresh_token')) {
-        throw new Error('The Authorization Server disabled using Refresh Tokens.');
-      }
-
-      if (this.refreshTokenService === undefined) {
-        throw new Error('Cannot enable Refresh Token Introspection without a Refresh Token Service.');
-      }
-
-      this.supportedTokenTypeHints.push('refresh_token');
-    }
-  }
+    private readonly validator: IntrospectionRequestValidator,
+    @Inject(SETTINGS) private readonly settings: Settings
+  ) {}
 
   /**
    * Introspects the provided Token about its metadata and state within the Authorization Server.
@@ -126,13 +96,9 @@ export class IntrospectionEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest<IntrospectionRequest>): Promise<HttpResponse> {
-    const parameters = request.data;
-
     try {
-      this.checkParameters(parameters);
-
-      const client = await this.clientAuthenticationHandler.authenticate(request);
-      const introspectionResponse = await this.introspectToken(parameters, client);
+      const context = await this.validator.validate(request);
+      const introspectionResponse = await this.introspectToken(context);
 
       return new HttpResponse().setHeaders(this.headers).json(introspectionResponse);
     } catch (exc: unknown) {
@@ -154,95 +120,35 @@ export class IntrospectionEndpoint implements EndpointInterface {
   }
 
   /**
-   * Checks if the Parameters of the Introspection Request are valid.
-   *
-   * @param parameters Parameters of the Introspection Request.
-   */
-  protected checkParameters(parameters: IntrospectionRequest): void {
-    const { token, token_type_hint: tokenTypeHint } = parameters;
-
-    if (typeof token !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "token".' });
-    }
-
-    if (tokenTypeHint !== undefined && !this.supportedTokenTypeHints.includes(tokenTypeHint)) {
-      throw new UnsupportedTokenTypeException({ description: `Unsupported token_type_hint "${tokenTypeHint}".` });
-    }
-  }
-
-  /**
    * Introspects the provide Token for its metadata.
    *
-   * @param parameters Parameters of the Introspection Request.
-   * @param client Authenticated Client.
+   * @param context Introspection Context.
    * @returns Metadata of the Token.
    */
-  private async introspectToken(parameters: IntrospectionRequest, client: Client): Promise<IntrospectionResponse> {
-    const { token, token_type_hint: tokenTypeHint } = parameters;
+  private async introspectToken(context: IntrospectionContext): Promise<IntrospectionResponse> {
+    const { client, token, tokenType } = context;
 
-    const { entity, tokenType } = (await this.findTokenEntity(token, tokenTypeHint)) ?? {};
-
-    if (entity === undefined || tokenType === undefined) {
+    if (token === null || tokenType === null) {
       return IntrospectionEndpoint.INACTIVE_TOKEN;
     }
 
-    if (!this.checkEntityClient(entity, client)) {
+    if (!this.checkTokenClient(token, client)) {
       return IntrospectionEndpoint.INACTIVE_TOKEN;
     }
 
-    return this.getTokenMetadata(entity);
-  }
-
-  /**
-   * Searches the application's storage for a Token Entity that satisfies the Token provided by the Client.
-   *
-   * @param token Token provided by the Client.
-   * @param tokenTypeHint Optional hint about the type of the Token.
-   * @returns Resulting Token Entity and its type.
-   */
-  private async findTokenEntity(token: string, tokenTypeHint?: TokenTypeHint): Promise<FindTokenResult | null> {
-    switch (tokenTypeHint) {
-      case 'refresh_token':
-        return (await this.findRefreshToken(token)) ?? (await this.findAccessToken(token));
-
-      case 'access_token':
-      default:
-        return (await this.findAccessToken(token)) ?? (await this.findRefreshToken(token));
-    }
-  }
-
-  /**
-   * Searches the application's storage for an Access Token.
-   *
-   * @param token Token provided by the Client.
-   * @returns Result of the search.
-   */
-  private async findAccessToken(token: string): Promise<FindTokenResult | null> {
-    const entity = await this.accessTokenService.findOne(token);
-    return entity !== null ? { entity, tokenType: 'access_token' } : null;
-  }
-
-  /**
-   * Searches the application's storage for a Refresh Token.
-   *
-   * @param token Token provided by the Client.
-   * @returns Result of the search.
-   */
-  private async findRefreshToken(token: string): Promise<FindTokenResult | null> {
-    const entity = await this.refreshTokenService?.findOne(token);
-    return entity != null ? { entity, tokenType: 'refresh_token' } : null;
+    return this.getTokenMetadata(token);
   }
 
   /**
    * Checks if the Client of the Request is the same to which the Token was issued to.
    *
-   * @param entity Instance of the Token retrieved based on the handle provided by the Client.
+   * @param token Instance of the Token retrieved based on the handle provided by the Client.
    * @param client Client of the Request.
    * @returns The Client of the Request is the same to which the Token was issued to.
    */
-  private checkEntityClient(entity: AccessToken | RefreshToken, client: Client): boolean {
+  private checkTokenClient(token: AccessToken | RefreshToken, client: Client): boolean {
     const clientIdBuffer = Buffer.from(client.id, 'utf8');
-    const tokenClientIdBuffer = Buffer.from(entity.client.id, 'utf8');
+    const tokenClientIdBuffer = Buffer.from(token.client.id, 'utf8');
 
     return clientIdBuffer.length === tokenClientIdBuffer.length && timingSafeEqual(clientIdBuffer, tokenClientIdBuffer);
   }

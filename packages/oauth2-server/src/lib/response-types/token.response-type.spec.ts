@@ -1,16 +1,18 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
+import { AuthorizationContext } from '../context/authorization/authorization.context';
+import { DisplayInterface } from '../displays/display.interface';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Session } from '../entities/session.entity';
-import { User } from '../entities/user.entity';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
+import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
+import { ResponseTypeInterface } from './response-type.interface';
 import { ResponseType } from './response-type.type';
 import { TokenResponseType } from './token.response-type';
 
@@ -46,47 +48,54 @@ describe('Token Response Type', () => {
   });
 
   describe('handle()', () => {
-    let parameters: AuthorizationRequest;
+    let context: AuthorizationContext<AuthorizationRequest>;
 
     beforeEach(() => {
-      parameters = <AuthorizationRequest>{ response_type: 'token', scope: 'foo bar', state: 'client_state' };
-    });
-
-    it('should throw when using "query" as the "response_mode".', async () => {
-      Reflect.set(parameters, 'response_mode', 'query');
-
-      const client = <Client>{ id: 'client_id' };
-      const user = <User>{ id: 'user_id' };
-
-      const session = <Session>{};
-      const consent = <Consent>{ client, scopes: ['foo', 'bar'], user };
-
-      await expect(responseType.handle(parameters, session, consent)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'Invalid response_mode "query" for response_type "token".',
+      context = <AuthorizationContext<AuthorizationRequest>>{
+        parameters: {
+          response_type: 'token',
+          client_id: 'client_id',
+          redirect_uri: 'https://client.example.com/oauth/callback',
+          scope: 'foo bar',
           state: 'client_state',
-        })
-      );
+          nonce: 'client_nonce',
+        },
+        cookies: {},
+        responseType: jest.mocked<ResponseTypeInterface>({
+          name: 'token',
+          defaultResponseMode: 'fragment',
+          handle: jest.fn(),
+        }),
+        client: <Client>{ id: 'client_id' },
+        redirectUri: new URL('https://client.example.com/oauth/callback'),
+        scopes: ['openid', 'foo', 'bar'],
+        state: 'client_state',
+        responseMode: jest.mocked<ResponseModeInterface>({ name: 'fragment', createHttpResponse: jest.fn() }),
+        nonce: 'client_nonce',
+        prompts: [],
+        display: jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
+        uiLocales: [],
+        acrValues: [],
+      };
     });
 
     it('should create a token authorization response.', async () => {
-      const client = <Client>{ id: 'client_id' };
-      const user = <User>{ id: 'user_id' };
-
       const session = <Session>{};
-      const consent = <Consent>{ client, scopes: ['foo', 'bar'], user };
+      const consent = <Consent>{
+        scopes: ['foo', 'bar'],
+        client: { id: 'client_id' },
+        user: { id: 'user_id' },
+      };
 
-      accessTokenServiceMock.create.mockImplementationOnce(async (scopes) => {
-        return <AccessToken>{
-          handle: 'access_token',
-          scopes,
-          expiresAt: new Date(Date.now() + 3600000),
-        };
-      });
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: consent.scopes,
+        expiresAt: new Date(Date.now() + 3600000),
+      };
 
-      await expect(
-        responseType.handle(parameters, session, consent)
-      ).resolves.toStrictEqual<TokenAuthorizationResponse>({
+      accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
+
+      await expect(responseType.handle(context, session, consent)).resolves.toStrictEqual<TokenAuthorizationResponse>({
         access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: 3600,

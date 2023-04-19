@@ -267,7 +267,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
         authenticationMethod: 'client_secret_jwt',
-        authenticationSigningAlgorithms: ['HS512'],
+        authenticationSigningAlgorithm: 'HS512',
       });
 
       Reflect.set(clientAssertion, 'name', 'client_secret_jwt');
@@ -289,7 +289,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       const client = <Client>{
         id: 'client_id',
         authenticationMethod: 'client_secret_jwt',
-        authenticationSigningAlgorithms: ['HS256'],
+        authenticationSigningAlgorithm: 'HS256',
       };
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);

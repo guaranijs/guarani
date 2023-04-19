@@ -90,10 +90,13 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
         });
       }
 
-      if (
-        client.authenticationSigningAlgorithms?.includes(<Exclude<JsonWebSignatureAlgorithm, 'none'>>header.alg) !==
-        true
-      ) {
+      if (typeof client.authenticationSigningAlgorithm !== 'string') {
+        throw new InvalidClientException({
+          description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
+        });
+      }
+
+      if (client.authenticationSigningAlgorithm !== header.alg) {
         throw new InvalidClientException({
           description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
         });

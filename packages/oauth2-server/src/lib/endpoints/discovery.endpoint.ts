@@ -63,6 +63,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
       token_endpoint: this.getEndpointPath('token'),
       userinfo_endpoint: this.getEndpointPath('userinfo'),
       jwks_uri: this.getEndpointPath('jwks'),
+      registration_endpoint: this.getEndpointPath('registration'),
       scopes_supported: this.settings.scopes,
       response_types_supported: this.settings.responseTypes,
       response_modes_supported: this.settings.responseModes,

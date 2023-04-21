@@ -94,6 +94,13 @@ export interface AuthorizationServerOptions {
   readonly enableRefreshTokenRotation?: boolean;
 
   /**
+   * Enables the Dynamic Client Registration Endpoint on the Authorization Server.
+   *
+   * @default false
+   */
+  readonly enableRegistrationEndpoint?: boolean;
+
+  /**
    * Enables the Revocation Endpoint on the Authorization Server.
    *
    * @default true

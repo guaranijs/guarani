@@ -1,5 +1,8 @@
 import { Injectable } from '@guarani/di';
 
+import { randomInt, randomUUID } from 'crypto';
+
+import { RegistrationContext } from '../../context/registration.context';
 import { Client } from '../../entities/client.entity';
 import { ClientServiceInterface } from '../client.service.interface';
 
@@ -9,6 +12,7 @@ export class ClientService implements ClientServiceInterface {
     {
       id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
       secret: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
+      secretIssuedAt: new Date(),
       name: 'Dev Client #1',
       redirectUris: ['http://localhost:4000/oauth/callback'],
       responseTypes: ['code', 'token'],
@@ -24,6 +28,7 @@ export class ClientService implements ClientServiceInterface {
       authenticationMethod: 'client_secret_basic',
       scopes: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
       requireAuthTime: false,
+      registrationAccessToken: 'aaaaaaaabbbbbbbbccccccccdddddddd',
       createdAt: new Date(),
     },
   ];
@@ -32,7 +37,66 @@ export class ClientService implements ClientServiceInterface {
     console.warn('Using default Client Service. This is only recommended for development.');
   }
 
+  public async create(context: RegistrationContext): Promise<Client> {
+    const client = <Client>{
+      id: randomUUID(),
+      secret: this.secretToken(),
+      secretIssuedAt: new Date(),
+      secretExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+      name: context.clientName,
+      redirectUris: context.redirectUris.map((redirectUri) => redirectUri.toString()),
+      responseTypes: context.responseTypes,
+      grantTypes: context.grantTypes,
+      applicationType: context.applicationType,
+      authenticationMethod: context.authenticationMethod,
+      authenticationSigningAlgorithm: context.authenticationSigningAlgorithm,
+      scopes: context.scopes,
+      clientUri: context.clientUri?.toString(),
+      logoUri: context.logoUri?.toString(),
+      contacts: context.contacts,
+      policyUri: context.policyUri?.toString(),
+      tosUri: context.tosUri?.toString(),
+      jwksUri: context.jwksUri?.toString(),
+      jwks: context.jwks,
+      // sectorIdentifierUri: context.sectorIdentifierUri,
+      // subjectType: context.subjectType,
+      idTokenSignedResponseAlgorithm: context.idTokenSignedResponseAlgorithm,
+      // idTokenEncryptedResponseKeyWrap: context.idTokenEncryptedResponseKeyWrap,
+      // idTokenEncryptedResponseContentEncryption: context.idTokenEncryptedResponseContentEncryption,
+      // userinfoSignedResponseAlgorithm: context.userinfoSignedResponseAlgorithm,
+      // userinfoEncryptedResponseKeyWrap: context.userinfoEncryptedResponseKeyWrap,
+      // userinfoEncryptedResponseContentEncryption: context.userinfoEncryptedResponseContentEncryption,
+      // requestObjectSigningAlgorithm: context.requestObjectSigningAlgorithm,
+      // requestObjectEncryptionKeyWrap: context.requestObjectEncryptionKeyWrap,
+      // requestObjectEncryptionContentEncryption: context.requestObjectEncryptionContentEncryption,
+      defaultMaxAge: context.defaultMaxAge,
+      requireAuthTime: context.requireAuthTime,
+      defaultAcrValues: context.defaultAcrValues,
+      initiateLoginUri: context.initiateLoginUri?.toString(),
+      // requestUris: context.requestUris,
+      softwareId: context.softwareId,
+      softwareVersion: context.softwareVersion,
+      registrationAccessToken: this.secretToken(),
+      createdAt: new Date(),
+    };
+
+    this.clients.push(client);
+
+    return client;
+  }
+
   public async findOne(id: string): Promise<Client | null> {
     return this.clients.find((client) => client.id === id) ?? null;
+  }
+
+  private secretToken(): string {
+    let token = '';
+    const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
+
+    for (let i = 0; i < 32; i++) {
+      token += alphabet[randomInt(alphabet.length)];
+    }
+
+    return token;
   }
 }

@@ -20,6 +20,13 @@ export interface Client extends Record<string, any> {
   secret?: string | null;
 
   /**
+   * Creation Date of the Client Secret.
+   *
+   * A **nullish** value indicates that no Client Secret was issued.
+   */
+  secretIssuedAt?: Date | null;
+
+  /**
    * Expiration Date of the Client Secret.
    *
    * A **nullish** value indicates that the Client Secret will not expire.
@@ -190,6 +197,11 @@ export interface Client extends Record<string, any> {
    * Version of the Software of the Client.
    */
   softwareVersion?: string | null;
+
+  /**
+   * Registration Access Token of the Client.
+   */
+  registrationAccessToken: string;
 
   /**
    * Creation Date of the Client.

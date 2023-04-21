@@ -15,7 +15,6 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
-import { ClientAssertionParameters } from './client-assertion.parameters';
 import { ClientAssertion } from './client-assertion.type';
 import { JwtBearerClientAssertion } from './jwt-bearer.client-assertion';
 
@@ -81,10 +80,10 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   });
 
   describe('hasBeenRequested()', () => {
-    let request: HttpRequest<ClientAssertionParameters>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<ClientAssertionParameters>({
+      request = new HttpRequest({
         body: { client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer', client_assertion: '' },
         cookies: {},
         headers: {},
@@ -102,10 +101,10 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   });
 
   describe('authenticate()', () => {
-    let request: HttpRequest<ClientAssertionParameters>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<ClientAssertionParameters>({
+      request = new HttpRequest({
         body: { client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer', client_assertion: '' },
         cookies: {},
         headers: {},

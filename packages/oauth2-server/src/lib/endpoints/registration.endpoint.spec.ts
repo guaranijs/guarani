@@ -135,10 +135,10 @@ describe('Dynamic Client Registration Endpoint', () => {
   });
 
   describe('handle() (POST)', () => {
-    let request: HttpRequest<RegistrationRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<RegistrationRequest>({
+      request = new HttpRequest({
         body: <RegistrationRequest>{
           redirect_uris: ['https://client.example.com/oauth/callback'],
           response_types: ['code'],
@@ -186,7 +186,7 @@ describe('Dynamic Client Registration Endpoint', () => {
       'should return the metadata of the registered client.',
       async (clientParams, responseParams) => {
         const context = <RegistrationContext>{
-          parameters: request.data,
+          parameters: <RegistrationRequest>request.body,
           redirectUris: [new URL('https://client.example.com/oauth/callback')],
           responseTypes: ['code'],
           grantTypes: ['authorization_code', 'refresh_token'],

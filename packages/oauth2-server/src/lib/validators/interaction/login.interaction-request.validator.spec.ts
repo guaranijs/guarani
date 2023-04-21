@@ -14,11 +14,9 @@ import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
-import { LoginDecision } from '../../interaction-types/login-decision.type';
 import { LoginContextInteractionRequest } from '../../requests/interaction/login-context.interaction-request';
 import { LoginDecisionAcceptInteractionRequest } from '../../requests/interaction/login-decision-accept.interaction-request';
 import { LoginDecisionDenyInteractionRequest } from '../../requests/interaction/login-decision-deny.interaction-request';
-import { LoginDecisionInteractionRequest } from '../../requests/interaction/login-decision.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { UserServiceInterface } from '../../services/user.service.interface';
@@ -83,10 +81,10 @@ describe('Login Interaction Request Validator', () => {
   });
 
   describe('validateContext()', () => {
-    let request: HttpRequest<LoginContextInteractionRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<LoginContextInteractionRequest>({
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},
@@ -121,7 +119,7 @@ describe('Login Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<LoginContextInteractionContext>({
-        parameters: request.data,
+        parameters: <LoginContextInteractionRequest>request.query,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });
@@ -129,10 +127,10 @@ describe('Login Interaction Request Validator', () => {
   });
 
   describe('validateDecision()', () => {
-    let request: HttpRequest<LoginDecisionInteractionRequest<LoginDecision>>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<LoginDecisionInteractionRequest<LoginDecision>>({
+      request = new HttpRequest({
         body: { interaction_type: 'login', login_challenge: 'login_challenge', decision: '' },
         cookies: {},
         headers: {},
@@ -252,7 +250,7 @@ describe('Login Interaction Request Validator', () => {
       userServiceMock.findOne.mockResolvedValueOnce(user);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LoginDecisionAcceptInteractionContext>({
-        parameters: <LoginDecisionAcceptInteractionRequest>request.data,
+        parameters: <LoginDecisionAcceptInteractionRequest>request.body,
         interactionType: interactionTypesMocks[1]!,
         grant,
         decision: 'accept',
@@ -301,14 +299,14 @@ describe('Login Interaction Request Validator', () => {
       const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
-        Reflect.construct(OAuth2Exception, [{ description: request.data.error_description }]),
-        { code: request.data.error }
+        Reflect.construct(OAuth2Exception, [{ description: request.body.error_description }]),
+        { code: request.body.error }
       );
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LoginDecisionDenyInteractionContext>({
-        parameters: <LoginDecisionDenyInteractionRequest>request.data,
+        parameters: <LoginDecisionDenyInteractionRequest>request.body,
         interactionType: interactionTypesMocks[1]!,
         grant,
         decision: 'deny',

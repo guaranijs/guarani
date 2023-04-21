@@ -66,8 +66,8 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
    * @param request Http Request.
    * @returns Authorization Context.
    */
-  public override async validate(request: HttpRequest<CodeAuthorizationRequest>): Promise<CodeAuthorizationContext> {
-    const { data: parameters } = request;
+  public override async validate(request: HttpRequest): Promise<CodeAuthorizationContext> {
+    const parameters = <CodeAuthorizationRequest>request.query;
 
     const authorizationRequest = await super.validate(request);
 

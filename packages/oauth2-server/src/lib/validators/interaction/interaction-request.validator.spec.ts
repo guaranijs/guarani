@@ -17,10 +17,10 @@ describe('Interaction Request Validator', () => {
   });
 
   describe('validateContext()', () => {
-    let request: HttpRequest<InteractionRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<InteractionRequest>({
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},
@@ -32,17 +32,17 @@ describe('Interaction Request Validator', () => {
 
     it('should return a context interaction context.', async () => {
       await expect(validator.validateContext(request)).resolves.toStrictEqual<InteractionContext<InteractionRequest>>({
-        parameters: request.data,
+        parameters: <InteractionRequest>request.query,
         interactionType: interactionTypesMocks[1]!,
       });
     });
   });
 
   describe('validateDecision()', () => {
-    let request: HttpRequest<InteractionRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<InteractionRequest>({
+      request = new HttpRequest({
         body: {
           interaction_type: 'consent',
           consent_challenge: 'consent_challenge',
@@ -60,7 +60,7 @@ describe('Interaction Request Validator', () => {
 
     it('should return a decision interaction context.', async () => {
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<InteractionContext<InteractionRequest>>({
-        parameters: request.data,
+        parameters: <InteractionRequest>request.body,
         interactionType: interactionTypesMocks[0]!,
       });
     });

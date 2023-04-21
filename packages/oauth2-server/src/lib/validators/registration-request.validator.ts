@@ -41,8 +41,8 @@ export class RegistrationRequestValidator {
    * @param request Http Request.
    * @returns Registration Context.
    */
-  public async validate(request: HttpRequest<RegistrationRequest>): Promise<RegistrationContext> {
-    const { data: parameters } = request;
+  public async validate(request: HttpRequest): Promise<RegistrationContext> {
+    const parameters = <RegistrationRequest>request.body;
 
     const redirectUris = this.getRedirectUris(parameters);
     const responseTypes = this.getResponseTypes(parameters);

@@ -14,7 +14,6 @@ import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
-import { IntrospectionRequest } from '../requests/introspection-request';
 import { IntrospectionResponse } from '../responses/introspection-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
@@ -68,8 +67,6 @@ export class IntrospectionEndpoint implements EndpointInterface {
    *
    * @param validator Instance of the Introspection Request Validator.
    * @param settings Settings of the Authorization Server.
-   * @param accessTokenService Instance of the Access Token Service.
-   * @param refreshTokenService Instance of the Refresh Token Service.
    */
   public constructor(
     private readonly validator: IntrospectionRequestValidator,
@@ -95,7 +92,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest<IntrospectionRequest>): Promise<HttpResponse> {
+  public async handle(request: HttpRequest): Promise<HttpResponse> {
     try {
       const context = await this.validator.validate(request);
       const introspectionResponse = await this.introspectToken(context);

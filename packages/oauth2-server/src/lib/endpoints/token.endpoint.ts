@@ -71,8 +71,8 @@ export class TokenEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest<TokenRequest>): Promise<HttpResponse> {
-    const { data: parameters } = request;
+  public async handle(request: HttpRequest): Promise<HttpResponse> {
+    const parameters = <TokenRequest>request.body;
 
     try {
       const validator = this.getValidator(parameters);

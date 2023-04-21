@@ -80,12 +80,12 @@ describe('Revocation Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest<RevocationRequest>;
+    let request: HttpRequest;
 
     const defaultResponse = new HttpResponse().setHeaders({ 'Cache-Control': 'no-store', Pragma: 'no-cache' });
 
     beforeEach(() => {
-      request = new HttpRequest<RevocationRequest>({
+      request = new HttpRequest({
         body: { token: 'access_token' },
         cookies: {},
         headers: {},
@@ -100,7 +100,7 @@ describe('Revocation Endpoint', () => {
       const token = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.data,
+        parameters: <RevocationRequest>request.body,
         client,
         token,
         tokenType: 'access_token',
@@ -117,7 +117,7 @@ describe('Revocation Endpoint', () => {
       const token = <AccessToken>{ handle: 'access_token', client };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.data,
+        parameters: <RevocationRequest>request.body,
         client,
         token,
         tokenType: 'access_token',
@@ -136,7 +136,7 @@ describe('Revocation Endpoint', () => {
       const token = <RefreshToken>{ handle: 'refresh_token', client };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.data,
+        parameters: <RevocationRequest>request.body,
         client,
         token,
         tokenType: 'refresh_token',

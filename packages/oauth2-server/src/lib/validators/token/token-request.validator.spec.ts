@@ -33,10 +33,10 @@ describe('Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<TokenRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<TokenRequest>({
+      request = new HttpRequest({
         body: { grant_type: 'authorization_code' },
         cookies: {},
         headers: {},
@@ -72,7 +72,7 @@ describe('Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<TokenContext<TokenRequest>>({
-        parameters: request.data,
+        parameters: <TokenRequest>request.body,
         client,
         grantType: grantTypesMocks[0]!,
       });

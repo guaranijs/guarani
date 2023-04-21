@@ -30,8 +30,8 @@ export class DeviceAuthorizationRequestValidator {
    * @param request Http Request.
    * @returns Device Authorization Context.
    */
-  public async validate(request: HttpRequest<DeviceAuthorizationRequest>): Promise<DeviceAuthorizationContext> {
-    const { data: parameters } = request;
+  public async validate(request: HttpRequest): Promise<DeviceAuthorizationContext> {
+    const parameters = <DeviceAuthorizationRequest>request.body;
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
     const scopes = this.getScopes(client, parameters.scope);

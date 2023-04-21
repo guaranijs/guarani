@@ -1,4 +1,4 @@
 /**
  * Http Methods allowed at the Authorization Server.
  */
-export type HttpMethod = 'GET' | 'POST';
+export type HttpMethod = 'DELETE' | 'GET' | 'POST' | 'PUT';

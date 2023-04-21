@@ -110,10 +110,10 @@ describe('JWT Bearer Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<JwtBearerTokenRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<JwtBearerTokenRequest>({
+      request = new HttpRequest({
         body: { grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: '' },
         cookies: {},
         headers: {},
@@ -824,7 +824,7 @@ describe('JWT Bearer Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<JwtBearerTokenContext>({
-        parameters: request.data,
+        parameters: <JwtBearerTokenRequest>request.body,
         client,
         grantType: grantTypesMocks[5]!,
         user,
@@ -882,7 +882,7 @@ describe('JWT Bearer Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(client.scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<JwtBearerTokenContext>({
-        parameters: request.data,
+        parameters: <JwtBearerTokenRequest>request.body,
         client,
         grantType: grantTypesMocks[5]!,
         user,

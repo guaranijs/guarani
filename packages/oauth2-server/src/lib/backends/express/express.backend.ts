@@ -4,6 +4,7 @@ import { Request, RequestHandler, Response, Router } from 'express';
 
 import { AuthorizationServer } from '../../authorization-server';
 import { Endpoint } from '../../endpoints/endpoint.type';
+import { HttpMethod } from '../../http/http-method.type';
 import { HttpRequest } from '../../http/http.request';
 import { HttpResponse } from '../../http/http.response';
 
@@ -52,7 +53,7 @@ export class ExpressBackend extends AuthorizationServer {
    */
   private _createOAuth2Request(request: Request): HttpRequest {
     return new HttpRequest({
-      method: request.method,
+      method: <HttpMethod>request.method.toUpperCase(),
       path: request.path,
       query: request.query,
       headers: request.headers,

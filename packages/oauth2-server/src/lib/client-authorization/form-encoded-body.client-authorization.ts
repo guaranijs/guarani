@@ -11,7 +11,7 @@ import { ClientAuthorization } from './client-authorization.type';
 /**
  * Parameters passed by the Client on the Http Request Body.
  */
-export interface FormEncodedBodyCredentials {
+interface FormEncodedBodyCredentials {
   /**
    * Access Token Handle.
    */
@@ -53,8 +53,9 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
    *
    * @param request Http Request.
    */
-  public hasBeenRequested(request: HttpRequest<FormEncodedBodyCredentials>): boolean {
-    return request.method === 'POST' && typeof request.data.access_token === 'string';
+  public hasBeenRequested(request: HttpRequest): boolean {
+    const { access_token: accessTokenHandle } = <FormEncodedBodyCredentials>request.body;
+    return request.method === 'POST' && typeof accessTokenHandle === 'string';
   }
 
   /**
@@ -63,10 +64,10 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
    * @param request Http Request.
    * @returns Access Token based on the provided Access Token Handle.
    */
-  public async authorize(request: HttpRequest<FormEncodedBodyCredentials>): Promise<AccessToken> {
-    const { access_token: handle } = request.data;
+  public async authorize(request: HttpRequest): Promise<AccessToken> {
+    const { access_token: accessTokenHandle } = <FormEncodedBodyCredentials>request.body;
 
-    const accessToken = await this.accessTokenService.findOne(handle);
+    const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
 
     if (accessToken === null) {
       throw new InvalidTokenException({ description: 'Invalid Access Token.' });

@@ -10,7 +10,6 @@ import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
-import { RegistrationRequest } from '../requests/registration-request';
 import { RegistrationResponse } from '../responses/registration-response';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
@@ -76,7 +75,7 @@ export class RegistrationEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest<RegistrationRequest>): Promise<HttpResponse> {
+  public async handle(request: HttpRequest): Promise<HttpResponse> {
     try {
       const context = await this.validator.validate(request);
       const registrationResponse = await this.registerClient(context);

@@ -13,7 +13,6 @@ import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
-import { RevocationRequest } from '../requests/revocation-request';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
@@ -86,7 +85,7 @@ export class RevocationEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest<RevocationRequest>): Promise<HttpResponse> {
+  public async handle(request: HttpRequest): Promise<HttpResponse> {
     try {
       const context = await this.validator.validate(request);
 

@@ -83,8 +83,8 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest<AuthorizationRequest>): Promise<HttpResponse> {
-    const { data: parameters } = request;
+  public async handle(request: HttpRequest): Promise<HttpResponse> {
+    const parameters = <AuthorizationRequest>request.query;
 
     let context: AuthorizationContext<AuthorizationRequest>;
 

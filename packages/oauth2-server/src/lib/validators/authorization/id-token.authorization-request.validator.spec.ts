@@ -143,10 +143,10 @@ describe('ID Token Authorization Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<AuthorizationRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<AuthorizationRequest>({
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},

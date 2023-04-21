@@ -53,8 +53,8 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<
    * @param request Http Request.
    * @returns Token Context.
    */
-  public override async validate(request: HttpRequest<RefreshTokenTokenRequest>): Promise<RefreshTokenTokenContext> {
-    const { data: parameters } = request;
+  public override async validate(request: HttpRequest): Promise<RefreshTokenTokenContext> {
+    const parameters = <RefreshTokenTokenRequest>request.body;
 
     const context = await super.validate(request);
 

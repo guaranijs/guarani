@@ -64,8 +64,8 @@ export class RevocationRequestValidator {
    * @param request Http Request.
    * @returns Revocation Context.
    */
-  public async validate(request: HttpRequest<RevocationRequest>): Promise<RevocationContext> {
-    const { data: parameters } = request;
+  public async validate(request: HttpRequest): Promise<RevocationContext> {
+    const parameters = <RevocationRequest>request.body;
 
     this.checkParameters(parameters);
 

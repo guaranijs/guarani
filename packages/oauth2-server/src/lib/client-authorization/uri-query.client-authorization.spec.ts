@@ -6,7 +6,7 @@ import { HttpRequest } from '../http/http.request';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { ClientAuthorization } from './client-authorization.type';
-import { UriQueryClientAuthorization, UriQueryCredentials } from './uri-query.client-authorization';
+import { UriQueryClientAuthorization } from './uri-query.client-authorization';
 
 describe('URI Query Client Authorization', () => {
   let container: DependencyInjectionContainer;
@@ -45,7 +45,7 @@ describe('URI Query Client Authorization', () => {
     ];
 
     it.each(methodRequests)('should check if the authorization method has beed requested.', (query, expected) => {
-      const request = new HttpRequest<UriQueryCredentials>({
+      const request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},
@@ -59,10 +59,10 @@ describe('URI Query Client Authorization', () => {
   });
 
   describe('authorize()', () => {
-    let request: HttpRequest<UriQueryCredentials>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<UriQueryCredentials>({
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},

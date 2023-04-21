@@ -68,14 +68,14 @@ describe('Introspection Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest<IntrospectionRequest>;
+    let request: HttpRequest;
 
     const defaultResponse = new HttpResponse()
       .setHeaders({ 'Cache-Control': 'no-store', Pragma: 'no-cache' })
       .json({ active: false });
 
     beforeEach(() => {
-      request = new HttpRequest<IntrospectionRequest>({
+      request = new HttpRequest({
         body: { token: 'access_token' },
         cookies: {},
         headers: {},
@@ -94,7 +94,7 @@ describe('Introspection Endpoint', () => {
       const token = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.data,
+        parameters: <IntrospectionRequest>request.body,
         client,
         token,
         tokenType: 'access_token',
@@ -108,7 +108,7 @@ describe('Introspection Endpoint', () => {
       const token = <AccessToken>{ handle: 'access_token', isRevoked: true, client };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.data,
+        parameters: <IntrospectionRequest>request.body,
         client,
         token,
         tokenType: 'access_token',
@@ -127,7 +127,7 @@ describe('Introspection Endpoint', () => {
       };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.data,
+        parameters: <IntrospectionRequest>request.body,
         client,
         token,
         tokenType: 'access_token',
@@ -147,7 +147,7 @@ describe('Introspection Endpoint', () => {
       };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.data,
+        parameters: <IntrospectionRequest>request.body,
         client,
         token,
         tokenType: 'access_token',
@@ -174,7 +174,7 @@ describe('Introspection Endpoint', () => {
       };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.data,
+        parameters: <IntrospectionRequest>request.body,
         client,
         token,
         tokenType: 'access_token',

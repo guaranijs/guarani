@@ -64,8 +64,8 @@ export class IntrospectionRequestValidator {
    * @param request Http Request.
    * @returns Introspection Context.
    */
-  public async validate(request: HttpRequest<IntrospectionRequest>): Promise<IntrospectionContext> {
-    const { data: parameters } = request;
+  public async validate(request: HttpRequest): Promise<IntrospectionContext> {
+    const parameters = <IntrospectionRequest>request.body;
 
     this.checkParameters(parameters);
 

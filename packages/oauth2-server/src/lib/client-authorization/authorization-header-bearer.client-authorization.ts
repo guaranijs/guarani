@@ -53,17 +53,17 @@ export class AuthorizationHeaderBearerClientAuthorization implements ClientAutho
   public async authorize(request: HttpRequest): Promise<AccessToken> {
     const { authorization } = request.headers;
 
-    const [, token] = authorization!.split(' ', 2);
+    const [, accessTokenHandle] = authorization!.split(' ', 2);
 
-    if (token === undefined) {
+    if (accessTokenHandle === undefined) {
       throw new InvalidRequestException({ description: 'Missing Bearer Token.' });
     }
 
-    if (!/^[a-zA-Z0-9+/\-_.~=]+$/.test(token)) {
+    if (!/^[a-zA-Z0-9+/\-_.~=]+$/.test(accessTokenHandle)) {
       throw new InvalidTokenException({ description: 'Invalid Bearer Token.' });
     }
 
-    const accessToken = await this.accessTokenService.findOne(token);
+    const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
 
     if (accessToken === null) {
       throw new InvalidTokenException({ description: 'Invalid Access Token.' });

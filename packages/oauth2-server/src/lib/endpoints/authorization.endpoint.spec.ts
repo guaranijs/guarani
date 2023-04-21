@@ -10,7 +10,6 @@ import { InteractionHandler } from '../handlers/interaction.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
-import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
 import { Settings } from '../settings/settings';
@@ -100,10 +99,10 @@ describe('Authorization Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest<AuthorizationRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<AuthorizationRequest>({
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},

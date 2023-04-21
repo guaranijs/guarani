@@ -59,10 +59,8 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * @param request Http Request.
    * @returns Token Context.
    */
-  public override async validate(
-    request: HttpRequest<ResourceOwnerPasswordCredentialsTokenRequest>
-  ): Promise<ResourceOwnerPasswordCredentialsTokenContext> {
-    const { data: parameters } = request;
+  public override async validate(request: HttpRequest): Promise<ResourceOwnerPasswordCredentialsTokenContext> {
+    const parameters = <ResourceOwnerPasswordCredentialsTokenRequest>request.body;
 
     const context = await super.validate(request);
 

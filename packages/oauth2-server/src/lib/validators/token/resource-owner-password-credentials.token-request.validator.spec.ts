@@ -100,10 +100,10 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<ResourceOwnerPasswordCredentialsTokenRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<ResourceOwnerPasswordCredentialsTokenRequest>({
+      request = new HttpRequest({
         body: { grant_type: 'password', username: 'username', password: 'password' },
         cookies: {},
         headers: {},
@@ -209,7 +209,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ResourceOwnerPasswordCredentialsTokenContext>({
-        parameters: request.data,
+        parameters: <ResourceOwnerPasswordCredentialsTokenRequest>request.body,
         client,
         grantType: grantTypesMocks[2]!,
         user,
@@ -228,7 +228,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(client.scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ResourceOwnerPasswordCredentialsTokenContext>({
-        parameters: request.data,
+        parameters: <ResourceOwnerPasswordCredentialsTokenRequest>request.body,
         client,
         grantType: grantTypesMocks[2]!,
         user,

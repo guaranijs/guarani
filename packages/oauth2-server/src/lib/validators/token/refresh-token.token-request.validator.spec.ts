@@ -75,10 +75,10 @@ describe('Refresh Token Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<RefreshTokenTokenRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<RefreshTokenTokenRequest>({
+      request = new HttpRequest({
         body: { grant_type: 'refresh_token', refresh_token: 'refresh_token' },
         cookies: {},
         headers: {},
@@ -202,7 +202,7 @@ describe('Refresh Token Token Request Validator', () => {
       scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RefreshTokenTokenContext>({
-        parameters: request.data,
+        parameters: <RefreshTokenTokenRequest>request.body,
         client,
         grantType: grantTypesMocks[3]!,
         refreshToken,
@@ -224,7 +224,7 @@ describe('Refresh Token Token Request Validator', () => {
       scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RefreshTokenTokenContext>({
-        parameters: request.data,
+        parameters: <RefreshTokenTokenRequest>request.body,
         client,
         grantType: grantTypesMocks[3]!,
         refreshToken,

@@ -47,10 +47,8 @@ export class ClientCredentialsTokenRequestValidator extends TokenRequestValidato
    * @param request Http Request.
    * @returns Token Context.
    */
-  public override async validate(
-    request: HttpRequest<ClientCredentialsTokenRequest>
-  ): Promise<ClientCredentialsTokenContext> {
-    const { data: parameters } = request;
+  public override async validate(request: HttpRequest): Promise<ClientCredentialsTokenContext> {
+    const parameters = <ClientCredentialsTokenRequest>request.body;
 
     const context = await super.validate(request);
 

@@ -48,8 +48,8 @@ export class DeviceCodeTokenRequestValidator extends TokenRequestValidator<
    * @param request Http Request.
    * @returns Token Context.
    */
-  public override async validate(request: HttpRequest<DeviceCodeTokenRequest>): Promise<DeviceCodeTokenContext> {
-    const { data: parameters } = request;
+  public override async validate(request: HttpRequest): Promise<DeviceCodeTokenContext> {
+    const parameters = <DeviceCodeTokenRequest>request.body;
 
     const context = await super.validate(request);
 

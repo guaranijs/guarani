@@ -57,8 +57,9 @@ export abstract class AuthorizationRequestValidator<
    * @param request Http Request.
    * @returns Authorization Context.
    */
-  public async validate(request: HttpRequest<TRequest>): Promise<TContext> {
-    const { cookies, data: parameters } = request;
+  public async validate(request: HttpRequest): Promise<TContext> {
+    const parameters = <TRequest>request.query;
+    const cookies = request.cookies;
 
     const state = this.getState(parameters);
     const client = await this.getClient(parameters);

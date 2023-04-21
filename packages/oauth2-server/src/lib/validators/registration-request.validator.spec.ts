@@ -143,10 +143,10 @@ describe('Registration Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<RegistrationRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<RegistrationRequest>({
+      request = new HttpRequest({
         body: removeUndefined<RegistrationRequest>({
           redirect_uris: ['https://client.example.com/oauth/callback'],
           response_types: ['code'],
@@ -731,7 +731,7 @@ describe('Registration Request Validator', () => {
 
     it('should return a registration request context.', async () => {
       await expect(validator.validate(request)).resolves.toStrictEqual<RegistrationContext>({
-        parameters: request.data,
+        parameters: <RegistrationRequest>request.body,
         redirectUris: [new URL('https://client.example.com/oauth/callback')],
         responseTypes: ['code'],
         grantTypes: ['authorization_code', 'refresh_token'],

@@ -64,10 +64,10 @@ describe('Token Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest<TokenRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<TokenRequest>({
+      request = new HttpRequest({
         body: { grant_type: 'authorization_code' },
         cookies: {},
         headers: {},
@@ -107,7 +107,7 @@ describe('Token Endpoint', () => {
       };
 
       const context = <TokenContext<TokenRequest>>{
-        parameters: request.data,
+        parameters: <TokenRequest>request.body,
         client: <Client>{ id: 'client_id' },
         grantType: jest.mocked<GrantTypeInterface>({
           name: 'authorization_code',

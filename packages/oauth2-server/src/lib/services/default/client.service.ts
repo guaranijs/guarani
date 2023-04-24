@@ -2,7 +2,7 @@ import { Injectable } from '@guarani/di';
 
 import { randomInt, randomUUID } from 'crypto';
 
-import { RegistrationContext } from '../../context/registration.context';
+import { PostRegistrationContext } from '../../context/registration/post.registration.context';
 import { Client } from '../../entities/client.entity';
 import { ClientServiceInterface } from '../client.service.interface';
 
@@ -28,7 +28,6 @@ export class ClientService implements ClientServiceInterface {
       authenticationMethod: 'client_secret_basic',
       scopes: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
       requireAuthTime: false,
-      registrationAccessToken: 'aaaaaaaabbbbbbbbccccccccdddddddd',
       createdAt: new Date(),
     },
   ];
@@ -37,7 +36,7 @@ export class ClientService implements ClientServiceInterface {
     console.warn('Using default Client Service. This is only recommended for development.');
   }
 
-  public async create(context: RegistrationContext): Promise<Client> {
+  public async create(context: PostRegistrationContext): Promise<Client> {
     const client = <Client>{
       id: randomUUID(),
       secret: this.secretToken(),
@@ -76,7 +75,6 @@ export class ClientService implements ClientServiceInterface {
       // requestUris: context.requestUris,
       softwareId: context.softwareId,
       softwareVersion: context.softwareVersion,
-      registrationAccessToken: this.secretToken(),
       createdAt: new Date(),
     };
 

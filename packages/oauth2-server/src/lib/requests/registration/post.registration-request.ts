@@ -1,51 +1,43 @@
-import { JsonWebKeySet, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import { JsonWebKeySetParameters, JsonWebSignatureAlgorithm } from '@guarani/jose';
 
-import { URL } from 'url';
-
-import { ClientAuthentication } from '../client-authentication/client-authentication.type';
-import { GrantType } from '../grant-types/grant-type.type';
-import { RegistrationRequest } from '../requests/registration-request';
-import { ResponseType } from '../response-types/response-type.type';
-import { ApplicationType } from '../types/application-type.type';
+import { ClientAuthentication } from '../../client-authentication/client-authentication.type';
+import { GrantType } from '../../grant-types/grant-type.type';
+import { ResponseType } from '../../response-types/response-type.type';
+import { ApplicationType } from '../../types/application-type.type';
 
 /**
- * Parameters of the Client Registration Context.
+ * Parameters of the OAuth 2.0 Post Client Registration Request.
  */
-export interface RegistrationContext {
-  /**
-   * Parameters of the Registration Request.
-   */
-  readonly parameters: RegistrationRequest;
-
+export interface PostRegistrationRequest extends Record<string, any> {
   /**
    * Redirect URIs of the Client.
    */
-  readonly redirectUris: URL[];
+  readonly redirect_uris: string[];
 
   /**
    * Response Types of the Client.
    */
-  readonly responseTypes: ResponseType[];
+  readonly response_types?: ResponseType[];
 
   /**
    * Grant Types of the Client.
    */
-  readonly grantTypes: (GrantType | 'implicit')[];
+  readonly grant_types?: (GrantType | 'implicit')[];
 
   /**
    * Application Type of the Client.
    */
-  readonly applicationType: ApplicationType;
+  readonly application_type?: ApplicationType;
 
   /**
    * Name of the Client.
    */
-  readonly clientName?: string;
+  readonly client_name?: string;
 
   /**
    * Default scopes of the Client.
    */
-  readonly scopes: string[];
+  readonly scope: string;
 
   /**
    * Email addresses of the people responsible for the Client.
@@ -55,130 +47,130 @@ export interface RegistrationContext {
   /**
    * Url of the Logo of the Client.
    */
-  readonly logoUri?: URL;
+  readonly logo_uri?: string;
 
   /**
    * Url of the Home Page of the Client.
    */
-  readonly clientUri?: URL;
+  readonly client_uri?: string;
 
   /**
    * Url of the Policy Page of the Client.
    */
-  readonly policyUri?: URL;
+  readonly policy_uri?: string;
 
   /**
    * Url of the Terms of Service Page of the Client.
    */
-  readonly tosUri?: URL;
+  readonly tos_uri?: string;
 
   /**
    * Url of the JSON Web Key Set of the Client.
    */
-  readonly jwksUri?: URL;
+  readonly jwks_uri?: string;
 
   /**
    * JSON Web Key Set of the Client.
    */
-  readonly jwks?: JsonWebKeySet;
+  readonly jwks?: JsonWebKeySetParameters;
 
   /**
    * Https Url used to calculate the Pseudonymous Identifiers of the Client.
    */
-  // readonly sectorIdentifierUri?: string;
+  // readonly sector_identifier_uri?: string;
 
   /**
    * Subject Type for responses to the Client.
    */
-  // readonly subjectType?: string;
+  // readonly subject_type?: string;
 
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.
    */
-  readonly idTokenSignedResponseAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
+  readonly id_token_signed_response_alg?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the ID Token issued to the Client.
    */
-  // readonly idTokenEncryptedResponseKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm;
+  // readonly id_token_encrypted_response_alg?: JsonWebEncryptionKeyWrapAlgorithm;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the ID Token issued to the Client.
    */
-  // readonly idTokenEncryptedResponseContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm;
+  // readonly id_token_encrypted_response_enc?: JsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
    * JSON Web Signature Algorithm used to sign the Userinfo JWT Response.
    */
-  // readonly userinfoSignedResponseAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
+  // readonly userinfo_signed_response_alg?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the Userinfo JWT Response.
    */
-  // readonly userinfoEncryptedResponseKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm;
+  // readonly userinfo_encrypted_response_alg?: JsonWebEncryptionKeyWrapAlgorithm;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the Userinfo JWT Response.
    */
-  // readonly userinfoEncryptedResponseContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm;
+  // readonly userinfo_encrypted_response_enc?: JsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
    * JSON Web Signature Algorithm used to sign the Request Object sent to the Authorization Server.
    */
-  // readonly requestObjectSigningAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
+  // readonly request_object_signing_alg?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the Request Object sent to the Authorization Server.
    */
-  // readonly requestObjectEncryptionKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm;
+  // readonly request_object_encryption_alg?: JsonWebEncryptionKeyWrapAlgorithm;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the Request Object sent to the Authorization Server.
    */
-  // readonly requestObjectEncryptionContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm;
+  // readonly request_object_encryption_enc?: JsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
    * Client Authentication Method of the Client.
    */
-  readonly authenticationMethod: ClientAuthentication;
+  readonly token_endpoint_auth_method?: ClientAuthentication;
 
   /**
    * JSON Web Signature Algorithm used by **client_secret_jwt** and/or **private_key_jwt**.
    */
-  readonly authenticationSigningAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
+  readonly token_endpoint_auth_signing_alg?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
   /**
    * Default Maximum Authentication Age.
    */
-  readonly defaultMaxAge?: number;
+  readonly default_max_age?: number;
 
   /**
    * Indicates if the claim **auth_time** is required in the ID Token.
    */
-  readonly requireAuthTime: boolean;
+  readonly require_auth_time?: boolean;
 
   /**
    * Default Authentication Context Class References of the Client.
    */
-  readonly defaultAcrValues?: string[];
+  readonly default_acr_values?: string[];
 
   /**
    * Url that a third party can use to initiate a login by the Client.
    */
-  readonly initiateLoginUri?: URL;
+  readonly initiate_login_uri?: string;
 
   /**
    * Pre-registered Request URIs of the Client.
    */
-  // readonly requestUris?: URL[];
+  // readonly request_uris?: string;
 
   /**
    * Unique Identifier of the Software of the Client.
    */
-  readonly softwareId?: string;
+  readonly software_id?: string;
 
   /**
    * Version of the Software of the Client.
    */
-  readonly softwareVersion?: string;
+  readonly software_version?: string;
 }

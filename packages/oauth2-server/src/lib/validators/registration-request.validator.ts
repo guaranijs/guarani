@@ -2,19 +2,29 @@ import { Inject, Injectable } from '@guarani/di';
 import { JsonWebKeySet, JsonWebSignatureAlgorithm } from '@guarani/jose';
 import { isPlainObject } from '@guarani/primitives';
 
+import { Buffer } from 'buffer';
+import { timingSafeEqual } from 'crypto';
 import { URL } from 'url';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
-import { RegistrationContext } from '../context/registration.context';
+import { GetRegistrationContext } from '../context/registration/get.registration.context';
+import { PostRegistrationContext } from '../context/registration/post.registration.context';
+import { AccessToken } from '../entities/access-token.entity';
+import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
 import { InvalidClientMetadataException } from '../exceptions/invalid-client-metadata.exception';
 import { InvalidRedirectUriException } from '../exceptions/invalid-redirect-uri.exception';
 import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
+import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { GrantType } from '../grant-types/grant-type.type';
+import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpRequest } from '../http/http.request';
-import { RegistrationRequest } from '../requests/registration-request';
+import { GetRegistrationRequest } from '../requests/registration/get.registration-request';
+import { PostRegistrationRequest } from '../requests/registration/post.registration-request';
 import { ResponseType } from '../response-types/response-type.type';
+import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
+import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { ApplicationType } from '../types/application-type.type';
@@ -25,24 +35,33 @@ import { ApplicationType } from '../types/application-type.type';
 @Injectable()
 export class RegistrationRequestValidator {
   /**
+   * Scopes that grant access to the Dynamic Client Registration Get Request.
+   */
+  public readonly getRequestScopes: string[] = ['client:manage', 'client:read'];
+
+  /**
    * Instantiates a new Registration Request Validator.
    *
    * @param scopeHandler Instance of the Scope Handler.
+   * @param clientAuthorizationHandler Instance of the Client Authorization Handler.
    * @param settings Settings of the Authorization Server.
+   * @param accessTokenService Instance of the Access Token Service.
    */
   public constructor(
     private readonly scopeHandler: ScopeHandler,
-    @Inject(SETTINGS) private readonly settings: Settings
+    private readonly clientAuthorizationHandler: ClientAuthorizationHandler,
+    @Inject(SETTINGS) private readonly settings: Settings,
+    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface
   ) {}
 
   /**
-   * Validates the Http Registration Request and returns the actors of the Registration Context.
+   * Validates the Http Post Registration Request and returns the actors of the Post Registration Context.
    *
    * @param request Http Request.
-   * @returns Registration Context.
+   * @returns Post Registration Context.
    */
-  public async validate(request: HttpRequest): Promise<RegistrationContext> {
-    const parameters = <RegistrationRequest>request.body;
+  public async validatePost(request: HttpRequest): Promise<PostRegistrationContext> {
+    const parameters = <PostRegistrationRequest>request.body;
 
     const redirectUris = this.getRedirectUris(parameters);
     const responseTypes = this.getResponseTypes(parameters);
@@ -129,12 +148,26 @@ export class RegistrationRequestValidator {
   }
 
   /**
+   * Validates the Http Get Registration Request and returns the actors of the Get Registration Context.
+   *
+   * @param request Http Request.
+   * @returns Get Registration Context.
+   */
+  public async validateGet(request: HttpRequest): Promise<GetRegistrationContext> {
+    const parameters = <GetRegistrationRequest>request.query;
+
+    const accessToken = await this.authorize(request, this.getRequestScopes);
+
+    return { parameters, accessToken, client: accessToken.client };
+  }
+
+  /**
    * Checks and returns the Redirect URIs of the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Redirect URIs of the Client.
    */
-  private getRedirectUris(parameters: RegistrationRequest): URL[] {
+  private getRedirectUris(parameters: PostRegistrationRequest): URL[] {
     if (
       !Array.isArray(parameters.redirect_uris) ||
       parameters.redirect_uris.some((redirectUri) => typeof redirectUri !== 'string')
@@ -169,10 +202,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Response Types requested by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Response Types requested by the Client.
    */
-  private getResponseTypes(parameters: RegistrationRequest): ResponseType[] {
+  private getResponseTypes(parameters: PostRegistrationRequest): ResponseType[] {
     if (
       typeof parameters.response_types !== 'undefined' &&
       (!Array.isArray(parameters.response_types) ||
@@ -197,10 +230,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Grant Types requested by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Grant Types requested by the Client.
    */
-  private getGrantTypes(parameters: RegistrationRequest): (GrantType | 'implicit')[] {
+  private getGrantTypes(parameters: PostRegistrationRequest): (GrantType | 'implicit')[] {
     if (
       typeof parameters.grant_types !== 'undefined' &&
       (!Array.isArray(parameters.grant_types) ||
@@ -292,10 +325,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Application Type requested by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Application Type requested by the Client.
    */
-  private getApplicationType(parameters: RegistrationRequest): ApplicationType {
+  private getApplicationType(parameters: PostRegistrationRequest): ApplicationType {
     if (typeof parameters.application_type !== 'undefined' && typeof parameters.application_type !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "application_type".' });
     }
@@ -356,10 +389,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Client Name provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Client Name provided by the Client.
    */
-  private getClientName(parameters: RegistrationRequest): string | undefined {
+  private getClientName(parameters: PostRegistrationRequest): string | undefined {
     if (typeof parameters.client_name !== 'undefined' && typeof parameters.client_name !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "client_name".' });
     }
@@ -370,10 +403,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Scopes requested by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Scopes requested by the Client.
    */
-  private getScopes(parameters: RegistrationRequest): string[] {
+  private getScopes(parameters: PostRegistrationRequest): string[] {
     if (typeof parameters.scope !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "scope".' });
     }
@@ -394,10 +427,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Contacts requested by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Contacts requested by the Client.
    */
-  private getContacts(parameters: RegistrationRequest): string[] | undefined {
+  private getContacts(parameters: PostRegistrationRequest): string[] | undefined {
     if (
       typeof parameters.contacts !== 'undefined' &&
       (!Array.isArray(parameters.contacts) || parameters.contacts.some((contact) => typeof contact !== 'string'))
@@ -411,10 +444,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Logo URI provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Logo URI provided by the Client.
    */
-  private getLogoUri(parameters: RegistrationRequest): URL | undefined {
+  private getLogoUri(parameters: PostRegistrationRequest): URL | undefined {
     if (typeof parameters.logo_uri !== 'undefined' && typeof parameters.logo_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "logo_uri".' });
     }
@@ -435,10 +468,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Client URI provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Client URI provided by the Client.
    */
-  private getClientUri(parameters: RegistrationRequest): URL | undefined {
+  private getClientUri(parameters: PostRegistrationRequest): URL | undefined {
     if (typeof parameters.client_uri !== 'undefined' && typeof parameters.client_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "client_uri".' });
     }
@@ -459,10 +492,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Policy URI provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Policy URI provided by the Client.
    */
-  private getPolicyUri(parameters: RegistrationRequest): URL | undefined {
+  private getPolicyUri(parameters: PostRegistrationRequest): URL | undefined {
     if (typeof parameters.policy_uri !== 'undefined' && typeof parameters.policy_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "policy_uri".' });
     }
@@ -483,10 +516,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Terms of Service URI provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Terms of Service URI provided by the Client.
    */
-  private getTosUri(parameters: RegistrationRequest): URL | undefined {
+  private getTosUri(parameters: PostRegistrationRequest): URL | undefined {
     if (typeof parameters.tos_uri !== 'undefined' && typeof parameters.tos_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "tos_uri".' });
     }
@@ -507,9 +540,9 @@ export class RegistrationRequestValidator {
   /**
    * Checks if only one of **jwks_uri** and **jwks** is provided.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    */
-  private checkJwksUriAndJwksAreNotBothProvided(parameters: RegistrationRequest): void {
+  private checkJwksUriAndJwksAreNotBothProvided(parameters: PostRegistrationRequest): void {
     if (typeof parameters.jwks_uri !== 'undefined' && typeof parameters.jwks !== 'undefined') {
       throw new InvalidClientMetadataException({
         description: 'Only one of the parameters "jwks_uri" and "jwks" must be provided.',
@@ -520,10 +553,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the JSON Web Key Set URI provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns JSON Web Key Set URI provided by the Client.
    */
-  private getJwksUri(parameters: RegistrationRequest): URL | undefined {
+  private getJwksUri(parameters: PostRegistrationRequest): URL | undefined {
     if (typeof parameters.jwks_uri !== 'undefined' && typeof parameters.jwks_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "jwks_uri".' });
     }
@@ -544,10 +577,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the JSON Web Key Set provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns JSON Web Key Set provided by the Client.
    */
-  private async getJwks(parameters: RegistrationRequest): Promise<JsonWebKeySet | undefined> {
+  private async getJwks(parameters: PostRegistrationRequest): Promise<JsonWebKeySet | undefined> {
     if (typeof parameters.jwks !== 'undefined' && !isPlainObject(parameters.jwks)) {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "jwks".' });
     }
@@ -572,11 +605,11 @@ export class RegistrationRequestValidator {
   /**
    * Returns the ID Token JSON Web Signature Algorithm provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns ID Token JSON Web Signature Algorithm provided by the Client.
    */
   private getIdTokenSignedResponseAlgorithm(
-    parameters: RegistrationRequest
+    parameters: PostRegistrationRequest
   ): Exclude<JsonWebSignatureAlgorithm, 'none'> {
     if (
       typeof parameters.id_token_signed_response_alg !== 'undefined' &&
@@ -617,10 +650,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Client Authentication Method provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Client Authentication Method provided by the Client.
    */
-  private getAuthenticationMethod(parameters: RegistrationRequest): ClientAuthentication {
+  private getAuthenticationMethod(parameters: PostRegistrationRequest): ClientAuthentication {
     if (
       typeof parameters.token_endpoint_auth_method !== 'undefined' &&
       typeof parameters.token_endpoint_auth_method !== 'string'
@@ -644,11 +677,11 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Client Authentication Method JSON Web Signature Algorithm provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Client Authentication Method JSON Web Signature Algorithm provided by the Client.
    */
   private getAuthenticationSigningAlgorithm(
-    parameters: RegistrationRequest
+    parameters: PostRegistrationRequest
   ): Exclude<JsonWebSignatureAlgorithm, 'none'> | undefined {
     if (
       typeof parameters.token_endpoint_auth_signing_alg !== 'undefined' &&
@@ -673,9 +706,9 @@ export class RegistrationRequestValidator {
    * Checks if the JSON Web Signature Algorithm provided by the Client for JWT Client Assertion
    * is valid for the Client Authentication Method provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    */
-  private checkAuthenticationMethodAndAuthenticationMethodSignature(parameters: RegistrationRequest): void {
+  private checkAuthenticationMethodAndAuthenticationMethodSignature(parameters: PostRegistrationRequest): void {
     const {
       token_endpoint_auth_method: authenticationMethod,
       token_endpoint_auth_signing_alg: authenticationSigningAlgorithm,
@@ -734,10 +767,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Default Max Age provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Default Max Age provided by the Client.
    */
-  private getDefaultMaxAge(parameters: RegistrationRequest): number | undefined {
+  private getDefaultMaxAge(parameters: PostRegistrationRequest): number | undefined {
     if (typeof parameters.default_max_age !== 'undefined') {
       if (typeof parameters.default_max_age !== 'number') {
         throw new InvalidClientMetadataException({ description: 'Invalid parameter "default_max_age".' });
@@ -754,10 +787,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the value for Require Auth Time provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Value for Require Auth Time provided by the Client.
    */
-  private getRequireAuthTime(parameters: RegistrationRequest): boolean {
+  private getRequireAuthTime(parameters: PostRegistrationRequest): boolean {
     if (typeof parameters.require_auth_time !== 'undefined' && typeof parameters.require_auth_time !== 'boolean') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "require_auth_time".' });
     }
@@ -768,10 +801,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Default Authentication Context Class References requested by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Default Authentication Context Class References requested by the Client.
    */
-  private getDefaultAcrValues(parameters: RegistrationRequest): string[] | undefined {
+  private getDefaultAcrValues(parameters: PostRegistrationRequest): string[] | undefined {
     if (
       typeof parameters.default_acr_values !== 'undefined' &&
       (!Array.isArray(parameters.default_acr_values) ||
@@ -792,10 +825,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Initiate Login URI provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Initiate Login URI provided by the Client.
    */
-  private getInitiateLoginUri(parameters: RegistrationRequest): URL | undefined {
+  private getInitiateLoginUri(parameters: PostRegistrationRequest): URL | undefined {
     if (typeof parameters.initiate_login_uri !== 'undefined' && typeof parameters.initiate_login_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "initiate_login_uri".' });
     }
@@ -818,10 +851,10 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Software Identifier provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Software Identifier provided by the Client.
    */
-  private getSoftwareId(parameters: RegistrationRequest): string | undefined {
+  private getSoftwareId(parameters: PostRegistrationRequest): string | undefined {
     if (typeof parameters.software_id !== 'undefined' && typeof parameters.software_id !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "software_id".' });
     }
@@ -832,14 +865,48 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Software Version provided by the Client.
    *
-   * @param parameters Parameters of the Client Registration Request.
+   * @param parameters Parameters of the Post Client Registration Request.
    * @returns Software Version provided by the Client.
    */
-  private getSoftwareVersion(parameters: RegistrationRequest): string | undefined {
+  private getSoftwareVersion(parameters: PostRegistrationRequest): string | undefined {
     if (typeof parameters.software_version !== 'undefined' && typeof parameters.software_version !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "software_version".' });
     }
 
     return parameters.software_version;
+  }
+
+  /**
+   * Retrieves the Access Token from the Authorization Header and validates it.
+   *
+   * @param request Http Request.
+   * @param scopes Expected Scopes for the Request.
+   * @returns Access Token based on the handle provided by the Client.
+   */
+  private async authorize(request: HttpRequest, scopes: string[]): Promise<AccessToken> {
+    const parameters = <GetRegistrationRequest>request.query;
+
+    if (typeof parameters.client_id !== 'string') {
+      throw new InvalidTokenException({ description: 'Invalid Credentials.' });
+    }
+
+    const accessToken = await this.clientAuthorizationHandler.authorize(request);
+
+    const clientIdentifier = Buffer.from(parameters.client_id, 'utf8');
+    const accessTokenClientIdentifier = Buffer.from(accessToken.client.id, 'utf8');
+
+    if (
+      clientIdentifier.length !== accessTokenClientIdentifier.length ||
+      !timingSafeEqual(clientIdentifier, accessTokenClientIdentifier)
+    ) {
+      await this.accessTokenService.revoke(accessToken);
+      throw new InsufficientScopeException({ description: 'Invalid Credentials.' });
+    }
+
+    if (accessToken.scopes.every((scope) => !scopes.includes(scope))) {
+      throw new InsufficientScopeException({ description: 'Invalid Credentials.' });
+    }
+
+    return accessToken;
   }
 }

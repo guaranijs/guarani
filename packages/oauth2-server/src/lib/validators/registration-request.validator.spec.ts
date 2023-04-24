@@ -6,18 +6,27 @@ import { Buffer } from 'buffer';
 import { URL } from 'url';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
-import { RegistrationContext } from '../context/registration.context';
+import { GetRegistrationContext } from '../context/registration/get.registration.context';
+import { PostRegistrationContext } from '../context/registration/post.registration.context';
+import { AccessToken } from '../entities/access-token.entity';
+import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
 import { InvalidClientMetadataException } from '../exceptions/invalid-client-metadata.exception';
 import { InvalidRedirectUriException } from '../exceptions/invalid-redirect-uri.exception';
+import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { GrantType } from '../grant-types/grant-type.type';
+import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpRequest } from '../http/http.request';
-import { RegistrationRequest } from '../requests/registration-request';
+import { GetRegistrationRequest } from '../requests/registration/get.registration-request';
+import { PostRegistrationRequest } from '../requests/registration/post.registration-request';
 import { ResponseType } from '../response-types/response-type.type';
+import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
+import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { RegistrationRequestValidator } from './registration-request.validator';
 
+jest.mock('../handlers/client-authorization.handler');
 jest.mock('../handlers/scope.handler');
 
 const invalidRedirectUris: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, () => 1, {}];
@@ -64,11 +73,14 @@ const invalidAuthenticationMethodSigningCombinations: [ClientAuthentication, Jso
   ['client_secret_jwt', 'RS256'],
 ];
 
+const invalidClientIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}];
+
 describe('Registration Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: RegistrationRequestValidator;
 
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+  const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype, true);
 
   const settings = <Settings>{
     responseTypes: [
@@ -128,11 +140,19 @@ describe('Registration Request Validator', () => {
     acrValues: ['guarani:acr:1fa', 'guarani:acr:2fa'],
   };
 
+  const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
+    create: jest.fn(),
+    findOne: jest.fn(),
+    revoke: jest.fn(),
+  });
+
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
     container.bind(ScopeHandler).toValue(scopeHandlerMock);
+    container.bind(ClientAuthorizationHandler).toValue(clientAuthorizationHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
+    container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind(RegistrationRequestValidator).toSelf().asSingleton();
 
     validator = container.resolve(RegistrationRequestValidator);
@@ -142,12 +162,18 @@ describe('Registration Request Validator', () => {
     jest.resetAllMocks();
   });
 
-  describe('validate()', () => {
+  describe('getRequestScopes', () => {
+    it('should have ["client:manage", "client:read"] as its value.', () => {
+      expect(validator.getRequestScopes).toEqual<string[]>(['client:manage', 'client:read']);
+    });
+  });
+
+  describe('validatePost()', () => {
     let request: HttpRequest;
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: removeUndefined<RegistrationRequest>({
+        body: removeUndefined<PostRegistrationRequest>({
           redirect_uris: ['https://client.example.com/oauth/callback'],
           response_types: ['code'],
           grant_types: ['authorization_code', 'refresh_token'],
@@ -195,7 +221,7 @@ describe('Registration Request Validator', () => {
       async (redirectUris) => {
         request.body.redirect_uris = redirectUris;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "redirect_uris".' })
         );
       }
@@ -204,7 +230,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an invalid redirect uri.', async () => {
       request.body.redirect_uris = ['client.example.com/oauth/callback'];
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidRedirectUriException({ description: 'Invalid Redirect URI "client.example.com/oauth/callback".' })
       );
     });
@@ -212,7 +238,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing a redirect uri with a fragment component.', async () => {
       request.body.redirect_uris = ['https://client.example.com/oauth/callback#fragment-component'];
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidRedirectUriException({
           description:
             'The Redirect URI "https://client.example.com/oauth/callback#fragment-component" MUST NOT have a fragment component.',
@@ -225,7 +251,7 @@ describe('Registration Request Validator', () => {
       async (responseTypes) => {
         request.body.response_types = responseTypes;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "response_types".' })
         );
       }
@@ -234,7 +260,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported response type.', async () => {
       request.body.response_types = ['unknown'];
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Unsupported response_type "unknown".' })
       );
     });
@@ -244,7 +270,7 @@ describe('Registration Request Validator', () => {
       async (grantTypes) => {
         request.body.grant_types = grantTypes;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "grant_types".' })
         );
       }
@@ -253,7 +279,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported grant type.', async () => {
       request.body.grant_types = ['unknown'];
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Unsupported grant_type "unknown".' })
       );
     });
@@ -262,7 +288,7 @@ describe('Registration Request Validator', () => {
       request.body.response_types = ['code'];
       request.body.grant_types = ['implicit'];
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({
           description: 'The Response Type "code" requires the Grant Type "authorization_code".',
         })
@@ -275,7 +301,7 @@ describe('Registration Request Validator', () => {
         request.body.response_types = [responseTypes];
         request.body.grant_types = ['authorization_code'];
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({
             description:
               'The Response Types ["id_token", "id_token token", "token"] require the Grant Type "implicit".',
@@ -290,7 +316,7 @@ describe('Registration Request Validator', () => {
         request.body.response_types = [responseType];
         request.body.grant_types = [grantType];
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({
             description:
               'The Response Types ["code id_token", "code id_token token", "code token"] require the Grant Types ["authorization_code", "implicit"].',
@@ -305,7 +331,7 @@ describe('Registration Request Validator', () => {
         request.body.response_types = [responseType];
         request.body.grant_types = ['authorization_code', 'implicit'];
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({
             description:
               'The Grant Type "authorization_code" requires at lease one of the Response Types ["code", "code id_token", "code id_token token", "code token"].',
@@ -318,7 +344,7 @@ describe('Registration Request Validator', () => {
       request.body.response_types = ['code'];
       request.body.grant_types = ['authorization_code', 'implicit'];
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({
           description:
             'The Grant Type "implicit" requires at lease one of the Response Types ["code id_token", "code id_token token", "code token", "id_token", "id_token token", "token"].',
@@ -331,7 +357,7 @@ describe('Registration Request Validator', () => {
       async (applicationType) => {
         request.body.application_type = applicationType;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "application_type".' })
         );
       }
@@ -340,7 +366,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported application type.', async () => {
       request.body.application_type = 'unknown';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Unsupported application_type "unknown".' })
       );
     });
@@ -348,7 +374,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing a http(s) redirect uri other than localhost for a native application.', async () => {
       request.body.application_type = 'native';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidRedirectUriException({
           description:
             'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
@@ -359,7 +385,7 @@ describe('Registration Request Validator', () => {
     it('should throw when not providing a https redirect uri for a web application.', async () => {
       request.body.redirect_uris = ['http://client.example.com/oauth/callback'];
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidRedirectUriException({
           description: 'The Redirect URI "http://client.example.com/oauth/callback" does not use the https protocol.',
         })
@@ -371,7 +397,7 @@ describe('Registration Request Validator', () => {
       async (redirectUri) => {
         request.body.redirect_uris = [redirectUri];
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidRedirectUriException({
             description: `The Authorization Server disallows using localhost as a Redirect URI for a "web" application.`,
           })
@@ -384,7 +410,7 @@ describe('Registration Request Validator', () => {
       async (clientName) => {
         request.body.client_name = clientName;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "client_name".' })
         );
       }
@@ -393,7 +419,7 @@ describe('Registration Request Validator', () => {
     it.each(invalidScopes)('should throw when providing an invalid "scope" parameter.', async (scope) => {
       request.body.scope = scope;
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Invalid parameter "scope".' })
       );
     });
@@ -407,7 +433,7 @@ describe('Registration Request Validator', () => {
         throw error;
       });
 
-      await expect(validator.validate(request)).rejects.toThrow(error);
+      await expect(validator.validatePost(request)).rejects.toThrow(error);
     });
 
     it.each([...invalidContacts, [...invalidContacts]])(
@@ -415,7 +441,7 @@ describe('Registration Request Validator', () => {
       async (contacts) => {
         request.body.contacts = contacts;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "contacts".' })
         );
       }
@@ -424,7 +450,7 @@ describe('Registration Request Validator', () => {
     it.each(invalidLogoUris)('should throw when providing an invalid "logo_uri" parameter.', async (logoUri) => {
       request.body.logo_uri = logoUri;
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Invalid parameter "logo_uri".' })
       );
     });
@@ -432,7 +458,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an invalid logo uri.', async () => {
       request.body.logo_uri = 'some.cdn.com/client-logo.jpg';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidRedirectUriException({ description: 'Invalid Logo URI.' })
       );
     });
@@ -440,7 +466,7 @@ describe('Registration Request Validator', () => {
     it.each(invalidClientUris)('should throw when providing an invalid "client_uri" parameter.', async (clientUri) => {
       request.body.client_uri = clientUri;
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Invalid parameter "client_uri".' })
       );
     });
@@ -448,7 +474,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an invalid client uri.', async () => {
       request.body.client_uri = 'client.example.com';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidRedirectUriException({ description: 'Invalid Client URI.' })
       );
     });
@@ -456,7 +482,7 @@ describe('Registration Request Validator', () => {
     it.each(invalidPolicyUris)('should throw when providing an invalid "policy_uri" parameter.', async (policyUri) => {
       request.body.policy_uri = policyUri;
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Invalid parameter "policy_uri".' })
       );
     });
@@ -464,7 +490,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an invalid policy uri.', async () => {
       request.body.policy_uri = 'client.example.com/policy';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidRedirectUriException({ description: 'Invalid Policy URI.' })
       );
     });
@@ -472,7 +498,7 @@ describe('Registration Request Validator', () => {
     it.each(invalidTosUris)('should throw when providing an invalid "tos_uri" parameter.', async (tosUri) => {
       request.body.tos_uri = tosUri;
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Invalid parameter "tos_uri".' })
       );
     });
@@ -480,7 +506,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an invalid terms of service uri.', async () => {
       request.body.tos_uri = 'client.example.com/terms-of-service';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidRedirectUriException({ description: 'Invalid Terms of Service URI.' })
       );
     });
@@ -488,7 +514,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing both the "jwks_uri" and "jwks" parameters.', async () => {
       request.body.jwks = {};
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({
           description: 'Only one of the parameters "jwks_uri" and "jwks" must be provided.',
         })
@@ -498,7 +524,7 @@ describe('Registration Request Validator', () => {
     it.each(invalidJwksUris)('should throw when providing an invalid "jwks_uri" parameter.', async (jwksUri) => {
       request.body.jwks_uri = jwksUri;
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Invalid parameter "jwks_uri".' })
       );
     });
@@ -506,7 +532,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an invalid json web key set uri.', async () => {
       request.body.jwks_uri = 'client.example.com/oauth/jwks';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidRedirectUriException({ description: 'Invalid JSON Web Key Set URI.' })
       );
     });
@@ -516,7 +542,7 @@ describe('Registration Request Validator', () => {
 
       request.body.jwks = jwks;
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Invalid parameter "jwks".' })
       );
     });
@@ -526,7 +552,7 @@ describe('Registration Request Validator', () => {
 
       request.body.jwks = {};
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidRedirectUriException({ description: 'Invalid JSON Web Key Set.' })
       );
     });
@@ -536,7 +562,7 @@ describe('Registration Request Validator', () => {
       async (algorithm) => {
         request.body.id_token_signed_response_alg = algorithm;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_signed_response_alg".' })
         );
       }
@@ -545,7 +571,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported id token signed response algorithm.', async () => {
       request.body.id_token_signed_response_alg = 'unknown';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Unsupported id_token_signed_response_alg "unknown".' })
       );
     });
@@ -555,7 +581,7 @@ describe('Registration Request Validator', () => {
       async (authenticationMethod) => {
         request.body.token_endpoint_auth_method = authenticationMethod;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "token_endpoint_auth_method".' })
         );
       }
@@ -564,7 +590,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported client authentication method.', async () => {
       request.body.token_endpoint_auth_method = 'unknown';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Unsupported token_endpoint_auth_method "unknown".' })
       );
     });
@@ -574,7 +600,7 @@ describe('Registration Request Validator', () => {
       async (algorithm) => {
         request.body.token_endpoint_auth_signing_alg = algorithm;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "token_endpoint_auth_signing_alg".' })
         );
       }
@@ -583,7 +609,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported jwt client assertion json web signature algorithm.', async () => {
       request.body.token_endpoint_auth_signing_alg = 'unknown';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Unsupported token_endpoint_auth_signing_alg "unknown".' })
       );
     });
@@ -591,7 +617,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing a client assertion json web signature algorithm for a client authentication method that does not use it.', async () => {
       request.body.token_endpoint_auth_method = 'client_secret_basic';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({
           description:
             'The Client Authentication Method "client_secret_basic" does not require a Client Authentication Signing Algorithm.',
@@ -602,7 +628,7 @@ describe('Registration Request Validator', () => {
     it('should throw when not providing a client assertion json web signature algorithm for a client authentication method uses it.', async () => {
       delete request.body.token_endpoint_auth_signing_alg;
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({
           description:
             'Missing required parameter "token_endpoint_auth_signing_alg" for Client Authentication Method "private_key_jwt".',
@@ -614,7 +640,7 @@ describe('Registration Request Validator', () => {
       delete request.body.jwks_uri;
       delete request.body.jwks;
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({
           description:
             'One of the parameters "jwks_uri" or "jwks" must be provided for Client Authentication Method "private_key_jwt".',
@@ -628,7 +654,7 @@ describe('Registration Request Validator', () => {
         request.body.token_endpoint_auth_method = method;
         request.body.token_endpoint_auth_signing_alg = algorithm;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({
             description: `Invalid JSON Web Signature Algorithm "${algorithm}" for Client Authentication Method "${method}".`,
           })
@@ -641,7 +667,7 @@ describe('Registration Request Validator', () => {
       async (defaultMaxAge) => {
         request.body.default_max_age = defaultMaxAge;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "default_max_age".' })
         );
       }
@@ -652,7 +678,7 @@ describe('Registration Request Validator', () => {
       async (defaultMaxAge) => {
         request.body.default_max_age = defaultMaxAge;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'The default max age must be a positive integer.' })
         );
       }
@@ -663,7 +689,7 @@ describe('Registration Request Validator', () => {
       async (requireAuthTime) => {
         request.body.require_auth_time = requireAuthTime;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "require_auth_time".' })
         );
       }
@@ -674,7 +700,7 @@ describe('Registration Request Validator', () => {
       async (acrValues) => {
         request.body.default_acr_values = acrValues;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "default_acr_values".' })
         );
       }
@@ -683,7 +709,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported acr value.', async () => {
       request.body.default_acr_values = ['unknown'];
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Unsupported acr_value "unknown".' })
       );
     });
@@ -693,7 +719,7 @@ describe('Registration Request Validator', () => {
       async (initiateLoginUri) => {
         request.body.initiate_login_uri = initiateLoginUri;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "initiate_login_uri".' })
         );
       }
@@ -702,7 +728,7 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an invalid initiate login uri.', async () => {
       request.body.initiate_login_uri = 'client.example.com/oauth/initiate';
 
-      await expect(validator.validate(request)).rejects.toThrow(
+      await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Invalid Initiate Login URI.' })
       );
     });
@@ -712,7 +738,7 @@ describe('Registration Request Validator', () => {
       async (softwareId) => {
         request.body.software_id = softwareId;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "software_id".' })
         );
       }
@@ -723,15 +749,15 @@ describe('Registration Request Validator', () => {
       async (softwareVersion) => {
         request.body.software_version = softwareVersion;
 
-        await expect(validator.validate(request)).rejects.toThrow(
+        await expect(validator.validatePost(request)).rejects.toThrow(
           new InvalidClientMetadataException({ description: 'Invalid parameter "software_version".' })
         );
       }
     );
 
-    it('should return a registration request context.', async () => {
-      await expect(validator.validate(request)).resolves.toStrictEqual<RegistrationContext>({
-        parameters: <RegistrationRequest>request.body,
+    it('should return a post registration request context.', async () => {
+      await expect(validator.validatePost(request)).resolves.toStrictEqual<PostRegistrationContext>({
+        parameters: <PostRegistrationRequest>request.body,
         redirectUris: [new URL('https://client.example.com/oauth/callback')],
         responseTypes: ['code'],
         grantTypes: ['authorization_code', 'refresh_token'],
@@ -767,5 +793,78 @@ describe('Registration Request Validator', () => {
         softwareVersion: 'v1.4.37',
       });
     });
+  });
+
+  describe('validateGet()', () => {
+    let request: HttpRequest;
+
+    beforeEach(() => {
+      request = new HttpRequest({
+        body: {},
+        cookies: {},
+        headers: {},
+        method: 'GET',
+        path: '/oauth/register',
+        query: { client_id: 'client_id' },
+      });
+    });
+
+    it.each(invalidClientIds)('should throw when providing an invalid "client_id" parameter.', async (clientId) => {
+      request.query.client_id = clientId;
+
+      await expect(validator.validateGet(request)).rejects.toThrow(
+        new InvalidTokenException({ description: 'Invalid Credentials.' })
+      );
+    });
+
+    it('should throw when the client fails the authorization process.', async () => {
+      const error = new InvalidTokenException({ description: 'Lorem ipsum dolor sit amet...' });
+
+      clientAuthorizationHandlerMock.authorize.mockRejectedValueOnce(error);
+
+      await expect(validator.validateGet(request)).rejects.toThrow(error);
+    });
+
+    it('should throw when the client presents an access token that was not issued to itself.', async () => {
+      const accessToken = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validateGet(request)).rejects.toThrow(
+        new InsufficientScopeException({ description: 'Invalid Credentials.' })
+      );
+
+      expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
+      expect(accessTokenServiceMock.revoke).toHaveBeenCalledWith(accessToken);
+    });
+
+    it('should throw when the client presents an access token that is not a registration access token.', async () => {
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validateGet(request)).rejects.toThrow(
+        new InsufficientScopeException({ description: 'Invalid Credentials.' })
+      );
+    });
+
+    it.each([[['client:manage']], [['client:read']], [['client:manage', 'client:read']]])(
+      'should return a get registration request context.',
+      async (scopes) => {
+        const accessToken = <AccessToken>{ handle: 'access_token', scopes, client: { id: 'client_id' } };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validateGet(request)).resolves.toStrictEqual<GetRegistrationContext>({
+          parameters: <GetRegistrationRequest>request.query,
+          accessToken,
+          client: accessToken.client,
+        });
+      }
+    );
   });
 });

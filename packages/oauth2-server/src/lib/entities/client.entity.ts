@@ -199,11 +199,6 @@ export interface Client extends Record<string, any> {
   softwareVersion?: string | null;
 
   /**
-   * Registration Access Token of the Client.
-   */
-  registrationAccessToken: string;
-
-  /**
    * Creation Date of the Client.
    */
   readonly createdAt: Date;

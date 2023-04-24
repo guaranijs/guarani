@@ -1,4 +1,4 @@
-import { RegistrationContext } from '../context/registration.context';
+import { PostRegistrationContext } from '../context/registration/post.registration.context';
 import { Client } from '../entities/client.entity';
 
 /**
@@ -12,9 +12,9 @@ export interface ClientServiceInterface {
    *
    * *note: this method is only required when enabling dynamic client registration.*
    *
-   * @param context Registration Request Context.
+   * @param context POST Registration Request Context.
    */
-  create?(context: RegistrationContext): Promise<Client>;
+  create?(context: PostRegistrationContext): Promise<Client>;
 
   /**
    * Searches the application's storage for a Client containing the provided Identifier.

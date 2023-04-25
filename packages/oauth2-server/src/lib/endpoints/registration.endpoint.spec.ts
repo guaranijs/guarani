@@ -1,14 +1,15 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeUndefined } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
 import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
 import { GetRegistrationContext } from '../context/registration/get.registration.context';
 import { PostRegistrationContext } from '../context/registration/post.registration.context';
+import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
-import { HttpResponse } from '../http/http.response';
 import { DeleteRegistrationRequest } from '../requests/registration/delete.registration-request';
 import { GetRegistrationRequest } from '../requests/registration/get.registration-request';
 import { PostRegistrationRequest } from '../requests/registration/post.registration-request';
@@ -169,7 +170,7 @@ describe('Dynamic Client Registration Endpoint', () => {
     beforeEach(() => {
       request = new HttpRequest({
         body: <PostRegistrationRequest>{
-          redirect_uris: ['https://client.example.com/oauth/callback'],
+          redirect_uris: ['https://client.example.com/oauth/callback/'],
           response_types: ['code'],
           grant_types: ['authorization_code', 'refresh_token'],
           application_type: 'web',
@@ -177,10 +178,10 @@ describe('Dynamic Client Registration Endpoint', () => {
           scope: 'openid profile email phone address foo bar baz qux',
           contacts: ['johndoe@email.com'],
           logo_uri: 'https://some.cdn.com/client-logo.jpg',
-          client_uri: 'https://client.example.com',
-          policy_uri: 'https://client.example.com/policy',
-          tos_uri: 'https://client.example.com/terms-of-service',
-          jwks_uri: 'https://client.example.com/oauth/jwks',
+          client_uri: 'https://client.example.com/',
+          policy_uri: 'https://client.example.com/policy/',
+          tos_uri: 'https://client.example.com/terms-of-service/',
+          jwks_uri: 'https://client.example.com/oauth/jwks/',
           jwks: undefined,
           // sector_identifier_uri: ,
           // subject_type: ,
@@ -198,7 +199,7 @@ describe('Dynamic Client Registration Endpoint', () => {
           default_max_age: 60 * 60 * 24 * 15,
           require_auth_time: true,
           default_acr_values: ['guarani:acr:2fa', 'guarani:acr:1fa'],
-          initiate_login_uri: 'https://client.example.com/oauth/initiate',
+          initiate_login_uri: 'https://client.example.com/oauth/initiate/',
           // request_uris: ,
           software_id: 'TJ9C-X43C-95V1LK03',
           software_version: 'v1.4.37',
@@ -216,7 +217,7 @@ describe('Dynamic Client Registration Endpoint', () => {
       async (clientParams, responseParams) => {
         const context = <PostRegistrationContext>{
           parameters: <PostRegistrationRequest>request.body,
-          redirectUris: [new URL('https://client.example.com/oauth/callback')],
+          redirectUris: [new URL('https://client.example.com/oauth/callback/')],
           responseTypes: ['code'],
           grantTypes: ['authorization_code', 'refresh_token'],
           applicationType: 'web',
@@ -224,10 +225,10 @@ describe('Dynamic Client Registration Endpoint', () => {
           scopes: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
           contacts: ['johndoe@email.com'],
           logoUri: new URL('https://some.cdn.com/client-logo.jpg'),
-          clientUri: new URL('https://client.example.com'),
-          policyUri: new URL('https://client.example.com/policy'),
-          tosUri: new URL('https://client.example.com/terms-of-service'),
-          jwksUri: new URL('https://client.example.com/oauth/jwks'),
+          clientUri: new URL('https://client.example.com/'),
+          policyUri: new URL('https://client.example.com/policy/'),
+          tosUri: new URL('https://client.example.com/terms-of-service/'),
+          jwksUri: new URL('https://client.example.com/oauth/jwks/'),
           jwks: undefined,
           // sectorIdentifierUri: ,
           // subjectType: ,
@@ -245,7 +246,7 @@ describe('Dynamic Client Registration Endpoint', () => {
           defaultMaxAge: 60 * 60 * 24 * 15,
           requireAuthTime: true,
           defaultAcrValues: ['guarani:acr:2fa', 'guarani:acr:1fa'],
-          initiateLoginUri: new URL('https://client.example.com/oauth/initiate'),
+          initiateLoginUri: new URL('https://client.example.com/oauth/initiate/'),
           // requestUris: ,
           softwareId: 'TJ9C-X43C-95V1LK03',
           softwareVersion: 'v1.4.37',
@@ -287,12 +288,10 @@ describe('Dynamic Client Registration Endpoint', () => {
           // requestUris: ,
           softwareId: context.softwareId,
           softwareVersion: context.softwareVersion,
-          registrationAccessToken: 'registration_access_token',
           createdAt: new Date(now),
         };
 
-        validatorMock.validatePost.mockResolvedValueOnce(context);
-        clientServiceMock.create!.mockResolvedValueOnce(client);
+        const accessToken = <AccessToken>{ handle: 'registration_access_token' };
 
         const registrationResponse = <PostRegistrationResponse>{
           client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
@@ -303,8 +302,21 @@ describe('Dynamic Client Registration Endpoint', () => {
           ...context.parameters,
         };
 
-        await expect(endpoint.handle(request)).resolves.toStrictEqual(
-          new HttpResponse().setHeaders(endpoint['headers']).json(registrationResponse)
+        validatorMock.validatePost.mockResolvedValueOnce(context);
+        clientServiceMock.create!.mockResolvedValueOnce(client);
+        accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
+
+        const response = await endpoint.handle(request);
+
+        expect(response.statusCode).toBe(200);
+
+        expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+          'Content-Type': 'application/json',
+          ...endpoint['headers'],
+        });
+
+        expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(
+          removeUndefined<PostRegistrationResponse>(registrationResponse)
         );
 
         expect(clientServiceMock.create).toHaveBeenCalledTimes(1);
@@ -420,8 +432,17 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       validatorMock.validateGet.mockResolvedValueOnce(context);
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setHeaders(endpoint['headers']).json(clientMetadataResponse)
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toBe(200);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(
+        removeUndefined<GetRegistrationResponse>(clientMetadataResponse)
       );
     });
   });

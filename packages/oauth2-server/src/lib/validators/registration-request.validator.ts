@@ -7,6 +7,7 @@ import { timingSafeEqual } from 'crypto';
 import { URL } from 'url';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
+import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
 import { GetRegistrationContext } from '../context/registration/get.registration.context';
 import { PostRegistrationContext } from '../context/registration/post.registration.context';
 import { AccessToken } from '../entities/access-token.entity';
@@ -20,6 +21,7 @@ import { GrantType } from '../grant-types/grant-type.type';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpRequest } from '../http/http.request';
+import { DeleteRegistrationRequest } from '../requests/registration/delete.registration-request';
 import { GetRegistrationRequest } from '../requests/registration/get.registration-request';
 import { PostRegistrationRequest } from '../requests/registration/post.registration-request';
 import { ResponseType } from '../response-types/response-type.type';
@@ -38,6 +40,11 @@ export class RegistrationRequestValidator {
    * Scopes that grant access to the Dynamic Client Registration Get Request.
    */
   public readonly getRequestScopes: string[] = ['client:manage', 'client:read'];
+
+  /**
+   * Scopes that grant access to the Dynamic Client Registration Delete Request.
+   */
+  public readonly deleteRequestScopes: string[] = ['client:manage', 'client:delete'];
 
   /**
    * Instantiates a new Registration Request Validator.
@@ -159,6 +166,20 @@ export class RegistrationRequestValidator {
     const accessToken = await this.authorize(request, this.getRequestScopes);
 
     return { parameters, accessToken, client: accessToken.client };
+  }
+
+  /**
+   * Validates the Http Delete Registration Request and returns the actors of the Delete Registration Context.
+   *
+   * @param request Http Request.
+   * @returns Delete Registration Context.
+   */
+  public async validateDelete(request: HttpRequest): Promise<DeleteRegistrationContext> {
+    const parameters = <DeleteRegistrationRequest>request.query;
+
+    const { client } = await this.authorize(request, this.deleteRequestScopes);
+
+    return { parameters, client };
   }
 
   /**

@@ -13,6 +13,7 @@ export interface ClientServiceInterface {
    * *note: this method is only required when enabling dynamic client registration.*
    *
    * @param context POST Registration Request Context.
+   * @returns Newly created Client.
    */
   create?(context: PostRegistrationContext): Promise<Client>;
 
@@ -23,4 +24,13 @@ export interface ClientServiceInterface {
    * @returns Client based on the provided Identifier.
    */
   findOne(id: string): Promise<Client | null>;
+
+  /**
+   * Removes the provided Client from the Authorization Server.
+   *
+   * *note: this method is only required when enabling dynamic client registration.*
+   *
+   * @param client Client to be removed from the Authorization Server.
+   */
+  remove?(client: Client): Promise<void>;
 }

@@ -1,13 +1,15 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
 import { OutgoingHttpHeaders } from 'http';
-import { GetRegistrationContext } from '../context/registration/get.registration.context';
 
+import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
+import { GetRegistrationContext } from '../context/registration/get.registration.context';
 import { PostRegistrationContext } from '../context/registration/post.registration.context';
 import { Client } from '../entities/client.entity';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { DeleteRegistrationRequest } from '../requests/registration/delete.registration-request';
 import { GetRegistrationRequest } from '../requests/registration/get.registration-request';
 import { PostRegistrationRequest } from '../requests/registration/post.registration-request';
 import { GetRegistrationResponse } from '../responses/registration/get.registration-response';
@@ -77,6 +79,7 @@ describe('Dynamic Client Registration Endpoint', () => {
     {
       create: jest.fn(),
       findOne: jest.fn(),
+      remove: jest.fn(),
     },
     true
   );
@@ -116,8 +119,8 @@ describe('Dynamic Client Registration Endpoint', () => {
   });
 
   describe('httpMethods', () => {
-    it('should have \'["GET", "POST"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['GET', 'POST']);
+    it('should have \'["DELETE", "GET", "POST"]\' as its supported http methods.', () => {
+      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['DELETE', 'GET', 'POST']);
     });
   });
 
@@ -142,6 +145,20 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       expect(() => container.resolve(RegistrationEndpoint)).toThrow(
         new TypeError('Missing implementation of required method "ClientServiceInterface.create".')
+      );
+    });
+
+    it('should throw when the client service does not implement the method "remove".', () => {
+      const clientServiceMock = jest.mocked<ClientServiceInterface>({ create: jest.fn(), findOne: jest.fn() });
+
+      container.delete<ClientServiceInterface>(CLIENT_SERVICE);
+      container.delete(RegistrationEndpoint);
+
+      container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
+      container.bind(RegistrationEndpoint).toSelf().asSingleton();
+
+      expect(() => container.resolve(RegistrationEndpoint)).toThrow(
+        new TypeError('Missing implementation of required method "ClientServiceInterface.remove".')
       );
     });
   });
@@ -406,6 +423,42 @@ describe('Dynamic Client Registration Endpoint', () => {
       await expect(endpoint.handle(request)).resolves.toStrictEqual(
         new HttpResponse().setHeaders(endpoint['headers']).json(clientMetadataResponse)
       );
+    });
+  });
+
+  describe('handle() (DELETE)', () => {
+    let request: HttpRequest;
+
+    beforeEach(() => {
+      request = new HttpRequest({
+        body: {},
+        cookies: {},
+        headers: {},
+        method: 'DELETE',
+        path: '/oauth/register',
+        query: { client_id: 'client_id' },
+      });
+    });
+
+    it('should decomission the client from the authorization server.', async () => {
+      const client = <Client>{ id: 'client_id' };
+
+      const context = <DeleteRegistrationContext>{
+        parameters: <DeleteRegistrationRequest>request.query,
+        accessToken: { handle: 'access_token' },
+        client,
+      };
+
+      validatorMock.validateDelete.mockResolvedValueOnce(context);
+
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toBe(204);
+      expect(response.headers).toStrictEqual(endpoint['headers']);
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(clientServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(clientServiceMock.remove).toHaveBeenCalledWith(client);
     });
   });
 });

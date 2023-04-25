@@ -6,6 +6,7 @@ import { Buffer } from 'buffer';
 import { URL } from 'url';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
+import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
 import { GetRegistrationContext } from '../context/registration/get.registration.context';
 import { PostRegistrationContext } from '../context/registration/post.registration.context';
 import { AccessToken } from '../entities/access-token.entity';
@@ -17,6 +18,7 @@ import { GrantType } from '../grant-types/grant-type.type';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpRequest } from '../http/http.request';
+import { DeleteRegistrationRequest } from '../requests/registration/delete.registration-request';
 import { GetRegistrationRequest } from '../requests/registration/get.registration-request';
 import { PostRegistrationRequest } from '../requests/registration/post.registration-request';
 import { ResponseType } from '../response-types/response-type.type';
@@ -862,6 +864,78 @@ describe('Registration Request Validator', () => {
         await expect(validator.validateGet(request)).resolves.toStrictEqual<GetRegistrationContext>({
           parameters: <GetRegistrationRequest>request.query,
           accessToken,
+          client: accessToken.client,
+        });
+      }
+    );
+  });
+
+  describe('validateDelete()', () => {
+    let request: HttpRequest;
+
+    beforeEach(() => {
+      request = new HttpRequest({
+        body: {},
+        cookies: {},
+        headers: {},
+        method: 'DELETE',
+        path: '/oauth/register',
+        query: { client_id: 'client_id' },
+      });
+    });
+
+    it.each(invalidClientIds)('should throw when providing an invalid "client_id" parameter.', async (clientId) => {
+      request.query.client_id = clientId;
+
+      await expect(validator.validateDelete(request)).rejects.toThrow(
+        new InvalidTokenException({ description: 'Invalid Credentials.' })
+      );
+    });
+
+    it('should throw when the client fails the authorization process.', async () => {
+      const error = new InvalidTokenException({ description: 'Lorem ipsum dolor sit amet...' });
+
+      clientAuthorizationHandlerMock.authorize.mockRejectedValueOnce(error);
+
+      await expect(validator.validateDelete(request)).rejects.toThrow(error);
+    });
+
+    it('should throw when the client presents an access token that was not issued to itself.', async () => {
+      const accessToken = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validateDelete(request)).rejects.toThrow(
+        new InsufficientScopeException({ description: 'Invalid Credentials.' })
+      );
+
+      expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
+      expect(accessTokenServiceMock.revoke).toHaveBeenCalledWith(accessToken);
+    });
+
+    it('should throw when the client presents an access token that is not a registration access token.', async () => {
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validateDelete(request)).rejects.toThrow(
+        new InsufficientScopeException({ description: 'Invalid Credentials.' })
+      );
+    });
+
+    it.each([[['client:manage']], [['client:delete']], [['client:manage', 'client:delete']]])(
+      'should return a delete registration request context.',
+      async (scopes) => {
+        const accessToken = <AccessToken>{ handle: 'access_token', scopes, client: { id: 'client_id' } };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validateDelete(request)).resolves.toStrictEqual<DeleteRegistrationContext>({
+          parameters: <DeleteRegistrationRequest>request.query,
           client: accessToken.client,
         });
       }

@@ -4,6 +4,7 @@ import { removeUndefined } from '@guarani/primitives';
 import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
 
+import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
 import { GetRegistrationContext } from '../context/registration/get.registration.context';
 import { PostRegistrationContext } from '../context/registration/post.registration.context';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
@@ -46,7 +47,7 @@ export class RegistrationEndpoint implements EndpointInterface {
   /**
    * Http Methods supported by the Endpoint.
    */
-  readonly httpMethods: HttpMethod[] = ['GET', 'POST'];
+  readonly httpMethods: HttpMethod[] = ['DELETE', 'GET', 'POST'];
 
   /**
    * Default Http Headers to be included in the Response.
@@ -70,6 +71,10 @@ export class RegistrationEndpoint implements EndpointInterface {
     if (typeof clientService.create !== 'function') {
       throw new TypeError('Missing implementation of required method "ClientServiceInterface.create".');
     }
+
+    if (typeof clientService.remove !== 'function') {
+      throw new TypeError('Missing implementation of required method "ClientServiceInterface.remove".');
+    }
   }
 
   /**
@@ -82,10 +87,10 @@ export class RegistrationEndpoint implements EndpointInterface {
     try {
       switch (request.method) {
         case 'DELETE':
-          return null!;
+          return await this.handleDelete(request);
 
         case 'GET':
-          return this.handleGet(request);
+          return await this.handleGet(request);
 
         case 'POST':
           return await this.handlePost(request);
@@ -158,6 +163,38 @@ export class RegistrationEndpoint implements EndpointInterface {
       const registrationResponse = await this.getClientMetadata(context);
 
       return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
+    } catch (exc: unknown) {
+      let error: OAuth2Exception;
+
+      if (exc instanceof OAuth2Exception) {
+        error = exc;
+      } else {
+        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
+        error.cause = exc;
+      }
+
+      return new HttpResponse()
+        .setStatus(error.statusCode)
+        .setHeaders(error.headers)
+        .setHeaders(this.headers)
+        .json(error.toJSON());
+    }
+  }
+
+  /**
+   * Creates a Http JSON Dynamic Client Registration Response.
+   *
+   * This method is responsible for decomissioning the Client from the Authorization Server.
+   *
+   * @param request Http Request.
+   * @returns Http Response.
+   */
+  private async handleDelete(request: HttpRequest): Promise<HttpResponse> {
+    try {
+      const context = await this.validator.validateDelete(request);
+      await this.decomissionClient(context);
+
+      return new HttpResponse().setStatus(204).setHeaders(this.headers);
     } catch (exc: unknown) {
       let error: OAuth2Exception;
 
@@ -299,5 +336,14 @@ export class RegistrationEndpoint implements EndpointInterface {
       software_id: client.softwareId ?? undefined,
       software_version: client.softwareVersion ?? undefined,
     });
+  }
+
+  /**
+   * Decomissions the Client from the Authorization Server.
+   *
+   * @param context Parameters of the Dynamic Client Registration Context.
+   */
+  private async decomissionClient(context: DeleteRegistrationContext): Promise<void> {
+    await this.clientService.remove!(context.client);
   }
 }

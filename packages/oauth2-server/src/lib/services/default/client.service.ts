@@ -87,6 +87,14 @@ export class ClientService implements ClientServiceInterface {
     return this.clients.find((client) => client.id === id) ?? null;
   }
 
+  public async remove(client: Client): Promise<void> {
+    const index = this.clients.findIndex((registeredClient) => registeredClient.id === client.id);
+
+    if (index > -1) {
+      this.clients.splice(index, 1);
+    }
+  }
+
   private secretToken(): string {
     let token = '';
     const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';

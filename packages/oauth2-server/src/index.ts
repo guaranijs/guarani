@@ -33,6 +33,7 @@ export { LoginDecisionAcceptInteractionContext } from './lib/context/interaction
 export { LoginDecisionDenyInteractionContext } from './lib/context/interaction/login-decision-deny.interaction.context';
 export { LoginDecisionInteractionContext } from './lib/context/interaction/login-decision.interaction.context';
 export { IntrospectionContext } from './lib/context/introspection.context';
+export { DeleteRegistrationContext } from './lib/context/registration/delete.registration.context';
 export { GetRegistrationContext } from './lib/context/registration/get.registration.context';
 export { PostRegistrationContext } from './lib/context/registration/post.registration.context';
 export { RevocationContext } from './lib/context/revocation.context';
@@ -149,6 +150,7 @@ export { LoginDecisionAcceptInteractionRequest } from './lib/requests/interactio
 export { LoginDecisionDenyInteractionRequest } from './lib/requests/interaction/login-decision-deny.interaction-request';
 export { LoginDecisionInteractionRequest } from './lib/requests/interaction/login-decision.interaction-request';
 export { IntrospectionRequest } from './lib/requests/introspection-request';
+export { DeleteRegistrationRequest } from './lib/requests/registration/delete.registration-request';
 export { GetRegistrationRequest } from './lib/requests/registration/get.registration-request';
 export { PostRegistrationRequest } from './lib/requests/registration/post.registration-request';
 export { RevocationRequest } from './lib/requests/revocation-request';

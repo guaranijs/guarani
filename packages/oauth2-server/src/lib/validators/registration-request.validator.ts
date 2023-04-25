@@ -10,12 +10,13 @@ import { ClientAuthentication } from '../client-authentication/client-authentica
 import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
 import { GetRegistrationContext } from '../context/registration/get.registration.context';
 import { PostRegistrationContext } from '../context/registration/post.registration.context';
+import { PutRegistrationContext } from '../context/registration/put.registration.context';
 import { AccessToken } from '../entities/access-token.entity';
+import { Client } from '../entities/client.entity';
 import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
 import { InvalidClientMetadataException } from '../exceptions/invalid-client-metadata.exception';
 import { InvalidRedirectUriException } from '../exceptions/invalid-redirect-uri.exception';
 import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
-import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { GrantType } from '../grant-types/grant-type.type';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
@@ -24,6 +25,8 @@ import { HttpRequest } from '../http/http.request';
 import { DeleteRegistrationRequest } from '../requests/registration/delete.registration-request';
 import { GetRegistrationRequest } from '../requests/registration/get.registration-request';
 import { PostRegistrationRequest } from '../requests/registration/post.registration-request';
+import { PutBodyRegistrationRequest } from '../requests/registration/put-body.registration-request';
+import { PutQueryRegistrationRequest } from '../requests/registration/put-query.registration-request';
 import { ResponseType } from '../response-types/response-type.type';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -45,6 +48,11 @@ export class RegistrationRequestValidator {
    * Scopes that grant access to the Dynamic Client Registration Delete Request.
    */
   public readonly deleteRequestScopes: string[] = ['client:manage', 'client:delete'];
+
+  /**
+   * Scopes that grant access to the Dynamic Client Registration Put Request.
+   */
+  public readonly putRequestScopes: string[] = ['client:manage', 'client:update'];
 
   /**
    * Instantiates a new Registration Request Validator.
@@ -163,7 +171,8 @@ export class RegistrationRequestValidator {
   public async validateGet(request: HttpRequest): Promise<GetRegistrationContext> {
     const parameters = <GetRegistrationRequest>request.query;
 
-    const accessToken = await this.authorize(request, this.getRequestScopes);
+    const clientId = this.getClientId(parameters);
+    const accessToken = await this.authorize(request, clientId, this.getRequestScopes);
 
     return { parameters, accessToken, client: accessToken.client };
   }
@@ -177,9 +186,187 @@ export class RegistrationRequestValidator {
   public async validateDelete(request: HttpRequest): Promise<DeleteRegistrationContext> {
     const parameters = <DeleteRegistrationRequest>request.query;
 
-    const { client } = await this.authorize(request, this.deleteRequestScopes);
+    const clientId = this.getClientId(parameters);
+    const { client } = await this.authorize(request, clientId, this.deleteRequestScopes);
 
     return { parameters, client };
+  }
+
+  /**
+   * Validates the Http Put Registration Request and returns the actors of the Put Registration Context.
+   *
+   * @param request Http Request.
+   * @returns Put Registration Context.
+   */
+  public async validatePut(request: HttpRequest): Promise<PutRegistrationContext> {
+    const queryParameters = <PutQueryRegistrationRequest>request.query;
+    const bodyParameters = <PutBodyRegistrationRequest>request.body;
+
+    const queryClientId = this.getClientId(queryParameters);
+    const bodyClientId = this.getClientId(bodyParameters);
+
+    const clientId = this.checkPutClientId(queryClientId, bodyClientId);
+    const clientSecret = this.getClientSecret(bodyParameters);
+
+    const accessToken = await this.authorize(request, clientId, this.putRequestScopes);
+
+    this.checkClientCredentials(accessToken.client, clientSecret);
+
+    const redirectUris = this.getRedirectUris(bodyParameters);
+    const responseTypes = this.getResponseTypes(bodyParameters);
+    const grantTypes = this.getGrantTypes(bodyParameters);
+
+    this.checkResponseTypesAndGrantTypes(responseTypes, grantTypes);
+
+    const applicationType = this.getApplicationType(bodyParameters);
+
+    this.checkApplicationTypeAndRedirectUris(applicationType, redirectUris);
+
+    const clientName = this.getClientName(bodyParameters);
+    const scopes = this.getScopes(bodyParameters);
+    const contacts = this.getContacts(bodyParameters);
+    const logoUri = this.getLogoUri(bodyParameters);
+    const clientUri = this.getClientUri(bodyParameters);
+    const policyUri = this.getPolicyUri(bodyParameters);
+    const tosUri = this.getTosUri(bodyParameters);
+
+    this.checkJwksUriAndJwksAreNotBothProvided(bodyParameters);
+
+    const jwksUri = this.getJwksUri(bodyParameters);
+    const jwks = await this.getJwks(bodyParameters);
+    // const sectorIdentifierUri = this.getSectorIdentifierUri(parameters);
+    // const subjectType = this.getSubjectType(parameters);
+    const idTokenSignedResponseAlgorithm = this.getIdTokenSignedResponseAlgorithm(bodyParameters);
+    // const idTokenEncryptedResponseKeyWrap = this.getIdTokenEncryptedResponseKeyWrap(parameters);
+    // const idTokenEncryptedResponseContentEncryption = this.getIdTokenEncryptedResponseContentEncryption(parameters);
+    // const userinfoSignedResponseAlgorithm = this.getUserinfoSignedResponseAlgorithm(parameters);
+    // const userinfoEncryptedResponseKeyWrap = this.getUserinfoEncryptedResponseKeyWrap(parameters);
+    // const userinfoEncryptedResponseContentEncryption = this.getUserinfoEncryptedResponseContentEncryption(parameters);
+    // const requestObjectSigningAlgorithm = this.getRequestObjectSigningAlgorithm(parameters);
+    // const requestObjectEncryptionKeyWrap = this.getRequestObjectEncryptionKeyWrap(parameters);
+    // const requestObjectEncryptionContentEncryption = this.getRequestObjectEncryptionContentEncryption(parameters);
+    const authenticationMethod = this.getAuthenticationMethod(bodyParameters);
+    const authenticationSigningAlgorithm = this.getAuthenticationSigningAlgorithm(bodyParameters);
+
+    this.checkAuthenticationMethodAndAuthenticationMethodSignature(bodyParameters);
+
+    const defaultMaxAge = this.getDefaultMaxAge(bodyParameters);
+    const requireAuthTime = this.getRequireAuthTime(bodyParameters);
+    const defaultAcrValues = this.getDefaultAcrValues(bodyParameters);
+    const initiateLoginUri = this.getInitiateLoginUri(bodyParameters);
+    // const requestUris = this.getRequestUris(parameters);
+    const softwareId = this.getSoftwareId(bodyParameters);
+    const softwareVersion = this.getSoftwareVersion(bodyParameters);
+
+    return {
+      queryParameters,
+      bodyParameters,
+      accessToken,
+      client: accessToken.client,
+      clientId,
+      clientSecret,
+      redirectUris,
+      responseTypes,
+      grantTypes,
+      applicationType,
+      clientName,
+      scopes,
+      contacts,
+      logoUri,
+      clientUri,
+      policyUri,
+      tosUri,
+      jwksUri,
+      jwks,
+      // sectorIdentifierUri,
+      // subjectType,
+      idTokenSignedResponseAlgorithm,
+      // idTokenEncryptedResponseKeyWrap,
+      // idTokenEncryptedResponseContentEncryption,
+      // userinfoSignedResponseAlgorithm,
+      // userinfoEncryptedResponseKeyWrap,
+      // userinfoEncryptedResponseContentEncryption,
+      // requestObjectSigningAlgorithm,
+      // requestObjectEncryptionKeyWrap,
+      // requestObjectEncryptionContentEncryption,
+      authenticationMethod,
+      authenticationSigningAlgorithm,
+      defaultMaxAge,
+      requireAuthTime,
+      defaultAcrValues,
+      initiateLoginUri,
+      // requestUris,
+      softwareId,
+      softwareVersion,
+    };
+  }
+
+  /**
+   * Checks and returns the Identifier of the Client of the Request.
+   *
+   * @param parameters Parameters of the Client Registration Request.
+   * @returns Identifier of the Client of the Request.
+   */
+  private getClientId<T extends Record<string, any>>(parameters: T): string {
+    if (typeof parameters.client_id !== 'string') {
+      throw new InvalidClientMetadataException({ description: 'Invalid parameter "client_id".' });
+    }
+
+    return parameters.client_id;
+  }
+
+  /**
+   * Checks if the Client Identifiers match and returns the Query Identifier of the Client of the Request.
+   *
+   * @param queryClientId Identifier of the Client of the Request at the Query Parameters.
+   * @param bodyClientId Identifier of the Client of the Request at the Body Parameters.
+   * @returns Query Identifier of the Client of the Request.
+   */
+  private checkPutClientId(queryClientId: string, bodyClientId: string): string {
+    const queryClientIdentifier = Buffer.from(queryClientId, 'utf8');
+    const bodyClientIdentifier = Buffer.from(bodyClientId, 'utf8');
+
+    if (
+      queryClientIdentifier.length !== bodyClientIdentifier.length ||
+      !timingSafeEqual(queryClientIdentifier, bodyClientIdentifier)
+    ) {
+      throw new InvalidClientMetadataException({ description: 'Mismatching Client Identifiers.' });
+    }
+
+    return queryClientId;
+  }
+
+  /**
+   * Checks and returns the Secret of the Client of the Request.
+   *
+   * @param parameters Parameters of the Put Client Registration Request.
+   * @returns Secret of the Client of the Request.
+   */
+  private getClientSecret(parameters: PutBodyRegistrationRequest): string | undefined {
+    if (typeof parameters.client_secret !== 'undefined' && typeof parameters.client_secret !== 'string') {
+      throw new InvalidClientMetadataException({ description: 'Invalid parameter "client_secret".' });
+    }
+
+    return parameters.client_secret;
+  }
+
+  /**
+   * Checks if the Credentials provided by the Client match it's own data.
+   *
+   * @param client Client of the Put Registration Request.
+   * @param clientSecret Secret of the Client of the Request.
+   */
+  private checkClientCredentials(client: Client, clientSecret: string | undefined): void {
+    if (client.secret == null || typeof clientSecret === 'undefined') {
+      return;
+    }
+
+    const secret = Buffer.from(client.secret, 'utf8');
+    const providedSecret = Buffer.from(clientSecret, 'utf8');
+
+    if (secret.length !== providedSecret.length || !timingSafeEqual(secret, providedSecret)) {
+      throw new InvalidClientMetadataException({ description: 'Mismatching Client Secret.' });
+    }
   }
 
   /**
@@ -901,19 +1088,14 @@ export class RegistrationRequestValidator {
    * Retrieves the Access Token from the Authorization Header and validates it.
    *
    * @param request Http Request.
+   * @param clientId Identifier of the Client of the Request.
    * @param scopes Expected Scopes for the Request.
    * @returns Access Token based on the handle provided by the Client.
    */
-  private async authorize(request: HttpRequest, scopes: string[]): Promise<AccessToken> {
-    const parameters = <GetRegistrationRequest>request.query;
-
-    if (typeof parameters.client_id !== 'string') {
-      throw new InvalidTokenException({ description: 'Invalid Credentials.' });
-    }
-
+  private async authorize(request: HttpRequest, clientId: string, scopes: string[]): Promise<AccessToken> {
     const accessToken = await this.clientAuthorizationHandler.authorize(request);
 
-    const clientIdentifier = Buffer.from(parameters.client_id, 'utf8');
+    const clientIdentifier = Buffer.from(clientId, 'utf8');
     const accessTokenClientIdentifier = Buffer.from(accessToken.client.id, 'utf8');
 
     if (

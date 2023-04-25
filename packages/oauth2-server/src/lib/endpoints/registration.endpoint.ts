@@ -126,27 +126,10 @@ export class RegistrationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handlePost(request: HttpRequest): Promise<HttpResponse> {
-    try {
-      const context = await this.validator.validatePost(request);
-      const registrationResponse = await this.registerClient(context);
+    const context = await this.validator.validatePost(request);
+    const registrationResponse = await this.registerClient(context);
 
-      return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
-    } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
-        error.cause = exc;
-      }
-
-      return new HttpResponse()
-        .setStatus(error.statusCode)
-        .setHeaders(error.headers)
-        .setHeaders(this.headers)
-        .json(error.toJSON());
-    }
+    return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
   }
 
   /**
@@ -158,27 +141,10 @@ export class RegistrationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handleGet(request: HttpRequest): Promise<HttpResponse> {
-    try {
-      const context = await this.validator.validateGet(request);
-      const registrationResponse = await this.getClientMetadata(context);
+    const context = await this.validator.validateGet(request);
+    const registrationResponse = await this.getClientMetadata(context);
 
-      return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
-    } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
-        error.cause = exc;
-      }
-
-      return new HttpResponse()
-        .setStatus(error.statusCode)
-        .setHeaders(error.headers)
-        .setHeaders(this.headers)
-        .json(error.toJSON());
-    }
+    return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
   }
 
   /**
@@ -190,27 +156,10 @@ export class RegistrationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handleDelete(request: HttpRequest): Promise<HttpResponse> {
-    try {
-      const context = await this.validator.validateDelete(request);
-      await this.decomissionClient(context);
+    const context = await this.validator.validateDelete(request);
+    await this.decomissionClient(context);
 
-      return new HttpResponse().setStatus(204).setHeaders(this.headers);
-    } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
-        error.cause = exc;
-      }
-
-      return new HttpResponse()
-        .setStatus(error.statusCode)
-        .setHeaders(error.headers)
-        .setHeaders(this.headers)
-        .json(error.toJSON());
-    }
+    return new HttpResponse().setStatus(204).setHeaders(this.headers);
   }
 
   /**

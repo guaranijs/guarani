@@ -3,6 +3,7 @@ import { Injectable } from '@guarani/di';
 import { randomInt, randomUUID } from 'crypto';
 
 import { PostRegistrationContext } from '../../context/registration/post.registration.context';
+import { PutRegistrationContext } from '../../context/registration/put.registration.context';
 import { Client } from '../../entities/client.entity';
 import { ClientServiceInterface } from '../client.service.interface';
 
@@ -93,6 +94,48 @@ export class ClientService implements ClientServiceInterface {
     if (index > -1) {
       this.clients.splice(index, 1);
     }
+  }
+
+  public async update(client: Client, context: PutRegistrationContext): Promise<void> {
+    const index = this.clients.findIndex((registeredClient) => registeredClient.id === client.id);
+
+    Object.assign<Client, Partial<Client>>(client, {
+      name: context.clientName,
+      redirectUris: context.redirectUris.map((redirectUri) => redirectUri.toString()),
+      responseTypes: context.responseTypes,
+      grantTypes: context.grantTypes,
+      applicationType: context.applicationType,
+      authenticationMethod: context.authenticationMethod,
+      authenticationSigningAlgorithm: context.authenticationSigningAlgorithm,
+      scopes: context.scopes,
+      clientUri: context.clientUri?.toString(),
+      logoUri: context.logoUri?.toString(),
+      contacts: context.contacts,
+      policyUri: context.policyUri?.toString(),
+      tosUri: context.tosUri?.toString(),
+      jwksUri: context.jwksUri?.toString(),
+      jwks: context.jwks,
+      // sectorIdentifierUri: context.sectorIdentifierUri,
+      // subjectType: context.subjectType,
+      idTokenSignedResponseAlgorithm: context.idTokenSignedResponseAlgorithm,
+      // idTokenEncryptedResponseKeyWrap: context.idTokenEncryptedResponseKeyWrap,
+      // idTokenEncryptedResponseContentEncryption: context.idTokenEncryptedResponseContentEncryption,
+      // userinfoSignedResponseAlgorithm: context.userinfoSignedResponseAlgorithm,
+      // userinfoEncryptedResponseKeyWrap: context.userinfoEncryptedResponseKeyWrap,
+      // userinfoEncryptedResponseContentEncryption: context.userinfoEncryptedResponseContentEncryption,
+      // requestObjectSigningAlgorithm: context.requestObjectSigningAlgorithm,
+      // requestObjectEncryptionKeyWrap: context.requestObjectEncryptionKeyWrap,
+      // requestObjectEncryptionContentEncryption: context.requestObjectEncryptionContentEncryption,
+      defaultMaxAge: context.defaultMaxAge,
+      requireAuthTime: context.requireAuthTime,
+      defaultAcrValues: context.defaultAcrValues,
+      initiateLoginUri: context.initiateLoginUri?.toString(),
+      // requestUris: context.requestUris,
+      softwareId: context.softwareId,
+      softwareVersion: context.softwareVersion,
+    });
+
+    this.clients[index] = client;
   }
 
   private secretToken(): string {

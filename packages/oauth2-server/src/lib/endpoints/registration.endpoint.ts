@@ -7,6 +7,7 @@ import { URL } from 'url';
 import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
 import { GetRegistrationContext } from '../context/registration/get.registration.context';
 import { PostRegistrationContext } from '../context/registration/post.registration.context';
+import { PutRegistrationContext } from '../context/registration/put.registration.context';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpMethod } from '../http/http-method.type';
@@ -14,6 +15,7 @@ import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { GetRegistrationResponse } from '../responses/registration/get.registration-response';
 import { PostRegistrationResponse } from '../responses/registration/post.registration-response';
+import { PutRegistrationResponse } from '../responses/registration/put.registration-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { ClientServiceInterface } from '../services/client.service.interface';
@@ -75,6 +77,10 @@ export class RegistrationEndpoint implements EndpointInterface {
     if (typeof clientService.remove !== 'function') {
       throw new TypeError('Missing implementation of required method "ClientServiceInterface.remove".');
     }
+
+    if (typeof clientService.update !== 'function') {
+      throw new TypeError('Missing implementation of required method "ClientServiceInterface.update".');
+    }
   }
 
   /**
@@ -96,7 +102,7 @@ export class RegistrationEndpoint implements EndpointInterface {
           return await this.handlePost(request);
 
         case 'PUT':
-          return null!;
+          return await this.handlePut(request);
       }
     } catch (exc: unknown) {
       let error: OAuth2Exception;
@@ -160,6 +166,21 @@ export class RegistrationEndpoint implements EndpointInterface {
     await this.decomissionClient(context);
 
     return new HttpResponse().setStatus(204).setHeaders(this.headers);
+  }
+
+  /**
+   * Creates a Http JSON Dynamic Client Registration Response.
+   *
+   * This method is responsible for updating the metadata of the Client.
+   *
+   * @param request Http Request.
+   * @returns Http Response.
+   */
+  private async handlePut(request: HttpRequest): Promise<HttpResponse> {
+    const context = await this.validator.validatePut(request);
+    const registrationResponse = await this.updateMetadata(context);
+
+    return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
   }
 
   /**
@@ -294,5 +315,69 @@ export class RegistrationEndpoint implements EndpointInterface {
    */
   private async decomissionClient(context: DeleteRegistrationContext): Promise<void> {
     await this.clientService.remove!(context.client);
+  }
+
+  /**
+   * Updates the Metadata of the Client based on the provided parameters and returns it.
+   *
+   * @param context Parameters of the Dynamic Client Registration Context.
+   * @returns Updated Metadata of the Client.
+   */
+  private async updateMetadata(context: PutRegistrationContext): Promise<PutRegistrationResponse> {
+    const { client } = context;
+
+    await this.clientService.update!(client, context);
+
+    const registrationClientUri = new URL(this.path, this.settings.issuer);
+
+    registrationClientUri.searchParams.set('client_id', client.id);
+
+    return removeUndefined<PostRegistrationResponse>({
+      client_id: client.id,
+      client_secret: client.secret ?? undefined,
+      client_id_issued_at:
+        client.secretIssuedAt != null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
+      client_secret_expires_at:
+        client.secret != null
+          ? client.secretExpiresAt != null
+            ? Math.floor(client.secretExpiresAt.getTime() / 1000)
+            : 0
+          : undefined,
+      registration_access_token: context.accessToken.handle,
+      registration_client_uri: registrationClientUri.href,
+      redirect_uris: client.redirectUris,
+      response_types: client.responseTypes,
+      grant_types: client.grantTypes,
+      application_type: client.applicationType,
+      client_name: client.name,
+      scope: client.scopes.join(' '),
+      contacts: client.contacts ?? undefined,
+      logo_uri: client.logoUri ?? undefined,
+      client_uri: client.clientUri ?? undefined,
+      policy_uri: client.policyUri ?? undefined,
+      tos_uri: client.tosUri ?? undefined,
+      jwks_uri: client.jwksUri ?? undefined,
+      jwks: client.jwks ?? undefined,
+      // sector_identifier_uri: ,
+      // subject_type: ,
+      id_token_signed_response_alg: client.idTokenSignedResponseAlgorithm ?? undefined,
+      // id_token_encrypted_response_alg: ,
+      // id_token_encrypted_response_enc: ,
+      // userinfo_signed_response_alg: ,
+      // userinfo_encrypted_response_alg: ,
+      // userinfo_encrypted_response_enc: ,
+      // request_object_signing_alg: ,
+      // request_object_encryption_alg: ,
+      // request_object_encryption_enc: ,
+      token_endpoint_auth_method: client.authenticationMethod,
+      token_endpoint_auth_signing_alg: client.authenticationSigningAlgorithm,
+      default_max_age: client.defaultMaxAge ?? undefined,
+      require_auth_time: client.requireAuthTime,
+      default_acr_values: client.defaultAcrValues ?? undefined,
+      initiate_login_uri: client.initiateLoginUri ?? undefined,
+      // request_uris: ,
+      software_id: client.softwareId ?? undefined,
+      software_version: client.softwareVersion ?? undefined,
+    });
   }
 }

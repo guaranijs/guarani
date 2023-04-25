@@ -6,6 +6,7 @@ import { OutgoingHttpHeaders } from 'http';
 import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
 import { GetRegistrationContext } from '../context/registration/get.registration.context';
 import { PostRegistrationContext } from '../context/registration/post.registration.context';
+import { PutRegistrationContext } from '../context/registration/put.registration.context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { HttpMethod } from '../http/http-method.type';
@@ -13,8 +14,11 @@ import { HttpRequest } from '../http/http.request';
 import { DeleteRegistrationRequest } from '../requests/registration/delete.registration-request';
 import { GetRegistrationRequest } from '../requests/registration/get.registration-request';
 import { PostRegistrationRequest } from '../requests/registration/post.registration-request';
+import { PutBodyRegistrationRequest } from '../requests/registration/put-body.registration-request';
+import { PutQueryRegistrationRequest } from '../requests/registration/put-query.registration-request';
 import { GetRegistrationResponse } from '../responses/registration/get.registration-response';
 import { PostRegistrationResponse } from '../responses/registration/post.registration-response';
+import { PutRegistrationResponse } from '../responses/registration/put.registration-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { ClientServiceInterface } from '../services/client.service.interface';
@@ -81,6 +85,7 @@ describe('Dynamic Client Registration Endpoint', () => {
       create: jest.fn(),
       findOne: jest.fn(),
       remove: jest.fn(),
+      update: jest.fn(),
     },
     true
   );
@@ -160,6 +165,24 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       expect(() => container.resolve(RegistrationEndpoint)).toThrow(
         new TypeError('Missing implementation of required method "ClientServiceInterface.remove".')
+      );
+    });
+
+    it('should throw when the client service does not implement the method "update".', () => {
+      const clientServiceMock = jest.mocked<ClientServiceInterface>({
+        create: jest.fn(),
+        findOne: jest.fn(),
+        remove: jest.fn(),
+      });
+
+      container.delete<ClientServiceInterface>(CLIENT_SERVICE);
+      container.delete(RegistrationEndpoint);
+
+      container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
+      container.bind(RegistrationEndpoint).toSelf().asSingleton();
+
+      expect(() => container.resolve(RegistrationEndpoint)).toThrow(
+        new TypeError('Missing implementation of required method "ClientServiceInterface.update".')
       );
     });
   });
@@ -480,6 +503,170 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       expect(clientServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(clientServiceMock.remove).toHaveBeenCalledWith(client);
+    });
+  });
+
+  describe('handle() (PUT)', () => {
+    let request: HttpRequest;
+
+    beforeEach(() => {
+      request = new HttpRequest({
+        body: <PutBodyRegistrationRequest>{
+          client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
+          // client_secret: ,
+          redirect_uris: ['https://client.example.com/oauth/callback/'],
+          response_types: ['code'],
+          grant_types: ['authorization_code', 'refresh_token'],
+          application_type: 'web',
+          client_name: 'Updated Test Client #1',
+          scope: 'openid profile email phone address',
+          contacts: ['johndoe@email.com'],
+          logo_uri: 'https://some.cdn.com/client-logo.jpg',
+          client_uri: 'https://client.example.com/',
+          policy_uri: 'https://client.example.com/policy/',
+          tos_uri: 'https://client.example.com/terms-of-service/',
+          jwks_uri: 'https://client.example.com/oauth/jwks/',
+          jwks: undefined,
+          // sector_identifier_uri: ,
+          // subject_type: ,
+          id_token_signed_response_alg: 'RS256',
+          // id_token_encrypted_response_alg: ,
+          // id_token_encrypted_response_enc: ,
+          // userinfo_signed_response_alg: ,
+          // userinfo_encrypted_response_alg: ,
+          // userinfo_encrypted_response_enc: ,
+          // request_object_signing_alg: ,
+          // request_object_encryption_alg: ,
+          // request_object_encryption_enc: ,
+          token_endpoint_auth_method: 'private_key_jwt',
+          token_endpoint_auth_signing_alg: 'RS256',
+          default_max_age: 60 * 60 * 24 * 15,
+          require_auth_time: true,
+          default_acr_values: ['guarani:acr:2fa', 'guarani:acr:1fa'],
+          initiate_login_uri: 'https://client.example.com/oauth/initiate/',
+          // request_uris: ,
+          software_id: 'TJ9C-X43C-95V1LK03',
+          software_version: 'v1.4.37',
+        },
+        cookies: {},
+        headers: {},
+        method: 'PUT',
+        path: '/oauth/register',
+        query: <PutQueryRegistrationRequest>{ client_id: 'client_id' },
+      });
+    });
+
+    it('should return the updated metadata of the registered client.', async () => {
+      const client = <Client>{
+        id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
+        secret: null,
+        secretIssuedAt: null,
+        secretExpiresAt: null,
+        name: 'Test Client #1',
+        redirectUris: ['https://client.example.com/oauth/callback/'],
+        responseTypes: ['code'],
+        grantTypes: ['authorization_code', 'refresh_token'],
+        applicationType: 'web',
+        authenticationMethod: 'private_key_jwt',
+        authenticationSigningAlgorithm: 'RS256',
+        scopes: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
+        clientUri: 'https://client.example.com/',
+        logoUri: 'https://some.cdn.com/client-logo.jpg',
+        contacts: ['johndoe@email.com'],
+        policyUri: 'https://client.example.com/policy/',
+        tosUri: 'https://client.example.com/terms-of-service/',
+        jwksUri: 'https://client.example.com/oauth/jwks/',
+        jwks: null,
+        // sectorIdentifierUri: ,
+        // subjectType: ,
+        idTokenSignedResponseAlgorithm: 'RS256',
+        // idTokenEncryptedResponseKeyWrap: ,
+        // idTokenEncryptedResponseContentEncryption: ,
+        // userinfoSignedResponseAlgorithm: ,
+        // userinfoEncryptedResponseKeyWrap: ,
+        // userinfoEncryptedResponseContentEncryption: ,
+        // requestObjectSigningAlgorithm: ,
+        // requestObjectEncryptionKeyWrap: ,
+        // requestObjectEncryptionContentEncryption: ,
+        defaultMaxAge: 60 * 60 * 24 * 15,
+        requireAuthTime: true,
+        defaultAcrValues: ['guarani:acr:2fa', 'guarani:acr:1fa'],
+        initiateLoginUri: 'https://client.example.com/oauth/initiate/',
+        // requestUris: ,
+        softwareId: 'TJ9C-X43C-95V1LK03',
+        softwareVersion: 'v1.4.37',
+        createdAt: new Date(now),
+      };
+
+      const accessToken = <AccessToken>{ handle: 'access_token', client };
+
+      const context = <PutRegistrationContext>{
+        queryParameters: <PutQueryRegistrationRequest>request.query,
+        bodyParameters: <PutBodyRegistrationRequest>request.body,
+        accessToken,
+        client,
+        clientId: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
+        clientSecret: undefined,
+        redirectUris: [new URL('https://client.example.com/oauth/callback/')],
+        responseTypes: ['code'],
+        grantTypes: ['authorization_code', 'refresh_token'],
+        applicationType: 'web',
+        clientName: 'Updated Test Client #1',
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        contacts: ['johndoe@email.com'],
+        logoUri: new URL('https://some.cdn.com/client-logo.jpg'),
+        clientUri: new URL('https://client.example.com/'),
+        policyUri: new URL('https://client.example.com/policy/'),
+        tosUri: new URL('https://client.example.com/terms-of-service/'),
+        jwksUri: new URL('https://client.example.com/oauth/jwks/'),
+        jwks: undefined,
+        // sectorIdentifierUri: ,
+        // subjectType: ,
+        idTokenSignedResponseAlgorithm: 'RS256',
+        // idTokenEncryptedResponseKeyWrap: ,
+        // idTokenEncryptedResponseContentEncryption: ,
+        // userinfoSignedResponseAlgorithm: ,
+        // userinfoEncryptedResponseKeyWrap: ,
+        // userinfoEncryptedResponseContentEncryption: ,
+        // requestObjectSigningAlgorithm: ,
+        // requestObjectEncryptionKeyWrap: ,
+        // requestObjectEncryptionContentEncryption: ,
+        authenticationMethod: 'private_key_jwt',
+        authenticationSigningAlgorithm: 'RS256',
+        defaultMaxAge: 60 * 60 * 24 * 15,
+        requireAuthTime: true,
+        defaultAcrValues: ['guarani:acr:2fa', 'guarani:acr:1fa'],
+        initiateLoginUri: new URL('https://client.example.com/oauth/initiate/'),
+        // requestUris: ,
+        softwareId: 'TJ9C-X43C-95V1LK03',
+        softwareVersion: 'v1.4.37',
+      };
+
+      const registrationResponse = <PutRegistrationResponse>{
+        registration_access_token: 'access_token',
+        registration_client_uri:
+          'https://server.example.com/oauth/register?client_id=b1eeace9-2b0c-468e-a444-733befc3b35d',
+        ...context.bodyParameters,
+      };
+
+      validatorMock.validatePut.mockResolvedValueOnce(context);
+
+      clientServiceMock.update!.mockImplementationOnce(async (client, context) => {
+        Object.assign<Client, Partial<Client>>(client, { name: context.clientName, scopes: context.scopes });
+      });
+
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toBe(200);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(
+        removeUndefined<PutRegistrationResponse>(registrationResponse)
+      );
     });
   });
 });

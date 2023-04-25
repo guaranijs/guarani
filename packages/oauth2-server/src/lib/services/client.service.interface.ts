@@ -1,4 +1,5 @@
 import { PostRegistrationContext } from '../context/registration/post.registration.context';
+import { PutRegistrationContext } from '../context/registration/put.registration.context';
 import { Client } from '../entities/client.entity';
 
 /**
@@ -33,4 +34,14 @@ export interface ClientServiceInterface {
    * @param client Client to be removed from the Authorization Server.
    */
   remove?(client: Client): Promise<void>;
+
+  /**
+   * Updates the Metadata of the provided Client.
+   *
+   * *note: this method is only required when enabling dynamic client registration.*
+   *
+   * @param client Client to be removed from the Authorization Server.
+   * @param context PUT Registration Request Context.
+   */
+  update?(client: Client, context: PutRegistrationContext): Promise<void>;
 }

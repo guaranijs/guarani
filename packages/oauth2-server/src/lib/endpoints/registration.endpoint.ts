@@ -135,7 +135,7 @@ export class RegistrationEndpoint implements EndpointInterface {
     const context = await this.validator.validatePost(request);
     const registrationResponse = await this.registerClient(context);
 
-    return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
+    return new HttpResponse().setStatus(201).setHeaders(this.headers).json(registrationResponse);
   }
 
   /**

@@ -331,7 +331,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
         const response = await endpoint.handle(request);
 
-        expect(response.statusCode).toBe(200);
+        expect(response.statusCode).toBe(201);
 
         expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
           'Content-Type': 'application/json',

@@ -73,10 +73,10 @@ describe('Device Authorization Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest<DeviceAuthorizationRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<DeviceAuthorizationRequest>({
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},
@@ -100,7 +100,7 @@ describe('Device Authorization Endpoint', () => {
       };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.data,
+        parameters: <DeviceAuthorizationRequest>request.body,
         client,
         scopes,
       });

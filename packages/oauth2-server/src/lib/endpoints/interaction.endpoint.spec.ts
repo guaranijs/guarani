@@ -67,10 +67,10 @@ describe('Interaction Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest<InteractionRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<InteractionRequest>({
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},
@@ -125,7 +125,7 @@ describe('Interaction Endpoint', () => {
       const interactionResponse: Record<string, any> = { skip: true, client: { id: 'client_id' } };
 
       const context = <InteractionContext<InteractionRequest>>{
-        parameters: request.data,
+        parameters: <InteractionRequest>request.query,
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'login',
           handleContext: jest.fn().mockResolvedValueOnce(interactionResponse),
@@ -148,7 +148,7 @@ describe('Interaction Endpoint', () => {
       const interactionResponse: Record<string, any> = { redirect_to: 'https://server.example.com/oauth/authorize' };
 
       const context = <InteractionContext<InteractionRequest>>{
-        parameters: request.data,
+        parameters: <InteractionRequest>request.body,
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'login',
           handleContext: jest.fn(),

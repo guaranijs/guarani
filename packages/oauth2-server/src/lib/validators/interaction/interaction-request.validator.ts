@@ -31,8 +31,8 @@ export abstract class InteractionRequestValidator<
    * @param request Http Request.
    * @returns Context Interaction Context.
    */
-  public async validateContext(request: HttpRequest<TContextRequest>): Promise<TContextContext> {
-    const { data: parameters } = request;
+  public async validateContext(request: HttpRequest): Promise<TContextContext> {
+    const parameters = <TContextRequest>request.query;
 
     const interactionType = this.getInteractionType(parameters);
 
@@ -45,8 +45,8 @@ export abstract class InteractionRequestValidator<
    * @param request Http Request.
    * @returns Decision Interaction Context.
    */
-  public async validateDecision(request: HttpRequest<TDecisionRequest>): Promise<TDecisionContext> {
-    const { data: parameters } = request;
+  public async validateDecision(request: HttpRequest): Promise<TDecisionContext> {
+    const parameters = <TDecisionRequest>request.body;
 
     const interactionType = this.getInteractionType(parameters);
 

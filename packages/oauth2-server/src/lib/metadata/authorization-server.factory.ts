@@ -21,6 +21,7 @@ import { ENDPOINT } from '../endpoints/endpoint.token';
 import { InteractionEndpoint } from '../endpoints/interaction.endpoint';
 import { IntrospectionEndpoint } from '../endpoints/introspection.endpoint';
 import { JsonWebKeySetEndpoint } from '../endpoints/jsonwebkeyset.endpoint';
+import { RegistrationEndpoint } from '../endpoints/registration.endpoint';
 import { RevocationEndpoint } from '../endpoints/revocation.endpoint';
 import { TokenEndpoint } from '../endpoints/token.endpoint';
 import { UserinfoEndpoint } from '../endpoints/userinfo.endpoint';
@@ -86,6 +87,7 @@ import { DeviceAuthorizationRequestValidator } from '../validators/device-author
 import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
 import { interactionRequestValidatorsRegistry } from '../validators/interaction/interaction-request.validator.registry';
 import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
+import { RegistrationRequestValidator } from '../validators/registration-request.validator';
 import { RevocationRequestValidator } from '../validators/revocation-request.validator';
 import { TokenRequestValidator } from '../validators/token/token-request.validator';
 import { tokenRequestValidatorsRegistry } from '../validators/token/token-request.validator.registry';
@@ -359,6 +361,10 @@ export class AuthorizationServerFactory {
       this.container.bind<EndpointInterface>(ENDPOINT).toClass(IntrospectionEndpoint).asSingleton();
     }
 
+    if (this.authorizationServerOptions.enableRegistrationEndpoint === true) {
+      this.container.bind<EndpointInterface>(ENDPOINT).toClass(RegistrationEndpoint).asSingleton();
+    }
+
     if (this.settings.jwks instanceof JsonWebKeySet) {
       this.container.bind<EndpointInterface>(ENDPOINT).toClass(JsonWebKeySetEndpoint).asSingleton();
     }
@@ -398,6 +404,10 @@ export class AuthorizationServerFactory {
 
     if (this.authorizationServerOptions.enableRevocationEndpoint !== false) {
       this.container.bind(RevocationRequestValidator).toSelf().asSingleton();
+    }
+
+    if (this.authorizationServerOptions.enableRegistrationEndpoint === true) {
+      this.container.bind(RegistrationRequestValidator).toSelf().asSingleton();
     }
 
     if (this.settings.grantTypes.includes('urn:ietf:params:oauth:grant-type:device_code')) {

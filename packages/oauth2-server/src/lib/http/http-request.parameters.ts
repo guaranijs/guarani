@@ -1,5 +1,7 @@
 import { IncomingHttpHeaders } from 'http';
 
+import { HttpMethod } from './http-method.type';
+
 /**
  * Parameters of the Http Request.
  */
@@ -7,7 +9,7 @@ export interface HttpRequestParameters {
   /**
    * Method of the Http Request.
    */
-  readonly method: string;
+  readonly method: HttpMethod;
 
   /**
    * Path of the Http Request.

@@ -9,7 +9,7 @@ import { HttpRequestParameters } from './http-request.parameters';
  * This abstraction is used to facilitate the integration of the OAuth 2.0 Authorization Server Framework
  * with the multiple Http Web Servers developed in NodeJS.
  */
-export class HttpRequest<TData extends Record<string, any> = Record<string, any>> {
+export class HttpRequest {
   /**
    * Method of the Http Request.
    */
@@ -41,18 +41,10 @@ export class HttpRequest<TData extends Record<string, any> = Record<string, any>
   public readonly body: Record<string, any>;
 
   /**
-   * Data of the Http Request based on the Http Method.
+   * Instantiates a new Http Request.
+   *
+   * @param parameters Parameters of the Http Request.
    */
-  public get data(): TData {
-    switch (this.method) {
-      case 'GET':
-        return <TData>this.query;
-
-      case 'POST':
-        return <TData>this.body;
-    }
-  }
-
   public constructor(parameters: HttpRequestParameters) {
     this.method = this.checkHttpMethod(parameters.method);
     this.headers = parameters.headers;
@@ -67,15 +59,15 @@ export class HttpRequest<TData extends Record<string, any> = Record<string, any>
    *
    * @param method Http Method provided by the application.
    */
-  private checkHttpMethod(method: string): HttpMethod {
+  private checkHttpMethod(method: HttpMethod): HttpMethod {
     if (typeof method !== 'string') {
       throw new Error('The Http Method must be a valid string.');
     }
 
-    if (method !== 'GET' && method !== 'POST') {
+    if (method !== 'DELETE' && method !== 'GET' && method !== 'POST' && method !== 'PUT') {
       throw new Error(`The Http Method "${method}" is invalid.`);
     }
 
-    return <HttpMethod>method;
+    return method;
   }
 }

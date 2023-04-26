@@ -106,10 +106,10 @@ describe('Introspection Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<IntrospectionRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<IntrospectionRequest>({
+      request = new HttpRequest({
         body: { token: 'access_token' },
         cookies: {},
         headers: {},
@@ -154,7 +154,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.data,
+        parameters: <IntrospectionRequest>request.body,
         client,
         token: null,
         tokenType: null,
@@ -180,7 +180,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.data,
+        parameters: <IntrospectionRequest>request.body,
         client,
         token: null,
         tokenType: null,
@@ -204,7 +204,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.data,
+        parameters: <IntrospectionRequest>request.body,
         client,
         token: null,
         tokenType: null,
@@ -217,6 +217,22 @@ describe('Introspection Request Validator', () => {
       const findRefreshTokenOrder = refreshTokenServiceMock.findOne.mock.invocationCallOrder[0]!;
 
       expect(findAccessTokenOrder).toBeLessThan(findRefreshTokenOrder);
+    });
+
+    it('should return a null introspection context token when the access token does not have a client.', async () => {
+      const client = <Client>{ id: 'client_id' };
+      const accessToken = <AccessToken>{ handle: 'access_token' };
+
+      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
+      accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
+      refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
+
+      await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
+        parameters: <IntrospectionRequest>request.body,
+        client,
+        token: null,
+        tokenType: null,
+      });
     });
 
     it('should return a null introspection context token when trying to revoke a refresh token and the authorization server does not support it.', async () => {
@@ -239,7 +255,7 @@ describe('Introspection Request Validator', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.data,
+        parameters: <IntrospectionRequest>request.body,
         client,
         token: null,
         tokenType: null,
@@ -258,7 +274,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.data,
+        parameters: <IntrospectionRequest>request.body,
         client,
         token: accessToken,
         tokenType: 'access_token',
@@ -275,7 +291,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.data,
+        parameters: <IntrospectionRequest>request.body,
         client,
         token: refreshToken,
         tokenType: 'refresh_token',

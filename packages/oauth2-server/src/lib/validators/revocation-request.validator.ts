@@ -64,15 +64,15 @@ export class RevocationRequestValidator {
    * @param request Http Request.
    * @returns Revocation Context.
    */
-  public async validate(request: HttpRequest<RevocationRequest>): Promise<RevocationContext> {
-    const { data: parameters } = request;
+  public async validate(request: HttpRequest): Promise<RevocationContext> {
+    const parameters = <RevocationRequest>request.body;
 
     this.checkParameters(parameters);
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
     const tokenResult = await this.findToken(parameters.token, parameters.token_type_hint);
 
-    if (tokenResult === null) {
+    if (tokenResult === null || tokenResult.token.client == null) {
       return { client, parameters, token: null, tokenType: null };
     }
 

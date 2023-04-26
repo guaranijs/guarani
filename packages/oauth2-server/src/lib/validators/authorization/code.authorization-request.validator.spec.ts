@@ -157,10 +157,10 @@ describe('Code Authorization Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<CodeAuthorizationRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<CodeAuthorizationRequest>({
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},
@@ -273,7 +273,7 @@ describe('Code Authorization Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<CodeAuthorizationContext>({
-        parameters: request.data,
+        parameters: <CodeAuthorizationRequest>request.query,
         cookies: request.cookies,
         responseType: responseTypesMocks[0]!,
         client,

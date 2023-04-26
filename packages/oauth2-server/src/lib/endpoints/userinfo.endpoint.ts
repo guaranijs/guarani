@@ -4,7 +4,7 @@ import { OutgoingHttpHeaders } from 'http';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
+import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
@@ -113,8 +113,12 @@ export class UserinfoEndpoint implements EndpointInterface {
       });
     }
 
+    if (accessToken.client == null) {
+      throw new InvalidTokenException({ description: 'Invalid Credentials.' });
+    }
+
     if (accessToken.user == null) {
-      throw new InvalidRequestException({ description: 'Invalid Credentials.' });
+      throw new InvalidTokenException({ description: 'Invalid Credentials.' });
     }
 
     return accessToken;

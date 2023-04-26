@@ -37,6 +37,41 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     return accessToken;
   }
 
+  public async createInitialAccessToken(): Promise<AccessToken> {
+    const now = Date.now();
+
+    const accessToken: AccessToken = {
+      handle: (await randomBytesAsync(16)).toString('hex'),
+      scopes: ['client:create'],
+      isRevoked: false,
+      issuedAt: new Date(now),
+      expiresAt: new Date(now + 300000),
+      validAfter: new Date(now),
+    };
+
+    this.accessTokens.push(accessToken);
+
+    return accessToken;
+  }
+
+  public async createRegistrationAccessToken(client: Client): Promise<AccessToken> {
+    const now = Date.now();
+
+    const accessToken: AccessToken = {
+      handle: (await randomBytesAsync(16)).toString('hex'),
+      scopes: ['client:manage'],
+      isRevoked: false,
+      issuedAt: new Date(now),
+      expiresAt: new Date(now + 86400000),
+      validAfter: new Date(now),
+      client,
+    };
+
+    this.accessTokens.push(accessToken);
+
+    return accessToken;
+  }
+
   public async findOne(handle: string): Promise<AccessToken | null> {
     return this.accessTokens.find((accessToken) => accessToken.handle === handle) ?? null;
   }

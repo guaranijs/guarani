@@ -36,10 +36,10 @@ describe('Device Authorization Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<DeviceAuthorizationRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<DeviceAuthorizationRequest>({
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},
@@ -91,7 +91,7 @@ describe('Device Authorization Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<DeviceAuthorizationContext>({
-        parameters: request.data,
+        parameters: <DeviceAuthorizationRequest>request.body,
         client,
         scopes,
       });

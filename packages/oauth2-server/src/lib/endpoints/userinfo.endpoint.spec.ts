@@ -4,7 +4,7 @@ import { OutgoingHttpHeaders } from 'http';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
+import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
@@ -115,13 +115,32 @@ describe('Userinfo Endpoint', () => {
       );
     });
 
-    it('should return an error response when the access token does not have a user.', async () => {
+    it('should return an error response when the access token does not have a client.', async () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
       };
 
-      const error = new InvalidRequestException({ description: 'Invalid Credentials.' });
+      const error = new InvalidTokenException({ description: 'Invalid Credentials.' });
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(
+        new HttpResponse()
+          .setStatus(error.statusCode)
+          .setHeaders({ ...error.headers, ...endpoint['headers'] })
+          .json(error.toJSON())
+      );
+    });
+
+    it('should return an error response when the access token does not have a user.', async () => {
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        client: { id: 'client_id' },
+      };
+
+      const error = new InvalidTokenException({ description: 'Invalid Credentials.' });
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -137,6 +156,7 @@ describe('Userinfo Endpoint', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        client: { id: 'client_id' },
         user: { id: 'user_id' },
       };
 

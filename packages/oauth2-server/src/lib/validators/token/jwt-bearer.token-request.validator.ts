@@ -91,8 +91,8 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * @param request Http Request.
    * @returns Token Context.
    */
-  public override async validate(request: HttpRequest<JwtBearerTokenRequest>): Promise<JwtBearerTokenContext> {
-    const { data: parameters } = request;
+  public override async validate(request: HttpRequest): Promise<JwtBearerTokenContext> {
+    const parameters = <JwtBearerTokenRequest>request.body;
 
     const context = await super.validate(request);
 

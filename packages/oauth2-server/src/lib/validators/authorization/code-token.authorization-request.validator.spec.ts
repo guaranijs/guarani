@@ -150,10 +150,10 @@ describe('Code & Token Authorization Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<CodeAuthorizationRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<CodeAuthorizationRequest>({
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},

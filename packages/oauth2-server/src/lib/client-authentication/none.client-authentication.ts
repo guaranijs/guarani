@@ -11,7 +11,7 @@ import { ClientAuthenticationInterface } from './client-authentication.interface
 /**
  * Parameters passed by the Client on the Http Request Body.
  */
-export interface NoneCredentials {
+interface NoneCredentials {
   /**
    * Client Identifier.
    */
@@ -61,8 +61,9 @@ export class NoneClientAuthentication implements ClientAuthenticationInterface {
    *
    * @param request Http Request.
    */
-  public hasBeenRequested(request: HttpRequest<NoneCredentials>): boolean {
-    return typeof request.data.client_id === 'string' && request.data.client_secret === undefined;
+  public hasBeenRequested(request: HttpRequest): boolean {
+    const { client_id: clientId, client_secret: clientSecret } = <NoneCredentials>request.body;
+    return typeof clientId === 'string' && clientSecret === undefined;
   }
 
   /**
@@ -71,8 +72,8 @@ export class NoneClientAuthentication implements ClientAuthenticationInterface {
    * @param request Http Request.
    * @returns Authenticated Client.
    */
-  public async authenticate(request: HttpRequest<NoneCredentials>): Promise<Client> {
-    const { client_id: clientId } = request.data;
+  public async authenticate(request: HttpRequest): Promise<Client> {
+    const { client_id: clientId } = request.body;
 
     const client = await this.clientService.findOne(clientId);
 

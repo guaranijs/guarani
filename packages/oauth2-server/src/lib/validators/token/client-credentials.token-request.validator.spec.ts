@@ -62,10 +62,10 @@ describe('Client Credentials Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<ClientCredentialsTokenRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<ClientCredentialsTokenRequest>({
+      request = new HttpRequest({
         body: { grant_type: 'client_credentials' },
         cookies: {},
         headers: {},
@@ -112,7 +112,7 @@ describe('Client Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ClientCredentialsTokenContext>({
-        parameters: request.data,
+        parameters: <ClientCredentialsTokenRequest>request.body,
         client,
         grantType: grantTypesMocks[1]!,
         scopes,
@@ -128,7 +128,7 @@ describe('Client Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(client.scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ClientCredentialsTokenContext>({
-        parameters: request.data,
+        parameters: <ClientCredentialsTokenRequest>request.body,
         client,
         grantType: grantTypesMocks[1]!,
         scopes: client.scopes,

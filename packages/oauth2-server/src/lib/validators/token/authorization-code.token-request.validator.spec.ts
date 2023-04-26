@@ -72,10 +72,10 @@ describe('Authorization Code Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<AuthorizationCodeTokenRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<AuthorizationCodeTokenRequest>({
+      request = new HttpRequest({
         body: {
           grant_type: 'authorization_code',
           code: 'code',
@@ -207,7 +207,7 @@ describe('Authorization Code Token Request Validator', () => {
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationCodeTokenContext>({
-        parameters: request.data,
+        parameters: <AuthorizationCodeTokenRequest>request.body,
         client,
         grantType: grantTypesMocks[0]!,
         authorizationCode,

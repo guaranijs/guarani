@@ -27,8 +27,6 @@ const unsupportedHttpMethods: string[] = [
   'trace',
   'patch',
   'HEAD',
-  'PUT',
-  'DELETE',
   'CONNECT',
   'OPTIONS',
   'TRACE',
@@ -48,6 +46,23 @@ describe('Http Request', () => {
     );
   });
 
+  it('should return a valid http delete request.', () => {
+    let httpRequest!: HttpRequest;
+
+    const parameters: HttpRequestParameters = {
+      method: 'DELETE',
+      path: '/p/a/t/h',
+      query: { entity_id: 'entity_id' },
+      headers: { origin: 'server.example.com' },
+      cookies: { guarani: 'guarani_cookie' },
+      body: {},
+    };
+
+    expect(() => (httpRequest = new HttpRequest(parameters))).not.toThrow();
+
+    expect(httpRequest).toMatchObject(parameters);
+  });
+
   it('should return a valid http get request.', () => {
     let httpRequest!: HttpRequest;
 
@@ -63,7 +78,6 @@ describe('Http Request', () => {
     expect(() => (httpRequest = new HttpRequest(parameters))).not.toThrow();
 
     expect(httpRequest).toMatchObject(parameters);
-    expect(httpRequest.data).toStrictEqual(parameters.query);
   });
 
   it('should return a valid http post request.', () => {
@@ -81,6 +95,22 @@ describe('Http Request', () => {
     expect(() => (httpRequest = new HttpRequest(parameters))).not.toThrow();
 
     expect(httpRequest).toMatchObject(parameters);
-    expect(httpRequest.data).toStrictEqual(parameters.body);
+  });
+
+  it('should return a valid http put request.', () => {
+    let httpRequest!: HttpRequest;
+
+    const parameters: HttpRequestParameters = {
+      method: 'PUT',
+      path: '/p/a/t/h',
+      query: { entity_id: 'entity_id' },
+      headers: { origin: 'server.example.com' },
+      cookies: { guarani: 'guarani_cookie' },
+      body: { foo: 'foo', bar: 'bar' },
+    };
+
+    expect(() => (httpRequest = new HttpRequest(parameters))).not.toThrow();
+
+    expect(httpRequest).toMatchObject(parameters);
   });
 });

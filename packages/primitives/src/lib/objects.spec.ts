@@ -1,4 +1,5 @@
-import { removeUndefined } from './objects';
+import { Buffer } from 'buffer';
+import { isPlainObject, removeUndefined } from './objects';
 
 describe('removeUndefined()', () => {
   it('should remove all undefined values from an object.', () => {
@@ -18,5 +19,18 @@ describe('removeUndefined()', () => {
       address: { streetAddress: '123 1st Avenue', referencePoint: null, trees: ['Oak', null] },
       hobbies: ['Jogging', { name: 'Gambling', skills: ['Poker', 'Black Jack'] }],
     });
+  });
+});
+
+describe('isPlainObject()', () => {
+  it.each([undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, []])(
+    'should return false when the data is not a plain javascript object.',
+    (data) => {
+      expect(isPlainObject(data)).toBe(false);
+    }
+  );
+
+  it.each([{}, Object.create(null)])('should return true when the data is a plain javascript object.', (data) => {
+    expect(isPlainObject(data)).toBe(true);
   });
 });

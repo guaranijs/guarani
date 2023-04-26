@@ -52,10 +52,8 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @param request Http Request.
    * @returns Token Context.
    */
-  public override async validate(
-    request: HttpRequest<AuthorizationCodeTokenRequest>
-  ): Promise<AuthorizationCodeTokenContext> {
-    const { data: parameters } = request;
+  public override async validate(request: HttpRequest): Promise<AuthorizationCodeTokenContext> {
+    const parameters = <AuthorizationCodeTokenRequest>request.body;
 
     const context = await super.validate(request);
 

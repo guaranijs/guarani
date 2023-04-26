@@ -12,13 +12,11 @@ import { OAuth2Exception } from '../../exceptions/oauth2.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
-import { ConsentDecision } from '../../interaction-types/consent-decision.type';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { ConsentContextInteractionRequest } from '../../requests/interaction/consent-context.interaction-request';
 import { ConsentDecisionAcceptInteractionRequest } from '../../requests/interaction/consent-decision-accept.interaction-request';
 import { ConsentDecisionDenyInteractionRequest } from '../../requests/interaction/consent-decision-deny.interaction-request';
-import { ConsentDecisionInteractionRequest } from '../../requests/interaction/consent-decision.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { ConsentInteractionRequestValidator } from './consent.interaction-request.validator';
@@ -78,10 +76,10 @@ describe('Consent Interaction Request Validator', () => {
   });
 
   describe('validateContext()', () => {
-    let request: HttpRequest<ConsentContextInteractionRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<ConsentContextInteractionRequest>({
+      request = new HttpRequest({
         body: {},
         cookies: {},
         headers: {},
@@ -116,7 +114,7 @@ describe('Consent Interaction Request Validator', () => {
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<ConsentContextInteractionContext>({
-        parameters: request.data,
+        parameters: <ConsentContextInteractionRequest>request.query,
         interactionType: interactionTypesMocks[0]!,
         grant,
       });
@@ -124,10 +122,10 @@ describe('Consent Interaction Request Validator', () => {
   });
 
   describe('validateDecision()', () => {
-    let request: HttpRequest<ConsentDecisionInteractionRequest<ConsentDecision>>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<ConsentDecisionInteractionRequest<ConsentDecision>>({
+      request = new HttpRequest({
         body: { interaction_type: 'consent', consent_challenge: 'consent_challenge', decision: '' },
         cookies: {},
         headers: {},
@@ -235,7 +233,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<ConsentDecisionAcceptInteractionContext>(
         {
-          parameters: <ConsentDecisionAcceptInteractionRequest>request.data,
+          parameters: <ConsentDecisionAcceptInteractionRequest>request.body,
           interactionType: interactionTypesMocks[0]!,
           grant,
           decision: 'accept',
@@ -283,14 +281,14 @@ describe('Consent Interaction Request Validator', () => {
       const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
-        Reflect.construct(OAuth2Exception, [{ description: request.data.error_description }]),
-        { code: request.data.error }
+        Reflect.construct(OAuth2Exception, [{ description: request.body.error_description }]),
+        { code: request.body.error }
       );
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<ConsentDecisionDenyInteractionContext>({
-        parameters: <ConsentDecisionDenyInteractionRequest>request.data,
+        parameters: <ConsentDecisionDenyInteractionRequest>request.body,
         interactionType: interactionTypesMocks[0]!,
         grant,
         decision: 'deny',

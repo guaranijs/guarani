@@ -8,7 +8,6 @@ import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
-import { DeviceAuthorizationRequest } from '../requests/device-authorization-request';
 import { DeviceAuthorizationResponse } from '../responses/device-authorization-response';
 import { DeviceCodeServiceInterface } from '../services/device-code.service.interface';
 import { DEVICE_CODE_SERVICE } from '../services/device-code.service.token';
@@ -78,7 +77,7 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
    * @param request Http Request.
    * @returns Http Response.
    */
-  public async handle(request: HttpRequest<DeviceAuthorizationRequest>): Promise<HttpResponse> {
+  public async handle(request: HttpRequest): Promise<HttpResponse> {
     try {
       const { client, scopes } = await this.validator.validate(request);
       const deviceCode = await this.deviceCodeService.create(scopes, client);

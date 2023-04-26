@@ -40,3 +40,19 @@ export function removeUndefined<T>(data: T): T {
     return result;
   }, <T>{});
 }
+
+/**
+ * Checks if the provided data is a Plain Javascript Object.
+ *
+ * @param data Object to be checked.
+ * @returns The provided data is a Plain Javascript Object.
+ */
+export function isPlainObject(data: unknown): data is object {
+  if (typeof data !== 'object' || data === null) {
+    return false;
+  }
+
+  const proto = Object.getPrototypeOf(data);
+
+  return proto === null || proto === Object.prototype;
+}

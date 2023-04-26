@@ -60,10 +60,8 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param request Http Request.
    * @returns Context Interaction Context.
    */
-  public override async validateContext(
-    request: HttpRequest<LoginContextInteractionRequest>
-  ): Promise<LoginContextInteractionContext> {
-    const { data: parameters } = request;
+  public override async validateContext(request: HttpRequest): Promise<LoginContextInteractionContext> {
+    const parameters = <LoginContextInteractionRequest>request.query;
 
     const context = await super.validateContext(request);
 
@@ -79,9 +77,9 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(
-    request: HttpRequest<LoginDecisionInteractionRequest<LoginDecision>>
+    request: HttpRequest
   ): Promise<LoginDecisionInteractionContext<LoginDecision>> {
-    const { data: parameters } = request;
+    const parameters = <LoginDecisionInteractionRequest<LoginDecision>>request.body;
 
     const context = await super.validateDecision(request);
 

@@ -35,6 +35,7 @@ describe('Discovery Document', () => {
       token_endpoint: 'http://localhost:3000/oauth/token',
       userinfo_endpoint: 'http://localhost:3000/oauth/userinfo',
       jwks_uri: 'http://localhost:3000/oauth/jwks',
+      registration_endpoint: 'http://localhost:3000/oauth/register',
       scopes_supported: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
       response_types_supported: [
         'code',

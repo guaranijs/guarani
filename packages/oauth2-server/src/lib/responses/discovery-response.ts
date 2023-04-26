@@ -37,6 +37,11 @@ export interface DiscoveryResponse extends Record<string, any> {
   readonly jwks_uri?: string;
 
   /**
+   * Url of the Dynamic Client Registration Endpoint.
+   */
+  readonly registration_endpoint?: string;
+
+  /**
    * Scopes supported by the Authorization Server.
    */
   readonly scopes_supported: string[];

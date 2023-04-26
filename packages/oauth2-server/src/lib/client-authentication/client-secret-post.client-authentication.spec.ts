@@ -6,10 +6,7 @@ import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { ClientAuthentication } from './client-authentication.type';
-import {
-  ClientSecretPostClientAuthentication,
-  ClientSecretPostCredentials,
-} from './client-secret-post.client-authentication';
+import { ClientSecretPostClientAuthentication } from './client-secret-post.client-authentication';
 
 describe('Client Secret Post Authentication Method', () => {
   let container: DependencyInjectionContainer;
@@ -48,7 +45,7 @@ describe('Client Secret Post Authentication Method', () => {
     ];
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
-      const request = new HttpRequest<ClientSecretPostCredentials>({
+      const request = new HttpRequest({
         body,
         cookies: {},
         headers: {},
@@ -62,10 +59,10 @@ describe('Client Secret Post Authentication Method', () => {
   });
 
   describe('authenticate()', () => {
-    let request: HttpRequest<ClientSecretPostCredentials>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<ClientSecretPostCredentials>({
+      request = new HttpRequest({
         body: { client_id: 'client_id', client_secret: 'client_secret' },
         cookies: {},
         headers: {},

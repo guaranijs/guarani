@@ -69,10 +69,10 @@ describe('Device Code Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest<DeviceCodeTokenRequest>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<DeviceCodeTokenRequest>({
+      request = new HttpRequest({
         body: { grant_type: 'urn:ietf:params:oauth:grant-type:device_code', device_code: 'device_code' },
         cookies: {},
         headers: {},
@@ -116,7 +116,7 @@ describe('Device Code Token Request Validator', () => {
       deviceCodeServiceMock.findOne.mockResolvedValueOnce(deviceCode);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<DeviceCodeTokenContext>({
-        parameters: request.data,
+        parameters: <DeviceCodeTokenRequest>request.body,
         client,
         grantType: grantTypesMocks[4]!,
         deviceCode,

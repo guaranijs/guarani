@@ -6,7 +6,7 @@ import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { ClientAuthentication } from './client-authentication.type';
-import { NoneClientAuthentication, NoneCredentials } from './none.client-authentication';
+import { NoneClientAuthentication } from './none.client-authentication';
 
 describe('None Client Authentication Method', () => {
   let container: DependencyInjectionContainer;
@@ -45,7 +45,7 @@ describe('None Client Authentication Method', () => {
     ];
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
-      const request = new HttpRequest<NoneCredentials>({
+      const request = new HttpRequest({
         body,
         cookies: {},
         headers: {},
@@ -59,10 +59,10 @@ describe('None Client Authentication Method', () => {
   });
 
   describe('authenticate()', () => {
-    let request: HttpRequest<NoneCredentials>;
+    let request: HttpRequest;
 
     beforeEach(() => {
-      request = new HttpRequest<NoneCredentials>({
+      request = new HttpRequest({
         body: { client_id: 'client_id' },
         cookies: {},
         headers: {},

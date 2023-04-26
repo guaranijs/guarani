@@ -33,8 +33,8 @@ export abstract class TokenRequestValidator<TRequest extends TokenRequest, TCont
    * @param request Http Request.
    * @returns Token Context.
    */
-  public async validate(request: HttpRequest<TRequest>): Promise<TContext> {
-    const { data: parameters } = request;
+  public async validate(request: HttpRequest): Promise<TContext> {
+    const parameters = <TRequest>request.body;
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
     const grantType = this.getGrantType(parameters, client);

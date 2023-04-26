@@ -1,5 +1,9 @@
 import { Injectable } from '@guarani/di';
 
+import { randomInt, randomUUID } from 'crypto';
+
+import { PostRegistrationContext } from '../../context/registration/post.registration.context';
+import { PutRegistrationContext } from '../../context/registration/put.registration.context';
 import { Client } from '../../entities/client.entity';
 import { ClientServiceInterface } from '../client.service.interface';
 
@@ -9,6 +13,7 @@ export class ClientService implements ClientServiceInterface {
     {
       id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
       secret: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
+      secretIssuedAt: new Date(),
       name: 'Dev Client #1',
       redirectUris: ['http://localhost:4000/oauth/callback'],
       responseTypes: ['code', 'token'],
@@ -23,6 +28,7 @@ export class ClientService implements ClientServiceInterface {
       applicationType: 'web',
       authenticationMethod: 'client_secret_basic',
       scopes: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
+      requireAuthTime: false,
       createdAt: new Date(),
     },
   ];
@@ -31,7 +37,115 @@ export class ClientService implements ClientServiceInterface {
     console.warn('Using default Client Service. This is only recommended for development.');
   }
 
+  public async create(context: PostRegistrationContext): Promise<Client> {
+    const client = <Client>{
+      id: randomUUID(),
+      secret: this.secretToken(),
+      secretIssuedAt: new Date(),
+      secretExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+      name: context.clientName,
+      redirectUris: context.redirectUris.map((redirectUri) => redirectUri.toString()),
+      responseTypes: context.responseTypes,
+      grantTypes: context.grantTypes,
+      applicationType: context.applicationType,
+      authenticationMethod: context.authenticationMethod,
+      authenticationSigningAlgorithm: context.authenticationSigningAlgorithm,
+      scopes: context.scopes,
+      clientUri: context.clientUri?.toString(),
+      logoUri: context.logoUri?.toString(),
+      contacts: context.contacts,
+      policyUri: context.policyUri?.toString(),
+      tosUri: context.tosUri?.toString(),
+      jwksUri: context.jwksUri?.toString(),
+      jwks: context.jwks,
+      // sectorIdentifierUri: context.sectorIdentifierUri,
+      // subjectType: context.subjectType,
+      idTokenSignedResponseAlgorithm: context.idTokenSignedResponseAlgorithm,
+      // idTokenEncryptedResponseKeyWrap: context.idTokenEncryptedResponseKeyWrap,
+      // idTokenEncryptedResponseContentEncryption: context.idTokenEncryptedResponseContentEncryption,
+      // userinfoSignedResponseAlgorithm: context.userinfoSignedResponseAlgorithm,
+      // userinfoEncryptedResponseKeyWrap: context.userinfoEncryptedResponseKeyWrap,
+      // userinfoEncryptedResponseContentEncryption: context.userinfoEncryptedResponseContentEncryption,
+      // requestObjectSigningAlgorithm: context.requestObjectSigningAlgorithm,
+      // requestObjectEncryptionKeyWrap: context.requestObjectEncryptionKeyWrap,
+      // requestObjectEncryptionContentEncryption: context.requestObjectEncryptionContentEncryption,
+      defaultMaxAge: context.defaultMaxAge,
+      requireAuthTime: context.requireAuthTime,
+      defaultAcrValues: context.defaultAcrValues,
+      initiateLoginUri: context.initiateLoginUri?.toString(),
+      // requestUris: context.requestUris,
+      softwareId: context.softwareId,
+      softwareVersion: context.softwareVersion,
+      createdAt: new Date(),
+    };
+
+    this.clients.push(client);
+
+    return client;
+  }
+
   public async findOne(id: string): Promise<Client | null> {
     return this.clients.find((client) => client.id === id) ?? null;
+  }
+
+  public async remove(client: Client): Promise<void> {
+    const index = this.clients.findIndex((registeredClient) => registeredClient.id === client.id);
+
+    if (index > -1) {
+      this.clients.splice(index, 1);
+    }
+  }
+
+  public async update(client: Client, context: PutRegistrationContext): Promise<void> {
+    const index = this.clients.findIndex((registeredClient) => registeredClient.id === client.id);
+
+    Object.assign<Client, Partial<Client>>(client, {
+      name: context.clientName,
+      redirectUris: context.redirectUris.map((redirectUri) => redirectUri.toString()),
+      responseTypes: context.responseTypes,
+      grantTypes: context.grantTypes,
+      applicationType: context.applicationType,
+      authenticationMethod: context.authenticationMethod,
+      authenticationSigningAlgorithm: context.authenticationSigningAlgorithm,
+      scopes: context.scopes,
+      clientUri: context.clientUri?.toString(),
+      logoUri: context.logoUri?.toString(),
+      contacts: context.contacts,
+      policyUri: context.policyUri?.toString(),
+      tosUri: context.tosUri?.toString(),
+      jwksUri: context.jwksUri?.toString(),
+      jwks: context.jwks,
+      // sectorIdentifierUri: context.sectorIdentifierUri,
+      // subjectType: context.subjectType,
+      idTokenSignedResponseAlgorithm: context.idTokenSignedResponseAlgorithm,
+      // idTokenEncryptedResponseKeyWrap: context.idTokenEncryptedResponseKeyWrap,
+      // idTokenEncryptedResponseContentEncryption: context.idTokenEncryptedResponseContentEncryption,
+      // userinfoSignedResponseAlgorithm: context.userinfoSignedResponseAlgorithm,
+      // userinfoEncryptedResponseKeyWrap: context.userinfoEncryptedResponseKeyWrap,
+      // userinfoEncryptedResponseContentEncryption: context.userinfoEncryptedResponseContentEncryption,
+      // requestObjectSigningAlgorithm: context.requestObjectSigningAlgorithm,
+      // requestObjectEncryptionKeyWrap: context.requestObjectEncryptionKeyWrap,
+      // requestObjectEncryptionContentEncryption: context.requestObjectEncryptionContentEncryption,
+      defaultMaxAge: context.defaultMaxAge,
+      requireAuthTime: context.requireAuthTime,
+      defaultAcrValues: context.defaultAcrValues,
+      initiateLoginUri: context.initiateLoginUri?.toString(),
+      // requestUris: context.requestUris,
+      softwareId: context.softwareId,
+      softwareVersion: context.softwareVersion,
+    });
+
+    this.clients[index] = client;
+  }
+
+  private secretToken(): string {
+    let token = '';
+    const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
+
+    for (let i = 0; i < 32; i++) {
+      token += alphabet[randomInt(alphabet.length)];
+    }
+
+    return token;
   }
 }

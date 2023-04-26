@@ -20,6 +20,13 @@ export interface Client extends Record<string, any> {
   secret?: string | null;
 
   /**
+   * Creation Date of the Client Secret.
+   *
+   * A **nullish** value indicates that no Client Secret was issued.
+   */
+  secretIssuedAt?: Date | null;
+
+  /**
    * Expiration Date of the Client Secret.
    *
    * A **nullish** value indicates that the Client Secret will not expire.
@@ -44,7 +51,7 @@ export interface Client extends Record<string, any> {
   /**
    * Grant Types of the Client.
    */
-  grantTypes: GrantType[];
+  grantTypes: (GrantType | 'implicit')[];
 
   /**
    * Application Type of the Client.
@@ -57,9 +64,9 @@ export interface Client extends Record<string, any> {
   authenticationMethod: ClientAuthentication;
 
   /**
-   * JSON Web Signature Algorithms used to validate the JWT Bearer Client Assertion.
+   * JSON Web Signature Algorithm used to validate the JWT Bearer Client Assertion.
    */
-  authenticationSigningAlgorithms?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
+  authenticationSigningAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
   /**
    * Scopes of the Client.
@@ -100,6 +107,86 @@ export interface Client extends Record<string, any> {
    * JSON Web Key Set object containing the JSON Web Keys of the Client.
    */
   jwks?: JsonWebKeySetParameters | null;
+
+  /**
+   * Https Url used to calculate the Pseudonymous Identifiers of the Client.
+   */
+  // sectorIdentifierUri?: string | null;
+
+  /**
+   * Subject Type for responses to the Client.
+   */
+  // subjectType?: string | null;
+
+  /**
+   * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.
+   */
+  idTokenSignedResponseAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithm used to encrypt the ID Token issued to the Client.
+   */
+  // idTokenEncryptedResponseKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm | null;
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithm used to encrypt the ID Token issued to the Client.
+   */
+  // idTokenEncryptedResponseContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm | null;
+
+  /**
+   * JSON Web Signature Algorithm used to sign the Userinfo JWT Response.
+   */
+  // userinfoSignedResponseAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithm used to encrypt the Userinfo JWT Response.
+   */
+  // userinfoEncryptedResponseKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm | null;
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithm used to encrypt the Userinfo JWT Response.
+   */
+  // userinfoEncryptedResponseContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm | null;
+
+  /**
+   * JSON Web Signature Algorithm used to sign the Request Object sent to the Authorization Server.
+   */
+  // requestObjectSigningAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithm used to encrypt the Request Object sent to the Authorization Server.
+   */
+  // requestObjectEncryptionKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm | null;
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithm used to encrypt the Request Object sent to the Authorization Server.
+   */
+  // requestObjectEncryptionContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm | null;
+
+  /**
+   * Default Maximum Authentication Age.
+   */
+  defaultMaxAge?: number | null;
+
+  /**
+   * Indicates if the claim **auth_time** is required in the ID Token.
+   */
+  requireAuthTime: boolean;
+
+  /**
+   * Default Authentication Context Class References of the Client.
+   */
+  defaultAcrValues?: string[] | null;
+
+  /**
+   * Url that a third party can use to initiate a login by the Client.
+   */
+  initiateLoginUri?: string | null;
+
+  /**
+   * Pre-registered Request URIs of the Client.
+   */
+  // requestUris?: string[] | null;
 
   /**
    * Unique Identifier of the Software of the Client.

@@ -58,10 +58,8 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @param request Http Request.
    * @returns Context Interaction Context.
    */
-  public override async validateContext(
-    request: HttpRequest<ConsentContextInteractionRequest>
-  ): Promise<ConsentContextInteractionContext> {
-    const { data: parameters } = request;
+  public override async validateContext(request: HttpRequest): Promise<ConsentContextInteractionContext> {
+    const parameters = <ConsentContextInteractionRequest>request.query;
 
     const context = await super.validateContext(request);
 
@@ -77,9 +75,9 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(
-    request: HttpRequest<ConsentDecisionInteractionRequest<ConsentDecision>>
+    request: HttpRequest
   ): Promise<ConsentDecisionInteractionContext<ConsentDecision>> {
-    const { data: parameters } = request;
+    const parameters = <ConsentDecisionInteractionRequest<ConsentDecision>>request.body;
 
     const context = await super.validateDecision(request);
 

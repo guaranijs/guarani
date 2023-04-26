@@ -14,7 +14,7 @@ import { ClientAuthenticationInterface } from './client-authentication.interface
 /**
  * Parameters passed by the Client on the Http Request Body.
  */
-export interface ClientSecretPostCredentials {
+interface ClientSecretPostCredentials {
   /**
    * Client Identifier.
    */
@@ -63,8 +63,9 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
    *
    * @param request Http Request.
    */
-  public hasBeenRequested(request: HttpRequest<ClientSecretPostCredentials>): boolean {
-    return typeof request.data.client_id === 'string' && typeof request.data.client_secret === 'string';
+  public hasBeenRequested(request: HttpRequest): boolean {
+    const { client_id: clientId, client_secret: clientSecret } = <ClientSecretPostCredentials>request.body;
+    return typeof clientId === 'string' && typeof clientSecret === 'string';
   }
 
   /**
@@ -73,8 +74,8 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
    * @param request Http Request.
    * @returns Authenticated Client.
    */
-  public async authenticate(request: HttpRequest<ClientSecretPostCredentials>): Promise<Client> {
-    const { client_id: clientId, client_secret: clientSecret } = request.data;
+  public async authenticate(request: HttpRequest): Promise<Client> {
+    const { client_id: clientId, client_secret: clientSecret } = <ClientSecretPostCredentials>request.body;
 
     const client = await this.clientService.findOne(clientId);
 

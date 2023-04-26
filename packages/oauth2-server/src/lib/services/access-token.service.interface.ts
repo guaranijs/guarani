@@ -19,6 +19,16 @@ export interface AccessTokenServiceInterface {
   create(scopes: string[], client: Client, user?: User): Promise<AccessToken>;
 
   /**
+   * Creates a Registration Access Token for authorized use by the Client on the Registration Endpoint.
+   *
+   * *note: this method is only required when enabling dynamic client registration.*
+   *
+   * @param client Client requesting authorization.
+   * @returns Issued Registration Access Token.
+   */
+  createRegistrationAccessToken?(client: Client): Promise<AccessToken>;
+
+  /**
    * Searches the application's storage for a Access Token containing the provided Handle.
    *
    * @param handle Handle of the Access Token.

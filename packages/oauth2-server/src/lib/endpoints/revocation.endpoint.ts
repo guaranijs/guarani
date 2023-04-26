@@ -144,7 +144,7 @@ export class RevocationEndpoint implements EndpointInterface {
    */
   private checkTokenClient(token: AccessToken | RefreshToken, client: Client): boolean {
     const clientIdBuffer = Buffer.from(client.id, 'utf8');
-    const tokenClientIdBuffer = Buffer.from(token.client.id, 'utf8');
+    const tokenClientIdBuffer = Buffer.from(token.client!.id, 'utf8');
 
     return clientIdBuffer.length === tokenClientIdBuffer.length && timingSafeEqual(clientIdBuffer, tokenClientIdBuffer);
   }

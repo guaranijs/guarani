@@ -145,7 +145,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
    */
   private checkTokenClient(token: AccessToken | RefreshToken, client: Client): boolean {
     const clientIdBuffer = Buffer.from(client.id, 'utf8');
-    const tokenClientIdBuffer = Buffer.from(token.client.id, 'utf8');
+    const tokenClientIdBuffer = Buffer.from(token.client!.id, 'utf8');
 
     return clientIdBuffer.length === tokenClientIdBuffer.length && timingSafeEqual(clientIdBuffer, tokenClientIdBuffer);
   }
@@ -166,14 +166,14 @@ export class IntrospectionEndpoint implements EndpointInterface {
     return removeUndefined<IntrospectionResponse>({
       active: true,
       scope: token.scopes.join(' '),
-      client_id: token.client.id,
+      client_id: token.client!.id,
       username: undefined,
       token_type: 'Bearer',
       exp: Math.ceil(token.expiresAt.getTime() / 1000),
       iat: Math.ceil(token.issuedAt.getTime() / 1000),
       nbf: Math.ceil(token.validAfter.getTime() / 1000),
       sub: token.user?.id,
-      aud: token.client.id,
+      aud: token.client!.id,
       iss: this.settings.issuer,
       jti: undefined,
     });

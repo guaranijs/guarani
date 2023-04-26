@@ -38,7 +38,7 @@ export interface AccessToken extends Record<string, any> {
   /**
    * Client that requested the Access Token.
    */
-  readonly client: Client;
+  readonly client?: Client | null;
 
   /**
    * End User that granted authorization to the Client.

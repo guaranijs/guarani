@@ -72,7 +72,7 @@ export class RevocationRequestValidator {
     const client = await this.clientAuthenticationHandler.authenticate(request);
     const tokenResult = await this.findToken(parameters.token, parameters.token_type_hint);
 
-    if (tokenResult === null) {
+    if (tokenResult === null || tokenResult.token.client == null) {
       return { client, parameters, token: null, tokenType: null };
     }
 

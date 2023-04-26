@@ -219,6 +219,22 @@ describe('Revocation Request Validator', () => {
       expect(findAccessTokenOrder).toBeLessThan(findRefreshTokenOrder);
     });
 
+    it('should return a null revocation context token when the access token does not have a client.', async () => {
+      const client = <Client>{ id: 'client_id' };
+      const accessToken = <AccessToken>{ handle: 'access_token' };
+
+      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
+      accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
+      refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
+
+      await expect(validator.validate(request)).resolves.toStrictEqual<RevocationContext>({
+        parameters: <RevocationRequest>request.body,
+        client,
+        token: null,
+        tokenType: null,
+      });
+    });
+
     it('should return a null revocation context token when trying to revoke a refresh token and the authorization server does not support it.', async () => {
       request.body.token = 'refresh_token';
 

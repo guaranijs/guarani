@@ -17,6 +17,7 @@ import { InsufficientScopeException } from '../exceptions/insufficient-scope.exc
 import { InvalidClientMetadataException } from '../exceptions/invalid-client-metadata.exception';
 import { InvalidRedirectUriException } from '../exceptions/invalid-redirect-uri.exception';
 import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
+import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { GrantType } from '../grant-types/grant-type.type';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
@@ -39,6 +40,11 @@ import { ApplicationType } from '../types/application-type.type';
  */
 @Injectable()
 export class RegistrationRequestValidator {
+  /**
+   * Scopes that grant access to the Dynamic Client Registration Post Request.
+   */
+  public readonly postRequestScopes: string[] = ['client:manage', 'client:create'];
+
   /**
    * Scopes that grant access to the Dynamic Client Registration Get Request.
    */
@@ -76,6 +82,8 @@ export class RegistrationRequestValidator {
    * @returns Post Registration Context.
    */
   public async validatePost(request: HttpRequest): Promise<PostRegistrationContext> {
+    const accessToken = await this.checkInitialAccessToken(request, this.postRequestScopes);
+
     const parameters = <PostRegistrationRequest>request.body;
 
     const redirectUris = this.getRedirectUris(parameters);
@@ -123,6 +131,8 @@ export class RegistrationRequestValidator {
     // const requestUris = this.getRequestUris(parameters);
     const softwareId = this.getSoftwareId(parameters);
     const softwareVersion = this.getSoftwareVersion(parameters);
+
+    await this.accessTokenService.revoke(accessToken);
 
     return {
       parameters,
@@ -174,7 +184,7 @@ export class RegistrationRequestValidator {
     const clientId = this.getClientId(parameters);
     const accessToken = await this.authorize(request, clientId, this.getRequestScopes);
 
-    return { parameters, accessToken, client: accessToken.client };
+    return { parameters, accessToken, client: accessToken.client! };
   }
 
   /**
@@ -187,9 +197,9 @@ export class RegistrationRequestValidator {
     const parameters = <DeleteRegistrationRequest>request.query;
 
     const clientId = this.getClientId(parameters);
-    const { client } = await this.authorize(request, clientId, this.deleteRequestScopes);
+    const accessToken = await this.authorize(request, clientId, this.deleteRequestScopes);
 
-    return { parameters, client };
+    return { parameters, client: accessToken.client! };
   }
 
   /**
@@ -210,7 +220,7 @@ export class RegistrationRequestValidator {
 
     const accessToken = await this.authorize(request, clientId, this.putRequestScopes);
 
-    this.checkClientCredentials(accessToken.client, clientSecret);
+    this.checkClientCredentials(accessToken.client!, clientSecret);
 
     const redirectUris = this.getRedirectUris(bodyParameters);
     const responseTypes = this.getResponseTypes(bodyParameters);
@@ -262,7 +272,7 @@ export class RegistrationRequestValidator {
       queryParameters,
       bodyParameters,
       accessToken,
-      client: accessToken.client,
+      client: accessToken.client!,
       clientId,
       clientSecret,
       redirectUris,
@@ -1085,7 +1095,28 @@ export class RegistrationRequestValidator {
   }
 
   /**
-   * Retrieves the Access Token from the Authorization Header and validates it.
+   * Retrieves the Initial Access Token from the Request and validates it.
+   *
+   * @param request Http Request.
+   * @param scopes Expected Scopes for the Request.
+   * @returns Initial Access Token.
+   */
+  private async checkInitialAccessToken(request: HttpRequest, scopes: string[]): Promise<AccessToken> {
+    const accessToken = await this.clientAuthorizationHandler.authorize(request);
+
+    if (accessToken.client != null) {
+      throw new InvalidTokenException({ description: 'Invalid Credentials.' });
+    }
+
+    if (accessToken.scopes.every((scope) => !scopes.includes(scope))) {
+      throw new InsufficientScopeException({ description: 'Invalid Credentials.' });
+    }
+
+    return accessToken;
+  }
+
+  /**
+   * Retrieves the Access Token from the Request and validates it.
    *
    * @param request Http Request.
    * @param clientId Identifier of the Client of the Request.
@@ -1095,8 +1126,12 @@ export class RegistrationRequestValidator {
   private async authorize(request: HttpRequest, clientId: string, scopes: string[]): Promise<AccessToken> {
     const accessToken = await this.clientAuthorizationHandler.authorize(request);
 
+    if (accessToken.client == null) {
+      throw new InvalidTokenException({ description: 'Invalid Credentials.' });
+    }
+
     const clientIdentifier = Buffer.from(clientId, 'utf8');
-    const accessTokenClientIdentifier = Buffer.from(accessToken.client.id, 'utf8');
+    const accessTokenClientIdentifier = Buffer.from(accessToken.client!.id, 'utf8');
 
     if (
       clientIdentifier.length !== accessTokenClientIdentifier.length ||

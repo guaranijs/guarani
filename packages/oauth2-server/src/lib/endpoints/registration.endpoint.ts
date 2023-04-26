@@ -49,7 +49,7 @@ export class RegistrationEndpoint implements EndpointInterface {
   /**
    * Http Methods supported by the Endpoint.
    */
-  readonly httpMethods: HttpMethod[] = ['DELETE', 'GET', 'POST'];
+  readonly httpMethods: HttpMethod[] = ['DELETE', 'GET', 'POST', 'PUT'];
 
   /**
    * Default Http Headers to be included in the Response.

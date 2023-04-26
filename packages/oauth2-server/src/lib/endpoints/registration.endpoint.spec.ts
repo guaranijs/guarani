@@ -129,8 +129,8 @@ describe('Dynamic Client Registration Endpoint', () => {
   });
 
   describe('httpMethods', () => {
-    it('should have \'["DELETE", "GET", "POST"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['DELETE', 'GET', 'POST']);
+    it('should have \'["DELETE", "GET", "POST", "PUT"]\' as its supported http methods.', () => {
+      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['DELETE', 'GET', 'POST', 'PUT']);
     });
   });
 

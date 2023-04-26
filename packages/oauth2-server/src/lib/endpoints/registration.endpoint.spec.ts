@@ -90,11 +90,15 @@ describe('Dynamic Client Registration Endpoint', () => {
     true
   );
 
-  const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    revoke: jest.fn(),
-  });
+  const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>(
+    {
+      create: jest.fn(),
+      createRegistrationAccessToken: jest.fn(),
+      findOne: jest.fn(),
+      revoke: jest.fn(),
+    },
+    true
+  );
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
@@ -183,6 +187,26 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       expect(() => container.resolve(RegistrationEndpoint)).toThrow(
         new TypeError('Missing implementation of required method "ClientServiceInterface.update".')
+      );
+    });
+
+    it('should throw when the access token service does not implement the method "createRegistrationAccessToken".', () => {
+      const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
+        create: jest.fn(),
+        findOne: jest.fn(),
+        revoke: jest.fn(),
+      });
+
+      container.delete<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE);
+      container.delete(RegistrationEndpoint);
+
+      container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
+      container.bind(RegistrationEndpoint).toSelf().asSingleton();
+
+      expect(() => container.resolve(RegistrationEndpoint)).toThrow(
+        new TypeError(
+          'Missing implementation of required method "AccessTokenServiceInterface.createRegistrationAccessToken".'
+        )
       );
     });
   });
@@ -327,7 +351,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
         validatorMock.validatePost.mockResolvedValueOnce(context);
         clientServiceMock.create!.mockResolvedValueOnce(client);
-        accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
+        accessTokenServiceMock.createRegistrationAccessToken!.mockResolvedValueOnce(accessToken);
 
         const response = await endpoint.handle(request);
 

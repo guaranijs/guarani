@@ -81,6 +81,12 @@ export class RegistrationEndpoint implements EndpointInterface {
     if (typeof clientService.update !== 'function') {
       throw new TypeError('Missing implementation of required method "ClientServiceInterface.update".');
     }
+
+    if (typeof accessTokenService.createRegistrationAccessToken !== 'function') {
+      throw new TypeError(
+        'Missing implementation of required method "AccessTokenServiceInterface.createRegistrationAccessToken".'
+      );
+    }
   }
 
   /**
@@ -191,7 +197,7 @@ export class RegistrationEndpoint implements EndpointInterface {
    */
   private async registerClient(context: PostRegistrationContext): Promise<PostRegistrationResponse> {
     const client = await this.clientService.create!(context);
-    const registrationAccessToken = await this.accessTokenService.create(this.validator.getRequestScopes, client);
+    const registrationAccessToken = await this.accessTokenService.createRegistrationAccessToken!(client);
 
     const registrationClientUri = new URL(this.path, this.settings.issuer);
 

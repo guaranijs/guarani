@@ -264,6 +264,7 @@ describe('Dynamic Client Registration Endpoint', () => {
       async (clientParams, responseParams) => {
         const context = <PostRegistrationContext>{
           parameters: <PostRegistrationRequest>request.body,
+          accessToken: { handle: 'initial_access_token', scopes: ['client:create'] },
           redirectUris: [new URL('https://client.example.com/oauth/callback/')],
           responseTypes: ['code'],
           grantTypes: ['authorization_code', 'refresh_token'],
@@ -368,6 +369,9 @@ describe('Dynamic Client Registration Endpoint', () => {
 
         expect(clientServiceMock.create).toHaveBeenCalledTimes(1);
         expect(clientServiceMock.create).toHaveBeenCalledWith(context);
+
+        expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
+        expect(accessTokenServiceMock.revoke).toHaveBeenCalledWith(context.accessToken);
       }
     );
   });
@@ -527,6 +531,9 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       expect(clientServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(clientServiceMock.remove).toHaveBeenCalledWith(client);
+
+      expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
+      expect(accessTokenServiceMock.revoke).toHaveBeenCalledWith(context.accessToken);
     });
   });
 

@@ -1025,6 +1025,7 @@ describe('Registration Request Validator', () => {
 
       await expect(validator.validatePost(request)).resolves.toStrictEqual<PostRegistrationContext>({
         parameters: <PostRegistrationRequest>request.body,
+        accessToken,
         redirectUris: [new URL('https://client.example.com/oauth/callback')],
         responseTypes: ['code'],
         grantTypes: ['authorization_code', 'refresh_token'],
@@ -1059,9 +1060,6 @@ describe('Registration Request Validator', () => {
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
       });
-
-      expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
-      expect(accessTokenServiceMock.revoke).toHaveBeenCalledWith(accessToken);
     });
   });
 
@@ -1224,6 +1222,7 @@ describe('Registration Request Validator', () => {
 
         await expect(validator.validateDelete(request)).resolves.toStrictEqual<DeleteRegistrationContext>({
           parameters: <DeleteRegistrationRequest>request.query,
+          accessToken,
           client: accessToken.client!,
         });
       }

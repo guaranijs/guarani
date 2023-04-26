@@ -199,6 +199,8 @@ export class RegistrationEndpoint implements EndpointInterface {
     const client = await this.clientService.create!(context);
     const registrationAccessToken = await this.accessTokenService.createRegistrationAccessToken!(client);
 
+    await this.accessTokenService.revoke(context.accessToken);
+
     const registrationClientUri = new URL(this.path, this.settings.issuer);
 
     registrationClientUri.searchParams.set('client_id', client.id);
@@ -321,6 +323,7 @@ export class RegistrationEndpoint implements EndpointInterface {
    */
   private async decomissionClient(context: DeleteRegistrationContext): Promise<void> {
     await this.clientService.remove!(context.client);
+    await this.accessTokenService.revoke(context.accessToken);
   }
 
   /**

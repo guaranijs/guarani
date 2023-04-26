@@ -132,10 +132,9 @@ export class RegistrationRequestValidator {
     const softwareId = this.getSoftwareId(parameters);
     const softwareVersion = this.getSoftwareVersion(parameters);
 
-    await this.accessTokenService.revoke(accessToken);
-
     return {
       parameters,
+      accessToken,
       redirectUris,
       responseTypes,
       grantTypes,
@@ -199,7 +198,7 @@ export class RegistrationRequestValidator {
     const clientId = this.getClientId(parameters);
     const accessToken = await this.authorize(request, clientId, this.deleteRequestScopes);
 
-    return { parameters, client: accessToken.client! };
+    return { parameters, accessToken, client: accessToken.client! };
   }
 
   /**

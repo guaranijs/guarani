@@ -3,6 +3,7 @@ import { JsonWebKeySet, JsonWebSignatureAlgorithm } from '@guarani/jose';
 import { URL } from 'url';
 
 import { ClientAuthentication } from '../../client-authentication/client-authentication.type';
+import { AccessToken } from '../../entities/access-token.entity';
 import { GrantType } from '../../grant-types/grant-type.type';
 import { PostRegistrationRequest } from '../../requests/registration/post.registration-request';
 import { ResponseType } from '../../response-types/response-type.type';
@@ -16,6 +17,11 @@ export interface PostRegistrationContext {
    * Parameters of the Post Registration Request.
    */
   readonly parameters: PostRegistrationRequest;
+
+  /**
+   * Initial Access Token.
+   */
+  readonly accessToken: AccessToken;
 
   /**
    * Redirect URIs of the Client.

@@ -11,6 +11,11 @@ export interface InteractionContext<T extends InteractionRequest> {
   readonly parameters: T;
 
   /**
+   * Cookies of the Request.
+   */
+  readonly cookies: Record<string, any>;
+
+  /**
    * Interaction Type requested by the Client.
    */
   readonly interactionType: InteractionTypeInterface;

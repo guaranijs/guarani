@@ -4,7 +4,7 @@ import express, { Application, urlencoded } from 'express';
 import request, { SuperAgentTest } from 'supertest';
 import { URL, URLSearchParams } from 'url';
 
-import { ExpressBackend } from '../src/lib/backends/express/express.backend';
+import { expressAuthorizationServer } from '../src/lib/backends/express/express.middleware';
 import { AuthorizationCodeTokenRequest } from '../src/lib/requests/token/authorization-code.token-request';
 import { CodeAuthorizationRequest } from '../src/lib/requests/authorization/code.authorization-request';
 import { CodeAuthorizationResponse } from '../src/lib/responses/authorization/code.authorization-response';
@@ -14,13 +14,11 @@ import { ConsentDecisionAcceptInteractionRequest } from '../src/lib/requests/int
 import { LoginContextInteractionRequest } from '../src/lib/requests/interaction/login-context.interaction-request';
 import { LoginDecisionAcceptInteractionRequest } from '../src/lib/requests/interaction/login-decision-accept.interaction-request';
 import { TokenResponse } from '../src/lib/responses/token-response';
-import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
 
 describe('Authorization Code Flow', () => {
   let app: Application;
   let agent: SuperAgentTest;
   let authorizationCode: string;
-  let authorizationServer: ExpressBackend;
 
   beforeAll(async () => {
     app = express();
@@ -28,14 +26,7 @@ describe('Authorization Code Flow', () => {
     app.use(cookieParser('super_safe_and_secure_secret'));
     app.use(urlencoded({ extended: false }));
 
-    authorizationServer = await AuthorizationServerFactory.create(
-      ExpressBackend,
-      Reflect.get(global, 'endToEndAuthorizationServerOptions')
-    );
-
-    await authorizationServer.bootstrap();
-
-    app.use(authorizationServer.router);
+    app.use(await expressAuthorizationServer(Reflect.get(global, 'endToEndAuthorizationServerOptions')));
 
     agent = request.agent(app);
   });
@@ -81,6 +72,9 @@ describe('Authorization Code Flow', () => {
     );
 
     expect(loginInteractionContextResponse.body.skip).toBe(false);
+
+    expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toBeUndefined();
     // #endregion
 
     // #region Update the Session with the Authenticated User.
@@ -99,6 +93,9 @@ describe('Authorization Code Flow', () => {
 
     expect(loginInteractionAcceptResponse.status).toBe(200);
     expect(loginInteractionAcceptResponse.body.redirect_to).toBe(loginInteractionContextResponse.body.request_url);
+
+    expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
     // #endregion
 
     // #region Retrieve the Consent Challenge.
@@ -112,6 +109,7 @@ describe('Authorization Code Flow', () => {
     expect(consentAuthorizationResponse.status).toBe(303);
 
     expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
     // #endregion
 
     // # Create the Consent within the Authorization Server.
@@ -133,6 +131,9 @@ describe('Authorization Code Flow', () => {
       request_url: loginInteractionContextResponse.body.request_url,
       login_challenge: loginChallenge,
     });
+
+    expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
     // #endregion
 
     // #region Update the Consent with the Authenticated User.
@@ -151,6 +152,9 @@ describe('Authorization Code Flow', () => {
 
     expect(consentInteractionAcceptResponse.status).toBe(200);
     expect(consentInteractionAcceptResponse.body.redirect_to).toBe(loginInteractionContextResponse.body.request_url);
+
+    expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
     // #endregion
 
     // #region Retrieve the Authorization Code.
@@ -162,13 +166,14 @@ describe('Authorization Code Flow', () => {
 
     expect(authorizationResponse.status).toBe(303);
 
-    expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toBeUndefined();
-
     expect(Object.fromEntries(callbackUrl.searchParams.entries())).toStrictEqual<CodeAuthorizationResponse>({
       code: expect.any(String),
       state: authorizationRequestData.state,
       iss: 'http://localhost:3000',
     });
+
+    expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toBeUndefined();
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
 
     authorizationCode = callbackUrl.searchParams.get('code')!;
     // #endregion

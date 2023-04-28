@@ -9,7 +9,7 @@ import { LoginDecisionDenyInteractionContext } from '../context/interaction/logi
 import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction.context';
 import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
-import { Prompt } from '../prompts/prompt.type';
+import { HttpResponse } from '../http/http.response';
 import { LoginContextInteractionResponse } from '../responses/interaction/login-context.interaction-response';
 import { LoginDecisionInteractionResponse } from '../responses/interaction/login-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -18,6 +18,7 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { Prompt } from '../types/prompt.type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 import { LoginDecision } from './login-decision.type';
@@ -71,9 +72,9 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * otherwise, it informs the application that it can safely skip this process and proceed with the authorization.
    *
    * @param context Login Context Interaction Request Context.
-   * @returns Parameters of the Login Context Interaction Response.
+   * @returns Login Context Interaction Response.
    */
-  public async handleContext(context: LoginContextInteractionContext): Promise<LoginContextInteractionResponse> {
+  public async handleContext(context: LoginContextInteractionContext): Promise<HttpResponse> {
     const { grant } = context;
 
     await this.checkGrant(grant);
@@ -98,7 +99,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
       }
     }
 
-    return removeUndefined<LoginContextInteractionResponse>({
+    const body = removeUndefined<LoginContextInteractionResponse>({
       skip,
       request_url: url.href,
       client: grant.client.id,
@@ -111,6 +112,14 @@ export class LoginInteractionType implements InteractionTypeInterface {
         acr_values: grant.parameters.acr_values?.split(' '),
       },
     });
+
+    const response = new HttpResponse().json(body);
+
+    if (grant.session != null) {
+      response.setCookie('guarani:session', grant.session.id);
+    }
+
+    return response;
   }
 
   /**
@@ -119,11 +128,9 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * This method decides whether or not to authenticate the end user based on the decision of the application.
    *
    * @param context Login Context Interaction Request Context.
-   * @returns Parameters of the Login Decision Interaction Response.
+   * @returns Login Decision Interaction Response.
    */
-  public async handleDecision(
-    context: LoginDecisionInteractionContext<LoginDecision>
-  ): Promise<LoginDecisionInteractionResponse> {
+  public async handleDecision(context: LoginDecisionInteractionContext<LoginDecision>): Promise<HttpResponse> {
     const { grant } = context;
 
     await this.checkGrant(grant);
@@ -142,14 +149,13 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * to continue the Authorization Process.
    *
    * @param context Login Context Interaction Request Context.
-   * @returns Redirect Url for the User-Agent to continue the Authorization Process.
+   * @returns Redirect Response for the User-Agent to continue the Authorization Process.
    */
-  private async acceptLogin(context: LoginDecisionAcceptInteractionContext): Promise<LoginDecisionInteractionResponse> {
+  private async acceptLogin(context: LoginDecisionAcceptInteractionContext): Promise<HttpResponse> {
     const { acr, amr, grant, user } = context;
 
     if (grant.session == null) {
       grant.session = await this.sessionService.create(user, amr, acr);
-
       await this.grantService.save(grant);
     }
 
@@ -158,16 +164,18 @@ export class LoginInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return { redirect_to: url.href };
+    return new HttpResponse()
+      .setCookie('guarani:session', grant.session.id)
+      .json<LoginDecisionInteractionResponse>({ redirect_to: url.href });
   }
 
   /**
    * Denies the authentication performed by the application and redirects the User-Agent to display the Error details.
    *
    * @param context Login Context Interaction Request Context.
-   * @returns Redirect Url for the User-Agent to abort the Authorization Process.
+   * @returns Redirect Response for the User-Agent to abort the Authorization Process.
    */
-  private async denyLogin(context: LoginDecisionDenyInteractionContext): Promise<LoginDecisionInteractionResponse> {
+  private async denyLogin(context: LoginDecisionDenyInteractionContext): Promise<HttpResponse> {
     const { error, grant } = context;
 
     await this.grantService.remove(grant);
@@ -177,7 +185,9 @@ export class LoginInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return { redirect_to: url.href };
+    return new HttpResponse()
+      .setCookie('guarani:grant', null)
+      .json<LoginDecisionInteractionResponse>({ redirect_to: url.href });
   }
 
   /**

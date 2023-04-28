@@ -75,6 +75,7 @@ describe('Consent Interaction Type', () => {
           interaction_type: 'consent',
           consent_challenge: 'consent_challenge',
         },
+        cookies: {},
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'consent',
           handleContext: jest.fn(),
@@ -115,7 +116,12 @@ describe('Consent Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<ConsentContextInteractionResponse>({
+      const response = await interactionType.handleContext(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({});
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<ConsentContextInteractionResponse>({
         skip: false,
         requested_scope: 'foo bar baz',
         subject: 'user_id',
@@ -129,7 +135,12 @@ describe('Consent Interaction Type', () => {
     it('should return a valid skip consent context response.', async () => {
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<ConsentContextInteractionResponse>({
+      const response = await interactionType.handleContext(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({});
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<ConsentContextInteractionResponse>({
         skip: true,
         requested_scope: 'foo bar baz',
         subject: 'user_id',
@@ -153,6 +164,7 @@ describe('Consent Interaction Type', () => {
           consent_challenge: 'consent_challenge',
           decision: <ConsentDecision>'',
         },
+        cookies: {},
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'consent',
           handleContext: jest.fn(),
@@ -216,7 +228,12 @@ describe('Consent Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
+      const response = await interactionType.handleDecision(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({});
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
@@ -230,7 +247,12 @@ describe('Consent Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
+      const response = await interactionType.handleDecision(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({});
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
@@ -257,7 +279,12 @@ describe('Consent Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(error.toJSON());
 
-      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
+      const response = await interactionType.handleDecision(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': null });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,
       });
 

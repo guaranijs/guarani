@@ -115,6 +115,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<ConsentContextInteractionContext>({
         parameters: <ConsentContextInteractionRequest>request.query,
+        cookies: request.cookies,
         interactionType: interactionTypesMocks[0]!,
         grant,
       });
@@ -234,6 +235,7 @@ describe('Consent Interaction Request Validator', () => {
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<ConsentDecisionAcceptInteractionContext>(
         {
           parameters: <ConsentDecisionAcceptInteractionRequest>request.body,
+          cookies: request.cookies,
           interactionType: interactionTypesMocks[0]!,
           grant,
           decision: 'accept',
@@ -289,6 +291,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<ConsentDecisionDenyInteractionContext>({
         parameters: <ConsentDecisionDenyInteractionRequest>request.body,
+        cookies: request.cookies,
         interactionType: interactionTypesMocks[0]!,
         grant,
         decision: 'deny',

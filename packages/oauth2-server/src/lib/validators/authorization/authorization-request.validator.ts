@@ -9,14 +9,13 @@ import { InvalidRequestException } from '../../exceptions/invalid-request.except
 import { UnauthorizedClientException } from '../../exceptions/unauthorized-client.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
-import { PromptInterface } from '../../prompts/prompt.interface';
-import { Prompt } from '../../prompts/prompt.type';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
 import { ResponseType } from '../../response-types/response-type.type';
 import { ClientServiceInterface } from '../../services/client.service.interface';
 import { Settings } from '../../settings/settings';
+import { Prompt } from '../../types/prompt.type';
 
 /**
  * Implementation of the Authorization Request Validator.
@@ -38,7 +37,6 @@ export abstract class AuthorizationRequestValidator<
    * @param clientService Instance of the Client Service.
    * @param responseModes Response Modes registered at the Authorization Server.
    * @param responseTypes Response Types registered at the Authorization Server.
-   * @param prompts Prompts registered at the Authorization Server.
    * @param displays Displays registered at the Authorization Server.
    */
   public constructor(
@@ -47,7 +45,6 @@ export abstract class AuthorizationRequestValidator<
     protected readonly clientService: ClientServiceInterface,
     protected readonly responseModes: ResponseModeInterface[],
     protected readonly responseTypes: ResponseTypeInterface[],
-    protected readonly prompts: PromptInterface[],
     protected readonly displays: DisplayInterface[]
   ) {}
 
@@ -260,13 +257,13 @@ export abstract class AuthorizationRequestValidator<
    * @param parameters Parameters of the Authorization Request.
    * @returns Prompts requested by the Client.
    */
-  protected getPrompts(parameters: AuthorizationRequest): PromptInterface[] {
+  protected getPrompts(parameters: AuthorizationRequest): Prompt[] {
     if (parameters.prompt !== undefined && typeof parameters.prompt !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "prompt".', state: parameters.state });
     }
 
     const requestedPrompts = <Prompt[]>(parameters.prompt?.split(' ') ?? []);
-    const supportedPromptsNames = this.prompts.map((prompt) => prompt.name);
+    const supportedPromptsNames: Prompt[] = ['consent', 'login', 'none'];
 
     requestedPrompts.forEach((prompt) => {
       if (!supportedPromptsNames.includes(prompt)) {
@@ -281,7 +278,7 @@ export abstract class AuthorizationRequestValidator<
       });
     }
 
-    return this.prompts.filter((prompt) => requestedPrompts.includes(prompt.name));
+    return requestedPrompts;
   }
 
   /**

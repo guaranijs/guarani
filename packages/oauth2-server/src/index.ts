@@ -132,11 +132,6 @@ export { PkceInterface } from './lib/pkces/pkce.interface';
 export { PKCE } from './lib/pkces/pkce.token';
 export { Pkce } from './lib/pkces/pkce.type';
 
-// Prompts
-export { PromptInterface } from './lib/prompts/prompt.interface';
-export { PROMPT } from './lib/prompts/prompt.token';
-export { Prompt } from './lib/prompts/prompt.type';
-
 // Requests
 export { AuthorizationRequest } from './lib/requests/authorization/authorization-request';
 export { CodeAuthorizationRequest } from './lib/requests/authorization/code.authorization-request';
@@ -231,6 +226,7 @@ export { UserInteractionSettings } from './lib/settings/user-interaction.setting
 // Types
 export { AccessTokenType } from './lib/types/access-token-type.type';
 export { ApplicationType } from './lib/types/application-type.type';
+export { Prompt } from './lib/types/prompt.type';
 export { TokenTypeHint } from './lib/types/token-type-hint.type';
 
 // Validators

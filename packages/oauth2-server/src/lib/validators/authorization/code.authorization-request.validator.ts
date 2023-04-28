@@ -8,8 +8,6 @@ import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { PkceInterface } from '../../pkces/pkce.interface';
 import { PKCE } from '../../pkces/pkce.token';
-import { PromptInterface } from '../../prompts/prompt.interface';
-import { PROMPT } from '../../prompts/prompt.token';
 import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
@@ -43,7 +41,6 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
    * @param clientService Instance of the Client Service.
    * @param responseModes Response Modes registered at the Authorization Server.
    * @param responseTypes Response Types registered at the Authorization Server.
-   * @param prompts Prompts registered at the Authorization Server.
    * @param displays Displays registered at the Authorization Server.
    * @param pkces PKCE Code Challenge Methods registered at the Authorization Server.
    */
@@ -53,11 +50,10 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
     @Inject(CLIENT_SERVICE) protected override readonly clientService: ClientServiceInterface,
     @InjectAll(RESPONSE_MODE) protected override readonly responseModes: ResponseModeInterface[],
     @InjectAll(RESPONSE_TYPE) protected override readonly responseTypes: ResponseTypeInterface[],
-    @InjectAll(PROMPT) protected override readonly prompts: PromptInterface[],
     @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[],
     @InjectAll(PKCE) protected readonly pkces: PkceInterface[]
   ) {
-    super(scopeHandler, settings, clientService, responseModes, responseTypes, prompts, displays);
+    super(scopeHandler, settings, clientService, responseModes, responseTypes, displays);
   }
 
   /**

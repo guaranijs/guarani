@@ -41,9 +41,6 @@ import { Pkce } from '../pkces/pkce.type';
 import { PkceInterface } from '../pkces/pkce.interface';
 import { pkceRegistry } from '../pkces/pkce.registry';
 import { PKCE } from '../pkces/pkce.token';
-import { PromptInterface } from '../prompts/prompt.interface';
-import { promptRegistry } from '../prompts/prompt.registry';
-import { PROMPT } from '../prompts/prompt.token';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { responseModeRegistry } from '../response-modes/response-mode.registry';
 import { RESPONSE_MODE } from '../response-modes/response-mode.token';
@@ -139,7 +136,6 @@ export class AuthorizationServerFactory {
     this.setClientAuthentication();
     this.setClientAuthorization();
     this.setGrantTypes();
-    this.setPrompts();
     this.setDisplays();
     this.setInteractionTypes();
     this.setResponseTypes();
@@ -242,15 +238,6 @@ export class AuthorizationServerFactory {
     grantTypes.forEach((grantType) => {
       const constructor = <Constructor<GrantTypeInterface>>grantTypeRegistry[grantType];
       this.container.bind<GrantTypeInterface>(GRANT_TYPE).toClass(constructor).asSingleton();
-    });
-  }
-
-  /**
-   * Defines the Prompts supported by the Authorization Server.
-   */
-  private static setPrompts(): void {
-    Object.values(promptRegistry).forEach((prompt) => {
-      this.container.bind<PromptInterface>(PROMPT).toClass(prompt).asSingleton();
     });
   }
 

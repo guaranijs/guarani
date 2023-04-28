@@ -7,7 +7,7 @@ import { ConsentDecisionDenyInteractionContext } from '../context/interaction/co
 import { ConsentDecisionInteractionContext } from '../context/interaction/consent-decision.interaction.context';
 import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
-import { Prompt } from '../prompts/prompt.type';
+import { HttpResponse } from '../http/http.response';
 import { ConsentContextInteractionResponse } from '../responses/interaction/consent-context.interaction-response';
 import { ConsentDecisionInteractionResponse } from '../responses/interaction/consent-decision.interaction-response';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
@@ -16,6 +16,7 @@ import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { Prompt } from '../types/prompt.type';
 import { ConsentDecision } from './consent-decision.type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
@@ -67,9 +68,9 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * otherwise, it informs the application that it can safely skip this process and proceed with the authorization.
    *
    * @param context Consent Context Interaction Context.
-   * @returns Parameters of the Consent Context Interaction Response.
+   * @returns Consent Context Interaction Response.
    */
-  public async handleContext(context: ConsentContextInteractionContext): Promise<ConsentContextInteractionResponse> {
+  public async handleContext(context: ConsentContextInteractionContext): Promise<HttpResponse> {
     const { grant } = context;
 
     await this.checkGrant(grant);
@@ -79,7 +80,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return removeUndefined<ConsentContextInteractionResponse>({
+    const body = removeUndefined<ConsentContextInteractionResponse>({
       skip: grant.consent != null,
       requested_scope: grant.parameters.scope,
       subject: grant.session!.user.id,
@@ -92,6 +93,8 @@ export class ConsentInteractionType implements InteractionTypeInterface {
         ui_locales: grant.parameters.ui_locales?.split(' '),
       },
     });
+
+    return new HttpResponse().json(body);
   }
 
   /**
@@ -101,11 +104,9 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * based on the decision of the application.
    *
    * @param context Consent Decision Interaction Context.
-   * @returns Parameters of the Consent Decision Interaction Response.
+   * @returns Consent Decision Interaction Response.
    */
-  public async handleDecision(
-    context: ConsentDecisionInteractionContext<ConsentDecision>
-  ): Promise<ConsentDecisionInteractionResponse> {
+  public async handleDecision(context: ConsentDecisionInteractionContext<ConsentDecision>): Promise<HttpResponse> {
     const { decision, grant } = context;
 
     await this.checkGrant(grant);
@@ -123,11 +124,9 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * Accepts the consent performed by the application and redirects the User-Agent to continue the Authorization Process.
    *
    * @param context Consent Decision Interaction Context.
-   * @returns Redirect Url for the User-Agent to continue the Authorization Process.
+   * @returns Redirect Response for the User-Agent to continue the Authorization Process.
    */
-  private async acceptConsent(
-    context: ConsentDecisionAcceptInteractionContext
-  ): Promise<ConsentDecisionInteractionResponse> {
+  private async acceptConsent(context: ConsentDecisionAcceptInteractionContext): Promise<HttpResponse> {
     const { grant, grantedScopes } = context;
 
     if (grant.consent == null) {
@@ -149,18 +148,16 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return { redirect_to: url.href };
+    return new HttpResponse().json<ConsentDecisionInteractionResponse>({ redirect_to: url.href });
   }
 
   /**
    * Denies the consent performed by the application and redirects the User-Agent to display the Error details.
    *
    * @param context Consent Decision Interaction Context.
-   * @returns Redirect Url for the User-Agent to abort the Authorization Process.
+   * @returns Redirect Response for the User-Agent to abort the Authorization Process.
    */
-  private async denyConsent(
-    context: ConsentDecisionDenyInteractionContext
-  ): Promise<ConsentDecisionInteractionResponse> {
+  private async denyConsent(context: ConsentDecisionDenyInteractionContext): Promise<HttpResponse> {
     const { grant, error } = context;
 
     await this.grantService.remove(grant);
@@ -170,7 +167,9 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return { redirect_to: url.href };
+    return new HttpResponse()
+      .setCookie('guarani:grant', null)
+      .json<ConsentDecisionInteractionResponse>({ redirect_to: url.href });
   }
 
   /**

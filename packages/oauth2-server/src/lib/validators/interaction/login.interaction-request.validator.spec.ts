@@ -120,6 +120,7 @@ describe('Login Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<LoginContextInteractionContext>({
         parameters: <LoginContextInteractionRequest>request.query,
+        cookies: request.cookies,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });
@@ -251,6 +252,7 @@ describe('Login Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LoginDecisionAcceptInteractionContext>({
         parameters: <LoginDecisionAcceptInteractionRequest>request.body,
+        cookies: request.cookies,
         interactionType: interactionTypesMocks[1]!,
         grant,
         decision: 'accept',
@@ -307,6 +309,7 @@ describe('Login Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LoginDecisionDenyInteractionContext>({
         parameters: <LoginDecisionDenyInteractionRequest>request.body,
+        cookies: request.cookies,
         interactionType: interactionTypesMocks[1]!,
         grant,
         decision: 'deny',

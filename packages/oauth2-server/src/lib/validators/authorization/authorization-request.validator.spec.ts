@@ -11,7 +11,6 @@ import { InvalidScopeException } from '../../exceptions/invalid-scope.exception'
 import { UnauthorizedClientException } from '../../exceptions/unauthorized-client.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
-import { PromptInterface } from '../../prompts/prompt.interface';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
@@ -117,12 +116,6 @@ describe('Authorization Request Validator', () => {
     }),
   ];
 
-  const promptsMocks = [
-    jest.mocked<PromptInterface>({ name: 'consent', handle: jest.fn() }),
-    jest.mocked<PromptInterface>({ name: 'login', handle: jest.fn() }),
-    jest.mocked<PromptInterface>({ name: 'none', handle: jest.fn() }),
-  ];
-
   const displaysMocks = [
     jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
     jest.mocked<DisplayInterface>({ name: 'popup', createHttpResponse: jest.fn() }),
@@ -137,7 +130,6 @@ describe('Authorization Request Validator', () => {
       clientServiceMock,
       responseModesMocks,
       responseTypesMocks,
-      promptsMocks,
       displaysMocks,
     ]);
   });
@@ -570,7 +562,6 @@ describe('Authorization Request Validator', () => {
         clientServiceMock,
         responseModesMocks,
         responseTypesMocks,
-        promptsMocks,
         displaysMocks,
       ]);
 
@@ -639,7 +630,6 @@ describe('Authorization Request Validator', () => {
         clientServiceMock,
         responseModesMocks,
         responseTypesMocks,
-        promptsMocks,
         displaysMocks,
       ]);
 
@@ -686,7 +676,7 @@ describe('Authorization Request Validator', () => {
         state: 'client_state',
         responseMode: responseModesMocks[0]!,
         nonce: 'client_nonce',
-        prompts: [promptsMocks[0]!],
+        prompts: ['consent'],
         display: displaysMocks[1]!,
         maxAge: 300,
         loginHint: 'login_hint',

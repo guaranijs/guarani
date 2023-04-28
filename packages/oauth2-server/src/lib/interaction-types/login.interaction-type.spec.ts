@@ -77,6 +77,7 @@ describe('Login Interaction Type', () => {
           interaction_type: 'login',
           login_challenge: 'login_challenge',
         },
+        cookies: { 'guarani:grant': 'grant_id' },
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'login',
           handleContext: jest.fn(),
@@ -115,7 +116,12 @@ describe('Login Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
+      const response = await interactionType.handleContext(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({});
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
@@ -128,7 +134,12 @@ describe('Login Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
+      const response = await interactionType.handleContext(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': context.grant.session!.id });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginContextInteractionResponse>({
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
@@ -141,7 +152,12 @@ describe('Login Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
+      const response = await interactionType.handleContext(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': context.grant.session!.id });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginContextInteractionResponse>({
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
@@ -156,7 +172,12 @@ describe('Login Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
+      const response = await interactionType.handleContext(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': context.grant.session!.id });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
@@ -185,6 +206,7 @@ describe('Login Interaction Type', () => {
           login_challenge: 'login_challenge',
           decision: <LoginDecision>'',
         },
+        cookies: { 'guarani:grant': 'grant_id' },
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'login',
           handleContext: jest.fn(),
@@ -245,7 +267,12 @@ describe('Login Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
+      const response = await interactionType.handleDecision(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': session.id });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
@@ -275,7 +302,12 @@ describe('Login Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
+      const response = await interactionType.handleDecision(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': context.grant.session!.id });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
@@ -303,7 +335,12 @@ describe('Login Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(error.toJSON());
 
-      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
+      const response = await interactionType.handleDecision(context);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': null });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,
       });
 

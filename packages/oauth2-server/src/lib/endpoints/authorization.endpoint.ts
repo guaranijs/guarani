@@ -118,7 +118,6 @@ export class AuthorizationEndpoint implements EndpointInterface {
       return context.responseMode.createHttpResponse(parameters.redirect_uri, authorizationResponse).setCookies({
         'guarani:grant': null,
         'guarani:session': session.id,
-        'guarani:consent': consent.id,
       });
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);

@@ -66,7 +66,7 @@ export interface Client extends Record<string, any> {
   /**
    * JSON Web Signature Algorithm used to validate the JWT Bearer Client Assertion.
    */
-  authenticationSigningAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
+  authenticationSigningAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
 
   /**
    * Scopes of the Client.
@@ -116,7 +116,7 @@ export interface Client extends Record<string, any> {
   /**
    * Subject Type for responses to the Client.
    */
-  // subjectType?: string | null;
+  // subjectType: string;
 
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.

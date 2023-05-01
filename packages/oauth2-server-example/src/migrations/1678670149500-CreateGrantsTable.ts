@@ -53,14 +53,12 @@ export class CreateGrantsTable1678670149500 implements MigrationInterface {
           type: 'uuid',
           foreignKeyConstraintName: 'sessions_id_fk',
           isNullable: true,
-          isUnique: true,
         },
         {
           name: 'consent_id',
           type: 'uuid',
           foreignKeyConstraintName: 'consents_id_fk',
           isNullable: true,
-          isUnique: true,
         },
       ],
       checks: [
@@ -111,20 +109,12 @@ export class CreateGrantsTable1678670149500 implements MigrationInterface {
           columnNames: ['consent_challenge'],
         },
         {
-          name: 'grants_session_id_uq',
-          columnNames: ['session_id'],
-        },
-        {
-          name: 'grants_consent_id_uq',
-          columnNames: ['consent_id'],
-        },
-        {
           name: 'grants_login_challenge_and_consent_challenge_uq',
           columnNames: ['login_challenge', 'consent_challenge'],
         },
         {
           name: 'grants_session_id_and_consent_id_uq',
-          columnNames: ['session_id', 'consent_id'],
+          columnNames: ['session', 'consent'],
         },
       ],
     });

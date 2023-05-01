@@ -13,8 +13,8 @@ export class ConsentService implements ConsentServiceInterface {
     return consent;
   }
 
-  public async findOne(id: string): Promise<Consent | null> {
-    return await Consent.findOneBy({ id });
+  public async findOne(client: Client, user: User): Promise<Consent | null> {
+    return await Consent.findOneBy({ client: { id: client.id }, user: { id: user.id } });
   }
 
   public async save(consent: Consent): Promise<void> {

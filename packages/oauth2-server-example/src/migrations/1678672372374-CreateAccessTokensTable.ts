@@ -44,7 +44,7 @@ export class CreateAccessTokensTable1678672372374 implements MigrationInterface 
           name: 'client_id',
           type: 'uuid',
           foreignKeyConstraintName: 'clients_id_fk',
-          isNullable: false,
+          isNullable: true,
         },
         {
           name: 'user_id',

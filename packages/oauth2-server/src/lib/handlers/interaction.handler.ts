@@ -49,7 +49,7 @@ export class InteractionHandler {
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
     @Inject(CONSENT_SERVICE) private readonly consentService: ConsentServiceInterface
   ) {
-    if (this.settings.userInteraction === undefined) {
+    if (typeof this.settings.userInteraction === 'undefined') {
       throw new TypeError('Missing User Interaction options.');
     }
   }
@@ -62,138 +62,126 @@ export class InteractionHandler {
    * or to an Interaction Endpoint so that the End User can continue the Authorization process.
    *
    * @param context Authorization Request Context.
-   * @returns Grant, Session and Consent Entities or Http Interaction Response.
+   * @returns Session and Consent Entities or Http Interaction Response.
    */
   public async getEntitiesOrHttpResponse(
     context: AuthorizationContext<AuthorizationRequest>
   ): Promise<HttpResponse | [Grant | null, Session, Consent]> {
-    const { client, cookies, display, parameters, prompts } = context;
+    const { client, cookies, display, idTokenHint, maxAge, parameters, prompts } = context;
 
-    let grant = await this.findGrant(cookies);
-    let session = await this.findSession(cookies);
-    let consent = await this.findConsent(cookies);
-
-    try {
-      for (const prompt of prompts) {
-        [grant, session, consent] = await prompt.handle(context, grant, session, consent);
-      }
-    } catch (exc: unknown) {
-      if (exc instanceof LoginRequiredException) {
-        return this.handleFatalAuthorizationError(exc).setCookie('guarani:session', null);
-      }
-
-      if (exc instanceof ConsentRequiredException) {
-        return this.handleFatalAuthorizationError(exc).setCookie('guarani:consent', null);
-      }
-
-      const error = this.asOAuth2Exception(exc, parameters);
-      const response = this.handleFatalAuthorizationError(error).setCookies({
-        'guarani:grant': null,
-        'guarani:session': null,
-      });
-
-      if (consent === null) {
-        response.setCookie('guarani:consent', null);
-      }
-
-      return response;
-    }
+    let grant: Grant | null = await this.findGrant(cookies);
+    let session: Session | null = null;
+    let consent: Consent | null = null;
 
     // #region Session validation
     try {
+      session = await this.findSession(cookies);
+
+      // Prompt "login" removes previous authentication result.
+      if (session !== null && grant?.session == null && prompts.includes('login')) {
+        await this.sessionService.remove(session);
+        session = null;
+      }
+
       if (session === null) {
-        grant ??= await this.grantService.create(parameters, client);
-
-        await this.checkGrant(grant, client, parameters);
-
-        if (grant.session == null) {
-          return this.redirectToLoginPage(grant, display);
+        if (prompts.includes('none')) {
+          throw new LoginRequiredException({ state: parameters.state });
         }
 
-        session = grant.session;
+        grant === null
+          ? (grant = await this.grantService.create(parameters, client))
+          : await this.checkGrant(grant, client, parameters);
+
+        return this.redirectToLoginPage(grant, display);
       }
 
       if (session.expiresAt != null && new Date() > session.expiresAt) {
         await this.sessionService.remove(session);
+
+        if (prompts.includes('none')) {
+          throw new LoginRequiredException({ state: parameters.state });
+        }
+
         grant ??= await this.grantService.create(parameters, client);
         return this.redirectToLoginPage(grant, display);
       }
 
-      if (
-        parameters.id_token_hint !== undefined &&
-        !(await this.idTokenHandler.checkIdTokenHint(parameters.id_token_hint, session))
-      ) {
+      if (typeof maxAge !== 'undefined' && new Date() >= new Date(session.createdAt.getTime() + maxAge * 1000)) {
         await this.sessionService.remove(session);
 
-        if (grant !== null) {
-          await this.grantService.remove(grant);
+        if (prompts.includes('none')) {
+          throw new LoginRequiredException({ state: parameters.state });
         }
+
+        grant ??= await this.grantService.create(parameters, client);
+        return this.redirectToLoginPage(grant, display);
+      }
+
+      if (typeof idTokenHint !== 'undefined' && !(await this.idTokenHandler.checkIdTokenHint(idTokenHint, session))) {
+        await this.sessionService.remove(session);
 
         throw new LoginRequiredException({
           description: 'The currently authenticated User is not the one expected by the ID Token Hint.',
           state: parameters.state,
         });
       }
-
-      if (parameters.max_age !== undefined) {
-        const maxAge = Number.parseInt(parameters.max_age, 10);
-
-        if (session.createdAt.getTime() + maxAge * 1000 <= Date.now()) {
-          grant ??= await this.grantService.create(parameters, client);
-
-          if (grant.session == null) {
-            grant.session = session;
-            await this.grantService.save(grant);
-          }
-
-          return this.redirectToLoginPage(grant, display);
-        }
-      }
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);
-      return this.handleFatalAuthorizationError(error).setCookies({ 'guarani:grant': null, 'guarani:session': null });
+      const response = this.handleFatalAuthorizationError(error).setCookie('guarani:session', null);
+
+      if (grant !== null) {
+        await this.grantService.remove(grant);
+        response.setCookie('guarani:grant', null);
+      }
+
+      return response;
     }
     // #endregion
 
     // #region Consent validation
     try {
+      const { user } = session;
+
+      consent = await this.consentService.findOne(client, user);
+
+      // Prompt "consent" removes previous authorization result.
+      if (consent !== null && grant?.consent == null && prompts.includes('consent')) {
+        await this.consentService.remove(consent);
+        consent = null;
+      }
+
       if (consent === null) {
-        grant ??= await this.grantService.create(parameters, client);
-
-        if (grant.session == null) {
-          grant.session = session;
-          await this.grantService.save(grant);
+        if (prompts.includes('none')) {
+          throw new ConsentRequiredException({ state: parameters.state });
         }
 
-        await this.checkGrant(grant, client, parameters);
+        grant === null
+          ? (grant = await this.grantService.create(parameters, client))
+          : await this.checkGrant(grant, client, parameters);
 
-        if (grant.consent == null) {
-          return this.redirectToConsentPage(grant, session, display);
-        }
-
-        consent = grant.consent;
+        return this.redirectToConsentPage(grant, display);
       }
 
       if (consent.expiresAt != null && new Date() > consent.expiresAt) {
         await this.consentService.remove(consent);
 
-        grant ??= await this.grantService.create(parameters, client);
-
-        if (grant.session == null) {
-          grant.session = session;
-          await this.grantService.save(grant);
+        if (prompts.includes('none')) {
+          throw new ConsentRequiredException({ state: parameters.state });
         }
 
-        return this.redirectToConsentPage(grant, session, display);
+        grant ??= await this.grantService.create(parameters, client);
+        return this.redirectToConsentPage(grant, display);
       }
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc, parameters);
+      const response = this.handleFatalAuthorizationError(error);
 
-      return this.handleFatalAuthorizationError(error).setCookies({
-        'guarani:grant': null,
-        'guarani:session': null,
-        'guarani:consent': null,
-      });
+      if (grant !== null) {
+        await this.grantService.remove(grant);
+        response.setCookie('guarani:grant', null);
+      }
+
+      return response;
     }
     // #endregion
 
@@ -233,22 +221,6 @@ export class InteractionHandler {
   }
 
   /**
-   * Searches the application's storage for a Consent based on the Identifier in the Cookies of the Http Request.
-   *
-   * @param cookies Cookies of the Http Request.
-   * @returns Consent based on the Cookies.
-   */
-  private async findConsent(cookies: Record<string, any>): Promise<Consent | null> {
-    const consentId: string | undefined = cookies['guarani:consent'];
-
-    if (consentId === undefined) {
-      return null;
-    }
-
-    return await this.consentService.findOne(consentId);
-  }
-
-  /**
    * Checks if the provided Grant is valid.
    *
    * @param grant Grant of the Request.
@@ -256,32 +228,22 @@ export class InteractionHandler {
    * @param parameters Parameters of the Authorization Request.
    */
   private async checkGrant(grant: Grant, client: Client, parameters: AuthorizationRequest): Promise<void> {
-    const { client: grantClient, parameters: grantParameters } = grant;
+    const clientId = Buffer.from(client.id, 'utf8');
+    const grantClientId = Buffer.from(grant.client.id, 'utf8');
 
-    const clientIdBuffer = Buffer.from(client.id, 'utf8');
-    const grantClientIdBuffer = Buffer.from(grantClient.id, 'utf8');
+    if (clientId.length !== grantClientId.length || !timingSafeEqual(clientId, grantClientId)) {
+      throw new InvalidRequestException({ description: 'Mismatching Client Identifier.', state: parameters.state });
+    }
 
-    try {
-      if (
-        clientIdBuffer.length !== grantClientIdBuffer.length ||
-        !timingSafeEqual(clientIdBuffer, grantClientIdBuffer)
-      ) {
-        throw new InvalidRequestException({ description: 'Mismatching Client Identifier.', state: parameters.state });
-      }
+    if (new Date() > grant.expiresAt) {
+      throw new InvalidRequestException({ description: 'Expired Grant.', state: parameters.state });
+    }
 
-      if (new Date() > grant.expiresAt) {
-        throw new InvalidRequestException({ description: 'Expired Grant.', state: parameters.state });
-      }
-
-      if (!isDeepStrictEqual(parameters, grantParameters)) {
-        throw new InvalidRequestException({
-          description: 'One or more parameters changed since the initial request.',
-          state: parameters.state,
-        });
-      }
-    } catch (exc: unknown) {
-      await this.grantService.remove(grant);
-      throw exc;
+    if (!isDeepStrictEqual(parameters, grant.parameters)) {
+      throw new InvalidRequestException({
+        description: 'One or more parameters changed since the initial request.',
+        state: parameters.state,
+      });
     }
   }
 
@@ -296,26 +258,21 @@ export class InteractionHandler {
     const url = new URL(this.settings.userInteraction!.loginUrl, this.settings.issuer);
     const parameters: Record<string, any> = { login_challenge: grant.loginChallenge };
 
-    return display
-      .createHttpResponse(url.href, parameters)
-      .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null });
+    return display.createHttpResponse(url.href, parameters).setCookie('guarani:grant', grant.id);
   }
 
   /**
    * Redirects the User-Agent to the Authorization Server's Consent Page for it to authenticate the User.
    *
    * @param grant Grant of the Request.
-   * @param session Session of the Request.
    * @param display Display requested by the Client.
    * @returns Http Redirect Response to the Consent Page.
    */
-  private redirectToConsentPage(grant: Grant, session: Session, display: DisplayInterface): HttpResponse {
+  private redirectToConsentPage(grant: Grant, display: DisplayInterface): HttpResponse {
     const url = new URL(this.settings.userInteraction!.consentUrl, this.settings.issuer);
     const parameters: Record<string, any> = { consent_challenge: grant.consentChallenge };
 
-    return display
-      .createHttpResponse(url.href, parameters)
-      .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null });
+    return display.createHttpResponse(url.href, parameters).setCookie('guarani:grant', grant.id);
   }
 
   /**

@@ -33,10 +33,11 @@ export abstract class InteractionRequestValidator<
    */
   public async validateContext(request: HttpRequest): Promise<TContextContext> {
     const parameters = <TContextRequest>request.query;
+    const cookies = request.cookies;
 
     const interactionType = this.getInteractionType(parameters);
 
-    return <TContextContext>{ parameters, interactionType };
+    return <TContextContext>{ parameters, cookies, interactionType };
   }
 
   /**
@@ -47,10 +48,11 @@ export abstract class InteractionRequestValidator<
    */
   public async validateDecision(request: HttpRequest): Promise<TDecisionContext> {
     const parameters = <TDecisionRequest>request.body;
+    const cookies = request.cookies;
 
     const interactionType = this.getInteractionType(parameters);
 
-    return <TDecisionContext>{ parameters, interactionType };
+    return <TDecisionContext>{ parameters, cookies, interactionType };
   }
 
   /**

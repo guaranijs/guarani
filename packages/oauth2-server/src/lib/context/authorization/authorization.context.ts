@@ -2,10 +2,10 @@ import { URL } from 'url';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { Client } from '../../entities/client.entity';
-import { PromptInterface } from '../../prompts/prompt.interface';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
+import { Prompt } from '../../types/prompt.type';
 
 /**
  * Parameters of the Authorization Context.
@@ -60,7 +60,7 @@ export interface AuthorizationContext<T extends AuthorizationRequest> {
   /**
    * Prompts requested by the Client.
    */
-  readonly prompts: PromptInterface[];
+  readonly prompts: Prompt[];
 
   /**
    * Display used to present the interaction UIs to the End User.

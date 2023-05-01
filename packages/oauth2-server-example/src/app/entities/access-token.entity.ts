@@ -33,9 +33,9 @@ export class AccessToken extends BaseEntity implements OAuth2AccessToken {
   @Column({ name: 'valid_after', type: 'timestamp', nullable: false })
   public readonly validAfter!: Date;
 
-  @ManyToOne(() => Client, { cascade: false, eager: true, nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @ManyToOne(() => Client, { cascade: false, eager: true, nullable: true, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'client_id', referencedColumnName: 'id', foreignKeyConstraintName: 'clients_id_fk' })
-  public readonly client!: Client;
+  public readonly client!: Client | null;
 
   @ManyToOne(() => User, { cascade: false, eager: true, nullable: true, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id', foreignKeyConstraintName: 'users_id_fk' })

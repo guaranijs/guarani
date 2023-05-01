@@ -1,6 +1,7 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { OutgoingHttpHeaders } from 'http';
 
-import { URLSearchParams } from 'url';
+import { URL, URLSearchParams } from 'url';
 
 import { AuthorizationContext } from '../context/authorization/authorization.context';
 import { DisplayInterface } from '../displays/display.interface';
@@ -10,9 +11,7 @@ import { Session } from '../entities/session.entity';
 import { ConsentRequiredException } from '../exceptions/consent-required.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { LoginRequiredException } from '../exceptions/login-required.exception';
-import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpResponse } from '../http/http.response';
-import { PromptInterface } from '../prompts/prompt.interface';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
@@ -22,6 +21,7 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { Prompt } from '../types/prompt.type';
 import { IdTokenHandler } from './id-token.handler';
 import { InteractionHandler } from './interaction.handler';
 
@@ -32,14 +32,6 @@ type Entities = [Grant | null, Session, Consent];
 describe('Interaction Handler', () => {
   let container: DependencyInjectionContainer;
   let handler: InteractionHandler;
-
-  const promptsMocks = [
-    jest.mocked<PromptInterface>({ name: 'none', handle: jest.fn() }),
-    jest.mocked<PromptInterface>({ name: 'login', handle: jest.fn() }),
-    jest.mocked<PromptInterface>({ name: 'consent', handle: jest.fn() }),
-  ];
-
-  const displaysMocks = [jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() })];
 
   const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
 
@@ -107,133 +99,77 @@ describe('Interaction Handler', () => {
 
     beforeEach(() => {
       context = <AuthorizationContext<AuthorizationRequest>>{
-        parameters: { state: 'client_state' },
+        parameters: <AuthorizationRequest>{ state: 'client_state', display: 'page' },
         cookies: {},
         client: { id: 'client_id' },
-        prompts: <PromptInterface[]>[],
+        state: 'client_state',
+        display: <DisplayInterface>{
+          name: 'page',
+          createHttpResponse: jest.fn((redirectUri, parameters) => {
+            const url = new URL(redirectUri);
+            const urlParameters = new URLSearchParams(parameters);
+            url.search = urlParameters.toString();
+            return new HttpResponse().redirect(url);
+          }),
+        },
+        prompts: <Prompt[]>[],
       };
     });
 
-    it('should return an error response when authentication is required.', async () => {
-      Object.assign(context, { parameters: { prompt: 'none' }, prompts: [promptsMocks[0]!] });
+    it('should redirect to the error endpoint when the prompt is "none" and no session is found.', async () => {
+      Reflect.set(context.parameters, 'prompt', 'none');
+      Reflect.set(context, 'prompts', ['none']);
 
       const error = new LoginRequiredException({ state: 'client_state' });
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse().redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
-      );
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': null });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
     });
 
-    it('should return an error response when authorization is required.', async () => {
-      Object.assign(context, { parameters: { prompt: 'none' }, prompts: [promptsMocks[0]!] });
-
-      const error = new ConsentRequiredException({ state: 'client_state' });
-      const errorParameters = new URLSearchParams(error.toJSON());
-
-      promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse().redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
-      );
-    });
-
-    it('should return an error response for a generic error with a previous authorization.', async () => {
-      Object.assign(context, { parameters: { prompt: 'none' }, prompts: [promptsMocks[0]!] });
-
-      const error = new ServerErrorException({ description: 'An unexpected error occurred.', state: 'client_state' });
-      const errorParameters = new URLSearchParams(error.toJSON());
-
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
-
-      promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': null, 'guarani:session': null })
-          .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
-      );
-    });
-
-    it('should return an error response for a generic error.', async () => {
-      Object.assign(context, { parameters: { prompt: 'none' }, prompts: [promptsMocks[0]!] });
-
-      const error = new ServerErrorException({ description: 'An unexpected error occurred.', state: 'client_state' });
-      const errorParameters = new URLSearchParams(error.toJSON());
-
-      consentServiceMock.findOne.mockResolvedValueOnce(<Consent>{ id: 'consent_id' });
-
-      promptsMocks.find((prompt) => prompt.name === 'none')!.handle.mockRejectedValueOnce(error);
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': null, 'guarani:session': null, 'guarani:consent': null })
-          .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
-      );
-    });
-
-    // #region Not authenticated and not authorized.
-    it('should return a redirect response to the login endpoint when starting a fresh authorization process.', async () => {
+    it('should create a grant and redirect to the login endpoint if no session is found.', async () => {
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
         client: context.client,
       };
 
       grantServiceMock.create.mockResolvedValueOnce(grant);
 
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/login?login_challenge=login_challenge',
       });
 
-      const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
-          .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
-      );
+      expect(response.body).toEqual(Buffer.alloc(0));
 
       expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
     });
 
-    it('should return a redirect response to the login endpoint when not authenticating at the login endpoint.', async () => {
-      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
+    it('should redirect to the error endpoint if the grant was issued to another client.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
 
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
-        client: context.client,
-      };
-
-      grantServiceMock.findOne.mockResolvedValueOnce(grant);
-
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
-      });
-
-      const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
-          .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
-      );
-
-      expect(grantServiceMock.create).not.toHaveBeenCalled();
-    });
-
-    it('should return an error response if the client of the request does not match the client of the grant.', async () => {
-      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
-
-      const grant = <Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
         client: { id: 'another_client_id' },
       };
 
@@ -246,18 +182,24 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': null, 'guarani:session': null })
-          .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
-      );
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
 
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': null, 'guarani:session': null });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
     });
 
-    it('should return an error response if the grant is expired.', async () => {
-      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
+    it('should redirect to the error endpoint if the grant is expired.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
 
       const grant = <Grant>{
         id: 'grant_id',
@@ -272,18 +214,24 @@ describe('Interaction Handler', () => {
       const error = new InvalidRequestException({ description: 'Expired Grant.', state: 'client_state' });
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': null, 'guarani:session': null })
-          .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
-      );
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
 
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': null, 'guarani:session': null });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
     });
 
-    it('should return an error response if one or more parameters changed during the interactions.', async () => {
-      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
+    it('should redirect to the error endpoint if the initial parameters changed.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
 
       const grant = <Grant>{
         id: 'grant_id',
@@ -302,68 +250,315 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': null, 'guarani:session': null })
-          .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
-      );
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
 
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': null, 'guarani:session': null });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
     });
 
-    it("should return a redirect response to the login endpoint if the user authenticated but did not authorize before the session's expiration time.", async () => {
-      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
+    it('should redirect to the login endpoint if no session is found.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
 
-      const session = <Session>{ id: 'session_id', expiresAt: new Date(Date.now() - 300000) };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
         client: context.client,
-        session,
       };
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
 
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/login?login_challenge=login_challenge',
       });
 
-      const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
-          .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
-      );
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
+    });
+
+    it('should redirect to the error endpoint when the prompt is "none" and the session is expired.', async () => {
+      context.cookies['guarani:session'] = 'session_id';
+
+      Reflect.set(context.parameters, 'prompt', 'none');
+      Reflect.set(context, 'prompts', ['none']);
+
+      const session = <Session>{
+        id: 'session_id',
+        expiresAt: new Date(Date.now() - 3600000),
+        user: { id: 'user_id' },
+      };
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+
+      const error = new LoginRequiredException({ state: 'client_state' });
+      const errorParameters = new URLSearchParams(error.toJSON());
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': null });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
 
       expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
     });
 
-    it('should return an error response when the authenticated user does not match the user expected by the "id_token_hint".', async () => {
-      Object.assign(context, {
-        parameters: { id_token_hint: 'another_user_id_token' },
-        cookies: { 'guarani:grant': 'grant_id' },
-        idTokenHint: 'another_user_id_token',
-      });
+    it('should create a grant and redirect to the login endpoint when the session is expired.', async () => {
+      context.cookies['guarani:session'] = 'session_id';
 
-      const session = <Session>{ id: 'session_id', user: { id: 'user_id' } };
+      const session = <Session>{
+        id: 'session_id',
+        expiresAt: new Date(Date.now() - 3600000),
+        user: { id: 'user_id' },
+      };
+
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
         client: context.client,
-        session,
+      };
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      grantServiceMock.create.mockResolvedValueOnce(grant);
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/login?login_challenge=login_challenge',
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
+
+      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
+
+      const removeSessionOrder = sessionServiceMock.remove.mock.invocationCallOrder[0]!;
+      const createGrantOrder = grantServiceMock.create.mock.invocationCallOrder[0]!;
+
+      expect(removeSessionOrder).toBeLessThan(createGrantOrder);
+    });
+
+    it('should redirect to the login endpoint when the session is expired.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
+      context.cookies['guarani:session'] = 'session_id';
+
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
+        client: context.client,
+      };
+
+      const session = <Session>{
+        id: 'session_id',
+        expiresAt: new Date(Date.now() - 3600000),
+        user: { id: 'user_id' },
       };
 
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
-      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/login?login_challenge=login_challenge',
       });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
+    });
+
+    it('should redirect to the error endpoint when the prompt is "none" and the session is older than the "max_age".', async () => {
+      context.cookies['guarani:session'] = 'session_id';
+
+      Reflect.set(context.parameters, 'prompt', 'none');
+      Reflect.set(context.parameters, 'max_age', 86400);
+      Reflect.set(context, 'prompts', ['none']);
+      Reflect.set(context, 'maxAge', 86400);
+
+      const session = <Session>{
+        id: 'session_id',
+        createdAt: new Date(Date.now() - 1296000000),
+        expiresAt: new Date(Date.now() + 3600000),
+        user: { id: 'user_id' },
+      };
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+
+      const error = new LoginRequiredException({ state: 'client_state' });
+      const errorParameters = new URLSearchParams(error.toJSON());
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': null });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
+    });
+
+    it('should create a grant and redirect to the login endpoint when the session is older than the "max_age".', async () => {
+      context.cookies['guarani:session'] = 'session_id';
+
+      Reflect.set(context.parameters, 'max_age', 86400);
+      Reflect.set(context, 'maxAge', 86400);
+
+      const session = <Session>{
+        id: 'session_id',
+        createdAt: new Date(Date.now() - 1296000000),
+        expiresAt: new Date(Date.now() + 3600000),
+        user: { id: 'user_id' },
+      };
+
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
+        client: context.client,
+      };
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      grantServiceMock.create.mockResolvedValueOnce(grant);
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/login?login_challenge=login_challenge',
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
+
+      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
+
+      const removeSessionOrder = sessionServiceMock.remove.mock.invocationCallOrder[0]!;
+      const createGrantOrder = grantServiceMock.create.mock.invocationCallOrder[0]!;
+
+      expect(removeSessionOrder).toBeLessThan(createGrantOrder);
+    });
+
+    it('should redirect to the login endpoint when the session is older than the "max_age".', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
+      context.cookies['guarani:session'] = 'session_id';
+
+      Reflect.set(context.parameters, 'max_age', 86400);
+      Reflect.set(context, 'maxAge', 86400);
+
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
+        client: context.client,
+      };
+
+      const session = <Session>{
+        id: 'session_id',
+        createdAt: new Date(Date.now() - 1296000000),
+        expiresAt: new Date(Date.now() + 3600000),
+        user: { id: 'user_id' },
+      };
+
+      grantServiceMock.findOne.mockResolvedValueOnce(grant);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/login?login_challenge=login_challenge',
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
+    });
+
+    it('should redirect to the error endpoint when the authenticated user does not match the user of "id_token_hint".', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
+      context.cookies['guarani:session'] = 'session_id';
+
+      Reflect.set(context.parameters, 'id_token_hint', 'id_token');
+      Reflect.set(context, 'idTokenHint', 'id_token');
+
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
+        client: context.client,
+      };
+
+      const session = <Session>{
+        id: 'session_id',
+        expiresAt: new Date(Date.now() + 3600000),
+        user: { id: 'user_id' },
+      };
+
+      grantServiceMock.findOne.mockResolvedValueOnce(grant);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
 
       const error = new LoginRequiredException({
         description: 'The currently authenticated User is not the one expected by the ID Token Hint.',
@@ -372,304 +567,32 @@ describe('Interaction Handler', () => {
 
       const errorParameters = new URLSearchParams(error.toJSON());
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': null, 'guarani:session': null })
-          .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
-      );
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
 
-      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
-    });
+      expect(response.statusCode).toBe(303);
 
-    it('should return a redirect response to the consent endpoint if not previously authorized.', async () => {
-      Reflect.set(context.cookies, 'guarani:grant', 'grant_id');
-
-      const session = <Session>{ id: 'session_id' };
-      const grant = <Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        parameters: context.parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: context.client,
-        session,
-      };
-
-      grantServiceMock.findOne.mockResolvedValueOnce(grant);
-      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
-
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
       });
 
-      const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': null, 'guarani:session': null });
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': grant.session!.id, 'guarani:consent': null })
-          .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
-      );
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
 
       expect(grantServiceMock.create).not.toHaveBeenCalled();
-      expect(grantServiceMock.save).not.toHaveBeenCalled();
     });
 
-    it('should return a redirect response to the consent enddpoint if the consent is expired.', async () => {
-      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' });
+    it('should redirect to the login endpoint when the prompt is "login" and there is an authenticated user.', async () => {
+      context.cookies['guarani:session'] = 'session_id';
+
+      Reflect.set(context.parameters, 'prompt', 'login');
+      Reflect.set(context, 'prompts', ['login']);
 
       const session = <Session>{ id: 'session_id' };
-      const consent = <Consent>{ id: 'consent_id', expiresAt: new Date(Date.now() - 300000) };
-      const grant = <Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        parameters: context.parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: context.client,
-        session,
-        consent,
-      };
 
-      grantServiceMock.findOne.mockResolvedValueOnce(grant);
-      sessionServiceMock.findOne.mockResolvedValueOnce(session);
-
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
-      });
-
-      const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
-          .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
-      );
-
-      expect(grantServiceMock.create).not.toHaveBeenCalled();
-      expect(grantServiceMock.save).not.toHaveBeenCalled();
-
-      expect(consentServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(consentServiceMock.remove).toHaveBeenCalledWith(grant.consent!);
-    });
-
-    it('should return the entities of the interaction.', async () => {
-      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' });
-
-      const session = <Session>{ id: 'session_id' };
-      const consent = <Consent>{ id: 'consent_id' };
-      const grant = <Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        consentChallenge: 'consent_challenge',
-        parameters: context.parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: context.client,
-        session,
-        consent,
-      };
-
-      grantServiceMock.findOne.mockResolvedValueOnce(grant);
-      sessionServiceMock.findOne.mockResolvedValueOnce(session);
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toEqual<Entities>([
-        grant,
-        session,
-        grant.consent!,
-      ]);
-    });
-    // #endregion
-
-    // #region Authenticated but not authorized.
-    it('should return a redirect response to the consent endpoint when previously authenticated but not authorized.', async () => {
-      Reflect.set(context.cookies, 'guarani:session', 'session_id');
-
-      const session = <Session>{ id: 'session_id' };
-      const grant = <Grant>{
-        id: 'grant_id',
-        consentChallenge: 'consent_challenge',
-        parameters: context.parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: context.client,
-      };
-
-      sessionServiceMock.findOne.mockResolvedValueOnce(session);
-      grantServiceMock.create.mockResolvedValueOnce(grant);
-
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
-      });
-
-      const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
-          .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
-      );
-
-      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
-
-      expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.save).toHaveBeenCalledWith({ ...grant, session });
-    });
-
-    it('should return a redirect response to the consent endpoint when previously authenticated but did not decide at the consent endpoint.', async () => {
-      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' });
-
-      const session = <Session>{ id: 'session_id' };
-      const grant = <Grant>{
-        id: 'grant_id',
-        consentChallenge: 'consent_challenge',
-        parameters: context.parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: context.client,
-        session,
-      };
-
-      grantServiceMock.findOne.mockResolvedValueOnce(grant);
-      sessionServiceMock.findOne.mockResolvedValueOnce(session);
-
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
-      });
-
-      const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
-          .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
-      );
-
-      expect(grantServiceMock.create).not.toHaveBeenCalled();
-      expect(grantServiceMock.save).not.toHaveBeenCalled();
-    });
-
-    it('should return a redirect response to the consent endpoint when previously authenticated but did not authorize and the consent expired.', async () => {
-      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' });
-
-      const session = <Session>{ id: 'session_id' };
-      const consent = <Consent>{ id: 'consent_id', expiresAt: new Date(Date.now() - 300000) };
-      const grant = <Grant>{
-        id: 'grant_id',
-        consentChallenge: 'consent_challenge',
-        parameters: context.parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: context.client,
-        session,
-        consent,
-      };
-
-      grantServiceMock.findOne.mockResolvedValueOnce(grant);
-      sessionServiceMock.findOne.mockResolvedValueOnce(session);
-
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
-      });
-
-      const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
-          .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
-      );
-
-      expect(consentServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(consentServiceMock.remove).toHaveBeenCalledWith(grant.consent!);
-
-      expect(grantServiceMock.create).not.toHaveBeenCalled();
-      expect(grantServiceMock.save).not.toHaveBeenCalled();
-    });
-
-    it('should return the entities of the interaction.', async () => {
-      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:session': 'session_id' });
-
-      const session = <Session>{ id: 'session_id' };
-      const consent = <Consent>{ id: 'consent_id' };
-      const grant = <Grant>{
-        id: 'grant_id',
-        consentChallenge: 'consent_challenge',
-        parameters: context.parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: context.client,
-        session,
-        consent,
-      };
-
-      grantServiceMock.findOne.mockResolvedValueOnce(grant);
-      sessionServiceMock.findOne.mockResolvedValueOnce(session);
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toEqual<Entities>([
-        grant,
-        session,
-        grant.consent!,
-      ]);
-    });
-    // #endregion
-
-    // #region Not authenticated but authorized.
-    it('should return a redirect response to the login endpoint when not authenticated but previously authorized.', async () => {
-      Reflect.set(context.cookies, 'guarani:consent', 'consent_id');
-
-      const consent = <Consent>{ id: 'consent_id' };
-      const grant = <Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        parameters: context.parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: context.client,
-      };
-
-      consentServiceMock.findOne.mockResolvedValueOnce(consent);
-      grantServiceMock.create.mockResolvedValueOnce(grant);
-
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
-      });
-
-      const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
-          .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
-      );
-
-      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
-    });
-
-    it('should return the entities of the interaction.', async () => {
-      Object.assign(context.cookies, { 'guarani:grant': 'grant_id', 'guarani:consent': 'consent_id' });
-
-      const session = <Session>{ id: 'session_id' };
-      const consent = <Consent>{ id: 'consent_id' };
-      const grant = <Grant>{
-        id: 'grant_id',
-        loginChallenge: 'login_challenge',
-        parameters: context.parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: context.client,
-        session,
-      };
-
-      grantServiceMock.findOne.mockResolvedValueOnce(grant);
-      consentServiceMock.findOne.mockResolvedValueOnce(consent);
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toEqual<Entities>([
-        grant,
-        grant.session!,
-        consent,
-      ]);
-    });
-    // #endregion
-
-    // #region Authenticated and Authorized.
-    it('should return a redirect response to the login endpoint if the session is expired.', async () => {
-      Object.assign(context.cookies, { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' });
-
-      const session = <Session>{ id: 'session_id', expiresAt: new Date(Date.now() - 3600000) };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
@@ -681,66 +604,36 @@ describe('Interaction Handler', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       grantServiceMock.create.mockResolvedValueOnce(grant);
 
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/login?login_challenge=login_challenge',
       });
 
-      const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
-          .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
-      );
+      expect(response.body).toEqual(Buffer.alloc(0));
 
       expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
 
       expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
+
+      const removeSessionOrder = sessionServiceMock.remove.mock.invocationCallOrder[0]!;
+      const createGrantOrder = grantServiceMock.create.mock.invocationCallOrder[0]!;
+
+      expect(removeSessionOrder).toBeLessThan(createGrantOrder);
     });
 
-    it('should return an error response when the authenticated user does not match the user expected by the "id_token_hint".', async () => {
-      Object.assign(context, {
-        parameters: { id_token_hint: 'another_user_id_token' },
-        cookies: { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' },
-        idTokenHint: 'another_user_id_token',
-      });
+    it('should redirect to the login endpoint when the prompt is "login" and there is an authenticated user with a previous unfinished grant.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
+      context.cookies['guarani:session'] = 'session_id';
 
-      const session = <Session>{ id: 'session_id', user: { id: 'user_id' } };
-      const consent = <Consent>{ id: 'consent_id' };
+      Reflect.set(context.parameters, 'prompt', 'login');
+      Reflect.set(context, 'prompts', ['login']);
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(session);
-      consentServiceMock.findOne.mockResolvedValueOnce(consent);
-      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
-
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
-      });
-
-      const error = new LoginRequiredException({
-        description: 'The currently authenticated User is not the one expected by the ID Token Hint.',
-        state: 'client_state',
-      });
-
-      const errorParameters = new URLSearchParams(error.toJSON());
-
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': null, 'guarani:session': null })
-          .redirect(`https://server.example.com/oauth/error?${errorParameters.toString()}`)
-      );
-
-      expect(grantServiceMock.remove).not.toHaveBeenCalled();
-    });
-
-    it('should return a redirect response to the login endpoint if the session\'s creation date is longer than "max_age".', async () => {
-      Object.assign(context, {
-        parameters: { max_age: '300' },
-        cookies: { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' },
-        maxAge: 300,
-      });
-
-      const session = <Session>{ id: 'session_id', createdAt: new Date(Date.now() - 3600000) };
       const grant = <Grant>{
         id: 'grant_id',
         loginChallenge: 'login_challenge',
@@ -749,32 +642,317 @@ describe('Interaction Handler', () => {
         client: context.client,
       };
 
-      sessionServiceMock.findOne.mockResolvedValueOnce(session);
-      grantServiceMock.create.mockResolvedValueOnce(grant);
-      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(true);
+      const session = <Session>{ id: 'session_id' };
 
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      grantServiceMock.findOne.mockResolvedValueOnce(grant);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/login?login_challenge=login_challenge',
       });
 
-      const redirectParameters = new URLSearchParams({ login_challenge: grant.loginChallenge });
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': null })
-          .redirect(`https://server.example.com/auth/login?${redirectParameters.toString()}`)
-      );
+      expect(response.body).toEqual(Buffer.alloc(0));
 
-      expect(sessionServiceMock.remove).not.toHaveBeenCalled();
+      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.remove).toHaveBeenCalledWith(session);
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
+    });
+
+    it('should redirect to the error endpoint when the prompt is "none" and no consent is found.', async () => {
+      context.cookies['guarani:session'] = 'session_id';
+
+      Reflect.set(context.parameters, 'prompt', 'none');
+      Reflect.set(context, 'prompts', ['none']);
+
+      const session = <Session>{
+        id: 'session_id',
+        user: { id: 'user_id' },
+      };
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      consentServiceMock.findOne.mockResolvedValueOnce(null);
+
+      const error = new ConsentRequiredException({ state: 'client_state' });
+      const errorParameters = new URLSearchParams(error.toJSON());
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({});
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+    });
+
+    it('should create a grant and redirect to the consent endpoint if no consent is found.', async () => {
+      context.cookies['guarani:session'] = 'session_id';
+
+      const session = <Session>{
+        id: 'session_id',
+        user: { id: 'user_id' },
+      };
+
+      const grant = <Grant>{
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+        parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
+        client: context.client,
+      };
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      consentServiceMock.findOne.mockResolvedValueOnce(null);
+      grantServiceMock.create.mockResolvedValueOnce(grant);
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/consent?consent_challenge=consent_challenge',
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
 
       expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
     });
 
-    it('should return a redirect response to the consent endpoint if the consent is expired.', async () => {
-      Object.assign(context.cookies, { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' });
+    it('should redirect to the consent endpoint if the grant was issued to another client.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
+      context.cookies['guarani:session'] = 'session_id';
 
-      const session = <Session>{ id: 'session_id' };
-      const consent = <Consent>{ id: 'consent_id', expiresAt: new Date(Date.now() - 3600000) };
+      const grant = <Grant>{
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+        parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
+        client: { id: 'another_client_id' },
+      };
+
+      const session = <Session>{
+        id: 'session_id',
+        user: { id: 'user_id' },
+      };
+
+      grantServiceMock.findOne.mockResolvedValueOnce(grant);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      consentServiceMock.findOne.mockResolvedValueOnce(null);
+
+      const error = new InvalidRequestException({
+        description: 'Mismatching Client Identifier.',
+        state: 'client_state',
+      });
+
+      const errorParameters = new URLSearchParams(error.toJSON());
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': null });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
+    });
+
+    it('should redirect to the consent endpoint if the grant is expired.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
+      context.cookies['guarani:session'] = 'session_id';
+
+      const grant = <Grant>{
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+        parameters: context.parameters,
+        expiresAt: new Date(Date.now() - 300000),
+        client: context.client,
+      };
+
+      const session = <Session>{
+        id: 'session_id',
+        user: { id: 'user_id' },
+      };
+
+      grantServiceMock.findOne.mockResolvedValueOnce(grant);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      consentServiceMock.findOne.mockResolvedValueOnce(null);
+
+      const error = new InvalidRequestException({ description: 'Expired Grant.', state: 'client_state' });
+      const errorParameters = new URLSearchParams(error.toJSON());
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': null });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
+    });
+
+    it('should redirect to the consent endpoint if the initial parameters changed.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
+      context.cookies['guarani:session'] = 'session_id';
+
+      const grant = <Grant>{
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+        parameters: { ...context.parameters, state: 'another_client_state' },
+        expiresAt: new Date(Date.now() + 300000),
+        client: context.client,
+      };
+
+      const session = <Session>{
+        id: 'session_id',
+        user: { id: 'user_id' },
+      };
+
+      grantServiceMock.findOne.mockResolvedValueOnce(grant);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      consentServiceMock.findOne.mockResolvedValueOnce(null);
+
+      const error = new InvalidRequestException({
+        description: 'One or more parameters changed since the initial request.',
+        state: 'client_state',
+      });
+
+      const errorParameters = new URLSearchParams(error.toJSON());
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': null });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
+    });
+
+    it('should redirect to the consent endpoint if no consent is found.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
+      context.cookies['guarani:session'] = 'session_id';
+
+      const grant = <Grant>{
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+        parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
+        client: context.client,
+      };
+
+      const session = <Session>{
+        id: 'session_id',
+        user: { id: 'user_id' },
+      };
+
+      grantServiceMock.findOne.mockResolvedValueOnce(grant);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      consentServiceMock.findOne.mockResolvedValueOnce(null);
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/consent?consent_challenge=consent_challenge',
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
+    });
+
+    it('should redirect to the error endpoint if the prompt is "none" and the consent is expired.', async () => {
+      context.cookies['guarani:session'] = 'session_id';
+
+      Reflect.set(context.parameters, 'prompt', 'none');
+      Reflect.set(context, 'prompts', ['none']);
+
+      const session = <Session>{
+        id: 'session_id',
+        user: { id: 'user_id' },
+      };
+
+      const consent = <Consent>{
+        id: 'consent_id',
+        expiresAt: new Date(Date.now() - 3600000),
+      };
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      consentServiceMock.findOne.mockResolvedValueOnce(consent);
+
+      const error = new ConsentRequiredException({ state: 'client_state' });
+      const errorParameters = new URLSearchParams(error.toJSON());
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: `https://server.example.com/oauth/error?${errorParameters.toString()}`,
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({});
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
+
+      expect(consentServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(consentServiceMock.remove).toHaveBeenCalledWith(consent);
+    });
+
+    it('should create a grant and redirect to the consent endpoint if the consent is expired.', async () => {
+      context.cookies['guarani:session'] = 'session_id';
+
+      const session = <Session>{
+        id: 'session_id',
+        user: { id: 'user_id' },
+      };
+
+      const consent = <Consent>{
+        id: 'consent_id',
+        expiresAt: new Date(Date.now() - 3600000),
+      };
+
       const grant = <Grant>{
         id: 'grant_id',
         consentChallenge: 'consent_challenge',
@@ -786,43 +964,111 @@ describe('Interaction Handler', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
       grantServiceMock.create.mockResolvedValueOnce(grant);
-      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(true);
 
-      displaysMocks[0]!.createHttpResponse.mockImplementationOnce((redirectUri, parameters) => {
-        return new HttpResponse().redirect(`${redirectUri}?${new URLSearchParams(parameters).toString()}`);
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/consent?consent_challenge=consent_challenge',
       });
 
-      const redirectParameters = new URLSearchParams({ consent_challenge: grant.consentChallenge });
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setCookies({ 'guarani:grant': grant.id, 'guarani:session': session.id, 'guarani:consent': null })
-          .redirect(`https://server.example.com/auth/consent?${redirectParameters.toString()}`)
-      );
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
 
       expect(consentServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(consentServiceMock.remove).toHaveBeenCalledWith(consent);
 
-      expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.save).toHaveBeenCalledWith({ ...grant, session });
+      const removeConsentOrder = consentServiceMock.remove.mock.invocationCallOrder[0]!;
+      const createGrantOrder = grantServiceMock.create.mock.invocationCallOrder[0]!;
 
-      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
+      expect(removeConsentOrder).toBeLessThan(createGrantOrder);
     });
 
-    it('should return the entities of the interaction.', async () => {
-      Object.assign(context.cookies, { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' });
+    it('should redirect to the consent endpoint if the consent is expired.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
+      context.cookies['guarani:session'] = 'session_id';
 
-      const session = <Session>{ id: 'session_id' };
+      const grant = <Grant>{
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+        parameters: context.parameters,
+        expiresAt: new Date(Date.now() + 300000),
+        client: context.client,
+      };
+
+      const session = <Session>{
+        id: 'session_id',
+        user: { id: 'user_id' },
+      };
+
+      const consent = <Consent>{
+        id: 'consent_id',
+        expiresAt: new Date(Date.now() - 3600000),
+      };
+
+      grantServiceMock.findOne.mockResolvedValueOnce(grant);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      consentServiceMock.findOne.mockResolvedValueOnce(consent);
+
+      const response = (await handler.getEntitiesOrHttpResponse(context)) as HttpResponse;
+
+      expect(response.statusCode).toBe(303);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/auth/consent?consent_challenge=consent_challenge',
+      });
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
+
+      expect(response.body).toEqual(Buffer.alloc(0));
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
+
+      expect(consentServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(consentServiceMock.remove).toHaveBeenCalledWith(consent);
+    });
+
+    it('should return the entities of the interaction process with a null grant.', async () => {
+      context.cookies['guarani:session'] = 'session_id';
+
+      const session = <Session>{ id: 'session_id', user: { id: 'user_id' } };
       const consent = <Consent>{ id: 'consent_id' };
 
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
-      idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(true);
 
-      await expect(handler.getEntitiesOrHttpResponse(context)).resolves.toEqual<Entities>([null, session, consent]);
+      const [expectedGrant, expectedSession, expectedConsent] = <Entities>(
+        await handler.getEntitiesOrHttpResponse(context)
+      );
 
-      expect(grantServiceMock.create).not.toHaveBeenCalled();
+      expect(expectedGrant).toBeNull();
+      expect(expectedSession).toStrictEqual(session);
+      expect(expectedConsent).toStrictEqual(consent);
     });
-    // #endregion
+
+    it('should return the entities of the interaction process.', async () => {
+      context.cookies['guarani:grant'] = 'grant_id';
+      context.cookies['guarani:session'] = 'session_id';
+
+      const grant = <Grant>{ id: 'grant_id' };
+      const session = <Session>{ id: 'session_id', user: { id: 'user_id' } };
+      const consent = <Consent>{ id: 'consent_id' };
+
+      grantServiceMock.findOne.mockResolvedValueOnce(grant);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      consentServiceMock.findOne.mockResolvedValueOnce(consent);
+
+      const [expectedGrant, expectedSession, expectedConsent] = <Entities>(
+        await handler.getEntitiesOrHttpResponse(context)
+      );
+
+      expect(expectedGrant).toStrictEqual(grant);
+      expect(expectedSession).toStrictEqual(session);
+      expect(expectedConsent).toStrictEqual(consent);
+    });
   });
 });

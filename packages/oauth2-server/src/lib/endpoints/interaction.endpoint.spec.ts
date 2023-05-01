@@ -122,10 +122,13 @@ describe('Interaction Endpoint', () => {
 
       request.query.interaction_type = 'login';
 
-      const interactionResponse: Record<string, any> = { skip: true, client: { id: 'client_id' } };
+      const interactionResponse = new HttpResponse()
+        .setHeaders(endpoint['headers'])
+        .json({ skip: true, client: { id: 'client_id' } });
 
       const context = <InteractionContext<InteractionRequest>>{
         parameters: <InteractionRequest>request.query,
+        cookies: request.cookies,
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'login',
           handleContext: jest.fn().mockResolvedValueOnce(interactionResponse),
@@ -135,9 +138,7 @@ describe('Interaction Endpoint', () => {
 
       validatorsMocks[0]!.validateContext.mockResolvedValueOnce(context);
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setHeaders(endpoint['headers']).json(interactionResponse)
-      );
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(interactionResponse);
     });
 
     it('should return an interaction decision response.', async () => {
@@ -145,10 +146,13 @@ describe('Interaction Endpoint', () => {
 
       request.body.interaction_type = 'login';
 
-      const interactionResponse: Record<string, any> = { redirect_to: 'https://server.example.com/oauth/authorize' };
+      const interactionResponse = new HttpResponse()
+        .setHeaders(endpoint['headers'])
+        .json({ redirect_to: 'https://server.example.com/oauth/authorize' });
 
       const context = <InteractionContext<InteractionRequest>>{
         parameters: <InteractionRequest>request.body,
+        cookies: request.cookies,
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'login',
           handleContext: jest.fn(),
@@ -158,9 +162,7 @@ describe('Interaction Endpoint', () => {
 
       validatorsMocks[0]!.validateDecision.mockResolvedValueOnce(context);
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setHeaders(endpoint['headers']).json(interactionResponse)
-      );
+      await expect(endpoint.handle(request)).resolves.toStrictEqual(interactionResponse);
     });
   });
 });

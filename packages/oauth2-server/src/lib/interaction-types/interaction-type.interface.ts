@@ -1,4 +1,5 @@
 import { InteractionContext } from '../context/interaction/interaction.context';
+import { HttpResponse } from '../http/http.response';
 import { InteractionRequest } from '../requests/interaction/interaction-request';
 import { InteractionType } from './interaction-type.type';
 
@@ -15,15 +16,15 @@ export interface InteractionTypeInterface {
    * Handles the Context Flow of the Interaction.
    *
    * @param context Interaction Context Request Context.
-   * @returns Parameters of the Interaction Context Response.
+   * @returns Interaction Context Response.
    */
-  handleContext(context: InteractionContext<InteractionRequest>): Promise<Record<string, any>>;
+  handleContext(context: InteractionContext<InteractionRequest>): Promise<HttpResponse>;
 
   /**
    * Handles the Decision Flow of the Interaction.
    *
    * @param context Interaction Decision Request Context.
-   * @returns Parameters of the Interaction Decision Response.
+   * @returns Interaction Decision Response.
    */
-  handleDecision(context: InteractionContext<InteractionRequest>): Promise<Record<string, any>>;
+  handleDecision(context: InteractionContext<InteractionRequest>): Promise<HttpResponse>;
 }

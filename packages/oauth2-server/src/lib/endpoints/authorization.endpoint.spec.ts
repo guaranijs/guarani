@@ -153,7 +153,6 @@ describe('Authorization Endpoint', () => {
 
       Object.assign(request.cookies, {
         'guarani:session': 'session_id',
-        'guarani:consent': 'consent_id',
       });
 
       interactionHandlerMock.getEntitiesOrHttpResponse.mockResolvedValueOnce([
@@ -175,7 +174,7 @@ describe('Authorization Endpoint', () => {
       Reflect.set(settings, 'enableAuthorizationResponseIssuerIdentifier', true);
 
       Object.assign(request, {
-        cookies: { 'guarani:session': 'session_id', 'guarani:consent': 'consent_id' },
+        cookies: { 'guarani:session': 'session_id' },
         query: { response_type: 'id_token code' },
       });
 

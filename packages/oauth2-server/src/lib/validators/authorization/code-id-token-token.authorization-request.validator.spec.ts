@@ -10,8 +10,6 @@ import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { PkceInterface } from '../../pkces/pkce.interface';
 import { PKCE } from '../../pkces/pkce.token';
-import { PromptInterface } from '../../prompts/prompt.interface';
-import { PROMPT } from '../../prompts/prompt.token';
 import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
@@ -93,12 +91,6 @@ describe('Code & ID Token & Token Authorization Request Validator', () => {
     }),
   ];
 
-  const promptsMocks = [
-    jest.mocked<PromptInterface>({ name: 'consent', handle: jest.fn() }),
-    jest.mocked<PromptInterface>({ name: 'login', handle: jest.fn() }),
-    jest.mocked<PromptInterface>({ name: 'none', handle: jest.fn() }),
-  ];
-
   const displaysMocks = [
     jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
     jest.mocked<DisplayInterface>({ name: 'popup', createHttpResponse: jest.fn() }),
@@ -124,10 +116,6 @@ describe('Code & ID Token & Token Authorization Request Validator', () => {
 
     responseTypesMocks.forEach((responseTypeMock) => {
       container.bind<ResponseTypeInterface>(RESPONSE_TYPE).toValue(responseTypeMock);
-    });
-
-    promptsMocks.forEach((promptMock) => {
-      container.bind<PromptInterface>(PROMPT).toValue(promptMock);
     });
 
     displaysMocks.forEach((displayMock) => {

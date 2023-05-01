@@ -5,8 +5,6 @@ import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
-import { PromptInterface } from '../../prompts/prompt.interface';
-import { PROMPT } from '../../prompts/prompt.token';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
@@ -40,7 +38,6 @@ export class TokenAuthorizationRequestValidator extends AuthorizationRequestVali
    * @param clientService Instance of the Client Service.
    * @param responseModes Response Modes registered at the Authorization Server.
    * @param responseTypes Response Types registered at the Authorization Server.
-   * @param prompts Prompts registered at the Authorization Server.
    * @param displays Displays registered at the Authorization Server.
    */
   public constructor(
@@ -49,10 +46,9 @@ export class TokenAuthorizationRequestValidator extends AuthorizationRequestVali
     @Inject(CLIENT_SERVICE) protected override readonly clientService: ClientServiceInterface,
     @InjectAll(RESPONSE_MODE) protected override readonly responseModes: ResponseModeInterface[],
     @InjectAll(RESPONSE_TYPE) protected override readonly responseTypes: ResponseTypeInterface[],
-    @InjectAll(PROMPT) protected override readonly prompts: PromptInterface[],
     @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[]
   ) {
-    super(scopeHandler, settings, clientService, responseModes, responseTypes, prompts, displays);
+    super(scopeHandler, settings, clientService, responseModes, responseTypes, displays);
   }
 
   /**

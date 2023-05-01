@@ -11,7 +11,7 @@ export class DeviceCode extends BaseEntity implements OAuth2DeviceCode {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'device_codes_pk' })
   public readonly id!: string;
 
-  @Column({ name: 'user_code', type: 'varchar', length: 9, nullable: false, unique: true })
+  @Column({ name: 'user_code', type: 'varchar', nullable: false, unique: true })
   @Check('check_user_code_length', 'length("user_code") = 9')
   public readonly userCode!: string;
 

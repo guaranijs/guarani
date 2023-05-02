@@ -67,15 +67,16 @@ export class InteractionHandler {
   public async getEntitiesOrHttpResponse(
     context: AuthorizationContext<AuthorizationRequest>
   ): Promise<HttpResponse | [Grant | null, Session, Consent]> {
-    const { client, cookies, display, idTokenHint, maxAge, parameters, prompts } = context;
+    const { client, display, idTokenHint, maxAge, parameters, prompts } = context;
 
-    let grant: Grant | null = await this.findGrant(cookies);
+    let grant: Grant | null = null;
     let session: Session | null = null;
     let consent: Consent | null = null;
 
     // #region Session validation
     try {
-      session = await this.findSession(cookies);
+      grant = await this.findGrant(context);
+      session = await this.findSession(context);
 
       // Prompt "login" removes previous authentication result.
       if (session !== null && grant?.session == null && prompts.includes('login')) {
@@ -84,15 +85,16 @@ export class InteractionHandler {
       }
 
       if (session === null) {
-        if (prompts.includes('none')) {
-          throw new LoginRequiredException({ state: parameters.state });
+        if (grant?.session == null) {
+          if (prompts.includes('none')) {
+            throw new LoginRequiredException({ state: parameters.state });
+          }
+
+          grant ??= await this.grantService.create(parameters, client);
+          return this.redirectToLoginPage(grant, display);
         }
 
-        grant === null
-          ? (grant = await this.grantService.create(parameters, client))
-          : await this.checkGrant(grant, client, parameters);
-
-        return this.redirectToLoginPage(grant, display);
+        session = grant.session;
       }
 
       if (session.expiresAt != null && new Date() > session.expiresAt) {
@@ -151,15 +153,16 @@ export class InteractionHandler {
       }
 
       if (consent === null) {
-        if (prompts.includes('none')) {
-          throw new ConsentRequiredException({ state: parameters.state });
+        if (grant?.consent == null) {
+          if (prompts.includes('none')) {
+            throw new ConsentRequiredException({ state: parameters.state });
+          }
+
+          grant ??= await this.grantService.create(parameters, client);
+          return this.redirectToConsentPage(grant, display);
         }
 
-        grant === null
-          ? (grant = await this.grantService.create(parameters, client))
-          : await this.checkGrant(grant, client, parameters);
-
-        return this.redirectToConsentPage(grant, display);
+        consent = grant.consent;
       }
 
       if (consent.expiresAt != null && new Date() > consent.expiresAt) {
@@ -191,26 +194,36 @@ export class InteractionHandler {
   /**
    * Searches the application's storage for a Grant based on the Identifier in the Cookies of the Http Request.
    *
-   * @param cookies Cookies of the Http Request.
+   * @param context Authorization Request Context.
    * @returns Grant based on the Cookies.
    */
-  private async findGrant(cookies: Record<string, any>): Promise<Grant | null> {
+  private async findGrant(context: AuthorizationContext<AuthorizationRequest>): Promise<Grant | null> {
+    const { client, cookies, parameters } = context;
+
     const grantId: string | undefined = cookies['guarani:grant'];
 
     if (grantId === undefined) {
       return null;
     }
 
-    return await this.grantService.findOne(grantId);
+    const grant = await this.grantService.findOne(grantId);
+
+    if (grant !== null) {
+      await this.checkGrant(grant, client, parameters);
+    }
+
+    return grant;
   }
 
   /**
    * Searches the application's storage for a Session based on the Identifier in the Cookies of the Http Request.
    *
-   * @param cookies Cookies of the Http Request.
+   * @param context Authorization Request Context.
    * @returns Session based on the Cookies.
    */
-  private async findSession(cookies: Record<string, any>): Promise<Session | null> {
+  private async findSession(context: AuthorizationContext<AuthorizationRequest>): Promise<Session | null> {
+    const { cookies } = context;
+
     const sessionId: string | undefined = cookies['guarani:session'];
 
     if (sessionId === undefined) {
@@ -228,22 +241,27 @@ export class InteractionHandler {
    * @param parameters Parameters of the Authorization Request.
    */
   private async checkGrant(grant: Grant, client: Client, parameters: AuthorizationRequest): Promise<void> {
-    const clientId = Buffer.from(client.id, 'utf8');
-    const grantClientId = Buffer.from(grant.client.id, 'utf8');
+    try {
+      const clientId = Buffer.from(client.id, 'utf8');
+      const grantClientId = Buffer.from(grant.client.id, 'utf8');
 
-    if (clientId.length !== grantClientId.length || !timingSafeEqual(clientId, grantClientId)) {
-      throw new InvalidRequestException({ description: 'Mismatching Client Identifier.', state: parameters.state });
-    }
+      if (clientId.length !== grantClientId.length || !timingSafeEqual(clientId, grantClientId)) {
+        throw new InvalidRequestException({ description: 'Mismatching Client Identifier.', state: parameters.state });
+      }
 
-    if (new Date() > grant.expiresAt) {
-      throw new InvalidRequestException({ description: 'Expired Grant.', state: parameters.state });
-    }
+      if (new Date() > grant.expiresAt) {
+        throw new InvalidRequestException({ description: 'Expired Grant.', state: parameters.state });
+      }
 
-    if (!isDeepStrictEqual(parameters, grant.parameters)) {
-      throw new InvalidRequestException({
-        description: 'One or more parameters changed since the initial request.',
-        state: parameters.state,
-      });
+      if (!isDeepStrictEqual(parameters, grant.parameters)) {
+        throw new InvalidRequestException({
+          description: 'One or more parameters changed since the initial request.',
+          state: parameters.state,
+        });
+      }
+    } catch (exc: unknown) {
+      await this.grantService.remove(grant);
+      throw exc;
     }
   }
 

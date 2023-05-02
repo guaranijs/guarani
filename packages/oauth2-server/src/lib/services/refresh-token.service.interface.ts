@@ -34,4 +34,15 @@ export interface RefreshTokenServiceInterface {
    * @param refreshToken Refresh Token to be revoked.
    */
   revoke(refreshToken: RefreshToken): Promise<void>;
+
+  /**
+   * Rotates the Refresh Token by creating a new Refresh Token with the same metadata and different handle,
+   * and revoking the old refresh token used to refresh the Access Token.
+   *
+   * *note: this method is only required when supporting **refresh token rotation**.*
+   *
+   * @param refreshToken Refresh Token provided by the Client.
+   * @returns Rotated Refresh Token with the same metadata as the revoked one.
+   */
+  rotate?(refreshToken: RefreshToken): Promise<RefreshToken>;
 }

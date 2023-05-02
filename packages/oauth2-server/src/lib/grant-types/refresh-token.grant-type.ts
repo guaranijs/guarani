@@ -41,7 +41,11 @@ export class RefreshTokenGrantType implements GrantTypeInterface {
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
     @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: RefreshTokenServiceInterface
-  ) {}
+  ) {
+    if (this.settings.enableRefreshTokenRotation && typeof this.refreshTokenService.rotate !== 'function') {
+      throw new TypeError('Missing implementation of required method "RefreshTokenServiceInterface.rotate".');
+    }
+  }
 
   /**
    * Creates the Access Token Response with the Access Token issued to the Client.
@@ -65,10 +69,8 @@ export class RefreshTokenGrantType implements GrantTypeInterface {
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
 
-    // TODO: set new expiration to old expiration.
     if (this.settings.enableRefreshTokenRotation) {
-      await this.refreshTokenService.revoke(refreshToken);
-      refreshToken = await this.refreshTokenService.create(refreshToken.scopes, client, user, accessToken);
+      refreshToken = await this.refreshTokenService.rotate!(refreshToken);
     }
 
     return createTokenResponse(accessToken, refreshToken);

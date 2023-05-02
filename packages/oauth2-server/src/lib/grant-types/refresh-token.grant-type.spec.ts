@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+
 import { RefreshTokenTokenContext } from '../context/token/refresh-token.token.context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
@@ -27,11 +28,15 @@ describe('Refresh Token Grant Type', () => {
     revoke: jest.fn(),
   });
 
-  const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    revoke: jest.fn(),
-  });
+  const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>(
+    {
+      create: jest.fn(),
+      findOne: jest.fn(),
+      revoke: jest.fn(),
+      rotate: jest.fn(),
+    },
+    true
+  );
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
@@ -51,6 +56,30 @@ describe('Refresh Token Grant Type', () => {
   describe('name', () => {
     it('should have "refresh_token" as its name.', () => {
       expect(grantType.name).toEqual<GrantType>('refresh_token');
+    });
+  });
+
+  describe('constructor', () => {
+    it('should throw when the user service does not implement the method "findByResourceOwnerCredentials()".', () => {
+      const settings = <Settings>{ enableRefreshTokenRotation: true };
+
+      const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>({
+        create: jest.fn(),
+        findOne: jest.fn(),
+        revoke: jest.fn(),
+      });
+
+      container.delete<Settings>(SETTINGS);
+      container.delete<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE);
+      container.delete(RefreshTokenGrantType);
+
+      container.bind<Settings>(SETTINGS).toValue(settings);
+      container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);
+      container.bind(RefreshTokenGrantType).toSelf().asSingleton();
+
+      expect(() => container.resolve(RefreshTokenGrantType)).toThrow(
+        new TypeError('Missing implementation of required method "RefreshTokenServiceInterface.rotate".')
+      );
     });
   });
 
@@ -175,7 +204,7 @@ describe('Refresh Token Grant Type', () => {
       const refreshToken = <RefreshToken>{ handle: 'new_refresh_token' };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
-      refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);
+      refreshTokenServiceMock.rotate!.mockResolvedValueOnce(refreshToken);
 
       await expect(grantType.handle(context)).resolves.toStrictEqual<TokenResponse>({
         access_token: 'access_token',
@@ -184,21 +213,6 @@ describe('Refresh Token Grant Type', () => {
         scope: 'foo bar baz',
         refresh_token: 'new_refresh_token',
       });
-
-      expect(refreshTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
-      expect(refreshTokenServiceMock.create).toHaveBeenCalledTimes(1);
-
-      const revokeOrder = refreshTokenServiceMock.revoke.mock.invocationCallOrder[0]!;
-      const createOrder = refreshTokenServiceMock.create.mock.invocationCallOrder[0]!;
-
-      expect(revokeOrder).toBeLessThan(createOrder);
-
-      expect(refreshTokenServiceMock.create).toHaveBeenCalledWith(
-        context.refreshToken.scopes,
-        context.client,
-        context.refreshToken.user,
-        accessToken
-      );
     });
 
     it('should create a token response with the requested scope and a new refresh token.', async () => {
@@ -223,7 +237,7 @@ describe('Refresh Token Grant Type', () => {
       const refreshToken = <RefreshToken>{ handle: 'new_refresh_token' };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
-      refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);
+      refreshTokenServiceMock.rotate!.mockResolvedValueOnce(refreshToken);
 
       await expect(grantType.handle(context)).resolves.toStrictEqual<TokenResponse>({
         access_token: 'access_token',
@@ -232,21 +246,6 @@ describe('Refresh Token Grant Type', () => {
         scope: 'foo bar',
         refresh_token: 'new_refresh_token',
       });
-
-      expect(refreshTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
-      expect(refreshTokenServiceMock.create).toHaveBeenCalledTimes(1);
-
-      const revokeOrder = refreshTokenServiceMock.revoke.mock.invocationCallOrder[0]!;
-      const createOrder = refreshTokenServiceMock.create.mock.invocationCallOrder[0]!;
-
-      expect(revokeOrder).toBeLessThan(createOrder);
-
-      expect(refreshTokenServiceMock.create).toHaveBeenCalledWith(
-        context.refreshToken.scopes,
-        context.client,
-        context.refreshToken.user,
-        accessToken
-      );
     });
   });
 });

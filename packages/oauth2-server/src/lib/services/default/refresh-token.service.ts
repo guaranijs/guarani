@@ -44,4 +44,25 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
   public async revoke(refreshToken: RefreshToken): Promise<void> {
     refreshToken.isRevoked = true;
   }
+
+  public async rotate(refreshToken: RefreshToken): Promise<RefreshToken> {
+    const now = Date.now();
+
+    const newRefreshToken: RefreshToken = {
+      handle: (await randomBytesAsync(12)).toString('hex'),
+      scopes: refreshToken.scopes,
+      isRevoked: false,
+      issuedAt: new Date(now),
+      expiresAt: refreshToken.expiresAt,
+      validAfter: new Date(now),
+      client: refreshToken.client,
+      user: refreshToken.user,
+    };
+
+    this.refreshTokens.push(newRefreshToken);
+
+    await this.revoke(refreshToken);
+
+    return newRefreshToken;
+  }
 }

@@ -2,8 +2,8 @@ import { Inject, Injectable, LazyInject } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
 
 import { URL } from 'url';
-import { AuthorizationServer } from '../authorization-server';
 
+import { AuthorizationServer } from '../authorization-server';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';

@@ -15,6 +15,7 @@ import { LoginContextInteractionRequest } from '../src/lib/requests/interaction/
 import { LoginDecisionAcceptInteractionRequest } from '../src/lib/requests/interaction/login-decision-accept.interaction-request';
 import { TokenResponse } from '../src/lib/responses/token-response';
 
+// TODO: Add test for multiple logins.
 describe('Authorization Code Flow', () => {
   let app: Application;
   let agent: SuperAgentTest;
@@ -32,7 +33,7 @@ describe('Authorization Code Flow', () => {
   });
 
   it('GET /oauth/authorize', async () => {
-    // #region Retrieve the Login Challenge.
+    // #region Reload the Authorization Endpoint to save the Session.
     const authorizationRequestData: CodeAuthorizationRequest = {
       response_type: 'code',
       client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
@@ -46,6 +47,22 @@ describe('Authorization Code Flow', () => {
 
     const authorizationRequestSearchParameters = new URLSearchParams(authorizationRequestData);
 
+    const firstAuthorizationResponse = await agent.get(
+      `/oauth/authorize?${authorizationRequestSearchParameters.toString()}`
+    );
+
+    const authorizationEndpointUrl = new URL(firstAuthorizationResponse.headers.location);
+
+    expect(firstAuthorizationResponse.status).toBe(303);
+    expect(authorizationEndpointUrl.href).toEqual(
+      `http://localhost:3000/oauth/authorize?${authorizationRequestSearchParameters.toString()}`
+    );
+
+    expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toBeUndefined();
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
+    // #endregion
+
+    // #region Retrieve the Login Challenge.
     const loginAuthorizationResponse = await agent.get(
       `/oauth/authorize?${authorizationRequestSearchParameters.toString()}`
     );
@@ -56,7 +73,7 @@ describe('Authorization Code Flow', () => {
     expect(loginAuthorizationResponse.status).toBe(303);
 
     expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
-    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toBeUndefined();
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
     // #endregion
 
     // #region Create the Session within the Authorization Server.
@@ -74,7 +91,7 @@ describe('Authorization Code Flow', () => {
     expect(loginInteractionContextResponse.body.skip).toBe(false);
 
     expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
-    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toBeUndefined();
+    expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
     // #endregion
 
     // #region Update the Session with the Authenticated User.

@@ -263,7 +263,7 @@ export abstract class AuthorizationRequestValidator<
     }
 
     const requestedPrompts = <Prompt[]>(parameters.prompt?.split(' ') ?? []);
-    const supportedPromptsNames: Prompt[] = ['consent', 'login', 'none'];
+    const supportedPromptsNames: Prompt[] = ['consent', 'login', 'none', 'select_account'];
 
     requestedPrompts.forEach((prompt) => {
       if (!supportedPromptsNames.includes(prompt)) {
@@ -274,6 +274,13 @@ export abstract class AuthorizationRequestValidator<
     if (requestedPrompts.includes('none') && requestedPrompts.length !== 1) {
       throw new InvalidRequestException({
         description: 'The prompt "none" must be used by itself.',
+        state: parameters.state,
+      });
+    }
+
+    if (requestedPrompts.includes('login') && requestedPrompts.includes('select_account')) {
+      throw new InvalidRequestException({
+        description: 'The prompts "login" and "select_account" cannot be used together.',
         state: parameters.state,
       });
     }

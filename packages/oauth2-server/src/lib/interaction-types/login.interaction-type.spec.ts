@@ -7,6 +7,7 @@ import { LoginDecisionAcceptInteractionContext } from '../context/interaction/lo
 import { LoginDecisionDenyInteractionContext } from '../context/interaction/login-decision-deny.interaction.context';
 import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction.context';
 import { Grant } from '../entities/grant.entity';
+import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
@@ -14,6 +15,8 @@ import { LoginContextInteractionResponse } from '../responses/interaction/login-
 import { LoginDecisionInteractionResponse } from '../responses/interaction/login-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
+import { LoginServiceInterface } from '../services/login.service.interface';
+import { LOGIN_SERVICE } from '../services/login.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
@@ -29,11 +32,10 @@ describe('Login Interaction Type', () => {
 
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
-  const sessionServiceMock = jest.mocked<SessionServiceInterface>({
+  const loginServiceMock = jest.mocked<LoginServiceInterface>({
     create: jest.fn(),
     findOne: jest.fn(),
     remove: jest.fn(),
-    save: jest.fn(),
   });
 
   const grantServiceMock = jest.mocked<GrantServiceInterface>({
@@ -45,12 +47,20 @@ describe('Login Interaction Type', () => {
     save: jest.fn(),
   });
 
+  const sessionServiceMock = jest.mocked<SessionServiceInterface>({
+    create: jest.fn(),
+    findOne: jest.fn(),
+    remove: jest.fn(),
+    save: jest.fn(),
+  });
+
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
-    container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
+    container.bind<LoginServiceInterface>(LOGIN_SERVICE).toValue(loginServiceMock);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
+    container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
     container.bind(LoginInteractionType).toSelf().asSingleton();
 
     interactionType = container.resolve(LoginInteractionType);
@@ -77,7 +87,6 @@ describe('Login Interaction Type', () => {
           interaction_type: 'login',
           login_challenge: 'login_challenge',
         },
-        cookies: { 'guarani:grant': 'grant_id' },
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'login',
           handleContext: jest.fn(),
@@ -96,7 +105,11 @@ describe('Login Interaction Type', () => {
           },
           expiresAt: new Date(now + 300000),
           client: { id: 'client_id' },
-          session: { id: 'session_id', createdAt: new Date(now - 3600000) },
+          session: {
+            id: 'session_id',
+            activeLogin: { id: 'login_id', createdAt: new Date(now - 3600000) },
+            logins: [{ id: 'login_id', createdAt: new Date(now - 3600000) }],
+          },
         },
       };
     });
@@ -109,19 +122,16 @@ describe('Login Interaction Type', () => {
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
     });
 
     it('should return a valid first time login context response.', async () => {
-      delete context.grant.session;
+      delete context.grant.session.activeLogin;
+      context.grant.session.logins = [];
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      const response = await interactionType.handleContext(context);
-
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({});
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginContextInteractionResponse>({
+      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
@@ -130,16 +140,9 @@ describe('Login Interaction Type', () => {
     });
 
     it('should return a valid skip login context response when not providing a "max_age" authorization parameter.', async () => {
-      Reflect.set(context.grant, 'session', { id: 'session_id' });
-
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      const response = await interactionType.handleContext(context);
-
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': context.grant.session!.id });
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginContextInteractionResponse>({
+      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
@@ -147,50 +150,46 @@ describe('Login Interaction Type', () => {
       });
     });
 
-    it('should return a valid skip login context response when the session is within the elapsed "max_age" time.', async () => {
+    it('should return a valid skip login context response when the login is within the elapsed "max_age" time.', async () => {
       Reflect.set(context.grant.parameters, 'max_age', '86400');
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      const response = await interactionType.handleContext(context);
-
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': context.grant.session!.id });
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginContextInteractionResponse>({
+      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
         context: {
-          auth_exp: Math.floor((context.grant.session!.createdAt.getTime() + 86400000) / 1000),
+          auth_exp: Math.floor((context.grant.session.activeLogin!.createdAt.getTime() + 86400000) / 1000),
         },
       });
     });
 
-    it('should return a valid login context response when the session is not within the elapsed "max_age" time.', async () => {
+    it('should return a valid login context response when the login is not within the elapsed "max_age" time.', async () => {
       Reflect.set(context.grant.parameters, 'max_age', '300');
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      const response = await interactionType.handleContext(context);
+      const removedLogin = context.grant.session.activeLogin!;
 
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': context.grant.session!.id });
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginContextInteractionResponse>({
+      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
         context: {
-          auth_exp: Math.floor((context.grant.session!.createdAt.getTime() + 300000) / 1000),
+          auth_exp: Math.floor((context.grant.session.activeLogin!.createdAt.getTime() + 300000) / 1000),
         },
       });
 
-      expect(sessionServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.remove).toHaveBeenCalledWith({
+      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{
         id: 'session_id',
-        createdAt: new Date(context.grant.session!.createdAt.getTime()),
+        activeLogin: null,
+        logins: [],
       });
+
+      expect(loginServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(loginServiceMock.remove).toHaveBeenCalledWith(removedLogin);
     });
   });
 
@@ -206,7 +205,6 @@ describe('Login Interaction Type', () => {
           login_challenge: 'login_challenge',
           decision: <LoginDecision>'',
         },
-        cookies: { 'guarani:grant': 'grant_id' },
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'login',
           handleContext: jest.fn(),
@@ -224,9 +222,14 @@ describe('Login Interaction Type', () => {
             state: 'client_state',
             response_mode: 'query',
           },
+          interactions: <InteractionType[]>[],
           expiresAt: new Date(now + 300000),
           client: { id: 'client_id' },
-          session: { id: 'session_id', createdAt: new Date(now - 3600000) },
+          session: {
+            id: 'session_id',
+            activeLogin: { id: 'login_id', createdAt: new Date(now - 3600000) },
+            logins: [{ id: 'login_id', createdAt: new Date(now - 3600000) }],
+          },
         },
       };
     });
@@ -239,11 +242,13 @@ describe('Login Interaction Type', () => {
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
     });
 
     // #region Accept Decision.
     it('should return a valid first time login accept decision interaction response.', async () => {
-      delete context.grant.session;
+      delete context.grant.session.activeLogin;
+      context.grant.session.logins = [];
 
       Object.assign(context.parameters, {
         decision: 'accept',
@@ -261,27 +266,36 @@ describe('Login Interaction Type', () => {
 
       const { acr, amr, user } = <LoginDecisionAcceptInteractionContext>context;
 
-      const session = <Session>{ id: 'session_id', acr, amr, user };
+      const login = <Login>{ id: 'login_id', acr, amr, user };
 
-      sessionServiceMock.create.mockResolvedValueOnce(session);
+      loginServiceMock.create.mockResolvedValueOnce(login);
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      const response = await interactionType.handleDecision(context);
-
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': session.id });
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginDecisionInteractionResponse>({
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
+      expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
+      expect(loginServiceMock.create).toHaveBeenCalledWith(user, context.grant.session, amr, acr);
+
+      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{
+        id: 'session_id',
+        activeLogin: login,
+        logins: [login],
+      });
+
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...context.grant, session });
+      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{
+        ...context.grant,
+        interactions: ['login'],
+        session: { id: 'session_id', activeLogin: login, logins: [login] },
+      });
     });
 
     it('should return a valid subsequent login accept decision interaction response.', async () => {
-      Object.assign(context.grant.session!, {
+      Object.assign(context.grant.session.activeLogin!, {
         acr: 'guarani:acr:2fa',
         amr: ['pwd', 'sms'],
         user: { id: 'user_id' },
@@ -302,15 +316,11 @@ describe('Login Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      const response = await interactionType.handleDecision(context);
-
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': context.grant.session!.id });
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginDecisionInteractionResponse>({
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
+      expect(loginServiceMock.create).not.toHaveBeenCalled();
       expect(sessionServiceMock.create).not.toHaveBeenCalled();
       expect(grantServiceMock.save).not.toHaveBeenCalled();
     });
@@ -335,16 +345,12 @@ describe('Login Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(error.toJSON());
 
-      const response = await interactionType.handleDecision(context);
-
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': null });
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<LoginDecisionInteractionResponse>({
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,
       });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
     });
     // #endregion
   });

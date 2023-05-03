@@ -3,7 +3,7 @@ import { removeUndefined } from '@guarani/primitives';
 
 import { AuthorizationContext } from '../context/authorization/authorization.context';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
@@ -57,13 +57,13 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
    * Creates and returns an Access Token and ID Token Response to the Client.
    *
    * @param context Authorization Request Context.
-   * @param session Session with the Authentication information of the End User.
+   * @param login Login with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Access Token and ID Token Response.
    */
   public async handle(
     context: AuthorizationContext<AuthorizationRequest>,
-    session: Session,
+    login: Login,
     consent: Consent
   ): Promise<TokenAuthorizationResponse & IdTokenAuthorizationResponse> {
     const { parameters } = context;
@@ -76,9 +76,9 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
     const accessToken = await this.accessTokenService.create(scopes, client, user);
     const idToken = await this.idTokenHandler.generateIdToken(consent, accessToken, null, {
       nonce: parameters.nonce,
-      auth_time: parameters.max_age !== undefined ? Math.floor(session.createdAt.getTime() / 1000) : undefined,
-      amr: session.amr ?? undefined,
-      acr: session.acr ?? undefined,
+      auth_time: parameters.max_age !== undefined ? Math.floor(login.createdAt.getTime() / 1000) : undefined,
+      amr: login.amr ?? undefined,
+      acr: login.acr ?? undefined,
     });
 
     const token: TokenAuthorizationResponse = createTokenResponse(accessToken);

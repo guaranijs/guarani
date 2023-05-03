@@ -6,12 +6,13 @@ import { promisify } from 'util';
 
 import { Client } from '../entities/client.entity';
 import { Grant } from '../entities/grant.entity';
+import { Session } from '../entities/session.entity';
 
 const randomBytesAsync = promisify(randomBytes);
 
 @Injectable()
 export class GrantService implements GrantServiceInterface {
-  public async create(parameters: AuthorizationRequest, client: Client): Promise<Grant> {
+  public async create(parameters: AuthorizationRequest, client: Client, session: Session): Promise<Grant> {
     const [loginChallengeBuffer, consentChallengeBuffer] = await Promise.all([
       randomBytesAsync(16),
       randomBytesAsync(16),
@@ -24,8 +25,9 @@ export class GrantService implements GrantServiceInterface {
       consentChallenge: consentChallengeBuffer.toString('hex'),
       parameters,
       createdAt: new Date(now),
-      expiresAt: new Date(now + 300000),
+      expiresAt: new Date(now + 1296000000),
       client,
+      session,
     });
 
     await grant.save();

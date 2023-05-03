@@ -7,6 +7,7 @@ import { ClientService } from './app/services/client.service';
 import { ConsentService } from './app/services/consent.service';
 import { DeviceCodeService } from './app/services/device-code.service';
 import { GrantService } from './app/services/grant.service';
+import { LoginService } from './app/services/login.service';
 import { RefreshTokenService } from './app/services/refresh-token.service';
 import { SessionService } from './app/services/session.service';
 import { UserService } from './app/services/user.service';
@@ -29,6 +30,7 @@ export const authorizationServerOptions: AuthorizationServerOptions = {
     consentUrl: '/auth/consent',
     errorUrl: '/oauth/error',
     loginUrl: '/auth/login',
+    selectAccountUrl: '/auth/select-account',
   },
   clientAuthenticationMethods: [
     'client_secret_basic',
@@ -56,8 +58,9 @@ export const authorizationServerOptions: AuthorizationServerOptions = {
   acrValues: ['urn:guarani:acr:1fa'],
   userService: UserService,
   clientService: ClientService,
-  sessionService: SessionService,
+  loginService: LoginService,
   consentService: ConsentService,
+  sessionService: SessionService,
   grantService: GrantService,
   authorizationCodeService: AuthorizationCodeService,
   accessTokenService: AccessTokenService,

@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreateAccessTokensTable1678672372374 implements MigrationInterface {
+  public readonly name: string = 'create_access_tokens_table_1678672372374';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
     const table = new Table({
       name: 'access_tokens',

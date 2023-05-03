@@ -5,7 +5,7 @@ import { DisplayInterface } from '../displays/display.interface';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { PkceInterface } from '../pkces/pkce.interface';
@@ -95,16 +95,16 @@ describe('Code ID Token Response Type', () => {
       Reflect.set(context.parameters, 'scope', 'foo bar');
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
-      const session = <Session>{};
+      const login = <Login>{};
       const consent = <Consent>{ scopes: ['foo', 'bar'] };
 
-      await expect(responseType.handle(context, session, consent)).rejects.toThrow(
+      await expect(responseType.handle(context, login, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Missing required scope "openid".', state: 'client_state' })
       );
     });
 
     it('should create a code id token authorization response.', async () => {
-      const session = <Session>{};
+      const login = <Login>{};
       const consent = <Consent>{ scopes: ['openid', 'foo', 'bar'] };
 
       const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
@@ -112,7 +112,7 @@ describe('Code ID Token Response Type', () => {
       authorizationCodeServiceMock.create.mockResolvedValueOnce(authorizationCode);
       idTokenHandlerMock.generateIdToken.mockResolvedValueOnce('id_token');
 
-      await expect(responseType.handle(context, session, consent)).resolves.toStrictEqual<
+      await expect(responseType.handle(context, login, consent)).resolves.toStrictEqual<
         CodeAuthorizationResponse & IdTokenAuthorizationResponse
       >({
         code: 'authorization_code',

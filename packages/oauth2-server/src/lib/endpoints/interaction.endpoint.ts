@@ -108,7 +108,7 @@ export class InteractionEndpoint implements EndpointInterface {
     const context = await validator.validateContext(request);
     const interactionResponse = await context.interactionType.handleContext(context);
 
-    return interactionResponse.setHeaders(this.headers);
+    return new HttpResponse().setHeaders(this.headers).json(interactionResponse);
   }
 
   /**
@@ -125,7 +125,7 @@ export class InteractionEndpoint implements EndpointInterface {
     const context = await validator.validateDecision(request);
     const interactionResponse = await context.interactionType.handleDecision(context);
 
-    return interactionResponse.setHeaders(this.headers);
+    return new HttpResponse().setHeaders(this.headers).json(interactionResponse);
   }
 
   /**

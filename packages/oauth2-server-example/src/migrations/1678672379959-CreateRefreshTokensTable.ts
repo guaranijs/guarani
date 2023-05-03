@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreateRefreshTokensTable1678672379959 implements MigrationInterface {
+  public readonly name: string = 'create_refresh_tokens_table_1678672379959';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
     const table = new Table({
       name: 'refresh_tokens',

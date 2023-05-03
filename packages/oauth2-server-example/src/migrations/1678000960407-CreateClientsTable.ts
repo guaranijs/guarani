@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreateClientsTable1678000960407 implements MigrationInterface {
+  public readonly name: string = 'create_clients_table_1678000960407';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
     const table = new Table({
       name: 'clients',
@@ -23,6 +25,7 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
         {
           name: 'secret_issued_at',
           type: 'timestamp',
+          default: 'CURRENT_TIMESTAMP',
           isNullable: true,
         },
         {

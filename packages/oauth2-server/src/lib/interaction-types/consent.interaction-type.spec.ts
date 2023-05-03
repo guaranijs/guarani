@@ -1,5 +1,7 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
+import { URLSearchParams } from 'url';
+
 import { ConsentContextInteractionContext } from '../context/interaction/consent-context.interaction.context';
 import { ConsentDecisionAcceptInteractionContext } from '../context/interaction/consent-decision-accept.interaction.context';
 import { ConsentDecisionDenyInteractionContext } from '../context/interaction/consent-decision-deny.interaction.context';
@@ -7,6 +9,8 @@ import { ConsentDecisionInteractionContext } from '../context/interaction/consen
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
+import { AccountSelectionRequiredException } from '../exceptions/account-selection-required.exception';
+import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ConsentContextInteractionResponse } from '../responses/interaction/consent-context.interaction-response';
 import { ConsentDecisionInteractionResponse } from '../responses/interaction/consent-decision.interaction-response';
@@ -75,7 +79,6 @@ describe('Consent Interaction Type', () => {
           interaction_type: 'consent',
           consent_challenge: 'consent_challenge',
         },
-        cookies: {},
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'consent',
           handleContext: jest.fn(),
@@ -95,7 +98,11 @@ describe('Consent Interaction Type', () => {
           },
           expiresAt: new Date(now + 300000),
           client: { id: 'client_id' },
-          session: { id: 'session_id', user: { id: 'user_id' } },
+          session: {
+            id: 'session_id',
+            activeLogin: { id: 'login_id', user: { id: 'user_id' } },
+            logins: [{ id: 'login_id', user: { id: 'user_id' } }],
+          },
           consent: { id: 'consent_id' },
         },
       };
@@ -109,6 +116,30 @@ describe('Consent Interaction Type', () => {
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
+    });
+
+    it('should throw when no active login is found at the session and the prompt includes "select_account".', async () => {
+      delete context.grant.session.activeLogin;
+      Reflect.set(context.grant.parameters, 'prompt', 'select_account');
+
+      await expect(interactionType.handleContext(context)).rejects.toThrow(
+        new AccountSelectionRequiredException({ description: 'Account selection required.' })
+      );
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
+    });
+
+    it('should throw when no active login is found at the session.', async () => {
+      Reflect.deleteProperty(context.grant.session, 'activeLogin');
+
+      await expect(interactionType.handleContext(context)).rejects.toThrow(
+        new LoginRequiredException({ description: 'No active login found.' })
+      );
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
     });
 
     it('should return a valid first time consent context response.', async () => {
@@ -116,12 +147,7 @@ describe('Consent Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      const response = await interactionType.handleContext(context);
-
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({});
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<ConsentContextInteractionResponse>({
+      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<ConsentContextInteractionResponse>({
         skip: false,
         requested_scope: 'foo bar baz',
         subject: 'user_id',
@@ -135,12 +161,7 @@ describe('Consent Interaction Type', () => {
     it('should return a valid skip consent context response.', async () => {
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      const response = await interactionType.handleContext(context);
-
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({});
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<ConsentContextInteractionResponse>({
+      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<ConsentContextInteractionResponse>({
         skip: true,
         requested_scope: 'foo bar baz',
         subject: 'user_id',
@@ -164,7 +185,6 @@ describe('Consent Interaction Type', () => {
           consent_challenge: 'consent_challenge',
           decision: <ConsentDecision>'',
         },
-        cookies: {},
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'consent',
           handleContext: jest.fn(),
@@ -183,9 +203,14 @@ describe('Consent Interaction Type', () => {
             state: 'client_state',
             response_mode: 'query',
           },
+          interactions: <InteractionType[]>[],
           expiresAt: new Date(now + 300000),
           client: { id: 'client_id' },
-          session: { id: 'session_id', user: { id: 'user_id' } },
+          session: {
+            id: 'session_id',
+            activeLogin: { id: 'login_id', user: { id: 'user_id' } },
+            logins: [{ id: 'login_id', user: { id: 'user_id' } }],
+          },
           consent: { id: 'consent_id', scopes: ['foo', 'bar'] },
         },
       };
@@ -199,21 +224,33 @@ describe('Consent Interaction Type', () => {
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
+    });
+
+    it('should throw when no active login is found at the session and the prompt includes "select_account".', async () => {
+      delete context.grant.session.activeLogin;
+      Reflect.set(context.grant.parameters, 'prompt', 'select_account');
+
+      await expect(interactionType.handleDecision(context)).rejects.toThrow(
+        new AccountSelectionRequiredException({ description: 'Account selection required.' })
+      );
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
+    });
+
+    it('should throw when no active login is found at the session.', async () => {
+      Reflect.deleteProperty(context.grant.session, 'activeLogin');
+
+      await expect(interactionType.handleDecision(context)).rejects.toThrow(
+        new LoginRequiredException({ description: 'No active login found.' })
+      );
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
     });
 
     // #region Accept Decision.
-    it('should throw when no session is found associated to the current grant.', async () => {
-      delete context.grant.session;
-      delete context.grant.consent;
-
-      Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar' });
-      Object.assign(context, { decision: 'accept', grantedScopes: ['foo', 'bar'] });
-
-      await expect(interactionType.handleDecision(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'No active session found for this consent.' })
-      );
-    });
-
     it('should return a valid first time consent accept decision interaction response.', async () => {
       delete context.grant.consent;
 
@@ -228,17 +265,16 @@ describe('Consent Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      const response = await interactionType.handleDecision(context);
-
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({});
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<ConsentDecisionInteractionResponse>({
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...context.grant, consent });
+      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{
+        ...context.grant,
+        interactions: ['consent'],
+        consent,
+      });
     });
 
     it('should return a valid subsequent consent accept decision interaction response.', async () => {
@@ -247,12 +283,7 @@ describe('Consent Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(context.grant.parameters);
 
-      const response = await interactionType.handleDecision(context);
-
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({});
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<ConsentDecisionInteractionResponse>({
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
@@ -279,16 +310,12 @@ describe('Consent Interaction Type', () => {
 
       const urlParameters = new URLSearchParams(error.toJSON());
 
-      const response = await interactionType.handleDecision(context);
-
-      expect(response.statusCode).toBe(200);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': null });
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<ConsentDecisionInteractionResponse>({
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,
       });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
     });
     // #endregion
   });

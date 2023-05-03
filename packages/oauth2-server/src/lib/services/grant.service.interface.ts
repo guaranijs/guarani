@@ -1,5 +1,6 @@
 import { Client } from '../entities/client.entity';
 import { Grant } from '../entities/grant.entity';
+import { Session } from '../entities/session.entity';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 
 /**
@@ -13,9 +14,10 @@ export interface GrantServiceInterface {
    *
    * @param parameters Parameters of the Authorization Request.
    * @param client Client requesting authorization.
+   * @param session Session containing the Logins for the User-Agent.
    * @returns Generated Grant.
    */
-  create(parameters: AuthorizationRequest, client: Client): Promise<Grant>;
+  create(parameters: AuthorizationRequest, client: Client, session: Session): Promise<Grant>;
 
   /**
    * Searches the application's storage for a Grant containing the provided Identifier.

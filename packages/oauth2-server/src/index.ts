@@ -32,6 +32,8 @@ export { LoginContextInteractionContext } from './lib/context/interaction/login-
 export { LoginDecisionAcceptInteractionContext } from './lib/context/interaction/login-decision-accept.interaction.context';
 export { LoginDecisionDenyInteractionContext } from './lib/context/interaction/login-decision-deny.interaction.context';
 export { LoginDecisionInteractionContext } from './lib/context/interaction/login-decision.interaction.context';
+export { SelectAccountContextInteractionContext } from './lib/context/interaction/select-account-context.interaction.context';
+export { SelectAccountDecisionInteractionContext } from './lib/context/interaction/select-account-decision.interaction.context';
 export { IntrospectionContext } from './lib/context/introspection.context';
 export { DeleteRegistrationContext } from './lib/context/registration/delete.registration.context';
 export { GetRegistrationContext } from './lib/context/registration/get.registration.context';
@@ -63,6 +65,7 @@ export { Client } from './lib/entities/client.entity';
 export { Consent } from './lib/entities/consent.entity';
 export { DeviceCode } from './lib/entities/device-code.entity';
 export { Grant } from './lib/entities/grant.entity';
+export { Login } from './lib/entities/login.entity';
 export { RefreshToken } from './lib/entities/refresh-token.entity';
 export { Session } from './lib/entities/session.entity';
 export { User } from './lib/entities/user.entity';
@@ -103,7 +106,6 @@ export { GrantType } from './lib/grant-types/grant-type.type';
 export { ClientAuthenticationHandler } from './lib/handlers/client-authentication.handler';
 export { ClientAuthorizationHandler } from './lib/handlers/client-authorization.handler';
 export { IdTokenHandler } from './lib/handlers/id-token.handler';
-export { InteractionHandler } from './lib/handlers/interaction.handler';
 export { ScopeHandler } from './lib/handlers/scope.handler';
 
 // Http
@@ -145,6 +147,7 @@ export { LoginContextInteractionRequest } from './lib/requests/interaction/login
 export { LoginDecisionAcceptInteractionRequest } from './lib/requests/interaction/login-decision-accept.interaction-request';
 export { LoginDecisionDenyInteractionRequest } from './lib/requests/interaction/login-decision-deny.interaction-request';
 export { LoginDecisionInteractionRequest } from './lib/requests/interaction/login-decision.interaction-request';
+export { SelectAccountDecisionInteractionRequest } from './lib/requests/interaction/select-account-decision.interaction-request';
 export { IntrospectionRequest } from './lib/requests/introspection-request';
 export { DeleteRegistrationRequest } from './lib/requests/registration/delete.registration-request';
 export { GetRegistrationRequest } from './lib/requests/registration/get.registration-request';
@@ -173,21 +176,23 @@ export { ResponseType } from './lib/response-types/response-type.type';
 // Responses
 export { AuthorizationResponse } from './lib/responses/authorization/authorization-response';
 export { CodeAuthorizationResponse } from './lib/responses/authorization/code.authorization-response';
-export { ConsentContextInteractionResponse } from './lib/responses/interaction/consent-context.interaction-response';
-export { ConsentContext } from './lib/responses/interaction/consent.context';
+export { IdTokenAuthorizationResponse } from './lib/responses/authorization/id-token.authorization-response';
+export { TokenAuthorizationResponse } from './lib/responses/authorization/token.authorization-response';
 export { DeviceAuthorizationResponse } from './lib/responses/device-authorization-response';
 export { DiscoveryResponse } from './lib/responses/discovery-response';
-export { IdTokenAuthorizationResponse } from './lib/responses/authorization/id-token.authorization-response';
-export { IntrospectionResponse } from './lib/responses/introspection-response';
+export { ConsentContextInteractionResponse } from './lib/responses/interaction/consent-context.interaction-response';
+export { ConsentDecisionInteractionResponse } from './lib/responses/interaction/consent-decision.interaction-response';
+export { ConsentContext } from './lib/responses/interaction/consent.context';
 export { LoginContextInteractionResponse } from './lib/responses/interaction/login-context.interaction-response';
 export { LoginDecisionInteractionResponse } from './lib/responses/interaction/login-decision.interaction-response';
 export { LoginContext } from './lib/responses/interaction/login.context';
+export { SelectAccountContextInteractionResponse } from './lib/responses/interaction/select-account-context.interaction-response';
+export { SelectAccountDecisionInteractionResponse } from './lib/responses/interaction/select-account-decision.interaction-response';
+export { IntrospectionResponse } from './lib/responses/introspection-response';
 export { GetRegistrationResponse } from './lib/responses/registration/get.registration-response';
 export { PostRegistrationResponse } from './lib/responses/registration/post.registration-response';
 export { PutRegistrationResponse } from './lib/responses/registration/put.registration-response';
 export { TokenResponse } from './lib/responses/token-response';
-export { TokenAuthorizationResponse } from './lib/responses/authorization/token.authorization-response';
-export { ConsentDecisionInteractionResponse } from './lib/responses/interaction/consent-decision.interaction-response';
 
 // Services
 export { AccessTokenService } from './lib/services/default/access-token.service';
@@ -196,6 +201,7 @@ export { ClientService } from './lib/services/default/client.service';
 export { ConsentService } from './lib/services/default/consent.service';
 export { DeviceCodeService } from './lib/services/default/device-code.service';
 export { GrantService } from './lib/services/default/grant.service';
+export { LoginService } from './lib/services/default/login.service';
 export { RefreshTokenService } from './lib/services/default/refresh-token.service';
 export { SessionService } from './lib/services/default/session.service';
 export { UserService } from './lib/services/default/user.service';
@@ -211,6 +217,8 @@ export { DeviceCodeServiceInterface } from './lib/services/device-code.service.i
 export { DEVICE_CODE_SERVICE } from './lib/services/device-code.service.token';
 export { GrantServiceInterface } from './lib/services/grant.service.interface';
 export { GRANT_SERVICE } from './lib/services/grant.service.token';
+export { LoginServiceInterface } from './lib/services/login.service.interface';
+export { LOGIN_SERVICE } from './lib/services/login.service.token';
 export { RefreshTokenServiceInterface } from './lib/services/refresh-token.service.interface';
 export { REFRESH_TOKEN_SERVICE } from './lib/services/refresh-token.service.token';
 export { SessionServiceInterface } from './lib/services/session.service.interface';

@@ -4,7 +4,7 @@ import { AuthorizationContext } from '../context/authorization/authorization.con
 import { DisplayInterface } from '../displays/display.interface';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
@@ -80,20 +80,20 @@ describe('ID Token Response Type', () => {
       Reflect.set(context.parameters, 'scope', 'foo bar');
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
-      const session = <Session>{};
+      const login = <Login>{};
       const consent = <Consent>{
         scopes: ['foo', 'bar'],
         client: { id: 'client_id' },
         user: { id: 'user_id' },
       };
 
-      await expect(responseType.handle(context, session, consent)).rejects.toThrow(
+      await expect(responseType.handle(context, login, consent)).rejects.toThrow(
         new InvalidRequestException({ description: 'Missing required scope "openid".', state: 'client_state' })
       );
     });
 
     it('should create an id token authorization response.', async () => {
-      const session = <Session>{};
+      const login = <Login>{};
       const consent = <Consent>{
         scopes: ['openid', 'foo', 'bar'],
         client: { id: 'client_id' },
@@ -102,12 +102,10 @@ describe('ID Token Response Type', () => {
 
       idTokenHandlerMock.generateIdToken.mockResolvedValueOnce('id_token');
 
-      await expect(responseType.handle(context, session, consent)).resolves.toStrictEqual<IdTokenAuthorizationResponse>(
-        {
-          id_token: 'id_token',
-          state: 'client_state',
-        }
-      );
+      await expect(responseType.handle(context, login, consent)).resolves.toStrictEqual<IdTokenAuthorizationResponse>({
+        id_token: 'id_token',
+        state: 'client_state',
+      });
     });
   });
 });

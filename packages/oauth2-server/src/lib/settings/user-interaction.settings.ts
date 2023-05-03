@@ -16,4 +16,9 @@ export interface UserInteractionSettings {
    * URL of the Login Page.
    */
   readonly loginUrl: string;
+
+  /**
+   * URL of the Select Account Page.
+   */
+  readonly selectAccountUrl: string;
 }

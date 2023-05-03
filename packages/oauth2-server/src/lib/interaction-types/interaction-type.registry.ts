@@ -4,6 +4,7 @@ import { ConsentInteractionType } from './consent.interaction-type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 import { LoginInteractionType } from './login.interaction-type';
+import { SelectAccountInteractionType } from './select-account.interaction-type';
 
 /**
  * Interaction Type Registry.
@@ -11,4 +12,5 @@ import { LoginInteractionType } from './login.interaction-type';
 export const interactionTypeRegistry: Record<InteractionType, Constructor<InteractionTypeInterface>> = {
   consent: ConsentInteractionType,
   login: LoginInteractionType,
+  select_account: SelectAccountInteractionType,
 };

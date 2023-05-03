@@ -1,14 +1,13 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
-import { URLSearchParams } from 'url';
+import { URL, URLSearchParams } from 'url';
 
 class Controller {
   public async callback(request: Request, response: Response): Promise<void> {
     const parameters = request.query;
 
-    if (parameters.error !== undefined) {
-      response.json(parameters);
-      return;
+    if (typeof parameters.error !== 'undefined') {
+      return this.redirectToErrorPage(response, parameters);
     }
 
     const body = new URLSearchParams({
@@ -19,7 +18,7 @@ class Controller {
     });
 
     try {
-      const accessTokenResponse = await axios.post('/oauth/token', body.toString(), {
+      const { data } = await axios.post('/oauth/token', body.toString(), {
         auth: {
           username: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
           password: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
@@ -28,9 +27,15 @@ class Controller {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
 
-      response.json(accessTokenResponse.data);
-    } catch (exc: any) {
-      response.json(exc.response.data);
+      console.info('callback', data);
+
+      return response.redirect(303, '/profile');
+    } catch (exc: unknown) {
+      if (exc instanceof AxiosError) {
+        return this.redirectToErrorPage(response, exc.response?.data ?? {});
+      }
+
+      throw exc;
     }
   }
 
@@ -42,6 +47,15 @@ class Controller {
     }
 
     return response.render('oauth/error', { request, title: 'OAuth 2.0 Error', parameters });
+  }
+
+  private redirectToErrorPage(response: Response, parameters: Record<string, any>): void {
+    const url = new URL('http://localhost:4000/oauth/error');
+    const searchParameters = new URLSearchParams(parameters);
+
+    url.search = searchParameters.toString();
+
+    return response.redirect(303, url.href);
   }
 }
 

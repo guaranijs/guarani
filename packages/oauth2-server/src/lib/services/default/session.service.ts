@@ -3,7 +3,6 @@ import { Injectable } from '@guarani/di';
 import { randomUUID } from 'crypto';
 
 import { Session } from '../../entities/session.entity';
-import { User } from '../../entities/user.entity';
 import { SessionServiceInterface } from '../session.service.interface';
 
 @Injectable()
@@ -14,17 +13,9 @@ export class SessionService implements SessionServiceInterface {
     console.warn('Using default Session Service. This is only recommended for development.');
   }
 
-  public async create(user: User, amr: string[] | undefined, acr: string | undefined): Promise<Session> {
-    const session: Session = {
-      id: randomUUID(),
-      amr,
-      acr,
-      createdAt: new Date(),
-      user,
-    };
-
+  public async create(): Promise<Session> {
+    const session: Session = { id: randomUUID(), logins: [] };
     this.sessions.push(session);
-
     return session;
   }
 

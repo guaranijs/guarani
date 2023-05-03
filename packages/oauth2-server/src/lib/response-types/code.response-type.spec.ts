@@ -5,7 +5,7 @@ import { DisplayInterface } from '../displays/display.interface';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 import { PkceInterface } from '../pkces/pkce.interface';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
@@ -84,14 +84,14 @@ describe('Code Response Type', () => {
     });
 
     it('should create a code authorization response.', async () => {
-      const session = <Session>{};
+      const login = <Login>{};
       const consent = <Consent>{ client: { id: 'client_id' }, user: { id: 'user_id' } };
 
       const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
 
       authorizationCodeServiceMock.create.mockResolvedValueOnce(authorizationCode);
 
-      await expect(responseType.handle(context, session, consent)).resolves.toStrictEqual<CodeAuthorizationResponse>({
+      await expect(responseType.handle(context, login, consent)).resolves.toStrictEqual<CodeAuthorizationResponse>({
         code: 'authorization_code',
         state: 'client_state',
       });

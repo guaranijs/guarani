@@ -32,7 +32,6 @@ import { GrantType } from '../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { IdTokenHandler } from '../handlers/id-token.handler';
-import { InteractionHandler } from '../handlers/interaction.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { interactionTypeRegistry } from '../interaction-types/interaction-type.registry';
@@ -63,6 +62,7 @@ import { ClientService } from '../services/default/client.service';
 import { ConsentService } from '../services/default/consent.service';
 import { DeviceCodeService } from '../services/default/device-code.service';
 import { GrantService } from '../services/default/grant.service';
+import { LoginService } from '../services/default/login.service';
 import { RefreshTokenService } from '../services/default/refresh-token.service';
 import { SessionService } from '../services/default/session.service';
 import { UserService } from '../services/default/user.service';
@@ -70,6 +70,8 @@ import { DeviceCodeServiceInterface } from '../services/device-code.service.inte
 import { DEVICE_CODE_SERVICE } from '../services/device-code.service.token';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
+import { LoginServiceInterface } from '../services/login.service.interface';
+import { LOGIN_SERVICE } from '../services/login.service.token';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
@@ -150,9 +152,10 @@ export class AuthorizationServerFactory {
     this.setClientService();
     this.setConsentService();
     this.setDeviceCodeService();
+    this.setSessionService();
     this.setGrantService();
     this.setRefreshTokenService();
-    this.setSessionService();
+    this.setLoginService();
     this.setUserService();
   }
 
@@ -373,7 +376,6 @@ export class AuthorizationServerFactory {
   private static setHandlers(): void {
     this.container.bind(ClientAuthenticationHandler).toSelf().asSingleton();
     this.container.bind(ScopeHandler).toSelf().asSingleton();
-    this.container.bind(InteractionHandler).toSelf().asSingleton();
 
     if (this.settings.scopes.includes('openid')) {
       this.container.bind(IdTokenHandler).toSelf().asSingleton();
@@ -497,6 +499,23 @@ export class AuthorizationServerFactory {
   }
 
   /**
+   * Defines the Session Service used by the Authorization Server.
+   */
+  private static setSessionService(): void {
+    if (this.settings.userInteraction === undefined) {
+      return;
+    }
+
+    const sessionService = this.authorizationServerOptions.sessionService ?? SessionService;
+
+    const binding = this.container.bind<SessionServiceInterface>(SESSION_SERVICE);
+
+    typeof sessionService === 'function'
+      ? binding.toClass(sessionService).asSingleton()
+      : binding.toValue(sessionService);
+  }
+
+  /**
    * Defines the Grant Service used by the Authorization Server.
    */
   private static setGrantService(): void {
@@ -529,16 +548,16 @@ export class AuthorizationServerFactory {
   }
 
   /**
-   * Defines the Session Service used by the Authorization Server.
+   * Defines the Login Service used by the Authorization Server.
    */
-  private static setSessionService(): void {
+  private static setLoginService(): void {
     if (this.settings.userInteraction === undefined) {
       return;
     }
 
-    const sessionService = this.authorizationServerOptions.sessionService ?? SessionService;
+    const sessionService = this.authorizationServerOptions.loginService ?? LoginService;
 
-    const binding = this.container.bind<SessionServiceInterface>(SESSION_SERVICE);
+    const binding = this.container.bind<LoginServiceInterface>(LOGIN_SERVICE);
 
     typeof sessionService === 'function'
       ? binding.toClass(sessionService).asSingleton()

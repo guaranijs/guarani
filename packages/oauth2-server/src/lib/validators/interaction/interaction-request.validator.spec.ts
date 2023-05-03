@@ -33,7 +33,6 @@ describe('Interaction Request Validator', () => {
     it('should return a context interaction context.', async () => {
       await expect(validator.validateContext(request)).resolves.toStrictEqual<InteractionContext<InteractionRequest>>({
         parameters: <InteractionRequest>request.query,
-        cookies: request.cookies,
         interactionType: interactionTypesMocks[1]!,
       });
     });
@@ -62,7 +61,6 @@ describe('Interaction Request Validator', () => {
     it('should return a decision interaction context.', async () => {
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<InteractionContext<InteractionRequest>>({
         parameters: <InteractionRequest>request.body,
-        cookies: request.cookies,
         interactionType: interactionTypesMocks[0]!,
       });
     });

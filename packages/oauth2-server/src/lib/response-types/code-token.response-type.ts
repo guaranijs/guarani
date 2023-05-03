@@ -3,7 +3,7 @@ import { removeUndefined } from '@guarani/primitives';
 
 import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
@@ -57,19 +57,19 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
    * Creates and returns an Authorization Code and Access Token Response to the Client.
    *
    * @param context Authorization Request Context.
-   * @param session Session with the Authentication information of the End User.
+   * @param login Login with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Authorization Code and Access Token Response.
    */
   public async handle(
     context: CodeAuthorizationContext,
-    session: Session,
+    login: Login,
     consent: Consent
   ): Promise<CodeAuthorizationResponse & TokenAuthorizationResponse> {
     const { parameters } = context;
     const { client, scopes, user } = consent;
 
-    const authorizationCode = await this.authorizationCodeService.create(parameters, session, consent);
+    const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);
     const accessToken = await this.accessTokenService.create(scopes, client, user);
 
     const token = createTokenResponse(accessToken);

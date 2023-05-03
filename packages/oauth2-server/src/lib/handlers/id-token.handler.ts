@@ -13,7 +13,7 @@ import { createHash, timingSafeEqual } from 'crypto';
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
 import { IdTokenClaimsParameters } from '../id-token/id-token.claims.parameters';
 import { UserServiceInterface } from '../services/user.service.interface';
@@ -93,10 +93,10 @@ export class IdTokenHandler {
    * represented by the ID Token provided by the Client.
    *
    * @param idToken ID Token provided by the Client as a hint to the expectedd authenticated User.
-   * @param session Session containing the currently authenticated User.
+   * @param login Login containing the currently authenticated User.
    * @returns Whether or not the authenticated User matches the User represented by the ID Token.
    */
-  public async checkIdTokenHint(idToken: string, session: Session): Promise<boolean> {
+  public async checkIdTokenHint(idToken: string, login: Login): Promise<boolean> {
     try {
       const { payload } = await JsonWebSignature.verify(
         idToken,
@@ -106,10 +106,10 @@ export class IdTokenHandler {
 
       const claims = await JsonWebTokenClaims.parse(payload, { ignoreExpired: true });
 
-      const sessionUserId = Buffer.from(session.user.id, 'utf8');
+      const loginUserId = Buffer.from(login.user.id, 'utf8');
       const idTokenUserId = Buffer.from(claims.sub!, 'utf8');
 
-      return sessionUserId.length === idTokenUserId.length && timingSafeEqual(sessionUserId, idTokenUserId);
+      return loginUserId.length === idTokenUserId.length && timingSafeEqual(loginUserId, idTokenUserId);
     } catch {
       return false;
     }

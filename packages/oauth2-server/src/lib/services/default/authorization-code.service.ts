@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 
 import { AuthorizationCode } from '../../entities/authorization-code.entity';
 import { Consent } from '../../entities/consent.entity';
-import { Session } from '../../entities/session.entity';
+import { Login } from '../../entities/login.entity';
 import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
 import { AuthorizationCodeServiceInterface } from '../authorization-code.service.interface';
 
@@ -18,7 +18,7 @@ export class AuthorizationCodeService implements AuthorizationCodeServiceInterfa
 
   public async create(
     parameters: CodeAuthorizationRequest,
-    session: Session,
+    login: Login,
     consent: Consent
   ): Promise<AuthorizationCode> {
     const now = Date.now();
@@ -30,7 +30,7 @@ export class AuthorizationCodeService implements AuthorizationCodeServiceInterfa
       issuedAt: new Date(now),
       expiresAt: new Date(now + 300000),
       validAfter: new Date(now),
-      session,
+      login,
       consent,
     };
 

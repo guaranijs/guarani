@@ -1,6 +1,6 @@
 import { CodeAuthorizationRequest } from '../requests/authorization/code.authorization-request';
 import { Consent } from './consent.entity';
-import { Session } from './session.entity';
+import { Login } from './login.entity';
 
 /**
  * OAuth 2.0 Authorization Code Entity.
@@ -37,9 +37,9 @@ export interface AuthorizationCode extends Record<string, any> {
   readonly validAfter: Date;
 
   /**
-   * Session with the Authentication information of the End User.
+   * Login with the Authentication information of the End User.
    */
-  readonly session: Session;
+  readonly login: Login;
 
   /**
    * Consent with the scopes granted by the End User.

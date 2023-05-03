@@ -1,3 +1,4 @@
+import { InteractionType } from '../interaction-types/interaction-type.type';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { Client } from './client.entity';
 import { Consent } from './consent.entity';
@@ -28,6 +29,11 @@ export interface Grant extends Record<string, any> {
   readonly parameters: AuthorizationRequest;
 
   /**
+   * Interactions processed by the Authorization Server.
+   */
+  readonly interactions: InteractionType[];
+
+  /**
    * Creation Date of the Grant.
    */
   readonly createdAt: Date;
@@ -43,9 +49,9 @@ export interface Grant extends Record<string, any> {
   readonly client: Client;
 
   /**
-   * End User Session.
+   * Session for the User-Agent.
    */
-  session?: Session | null;
+  readonly session: Session;
 
   /**
    * End User Consent.

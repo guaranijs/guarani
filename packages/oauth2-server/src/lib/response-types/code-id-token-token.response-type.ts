@@ -3,7 +3,7 @@ import { removeUndefined } from '@guarani/primitives';
 
 import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { ResponseMode } from '../response-modes/response-mode.type';
@@ -62,13 +62,13 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
    * Creates and returns a Code Authorization Response and an Access Token and ID Token Response to the Client.
    *
    * @param context Authorization Request Context.
-   * @param session Session with the Authentication information of the End User.
+   * @param login Login with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Code Authorization Response and Access Token and ID Token Response.
    */
   public async handle(
     context: CodeAuthorizationContext,
-    session: Session,
+    login: Login,
     consent: Consent
   ): Promise<CodeAuthorizationResponse & IdTokenAuthorizationResponse & TokenAuthorizationResponse> {
     const { parameters } = context;
@@ -79,12 +79,12 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
-    const authorizationCode = await this.authorizationCodeService.create(parameters, session, consent);
+    const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);
     const idToken = await this.idTokenHandler.generateIdToken(consent, accessToken, authorizationCode, {
       nonce: parameters.nonce,
-      auth_time: parameters.max_age !== undefined ? Math.floor(session.createdAt.getTime() / 1000) : undefined,
-      amr: session.amr ?? undefined,
-      acr: session.acr ?? undefined,
+      auth_time: parameters.max_age !== undefined ? Math.floor(login.createdAt.getTime() / 1000) : undefined,
+      amr: login.amr ?? undefined,
+      acr: login.acr ?? undefined,
     });
 
     const token = createTokenResponse(accessToken);

@@ -23,6 +23,7 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
         {
           name: 'secret_issued_at',
           type: 'timestamp',
+          default: 'CURRENT_TIMESTAMP',
           isNullable: true,
         },
         {

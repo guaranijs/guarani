@@ -33,7 +33,7 @@ export class Client extends BaseEntity implements OAuth2Client {
   @Check('check_secret_length', 'length("secret") = 32')
   public secret!: string | null;
 
-  @Column({ name: 'secret_issued_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'secret_issued_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', nullable: true })
   public secretIssuedAt!: Date | null;
 
   @Column({ name: 'secret_expires_at', type: 'timestamp', nullable: true })

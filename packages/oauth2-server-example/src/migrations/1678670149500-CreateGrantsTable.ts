@@ -114,7 +114,7 @@ export class CreateGrantsTable1678670149500 implements MigrationInterface {
         },
         {
           name: 'grants_session_id_and_consent_id_uq',
-          columnNames: ['session', 'consent'],
+          columnNames: ['session_id', 'consent_id'],
         },
       ],
     });

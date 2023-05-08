@@ -52,7 +52,7 @@ export interface AuthorizationContext<T extends AuthorizationRequest> {
   readonly responseMode: ResponseModeInterface;
 
   /**
-   * Nonce provided by the Client to associate itself to a session and to prevent Replay Attacks.
+   * Nonce provided by the Client to associate itself to a login and to prevent Replay Attacks.
    * This value is passed unmodified from the Authorization Request to the ID Token.
    */
   readonly nonce?: string;

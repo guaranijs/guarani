@@ -3,7 +3,7 @@ import { removeUndefined } from '@guarani/primitives';
 
 import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { AuthorizationCodeServiceInterface } from '../services/authorization-code.service.interface';
@@ -61,17 +61,17 @@ export class CodeResponseType implements ResponseTypeInterface {
    * at the application's storage together with the issued Authorization Code for verification at the Token Endpoint.
    *
    * @param context Authorization Request Context.
-   * @param session Session with the Authentication information of the End User.
+   * @param login Login with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Authorization Code Response.
    */
   public async handle(
     context: CodeAuthorizationContext,
-    session: Session,
+    login: Login,
     consent: Consent
   ): Promise<CodeAuthorizationResponse> {
     const { parameters } = context;
-    const authorizationCode = await this.authorizationCodeService.create(parameters, session, consent);
+    const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);
     return removeUndefined<CodeAuthorizationResponse>({ code: authorizationCode.code, state: parameters.state });
   }
 }

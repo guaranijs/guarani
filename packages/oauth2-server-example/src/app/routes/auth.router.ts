@@ -6,6 +6,7 @@ import { ConsentController } from '../controllers/auth/consent.controller';
 import { LoginController } from '../controllers/auth/login.controller';
 import { LogoutController } from '../controllers/auth/logout.controller';
 import { RegisterController } from '../controllers/auth/register.controller';
+import { SelectAccountController } from '../controllers/auth/select-account.controller';
 import { authenticated } from '../guards/authenticated.guard';
 import { unauthenticated } from '../guards/unauthenticated.guard';
 
@@ -16,6 +17,11 @@ router
   .route('/register')
   .get(unauthenticated, csrf, RegisterController.get)
   .post(unauthenticated, csrf, RegisterController.post);
+
+router
+  .route('/select-account')
+  .get(csrf, async (req, res) => await SelectAccountController.get(req, res))
+  .post(csrf, async (req, res) => await SelectAccountController.post(req, res));
 
 router
   .route('/login')

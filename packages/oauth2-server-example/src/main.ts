@@ -6,7 +6,7 @@ import { expressAuthorizationServer, User, UserServiceInterface, USER_SERVICE } 
 import flash from 'connect-flash';
 import RedisStore from 'connect-redis';
 import cookieParser from 'cookie-parser';
-import express, { Application, static as expressStatic, urlencoded } from 'express';
+import express, { Application, json, static as expressStatic, urlencoded } from 'express';
 import session from 'express-session';
 import Redis from 'ioredis';
 import nunjucks from 'nunjucks';
@@ -56,7 +56,8 @@ async function main(): Promise<void> {
 
   const redis = new Redis(process.env.REDIS_URL!);
 
-  app.use(urlencoded({ extended: false }));
+  app.use(urlencoded({ extended: true }));
+  app.use(json());
   app.use(cookieParser(secret));
   app.use(
     session({

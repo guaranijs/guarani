@@ -6,7 +6,7 @@ import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 import { PkceInterface } from '../pkces/pkce.interface';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
@@ -95,7 +95,7 @@ describe('Code Token Response Type', () => {
     });
 
     it('should create a code token authorization response.', async () => {
-      const session = <Session>{};
+      const login = <Login>{};
       const consent = <Consent>{
         scopes: ['foo', 'bar'],
         client: { id: 'client_id' },
@@ -112,7 +112,7 @@ describe('Code Token Response Type', () => {
       authorizationCodeServiceMock.create.mockResolvedValueOnce(authorizationCode);
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
-      await expect(responseType.handle(context, session, consent)).resolves.toStrictEqual<
+      await expect(responseType.handle(context, login, consent)).resolves.toStrictEqual<
         CodeAuthorizationResponse & TokenAuthorizationResponse
       >({
         access_token: 'access_token',

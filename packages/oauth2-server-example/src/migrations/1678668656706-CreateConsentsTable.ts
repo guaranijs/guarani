@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreateConsentsTable1678668656706 implements MigrationInterface {
+  public readonly name: string = 'create_consents_table_1678668656706';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
     const table = new Table({
       name: 'consents',

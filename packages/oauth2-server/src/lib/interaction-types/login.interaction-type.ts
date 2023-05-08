@@ -8,12 +8,15 @@ import { LoginDecisionAcceptInteractionContext } from '../context/interaction/lo
 import { LoginDecisionDenyInteractionContext } from '../context/interaction/login-decision-deny.interaction.context';
 import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction.context';
 import { Grant } from '../entities/grant.entity';
+import { Login } from '../entities/login.entity';
+import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
-import { HttpResponse } from '../http/http.response';
 import { LoginContextInteractionResponse } from '../responses/interaction/login-context.interaction-response';
 import { LoginDecisionInteractionResponse } from '../responses/interaction/login-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
+import { LoginServiceInterface } from '../services/login.service.interface';
+import { LOGIN_SERVICE } from '../services/login.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
@@ -38,7 +41,7 @@ import { LoginDecision } from './login-decision.type';
  *
  * If the authentication is denied, the authorization server informs the User-Agent to redirect
  * to the authorization server's error page to display the reason of the failure.
- * It will also delete the analyzed Session.
+ * It will also delete the analyzed Login.
  *
  * If the authentication is accepted, the authorization server informs the User-Agent to redirect
  * to the authorization endpoint to continue the authorization process.
@@ -54,13 +57,15 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * Instantiates a new Login Interaction Type.
    *
    * @param settings Settings of the Authorization Server.
-   * @param sessionService Instance of the Session Service.
+   * @param loginService Instance of the Login Service.
    * @param grantService Instance of the Grant Service.
+   * @param sessionService Instance of the Session Service.
    */
   public constructor(
     @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
-    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface
+    @Inject(LOGIN_SERVICE) private readonly loginService: LoginServiceInterface,
+    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
+    @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface
   ) {}
 
   /**
@@ -74,7 +79,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * @param context Login Context Interaction Request Context.
    * @returns Login Context Interaction Response.
    */
-  public async handleContext(context: LoginContextInteractionContext): Promise<HttpResponse> {
+  public async handleContext(context: LoginContextInteractionContext): Promise<LoginContextInteractionResponse> {
     const { grant } = context;
 
     await this.checkGrant(grant);
@@ -84,22 +89,22 @@ export class LoginInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    let skip = grant.session != null;
+    let skip = grant.session.activeLogin != null;
     let authExp: number | undefined;
 
-    if (grant.session != null && grant.parameters.max_age !== undefined) {
-      const authTime = grant.session.createdAt.getTime();
+    if (grant.session.activeLogin != null && grant.parameters.max_age !== undefined) {
+      const authTime = grant.session.activeLogin.createdAt.getTime();
       const maxAge = Number.parseInt(grant.parameters.max_age, 10) * 1000;
 
       skip &&= Date.now() < authTime + maxAge;
       authExp = Math.floor((authTime + maxAge) / 1000);
 
       if (!skip) {
-        await this.sessionService.remove(grant.session);
+        await this.removeLoginFromSession(grant.session);
       }
     }
 
-    const body = removeUndefined<LoginContextInteractionResponse>({
+    return removeUndefined<LoginContextInteractionResponse>({
       skip,
       request_url: url.href,
       client: grant.client.id,
@@ -112,14 +117,6 @@ export class LoginInteractionType implements InteractionTypeInterface {
         acr_values: grant.parameters.acr_values?.split(' '),
       },
     });
-
-    const response = new HttpResponse().json(body);
-
-    if (grant.session != null) {
-      response.setCookie('guarani:session', grant.session.id);
-    }
-
-    return response;
   }
 
   /**
@@ -130,7 +127,9 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * @param context Login Context Interaction Request Context.
    * @returns Login Decision Interaction Response.
    */
-  public async handleDecision(context: LoginDecisionInteractionContext<LoginDecision>): Promise<HttpResponse> {
+  public async handleDecision(
+    context: LoginDecisionInteractionContext<LoginDecision>
+  ): Promise<LoginDecisionInteractionResponse> {
     const { grant } = context;
 
     await this.checkGrant(grant);
@@ -149,13 +148,16 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * to continue the Authorization Process.
    *
    * @param context Login Context Interaction Request Context.
-   * @returns Redirect Response for the User-Agent to continue the Authorization Process.
+   * @returns Login Decision Interaction Response.
    */
-  private async acceptLogin(context: LoginDecisionAcceptInteractionContext): Promise<HttpResponse> {
+  private async acceptLogin(context: LoginDecisionAcceptInteractionContext): Promise<LoginDecisionInteractionResponse> {
     const { acr, amr, grant, user } = context;
 
-    if (grant.session == null) {
-      grant.session = await this.sessionService.create(user, amr, acr);
+    if (grant.session.activeLogin == null) {
+      const login = await this.loginService.create(user, grant.session, amr, acr);
+      await this.updateActiveLogin(grant.session, login);
+
+      grant.interactions.push('login');
       await this.grantService.save(grant);
     }
 
@@ -164,18 +166,16 @@ export class LoginInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return new HttpResponse()
-      .setCookie('guarani:session', grant.session.id)
-      .json<LoginDecisionInteractionResponse>({ redirect_to: url.href });
+    return { redirect_to: url.href };
   }
 
   /**
    * Denies the authentication performed by the application and redirects the User-Agent to display the Error details.
    *
    * @param context Login Context Interaction Request Context.
-   * @returns Redirect Response for the User-Agent to abort the Authorization Process.
+   * @returns Login Decision Interaction Response.
    */
-  private async denyLogin(context: LoginDecisionDenyInteractionContext): Promise<HttpResponse> {
+  private async denyLogin(context: LoginDecisionDenyInteractionContext): Promise<LoginDecisionInteractionResponse> {
     const { error, grant } = context;
 
     await this.grantService.remove(grant);
@@ -185,9 +185,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return new HttpResponse()
-      .setCookie('guarani:grant', null)
-      .json<LoginDecisionInteractionResponse>({ redirect_to: url.href });
+    return { redirect_to: url.href };
   }
 
   /**
@@ -200,5 +198,33 @@ export class LoginInteractionType implements InteractionTypeInterface {
       await this.grantService.remove(grant);
       throw new AccessDeniedException({ description: 'Expired Grant.' });
     }
+  }
+
+  /**
+   * Removes the current Login from the application's storage and from the current Session.
+   *
+   * @param session Session of the Request.
+   */
+  private async removeLoginFromSession(session: Session): Promise<void> {
+    const login = session.activeLogin!;
+
+    session.activeLogin = null;
+    session.logins = session.logins.filter((savedLogin) => savedLogin.id !== login.id);
+
+    await this.sessionService.save(session);
+    await this.loginService.remove(login);
+  }
+
+  /**
+   * Updates the Active Login of the Session and adds the Login to the list of Logins of the Session.
+   *
+   * @param session Session of the Request.
+   * @param login Login to be added to the Session.
+   */
+  private async updateActiveLogin(session: Session, login: Login): Promise<void> {
+    session.activeLogin = login;
+    session.logins.push(login);
+
+    await this.sessionService.save(session);
   }
 }

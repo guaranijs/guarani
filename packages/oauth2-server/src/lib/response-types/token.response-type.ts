@@ -10,7 +10,7 @@ import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { createTokenResponse } from '../utils/create-token-response';
 import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 import { AuthorizationContext } from '../context/authorization/authorization.context';
 
 /**
@@ -49,13 +49,13 @@ export class TokenResponseType implements ResponseTypeInterface {
    * Creates and returns an Access Token Response to the Client.
    *
    * @param context Authorization Request Context.
-   * @param _session Session with the Authentication information of the End User.
+   * @param _login Login with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Access Token Response.
    */
   public async handle(
     context: AuthorizationContext<AuthorizationRequest>,
-    _session: Session,
+    _login: Login,
     consent: Consent
   ): Promise<TokenAuthorizationResponse> {
     const { parameters } = context;

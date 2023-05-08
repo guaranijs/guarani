@@ -6,8 +6,8 @@ import { AuthorizationCodeTokenContext } from '../context/token/authorization-co
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
+import { Login } from '../entities/login.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
-import { Session } from '../entities/session.entity';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { PkceInterface } from '../pkces/pkce.interface';
@@ -121,7 +121,7 @@ describe('Authorization Code Grant Type', () => {
           issuedAt: new Date(now),
           expiresAt: new Date(now + 300000),
           validAfter: new Date(now),
-          session: <Session>{ id: 'session_id', createdAt: new Date(now) },
+          login: <Login>{ id: 'login_id', createdAt: new Date(now) },
           consent: <Consent>{
             id: 'consent_id',
             scopes: ['foo', 'bar', 'baz'],

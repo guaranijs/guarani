@@ -1,13 +1,16 @@
 import { Inject, Injectable } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
 
+import { URL, URLSearchParams } from 'url';
+
 import { ConsentContextInteractionContext } from '../context/interaction/consent-context.interaction.context';
 import { ConsentDecisionAcceptInteractionContext } from '../context/interaction/consent-decision-accept.interaction.context';
 import { ConsentDecisionDenyInteractionContext } from '../context/interaction/consent-decision-deny.interaction.context';
 import { ConsentDecisionInteractionContext } from '../context/interaction/consent-decision.interaction.context';
 import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
-import { HttpResponse } from '../http/http.response';
+import { AccountSelectionRequiredException } from '../exceptions/account-selection-required.exception';
+import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { ConsentContextInteractionResponse } from '../responses/interaction/consent-context.interaction-response';
 import { ConsentDecisionInteractionResponse } from '../responses/interaction/consent-decision.interaction-response';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
@@ -70,7 +73,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * @param context Consent Context Interaction Context.
    * @returns Consent Context Interaction Response.
    */
-  public async handleContext(context: ConsentContextInteractionContext): Promise<HttpResponse> {
+  public async handleContext(context: ConsentContextInteractionContext): Promise<ConsentContextInteractionResponse> {
     const { grant } = context;
 
     await this.checkGrant(grant);
@@ -80,10 +83,10 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    const body = removeUndefined<ConsentContextInteractionResponse>({
+    return removeUndefined<ConsentContextInteractionResponse>({
       skip: grant.consent != null,
       requested_scope: grant.parameters.scope,
-      subject: grant.session!.user.id,
+      subject: grant.session.activeLogin!.user.id,
       request_url: url.href,
       login_challenge: grant.loginChallenge,
       client: grant.client.id,
@@ -93,8 +96,6 @@ export class ConsentInteractionType implements InteractionTypeInterface {
         ui_locales: grant.parameters.ui_locales?.split(' '),
       },
     });
-
-    return new HttpResponse().json(body);
   }
 
   /**
@@ -106,7 +107,9 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * @param context Consent Decision Interaction Context.
    * @returns Consent Decision Interaction Response.
    */
-  public async handleDecision(context: ConsentDecisionInteractionContext<ConsentDecision>): Promise<HttpResponse> {
+  public async handleDecision(
+    context: ConsentDecisionInteractionContext<ConsentDecision>
+  ): Promise<ConsentDecisionInteractionResponse> {
     const { decision, grant } = context;
 
     await this.checkGrant(grant);
@@ -124,21 +127,20 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * Accepts the consent performed by the application and redirects the User-Agent to continue the Authorization Process.
    *
    * @param context Consent Decision Interaction Context.
-   * @returns Redirect Response for the User-Agent to continue the Authorization Process.
+   * @returns Consent Decision Interaction Response.
    */
-  private async acceptConsent(context: ConsentDecisionAcceptInteractionContext): Promise<HttpResponse> {
+  private async acceptConsent(
+    context: ConsentDecisionAcceptInteractionContext
+  ): Promise<ConsentDecisionInteractionResponse> {
     const { grant, grantedScopes } = context;
 
     if (grant.consent == null) {
       const { client, session } = grant;
 
-      if (session == null) {
-        throw new AccessDeniedException({ description: 'No active session found for this consent.' });
-      }
-
-      const consent = await this.consentService.create(grantedScopes, client, session.user);
+      const consent = await this.consentService.create(grantedScopes, client, session.activeLogin!.user);
 
       grant.consent = consent;
+      grant.interactions.push('consent');
 
       await this.grantService.save(grant);
     }
@@ -148,16 +150,18 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return new HttpResponse().json<ConsentDecisionInteractionResponse>({ redirect_to: url.href });
+    return { redirect_to: url.href };
   }
 
   /**
    * Denies the consent performed by the application and redirects the User-Agent to display the Error details.
    *
    * @param context Consent Decision Interaction Context.
-   * @returns Redirect Response for the User-Agent to abort the Authorization Process.
+   * @returns Consent Decision Interaction Response.
    */
-  private async denyConsent(context: ConsentDecisionDenyInteractionContext): Promise<HttpResponse> {
+  private async denyConsent(
+    context: ConsentDecisionDenyInteractionContext
+  ): Promise<ConsentDecisionInteractionResponse> {
     const { grant, error } = context;
 
     await this.grantService.remove(grant);
@@ -167,9 +171,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return new HttpResponse()
-      .setCookie('guarani:grant', null)
-      .json<ConsentDecisionInteractionResponse>({ redirect_to: url.href });
+    return { redirect_to: url.href };
   }
 
   /**
@@ -181,6 +183,16 @@ export class ConsentInteractionType implements InteractionTypeInterface {
     if (new Date() > grant.expiresAt) {
       await this.grantService.remove(grant);
       throw new AccessDeniedException({ description: 'Expired Grant.' });
+    }
+
+    if (grant.session.activeLogin == null) {
+      await this.grantService.remove(grant);
+
+      if (grant.parameters.prompt?.includes('select_account') === true) {
+        throw new AccountSelectionRequiredException({ description: 'Account selection required.' });
+      }
+
+      throw new LoginRequiredException({ description: 'No active login found.' });
     }
   }
 }

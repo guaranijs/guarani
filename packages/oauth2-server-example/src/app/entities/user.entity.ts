@@ -1,3 +1,5 @@
+import { User as OAuth2User } from '@guarani/oauth2-server';
+
 import {
   BaseEntity,
   Column,
@@ -11,7 +13,7 @@ import {
 import { Address } from './address.entity';
 
 @Entity({ name: 'users' })
-export class User extends BaseEntity {
+export class User extends BaseEntity implements OAuth2User {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'users_pk' })
   public readonly id!: string;
 

@@ -4,6 +4,7 @@ import { randomBytes, randomUUID } from 'crypto';
 
 import { Client } from '../../entities/client.entity';
 import { Grant } from '../../entities/grant.entity';
+import { Session } from '../../entities/session.entity';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { GrantServiceInterface } from '../grant.service.interface';
 
@@ -15,15 +16,17 @@ export class GrantService implements GrantServiceInterface {
     console.warn('Using default Grant Service. This is only recommended for development.');
   }
 
-  public async create(parameters: AuthorizationRequest, client: Client): Promise<Grant> {
+  public async create(parameters: AuthorizationRequest, client: Client, session: Session): Promise<Grant> {
     const grant: Grant = {
       id: randomUUID(),
       loginChallenge: randomBytes(16).toString('hex'),
       consentChallenge: randomBytes(16).toString('hex'),
       parameters,
+      interactions: [],
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 300000),
       client,
+      session,
     };
 
     this.grants.push(grant);

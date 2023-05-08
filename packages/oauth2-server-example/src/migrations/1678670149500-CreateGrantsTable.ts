@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreateGrantsTable1678670149500 implements MigrationInterface {
+  public readonly name: string = 'create_grants_table_1678670149500';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
     const table = new Table({
       name: 'grants',
@@ -29,6 +31,13 @@ export class CreateGrantsTable1678670149500 implements MigrationInterface {
         {
           name: 'parameters',
           type: 'json',
+          isNullable: false,
+        },
+        {
+          name: 'interactions',
+          type: 'varchar',
+          default: "'{}'",
+          isArray: true,
           isNullable: false,
         },
         {
@@ -87,7 +96,7 @@ export class CreateGrantsTable1678670149500 implements MigrationInterface {
           columnNames: ['session_id'],
           referencedTableName: 'sessions',
           referencedColumnNames: ['id'],
-          onDelete: 'SET NULL',
+          onDelete: 'CASCADE',
           onUpdate: 'CASCADE',
         },
         {
@@ -111,10 +120,6 @@ export class CreateGrantsTable1678670149500 implements MigrationInterface {
         {
           name: 'grants_login_challenge_and_consent_challenge_uq',
           columnNames: ['login_challenge', 'consent_challenge'],
-        },
-        {
-          name: 'grants_session_id_and_consent_id_uq',
-          columnNames: ['session_id', 'consent_id'],
         },
       ],
     });

@@ -3,13 +3,13 @@ import { AuthorizationCodeServiceInterface, CodeAuthorizationRequest } from '@gu
 
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 
 @Injectable()
 export class AuthorizationCodeService implements AuthorizationCodeServiceInterface {
   public async create(
     parameters: CodeAuthorizationRequest,
-    session: Session,
+    login: Login,
     consent: Consent
   ): Promise<AuthorizationCode> {
     const now = Date.now();
@@ -19,7 +19,7 @@ export class AuthorizationCodeService implements AuthorizationCodeServiceInterfa
       issuedAt: new Date(now),
       expiresAt: new Date(now + 300000),
       validAfter: new Date(now),
-      session,
+      login,
       consent,
     });
 

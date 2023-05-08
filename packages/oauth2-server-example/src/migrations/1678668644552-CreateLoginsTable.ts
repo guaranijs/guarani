@@ -1,9 +1,11 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export class CreateSessionsTable1678668644552 implements MigrationInterface {
+export class CreateLoginsTable1678668644552 implements MigrationInterface {
+  public readonly name: string = 'create_logins_table_1678668644552';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
     const table = new Table({
-      name: 'sessions',
+      name: 'logins',
       columns: [
         {
           name: 'id',
@@ -12,7 +14,7 @@ export class CreateSessionsTable1678668644552 implements MigrationInterface {
           isGenerated: true,
           isNullable: false,
           isPrimary: true,
-          primaryKeyConstraintName: 'sessions_pk',
+          primaryKeyConstraintName: 'logins_pk',
         },
         {
           name: 'amr',
@@ -39,26 +41,21 @@ export class CreateSessionsTable1678668644552 implements MigrationInterface {
         {
           name: 'user_id',
           type: 'uuid',
-          foreignKeyConstraintName: 'users_id_fk',
           isNullable: false,
         },
-      ],
-      foreignKeys: [
         {
-          name: 'users_id_fk',
-          columnNames: ['user_id'],
-          referencedTableName: 'users',
-          referencedColumnNames: ['id'],
-          onDelete: 'CASCADE',
-          onUpdate: 'CASCADE',
+          name: 'session_id',
+          type: 'uuid',
+          isNullable: false,
+          isUnique: true,
         },
       ],
     });
 
-    await queryRunner.createTable(table, true, true);
+    await queryRunner.createTable(table, true);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('sessions', true, true);
+    await queryRunner.dropTable('logins', true);
   }
 }

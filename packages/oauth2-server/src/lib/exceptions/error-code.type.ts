@@ -3,6 +3,7 @@
  */
 export type ErrorCode =
   | 'access_denied'
+  | 'account_selection_required'
   | 'authorization_pending'
   | 'consent_required'
   | 'expired_token'

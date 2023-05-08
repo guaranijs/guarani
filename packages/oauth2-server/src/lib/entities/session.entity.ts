@@ -1,38 +1,21 @@
-import { User } from './user.entity';
+import { Login } from './login.entity';
 
 /**
  * OAuth 2.0 Session Entity.
  */
-export interface Session extends Record<string, any> {
+export interface Session {
   /**
    * Identifier of the Session.
    */
   readonly id: string;
 
   /**
-   * Authentication Methods used in the Authentication.
+   * Currently active Login.
    */
-  readonly amr?: string[] | null;
+  activeLogin?: Login | null;
 
   /**
-   * Authentication Context Class Reference satisfied by the Authentication process.
+   * Logins created within the Session.
    */
-  readonly acr?: string | null;
-
-  /**
-   * Creation Date of the Session.
-   */
-  readonly createdAt: Date;
-
-  /**
-   * Expiration Date of the Session.
-   *
-   * *note: a **null** or **undefined** value indicates that the session does not expire.*
-   */
-  readonly expiresAt?: Date | null;
-
-  /**
-   * Authenticated End User.
-   */
-  readonly user: User;
+  logins: Login[];
 }

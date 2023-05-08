@@ -5,7 +5,7 @@ import { DisplayInterface } from '../displays/display.interface';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
-import { Session } from '../entities/session.entity';
+import { Login } from '../entities/login.entity';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
@@ -80,7 +80,7 @@ describe('Token Response Type', () => {
     });
 
     it('should create a token authorization response.', async () => {
-      const session = <Session>{};
+      const login = <Login>{};
       const consent = <Consent>{
         scopes: ['foo', 'bar'],
         client: { id: 'client_id' },
@@ -95,7 +95,7 @@ describe('Token Response Type', () => {
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
-      await expect(responseType.handle(context, session, consent)).resolves.toStrictEqual<TokenAuthorizationResponse>({
+      await expect(responseType.handle(context, login, consent)).resolves.toStrictEqual<TokenAuthorizationResponse>({
         access_token: 'access_token',
         token_type: 'Bearer',
         expires_in: 3600,

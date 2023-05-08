@@ -2,12 +2,11 @@ import { Injectable } from '@guarani/di';
 import { SessionServiceInterface } from '@guarani/oauth2-server';
 
 import { Session } from '../entities/session.entity';
-import { User } from '../entities/user.entity';
 
 @Injectable()
 export class SessionService implements SessionServiceInterface {
-  public async create(user: User, amr: string[] | undefined, acr: string | undefined): Promise<Session> {
-    const session = Session.create({ amr, acr, user });
+  public async create(): Promise<Session> {
+    const session = Session.create();
     await session.save();
     return session;
   }

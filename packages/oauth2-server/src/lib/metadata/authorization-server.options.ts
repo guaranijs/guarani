@@ -12,6 +12,7 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { DeviceCodeServiceInterface } from '../services/device-code.service.interface';
 import { GrantServiceInterface } from '../services/grant.service.interface';
+import { LoginServiceInterface } from '../services/login.service.interface';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { UserServiceInterface } from '../services/user.service.interface';
@@ -168,19 +169,24 @@ export interface AuthorizationServerOptions {
   readonly deviceCodeService?: DeviceCodeServiceInterface | Constructor<DeviceCodeServiceInterface>;
 
   /**
+   * Session Service.
+   */
+  readonly sessionService?: SessionServiceInterface | Constructor<SessionServiceInterface>;
+
+  /**
    * Grant Service.
    */
   readonly grantService?: GrantServiceInterface | Constructor<GrantServiceInterface>;
 
   /**
+   * Login Service.
+   */
+  readonly loginService?: LoginServiceInterface | Constructor<LoginServiceInterface>;
+
+  /**
    * Refresh Token Service.
    */
   readonly refreshTokenService?: RefreshTokenServiceInterface | Constructor<RefreshTokenServiceInterface>;
-
-  /**
-   * Session Service.
-   */
-  readonly sessionService?: SessionServiceInterface | Constructor<SessionServiceInterface>;
 
   /**
    * User Service.

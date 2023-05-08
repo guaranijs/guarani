@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreateDeviceCodesTable1678686707547 implements MigrationInterface {
+  public readonly name: string = 'create_device_codes_table_1678686707547';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
     const table = new Table({
       name: 'device_codes',

@@ -1,4 +1,5 @@
 import {
+  CodeAuthorizationRequest,
   Display,
   LoginContextInteractionResponse,
   LoginDecisionAcceptInteractionRequest,
@@ -6,6 +7,7 @@ import {
 } from '@guarani/oauth2-server';
 
 import axios, { AxiosError } from 'axios';
+import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
 import { URL, URLSearchParams } from 'url';
 
@@ -24,14 +26,22 @@ class Controller {
       const loginChallenge = <string>request.query.login_challenge;
 
       if (typeof loginChallenge !== 'string') {
-        return request.isAuthenticated()
-          ? response.redirect(303, '/')
-          : response.render('auth/login', {
-              request,
-              title: 'Login',
-              error: request.flash('error'),
-              success: request.flash('success'),
-            });
+        const parameters: CodeAuthorizationRequest = {
+          response_type: 'code',
+          client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
+          redirect_uri: 'http://localhost:4000/oauth/callback',
+          scope: 'openid profile email phone address',
+          state: randomUUID(),
+          code_challenge: 'kRaf6IMJlerQjcqlFczEUYUcVsdwMpYonctl1yXYiiI',
+          code_challenge_method: 'S256',
+        };
+
+        const url = new URL('http://localhost:4000/oauth/authorize');
+        const searchParameters = new URLSearchParams(parameters);
+
+        url.search = searchParameters.toString();
+
+        return response.redirect(303, url.href);
       }
 
       const url = new URL('http://localhost:4000/oauth/interaction');
@@ -106,17 +116,26 @@ class Controller {
 
     const reqBody = new URLSearchParams(reqParameters);
 
-    const {
-      data: { redirect_to: redirectTo },
-    } = await axios.post<LoginDecisionInteractionResponse>(
-      'http://localhost:4000/oauth/interaction',
-      reqBody.toString(),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
+    try {
+      const {
+        data: { redirect_to: redirectTo },
+      } = await axios.post<LoginDecisionInteractionResponse>(
+        'http://localhost:4000/oauth/interaction',
+        reqBody.toString(),
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
 
-    display ??= <Display>request.cookies.display;
+      display ??= <Display>request.cookies.display;
 
-    return this.redirectOrClosePopup(response, redirectTo, display);
+      return this.redirectOrClosePopup(response, redirectTo, display);
+    } catch (exc: unknown) {
+      if (exc instanceof AxiosError) {
+        response.json(exc.response?.data);
+        return;
+      }
+
+      throw exc;
+    }
   }
 
   private redirectOrClosePopup(response: Response, url: string, display: Display | undefined): void {

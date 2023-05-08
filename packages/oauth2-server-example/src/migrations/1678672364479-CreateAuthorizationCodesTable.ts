@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreateAuthorizationCodesTable1678672364479 implements MigrationInterface {
+  public readonly name: string = 'create_authorization_codes_table_1678672364479';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
     const table = new Table({
       name: 'authorization_codes',
@@ -41,9 +43,9 @@ export class CreateAuthorizationCodesTable1678672364479 implements MigrationInte
           isNullable: false,
         },
         {
-          name: 'session_id',
+          name: 'login_id',
           type: 'uuid',
-          foreignKeyConstraintName: 'sessions_id_fk',
+          foreignKeyConstraintName: 'logins_id_fk',
           isNullable: false,
           isUnique: true,
         },
@@ -57,9 +59,9 @@ export class CreateAuthorizationCodesTable1678672364479 implements MigrationInte
       ],
       foreignKeys: [
         {
-          name: 'sessions_id_fk',
-          columnNames: ['session_id'],
-          referencedTableName: 'sessions',
+          name: 'logins_id_fk',
+          columnNames: ['login_id'],
+          referencedTableName: 'logins',
           referencedColumnNames: ['id'],
           onDelete: 'CASCADE',
           onUpdate: 'CASCADE',
@@ -75,16 +77,16 @@ export class CreateAuthorizationCodesTable1678672364479 implements MigrationInte
       ],
       uniques: [
         {
-          name: 'authorization_codes_session_id_uq',
-          columnNames: ['session_id'],
+          name: 'authorization_codes_login_id_uq',
+          columnNames: ['login_id'],
         },
         {
           name: 'authorization_codes_consent_id_uq',
           columnNames: ['consent_id'],
         },
         {
-          name: 'authorization_codes_session_id_and_consent_id_uq',
-          columnNames: ['session_id', 'consent_id'],
+          name: 'authorization_codes_login_id_and_consent_id_uq',
+          columnNames: ['login_id', 'consent_id'],
         },
       ],
     });

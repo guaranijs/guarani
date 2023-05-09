@@ -152,6 +152,11 @@ export interface DiscoveryResponse extends Record<string, any> {
   readonly device_authorization_endpoint?: string;
 
   /**
+   * Url of the Logout Endpoint.
+   */
+  readonly end_session_endpoint?: string;
+
+  /**
    * Informs whether or not the Authorization Server supports Issuer Identifier on the Authorization Response.
    */
   readonly authorization_response_iss_parameter_supported: boolean;

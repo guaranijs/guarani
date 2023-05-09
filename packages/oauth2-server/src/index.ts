@@ -149,6 +149,7 @@ export { LoginDecisionDenyInteractionRequest } from './lib/requests/interaction/
 export { LoginDecisionInteractionRequest } from './lib/requests/interaction/login-decision.interaction-request';
 export { SelectAccountDecisionInteractionRequest } from './lib/requests/interaction/select-account-decision.interaction-request';
 export { IntrospectionRequest } from './lib/requests/introspection-request';
+export { LogoutRequest } from './lib/requests/logout-request';
 export { DeleteRegistrationRequest } from './lib/requests/registration/delete.registration-request';
 export { GetRegistrationRequest } from './lib/requests/registration/get.registration-request';
 export { PostRegistrationRequest } from './lib/requests/registration/post.registration-request';

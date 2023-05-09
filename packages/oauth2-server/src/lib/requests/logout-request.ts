@@ -15,7 +15,7 @@ export interface LogoutRequest extends Record<string, any> {
   /**
    * Post Logout Redirect URI provided by the Client.
    */
-  readonly redirect_uri: string;
+  readonly post_logout_redirect_uri: string;
 
   /**
    * State of the Client Application prior to the Logout Request.

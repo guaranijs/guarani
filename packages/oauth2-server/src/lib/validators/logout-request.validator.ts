@@ -64,7 +64,7 @@ export class LogoutRequestValidator {
    * @param request Http Request.
    * @returns Parameters of the Logout Request.
    */
-  private getLogoutParameters(request: HttpRequest): LogoutRequest {
+  public getLogoutParameters(request: HttpRequest): LogoutRequest {
     switch (<Extract<HttpMethod, 'GET' | 'POST'>>request.method) {
       case 'GET':
         return <LogoutRequest>request.query;

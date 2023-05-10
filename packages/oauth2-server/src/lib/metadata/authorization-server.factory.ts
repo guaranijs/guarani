@@ -21,6 +21,7 @@ import { ENDPOINT } from '../endpoints/endpoint.token';
 import { InteractionEndpoint } from '../endpoints/interaction.endpoint';
 import { IntrospectionEndpoint } from '../endpoints/introspection.endpoint';
 import { JsonWebKeySetEndpoint } from '../endpoints/jsonwebkeyset.endpoint';
+import { LogoutEndpoint } from '../endpoints/logout.endpoint';
 import { RegistrationEndpoint } from '../endpoints/registration.endpoint';
 import { RevocationEndpoint } from '../endpoints/revocation.endpoint';
 import { TokenEndpoint } from '../endpoints/token.endpoint';
@@ -338,6 +339,7 @@ export class AuthorizationServerFactory {
     if (hasAuthorizationEndpoint) {
       this.container.bind<EndpointInterface>(ENDPOINT).toClass(AuthorizationEndpoint).asSingleton();
       this.container.bind<EndpointInterface>(ENDPOINT).toClass(InteractionEndpoint).asSingleton();
+      this.container.bind<EndpointInterface>(ENDPOINT).toClass(LogoutEndpoint).asSingleton();
     }
 
     if (hasTokenEndpoint) {

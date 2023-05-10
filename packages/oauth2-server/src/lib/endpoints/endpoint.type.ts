@@ -8,6 +8,7 @@ export type Endpoint =
   | 'interaction'
   | 'introspection'
   | 'jwks'
+  | 'logout'
   | 'registration'
   | 'revocation'
   | 'token'

@@ -189,6 +189,11 @@ export interface Client extends Record<string, any> {
   // requestUris?: string[] | null;
 
   /**
+   * Post Logout Redirect URIs of the Client.
+   */
+  postLogoutRedirectUris: string[];
+
+  /**
    * Unique Identifier of the Software of the Client.
    */
   softwareId?: string | null;

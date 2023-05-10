@@ -86,6 +86,7 @@ import { DeviceAuthorizationRequestValidator } from '../validators/device-author
 import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
 import { interactionRequestValidatorsRegistry } from '../validators/interaction/interaction-request.validator.registry';
 import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
+import { LogoutRequestValidator } from '../validators/logout-request.validator';
 import { RegistrationRequestValidator } from '../validators/registration-request.validator';
 import { RevocationRequestValidator } from '../validators/revocation-request.validator';
 import { TokenRequestValidator } from '../validators/token/token-request.validator';
@@ -412,6 +413,8 @@ export class AuthorizationServerFactory {
       Object.entries(interactionRequestValidatorsRegistry)
         .map(([, validator]) => validator)
         .forEach((validator) => this.container.bind(InteractionRequestValidator).toClass(validator).asSingleton());
+
+      this.container.bind(LogoutRequestValidator).toSelf().asSingleton();
     }
 
     if (this.container.isRegistered<GrantServiceInterface>(GRANT_TYPE)) {

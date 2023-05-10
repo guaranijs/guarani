@@ -35,6 +35,7 @@ export { LoginDecisionInteractionContext } from './lib/context/interaction/login
 export { SelectAccountContextInteractionContext } from './lib/context/interaction/select-account-context.interaction.context';
 export { SelectAccountDecisionInteractionContext } from './lib/context/interaction/select-account-decision.interaction.context';
 export { IntrospectionContext } from './lib/context/introspection.context';
+export { LogoutContext } from './lib/context/logout.context';
 export { DeleteRegistrationContext } from './lib/context/registration/delete.registration.context';
 export { GetRegistrationContext } from './lib/context/registration/get.registration.context';
 export { PostRegistrationContext } from './lib/context/registration/post.registration.context';
@@ -243,6 +244,7 @@ export { AuthorizationRequestValidator } from './lib/validators/authorization/au
 export { DeviceAuthorizationRequestValidator } from './lib/validators/device-authorization-request.validator';
 export { InteractionRequestValidator } from './lib/validators/interaction/interaction-request.validator';
 export { IntrospectionRequestValidator } from './lib/validators/introspection-request.validator';
+export { LogoutRequestValidator } from './lib/validators/logout-request.validator';
 export { RegistrationRequestValidator } from './lib/validators/registration-request.validator';
 export { RevocationRequestValidator } from './lib/validators/revocation-request.validator';
 export { TokenRequestValidator } from './lib/validators/token/token-request.validator';

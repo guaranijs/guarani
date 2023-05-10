@@ -1,7 +1,9 @@
 import { getContainer } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
+
 import express, { Application, json } from 'express';
 import request, { SuperAgentTest } from 'supertest';
+
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
 import { InvalidTokenException } from '../src/lib/exceptions/invalid-token.exception';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';

@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
-import { AuthorizationServer } from '../authorization-server';
 
+import { AuthorizationServer } from '../authorization-server';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
@@ -35,10 +35,10 @@ describe('Discovery Endpoint', () => {
   const endpoints = <jest.MockedObject<EndpointInterface>[]>[
     jest.mocked<Partial<EndpointInterface>>({ name: 'authorization', path: '/oauth/authorize' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'device_authorization', path: '/oauth/device-authorization' }),
+    jest.mocked<Partial<EndpointInterface>>({ name: 'end_session', path: '/oauth/end_session' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'interaction', path: '/oauth/interaction' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'introspection', path: '/oauth/introspect' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'jwks', path: '/oauth/jwks' }),
-    jest.mocked<Partial<EndpointInterface>>({ name: 'logout', path: '/oauth/logout' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'registration', path: '/oauth/register' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'revocation', path: '/oauth/revoke' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'token', path: '/oauth/token' }),
@@ -119,7 +119,7 @@ describe('Discovery Endpoint', () => {
         code_challenge_methods_supported: ['S256'],
         interaction_endpoint: 'https://server.example.com/oauth/interaction',
         device_authorization_endpoint: 'https://server.example.com/oauth/device-authorization',
-        end_session_endpoint: 'https://server.example.com/oauth/logout',
+        end_session_endpoint: 'https://server.example.com/oauth/end_session',
         authorization_response_iss_parameter_supported: true,
       };
 

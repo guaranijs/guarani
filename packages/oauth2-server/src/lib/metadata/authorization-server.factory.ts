@@ -16,12 +16,12 @@ import { Display } from '../displays/display.type';
 import { AuthorizationEndpoint } from '../endpoints/authorization.endpoint';
 import { DeviceAuthorizationEndpoint } from '../endpoints/device-authorization.endpoint';
 import { DiscoveryEndpoint } from '../endpoints/discovery.endpoint';
+import { EndSessionEndpoint } from '../endpoints/end-session.endpoint';
 import { EndpointInterface } from '../endpoints/endpoint.interface';
 import { ENDPOINT } from '../endpoints/endpoint.token';
 import { InteractionEndpoint } from '../endpoints/interaction.endpoint';
 import { IntrospectionEndpoint } from '../endpoints/introspection.endpoint';
 import { JsonWebKeySetEndpoint } from '../endpoints/jsonwebkeyset.endpoint';
-import { LogoutEndpoint } from '../endpoints/logout.endpoint';
 import { RegistrationEndpoint } from '../endpoints/registration.endpoint';
 import { RevocationEndpoint } from '../endpoints/revocation.endpoint';
 import { TokenEndpoint } from '../endpoints/token.endpoint';
@@ -84,10 +84,10 @@ import { SETTINGS } from '../settings/settings.token';
 import { AuthorizationRequestValidator } from '../validators/authorization/authorization-request.validator';
 import { authorizationRequestValidatorsRegistry } from '../validators/authorization/authorization-request.validator.registry';
 import { DeviceAuthorizationRequestValidator } from '../validators/device-authorization-request.validator';
+import { EndSessionRequestValidator } from '../validators/end-session-request.validator';
 import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
 import { interactionRequestValidatorsRegistry } from '../validators/interaction/interaction-request.validator.registry';
 import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
-import { LogoutRequestValidator } from '../validators/logout-request.validator';
 import { RegistrationRequestValidator } from '../validators/registration-request.validator';
 import { RevocationRequestValidator } from '../validators/revocation-request.validator';
 import { TokenRequestValidator } from '../validators/token/token-request.validator';
@@ -339,7 +339,7 @@ export class AuthorizationServerFactory {
     if (hasAuthorizationEndpoint) {
       this.container.bind<EndpointInterface>(ENDPOINT).toClass(AuthorizationEndpoint).asSingleton();
       this.container.bind<EndpointInterface>(ENDPOINT).toClass(InteractionEndpoint).asSingleton();
-      this.container.bind<EndpointInterface>(ENDPOINT).toClass(LogoutEndpoint).asSingleton();
+      this.container.bind<EndpointInterface>(ENDPOINT).toClass(EndSessionEndpoint).asSingleton();
     }
 
     if (hasTokenEndpoint) {
@@ -416,7 +416,7 @@ export class AuthorizationServerFactory {
         .map(([, validator]) => validator)
         .forEach((validator) => this.container.bind(InteractionRequestValidator).toClass(validator).asSingleton());
 
-      this.container.bind(LogoutRequestValidator).toSelf().asSingleton();
+      this.container.bind(EndSessionRequestValidator).toSelf().asSingleton();
     }
 
     if (this.container.isRegistered<GrantServiceInterface>(GRANT_TYPE)) {

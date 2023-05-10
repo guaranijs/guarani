@@ -1,16 +1,16 @@
 import { URL } from 'url';
 
 import { Client } from '../entities/client.entity';
-import { LogoutRequest } from '../requests/logout-request';
+import { EndSessionRequest } from '../requests/end-session-request';
 
 /**
- * Parameters of the Logout Context.
+ * Parameters of the End Session Context.
  */
-export interface LogoutContext {
+export interface EndSessionContext {
   /**
-   * Parameters of the Logout Request.
+   * Parameters of the End Session Request.
    */
-  readonly parameters: LogoutRequest;
+  readonly parameters: EndSessionRequest;
 
   /**
    * ID Token used as a hint about the User that the Client expects to be authenticated.
@@ -28,7 +28,7 @@ export interface LogoutContext {
   readonly postLogoutRedirectUri: URL;
 
   /**
-   * State of the Client prior to the Logout Request.
+   * State of the Client prior to the End Session Request.
    */
   readonly state?: string;
 

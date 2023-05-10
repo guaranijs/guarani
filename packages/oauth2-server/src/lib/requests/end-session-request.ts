@@ -1,7 +1,7 @@
 /**
- * Parameters of the OAuth 2.0 Logout Request.
+ * Parameters of the OAuth 2.0 End Session Request.
  */
-export interface LogoutRequest extends Record<string, any> {
+export interface EndSessionRequest extends Record<string, any> {
   /**
    * ID Token used as a hint about the User that the Client expects to be authenticated.
    */
@@ -18,7 +18,7 @@ export interface LogoutRequest extends Record<string, any> {
   readonly post_logout_redirect_uri: string;
 
   /**
-   * State of the Client Application prior to the Logout Request.
+   * State of the Client Application prior to the End Session Request.
    */
   readonly state?: string;
 

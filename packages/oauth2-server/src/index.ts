@@ -23,6 +23,7 @@ export { ClientAuthorization } from './lib/client-authorization/client-authoriza
 export { AuthorizationContext } from './lib/context/authorization/authorization.context';
 export { CodeAuthorizationContext } from './lib/context/authorization/code.authorization.context';
 export { DeviceAuthorizationContext } from './lib/context/device-authorization.context';
+export { EndSessionContext } from './lib/context/end-session.context';
 export { ConsentContextInteractionContext } from './lib/context/interaction/consent-context.interaction.context';
 export { ConsentDecisionAcceptInteractionContext } from './lib/context/interaction/consent-decision-accept.interaction.context';
 export { ConsentDecisionDenyInteractionContext } from './lib/context/interaction/consent-decision-deny.interaction.context';
@@ -35,7 +36,6 @@ export { LoginDecisionInteractionContext } from './lib/context/interaction/login
 export { SelectAccountContextInteractionContext } from './lib/context/interaction/select-account-context.interaction.context';
 export { SelectAccountDecisionInteractionContext } from './lib/context/interaction/select-account-decision.interaction.context';
 export { IntrospectionContext } from './lib/context/introspection.context';
-export { LogoutContext } from './lib/context/logout.context';
 export { DeleteRegistrationContext } from './lib/context/registration/delete.registration.context';
 export { GetRegistrationContext } from './lib/context/registration/get.registration.context';
 export { PostRegistrationContext } from './lib/context/registration/post.registration.context';
@@ -139,6 +139,7 @@ export { Pkce } from './lib/pkces/pkce.type';
 export { AuthorizationRequest } from './lib/requests/authorization/authorization-request';
 export { CodeAuthorizationRequest } from './lib/requests/authorization/code.authorization-request';
 export { DeviceAuthorizationRequest } from './lib/requests/device-authorization-request';
+export { EndSessionRequest } from './lib/requests/end-session-request';
 export { ConsentContextInteractionRequest } from './lib/requests/interaction/consent-context.interaction-request';
 export { ConsentDecisionAcceptInteractionRequest } from './lib/requests/interaction/consent-decision-accept.interaction-request';
 export { ConsentDecisionDenyInteractionRequest } from './lib/requests/interaction/consent-decision-deny.interaction-request';
@@ -150,7 +151,6 @@ export { LoginDecisionDenyInteractionRequest } from './lib/requests/interaction/
 export { LoginDecisionInteractionRequest } from './lib/requests/interaction/login-decision.interaction-request';
 export { SelectAccountDecisionInteractionRequest } from './lib/requests/interaction/select-account-decision.interaction-request';
 export { IntrospectionRequest } from './lib/requests/introspection-request';
-export { LogoutRequest } from './lib/requests/logout-request';
 export { DeleteRegistrationRequest } from './lib/requests/registration/delete.registration-request';
 export { GetRegistrationRequest } from './lib/requests/registration/get.registration-request';
 export { PostRegistrationRequest } from './lib/requests/registration/post.registration-request';
@@ -242,9 +242,9 @@ export { TokenTypeHint } from './lib/types/token-type-hint.type';
 // Validators
 export { AuthorizationRequestValidator } from './lib/validators/authorization/authorization-request.validator';
 export { DeviceAuthorizationRequestValidator } from './lib/validators/device-authorization-request.validator';
+export { EndSessionRequestValidator } from './lib/validators/end-session-request.validator';
 export { InteractionRequestValidator } from './lib/validators/interaction/interaction-request.validator';
 export { IntrospectionRequestValidator } from './lib/validators/introspection-request.validator';
-export { LogoutRequestValidator } from './lib/validators/logout-request.validator';
 export { RegistrationRequestValidator } from './lib/validators/registration-request.validator';
 export { RevocationRequestValidator } from './lib/validators/revocation-request.validator';
 export { TokenRequestValidator } from './lib/validators/token/token-request.validator';

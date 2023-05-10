@@ -3,17 +3,17 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { HttpMethod } from '../http/http-method.type';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
-import { LogoutRequestValidator } from '../validators/logout-request.validator';
+import { EndSessionRequestValidator } from '../validators/end-session-request.validator';
+import { EndSessionEndpoint } from './end-session.endpoint';
 import { Endpoint } from './endpoint.type';
-import { LogoutEndpoint } from './logout.endpoint';
 
-jest.mock('../validators/logout-request.validator');
+jest.mock('../validators/end-session-request.validator');
 
-describe('Logout Endpoint', () => {
+describe('End Session Endpoint', () => {
   let container: DependencyInjectionContainer;
-  let endpoint: LogoutEndpoint;
+  let endpoint: EndSessionEndpoint;
 
-  const validatorMock = jest.mocked(LogoutRequestValidator.prototype, true);
+  const validatorMock = jest.mocked(EndSessionRequestValidator.prototype, true);
 
   const settings = <Settings>{
     issuer: 'https://server.example.com',
@@ -24,11 +24,11 @@ describe('Logout Endpoint', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
-    container.bind(LogoutRequestValidator).toValue(validatorMock);
+    container.bind(EndSessionRequestValidator).toValue(validatorMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
-    container.bind(LogoutEndpoint).toSelf().asSingleton();
+    container.bind(EndSessionEndpoint).toSelf().asSingleton();
 
-    endpoint = container.resolve(LogoutEndpoint);
+    endpoint = container.resolve(EndSessionEndpoint);
   });
 
   afterEach(() => {
@@ -36,14 +36,14 @@ describe('Logout Endpoint', () => {
   });
 
   describe('name', () => {
-    it('should have "logout" as its name.', () => {
-      expect(endpoint.name).toEqual<Endpoint>('logout');
+    it('should have "end_session" as its name.', () => {
+      expect(endpoint.name).toEqual<Endpoint>('end_session');
     });
   });
 
   describe('path', () => {
-    it('should have "/oauth/logout" as its default path.', () => {
-      expect(endpoint.path).toEqual('/oauth/logout');
+    it('should have "/oauth/end_session" as its default path.', () => {
+      expect(endpoint.path).toEqual('/oauth/end_session');
     });
   });
 
@@ -58,12 +58,12 @@ describe('Logout Endpoint', () => {
       const settings = <Settings>{ issuer: 'https://server.example.com' };
 
       container.delete<Settings>(SETTINGS);
-      container.delete(LogoutEndpoint);
+      container.delete(EndSessionEndpoint);
 
       container.bind<Settings>(SETTINGS).toValue(settings);
-      container.bind(LogoutEndpoint).toSelf().asSingleton();
+      container.bind(EndSessionEndpoint).toSelf().asSingleton();
 
-      expect(() => container.resolve(LogoutEndpoint)).toThrow(new TypeError('Missing User Interaction options.'));
+      expect(() => container.resolve(EndSessionEndpoint)).toThrow(new TypeError('Missing User Interaction options.'));
     });
   });
 

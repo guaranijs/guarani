@@ -77,6 +77,7 @@ describe('Dynamic Client Registration', () => {
       default_acr_values: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
+      post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });
@@ -153,6 +154,7 @@ describe('Dynamic Client Registration', () => {
       default_acr_values: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
+      post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });
@@ -193,6 +195,7 @@ describe('Dynamic Client Registration', () => {
       default_acr_values: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
+      post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });
@@ -262,6 +265,7 @@ describe('Dynamic Client Registration', () => {
       default_acr_values: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
+      post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });

@@ -2,6 +2,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
 import { GetRegistrationContext } from '../context/registration/get.registration.context';
@@ -248,6 +249,7 @@ describe('Dynamic Client Registration Endpoint', () => {
           default_acr_values: ['guarani:acr:2fa', 'guarani:acr:1fa'],
           initiate_login_uri: 'https://client.example.com/oauth/initiate/',
           // request_uris: ,
+          post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
           software_id: 'TJ9C-X43C-95V1LK03',
           software_version: 'v1.4.37',
         },
@@ -296,6 +298,7 @@ describe('Dynamic Client Registration Endpoint', () => {
           defaultAcrValues: ['guarani:acr:2fa', 'guarani:acr:1fa'],
           initiateLoginUri: new URL('https://client.example.com/oauth/initiate/'),
           // requestUris: ,
+          postLogoutRedirectUris: [new URL('https://client.example.com/oauth/logout-callback/')],
           softwareId: 'TJ9C-X43C-95V1LK03',
           softwareVersion: 'v1.4.37',
         };
@@ -334,6 +337,9 @@ describe('Dynamic Client Registration Endpoint', () => {
           defaultAcrValues: context.defaultAcrValues,
           initiateLoginUri: context.initiateLoginUri?.href,
           // requestUris: ,
+          postLogoutRedirectUris: context.postLogoutRedirectUris.map((postLogoutRedirectUri) => {
+            return postLogoutRedirectUri.href;
+          }),
           softwareId: context.softwareId,
           softwareVersion: context.softwareVersion,
           createdAt: new Date(now),
@@ -427,6 +433,7 @@ describe('Dynamic Client Registration Endpoint', () => {
         defaultAcrValues: ['guarani:acr:2fa', 'guarani:acr:1fa'],
         initiateLoginUri: 'https://client.example.com/oauth/initiate',
         // requestUris: ,
+        postLogoutRedirectUris: ['https://client.example.com/oauth/logout-callback/'],
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
         createdAt: new Date(now),
@@ -477,6 +484,7 @@ describe('Dynamic Client Registration Endpoint', () => {
         default_acr_values: ['guarani:acr:2fa', 'guarani:acr:1fa'],
         initiate_login_uri: 'https://client.example.com/oauth/initiate',
         // request_uris: ,
+        post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
         software_id: 'TJ9C-X43C-95V1LK03',
         software_version: 'v1.4.37',
       };
@@ -576,6 +584,7 @@ describe('Dynamic Client Registration Endpoint', () => {
           default_acr_values: ['guarani:acr:2fa', 'guarani:acr:1fa'],
           initiate_login_uri: 'https://client.example.com/oauth/initiate/',
           // request_uris: ,
+          post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
           software_id: 'TJ9C-X43C-95V1LK03',
           software_version: 'v1.4.37',
         },
@@ -624,6 +633,7 @@ describe('Dynamic Client Registration Endpoint', () => {
         defaultAcrValues: ['guarani:acr:2fa', 'guarani:acr:1fa'],
         initiateLoginUri: 'https://client.example.com/oauth/initiate/',
         // requestUris: ,
+        postLogoutRedirectUris: ['https://client.example.com/oauth/logout-callback/'],
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
         createdAt: new Date(now),
@@ -669,6 +679,7 @@ describe('Dynamic Client Registration Endpoint', () => {
         defaultAcrValues: ['guarani:acr:2fa', 'guarani:acr:1fa'],
         initiateLoginUri: new URL('https://client.example.com/oauth/initiate/'),
         // requestUris: ,
+        postLogoutRedirectUris: [new URL('https://client.example.com/oauth/logout-callback/')],
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
       };

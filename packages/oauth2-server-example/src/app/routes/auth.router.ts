@@ -37,6 +37,9 @@ router
   .get(authenticated, csrf, async (req, res) => await ConsentController.get(req, res))
   .post(authenticated, csrf, async (req, res) => await ConsentController.post(req, res));
 
-router.route('/logout').get(authenticated, LogoutController.logout).post(authenticated, LogoutController.logout);
+router
+  .route('/logout')
+  .get(csrf, async (req, res) => await LogoutController.get(req, res))
+  .post(csrf, async (req, res) => await LogoutController.post(req, res));
 
 export { router as authRouter };

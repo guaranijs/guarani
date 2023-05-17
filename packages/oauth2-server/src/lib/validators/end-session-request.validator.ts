@@ -39,6 +39,7 @@ export class EndSessionRequestValidator {
    */
   public async validate(request: HttpRequest): Promise<EndSessionContext> {
     const parameters = this.getEndSessionParameters(request);
+    const cookies = request.cookies;
 
     const state = this.getState(parameters);
     const idTokenHint = this.getIdTokenHint(parameters);
@@ -49,6 +50,7 @@ export class EndSessionRequestValidator {
 
     return {
       parameters,
+      cookies,
       idTokenHint,
       client,
       postLogoutRedirectUri,
@@ -129,12 +131,19 @@ export class EndSessionRequestValidator {
    * @param client Client of the Request.
    * @returns Parsed and validated Post Logout Redirect URI.
    */
-  private getPostLogoutRedirectUri(parameters: EndSessionRequest, client: Client): URL {
-    if (typeof parameters.post_logout_redirect_uri !== 'string') {
+  private getPostLogoutRedirectUri(parameters: EndSessionRequest, client: Client): URL | undefined {
+    if (
+      typeof parameters.post_logout_redirect_uri !== 'undefined' &&
+      typeof parameters.post_logout_redirect_uri !== 'string'
+    ) {
       throw new InvalidRequestException({
         description: 'Invalid parameter "post_logout_redirect_uri".',
         state: parameters.state,
       });
+    }
+
+    if (typeof parameters.post_logout_redirect_uri === 'undefined') {
+      return undefined;
     }
 
     let postLogoutRedirectUri: URL;

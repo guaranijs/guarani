@@ -64,6 +64,7 @@ import { ConsentService } from '../services/default/consent.service';
 import { DeviceCodeService } from '../services/default/device-code.service';
 import { GrantService } from '../services/default/grant.service';
 import { LoginService } from '../services/default/login.service';
+import { LogoutTicketService } from '../services/default/logout-ticket.service';
 import { RefreshTokenService } from '../services/default/refresh-token.service';
 import { SessionService } from '../services/default/session.service';
 import { UserService } from '../services/default/user.service';
@@ -73,6 +74,8 @@ import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
 import { LoginServiceInterface } from '../services/login.service.interface';
 import { LOGIN_SERVICE } from '../services/login.service.token';
+import { LogoutTicketServiceInterface } from '../services/logout-ticket.service.interface';
+import { LOGOUT_TICKET_SERVICE } from '../services/logout-ticket.service.token';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
 import { REFRESH_TOKEN_SERVICE } from '../services/refresh-token.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
@@ -158,6 +161,7 @@ export class AuthorizationServerFactory {
     this.setGrantService();
     this.setRefreshTokenService();
     this.setLoginService();
+    this.setLogoutTicketService();
     this.setUserService();
   }
 
@@ -192,6 +196,7 @@ export class AuthorizationServerFactory {
       devicePollingInterval: this.authorizationServerOptions.devicePollingInterval ?? 5,
       enableAuthorizationResponseIssuerIdentifier:
         this.authorizationServerOptions.enableAuthorizationResponseIssuerIdentifier ?? false,
+      postLogoutUrl: this.authorizationServerOptions.postLogoutUrl,
     };
 
     this.container.bind<Settings>(SETTINGS).toValue(settings);
@@ -567,6 +572,23 @@ export class AuthorizationServerFactory {
     typeof sessionService === 'function'
       ? binding.toClass(sessionService).asSingleton()
       : binding.toValue(sessionService);
+  }
+
+  /**
+   * Defines the Logout Ticket Service used by the Authorization Server.
+   */
+  private static setLogoutTicketService(): void {
+    if (this.settings.userInteraction === undefined) {
+      return;
+    }
+
+    const logoutTicketService = this.authorizationServerOptions.logoutTicketService ?? LogoutTicketService;
+
+    const binding = this.container.bind<LogoutTicketServiceInterface>(LOGOUT_TICKET_SERVICE);
+
+    typeof logoutTicketService === 'function'
+      ? binding.toClass(logoutTicketService).asSingleton()
+      : binding.toValue(logoutTicketService);
   }
 
   /**

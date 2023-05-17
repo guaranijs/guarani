@@ -25,6 +25,7 @@ class Controller {
     try {
       const loginChallenge = <string>request.query.login_challenge;
 
+      // TODO: Add check to select an account or login when previous login exist.
       if (typeof loginChallenge !== 'string') {
         const parameters: CodeAuthorizationRequest = {
           response_type: 'code',
@@ -34,6 +35,7 @@ class Controller {
           state: randomUUID(),
           code_challenge: 'kRaf6IMJlerQjcqlFczEUYUcVsdwMpYonctl1yXYiiI',
           code_challenge_method: 'S256',
+          prompt: 'login',
         };
 
         const url = new URL('http://localhost:4000/oauth/authorize');
@@ -72,7 +74,6 @@ class Controller {
       return response.render('auth/login', {
         request,
         title: 'Login',
-        display,
         login_challenge: loginChallenge,
         login_hint: loginHint,
         error: request.flash('error'),

@@ -13,10 +13,7 @@
 
       <form action="/auth/login" method="post">
         <input type="hidden" name="_csrf" value="{{ request.csrfToken() }}"/>
-
-        {% if login_challenge %}
-          <input type="hidden" name="login_challenge" value="{{ login_challenge }}"/>
-        {% endif %}
+        <input type="hidden" name="login_challenge" value="{{ login_challenge }}"/>
 
         <div class="form-group d-flex align-items-center ps-2 mt-3 input-group-widget">
           <div class="icon d-flex align-items-center justify-content-center">

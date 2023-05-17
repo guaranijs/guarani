@@ -1,3 +1,5 @@
+import { TokenResponse } from '@guarani/oauth2-server';
+
 import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
 import { URL, URLSearchParams } from 'url';
@@ -18,7 +20,7 @@ class Controller {
     });
 
     try {
-      const { data } = await axios.post('/oauth/token', body.toString(), {
+      const { data } = await axios.post<TokenResponse>('/oauth/token', body.toString(), {
         auth: {
           username: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
           password: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
@@ -27,7 +29,9 @@ class Controller {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
 
-      console.info('callback', data);
+      if (typeof data.id_token !== 'undefined') {
+        response.cookie('id_token', data.id_token, { signed: true });
+      }
 
       return response.redirect(303, '/profile');
     } catch (exc: unknown) {
@@ -37,6 +41,10 @@ class Controller {
 
       throw exc;
     }
+  }
+
+  public async logoutCallback(request: Request, response: Response): Promise<void> {
+    return response.render('oauth/logout-callback', { request, title: 'Logout' });
   }
 
   public async error(request: Request, response: Response): Promise<void> {

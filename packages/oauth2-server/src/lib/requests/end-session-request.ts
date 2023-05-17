@@ -15,7 +15,7 @@ export interface EndSessionRequest extends Record<string, any> {
   /**
    * Post Logout Redirect URI provided by the Client.
    */
-  readonly post_logout_redirect_uri: string;
+  readonly post_logout_redirect_uri?: string;
 
   /**
    * State of the Client Application prior to the End Session Request.

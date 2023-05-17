@@ -8,6 +8,7 @@ import { ConsentService } from './app/services/consent.service';
 import { DeviceCodeService } from './app/services/device-code.service';
 import { GrantService } from './app/services/grant.service';
 import { LoginService } from './app/services/login.service';
+import { LogoutTicketService } from './app/services/logout-ticket.service';
 import { RefreshTokenService } from './app/services/refresh-token.service';
 import { SessionService } from './app/services/session.service';
 import { UserService } from './app/services/user.service';
@@ -30,6 +31,7 @@ export const authorizationServerOptions: AuthorizationServerOptions = {
     consentUrl: '/auth/consent',
     errorUrl: '/oauth/error',
     loginUrl: '/auth/login',
+    logoutUrl: '/auth/logout',
     selectAccountUrl: '/auth/select-account',
   },
   clientAuthenticationMethods: [
@@ -56,6 +58,7 @@ export const authorizationServerOptions: AuthorizationServerOptions = {
   responseModes: ['form_post', 'fragment', 'query'],
   responseTypes: ['code id_token token', 'code id_token', 'code token', 'code', 'id_token token', 'id_token', 'token'],
   acrValues: ['urn:guarani:acr:1fa'],
+  postLogoutUrl: 'http://localhost:4000',
   userService: UserService,
   clientService: ClientService,
   loginService: LoginService,
@@ -66,4 +69,5 @@ export const authorizationServerOptions: AuthorizationServerOptions = {
   accessTokenService: AccessTokenService,
   refreshTokenService: RefreshTokenService,
   deviceCodeService: DeviceCodeService,
+  logoutTicketService: LogoutTicketService,
 };

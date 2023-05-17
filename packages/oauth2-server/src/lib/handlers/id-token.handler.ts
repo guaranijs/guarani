@@ -8,7 +8,7 @@ import {
   JsonWebTokenClaims,
 } from '@guarani/jose';
 
-import { createHash, timingSafeEqual } from 'crypto';
+import { createHash } from 'crypto';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
@@ -92,7 +92,7 @@ export class IdTokenHandler {
    * Checks the provided ID Token and verifies that the currently authenticated User matches the User
    * represented by the ID Token provided by the Client.
    *
-   * @param idToken ID Token provided by the Client as a hint to the expectedd authenticated User.
+   * @param idToken ID Token provided by the Client as a hint to the expected authenticated User.
    * @param login Login containing the currently authenticated User.
    * @returns Whether or not the authenticated User matches the User represented by the ID Token.
    */
@@ -104,12 +104,15 @@ export class IdTokenHandler {
         this.settings.idTokenSignatureAlgorithms
       );
 
-      const claims = await JsonWebTokenClaims.parse(payload, { ignoreExpired: true });
+      await JsonWebTokenClaims.parse(payload, {
+        ignoreExpired: true,
+        validationOptions: {
+          iss: { essential: true, value: this.settings.issuer },
+          sub: { essential: true, value: login.user.id },
+        },
+      });
 
-      const loginUserId = Buffer.from(login.user.id, 'utf8');
-      const idTokenUserId = Buffer.from(claims.sub!, 'utf8');
-
-      return loginUserId.length === idTokenUserId.length && timingSafeEqual(loginUserId, idTokenUserId);
+      return true;
     } catch {
       return false;
     }

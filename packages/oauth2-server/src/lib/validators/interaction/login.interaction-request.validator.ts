@@ -149,7 +149,7 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * Fetches a User from the application's storage based on the provided Subject Identifier.
    *
    * @param parameters Parameters of the Interaction Request.
-   * @returns User based on the provided Client Identifier.
+   * @returns User based on the provided Subject Identifier.
    */
   private async getUser(parameters: LoginDecisionAcceptInteractionRequest): Promise<User> {
     if (typeof parameters.subject !== 'string') {

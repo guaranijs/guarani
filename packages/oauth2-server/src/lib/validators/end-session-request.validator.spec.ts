@@ -19,7 +19,7 @@ import { EndSessionRequestValidator } from './end-session-request.validator';
 const invalidStates: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidIdTokenHints: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidClientIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidPostLogoutRedirectUris: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidPostLogoutRedirectUris: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidLogoutHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidUiLocales: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
@@ -247,6 +247,7 @@ describe('End Session Request Validator', () => {
 
       await expect(validator.validate(request)).resolves.toStrictEqual<EndSessionContext>({
         parameters: <EndSessionRequest>request.query,
+        cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client,
         postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout-callback'),

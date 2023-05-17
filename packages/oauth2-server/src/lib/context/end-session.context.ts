@@ -13,6 +13,11 @@ export interface EndSessionContext {
   readonly parameters: EndSessionRequest;
 
   /**
+   * Cookies of the Http Request.
+   */
+  readonly cookies: Record<string, any>;
+
+  /**
    * ID Token used as a hint about the User that the Client expects to be authenticated.
    */
   readonly idTokenHint: string;
@@ -25,7 +30,7 @@ export interface EndSessionContext {
   /**
    * Post Logout Redirect URI provided by the Client.
    */
-  readonly postLogoutRedirectUri: URL;
+  readonly postLogoutRedirectUri?: URL;
 
   /**
    * State of the Client prior to the End Session Request.

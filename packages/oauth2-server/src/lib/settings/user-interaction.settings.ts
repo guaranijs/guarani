@@ -8,17 +8,22 @@ export interface UserInteractionSettings {
   readonly consentUrl: string;
 
   /**
-   * URL of the Error Page.
+   * Url of the Error Page.
    */
   readonly errorUrl: string;
 
   /**
-   * URL of the Login Page.
+   * Url of the Login Page.
    */
   readonly loginUrl: string;
 
   /**
-   * URL of the Select Account Page.
+   * Url of the Logout Page.
+   */
+  readonly logoutUrl: string;
+
+  /**
+   * Url of the Select Account Page.
    */
   readonly selectAccountUrl: string;
 }

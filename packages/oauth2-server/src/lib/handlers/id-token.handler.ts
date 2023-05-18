@@ -109,6 +109,7 @@ export class IdTokenHandler {
         validationOptions: {
           iss: { essential: true, value: this.settings.issuer },
           sub: { essential: true, value: login.user.id },
+          sid: { essential: false, value: login.id },
         },
       });
 

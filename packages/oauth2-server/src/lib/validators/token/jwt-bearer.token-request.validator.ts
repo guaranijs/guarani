@@ -123,11 +123,13 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
         });
       }
 
+      const idTokenAudience = new URL('/oauth/token', this.settings.issuer).href;
+
       const claims = await JsonWebTokenClaims.parse(payload, {
         validationOptions: {
           iss: { essential: true, value: client.id },
           sub: { essential: true },
-          aud: { essential: true, value: new URL('/oauth/token', this.settings.issuer).href },
+          aud: { essential: true, values: [idTokenAudience, [idTokenAudience]] },
           exp: { essential: true },
         },
       });

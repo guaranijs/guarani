@@ -149,11 +149,13 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
       });
     }
 
+    const idTokenAudience = new URL(request.path, this.settings.issuer).href;
+
     const claims = await JsonWebTokenClaims.parse(payload, {
       validationOptions: {
         iss: { essential: true },
         sub: { essential: true },
-        aud: { essential: true, value: new URL(request.path, this.settings.issuer).href },
+        aud: { essential: true, values: [idTokenAudience, [idTokenAudience]] },
         exp: { essential: true },
         jti: { essential: true },
       },

@@ -12,6 +12,7 @@ import { createHash } from 'crypto';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
+import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
@@ -68,7 +69,7 @@ export class IdTokenHandler {
     const header = new JsonWebSignatureHeader({ alg: <JsonWebSignatureAlgorithm>jwk.alg, kid: jwk.kid, typ: 'JWT' });
     const claims = new IdTokenClaims({
       iss: this.settings.issuer,
-      aud: client.id,
+      aud: [client.id],
       exp: now + 86400,
       iat: now,
       ...additionalClaims,
@@ -93,10 +94,11 @@ export class IdTokenHandler {
    * represented by the ID Token provided by the Client.
    *
    * @param idToken ID Token provided by the Client as a hint to the expected authenticated User.
+   * @param client Client of the Request.
    * @param login Login containing the currently authenticated User.
    * @returns Whether or not the authenticated User matches the User represented by the ID Token.
    */
-  public async checkIdTokenHint(idToken: string, login: Login): Promise<boolean> {
+  public async checkIdTokenHint(idToken: string, client: Client, login: Login): Promise<boolean> {
     try {
       const { payload } = await JsonWebSignature.verify(
         idToken,
@@ -109,6 +111,7 @@ export class IdTokenHandler {
         validationOptions: {
           iss: { essential: true, value: this.settings.issuer },
           sub: { essential: true, value: login.user.id },
+          aud: { essential: true, values: [client.id, [client.id]] },
           sid: { essential: false, value: login.id },
         },
       });

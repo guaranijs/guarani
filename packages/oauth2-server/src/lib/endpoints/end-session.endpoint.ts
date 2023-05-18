@@ -103,7 +103,7 @@ export class EndSessionEndpoint implements EndpointInterface {
       const session = await this.findSession(context);
 
       if (session !== null && session.activeLogin != null) {
-        if (!(await this.idTokenHandler.checkIdTokenHint(idTokenHint, session.activeLogin))) {
+        if (!(await this.idTokenHandler.checkIdTokenHint(idTokenHint, client, session.activeLogin))) {
           throw new InvalidRequestException({
             description: 'The currently authenticated User is not the one expected by the ID Token Hint.',
             state,

@@ -77,7 +77,7 @@ describe('Access Token Introspection', () => {
       iat: expect.any(Number),
       nbf: expect.any(Number),
       sub: '16907c32-687b-493c-85ba-f41f2c9d4daa',
-      aud: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
+      aud: ['b1eeace9-2b0c-468e-a444-733befc3b35d'],
       iss: 'http://localhost:3000',
       // jti: undefined,
     });

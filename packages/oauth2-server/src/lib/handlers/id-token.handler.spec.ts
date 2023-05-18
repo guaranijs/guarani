@@ -101,7 +101,7 @@ describe('ID Token Handler', () => {
   });
 
   describe('constructor', () => {
-    it(`should reject not implementing user service's "getUserInfo()".`, () => {
+    it('should reject not implementing user service\'s "getUserInfo()".', () => {
       container.delete<UserServiceInterface>(USER_SERVICE);
       container.delete(IdTokenHandler);
 

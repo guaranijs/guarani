@@ -190,7 +190,7 @@ describe('Introspection Endpoint', () => {
         iat: Math.ceil((now - 3600000) / 1000),
         nbf: Math.ceil((now - 3600000) / 1000),
         sub: 'user_id',
-        aud: 'client_id',
+        aud: ['client_id'],
         iss: 'https://server.example.com',
         // jti: undefined,
       };

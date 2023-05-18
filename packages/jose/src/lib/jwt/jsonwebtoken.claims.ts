@@ -215,10 +215,6 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
           throw new InvalidJsonWebTokenClaimException('Expected an array for the option "values".');
         }
 
-        if (option.values.length === 0) {
-          throw new InvalidJsonWebTokenClaimException(`Mismatching expected value for claim "${claim}".`);
-        }
-
         if (!option.values.some((value) => isDeepStrictEqual(value, claimValue))) {
           throw new InvalidJsonWebTokenClaimException(`Mismatching expected value for claim "${claim}".`);
         }

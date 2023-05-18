@@ -7,7 +7,7 @@ export interface JsonWebTokenClaimsParseOptions {
   /**
    * Options used to validate the claims in a fine-grained manner.
    */
-  readonly validationOptions?: Record<string, JsonWebTokenClaimValidationOptions>;
+  readonly validationOptions?: Record<string, JsonWebTokenClaimValidationOptions | null>;
 
   /**
    * Informs if the **exp** claim should be ignored.

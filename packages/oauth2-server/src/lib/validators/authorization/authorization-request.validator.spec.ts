@@ -424,6 +424,48 @@ describe('Authorization Request Validator', () => {
       );
     });
 
+    it('should throw when requesting the prompts "create" and "login" together.', async () => {
+      request.query.prompt = 'create login';
+
+      const client = <Client>{
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+      };
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
+
+      await expect(validator.validate(request)).rejects.toThrow(
+        new InvalidRequestException({
+          description: 'The prompts "create" and "login" cannot be used together.',
+          state: 'client_state',
+        })
+      );
+    });
+
+    it('should throw when requesting the prompts "create" and "select_account" together.', async () => {
+      request.query.prompt = 'create select_account';
+
+      const client = <Client>{
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+      };
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
+
+      await expect(validator.validate(request)).rejects.toThrow(
+        new InvalidRequestException({
+          description: 'The prompts "create" and "select_account" cannot be used together.',
+          state: 'client_state',
+        })
+      );
+    });
+
     it('should throw when requesting the prompts "login" and "select_account" together.', async () => {
       request.query.prompt = 'login select_account';
 

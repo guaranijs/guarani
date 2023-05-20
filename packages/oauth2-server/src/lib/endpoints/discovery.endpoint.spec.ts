@@ -103,6 +103,7 @@ describe('Discovery Endpoint', () => {
         grant_types_supported: ['authorization_code', 'refresh_token'],
         acr_values_supported: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
         id_token_signing_alg_values_supported: ['ES256', 'RS256'],
+        prompt_values_supported: ['consent', 'create', 'login', 'none', 'select_account'],
         display_values_supported: ['page', 'popup', 'touch', 'wap'],
         token_endpoint_auth_methods_supported: ['client_secret_basic', 'private_key_jwt'],
         token_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256'],

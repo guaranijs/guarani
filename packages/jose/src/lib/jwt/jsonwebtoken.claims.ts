@@ -112,15 +112,15 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
   private static validateDefaultClaims(claims: JsonWebTokenClaimsParameters, ignoreExpired = false): void {
     const now = Math.floor(Date.now() / 1000);
 
-    if (claims.iss !== undefined && typeof claims.iss !== 'string') {
+    if (typeof claims.iss !== 'undefined' && typeof claims.iss !== 'string') {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "iss".');
     }
 
-    if (claims.sub !== undefined && typeof claims.sub !== 'string') {
+    if (typeof claims.sub !== 'undefined' && typeof claims.sub !== 'string') {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "sub".');
     }
 
-    if (claims.aud !== undefined) {
+    if (typeof claims.aud !== 'undefined') {
       if (typeof claims.aud !== 'string' && !Array.isArray(claims.aud)) {
         throw new InvalidJsonWebTokenClaimException('Invalid claim "aud".');
       }
@@ -130,7 +130,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
       }
     }
 
-    if (claims.exp !== undefined) {
+    if (typeof claims.exp !== 'undefined') {
       if (typeof claims.exp !== 'number' || !Number.isInteger(claims.exp)) {
         throw new InvalidJsonWebTokenClaimException('Invalid claim "exp".');
       }
@@ -140,7 +140,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
       }
     }
 
-    if (claims.nbf !== undefined) {
+    if (typeof claims.nbf !== 'undefined') {
       if (typeof claims.nbf !== 'number' || !Number.isInteger(claims.nbf)) {
         throw new InvalidJsonWebTokenClaimException('Invalid claim "nbf".');
       }
@@ -150,11 +150,11 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
       }
     }
 
-    if (claims.iat !== undefined && (typeof claims.iat !== 'number' || !Number.isInteger(claims.iat))) {
+    if (typeof claims.iat !== 'undefined' && (typeof claims.iat !== 'number' || !Number.isInteger(claims.iat))) {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "iat".');
     }
 
-    if (claims.jti !== undefined && typeof claims.jti !== 'string') {
+    if (typeof claims.jti !== 'undefined' && typeof claims.jti !== 'string') {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "jti".');
     }
   }
@@ -179,35 +179,45 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
    */
   private static validateClaimsOptions(
     claims: JsonWebTokenClaimsParameters,
-    options: Record<string, JsonWebTokenClaimValidationOptions>
+    options: Record<string, JsonWebTokenClaimValidationOptions | null>
   ): void {
     Object.entries(options).forEach(([claim, option]) => {
+      if (option === null) {
+        return;
+      }
+
+      if (typeof option.value !== 'undefined' && typeof option.values !== 'undefined') {
+        throw new InvalidJsonWebTokenClaimException('Cannot have both "value" and "values" options for a claim.');
+      }
+
       const claimValue = claims[claim];
 
-      if (option.essential === true && claimValue === undefined) {
+      if (option.essential === true && typeof claimValue === 'undefined') {
         throw new InvalidJsonWebTokenClaimException(`Missing required claim "${claim}".`);
       }
 
-      if (option.value !== undefined && !isDeepStrictEqual(claimValue, option.value)) {
-        throw new InvalidJsonWebTokenClaimException(`Mismatching expected value for claim "${claim}".`);
+      if (typeof option.value !== 'undefined') {
+        if (option.essential === false && typeof claimValue === 'undefined') {
+          return;
+        }
+
+        if (!isDeepStrictEqual(claimValue, option.value)) {
+          throw new InvalidJsonWebTokenClaimException(`Mismatching expected value for claim "${claim}".`);
+        }
       }
 
-      if (option.values !== undefined) {
+      if (typeof option.values !== 'undefined') {
+        if (option.essential === false && typeof claimValue === 'undefined') {
+          return;
+        }
+
         if (!Array.isArray(option.values)) {
           throw new InvalidJsonWebTokenClaimException('Expected an array for the option "values".');
         }
 
-        if (option.values.length === 0) {
+        if (!option.values.some((value) => isDeepStrictEqual(value, claimValue))) {
           throw new InvalidJsonWebTokenClaimException(`Mismatching expected value for claim "${claim}".`);
         }
-
-        option.values.forEach((value) => {
-          if (!isDeepStrictEqual(value, claimValue)) {
-            throw new InvalidJsonWebTokenClaimException(
-              `Mismatching expected value for claim "${claim}". Received "${claimValue}".`
-            );
-          }
-        });
       }
     });
   }

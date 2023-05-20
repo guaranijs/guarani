@@ -26,7 +26,7 @@ const header: JsonWebSignatureHeaderParameters = { alg: 'HS256', typ: 'JWT' };
 const claims: JsonWebTokenClaimsParameters = {
   iss: 'client_id',
   sub: 'client_id',
-  aud: 'https://server.example.com/oauth/token',
+  aud: ['https://server.example.com/oauth/token'],
   iat: now,
   exp: now + 86400,
   jti: 'unique_assertion_id',
@@ -191,6 +191,23 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       const jws = new JsonWebSignature(
         header,
         new JsonWebTokenClaims({ ...claims, aud: 'https://server.example.com' }).toBuffer()
+      );
+
+      const assertion = await jws.sign(jwk);
+
+      request.body.client_assertion = assertion;
+
+      Reflect.set(clientAssertion, 'algorithms', ['HS256']);
+
+      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
+        new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' })
+      );
+    });
+
+    it('should throw when the "aud" claim does not point to the requested endpoint.', async () => {
+      const jws = new JsonWebSignature(
+        header,
+        new JsonWebTokenClaims({ ...claims, aud: ['https://server.example.com'] }).toBuffer()
       );
 
       const assertion = await jws.sign(jwk);

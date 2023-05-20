@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebTokenClaimException } from '../exceptions/invalid-jsonwebtoken-claim.exception';
+import { JsonWebTokenClaimsParseOptions } from './jsonwebtoken-claims-parse.options';
 import { JsonWebTokenClaims } from './jsonwebtoken.claims';
 import { JsonWebTokenClaimsParameters } from './jsonwebtoken.claims.parameters';
 
@@ -11,6 +12,8 @@ const invalidExps: any[] = [null, true, 1.2, 'a', {}, []];
 const invalidNbfs: any[] = [...invalidExps];
 const invalidIats: any[] = [...invalidExps];
 const invalidJtis: any[] = [...invalidIss];
+const invalidValuesOptions: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, () => 1, {}];
+const valuesOptions: string[][][] = [[[]], [['https://example.org']], [['https://example.org', 'https://example.xyz']]];
 
 describe('JSON Web Token Claims', () => {
   describe('parse()', () => {
@@ -88,7 +91,91 @@ describe('JSON Web Token Claims', () => {
       expect(validateCustomClaimsSpy).toHaveBeenCalled();
     });
 
-    it.todo('should test validateClaimsOptions()');
+    it('should throw when providing both "value" and "values" validation options.', async () => {
+      const claims: JsonWebTokenClaimsParameters = { iss: 'https://example.com' };
+      const data = Buffer.from(JSON.stringify(claims), 'utf8');
+      const options: JsonWebTokenClaimsParseOptions = {
+        validationOptions: { iss: { value: 'https://example.com', values: ['https://example.com'] } },
+      };
+
+      await expect(JsonWebTokenClaims.parse(data, options)).rejects.toThrow(
+        new InvalidJsonWebTokenClaimException('Cannot have both "value" and "values" options for a claim.')
+      );
+    });
+
+    it('should throw when not providing a required claim.', async () => {
+      const claims: JsonWebTokenClaimsParameters = { iss: 'https://example.com' };
+      const data = Buffer.from(JSON.stringify(claims), 'utf8');
+      const options: JsonWebTokenClaimsParseOptions = {
+        validationOptions: { sub: { essential: true } },
+      };
+
+      await expect(JsonWebTokenClaims.parse(data, options)).rejects.toThrow(
+        new InvalidJsonWebTokenClaimException('Missing required claim "sub".')
+      );
+    });
+
+    it('should not throw when not providing an optional claim with a "value" option.', async () => {
+      const claims: JsonWebTokenClaimsParameters = { iss: 'https://example.com' };
+      const data = Buffer.from(JSON.stringify(claims), 'utf8');
+      const options: JsonWebTokenClaimsParseOptions = {
+        validationOptions: { sub: { essential: false, value: '1234' } },
+      };
+
+      await expect(JsonWebTokenClaims.parse(data, options)).resolves.not.toThrow();
+    });
+
+    it('should throw when providing an unexpected value for a claim with a "value" option.', async () => {
+      const claims: JsonWebTokenClaimsParameters = { iss: 'https://example.com' };
+      const data = Buffer.from(JSON.stringify(claims), 'utf8');
+      const options: JsonWebTokenClaimsParseOptions = {
+        validationOptions: { iss: { value: 'https://example.org' } },
+      };
+
+      await expect(JsonWebTokenClaims.parse(data, options)).rejects.toThrow(
+        new InvalidJsonWebTokenClaimException('Mismatching expected value for claim "iss".')
+      );
+    });
+
+    it('should not throw when not providing an optional claim with a "values" option.', async () => {
+      const claims: JsonWebTokenClaimsParameters = { iss: 'https://example.com' };
+      const data = Buffer.from(JSON.stringify(claims), 'utf8');
+      const options: JsonWebTokenClaimsParseOptions = {
+        validationOptions: { sub: { essential: false, values: ['1234'] } },
+      };
+
+      await expect(JsonWebTokenClaims.parse(data, options)).resolves.not.toThrow();
+    });
+
+    it.each(invalidValuesOptions)(
+      'should throw when not providing an array for the "values" option.',
+      async (invalidValuesOption) => {
+        const claims: JsonWebTokenClaimsParameters = { iss: 'https://example.com' };
+        const data = Buffer.from(JSON.stringify(claims), 'utf8');
+        const options: JsonWebTokenClaimsParseOptions = {
+          validationOptions: { iss: { values: invalidValuesOption } },
+        };
+
+        await expect(JsonWebTokenClaims.parse(data, options)).rejects.toThrow(
+          new InvalidJsonWebTokenClaimException('Expected an array for the option "values".')
+        );
+      }
+    );
+
+    it.each(valuesOptions)(
+      'should throw when providing an unexpected value for a claim with a "values" option.',
+      async (valuesOption) => {
+        const claims: JsonWebTokenClaimsParameters = { iss: 'https://example.com' };
+        const data = Buffer.from(JSON.stringify(claims), 'utf8');
+        const options: JsonWebTokenClaimsParseOptions = {
+          validationOptions: { iss: { values: valuesOption } },
+        };
+
+        await expect(JsonWebTokenClaims.parse(data, options)).rejects.toThrow(
+          new InvalidJsonWebTokenClaimException('Mismatching expected value for claim "iss".')
+        );
+      }
+    );
 
     it('should create an instance of json web token claims.', async () => {
       const claims: JsonWebTokenClaimsParameters = { iss: 'https://example.com', sub: '1234' };

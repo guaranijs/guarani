@@ -5,6 +5,7 @@ export type Endpoint =
   | 'authorization'
   | 'device_authorization'
   | 'discovery'
+  | 'end_session'
   | 'interaction'
   | 'introspection'
   | 'jwks'

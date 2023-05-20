@@ -189,7 +189,10 @@ export class AuthorizationEndpoint implements EndpointInterface {
         return this.redirectToLoginPage(grant, display);
       }
 
-      if (typeof idTokenHint !== 'undefined' && !(await this.idTokenHandler.checkIdTokenHint(idTokenHint, login))) {
+      if (
+        typeof idTokenHint !== 'undefined' &&
+        !(await this.idTokenHandler.checkIdTokenHint(idTokenHint, client, login))
+      ) {
         await this.removeActiveLoginFromSession(session);
 
         throw new LoginRequiredException({

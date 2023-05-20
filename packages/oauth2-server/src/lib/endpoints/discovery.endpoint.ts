@@ -86,6 +86,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
       code_challenge_methods_supported: this.settings.pkces,
       interaction_endpoint: this.getEndpointPath('interaction'),
       device_authorization_endpoint: this.getEndpointPath('device_authorization'),
+      end_session_endpoint: this.getEndpointPath('end_session'),
       authorization_response_iss_parameter_supported: this.settings.enableAuthorizationResponseIssuerIdentifier,
     });
 

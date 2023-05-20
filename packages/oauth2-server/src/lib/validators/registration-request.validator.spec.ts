@@ -55,6 +55,7 @@ const notPositiveIntegerDefaultMaxAges: any[] = [1.2, -1, -1.2];
 const invalidRequireAuthTimes: any[] = [null, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, () => 1, {}, []];
 const invalidAcrValues: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}];
 const invalidInitiateLoginUris: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidPostLogoutRedirectUris: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, () => 1, {}];
 const invalidSoftwareIds: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidSoftwareVersions: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
@@ -72,6 +73,10 @@ const hybridImplicit = hybridResponseTypes.map<[ResponseType, GrantType | 'impli
 ]);
 
 const localhostRedirectUris = ['https://localhost/oauth/callback', 'https://127.0.0.1/oauth/callback'];
+const localhostPostLogoutRedirectUris = [
+  'https://localhost/oauth/logout-callback',
+  'https://127.0.0.1/oauth/logout-callback',
+];
 
 const invalidAuthenticationMethodSigningCombinations: [ClientAuthentication, JsonWebSignatureAlgorithm][] = [
   ['private_key_jwt', 'HS256'],
@@ -229,6 +234,7 @@ describe('Registration Request Validator', () => {
           default_acr_values: ['guarani:acr:2fa', 'guarani:acr:1fa'],
           initiate_login_uri: 'https://client.example.com/oauth/initiate',
           // request_uris: ,
+          post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback'],
           software_id: 'TJ9C-X43C-95V1LK03',
           software_version: 'v1.4.37',
         }),
@@ -988,6 +994,100 @@ describe('Registration Request Validator', () => {
       );
     });
 
+    it.each([...invalidPostLogoutRedirectUris, [...invalidPostLogoutRedirectUris]])(
+      'should throw when providing an invalid "post_logout_redirect_uris" parameter.',
+      async (postLogoutRedirectUris) => {
+        request.body.post_logout_redirect_uris = postLogoutRedirectUris;
+
+        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePost(request)).rejects.toThrow(
+          new InvalidClientMetadataException({ description: 'Invalid parameter "post_logout_redirect_uris".' })
+        );
+      }
+    );
+
+    it('should throw when providing an invalid post logout redirect uri.', async () => {
+      request.body.post_logout_redirect_uris = ['client.example.com/oauth/logout-callback'];
+
+      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePost(request)).rejects.toThrow(
+        new InvalidRedirectUriException({
+          description: 'Invalid Post Logout Redirect URI "client.example.com/oauth/logout-callback".',
+        })
+      );
+    });
+
+    it('should throw when providing a post logout redirect uri with a fragment component.', async () => {
+      request.body.post_logout_redirect_uris = ['https://client.example.com/oauth/logout-callback#fragment-component'];
+
+      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePost(request)).rejects.toThrow(
+        new InvalidRedirectUriException({
+          description:
+            'The Post Logout Redirect URI "https://client.example.com/oauth/logout-callback#fragment-component" ' +
+            'MUST NOT have a fragment component.',
+        })
+      );
+    });
+
+    it('should throw when providing a http(s) post logout redirect uri other than localhost for a native application.', async () => {
+      request.body.application_type = 'native';
+
+      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePost(request)).rejects.toThrow(
+        new InvalidRedirectUriException({
+          description:
+            'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
+        })
+      );
+    });
+
+    it('should throw when not providing a https post logout redirect uri for a web application.', async () => {
+      request.body.post_logout_redirect_uris = ['http://client.example.com/oauth/logout-callback'];
+
+      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePost(request)).rejects.toThrow(
+        new InvalidRedirectUriException({
+          description:
+            'The Post Logout Redirect URI "http://client.example.com/oauth/logout-callback" ' +
+            'does not use the https protocol.',
+        })
+      );
+    });
+
+    it.each(localhostPostLogoutRedirectUris)(
+      'should throw when providing a localhost post logout redirect uri for a web application.',
+      async (postLogoutRedirectUri) => {
+        request.body.post_logout_redirect_uris = [postLogoutRedirectUri];
+
+        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePost(request)).rejects.toThrow(
+          new InvalidRedirectUriException({
+            description:
+              'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.',
+          })
+        );
+      }
+    );
+
     it.each(invalidSoftwareIds)(
       'should throw when providing an invalid "software_id" parameter.',
       async (softwareId) => {
@@ -1057,6 +1157,7 @@ describe('Registration Request Validator', () => {
         defaultAcrValues: ['guarani:acr:2fa', 'guarani:acr:1fa'],
         initiateLoginUri: new URL('https://client.example.com/oauth/initiate'),
         // requestUris: ,
+        postLogoutRedirectUris: [new URL('https://client.example.com/oauth/logout-callback')],
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
       });
@@ -1268,6 +1369,7 @@ describe('Registration Request Validator', () => {
           default_acr_values: ['guarani:acr:2fa', 'guarani:acr:1fa'],
           initiate_login_uri: 'https://client.example.com/oauth/initiate',
           // request_uris: ,
+          post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback'],
           software_id: 'TJ9C-X43C-95V1LK03',
           software_version: 'v1.4.37',
         }),
@@ -2307,6 +2409,124 @@ describe('Registration Request Validator', () => {
       );
     });
 
+    it.each([...invalidPostLogoutRedirectUris, [...invalidPostLogoutRedirectUris]])(
+      'should throw when providing an invalid "post_logout_redirect_uris" parameter.',
+      async (postLogoutRedirectUris) => {
+        request.body.post_logout_redirect_uris = postLogoutRedirectUris;
+
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          scopes: ['client:update'],
+          client: { id: 'client_id' },
+        };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePut(request)).rejects.toThrow(
+          new InvalidClientMetadataException({ description: 'Invalid parameter "post_logout_redirect_uris".' })
+        );
+      }
+    );
+
+    it('should throw when providing an invalid post logout redirect uri.', async () => {
+      request.body.post_logout_redirect_uris = ['client.example.com/oauth/logout-callback'];
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['client:update'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePut(request)).rejects.toThrow(
+        new InvalidRedirectUriException({
+          description: 'Invalid Post Logout Redirect URI "client.example.com/oauth/logout-callback".',
+        })
+      );
+    });
+
+    it('should throw when providing a post logout redirect uri with a fragment component.', async () => {
+      request.body.post_logout_redirect_uris = ['https://client.example.com/oauth/logout-callback#fragment-component'];
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['client:update'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePut(request)).rejects.toThrow(
+        new InvalidRedirectUriException({
+          description:
+            'The Post Logout Redirect URI "https://client.example.com/oauth/logout-callback#fragment-component" ' +
+            'MUST NOT have a fragment component.',
+        })
+      );
+    });
+
+    it('should throw when providing a http(s) post logout redirect uri other than localhost for a native application.', async () => {
+      request.body.application_type = 'native';
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['client:update'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePut(request)).rejects.toThrow(
+        new InvalidRedirectUriException({
+          description:
+            'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
+        })
+      );
+    });
+
+    it('should throw when not providing a https post logout redirect uri for a web application.', async () => {
+      request.body.post_logout_redirect_uris = ['http://client.example.com/oauth/logout-callback'];
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['client:update'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePut(request)).rejects.toThrow(
+        new InvalidRedirectUriException({
+          description:
+            'The Post Logout Redirect URI "http://client.example.com/oauth/logout-callback" ' +
+            'does not use the https protocol.',
+        })
+      );
+    });
+
+    it.each(localhostPostLogoutRedirectUris)(
+      'should throw when providing a localhost post logout redirect uri for a web application.',
+      async (postLogoutRedirectUri) => {
+        request.body.post_logout_redirect_uris = [postLogoutRedirectUri];
+
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          scopes: ['client:update'],
+          client: { id: 'client_id' },
+        };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePut(request)).rejects.toThrow(
+          new InvalidRedirectUriException({
+            description:
+              'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.',
+          })
+        );
+      }
+    );
+
     it.each(invalidSoftwareIds)(
       'should throw when providing an invalid "software_id" parameter.',
       async (softwareId) => {
@@ -2392,6 +2612,7 @@ describe('Registration Request Validator', () => {
         defaultAcrValues: ['guarani:acr:2fa', 'guarani:acr:1fa'],
         initiateLoginUri: new URL('https://client.example.com/oauth/initiate'),
         // requestUris: ,
+        postLogoutRedirectUris: [new URL('https://client.example.com/oauth/logout-callback')],
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
       });

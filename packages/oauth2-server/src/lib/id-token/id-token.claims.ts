@@ -86,54 +86,54 @@ export class IdTokenClaims extends JsonWebTokenClaims implements IdTokenClaimsPa
    * @param claims Claims of the ID Token.
    */
   protected static override validateCustomClaims(claims: IdTokenClaimsParameters): void {
-    if (claims.iss === undefined) {
+    if (typeof claims.iss === 'undefined') {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "iss".');
     }
 
-    if (claims.sub === undefined) {
+    if (typeof claims.sub === 'undefined') {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "sub".');
     }
 
-    if (claims.aud === undefined) {
+    if (typeof claims.aud === 'undefined') {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "aud".');
     }
 
-    if (claims.exp === undefined) {
+    if (typeof claims.exp === 'undefined') {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "exp".');
     }
 
-    if (claims.iat === undefined) {
+    if (typeof claims.iat === 'undefined') {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "iat".');
     }
 
-    if (claims.auth_time !== undefined && typeof claims.auth_time !== 'number') {
+    if (typeof claims.auth_time !== 'undefined' && typeof claims.auth_time !== 'number') {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "auth_time".');
     }
 
-    if (claims.nonce !== undefined && (typeof claims.nonce !== 'string' || claims.nonce.length === 0)) {
+    if (typeof claims.nonce !== 'undefined' && (typeof claims.nonce !== 'string' || claims.nonce.length === 0)) {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "nonce".');
     }
 
-    if (claims.acr !== undefined && (typeof claims.acr !== 'string' || claims.acr.length === 0)) {
+    if (typeof claims.acr !== 'undefined' && (typeof claims.acr !== 'string' || claims.acr.length === 0)) {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "acr".');
     }
 
     if (
-      claims.amr !== undefined &&
+      typeof claims.amr !== 'undefined' &&
       (!Array.isArray(claims.amr) || claims.amr.some((method) => typeof method !== 'string' || method.length === 0))
     ) {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "amr".');
     }
 
-    if (claims.azp !== undefined && (typeof claims.azp !== 'string' || claims.azp.length === 0)) {
+    if (typeof claims.azp !== 'undefined' && (typeof claims.azp !== 'string' || claims.azp.length === 0)) {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "azp".');
     }
 
-    if (claims.at_hash !== undefined && (typeof claims.at_hash !== 'string' || claims.at_hash.length === 0)) {
+    if (typeof claims.at_hash !== 'undefined' && (typeof claims.at_hash !== 'string' || claims.at_hash.length === 0)) {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "at_hash".');
     }
 
-    if (claims.c_hash !== undefined && (typeof claims.c_hash !== 'string' || claims.c_hash.length === 0)) {
+    if (typeof claims.c_hash !== 'undefined' && (typeof claims.c_hash !== 'string' || claims.c_hash.length === 0)) {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "c_hash".');
     }
   }

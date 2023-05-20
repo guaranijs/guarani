@@ -175,6 +175,11 @@ export interface PutBodyRegistrationRequest extends Record<string, any> {
   // readonly request_uris?: string;
 
   /**
+   * Post Logout Redirect URIs of the Client.
+   */
+  readonly post_logout_redirect_uris: string[];
+
+  /**
    * Unique Identifier of the Software of the Client.
    */
   readonly software_id?: string;

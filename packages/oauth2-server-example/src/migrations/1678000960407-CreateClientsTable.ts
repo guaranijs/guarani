@@ -201,6 +201,13 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
         //   isNullable: true,
         // },
         {
+          name: 'post_logout_redirect_uris',
+          type: 'varchar',
+          default: "'{}'",
+          isArray: true,
+          isNullable: false,
+        },
+        {
           name: 'software_id',
           type: 'varchar',
           isNullable: true,

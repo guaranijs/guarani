@@ -179,6 +179,11 @@ export interface PostRegistrationContext {
   // readonly requestUris?: URL[];
 
   /**
+   * Post Logout Redirect URIs of the Client.
+   */
+  readonly postLogoutRedirectUris: URL[];
+
+  /**
    * Unique Identifier of the Software of the Client.
    */
   readonly softwareId?: string;

@@ -124,7 +124,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
    *
    * This method decides whether or not to authenticate the end user based on the decision of the application.
    *
-   * @param context Login Context Interaction Request Context.
+   * @param context Login Decision Interaction Request Context.
    * @returns Login Decision Interaction Response.
    */
   public async handleDecision(

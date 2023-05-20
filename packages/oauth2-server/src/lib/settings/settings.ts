@@ -112,4 +112,9 @@ export interface Settings {
    * Enables Authorization Response Issuer Identifier in Authorization and Token Responses.
    */
   readonly enableAuthorizationResponseIssuerIdentifier: boolean;
+
+  /**
+   * Post Logout Url of the Authorization Server.
+   */
+  readonly postLogoutUrl?: string;
 }

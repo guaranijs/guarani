@@ -29,6 +29,7 @@ export class ClientService implements ClientServiceInterface {
       authenticationMethod: 'client_secret_basic',
       scopes: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
       requireAuthTime: false,
+      postLogoutRedirectUris: ['http://localhost:4000/oauth/-logoutcallback'],
       createdAt: new Date(),
     },
   ];
@@ -38,12 +39,14 @@ export class ClientService implements ClientServiceInterface {
   }
 
   public async create(context: PostRegistrationContext): Promise<Client> {
-    const client = <Client>{
-      id: randomUUID(),
+    const id = randomUUID();
+
+    const client: Client = {
+      id,
       secret: this.secretToken(),
       secretIssuedAt: new Date(),
       secretExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
-      name: context.clientName,
+      name: context.clientName ?? id,
       redirectUris: context.redirectUris.map((redirectUri) => redirectUri.toString()),
       responseTypes: context.responseTypes,
       grantTypes: context.grantTypes,
@@ -74,6 +77,7 @@ export class ClientService implements ClientServiceInterface {
       defaultAcrValues: context.defaultAcrValues,
       initiateLoginUri: context.initiateLoginUri?.toString(),
       // requestUris: context.requestUris,
+      postLogoutRedirectUris: context.postLogoutRedirectUris.map((postLogoutRedirectUri) => postLogoutRedirectUri.href),
       softwareId: context.softwareId,
       softwareVersion: context.softwareVersion,
       createdAt: new Date(),

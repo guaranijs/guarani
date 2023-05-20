@@ -173,7 +173,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
       iat: Math.ceil(token.issuedAt.getTime() / 1000),
       nbf: Math.ceil(token.validAfter.getTime() / 1000),
       sub: token.user?.id,
-      aud: token.client!.id,
+      aud: [token.client!.id],
       iss: this.settings.issuer,
       jti: undefined,
     });

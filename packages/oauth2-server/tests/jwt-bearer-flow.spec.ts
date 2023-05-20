@@ -34,7 +34,7 @@ describe('Client Credentials Flow', () => {
     const claims = new JsonWebTokenClaims({
       iss: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
       sub: '16907c32-687b-493c-85ba-f41f2c9d4daa',
-      aud: 'http://localhost:3000/oauth/token',
+      aud: ['http://localhost:3000/oauth/token'],
       exp: Math.ceil((Date.now() + 300000) / 1000),
     });
 

@@ -129,6 +129,10 @@ export class RegistrationRequestValidator {
     const defaultAcrValues = this.getDefaultAcrValues(parameters);
     const initiateLoginUri = this.getInitiateLoginUri(parameters);
     // const requestUris = this.getRequestUris(parameters);
+    const postLogoutRedirectUris = this.getPostLogoutRedirectUris(parameters);
+
+    this.checkApplicationTypeAndPostLogoutRedirectUris(applicationType, postLogoutRedirectUris);
+
     const softwareId = this.getSoftwareId(parameters);
     const softwareVersion = this.getSoftwareVersion(parameters);
 
@@ -166,6 +170,7 @@ export class RegistrationRequestValidator {
       defaultAcrValues,
       initiateLoginUri,
       // requestUris,
+      postLogoutRedirectUris,
       softwareId,
       softwareVersion,
     };
@@ -264,6 +269,10 @@ export class RegistrationRequestValidator {
     const defaultAcrValues = this.getDefaultAcrValues(bodyParameters);
     const initiateLoginUri = this.getInitiateLoginUri(bodyParameters);
     // const requestUris = this.getRequestUris(parameters);
+    const postLogoutRedirectUris = this.getPostLogoutRedirectUris(bodyParameters);
+
+    this.checkApplicationTypeAndPostLogoutRedirectUris(applicationType, postLogoutRedirectUris);
+
     const softwareId = this.getSoftwareId(bodyParameters);
     const softwareVersion = this.getSoftwareVersion(bodyParameters);
 
@@ -305,6 +314,7 @@ export class RegistrationRequestValidator {
       defaultAcrValues,
       initiateLoginUri,
       // requestUris,
+      postLogoutRedirectUris,
       softwareId,
       softwareVersion,
     };
@@ -384,7 +394,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Redirect URIs of the Client.
    */
-  private getRedirectUris(parameters: PostRegistrationRequest): URL[] {
+  private getRedirectUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL[] {
     if (
       !Array.isArray(parameters.redirect_uris) ||
       parameters.redirect_uris.some((redirectUri) => typeof redirectUri !== 'string')
@@ -422,7 +432,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Response Types requested by the Client.
    */
-  private getResponseTypes(parameters: PostRegistrationRequest): ResponseType[] {
+  private getResponseTypes(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): ResponseType[] {
     if (
       typeof parameters.response_types !== 'undefined' &&
       (!Array.isArray(parameters.response_types) ||
@@ -450,7 +460,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Grant Types requested by the Client.
    */
-  private getGrantTypes(parameters: PostRegistrationRequest): (GrantType | 'implicit')[] {
+  private getGrantTypes(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): (GrantType | 'implicit')[] {
     if (
       typeof parameters.grant_types !== 'undefined' &&
       (!Array.isArray(parameters.grant_types) ||
@@ -545,7 +555,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Application Type requested by the Client.
    */
-  private getApplicationType(parameters: PostRegistrationRequest): ApplicationType {
+  private getApplicationType(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): ApplicationType {
     if (typeof parameters.application_type !== 'undefined' && typeof parameters.application_type !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "application_type".' });
     }
@@ -609,7 +619,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Client Name provided by the Client.
    */
-  private getClientName(parameters: PostRegistrationRequest): string | undefined {
+  private getClientName(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string | undefined {
     if (typeof parameters.client_name !== 'undefined' && typeof parameters.client_name !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "client_name".' });
     }
@@ -623,7 +633,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Scopes requested by the Client.
    */
-  private getScopes(parameters: PostRegistrationRequest): string[] {
+  private getScopes(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string[] {
     if (typeof parameters.scope !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "scope".' });
     }
@@ -647,7 +657,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Contacts requested by the Client.
    */
-  private getContacts(parameters: PostRegistrationRequest): string[] | undefined {
+  private getContacts(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string[] | undefined {
     if (
       typeof parameters.contacts !== 'undefined' &&
       (!Array.isArray(parameters.contacts) || parameters.contacts.some((contact) => typeof contact !== 'string'))
@@ -664,7 +674,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Logo URI provided by the Client.
    */
-  private getLogoUri(parameters: PostRegistrationRequest): URL | undefined {
+  private getLogoUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
     if (typeof parameters.logo_uri !== 'undefined' && typeof parameters.logo_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "logo_uri".' });
     }
@@ -688,7 +698,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Client URI provided by the Client.
    */
-  private getClientUri(parameters: PostRegistrationRequest): URL | undefined {
+  private getClientUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
     if (typeof parameters.client_uri !== 'undefined' && typeof parameters.client_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "client_uri".' });
     }
@@ -712,7 +722,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Policy URI provided by the Client.
    */
-  private getPolicyUri(parameters: PostRegistrationRequest): URL | undefined {
+  private getPolicyUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
     if (typeof parameters.policy_uri !== 'undefined' && typeof parameters.policy_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "policy_uri".' });
     }
@@ -736,7 +746,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Terms of Service URI provided by the Client.
    */
-  private getTosUri(parameters: PostRegistrationRequest): URL | undefined {
+  private getTosUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
     if (typeof parameters.tos_uri !== 'undefined' && typeof parameters.tos_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "tos_uri".' });
     }
@@ -759,7 +769,9 @@ export class RegistrationRequestValidator {
    *
    * @param parameters Parameters of the Post Client Registration Request.
    */
-  private checkJwksUriAndJwksAreNotBothProvided(parameters: PostRegistrationRequest): void {
+  private checkJwksUriAndJwksAreNotBothProvided(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): void {
     if (typeof parameters.jwks_uri !== 'undefined' && typeof parameters.jwks !== 'undefined') {
       throw new InvalidClientMetadataException({
         description: 'Only one of the parameters "jwks_uri" and "jwks" must be provided.',
@@ -773,7 +785,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns JSON Web Key Set URI provided by the Client.
    */
-  private getJwksUri(parameters: PostRegistrationRequest): URL | undefined {
+  private getJwksUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
     if (typeof parameters.jwks_uri !== 'undefined' && typeof parameters.jwks_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "jwks_uri".' });
     }
@@ -797,7 +809,9 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns JSON Web Key Set provided by the Client.
    */
-  private async getJwks(parameters: PostRegistrationRequest): Promise<JsonWebKeySet | undefined> {
+  private async getJwks(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): Promise<JsonWebKeySet | undefined> {
     if (typeof parameters.jwks !== 'undefined' && !isPlainObject(parameters.jwks)) {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "jwks".' });
     }
@@ -815,9 +829,9 @@ export class RegistrationRequestValidator {
     }
   }
 
-  // private getSectionIdentifierUri(parameters: RegistrationRequest): URL | undefined {}
+  // private getSectionIdentifierUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {}
 
-  // private getSubjectType(parameters: RegistrationRequest): string {}
+  // private getSubjectType(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string {}
 
   /**
    * Returns the ID Token JSON Web Signature Algorithm provided by the Client.
@@ -826,7 +840,7 @@ export class RegistrationRequestValidator {
    * @returns ID Token JSON Web Signature Algorithm provided by the Client.
    */
   private getIdTokenSignedResponseAlgorithm(
-    parameters: PostRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
   ): Exclude<JsonWebSignatureAlgorithm, 'none'> {
     if (
       typeof parameters.id_token_signed_response_alg !== 'undefined' &&
@@ -848,21 +862,21 @@ export class RegistrationRequestValidator {
     return parameters.id_token_signed_response_alg;
   }
 
-  // private getIdTokenEncryptedResponseKeyWrap(parameters: RegistrationRequest): JsonWebEncryptionKeyWrapAlgorithm {}
+  // private getIdTokenEncryptedResponseKeyWrap(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionKeyWrapAlgorithm {}
 
-  // private getIdTokenEncryptedResponseContentEncryption(parameters: RegistrationRequest): JsonWebEncryptionContentEncryptionAlgorithm {}
+  // private getIdTokenEncryptedResponseContentEncryption(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionContentEncryptionAlgorithm {}
 
-  // private getUserinfoSignedResponseAlgorithm(parameters: RegistrationRequest): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
+  // private getUserinfoSignedResponseAlgorithm(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
 
-  // private getUserinfoEncryptedResponseKeyWrap(parameters: RegistrationRequest): JsonWebEncryptionKeyWrapAlgorithm {}
+  // private getUserinfoEncryptedResponseKeyWrap(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionKeyWrapAlgorithm {}
 
-  // private getUserinfoEncryptedResponseContentEncryption(parameters: RegistrationRequest): JsonWebEncryptionContentEncryptionAlgorithm {}
+  // private getUserinfoEncryptedResponseContentEncryption(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionContentEncryptionAlgorithm {}
 
-  // private getRequestObjectSigningAlgorithm(parameters: RegistrationRequest): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
+  // private getRequestObjectSigningAlgorithm(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
 
-  // private getRequestObjectEncryptionKeyWrap(parameters: RegistrationRequest): JsonWebEncryptionKeyWrapAlgorithm {}
+  // private getRequestObjectEncryptionKeyWrap(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionKeyWrapAlgorithm {}
 
-  // private getRequestObjectEncryptionContentEncryption(parameters: RegistrationRequest): JsonWebEncryptionContentEncryptionAlgorithm {}
+  // private getRequestObjectEncryptionContentEncryption(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionContentEncryptionAlgorithm {}
 
   /**
    * Returns the Client Authentication Method provided by the Client.
@@ -870,7 +884,9 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Client Authentication Method provided by the Client.
    */
-  private getAuthenticationMethod(parameters: PostRegistrationRequest): ClientAuthentication {
+  private getAuthenticationMethod(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): ClientAuthentication {
     if (
       typeof parameters.token_endpoint_auth_method !== 'undefined' &&
       typeof parameters.token_endpoint_auth_method !== 'string'
@@ -898,7 +914,7 @@ export class RegistrationRequestValidator {
    * @returns Client Authentication Method JSON Web Signature Algorithm provided by the Client.
    */
   private getAuthenticationSigningAlgorithm(
-    parameters: PostRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
   ): Exclude<JsonWebSignatureAlgorithm, 'none'> | undefined {
     if (
       typeof parameters.token_endpoint_auth_signing_alg !== 'undefined' &&
@@ -925,7 +941,9 @@ export class RegistrationRequestValidator {
    *
    * @param parameters Parameters of the Post Client Registration Request.
    */
-  private checkAuthenticationMethodAndAuthenticationMethodSignature(parameters: PostRegistrationRequest): void {
+  private checkAuthenticationMethodAndAuthenticationMethodSignature(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): void {
     const {
       token_endpoint_auth_method: authenticationMethod,
       token_endpoint_auth_signing_alg: authenticationSigningAlgorithm,
@@ -987,7 +1005,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Default Max Age provided by the Client.
    */
-  private getDefaultMaxAge(parameters: PostRegistrationRequest): number | undefined {
+  private getDefaultMaxAge(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): number | undefined {
     if (typeof parameters.default_max_age !== 'undefined') {
       if (typeof parameters.default_max_age !== 'number') {
         throw new InvalidClientMetadataException({ description: 'Invalid parameter "default_max_age".' });
@@ -1007,7 +1025,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Value for Require Auth Time provided by the Client.
    */
-  private getRequireAuthTime(parameters: PostRegistrationRequest): boolean {
+  private getRequireAuthTime(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): boolean {
     if (typeof parameters.require_auth_time !== 'undefined' && typeof parameters.require_auth_time !== 'boolean') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "require_auth_time".' });
     }
@@ -1021,7 +1039,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Default Authentication Context Class References requested by the Client.
    */
-  private getDefaultAcrValues(parameters: PostRegistrationRequest): string[] | undefined {
+  private getDefaultAcrValues(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string[] | undefined {
     if (
       typeof parameters.default_acr_values !== 'undefined' &&
       (!Array.isArray(parameters.default_acr_values) ||
@@ -1045,7 +1063,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Initiate Login URI provided by the Client.
    */
-  private getInitiateLoginUri(parameters: PostRegistrationRequest): URL | undefined {
+  private getInitiateLoginUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
     if (typeof parameters.initiate_login_uri !== 'undefined' && typeof parameters.initiate_login_uri !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "initiate_login_uri".' });
     }
@@ -1063,7 +1081,91 @@ export class RegistrationRequestValidator {
     }
   }
 
-  // private getRequestUris(parameters: RegistrationRequest): URL[] | undefined {}
+  // private getRequestUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL[] | undefined {}
+
+  /**
+   * Checks and returns the Post Logout Redirect URIs of the Client.
+   *
+   * @param parameters Parameters of the Post Client Registration Request.
+   * @returns Post Logout Redirect URIs of the Client.
+   */
+  private getPostLogoutRedirectUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL[] {
+    if (
+      !Array.isArray(parameters.post_logout_redirect_uris) ||
+      parameters.post_logout_redirect_uris.some((postLogoutRedirectUri) => typeof postLogoutRedirectUri !== 'string')
+    ) {
+      throw new InvalidClientMetadataException({ description: 'Invalid parameter "post_logout_redirect_uris".' });
+    }
+
+    return parameters.post_logout_redirect_uris.map((postLogoutRedirectUri) => {
+      try {
+        const url = new URL(postLogoutRedirectUri);
+
+        if (url.hash.length !== 0) {
+          throw new InvalidRedirectUriException({
+            description: `The Post Logout Redirect URI "${postLogoutRedirectUri}" MUST NOT have a fragment component.`,
+          });
+        }
+
+        return url;
+      } catch (exc: unknown) {
+        if (exc instanceof OAuth2Exception) {
+          throw exc;
+        }
+
+        const exception = new InvalidRedirectUriException({
+          description: `Invalid Post Logout Redirect URI "${postLogoutRedirectUri}".`,
+        });
+
+        exception.cause = exc;
+
+        throw exception;
+      }
+    });
+  }
+
+  /**
+   * Checks if the Post Logout Redirect URIs provided by the Client match the requirements of the requested Application Type.
+   *
+   * @param applicationType Application Type requested by the Client.
+   * @param postLogoutRedirectUris Post Logout Redirect URIs provided by the Client.
+   */
+  private checkApplicationTypeAndPostLogoutRedirectUris(
+    applicationType: ApplicationType,
+    postLogoutRedirectUris: URL[]
+  ): void {
+    postLogoutRedirectUris.forEach((postLogoutRedirectUri) => {
+      switch (applicationType) {
+        case 'native': {
+          if (postLogoutRedirectUri.protocol.includes('http') && postLogoutRedirectUri.hostname !== 'localhost') {
+            throw new InvalidRedirectUriException({
+              description:
+                'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
+            });
+          }
+
+          break;
+        }
+
+        case 'web': {
+          if (!postLogoutRedirectUri.protocol.includes('https')) {
+            throw new InvalidRedirectUriException({
+              description: `The Post Logout Redirect URI "${postLogoutRedirectUri.href}" does not use the https protocol.`,
+            });
+          }
+
+          if (postLogoutRedirectUri.hostname === 'localhost' || postLogoutRedirectUri.hostname === '127.0.0.1') {
+            throw new InvalidRedirectUriException({
+              description:
+                'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.',
+            });
+          }
+
+          break;
+        }
+      }
+    });
+  }
 
   /**
    * Returns the Software Identifier provided by the Client.
@@ -1071,7 +1173,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Software Identifier provided by the Client.
    */
-  private getSoftwareId(parameters: PostRegistrationRequest): string | undefined {
+  private getSoftwareId(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string | undefined {
     if (typeof parameters.software_id !== 'undefined' && typeof parameters.software_id !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "software_id".' });
     }
@@ -1085,7 +1187,7 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Software Version provided by the Client.
    */
-  private getSoftwareVersion(parameters: PostRegistrationRequest): string | undefined {
+  private getSoftwareVersion(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string | undefined {
     if (typeof parameters.software_version !== 'undefined' && typeof parameters.software_version !== 'string') {
       throw new InvalidClientMetadataException({ description: 'Invalid parameter "software_version".' });
     }

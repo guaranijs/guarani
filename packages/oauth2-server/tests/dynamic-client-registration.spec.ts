@@ -1,7 +1,9 @@
 import { getContainer } from '@guarani/di';
 import { removeUndefined } from '@guarani/primitives';
+
 import express, { Application, json } from 'express';
 import request, { SuperAgentTest } from 'supertest';
+
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
 import { InvalidTokenException } from '../src/lib/exceptions/invalid-token.exception';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
@@ -77,6 +79,7 @@ describe('Dynamic Client Registration', () => {
       default_acr_values: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
+      post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });
@@ -153,6 +156,7 @@ describe('Dynamic Client Registration', () => {
       default_acr_values: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
+      post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });
@@ -193,6 +197,7 @@ describe('Dynamic Client Registration', () => {
       default_acr_values: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
+      post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });
@@ -262,6 +267,7 @@ describe('Dynamic Client Registration', () => {
       default_acr_values: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
+      post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });

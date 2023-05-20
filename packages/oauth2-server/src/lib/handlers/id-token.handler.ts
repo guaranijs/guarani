@@ -8,10 +8,11 @@ import {
   JsonWebTokenClaims,
 } from '@guarani/jose';
 
-import { createHash, timingSafeEqual } from 'crypto';
+import { createHash } from 'crypto';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
+import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
@@ -68,7 +69,7 @@ export class IdTokenHandler {
     const header = new JsonWebSignatureHeader({ alg: <JsonWebSignatureAlgorithm>jwk.alg, kid: jwk.kid, typ: 'JWT' });
     const claims = new IdTokenClaims({
       iss: this.settings.issuer,
-      aud: client.id,
+      aud: [client.id],
       exp: now + 86400,
       iat: now,
       ...additionalClaims,
@@ -92,11 +93,12 @@ export class IdTokenHandler {
    * Checks the provided ID Token and verifies that the currently authenticated User matches the User
    * represented by the ID Token provided by the Client.
    *
-   * @param idToken ID Token provided by the Client as a hint to the expectedd authenticated User.
+   * @param idToken ID Token provided by the Client as a hint to the expected authenticated User.
+   * @param client Client of the Request.
    * @param login Login containing the currently authenticated User.
    * @returns Whether or not the authenticated User matches the User represented by the ID Token.
    */
-  public async checkIdTokenHint(idToken: string, login: Login): Promise<boolean> {
+  public async checkIdTokenHint(idToken: string, client: Client, login: Login): Promise<boolean> {
     try {
       const { payload } = await JsonWebSignature.verify(
         idToken,
@@ -104,12 +106,17 @@ export class IdTokenHandler {
         this.settings.idTokenSignatureAlgorithms
       );
 
-      const claims = await JsonWebTokenClaims.parse(payload, { ignoreExpired: true });
+      await JsonWebTokenClaims.parse(payload, {
+        ignoreExpired: true,
+        validationOptions: {
+          iss: { essential: true, value: this.settings.issuer },
+          sub: { essential: true, value: login.user.id },
+          aud: { essential: true, values: [client.id, [client.id]] },
+          sid: { essential: false, value: login.id },
+        },
+      });
 
-      const loginUserId = Buffer.from(login.user.id, 'utf8');
-      const idTokenUserId = Buffer.from(claims.sub!, 'utf8');
-
-      return loginUserId.length === idTokenUserId.length && timingSafeEqual(loginUserId, idTokenUserId);
+      return true;
     } catch {
       return false;
     }

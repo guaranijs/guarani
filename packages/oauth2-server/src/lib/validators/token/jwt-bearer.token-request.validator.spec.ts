@@ -153,7 +153,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -181,7 +181,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const claims: JsonWebTokenClaimsParameters = {
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -208,7 +208,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'another_client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -234,7 +234,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -287,7 +287,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com',
+        aud: ['https://server.example.com'],
         iat: now,
         exp: now + 86400,
       };
@@ -314,7 +314,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
       };
 
@@ -340,7 +340,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -367,7 +367,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -399,7 +399,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -440,7 +440,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -487,7 +487,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -534,7 +534,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -581,7 +581,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -628,7 +628,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -676,7 +676,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -726,7 +726,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };
@@ -838,7 +838,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const claims: JsonWebTokenClaimsParameters = {
         iss: 'client_id',
         sub: 'user_id',
-        aud: 'https://server.example.com/oauth/token',
+        aud: ['https://server.example.com/oauth/token'],
         iat: now,
         exp: now + 86400,
       };

@@ -53,7 +53,7 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
   /**
    * Handles the Context Flow of the Select Account Interaction.
    *
-   * @param context Select Account Interaction Context Request Context.
+   * @param context Select Account Context Interaction Request Context.
    * @returns Select Account Context Interaction Response.
    */
   public async handleContext(
@@ -76,7 +76,7 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
   /**
    * Handles the Decision Flow of the Select Account Interaction.
    *
-   * @param context Select Account Interaction Decision Request Context.
+   * @param context Select Account Decision Interaction Request Context.
    * @returns Select Account Decision Interaction Response.
    */
   public async handleDecision(

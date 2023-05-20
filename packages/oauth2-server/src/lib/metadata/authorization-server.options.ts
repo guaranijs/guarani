@@ -13,6 +13,7 @@ import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { DeviceCodeServiceInterface } from '../services/device-code.service.interface';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { LoginServiceInterface } from '../services/login.service.interface';
+import { LogoutTicketServiceInterface } from '../services/logout-ticket.service.interface';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { UserServiceInterface } from '../services/user.service.interface';
@@ -142,6 +143,11 @@ export interface AuthorizationServerOptions {
   readonly enableAuthorizationResponseIssuerIdentifier?: boolean;
 
   /**
+   * Post Logout Url of the Authorization Server.
+   */
+  readonly postLogoutUrl?: string;
+
+  /**
    * Access Token Service.
    */
   readonly accessTokenService?: AccessTokenServiceInterface | Constructor<AccessTokenServiceInterface>;
@@ -182,6 +188,11 @@ export interface AuthorizationServerOptions {
    * Login Service.
    */
   readonly loginService?: LoginServiceInterface | Constructor<LoginServiceInterface>;
+
+  /**
+   * Logout Service.
+   */
+  readonly logoutTicketService?: LogoutTicketServiceInterface | Constructor<LogoutTicketServiceInterface>;
 
   /**
    * Refresh Token Service.

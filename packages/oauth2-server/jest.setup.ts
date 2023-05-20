@@ -73,4 +73,5 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   },
   enableRegistrationEndpoint: true,
   enableAuthorizationResponseIssuerIdentifier: true,
+  postLogoutUrl: 'http://localhost:3000',
 });

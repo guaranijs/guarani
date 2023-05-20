@@ -1,4 +1,4 @@
 /**
  * Interaction Types supported by Guarani.
  */
-export type InteractionType = 'consent' | 'login' | 'select_account';
+export type InteractionType = 'consent' | 'login' | 'logout' | 'select_account';

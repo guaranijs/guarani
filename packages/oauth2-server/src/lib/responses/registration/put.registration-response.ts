@@ -4,6 +4,7 @@ import { ClientAuthentication } from '../../client-authentication/client-authent
 import { GrantType } from '../../grant-types/grant-type.type';
 import { ResponseType } from '../../response-types/response-type.type';
 import { ApplicationType } from '../../types/application-type.type';
+import { SubjectType } from '../../types/subject-type.type';
 
 /**
  * Parameters of the OAuth 2.0 Put Registration Response.
@@ -114,7 +115,7 @@ export interface PutRegistrationResponse {
   /**
    * Subject Type for responses to the Client.
    */
-  // readonly subject_type?: string;
+  readonly subject_type: SubjectType;
 
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.

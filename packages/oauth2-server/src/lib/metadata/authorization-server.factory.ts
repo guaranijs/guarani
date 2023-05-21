@@ -182,6 +182,7 @@ export class AuthorizationServerFactory {
       displays: <Display[]>Object.keys(displayRegistry),
       acrValues: this.authorizationServerOptions.acrValues ?? [],
       uiLocales: this.authorizationServerOptions.uiLocales ?? [],
+      subjectTypes: this.authorizationServerOptions.subjectTypes ?? ['public'],
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
       idTokenSignatureAlgorithms: this.authorizationServerOptions.idTokenSignatureAlgorithms ?? ['RS256'],

@@ -6,6 +6,7 @@ import { GrantType } from '../grant-types/grant-type.type';
 import { Pkce } from '../pkces/pkce.type';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { ResponseType } from '../response-types/response-type.type';
+import { SubjectType } from '../types/subject-type.type';
 import { UserInteractionSettings } from './user-interaction.settings';
 
 /**
@@ -71,6 +72,11 @@ export interface Settings {
    * UI Locales registered at the Authorization Server.
    */
   readonly uiLocales: string[];
+
+  /**
+   * Subject Types registered at the Authorization Server.
+   */
+  readonly subjectTypes: SubjectType[];
 
   /**
    * JSON Web Key Set of the Authorization Server.

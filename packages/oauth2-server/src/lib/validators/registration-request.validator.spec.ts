@@ -47,6 +47,7 @@ const invalidPolicyUris: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, (
 const invalidTosUris: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidJwksUris: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidJwks: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, []];
+const invalidSubjectTypes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidIdTokenJWSAlgorithms: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidAuthenticationMethods: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidJWTClientAssertionJWSAlgorithms: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
@@ -149,6 +150,7 @@ describe('Registration Request Validator', () => {
       'RS512',
     ],
     acrValues: ['guarani:acr:1fa', 'guarani:acr:2fa'],
+    subjectTypes: ['pairwise', 'public'],
   };
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
@@ -217,7 +219,7 @@ describe('Registration Request Validator', () => {
           jwks_uri: 'https://client.example.com/oauth/jwks',
           jwks: undefined,
           // sector_identifier_uri: '',
-          // subject_type: '',
+          subject_type: 'public',
           id_token_signed_response_alg: 'RS256',
           // id_token_encrypted_response_alg: '',
           // id_token_encrypted_response_enc: '',
@@ -750,6 +752,33 @@ describe('Registration Request Validator', () => {
       );
     });
 
+    it.each(invalidSubjectTypes)(
+      'should throw when providing an invalid "subject_type" parameter.',
+      async (subjectType) => {
+        request.body.subject_type = subjectType;
+
+        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePost(request)).rejects.toThrow(
+          new InvalidClientMetadataException({ description: 'Invalid parameter "subject_type".' })
+        );
+      }
+    );
+
+    it('should throw when providing an unsupported subject type.', async () => {
+      request.body.subject_type = 'unknown';
+
+      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePost(request)).rejects.toThrow(
+        new InvalidClientMetadataException({ description: 'Unsupported subject_type "unknown".' })
+      );
+    });
+
     it.each(invalidIdTokenJWSAlgorithms)(
       'should throw when providing an invalid "id_token_signed_response_alg" parameter.',
       async (algorithm) => {
@@ -1140,7 +1169,7 @@ describe('Registration Request Validator', () => {
         jwksUri: new URL('https://client.example.com/oauth/jwks'),
         jwks: undefined,
         // sectorIdentifierUri: ,
-        // subjectType: ,
+        subjectType: 'public',
         idTokenSignedResponseAlgorithm: 'RS256',
         // idTokenEncryptedResponseKeyWrap: ,
         // idTokenEncryptedResponseContentEncryption: ,
@@ -1352,7 +1381,7 @@ describe('Registration Request Validator', () => {
           jwks_uri: 'https://client.example.com/oauth/jwks',
           jwks: undefined,
           // sector_identifier_uri: '',
-          // subject_type: '',
+          subject_type: 'public',
           id_token_signed_response_alg: 'RS256',
           // id_token_encrypted_response_alg: '',
           // id_token_encrypted_response_enc: '',
@@ -2097,6 +2126,41 @@ describe('Registration Request Validator', () => {
       );
     });
 
+    it.each(invalidSubjectTypes)(
+      'should throw when providing an invalid "subject_type" parameter.',
+      async (subjectType) => {
+        request.body.subject_type = subjectType;
+
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          scopes: ['client:update'],
+          client: { id: 'client_id' },
+        };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePut(request)).rejects.toThrow(
+          new InvalidClientMetadataException({ description: 'Invalid parameter "subject_type".' })
+        );
+      }
+    );
+
+    it('should throw when providing an unsupported subject type.', async () => {
+      request.body.subject_type = 'unknown';
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['client:update'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePut(request)).rejects.toThrow(
+        new InvalidClientMetadataException({ description: 'Unsupported subject_type "unknown".' })
+      );
+    });
+
     it.each(invalidIdTokenJWSAlgorithms)(
       'should throw when providing an invalid "id_token_signed_response_alg" parameter.',
       async (algorithm) => {
@@ -2595,7 +2659,7 @@ describe('Registration Request Validator', () => {
         jwksUri: new URL('https://client.example.com/oauth/jwks'),
         jwks: undefined,
         // sectorIdentifierUri: ,
-        // subjectType: ,
+        subjectType: 'public',
         idTokenSignedResponseAlgorithm: 'RS256',
         // idTokenEncryptedResponseKeyWrap: ,
         // idTokenEncryptedResponseContentEncryption: ,

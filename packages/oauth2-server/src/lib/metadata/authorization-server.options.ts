@@ -18,6 +18,7 @@ import { RefreshTokenServiceInterface } from '../services/refresh-token.service.
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { UserInteractionSettings } from '../settings/user-interaction.settings';
+import { SubjectType } from '../types/subject-type.type';
 
 /**
  * Configuration Parameters of the Authorization Server.
@@ -77,6 +78,13 @@ export interface AuthorizationServerOptions {
    * UI Locales registered at the Authorization Server.
    */
   readonly uiLocales?: string[];
+
+  /**
+   * Subject Types registered at the Authorization Server.
+   *
+   * @default ["public"]
+   */
+  readonly subjectTypes?: SubjectType[];
 
   /**
    * JSON Web Key Set of the Authorization Server.

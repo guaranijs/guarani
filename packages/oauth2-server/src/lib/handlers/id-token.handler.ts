@@ -81,6 +81,7 @@ export class IdTokenHandler {
       auth_time: typeof parameters.max_age !== 'undefined' ? Math.floor(login.createdAt.getTime() / 1000) : undefined,
       amr: login.amr ?? undefined,
       acr: login.acr ?? undefined,
+      azp: client.id,
       at_hash: accessToken !== null ? this.getLeftHash(accessToken.handle, header.alg) : undefined,
       c_hash: authorizationCode !== null ? this.getLeftHash(authorizationCode.code, header.alg) : undefined,
       ...userinfo,

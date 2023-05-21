@@ -11,6 +11,7 @@ import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
+import { UnmetAuthenticationRequirementsException } from '../exceptions/unmet-authentication-requirements.exception';
 import { LoginContextInteractionResponse } from '../responses/interaction/login-context.interaction-response';
 import { LoginDecisionInteractionResponse } from '../responses/interaction/login-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -246,6 +247,40 @@ describe('Login Interaction Type', () => {
     });
 
     // #region Accept Decision.
+    it('should return an error response when the authorization server fails to meet the required "acr_values".', async () => {
+      context.grant.session.activeLogin = null;
+      context.grant.session.logins = [];
+
+      Reflect.set(context.grant.parameters, 'acr_values', 'urn:guarani:acr:2fa');
+
+      Object.assign(context.parameters, {
+        decision: 'accept',
+        subject: 'user_id',
+        amr: 'pwd',
+        acr: 'urn:guarani:acr:1fa',
+      });
+
+      Object.assign(context, {
+        decision: 'accept',
+        user: { id: 'user_id' },
+        amr: ['pwd'],
+        acr: 'urn:guarani:acr:1fa',
+      });
+
+      const error = new UnmetAuthenticationRequirementsException({
+        description: 'Could not authenticate using the Authentication Context Class Reference "urn:guarani:acr:2fa".',
+      });
+
+      const parameters = new URLSearchParams(error.toJSON());
+
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
+        redirect_to: `https://server.example.com/oauth/error?${parameters.toString()}`,
+      });
+
+      expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
+    });
+
     it('should return a valid first time login accept decision interaction response.', async () => {
       delete context.grant.session.activeLogin;
       context.grant.session.logins = [];

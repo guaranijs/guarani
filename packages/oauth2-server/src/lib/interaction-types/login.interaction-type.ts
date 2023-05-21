@@ -11,6 +11,7 @@ import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
+import { UnmetAuthenticationRequirementsException } from '../exceptions/unmet-authentication-requirements.exception';
 import { LoginContextInteractionResponse } from '../responses/interaction/login-context.interaction-response';
 import { LoginDecisionInteractionResponse } from '../responses/interaction/login-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -152,6 +153,21 @@ export class LoginInteractionType implements InteractionTypeInterface {
    */
   private async acceptLogin(context: LoginDecisionAcceptInteractionContext): Promise<LoginDecisionInteractionResponse> {
     const { acr, amr, grant, user } = context;
+
+    if (typeof acr !== 'undefined' && grant.parameters.acr_values?.includes(acr) === false) {
+      await this.grantService.remove(grant);
+
+      const error = new UnmetAuthenticationRequirementsException({
+        description: `Could not authenticate using the Authentication Context Class Reference "${grant.parameters.acr_values}".`,
+      });
+
+      const url = new URL('/oauth/error', this.settings.issuer);
+      const searchParameters = new URLSearchParams(error.toJSON());
+
+      url.search = searchParameters.toString();
+
+      return { redirect_to: url.href };
+    }
 
     if (grant.session.activeLogin == null) {
       const login = await this.loginService.create(user, grant.session, amr, acr);

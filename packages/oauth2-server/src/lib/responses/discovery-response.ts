@@ -7,6 +7,7 @@ import { Pkce } from '../pkces/pkce.type';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { ResponseType } from '../response-types/response-type.type';
 import { Prompt } from '../types/prompt.type';
+import { SubjectType } from '../types/subject-type.type';
 
 /**
  * Parameters of the OAuth 2.0 Discovery Endpoint.
@@ -68,7 +69,12 @@ export interface DiscoveryResponse extends Record<string, any> {
   readonly acr_values_supported?: string[];
 
   /**
-   * JSON Web Signature Algorithms for ID Token Signature registered at the Authorization Server.
+   * Subject Types supported by the Authorization Server.
+   */
+  readonly subject_types_supported: SubjectType[];
+
+  /**
+   * JSON Web Signature Algorithms for ID Token Signature supported by the Authorization Server.
    */
   readonly id_token_signing_alg_values_supported: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
 

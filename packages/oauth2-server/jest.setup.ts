@@ -52,6 +52,7 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   pkces: ['S256', 'plain'],
   acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
   uiLocales: ['en', 'es', 'pt-BR'],
+  subjectTypes: ['pairwise', 'public'],
   jwks: {
     keys: [
       {

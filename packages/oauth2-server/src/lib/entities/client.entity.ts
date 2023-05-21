@@ -4,6 +4,7 @@ import { ClientAuthentication } from '../client-authentication/client-authentica
 import { GrantType } from '../grant-types/grant-type.type';
 import { ResponseType } from '../response-types/response-type.type';
 import { ApplicationType } from '../types/application-type.type';
+import { SubjectType } from '../types/subject-type.type';
 
 /**
  * OAuth 2.0 Client Entity.
@@ -116,7 +117,7 @@ export interface Client extends Record<string, any> {
   /**
    * Subject Type for responses to the Client.
    */
-  // subjectType: string;
+  subjectType: SubjectType;
 
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.

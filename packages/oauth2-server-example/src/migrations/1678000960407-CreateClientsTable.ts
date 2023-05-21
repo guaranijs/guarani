@@ -122,11 +122,12 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
         //   type: 'varchar',
         //   isNullable: true,
         // },
-        // {
-        //   name: 'subject_type',
-        //   type: 'varchar',
-        //   isNullable: false,
-        // },
+        {
+          name: 'subject_type',
+          type: 'varchar',
+          default: 'public',
+          isNullable: false,
+        },
         {
           name: 'id_token_signed_response_algorithm',
           type: 'varchar',

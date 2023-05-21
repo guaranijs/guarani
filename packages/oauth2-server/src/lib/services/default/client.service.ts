@@ -28,6 +28,7 @@ export class ClientService implements ClientServiceInterface {
       applicationType: 'web',
       authenticationMethod: 'client_secret_basic',
       scopes: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
+      subjectType: 'public',
       requireAuthTime: false,
       postLogoutRedirectUris: ['http://localhost:4000/oauth/-logoutcallback'],
       createdAt: new Date(),

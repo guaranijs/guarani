@@ -5,6 +5,7 @@ import {
   ClientAuthentication,
   GrantType,
   ResponseType,
+  SubjectType,
 } from '@guarani/oauth2-server';
 
 import {
@@ -89,8 +90,8 @@ export class Client extends BaseEntity implements OAuth2Client {
   // @Column({ name: 'sector_identifier_uri', type: 'varchar', nullable: true })
   // public sectorIdentifierUri!: string | null;
 
-  // @Column({ name: 'subject_type', type: 'varchar', nullable: false })
-  // public subjectType!: string;
+  @Column({ name: 'subject_type', type: 'varchar', default: 'public', nullable: false })
+  public subjectType!: SubjectType;
 
   @Column({ name: 'id_token_signed_response_algorithm', type: 'varchar', nullable: true })
   @Check('check_id_token_signed_response_algorithm', '"id_token_signed_response_algorithm" <> \'none\'')

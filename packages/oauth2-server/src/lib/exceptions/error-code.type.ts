@@ -20,6 +20,7 @@ export type ErrorCode =
   | 'slow_down'
   | 'temporarily_unavailable'
   | 'unauthorized_client'
+  | 'unmet_authentication_requirements'
   | 'unsupported_grant_type'
   | 'unsupported_interaction_type'
   | 'unsupported_response_type'

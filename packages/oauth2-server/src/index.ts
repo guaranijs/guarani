@@ -100,6 +100,7 @@ export { ServerErrorException } from './lib/exceptions/server-error.exception';
 export { SlowDownException } from './lib/exceptions/slow-down.exception';
 export { TemporarilyUnavailableException } from './lib/exceptions/temporarily-unavailable.exception';
 export { UnauthorizedClientException } from './lib/exceptions/unauthorized-client.exception';
+export { UnmetAuthenticationRequirementsException } from './lib/exceptions/unmet-authentication-requirements.exception';
 export { UnsupportedGrantTypeException } from './lib/exceptions/unsupported-grant-type.exception';
 export { UnsupportedInteractionTypeException } from './lib/exceptions/unsupported-interaction-type.exception';
 export { UnsupportedResponseTypeException } from './lib/exceptions/unsupported-response-type.exception';

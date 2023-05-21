@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@guarani/di';
 import { OutgoingHttpHeaders } from 'http';
 
 import { AccessToken } from '../entities/access-token.entity';
+import { User } from '../entities/user.entity';
 import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
@@ -11,6 +12,7 @@ import { ClientAuthorizationHandler } from '../handlers/client-authorization.han
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { EndpointInterface } from './endpoint.interface';
@@ -77,7 +79,7 @@ export class UserinfoEndpoint implements EndpointInterface {
   public async handle(request: HttpRequest): Promise<HttpResponse> {
     try {
       const { scopes, user } = await this.authorize(request);
-      const claims = await this.userService.getUserinfo!(user!, scopes);
+      const claims = await this.getUserinfo(user!, scopes);
 
       return new HttpResponse().setHeaders(this.headers).json(claims);
     } catch (exc: unknown) {
@@ -122,5 +124,18 @@ export class UserinfoEndpoint implements EndpointInterface {
     }
 
     return accessToken;
+  }
+
+  /**
+   * Retrieves claims about the provided User based on the provided scopes.
+   *
+   * @param user End User to have it's information gathered.
+   * @param scopes Scopes requested by the Client.
+   * @returns Claims about the provided User.
+   */
+  private async getUserinfo(user: User, scopes: string[]): Promise<UserinfoClaimsParameters> {
+    // UserService.getUserinfo() does not return the "sub" claim.
+    const claims: UserinfoClaimsParameters = { sub: user.id };
+    return Object.assign(claims, await this.userService.getUserinfo!(user, scopes));
   }
 }

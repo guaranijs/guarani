@@ -5,11 +5,6 @@ import { AddressClaimParameters } from './address.claim.parameters';
  */
 export interface UserinfoClaimsParameters extends Record<string, any> {
   /**
-   * Identifier of the User.
-   */
-  readonly sub: string;
-
-  /**
    * Formatted name of the User.
    */
   name?: string;

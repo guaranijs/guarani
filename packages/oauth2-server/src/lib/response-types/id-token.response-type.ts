@@ -65,12 +65,7 @@ export class IdTokenResponseType implements ResponseTypeInterface {
       throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
     }
 
-    const idToken = await this.idTokenHandler.generateIdToken(consent, null, null, {
-      nonce: parameters.nonce,
-      auth_time: parameters.max_age !== undefined ? Math.floor(login.createdAt.getTime() / 1000) : undefined,
-      amr: login.amr ?? undefined,
-      acr: login.acr ?? undefined,
-    });
+    const idToken = await this.idTokenHandler.generateIdToken(parameters, login, consent, null, null);
 
     return removeUndefined<IdTokenAuthorizationResponse>({ id_token: idToken, state: parameters.state });
   }

@@ -32,6 +32,11 @@ export interface IdTokenClaimsParameters extends JsonWebTokenClaimsParameters {
   readonly iat: number;
 
   /**
+   * Identifier of the Login for the Authenticated User.
+   */
+  readonly sid: string;
+
+  /**
    * Time when the End-User was authenticated.
    */
   auth_time?: number;

@@ -32,6 +32,7 @@ export const authorizationServerOptions: AuthorizationServerOptions = {
     errorUrl: '/oauth/error',
     loginUrl: '/auth/login',
     logoutUrl: '/auth/logout',
+    registrationUrl: '/auth/register',
     selectAccountUrl: '/auth/select-account',
   },
   clientAuthenticationMethods: [

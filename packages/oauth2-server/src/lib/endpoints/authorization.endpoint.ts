@@ -138,6 +138,14 @@ export class AuthorizationEndpoint implements EndpointInterface {
         return this.reloadAuthorizationEndpoint(session, parameters);
       }
 
+      if (prompts.includes('create')) {
+        grant ??= await this.grantService.create(parameters, client, session);
+
+        if (!grant.interactions.includes('create')) {
+          return this.redirectToRegistrationPage(grant, display);
+        }
+      }
+
       if (prompts.includes('select_account')) {
         if (session.logins.length === 0) {
           throw new LoginRequiredException({ state });
@@ -382,6 +390,21 @@ export class AuthorizationEndpoint implements EndpointInterface {
     url.search = urlParameters.toString();
 
     return new HttpResponse().redirect(url).setCookie('guarani:session', session.id);
+  }
+
+  /**
+   * Redirects the User-Agent to the Authorization Server's User Registration Page for the User to create an Account
+   * in order to proceed with the Authorization Process.
+   *
+   * @param grant Grant of the Request.
+   * @param display Display requested by the Client.
+   * @returns Http Redirect Response to the User Registration Page.
+   */
+  private redirectToRegistrationPage(grant: Grant, display: DisplayInterface): HttpResponse {
+    const url = new URL(this.settings.userInteraction!.registrationUrl, this.settings.issuer);
+    const parameters: Record<string, any> = { login_challenge: grant.loginChallenge };
+
+    return display.createHttpResponse(url.href, parameters).setCookie('guarani:grant', grant.id);
   }
 
   /**

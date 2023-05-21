@@ -31,7 +31,7 @@ export class UserRegistrationDto {
   @Expose({ name: 'given_name' })
   @Matches(/^(?=.*?[a-zA-Z])[a-zA-Z ]+$/, { message: 'The given name must only have letters and spaces.' })
   @IsDefined({ message: 'The given name must not be empty.' })
-  public readonly givenName!: string;
+  public readonly given_name!: string;
 
   /**
    * Last or Family Name of the User.
@@ -39,7 +39,7 @@ export class UserRegistrationDto {
   @Expose({ name: 'family_name' })
   @Matches(/^(?=.*?[a-zA-Z])[a-zA-Z ]+$/, { message: 'The family name must only have letters and spaces.' })
   @IsDefined({ message: 'The family name must not be empty.' })
-  public readonly familyName!: string;
+  public readonly family_name!: string;
 
   /**
    * Phone Number of the User.
@@ -47,7 +47,7 @@ export class UserRegistrationDto {
   @Expose({ name: 'phone_number' })
   @IsPhoneNumber(undefined, { message: 'Invalid phone number.' })
   @IsDefined({ message: 'The phone number must not be empty.' })
-  public readonly phoneNumber!: string;
+  public readonly phone_number!: string;
 
   /**
    * Birthdate of the User.

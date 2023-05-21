@@ -36,6 +36,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
 
   const userServiceMock = jest.mocked<UserServiceInterface>(
     {
+      create: jest.fn(),
       findOne: jest.fn(),
       findByResourceOwnerCredentials: jest.fn(),
       getUserinfo: jest.fn(),
@@ -81,6 +82,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
   describe('constructor', () => {
     it('should throw when the user service does not implement the method "findByResourceOwnerCredentials()".', () => {
       const userServiceMock = jest.mocked<UserServiceInterface>({
+        create: jest.fn(),
         findOne: jest.fn(),
         getUserinfo: jest.fn(),
       });

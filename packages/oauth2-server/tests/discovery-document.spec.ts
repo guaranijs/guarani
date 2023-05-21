@@ -68,6 +68,7 @@ describe('Discovery Document', () => {
         'RS384',
         'RS512',
       ],
+      prompt_values_supported: ['consent', 'create', 'login', 'none', 'select_account'],
       display_values_supported: ['page', 'popup', 'touch', 'wap'],
       token_endpoint_auth_methods_supported: [
         'client_secret_basic',

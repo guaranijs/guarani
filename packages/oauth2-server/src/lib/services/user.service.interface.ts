@@ -8,6 +8,14 @@ import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters
  */
 export interface UserServiceInterface {
   /**
+   * Creates a Login representing the End User's Authentication.
+   *
+   * @param parameters Parameters of the User Registration.
+   * @returns Generated User.
+   */
+  create(parameters: Record<string, any>): Promise<User>;
+
+  /**
    * Searches the application's storage for an End User containing the provided Identifier.
    *
    * @param id Identifier of the End User.

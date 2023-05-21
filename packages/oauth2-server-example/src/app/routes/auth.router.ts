@@ -7,16 +7,14 @@ import { LoginController } from '../controllers/auth/login.controller';
 import { LogoutController } from '../controllers/auth/logout.controller';
 import { RegisterController } from '../controllers/auth/register.controller';
 import { SelectAccountController } from '../controllers/auth/select-account.controller';
-import { authenticated } from '../guards/authenticated.guard';
-import { unauthenticated } from '../guards/unauthenticated.guard';
 
 const router = Router();
 const csrf = csurf();
 
 router
   .route('/register')
-  .get(unauthenticated, csrf, RegisterController.get)
-  .post(unauthenticated, csrf, RegisterController.post);
+  .get(csrf, async (req, res) => await RegisterController.get(req, res))
+  .post(csrf, async (req, res) => await RegisterController.post(req, res));
 
 router
   .route('/select-account')
@@ -34,8 +32,8 @@ router
 
 router
   .route('/consent')
-  .get(authenticated, csrf, async (req, res) => await ConsentController.get(req, res))
-  .post(authenticated, csrf, async (req, res) => await ConsentController.post(req, res));
+  .get(csrf, async (req, res) => await ConsentController.get(req, res))
+  .post(csrf, async (req, res) => await ConsentController.post(req, res));
 
 router
   .route('/logout')

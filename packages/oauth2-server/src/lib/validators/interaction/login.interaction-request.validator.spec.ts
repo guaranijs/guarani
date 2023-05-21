@@ -45,6 +45,7 @@ describe('Login Interaction Request Validator', () => {
   });
 
   const userServiceMock = jest.mocked<UserServiceInterface>({
+    create: jest.fn(),
     findOne: jest.fn(),
     findByResourceOwnerCredentials: jest.fn(),
     getUserinfo: jest.fn(),

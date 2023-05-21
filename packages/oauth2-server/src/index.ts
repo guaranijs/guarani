@@ -28,6 +28,8 @@ export { ConsentContextInteractionContext } from './lib/context/interaction/cons
 export { ConsentDecisionAcceptInteractionContext } from './lib/context/interaction/consent-decision-accept.interaction.context';
 export { ConsentDecisionDenyInteractionContext } from './lib/context/interaction/consent-decision-deny.interaction.context';
 export { ConsentDecisionInteractionContext } from './lib/context/interaction/consent-decision.interaction.context';
+export { CreateContextInteractionContext } from './lib/context/interaction/create-context.interaction.context';
+export { CreateDecisionInteractionContext } from './lib/context/interaction/create-decision.interaction.context';
 export { InteractionContext } from './lib/context/interaction/interaction.context';
 export { LoginContextInteractionContext } from './lib/context/interaction/login-context.interaction.context';
 export { LoginDecisionAcceptInteractionContext } from './lib/context/interaction/login-decision-accept.interaction.context';
@@ -150,6 +152,8 @@ export { ConsentContextInteractionRequest } from './lib/requests/interaction/con
 export { ConsentDecisionAcceptInteractionRequest } from './lib/requests/interaction/consent-decision-accept.interaction-request';
 export { ConsentDecisionDenyInteractionRequest } from './lib/requests/interaction/consent-decision-deny.interaction-request';
 export { ConsentDecisionInteractionRequest } from './lib/requests/interaction/consent-decision.interaction-request';
+export { CreateContextInteractionRequest } from './lib/requests/interaction/create-context.interaction-request';
+export { CreateDecisionInteractionRequest } from './lib/requests/interaction/create-decision.interaction-request';
 export { InteractionRequest } from './lib/requests/interaction/interaction-request';
 export { LoginContextInteractionRequest } from './lib/requests/interaction/login-context.interaction-request';
 export { LoginDecisionAcceptInteractionRequest } from './lib/requests/interaction/login-decision-accept.interaction-request';
@@ -159,6 +163,7 @@ export { LogoutContextInteractionRequest } from './lib/requests/interaction/logo
 export { LogoutDecisionAcceptInteractionRequest } from './lib/requests/interaction/logout-decision-accept.interaction-request';
 export { LogoutDecisionDenyInteractionRequest } from './lib/requests/interaction/logout-decision-deny.interaction-request';
 export { LogoutDecisionInteractionRequest } from './lib/requests/interaction/logout-decision.interaction-request';
+export { SelectAccountContextInteractionRequest } from './lib/requests/interaction/select-account-context.interaction-request';
 export { SelectAccountDecisionInteractionRequest } from './lib/requests/interaction/select-account-decision.interaction-request';
 export { IntrospectionRequest } from './lib/requests/introspection-request';
 export { DeleteRegistrationRequest } from './lib/requests/registration/delete.registration-request';
@@ -195,6 +200,9 @@ export { DiscoveryResponse } from './lib/responses/discovery-response';
 export { ConsentContextInteractionResponse } from './lib/responses/interaction/consent-context.interaction-response';
 export { ConsentDecisionInteractionResponse } from './lib/responses/interaction/consent-decision.interaction-response';
 export { ConsentContext } from './lib/responses/interaction/consent.context';
+export { CreateContextInteractionResponse } from './lib/responses/interaction/create-context.interaction-response';
+export { CreateDecisionInteractionResponse } from './lib/responses/interaction/create-decision.interaction-response';
+export { CreateContext } from './lib/responses/interaction/create.context';
 export { LoginContextInteractionResponse } from './lib/responses/interaction/login-context.interaction-response';
 export { LoginDecisionInteractionResponse } from './lib/responses/interaction/login-decision.interaction-response';
 export { LoginContext } from './lib/responses/interaction/login.context';

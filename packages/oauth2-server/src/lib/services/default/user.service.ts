@@ -1,5 +1,7 @@
 import { Injectable } from '@guarani/di';
 
+import { randomUUID } from 'crypto';
+
 import { User } from '../../entities/user.entity';
 import { UserinfoClaimsParameters } from '../../id-token/userinfo.claims.parameters';
 import { UserServiceInterface } from '../user.service.interface';
@@ -41,6 +43,12 @@ export class UserService implements UserServiceInterface {
 
   public constructor() {
     console.warn('Using default User Service. This is only recommended for development.');
+  }
+
+  public async create(parameters: Record<string, any>): Promise<User> {
+    const user: User = { id: randomUUID(), ...parameters };
+    this.users.push(user);
+    return user;
   }
 
   public async findOne(id: string): Promise<User | null> {

@@ -109,8 +109,11 @@ export class RegistrationRequestValidator {
 
     const jwksUri = this.getJwksUri(parameters);
     const jwks = await this.getJwks(parameters);
-    // const sectorIdentifierUri = this.getSectorIdentifierUri(parameters);
+
+    this.checkSubjectTypeAndSectorIdentifierUri(parameters);
+
     const subjectType = this.getSubjectType(parameters);
+    const sectorIdentifierUri = this.getSectorIdentifierUri(parameters);
     const idTokenSignedResponseAlgorithm = this.getIdTokenSignedResponseAlgorithm(parameters);
     // const idTokenEncryptedResponseKeyWrap = this.getIdTokenEncryptedResponseKeyWrap(parameters);
     // const idTokenEncryptedResponseContentEncryption = this.getIdTokenEncryptedResponseContentEncryption(parameters);
@@ -153,8 +156,8 @@ export class RegistrationRequestValidator {
       tosUri,
       jwksUri,
       jwks,
-      // sectorIdentifierUri,
       subjectType,
+      sectorIdentifierUri,
       idTokenSignedResponseAlgorithm,
       // idTokenEncryptedResponseKeyWrap,
       // idTokenEncryptedResponseContentEncryption,
@@ -249,8 +252,11 @@ export class RegistrationRequestValidator {
 
     const jwksUri = this.getJwksUri(bodyParameters);
     const jwks = await this.getJwks(bodyParameters);
-    // const sectorIdentifierUri = this.getSectorIdentifierUri(bodyParameters);
+
+    this.checkSubjectTypeAndSectorIdentifierUri(bodyParameters);
+
     const subjectType = this.getSubjectType(bodyParameters);
+    const sectorIdentifierUri = this.getSectorIdentifierUri(bodyParameters);
     const idTokenSignedResponseAlgorithm = this.getIdTokenSignedResponseAlgorithm(bodyParameters);
     // const idTokenEncryptedResponseKeyWrap = this.getIdTokenEncryptedResponseKeyWrap(bodyParameters);
     // const idTokenEncryptedResponseContentEncryption = this.getIdTokenEncryptedResponseContentEncryption(bodyParameters);
@@ -297,8 +303,8 @@ export class RegistrationRequestValidator {
       tosUri,
       jwksUri,
       jwks,
-      // sectorIdentifierUri,
       subjectType,
+      sectorIdentifierUri,
       idTokenSignedResponseAlgorithm,
       // idTokenEncryptedResponseKeyWrap,
       // idTokenEncryptedResponseContentEncryption,
@@ -830,7 +836,20 @@ export class RegistrationRequestValidator {
     }
   }
 
-  // private getSectionIdentifierUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {}
+  /**
+   * Checks if the parameter **sector_identifier_uri** is provided when **subject_type** is `pairwise`.
+   *
+   * @param parameters Parameters of the Client Registration Request.
+   */
+  private checkSubjectTypeAndSectorIdentifierUri(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): void {
+    if (parameters.subject_type === 'pairwise' && typeof parameters.sector_identifier_uri === 'undefined') {
+      throw new InvalidClientMetadataException({
+        description: 'The Subject Type "pairwise" requires a Sector Identifier URI.',
+      });
+    }
+  }
 
   /**
    * Returns the Subject Type provided by the Client.
@@ -854,6 +873,46 @@ export class RegistrationRequestValidator {
     }
 
     return parameters.subject_type;
+  }
+
+  /**
+   * Returns the Sector Identifier URI provided by the Client.
+   *
+   * @param parameters Parameters of the Post Client Registration Request.
+   * @returns Sector Identifier URI provided by the Client.
+   */
+  private getSectorIdentifierUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
+    if (
+      typeof parameters.sector_identifier_uri !== 'undefined' &&
+      typeof parameters.sector_identifier_uri !== 'string'
+    ) {
+      throw new InvalidClientMetadataException({ description: 'Invalid parameter "sector_identifier_uri".' });
+    }
+
+    if (typeof parameters.sector_identifier_uri === 'undefined') {
+      return parameters.sector_identifier_uri;
+    }
+
+    try {
+      const url = new URL(parameters.sector_identifier_uri);
+
+      if (!url.protocol.includes('https')) {
+        throw new InvalidClientMetadataException({
+          description: 'The Sector Identifier URI does not use the https protocol.',
+        });
+      }
+
+      return url;
+    } catch (exc: unknown) {
+      if (exc instanceof OAuth2Exception) {
+        throw exc;
+      }
+
+      const exception = new InvalidClientMetadataException({ description: 'Invalid Sector Identifier URI.' });
+      exception.cause = exc;
+
+      throw exception;
+    }
   }
 
   /**

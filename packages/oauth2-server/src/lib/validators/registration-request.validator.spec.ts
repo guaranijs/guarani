@@ -48,6 +48,7 @@ const invalidTosUris: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () =
 const invalidJwksUris: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidJwks: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, []];
 const invalidSubjectTypes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidSectorIdentifierUris: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidIdTokenJWSAlgorithms: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidAuthenticationMethods: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidJWTClientAssertionJWSAlgorithms: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
@@ -218,8 +219,8 @@ describe('Registration Request Validator', () => {
           tos_uri: 'https://client.example.com/terms-of-service',
           jwks_uri: 'https://client.example.com/oauth/jwks',
           jwks: undefined,
-          // sector_identifier_uri: '',
-          subject_type: 'public',
+          subject_type: 'pairwise',
+          sector_identifier_uri: 'https://client.example.com/redirect_uris.json',
           id_token_signed_response_alg: 'RS256',
           // id_token_encrypted_response_alg: '',
           // id_token_encrypted_response_enc: '',
@@ -752,6 +753,21 @@ describe('Registration Request Validator', () => {
       );
     });
 
+    it('should throw when the subject type is "pairwise" and no sector identifier uri is provided.', async () => {
+      request.body.subject_type = 'pairwise';
+      delete request.body.sector_identifier_uri;
+
+      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePost(request)).rejects.toThrow(
+        new InvalidClientMetadataException({
+          description: 'The Subject Type "pairwise" requires a Sector Identifier URI.',
+        })
+      );
+    });
+
     it.each(invalidSubjectTypes)(
       'should throw when providing an invalid "subject_type" parameter.',
       async (subjectType) => {
@@ -776,6 +792,45 @@ describe('Registration Request Validator', () => {
 
       await expect(validator.validatePost(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Unsupported subject_type "unknown".' })
+      );
+    });
+
+    it.each(invalidSectorIdentifierUris)(
+      'should throw when providing an invalid "sector_identifier_uri" parameter.',
+      async (sectorIdentifierUri) => {
+        request.body.sector_identifier_uri = sectorIdentifierUri;
+
+        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePost(request)).rejects.toThrow(
+          new InvalidClientMetadataException({ description: 'Invalid parameter "sector_identifier_uri".' })
+        );
+      }
+    );
+
+    it('should throw when providing an invalid sector identifier uri.', async () => {
+      request.body.sector_identifier_uri = 'client.example.com/redirect_uris.json';
+
+      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePost(request)).rejects.toThrow(
+        new InvalidRedirectUriException({ description: 'Invalid Sector Identifier URI.' })
+      );
+    });
+
+    it('should throw when the sector identifier uri does not use the https protocol.', async () => {
+      request.body.sector_identifier_uri = 'http://client.example.com/redirect_uris.json';
+
+      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePost(request)).rejects.toThrow(
+        new InvalidRedirectUriException({ description: 'The Sector Identifier URI does not use the https protocol.' })
       );
     });
 
@@ -1168,8 +1223,8 @@ describe('Registration Request Validator', () => {
         tosUri: new URL('https://client.example.com/terms-of-service'),
         jwksUri: new URL('https://client.example.com/oauth/jwks'),
         jwks: undefined,
-        // sectorIdentifierUri: ,
-        subjectType: 'public',
+        subjectType: 'pairwise',
+        sectorIdentifierUri: new URL('https://client.example.com/redirect_uris.json'),
         idTokenSignedResponseAlgorithm: 'RS256',
         // idTokenEncryptedResponseKeyWrap: ,
         // idTokenEncryptedResponseContentEncryption: ,
@@ -1380,8 +1435,8 @@ describe('Registration Request Validator', () => {
           tos_uri: 'https://client.example.com/terms-of-service',
           jwks_uri: 'https://client.example.com/oauth/jwks',
           jwks: undefined,
-          // sector_identifier_uri: '',
-          subject_type: 'public',
+          subject_type: 'pairwise',
+          sector_identifier_uri: 'https://client.example.com/redirect_uris.json',
           id_token_signed_response_alg: 'RS256',
           // id_token_encrypted_response_alg: '',
           // id_token_encrypted_response_enc: '',
@@ -2126,6 +2181,25 @@ describe('Registration Request Validator', () => {
       );
     });
 
+    it('should throw when the subject type is "pairwise" and no sector identifier uri is provided.', async () => {
+      request.body.subject_type = 'pairwise';
+      delete request.body.sector_identifier_uri;
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['client:update'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePut(request)).rejects.toThrow(
+        new InvalidClientMetadataException({
+          description: 'The Subject Type "pairwise" requires a Sector Identifier URI.',
+        })
+      );
+    });
+
     it.each(invalidSubjectTypes)(
       'should throw when providing an invalid "subject_type" parameter.',
       async (subjectType) => {
@@ -2158,6 +2232,57 @@ describe('Registration Request Validator', () => {
 
       await expect(validator.validatePut(request)).rejects.toThrow(
         new InvalidClientMetadataException({ description: 'Unsupported subject_type "unknown".' })
+      );
+    });
+
+    it.each(invalidSectorIdentifierUris)(
+      'should throw when providing an invalid "sector_identifier_uri" parameter.',
+      async (sectorIdentifierUri) => {
+        request.body.sector_identifier_uri = sectorIdentifierUri;
+
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          scopes: ['client:update'],
+          client: { id: 'client_id' },
+        };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePut(request)).rejects.toThrow(
+          new InvalidClientMetadataException({ description: 'Invalid parameter "sector_identifier_uri".' })
+        );
+      }
+    );
+
+    it('should throw when providing an invalid sector identifier uri.', async () => {
+      request.body.sector_identifier_uri = 'client.example.com/redirect_uris.json';
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['client:update'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePut(request)).rejects.toThrow(
+        new InvalidRedirectUriException({ description: 'Invalid Sector Identifier URI.' })
+      );
+    });
+
+    it('should throw when the sector identifier uri does not use the https protocol.', async () => {
+      request.body.sector_identifier_uri = 'http://client.example.com/redirect_uris.json';
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['client:update'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePut(request)).rejects.toThrow(
+        new InvalidRedirectUriException({ description: 'The Sector Identifier URI does not use the https protocol.' })
       );
     });
 
@@ -2658,8 +2783,8 @@ describe('Registration Request Validator', () => {
         tosUri: new URL('https://client.example.com/terms-of-service'),
         jwksUri: new URL('https://client.example.com/oauth/jwks'),
         jwks: undefined,
-        // sectorIdentifierUri: ,
-        subjectType: 'public',
+        subjectType: 'pairwise',
+        sectorIdentifierUri: new URL('https://client.example.com/redirect_uris.json'),
         idTokenSignedResponseAlgorithm: 'RS256',
         // idTokenEncryptedResponseKeyWrap: ,
         // idTokenEncryptedResponseContentEncryption: ,

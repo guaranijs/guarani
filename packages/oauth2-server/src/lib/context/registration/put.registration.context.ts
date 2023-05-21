@@ -112,14 +112,14 @@ export interface PutRegistrationContext {
   readonly jwks?: JsonWebKeySet;
 
   /**
-   * Https Url used to calculate the Pseudonymous Identifiers of the Client.
-   */
-  // readonly sectorIdentifierUri?: string;
-
-  /**
    * Subject Type for responses to the Client.
    */
   readonly subjectType: SubjectType;
+
+  /**
+   * Https Url used to calculate the Pseudonymous Identifiers of the Client.
+   */
+  readonly sectorIdentifierUri?: URL;
 
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.

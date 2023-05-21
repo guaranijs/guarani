@@ -110,14 +110,14 @@ export interface Client extends Record<string, any> {
   jwks?: JsonWebKeySetParameters | null;
 
   /**
-   * Https Url used to calculate the Pseudonymous Identifiers of the Client.
-   */
-  // sectorIdentifierUri?: string | null;
-
-  /**
    * Subject Type for responses to the Client.
    */
   subjectType: SubjectType;
+
+  /**
+   * Https Url used to calculate the Pseudonymous Identifiers of the Client.
+   */
+  sectorIdentifierUri?: string | null;
 
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.

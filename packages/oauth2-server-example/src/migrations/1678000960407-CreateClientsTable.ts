@@ -117,16 +117,16 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
           type: 'json',
           isNullable: true,
         },
-        // {
-        //   name: 'sector_identifier_uri',
-        //   type: 'varchar',
-        //   isNullable: true,
-        // },
         {
           name: 'subject_type',
           type: 'varchar',
           default: 'public',
           isNullable: false,
+        },
+        {
+          name: 'sector_identifier_uri',
+          type: 'varchar',
+          isNullable: true,
         },
         {
           name: 'id_token_signed_response_algorithm',
@@ -250,9 +250,16 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
           expression: '"secret" IS NOT NULL OR "secret_expires_at" IS NULL',
         },
         {
-          name: 'jwks_uri_and_jwks',
+          name: 'check_jwks_uri_and_jwks',
           columnNames: ['jwks_uri', 'jwks'],
           expression: '"jwks_uri" IS NULL OR "jwks" IS NULL',
+        },
+        {
+          name: 'check_subject_type_and_sector_identifier_uri',
+          columnNames: ['subject_type', 'sector_identifier_uri'],
+          expression:
+            '("subject_type" = \'pairwise\' AND "sector_identifier_uri" IS NOT NULL) OR ' +
+            '("subject_type" = \'public\' AND "sector_identifier_uri" IS NULL)',
         },
         {
           name: 'check_secret_length',
@@ -270,7 +277,7 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
           expression: '"authentication_signing_algorithm" <> \'none\'',
         },
         {
-          name: 'id_token_signed_response_algorithm',
+          name: 'check_id_token_signed_response_algorithm',
           columnNames: ['authentication_signing_algorithm'],
           expression: '"id_token_signed_response_algorithm" <> \'none\'',
         },

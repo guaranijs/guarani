@@ -25,7 +25,12 @@ import {
   '("secret" IS NULL AND "secret_issued_at" IS NULL) OR ("secret" IS NOT NULL AND "secret_issued_at" IS NOT NULL)'
 )
 @Check('check_secret_expiration', '"secret" IS NOT NULL OR "secret_expires_at" IS NULL')
-@Check('jwks_uri_and_jwks', '"jwks_uri" IS NULL OR "jwks" IS NULL')
+@Check('check_jwks_uri_and_jwks', '"jwks_uri" IS NULL OR "jwks" IS NULL')
+@Check(
+  'check_subject_type_and_sector_identifier_uri',
+  '("subject_type" = \'pairwise\' AND "sector_identifier_uri" IS NOT NULL) OR ' +
+    '("subject_type" = \'public\' AND "sector_identifier_uri" IS NULL)'
+)
 export class Client extends BaseEntity implements OAuth2Client {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'clients_pk' })
   public readonly id!: string;
@@ -87,11 +92,11 @@ export class Client extends BaseEntity implements OAuth2Client {
   @Column({ name: 'jwks', type: 'json', nullable: true })
   public jwks!: JsonWebKeySetParameters | null;
 
-  // @Column({ name: 'sector_identifier_uri', type: 'varchar', nullable: true })
-  // public sectorIdentifierUri!: string | null;
-
   @Column({ name: 'subject_type', type: 'varchar', default: 'public', nullable: false })
   public subjectType!: SubjectType;
+
+  @Column({ name: 'sector_identifier_uri', type: 'varchar', nullable: true })
+  public sectorIdentifierUri!: string | null;
 
   @Column({ name: 'id_token_signed_response_algorithm', type: 'varchar', nullable: true })
   @Check('check_id_token_signed_response_algorithm', '"id_token_signed_response_algorithm" <> \'none\'')

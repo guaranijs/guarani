@@ -34,6 +34,11 @@ export class IdTokenClaims extends JsonWebTokenClaims implements IdTokenClaimsPa
   public override readonly iat!: number;
 
   /**
+   * Identifier of the Login for the Authenticated User.
+   */
+  public readonly sid!: string;
+
+  /**
    * Time when the End-User was authenticated.
    */
   public auth_time?: number;
@@ -104,6 +109,10 @@ export class IdTokenClaims extends JsonWebTokenClaims implements IdTokenClaimsPa
 
     if (typeof claims.iat === 'undefined') {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "iat".');
+    }
+
+    if (typeof claims.sid !== 'string' || claims.sid.length === 0) {
+      throw new InvalidJsonWebTokenClaimException('Invalid claim "sid".');
     }
 
     if (typeof claims.auth_time !== 'undefined' && typeof claims.auth_time !== 'number') {

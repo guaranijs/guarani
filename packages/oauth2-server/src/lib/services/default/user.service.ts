@@ -63,7 +63,7 @@ export class UserService implements UserServiceInterface {
     user: User & Partial<UserinfoClaimsParameters>,
     scopes: string[]
   ): Promise<UserinfoClaimsParameters> {
-    const claims: UserinfoClaimsParameters = { sub: user.id };
+    const claims: UserinfoClaimsParameters = {};
 
     if (scopes.includes('profile')) {
       claims.name = user.name;

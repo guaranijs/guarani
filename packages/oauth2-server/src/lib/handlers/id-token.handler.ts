@@ -16,7 +16,7 @@ import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
-import { IdTokenClaimsParameters } from '../id-token/id-token.claims.parameters';
+import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
@@ -47,16 +47,19 @@ export class IdTokenHandler {
   /**
    * Generates an ID Token to be used by the Client for authentication purposes.
    *
+   * @param parameters Parameters of the Authorization Request.
+   * @param login Login containing the currently Authenticated User.
    * @param consent Consent granted by the Authenticated User.
    * @param accessToken Access Token issued to the Client.
    * @param authorizationCode Authorization Code issued to the Client.
    * @returns Generated ID Token.
    */
   public async generateIdToken(
+    parameters: AuthorizationRequest,
+    login: Login,
     consent: Consent,
     accessToken: AccessToken | null,
-    authorizationCode: AuthorizationCode | null,
-    additionalClaims: Partial<IdTokenClaimsParameters> = {}
+    authorizationCode: AuthorizationCode | null
   ): Promise<string> {
     const jwk = this.getJsonWebKey();
 
@@ -69,20 +72,19 @@ export class IdTokenHandler {
     const header = new JsonWebSignatureHeader({ alg: <JsonWebSignatureAlgorithm>jwk.alg, kid: jwk.kid, typ: 'JWT' });
     const claims = new IdTokenClaims({
       iss: this.settings.issuer,
+      sub: user.id,
       aud: [client.id],
       exp: now + 86400,
       iat: now,
-      ...additionalClaims,
+      sid: login.id,
+      nonce: parameters.nonce,
+      auth_time: typeof parameters.max_age !== 'undefined' ? Math.floor(login.createdAt.getTime() / 1000) : undefined,
+      amr: login.amr ?? undefined,
+      acr: login.acr ?? undefined,
+      at_hash: accessToken !== null ? this.getLeftHash(accessToken.handle, header.alg) : undefined,
+      c_hash: authorizationCode !== null ? this.getLeftHash(authorizationCode.code, header.alg) : undefined,
       ...userinfo,
     });
-
-    if (accessToken !== null) {
-      claims.at_hash = this.getLeftHash(accessToken.handle, header.alg);
-    }
-
-    if (authorizationCode !== null) {
-      claims.c_hash = this.getLeftHash(authorizationCode.code, header.alg);
-    }
 
     const jws = new JsonWebSignature(header, claims.toBuffer());
 
@@ -95,7 +97,7 @@ export class IdTokenHandler {
    *
    * @param idToken ID Token provided by the Client as a hint to the expected authenticated User.
    * @param client Client of the Request.
-   * @param login Login containing the currently authenticated User.
+   * @param login Login containing the currently Authenticated User.
    * @returns Whether or not the authenticated User matches the User represented by the ID Token.
    */
   public async checkIdTokenHint(idToken: string, client: Client, login: Login): Promise<boolean> {

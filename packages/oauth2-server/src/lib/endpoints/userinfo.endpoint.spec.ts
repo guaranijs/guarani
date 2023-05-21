@@ -8,7 +8,6 @@ import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
-import { HttpResponse } from '../http/http.response';
 import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
@@ -23,12 +22,15 @@ describe('Userinfo Endpoint', () => {
 
   const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype, true);
 
-  const userServiceMock = jest.mocked<UserServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    findByResourceOwnerCredentials: jest.fn(),
-    getUserinfo: jest.fn(),
-  });
+  const userServiceMock = jest.mocked<UserServiceInterface>(
+    {
+      create: jest.fn(),
+      findOne: jest.fn(),
+      findByResourceOwnerCredentials: jest.fn(),
+      getUserinfo: jest.fn(),
+    },
+    true
+  );
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
@@ -108,12 +110,17 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setStatus(error.statusCode)
-          .setHeaders({ ...error.headers, ...endpoint['headers'] })
-          .json(error.toJSON())
-      );
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toBe(error.statusCode);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...error.headers,
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
     });
 
     it('should return an error response when the access token does not have a client.', async () => {
@@ -126,12 +133,17 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setStatus(error.statusCode)
-          .setHeaders({ ...error.headers, ...endpoint['headers'] })
-          .json(error.toJSON())
-      );
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toBe(error.statusCode);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...error.headers,
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
     });
 
     it('should return an error response when the access token does not have a user.', async () => {
@@ -145,12 +157,17 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse()
-          .setStatus(error.statusCode)
-          .setHeaders({ ...error.headers, ...endpoint['headers'] })
-          .json(error.toJSON())
-      );
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toBe(error.statusCode);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...error.headers,
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
     });
 
     it('should return the claims of the user based on the scopes of the access token.', async () => {
@@ -162,7 +179,6 @@ describe('Userinfo Endpoint', () => {
       };
 
       const claims: UserinfoClaimsParameters = {
-        sub: 'user_id',
         name: 'John H. Doe',
         given_name: 'John',
         middle_name: 'Harold',
@@ -192,10 +208,21 @@ describe('Userinfo Endpoint', () => {
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setHeaders(endpoint['headers']).json(claims)
-      );
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toBe(200);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<UserinfoClaimsParameters>({
+        sub: 'user_id',
+        ...claims,
+      });
     });
   });
 });

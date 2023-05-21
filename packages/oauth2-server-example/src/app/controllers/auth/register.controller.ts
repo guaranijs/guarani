@@ -1,41 +1,138 @@
-import argon2 from 'argon2';
+import {
+  CodeAuthorizationRequest,
+  CreateContextInteractionResponse,
+  CreateDecisionInteractionRequest,
+  CreateDecisionInteractionResponse,
+  Display,
+} from '@guarani/oauth2-server';
+
+import axios, { AxiosError } from 'axios';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
+import { URL, URLSearchParams } from 'url';
 
 import { UserRegistrationDto } from '../../dto/user-registration.dto';
-import { User } from '../../entities/user.entity';
+import { Session } from '../../entities/session.entity';
+
+const popupTemplateFn = (redirectUri: string): string => `
+<script type="text/javascript">
+  window.opener.callback('${redirectUri}');
+  window.close();
+</script>
+`;
 
 class Controller {
   public async get(request: Request, response: Response): Promise<void> {
-    return response.render('auth/register', { request, title: 'Register', errors: request.flash('errors') });
+    try {
+      const loginChallenge = <string>request.query.login_challenge;
+
+      if (typeof loginChallenge !== 'string') {
+        const parameters: CodeAuthorizationRequest = {
+          response_type: 'code',
+          client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
+          redirect_uri: 'http://localhost:4000/oauth/callback',
+          scope: 'openid profile email phone address',
+          state: randomUUID(),
+          code_challenge: 'kRaf6IMJlerQjcqlFczEUYUcVsdwMpYonctl1yXYiiI',
+          code_challenge_method: 'S256',
+          prompt: 'create',
+          nonce: 'nonce',
+        };
+
+        const url = new URL('http://localhost:4000/oauth/authorize');
+        const searchParameters = new URLSearchParams(parameters);
+
+        url.search = searchParameters.toString();
+
+        return response.redirect(303, url.href);
+      }
+
+      const url = new URL('http://localhost:4000/oauth/interaction');
+      const searchParams = new URLSearchParams({ interaction_type: 'create', login_challenge: loginChallenge });
+
+      url.search = searchParams.toString();
+
+      const { data } = await axios.get<CreateContextInteractionResponse>(url.href);
+
+      if (data.context.display === 'popup') {
+        response.cookie('display', 'popup');
+      }
+
+      if (data.skip) {
+        return this.redirectOrClosePopup(response, data.request_url, data.context.display);
+      }
+
+      return response.render('auth/register', {
+        request,
+        title: 'Register',
+        login_challenge: loginChallenge,
+        errors: request.flash('errors'),
+      });
+    } catch (exc: unknown) {
+      if (exc instanceof AxiosError) {
+        response.json(exc.response?.data);
+        return;
+      }
+
+      throw exc;
+    }
   }
 
   public async post(request: Request, response: Response): Promise<void> {
+    const { login_challenge: loginChallenge } = request.body;
+
     const userRegistrationDto = plainToInstance(UserRegistrationDto, request.body);
 
     const errors = await validate(userRegistrationDto);
 
     if (errors.length > 0) {
       request.flash('errors', errors.map((error) => Object.values(error.constraints ?? {})).flat());
-      return response.redirect(303, '/auth/register');
+      return response.redirect(303, `/auth/register?login_challenge=${loginChallenge}`);
     }
 
-    const user: User = Object.assign<User, Partial<User>>(new User(), {
-      password: await argon2.hash(userRegistrationDto.password),
-      givenName: userRegistrationDto.givenName,
-      familyName: userRegistrationDto.familyName,
-      email: userRegistrationDto.email,
-      phoneNumber: userRegistrationDto.phoneNumber,
-      birthdate: userRegistrationDto.birthdate,
-      address: { formatted: userRegistrationDto.address },
-    });
+    const requestParameters: CreateDecisionInteractionRequest = {
+      interaction_type: 'create',
+      login_challenge: loginChallenge,
+      ...userRegistrationDto,
+    };
 
-    await user.save();
+    const requestBody = new URLSearchParams(requestParameters);
 
-    request.flash('success', 'User created successfully');
+    try {
+      const {
+        data: { redirect_to: redirectTo },
+      } = await axios.post<CreateDecisionInteractionResponse>(
+        'http://localhost:4000/oauth/interaction',
+        requestBody.toString(),
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
 
-    return response.redirect(303, '/auth/login');
+      const sessionId = request.signedCookies['guarani:session'];
+      const session = await Session.findOneByOrFail({ id: sessionId });
+
+      request.login(session.activeLogin!.user, { session: true }, () => {
+        const display = <Display>request.cookies.display;
+        return this.redirectOrClosePopup(response, redirectTo, display);
+      });
+    } catch (exc: unknown) {
+      if (exc instanceof AxiosError) {
+        response.json(exc.response?.data);
+        return;
+      }
+
+      throw exc;
+    }
+  }
+
+  private redirectOrClosePopup(response: Response, url: string, display: Display | undefined): void {
+    if (display === 'popup') {
+      response.clearCookie('display').send(popupTemplateFn(url));
+      return;
+    }
+
+    return response.redirect(303, url);
   }
 }
 

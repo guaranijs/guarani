@@ -23,6 +23,11 @@ export interface UserInteractionSettings {
   readonly logoutUrl: string;
 
   /**
+   * Url of the Registration Page.
+   */
+  readonly registrationUrl: string;
+
+  /**
    * Url of the Select Account Page.
    */
   readonly selectAccountUrl: string;

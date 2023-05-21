@@ -321,7 +321,7 @@ describe('Login Interaction Type', () => {
       });
 
       expect(loginServiceMock.create).not.toHaveBeenCalled();
-      expect(sessionServiceMock.create).not.toHaveBeenCalled();
+      expect(sessionServiceMock.save).not.toHaveBeenCalled();
       expect(grantServiceMock.save).not.toHaveBeenCalled();
     });
     // #endregion

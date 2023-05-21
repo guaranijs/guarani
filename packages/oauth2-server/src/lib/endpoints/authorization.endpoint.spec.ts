@@ -53,6 +53,7 @@ describe('Authorization Endpoint', () => {
       consentUrl: '/auth/consent',
       errorUrl: '/oauth/error',
       loginUrl: '/auth/login',
+      registrationUrl: '/auth/register',
       selectAccountUrl: '/auth/select-account',
     },
     enableAuthorizationResponseIssuerIdentifier: false,
@@ -372,6 +373,57 @@ describe('Authorization Endpoint', () => {
       });
 
       expect(sessionServiceMock.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('should redirect to the registration endpoint if the prompt is "create" and it is not yet processed.', async () => {
+      Reflect.set(validatorMock, 'name', 'code');
+
+      request.cookies['guarani:session'] = 'session_id';
+      request.cookies['guarani:grant'] = 'grant_id';
+
+      request.query.prompt = 'create';
+
+      const redirectUrl = 'https://server.example.com/auth/register';
+
+      const context = <AuthorizationContext<AuthorizationRequest>>{
+        parameters: <AuthorizationRequest>request.query,
+        cookies: request.cookies,
+        client: { id: 'client_id' },
+        state: 'client_state',
+        prompts: ['create'],
+        display: <DisplayInterface>{
+          name: 'page',
+          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(redirectUrl)),
+        },
+      };
+
+      const login = <Login>{ id: 'login_id' };
+
+      const session = <Session>{
+        id: 'session_id',
+        activeLogin: login,
+        logins: [login],
+      };
+
+      const grant = <Grant>{
+        id: 'grant_id',
+        parameters: context.parameters,
+        interactions: <InteractionType[]>[],
+        expiresAt: new Date(Date.now() + 3600000),
+        client: context.client,
+        session,
+      };
+
+      validatorMock.validate.mockResolvedValueOnce(context);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+      grantServiceMock.findOne.mockResolvedValueOnce(grant);
+
+      const response = await endpoint.handle(request);
+
+      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:grant': grant.id });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: redirectUrl });
+
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
     });
 
     it('should redirect to the error endpoint if the prompt is "select_account" and no login is registered at the session.', async () => {

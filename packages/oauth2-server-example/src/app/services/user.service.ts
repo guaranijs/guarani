@@ -3,10 +3,27 @@ import { UserinfoClaimsParameters, UserServiceInterface } from '@guarani/oauth2-
 
 import argon2 from 'argon2';
 
+import { UserRegistrationDto } from '../dto/user-registration.dto';
 import { User } from '../entities/user.entity';
 
 @Injectable()
 export class UserService implements UserServiceInterface {
+  public async create(parameters: UserRegistrationDto): Promise<User> {
+    const user = User.create({
+      password: await argon2.hash(parameters.password),
+      givenName: parameters.given_name,
+      familyName: parameters.family_name,
+      email: parameters.email,
+      phoneNumber: parameters.phone_number,
+      birthdate: parameters.birthdate,
+      address: { formatted: parameters.address },
+    });
+
+    await user.save();
+
+    return user;
+  }
+
   public async findOne(id: string): Promise<User | null> {
     return await User.findOneBy({ id });
   }

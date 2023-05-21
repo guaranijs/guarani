@@ -24,6 +24,7 @@ describe('Userinfo Endpoint', () => {
   const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype, true);
 
   const userServiceMock = jest.mocked<UserServiceInterface>({
+    create: jest.fn(),
     findOne: jest.fn(),
     findByResourceOwnerCredentials: jest.fn(),
     getUserinfo: jest.fn(),
@@ -75,7 +76,7 @@ describe('Userinfo Endpoint', () => {
       container.delete(UserinfoEndpoint);
       container.delete<UserServiceInterface>(USER_SERVICE);
 
-      container.bind<UserServiceInterface>(USER_SERVICE).toValue({ findOne: jest.fn() });
+      container.bind<UserServiceInterface>(USER_SERVICE).toValue({ create: jest.fn(), findOne: jest.fn() });
       container.bind(UserinfoEndpoint).toSelf().asSingleton();
 
       expect(() => container.resolve(UserinfoEndpoint)).toThrow(

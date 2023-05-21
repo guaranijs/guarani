@@ -48,6 +48,7 @@ describe('JWT Bearer Token Request Validator', () => {
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
   const userServiceMock = jest.mocked<UserServiceInterface>({
+    create: jest.fn(),
     findOne: jest.fn(),
     findByResourceOwnerCredentials: jest.fn(),
     getUserinfo: jest.fn(),

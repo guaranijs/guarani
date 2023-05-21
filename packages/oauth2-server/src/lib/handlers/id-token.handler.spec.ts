@@ -81,7 +81,12 @@ describe('ID Token Handler', () => {
   const settings = <Settings>{ issuer: 'https://server.example.com', idTokenSignatureAlgorithms: ['ES256', 'RS256'] };
 
   const userServiceMock = jest.mocked<UserServiceInterface>(
-    { findByResourceOwnerCredentials: jest.fn(), findOne: jest.fn(), getUserinfo: jest.fn() },
+    {
+      create: jest.fn(),
+      findByResourceOwnerCredentials: jest.fn(),
+      findOne: jest.fn(),
+      getUserinfo: jest.fn(),
+    },
     true
   );
 
@@ -105,7 +110,7 @@ describe('ID Token Handler', () => {
       container.delete<UserServiceInterface>(USER_SERVICE);
       container.delete(IdTokenHandler);
 
-      container.bind<UserServiceInterface>(USER_SERVICE).toValue({ findOne: jest.fn() });
+      container.bind<UserServiceInterface>(USER_SERVICE).toValue({ create: jest.fn(), findOne: jest.fn() });
       container.bind(IdTokenHandler).toSelf().asSingleton();
 
       expect(() => container.resolve(IdTokenHandler)).toThrow(

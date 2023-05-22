@@ -1,4 +1,8 @@
-import { JsonWebSignatureAlgorithm } from '@guarani/jose';
+import {
+  JsonWebEncryptionContentEncryptionAlgorithm,
+  JsonWebEncryptionKeyWrapAlgorithm,
+  JsonWebSignatureAlgorithm,
+} from '@guarani/jose';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { Display } from '../displays/display.type';
@@ -77,6 +81,16 @@ export interface DiscoveryResponse extends Record<string, any> {
    * JSON Web Signature Algorithms for ID Token Signature supported by the Authorization Server.
    */
   readonly id_token_signing_alg_values_supported: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
+
+  /**
+   * JSON Web Signature Algorithms for ID Token Signature supported by the Authorization Server.
+   */
+  readonly id_token_encryption_alg_values_supported?: JsonWebEncryptionKeyWrapAlgorithm[];
+
+  /**
+   * JSON Web Signature Algorithms for ID Token Signature supported by the Authorization Server.
+   */
+  readonly id_token_encryption_enc_values_supported?: JsonWebEncryptionContentEncryptionAlgorithm[];
 
   /**
    * Prompts supported by the Authorization Server.

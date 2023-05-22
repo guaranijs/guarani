@@ -1,5 +1,10 @@
 import { Constructor } from '@guarani/di';
-import { JsonWebKeySetParameters, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import {
+  JsonWebEncryptionContentEncryptionAlgorithm,
+  JsonWebEncryptionKeyWrapAlgorithm,
+  JsonWebKeySetParameters,
+  JsonWebSignatureAlgorithm,
+} from '@guarani/jose';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { GrantType } from '../grant-types/grant-type.type';
@@ -48,6 +53,16 @@ export interface AuthorizationServerOptions {
    * JSON Web Signature Algorithms for ID Token Signature to be registered at the Authorization Server.
    */
   readonly idTokenSignatureAlgorithms?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithms for ID Token Encryption to be registered at the Authorization Server.
+   */
+  readonly idTokenKeyWrapAlgorithms?: JsonWebEncryptionKeyWrapAlgorithm[];
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithms for ID Token Encryption to be registered at the Authorization Server.
+   */
+  readonly idTokenContentEncryptionAlgorithms?: JsonWebEncryptionContentEncryptionAlgorithm[];
 
   /**
    * Grant Types to be registered at the Authorization Server.

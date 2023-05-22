@@ -71,6 +71,8 @@ export class DiscoveryEndpoint implements EndpointInterface {
       acr_values_supported: this.settings.acrValues,
       subject_types_supported: this.settings.subjectTypes,
       id_token_signing_alg_values_supported: this.settings.idTokenSignatureAlgorithms,
+      id_token_encryption_alg_values_supported: this.settings.idTokenKeyWrapAlgorithms,
+      id_token_encryption_enc_values_supported: this.settings.idTokenContentEncryptionAlgorithms,
       prompt_values_supported: ['consent', 'create', 'login', 'none', 'select_account'],
       display_values_supported: this.settings.displays,
       token_endpoint_auth_methods_supported: this.settings.clientAuthenticationMethods,

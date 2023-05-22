@@ -186,6 +186,8 @@ export class AuthorizationServerFactory {
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
       idTokenSignatureAlgorithms: this.authorizationServerOptions.idTokenSignatureAlgorithms ?? ['RS256'],
+      idTokenKeyWrapAlgorithms: this.authorizationServerOptions.idTokenKeyWrapAlgorithms,
+      idTokenContentEncryptionAlgorithms: this.authorizationServerOptions.idTokenContentEncryptionAlgorithms,
       jwks:
         this.authorizationServerOptions.jwks !== undefined
           ? await JsonWebKeySet.load(this.authorizationServerOptions.jwks)

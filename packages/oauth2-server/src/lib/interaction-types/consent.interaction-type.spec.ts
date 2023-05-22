@@ -12,6 +12,7 @@ import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { AccountSelectionRequiredException } from '../exceptions/account-selection-required.exception';
 import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
+import { ResponseType } from '../response-types/response-type.type';
 import { ConsentContextInteractionResponse } from '../responses/interaction/consent-context.interaction-response';
 import { ConsentDecisionInteractionResponse } from '../responses/interaction/consent-decision.interaction-response';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
@@ -24,6 +25,8 @@ import { ConsentDecision } from './consent-decision.type';
 import { ConsentInteractionType } from './consent.interaction-type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
+
+const codeLessResponseTypes: ResponseType[] = ['id_token token', 'id_token', 'token'];
 
 describe('Consent Interaction Type', () => {
   let container: DependencyInjectionContainer;
@@ -269,6 +272,13 @@ describe('Consent Interaction Type', () => {
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
       });
 
+      expect(consentServiceMock.create).toHaveBeenCalledTimes(1);
+      expect(consentServiceMock.create).toHaveBeenCalledWith(
+        ['foo', 'bar'],
+        context.grant.client,
+        context.grant.session.activeLogin!.user
+      );
+
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{
         ...context.grant,
@@ -276,6 +286,79 @@ describe('Consent Interaction Type', () => {
         consent,
       });
     });
+
+    it('should return a valid first time consent accept decision interaction response with an "offline_access" scope.', async () => {
+      delete context.grant.consent;
+
+      Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar offline_access' });
+      Object.assign(context, { decision: 'accept', grantedScopes: ['foo', 'bar', 'offline_access'] });
+
+      const { grantedScopes } = <ConsentDecisionAcceptInteractionContext>context;
+
+      const consent = <Consent>{ id: 'consent_id', scopes: grantedScopes };
+
+      consentServiceMock.create.mockResolvedValueOnce(consent);
+
+      const urlParameters = new URLSearchParams(context.grant.parameters);
+
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
+        redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+      });
+
+      expect(consentServiceMock.create).toHaveBeenCalledTimes(1);
+      expect(consentServiceMock.create).toHaveBeenCalledWith(
+        ['foo', 'bar', 'offline_access'],
+        context.grant.client,
+        context.grant.session.activeLogin!.user
+      );
+
+      expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{
+        ...context.grant,
+        interactions: ['consent'],
+        consent,
+      });
+    });
+
+    it.each(codeLessResponseTypes)(
+      'should return a valid first time consent accept decision interaction response without an "offline_access" scope.',
+      async (responseType) => {
+        delete context.grant.consent;
+
+        Reflect.set(context.grant.parameters, 'response_type', responseType);
+
+        Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar offline_access' });
+        Object.assign(context, { decision: 'accept', grantedScopes: ['foo', 'bar', 'offline_access'] });
+
+        const { grantedScopes } = <ConsentDecisionAcceptInteractionContext>context;
+
+        const consent = <Consent>{ id: 'consent_id', scopes: grantedScopes };
+
+        consentServiceMock.create.mockResolvedValueOnce(consent);
+
+        const urlParameters = new URLSearchParams(context.grant.parameters);
+
+        await expect(
+          interactionType.handleDecision(context)
+        ).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
+          redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        });
+
+        expect(consentServiceMock.create).toHaveBeenCalledTimes(1);
+        expect(consentServiceMock.create).toHaveBeenCalledWith(
+          ['foo', 'bar'],
+          context.grant.client,
+          context.grant.session.activeLogin!.user
+        );
+
+        expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
+        expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{
+          ...context.grant,
+          interactions: ['consent'],
+          consent,
+        });
+      }
+    );
 
     it('should return a valid subsequent consent accept decision interaction response.', async () => {
       Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar' });

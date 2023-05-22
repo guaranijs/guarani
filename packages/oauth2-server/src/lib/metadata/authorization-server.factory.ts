@@ -198,6 +198,8 @@ export class AuthorizationServerFactory {
       enableAuthorizationResponseIssuerIdentifier:
         this.authorizationServerOptions.enableAuthorizationResponseIssuerIdentifier ?? false,
       postLogoutUrl: this.authorizationServerOptions.postLogoutUrl,
+      secretKey: this.authorizationServerOptions.secretKey,
+      maxLocalSubjectLength: this.authorizationServerOptions.maxLocalSubjectLength,
     };
 
     this.container.bind<Settings>(SETTINGS).toValue(settings);

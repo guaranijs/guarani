@@ -31,6 +31,11 @@ import {
   '("subject_type" = \'pairwise\' AND "sector_identifier_uri" IS NOT NULL) OR ' +
     '("subject_type" = \'public\' AND "sector_identifier_uri" IS NULL)'
 )
+@Check(
+  'check_subject_type_and_pairwise_salt',
+  '("subject_type" = \'pairwise\' AND "pairwise_salt" IS NOT NULL) OR ' +
+    '("subject_type" = \'public\' AND "pairwise_salt" IS NULL)'
+)
 export class Client extends BaseEntity implements OAuth2Client {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'clients_pk' })
   public readonly id!: string;
@@ -97,6 +102,10 @@ export class Client extends BaseEntity implements OAuth2Client {
 
   @Column({ name: 'sector_identifier_uri', type: 'varchar', nullable: true })
   public sectorIdentifierUri!: string | null;
+
+  @Column({ name: 'pairwise_salt', type: 'varchar', nullable: true, unique: true })
+  @Check('check_pairwise_salt_length', 'length("pairwise_salt") = 32')
+  public pairwiseSalt!: string | null;
 
   @Column({ name: 'id_token_signed_response_algorithm', type: 'varchar', nullable: true })
   @Check('check_id_token_signed_response_algorithm', '"id_token_signed_response_algorithm" <> \'none\'')

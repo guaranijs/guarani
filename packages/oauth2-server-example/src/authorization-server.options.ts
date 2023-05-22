@@ -1,6 +1,9 @@
 import { EllipticCurveKey, JsonWebKeySet } from '@guarani/jose';
 import { AuthorizationServerOptions } from '@guarani/oauth2-server';
 
+import dotenv from 'dotenv';
+import path from 'path';
+
 import { AccessTokenService } from './app/services/access-token.service';
 import { AuthorizationCodeService } from './app/services/authorization-code.service';
 import { ClientService } from './app/services/client.service';
@@ -12,6 +15,8 @@ import { LogoutTicketService } from './app/services/logout-ticket.service';
 import { RefreshTokenService } from './app/services/refresh-token.service';
 import { SessionService } from './app/services/session.service';
 import { UserService } from './app/services/user.service';
+
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 export const authorizationServerOptions: AuthorizationServerOptions = {
   issuer: 'http://localhost:4000',
@@ -59,7 +64,9 @@ export const authorizationServerOptions: AuthorizationServerOptions = {
   responseModes: ['form_post', 'fragment', 'query'],
   responseTypes: ['code id_token token', 'code id_token', 'code token', 'code', 'id_token token', 'id_token', 'token'],
   acrValues: ['urn:guarani:acr:1fa'],
+  subjectTypes: ['public'],
   postLogoutUrl: 'http://localhost:4000',
+  secretKey: process.env.SECRET_KEY!,
   userService: UserService,
   clientService: ClientService,
   loginService: LoginService,

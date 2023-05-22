@@ -123,4 +123,16 @@ export interface Settings {
    * Post Logout Url of the Authorization Server.
    */
   readonly postLogoutUrl?: string;
+
+  /**
+   * Secret Key of the Authorization Server.
+   */
+  readonly secretKey: string;
+
+  /**
+   * Maximum length of the Local User Identifier for Pairwise Subject Type.
+   *
+   * *note: this is only required when supporting **pairwise** subject type identifiers.*
+   */
+  readonly maxLocalSubjectLength?: number;
 }

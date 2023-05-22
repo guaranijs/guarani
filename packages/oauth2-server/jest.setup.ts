@@ -75,4 +75,5 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   enableRegistrationEndpoint: true,
   enableAuthorizationResponseIssuerIdentifier: true,
   postLogoutUrl: 'http://localhost:3000',
+  secretKey: 'super_secret_passphrase_that_nobody_will_be_able_to_guess',
 });

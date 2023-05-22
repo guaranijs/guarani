@@ -120,6 +120,11 @@ export interface Client extends Record<string, any> {
   sectorIdentifierUri?: string | null;
 
   /**
+   * Client Salt for the Pairwise Subject Type.
+   */
+  pairwiseSalt?: string | null;
+
+  /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.
    */
   idTokenSignedResponseAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;

@@ -1,6 +1,6 @@
 import { Injectable } from '@guarani/di';
 
-import { randomInt, randomUUID } from 'crypto';
+import { randomBytes, randomInt, randomUUID } from 'crypto';
 
 import { PostRegistrationContext } from '../../context/registration/post.registration.context';
 import { PutRegistrationContext } from '../../context/registration/put.registration.context';
@@ -64,6 +64,7 @@ export class ClientService implements ClientServiceInterface {
       jwks: context.jwks,
       subjectType: context.subjectType,
       sectorIdentifierUri: context.sectorIdentifierUri?.toString(),
+      pairwiseSalt: context.subjectType === 'pairwise' ? randomBytes(16).toString('hex') : undefined,
       idTokenSignedResponseAlgorithm: context.idTokenSignedResponseAlgorithm,
       // idTokenEncryptedResponseKeyWrap: context.idTokenEncryptedResponseKeyWrap,
       // idTokenEncryptedResponseContentEncryption: context.idTokenEncryptedResponseContentEncryption,

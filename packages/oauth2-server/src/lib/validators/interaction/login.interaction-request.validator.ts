@@ -4,6 +4,7 @@ import { LoginContextInteractionContext } from '../../context/interaction/login-
 import { LoginDecisionAcceptInteractionContext } from '../../context/interaction/login-decision-accept.interaction.context';
 import { LoginDecisionDenyInteractionContext } from '../../context/interaction/login-decision-deny.interaction.context';
 import { LoginDecisionInteractionContext } from '../../context/interaction/login-decision.interaction.context';
+import { Client } from '../../entities/client.entity';
 import { Grant } from '../../entities/grant.entity';
 import { User } from '../../entities/user.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
@@ -22,6 +23,9 @@ import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { UserServiceInterface } from '../../services/user.service.interface';
 import { USER_SERVICE } from '../../services/user.service.token';
+import { Settings } from '../../settings/settings';
+import { SETTINGS } from '../../settings/settings.token';
+import { retrieveSubjectIdentifier } from '../../utils/retrieve-subject-identifier';
 import { InteractionRequestValidator } from './interaction-request.validator';
 
 /**
@@ -42,11 +46,13 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
   /**
    * Instantiates a new Login Interaction Request Validator.
    *
+   * @param settings Settings of the Authorization Server.
    * @param grantService Instance of the Grant Service.
    * @param userService Instance of the User Service.
    * @param interactionTypes Interaction Types registered at the Authorization Server.
    */
   public constructor(
+    @Inject(SETTINGS) protected readonly settings: Settings,
     @Inject(GRANT_SERVICE) protected readonly grantService: GrantServiceInterface,
     @Inject(USER_SERVICE) protected readonly userService: UserServiceInterface,
     @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[]
@@ -90,7 +96,7 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
 
     switch (decision) {
       case 'accept': {
-        const user = await this.getUser(<LoginDecisionAcceptInteractionRequest>parameters);
+        const user = await this.getUser(<LoginDecisionAcceptInteractionRequest>parameters, grant.client);
         const amr = this.getAuthenticationMethods(<LoginDecisionAcceptInteractionRequest>parameters);
         const acr = this.getAuthenticationContextClass(<LoginDecisionAcceptInteractionRequest>parameters);
 
@@ -151,12 +157,12 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param parameters Parameters of the Interaction Request.
    * @returns User based on the provided Subject Identifier.
    */
-  private async getUser(parameters: LoginDecisionAcceptInteractionRequest): Promise<User> {
+  private async getUser(parameters: LoginDecisionAcceptInteractionRequest, client: Client): Promise<User> {
     if (typeof parameters.subject !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "subject".' });
     }
 
-    const user = await this.userService.findOne(parameters.subject);
+    const user = await this.userService.findOne(retrieveSubjectIdentifier(parameters.subject, client, this.settings));
 
     if (user === null) {
       throw new AccessDeniedException({ description: 'Invalid User.' });

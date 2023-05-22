@@ -129,6 +129,12 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
           isNullable: true,
         },
         {
+          name: 'pairwise_salt',
+          type: 'varchar',
+          isNullable: true,
+          isUnique: true,
+        },
+        {
           name: 'id_token_signed_response_algorithm',
           type: 'varchar',
           isNullable: true,
@@ -262,6 +268,13 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
             '("subject_type" = \'public\' AND "sector_identifier_uri" IS NULL)',
         },
         {
+          name: 'check_subject_type_and_pairwise_salt',
+          columnNames: ['subject_type', 'pairwise_salt'],
+          expression:
+            '("subject_type" = \'pairwise\' AND "pairwise_salt" IS NOT NULL) OR ' +
+            '("subject_type" = \'public\' AND "pairwise_salt" IS NULL)',
+        },
+        {
           name: 'check_secret_length',
           columnNames: ['secret'],
           expression: 'length("secret") = 32',
@@ -275,6 +288,11 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
           name: 'check_authentication_signing_algorithm',
           columnNames: ['authentication_signing_algorithm'],
           expression: '"authentication_signing_algorithm" <> \'none\'',
+        },
+        {
+          name: 'check_pairwise_salt_length',
+          columnNames: ['pairwise_salt'],
+          expression: 'length("pairwise_salt") = 32',
         },
         {
           name: 'check_id_token_signed_response_algorithm',
@@ -301,6 +319,10 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
         {
           name: 'clients_secret_uq',
           columnNames: ['secret'],
+        },
+        {
+          name: 'clients_pairwise_salt_uq',
+          columnNames: ['pairwise_salt'],
         },
       ],
     });

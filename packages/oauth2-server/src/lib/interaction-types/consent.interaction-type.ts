@@ -138,7 +138,14 @@ export class ConsentInteractionType implements InteractionTypeInterface {
     if (grant.consent == null) {
       const { client, session } = grant;
 
-      const consent = await this.consentService.create(grantedScopes, client, session.activeLogin!.user);
+      let scopes = grantedScopes;
+
+      // TODO: Add logging for this since the OIDC Spec only requires that we ignore the scope if this happens.
+      if (scopes.includes('offline_access') && !grant.parameters.response_type.includes('code')) {
+        scopes = scopes.filter((scope) => scope !== 'offline_access');
+      }
+
+      const consent = await this.consentService.create(scopes, client, session.activeLogin!.user);
 
       grant.consent = consent;
       grant.interactions.push('consent');

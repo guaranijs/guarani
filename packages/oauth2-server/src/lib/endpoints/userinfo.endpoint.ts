@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@guarani/di';
 import { OutgoingHttpHeaders } from 'http';
 
 import { AccessToken } from '../entities/access-token.entity';
+import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
 import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
@@ -15,6 +16,9 @@ import { HttpResponse } from '../http/http.response';
 import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
+import { Settings } from '../settings/settings';
+import { SETTINGS } from '../settings/settings.token';
+import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 
@@ -51,10 +55,12 @@ export class UserinfoEndpoint implements EndpointInterface {
    * Instantiates a new Userinfo Endpoint.
    *
    * @param clientAuthorizationHandler Instance of the Client Authorization Handler.
+   * @param settings Settings of the Authorization Server.
    * @param userService Instance of the User Service.
    */
   public constructor(
     private readonly clientAuthorizationHandler: ClientAuthorizationHandler,
+    @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(USER_SERVICE) private readonly userService: UserServiceInterface
   ) {
     if (typeof this.userService.getUserinfo !== 'function') {
@@ -78,8 +84,8 @@ export class UserinfoEndpoint implements EndpointInterface {
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
     try {
-      const { scopes, user } = await this.authorize(request);
-      const claims = await this.getUserinfo(user!, scopes);
+      const { client, scopes, user } = await this.authorize(request);
+      const claims = await this.getUserinfo(client!, user!, scopes);
 
       return new HttpResponse().setHeaders(this.headers).json(claims);
     } catch (exc: unknown) {
@@ -129,13 +135,14 @@ export class UserinfoEndpoint implements EndpointInterface {
   /**
    * Retrieves claims about the provided User based on the provided scopes.
    *
+   * @param client Client of the Request.
    * @param user End User to have it's information gathered.
    * @param scopes Scopes requested by the Client.
    * @returns Claims about the provided User.
    */
-  private async getUserinfo(user: User, scopes: string[]): Promise<UserinfoClaimsParameters> {
+  private async getUserinfo(client: Client, user: User, scopes: string[]): Promise<UserinfoClaimsParameters> {
     // UserService.getUserinfo() does not return the "sub" claim.
-    const claims: UserinfoClaimsParameters = { sub: user.id };
+    const claims: UserinfoClaimsParameters = { sub: calculateSubjectIdentifier(user, client, this.settings) };
     return Object.assign(claims, await this.userService.getUserinfo!(user, scopes));
   }
 }

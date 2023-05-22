@@ -97,7 +97,7 @@ describe('Consent Interaction Type', () => {
             response_mode: 'query',
           },
           expiresAt: new Date(now + 300000),
-          client: { id: 'client_id' },
+          client: { id: 'client_id', subjectType: 'public' },
           session: {
             id: 'session_id',
             activeLogin: { id: 'login_id', user: { id: 'user_id' } },

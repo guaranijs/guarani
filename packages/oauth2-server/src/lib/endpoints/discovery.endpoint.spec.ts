@@ -29,6 +29,7 @@ describe('Discovery Endpoint', () => {
     displays: ['page', 'popup', 'touch', 'wap'],
     acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
     uiLocales: ['en', 'es', 'pt-BR'],
+    subjectTypes: ['pairwise', 'public'],
     enableAuthorizationResponseIssuerIdentifier: true,
   };
 
@@ -102,6 +103,7 @@ describe('Discovery Endpoint', () => {
         response_modes_supported: ['query'],
         grant_types_supported: ['authorization_code', 'refresh_token'],
         acr_values_supported: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
+        subject_types_supported: ['pairwise', 'public'],
         id_token_signing_alg_values_supported: ['ES256', 'RS256'],
         prompt_values_supported: ['consent', 'create', 'login', 'none', 'select_account'],
         display_values_supported: ['page', 'popup', 'touch', 'wap'],

@@ -21,6 +21,7 @@ import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
 
 /**
  * Handler used to aggregate the operations of the OpenID Connect ID Token.
@@ -72,7 +73,7 @@ export class IdTokenHandler {
     const header = new JsonWebSignatureHeader({ alg: <JsonWebSignatureAlgorithm>jwk.alg, kid: jwk.kid, typ: 'JWT' });
     const claims = new IdTokenClaims({
       iss: this.settings.issuer,
-      sub: user.id,
+      sub: calculateSubjectIdentifier(user, client, this.settings),
       aud: [client.id],
       exp: now + 86400,
       iat: now,
@@ -113,7 +114,7 @@ export class IdTokenHandler {
         ignoreExpired: true,
         validationOptions: {
           iss: { essential: true, value: this.settings.issuer },
-          sub: { essential: true, value: login.user.id },
+          sub: { essential: true, value: calculateSubjectIdentifier(login.user, client, this.settings) },
           aud: { essential: true, values: [client.id, [client.id]] },
           sid: { essential: false, value: login.id },
         },

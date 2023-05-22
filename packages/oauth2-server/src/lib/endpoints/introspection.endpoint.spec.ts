@@ -159,7 +159,7 @@ describe('Introspection Endpoint', () => {
     it('should return the metadata of the requested token.', async () => {
       const now = Date.now();
 
-      const client = <Client>{ id: 'client_id' };
+      const client = <Client>{ id: 'client_id', subjectType: 'public' };
       const user = <User>{ id: 'user_id' };
 
       const token = <AccessToken>{

@@ -20,6 +20,7 @@ import { GRANT_SERVICE } from '../services/grant.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { Prompt } from '../types/prompt.type';
+import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
 import { ConsentDecision } from './consent-decision.type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
@@ -86,7 +87,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
     return removeUndefined<ConsentContextInteractionResponse>({
       skip: grant.consent != null,
       requested_scope: grant.parameters.scope,
-      subject: grant.session.activeLogin!.user.id,
+      subject: calculateSubjectIdentifier(grant.session.activeLogin!.user, grant.client, this.settings),
       request_url: url.href,
       login_challenge: grant.loginChallenge,
       client: grant.client.id,

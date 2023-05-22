@@ -1,6 +1,6 @@
 import { Injectable } from '@guarani/di';
 
-import { randomInt, randomUUID } from 'crypto';
+import { randomBytes, randomInt, randomUUID } from 'crypto';
 
 import { PostRegistrationContext } from '../../context/registration/post.registration.context';
 import { PutRegistrationContext } from '../../context/registration/put.registration.context';
@@ -28,6 +28,7 @@ export class ClientService implements ClientServiceInterface {
       applicationType: 'web',
       authenticationMethod: 'client_secret_basic',
       scopes: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
+      subjectType: 'public',
       requireAuthTime: false,
       postLogoutRedirectUris: ['http://localhost:4000/oauth/-logoutcallback'],
       createdAt: new Date(),
@@ -61,8 +62,9 @@ export class ClientService implements ClientServiceInterface {
       tosUri: context.tosUri?.toString(),
       jwksUri: context.jwksUri?.toString(),
       jwks: context.jwks,
-      // sectorIdentifierUri: context.sectorIdentifierUri,
-      // subjectType: context.subjectType,
+      subjectType: context.subjectType,
+      sectorIdentifierUri: context.sectorIdentifierUri?.toString(),
+      pairwiseSalt: context.subjectType === 'pairwise' ? randomBytes(16).toString('hex') : undefined,
       idTokenSignedResponseAlgorithm: context.idTokenSignedResponseAlgorithm,
       // idTokenEncryptedResponseKeyWrap: context.idTokenEncryptedResponseKeyWrap,
       // idTokenEncryptedResponseContentEncryption: context.idTokenEncryptedResponseContentEncryption,
@@ -119,8 +121,8 @@ export class ClientService implements ClientServiceInterface {
       tosUri: context.tosUri?.toString(),
       jwksUri: context.jwksUri?.toString(),
       jwks: context.jwks,
-      // sectorIdentifierUri: context.sectorIdentifierUri,
-      // subjectType: context.subjectType,
+      subjectType: context.subjectType,
+      sectorIdentifierUri: context.sectorIdentifierUri?.toString(),
       idTokenSignedResponseAlgorithm: context.idTokenSignedResponseAlgorithm,
       // idTokenEncryptedResponseKeyWrap: context.idTokenEncryptedResponseKeyWrap,
       // idTokenEncryptedResponseContentEncryption: context.idTokenEncryptedResponseContentEncryption,
@@ -135,6 +137,7 @@ export class ClientService implements ClientServiceInterface {
       defaultAcrValues: context.defaultAcrValues,
       initiateLoginUri: context.initiateLoginUri?.toString(),
       // requestUris: context.requestUris,
+      postLogoutRedirectUris: context.postLogoutRedirectUris.map((postLogoutRedirectUri) => postLogoutRedirectUri.href),
       softwareId: context.softwareId,
       softwareVersion: context.softwareVersion,
     });

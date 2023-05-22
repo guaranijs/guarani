@@ -21,6 +21,8 @@ import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { UserServiceInterface } from '../../services/user.service.interface';
 import { USER_SERVICE } from '../../services/user.service.token';
+import { Settings } from '../../settings/settings';
+import { SETTINGS } from '../../settings/settings.token';
 import { LoginInteractionRequestValidator } from './login.interaction-request.validator';
 
 const invalidLoginChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
@@ -34,6 +36,8 @@ const invalidErrorDescriptions: any[] = [undefined, null, true, 1, 1.2, 1n, Symb
 describe('Login Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: LoginInteractionRequestValidator;
+
+  const settings = <Settings>{};
 
   const grantServiceMock = jest.mocked<GrantServiceInterface>({
     create: jest.fn(),
@@ -59,6 +63,7 @@ describe('Login Interaction Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind<UserServiceInterface>(USER_SERVICE).toValue(userServiceMock);
 
@@ -163,7 +168,11 @@ describe('Login Interaction Request Validator', () => {
     it.each(invalidDecisions)('should throw when providing an invalid "decision" parameter.', async (decision) => {
       request.body.decision = decision;
 
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        client: { id: 'client_id', subjectType: 'public' },
+      };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -175,7 +184,11 @@ describe('Login Interaction Request Validator', () => {
     it('should throw when providing an unsupported decision.', async () => {
       request.body.decision = 'unknown';
 
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        client: { id: 'client_id', subjectType: 'public' },
+      };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -188,7 +201,11 @@ describe('Login Interaction Request Validator', () => {
     it.each(invalidSubjects)('should throw when providing an invalid "subject" parameter.', async (subject) => {
       Object.assign(request.body, { decision: 'accept', subject });
 
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        client: { id: 'client_id', subjectType: 'public' },
+      };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -200,7 +217,11 @@ describe('Login Interaction Request Validator', () => {
     it('should throw when no user is found.', async () => {
       Object.assign(request.body, { decision: 'accept', subject: 'user_id' });
 
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        client: { id: 'client_id', subjectType: 'public' },
+      };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
       userServiceMock.findOne.mockResolvedValueOnce(null);
@@ -213,7 +234,11 @@ describe('Login Interaction Request Validator', () => {
     it.each(invalidAuthenticationMethods)('should throw when providing an invalid "amr" parameter.', async (amr) => {
       Object.assign(request.body, { decision: 'accept', subject: 'user_id', amr });
 
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        client: { id: 'client_id', subjectType: 'public' },
+      };
       const user = <User>{ id: 'user_id' };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
@@ -229,7 +254,11 @@ describe('Login Interaction Request Validator', () => {
       async (acr) => {
         Object.assign(request.body, { decision: 'accept', subject: 'user_id', amr: 'pwd sms', acr });
 
-        const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+        const grant = <Grant>{
+          id: 'grant_id',
+          loginChallenge: 'login_challenge',
+          client: { id: 'client_id', subjectType: 'public' },
+        };
         const user = <User>{ id: 'user_id' };
 
         grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
@@ -244,7 +273,11 @@ describe('Login Interaction Request Validator', () => {
     it('should return a login decision accept interaction context.', async () => {
       Object.assign(request.body, { decision: 'accept', subject: 'user_id', amr: 'pwd sms', acr: 'guarani:acr:2fa' });
 
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        client: { id: 'client_id', subjectType: 'public' },
+      };
       const user = <User>{ id: 'user_id' };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
@@ -266,7 +299,11 @@ describe('Login Interaction Request Validator', () => {
     it.each(invalidErrors)('should throw when providing an invalid "error" parameter.', async (error) => {
       Object.assign(request.body, { decision: 'deny', error });
 
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        client: { id: 'client_id', subjectType: 'public' },
+      };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -280,7 +317,11 @@ describe('Login Interaction Request Validator', () => {
       async (errorDescription) => {
         Object.assign(request.body, { decision: 'deny', error: 'login_denied', error_description: errorDescription });
 
-        const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+        const grant = <Grant>{
+          id: 'grant_id',
+          loginChallenge: 'login_challenge',
+          client: { id: 'client_id', subjectType: 'public' },
+        };
 
         grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -297,7 +338,11 @@ describe('Login Interaction Request Validator', () => {
         error_description: 'Lorem ipsum dolor sit amet...',
       });
 
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+      const grant = <Grant>{
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        client: { id: 'client_id', subjectType: 'public' },
+      };
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
         Reflect.construct(OAuth2Exception, [{ description: request.body.error_description }]),

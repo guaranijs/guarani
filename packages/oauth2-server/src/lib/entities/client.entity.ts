@@ -4,6 +4,7 @@ import { ClientAuthentication } from '../client-authentication/client-authentica
 import { GrantType } from '../grant-types/grant-type.type';
 import { ResponseType } from '../response-types/response-type.type';
 import { ApplicationType } from '../types/application-type.type';
+import { SubjectType } from '../types/subject-type.type';
 
 /**
  * OAuth 2.0 Client Entity.
@@ -109,14 +110,19 @@ export interface Client extends Record<string, any> {
   jwks?: JsonWebKeySetParameters | null;
 
   /**
-   * Https Url used to calculate the Pseudonymous Identifiers of the Client.
-   */
-  // sectorIdentifierUri?: string | null;
-
-  /**
    * Subject Type for responses to the Client.
    */
-  // subjectType: string;
+  subjectType: SubjectType;
+
+  /**
+   * Https Url used to calculate the Pseudonymous Identifiers of the Client.
+   */
+  sectorIdentifierUri?: string | null;
+
+  /**
+   * Client Salt for the Pairwise Subject Type.
+   */
+  pairwiseSalt?: string | null;
 
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.

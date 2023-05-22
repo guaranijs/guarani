@@ -10,6 +10,7 @@ import { PutBodyRegistrationRequest } from '../../requests/registration/put-body
 import { PutQueryRegistrationRequest } from '../../requests/registration/put-query.registration-request';
 import { ResponseType } from '../../response-types/response-type.type';
 import { ApplicationType } from '../../types/application-type.type';
+import { SubjectType } from '../../types/subject-type.type';
 
 /**
  * Parameters of the Put Client Registration Context.
@@ -111,14 +112,14 @@ export interface PutRegistrationContext {
   readonly jwks?: JsonWebKeySet;
 
   /**
-   * Https Url used to calculate the Pseudonymous Identifiers of the Client.
-   */
-  // readonly sectorIdentifierUri?: string;
-
-  /**
    * Subject Type for responses to the Client.
    */
-  // readonly subjectType?: string;
+  readonly subjectType: SubjectType;
+
+  /**
+   * Https Url used to calculate the Pseudonymous Identifiers of the Client.
+   */
+  readonly sectorIdentifierUri?: URL;
 
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.

@@ -18,6 +18,7 @@ import { RefreshTokenServiceInterface } from '../services/refresh-token.service.
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { UserInteractionSettings } from '../settings/user-interaction.settings';
+import { SubjectType } from '../types/subject-type.type';
 
 /**
  * Configuration Parameters of the Authorization Server.
@@ -77,6 +78,13 @@ export interface AuthorizationServerOptions {
    * UI Locales registered at the Authorization Server.
    */
   readonly uiLocales?: string[];
+
+  /**
+   * Subject Types registered at the Authorization Server.
+   *
+   * @default ["public"]
+   */
+  readonly subjectTypes?: SubjectType[];
 
   /**
    * JSON Web Key Set of the Authorization Server.
@@ -146,6 +154,18 @@ export interface AuthorizationServerOptions {
    * Post Logout Url of the Authorization Server.
    */
   readonly postLogoutUrl?: string;
+
+  /**
+   * Secret Key of the Authorization Server.
+   */
+  readonly secretKey: string;
+
+  /**
+   * Maximum length of the Local User Identifier for Pairwise Subject Type.
+   *
+   * *note: this is only required when supporting **pairwise** subject type identifiers.*
+   */
+  readonly maxLocalSubjectLength?: number;
 
   /**
    * Access Token Service.

@@ -182,6 +182,7 @@ export class AuthorizationServerFactory {
       displays: <Display[]>Object.keys(displayRegistry),
       acrValues: this.authorizationServerOptions.acrValues ?? [],
       uiLocales: this.authorizationServerOptions.uiLocales ?? [],
+      subjectTypes: this.authorizationServerOptions.subjectTypes ?? ['public'],
       clientAuthenticationSignatureAlgorithms:
         this.authorizationServerOptions.clientAuthenticationSignatureAlgorithms ?? [],
       idTokenSignatureAlgorithms: this.authorizationServerOptions.idTokenSignatureAlgorithms ?? ['RS256'],
@@ -197,6 +198,8 @@ export class AuthorizationServerFactory {
       enableAuthorizationResponseIssuerIdentifier:
         this.authorizationServerOptions.enableAuthorizationResponseIssuerIdentifier ?? false,
       postLogoutUrl: this.authorizationServerOptions.postLogoutUrl,
+      secretKey: this.authorizationServerOptions.secretKey,
+      maxLocalSubjectLength: this.authorizationServerOptions.maxLocalSubjectLength,
     };
 
     this.container.bind<Settings>(SETTINGS).toValue(settings);

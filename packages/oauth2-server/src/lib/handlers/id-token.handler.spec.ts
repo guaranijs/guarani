@@ -19,7 +19,7 @@ const login = <Login>{
 };
 
 const consent = <Consent>{
-  client: { id: 'client_id' },
+  client: { id: 'client_id', subjectType: 'public' },
   scopes: ['openid', 'profile', 'email', 'phone', 'address'],
   user: { id: 'user_id' },
 };

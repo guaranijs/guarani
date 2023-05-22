@@ -262,6 +262,7 @@ export { UserInteractionSettings } from './lib/settings/user-interaction.setting
 export { AccessTokenType } from './lib/types/access-token-type.type';
 export { ApplicationType } from './lib/types/application-type.type';
 export { Prompt } from './lib/types/prompt.type';
+export { SubjectType } from './lib/types/subject-type.type';
 export { TokenTypeHint } from './lib/types/token-type-hint.type';
 
 // Validators

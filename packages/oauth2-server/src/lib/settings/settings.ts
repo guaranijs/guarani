@@ -6,6 +6,7 @@ import { GrantType } from '../grant-types/grant-type.type';
 import { Pkce } from '../pkces/pkce.type';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { ResponseType } from '../response-types/response-type.type';
+import { SubjectType } from '../types/subject-type.type';
 import { UserInteractionSettings } from './user-interaction.settings';
 
 /**
@@ -73,6 +74,11 @@ export interface Settings {
   readonly uiLocales: string[];
 
   /**
+   * Subject Types registered at the Authorization Server.
+   */
+  readonly subjectTypes: SubjectType[];
+
+  /**
    * JSON Web Key Set of the Authorization Server.
    */
   readonly jwks?: JsonWebKeySet;
@@ -117,4 +123,16 @@ export interface Settings {
    * Post Logout Url of the Authorization Server.
    */
   readonly postLogoutUrl?: string;
+
+  /**
+   * Secret Key of the Authorization Server.
+   */
+  readonly secretKey: string;
+
+  /**
+   * Maximum length of the Local User Identifier for Pairwise Subject Type.
+   *
+   * *note: this is only required when supporting **pairwise** subject type identifiers.*
+   */
+  readonly maxLocalSubjectLength?: number;
 }

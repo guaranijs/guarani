@@ -17,6 +17,7 @@ import { HttpResponse } from '../http/http.response';
 import { IntrospectionResponse } from '../responses/introspection-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
 import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
@@ -172,7 +173,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
       exp: Math.ceil(token.expiresAt.getTime() / 1000),
       iat: Math.ceil(token.issuedAt.getTime() / 1000),
       nbf: Math.ceil(token.validAfter.getTime() / 1000),
-      sub: token.user?.id,
+      sub: token.user != null ? calculateSubjectIdentifier(token.user, token.client!, this.settings) : undefined,
       aud: [token.client!.id],
       iss: this.settings.issuer,
       jti: undefined,

@@ -11,6 +11,8 @@ import { HttpRequest } from '../http/http.request';
 import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
+import { Settings } from '../settings/settings';
+import { SETTINGS } from '../settings/settings.token';
 import { Endpoint } from './endpoint.type';
 import { UserinfoEndpoint } from './userinfo.endpoint';
 
@@ -21,6 +23,8 @@ describe('Userinfo Endpoint', () => {
   let endpoint: UserinfoEndpoint;
 
   const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype, true);
+
+  const settings = <Settings>{ secretKey: '0123456789abcdef' };
 
   const userServiceMock = jest.mocked<UserServiceInterface>(
     {
@@ -36,6 +40,7 @@ describe('Userinfo Endpoint', () => {
     container = new DependencyInjectionContainer();
 
     container.bind(ClientAuthorizationHandler).toValue(clientAuthorizationHandlerMock);
+    container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<UserServiceInterface>(USER_SERVICE).toValue(userServiceMock);
     container.bind(UserinfoEndpoint).toSelf().asSingleton();
 
@@ -174,7 +179,7 @@ describe('Userinfo Endpoint', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', subjectType: 'public' },
         user: { id: 'user_id' },
       };
 

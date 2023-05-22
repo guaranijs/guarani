@@ -52,6 +52,7 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   pkces: ['S256', 'plain'],
   acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
   uiLocales: ['en', 'es', 'pt-BR'],
+  subjectTypes: ['pairwise', 'public'],
   jwks: {
     keys: [
       {
@@ -74,4 +75,5 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   enableRegistrationEndpoint: true,
   enableAuthorizationResponseIssuerIdentifier: true,
   postLogoutUrl: 'http://localhost:3000',
+  secretKey: 'super_secret_passphrase_that_nobody_will_be_able_to_guess',
 });

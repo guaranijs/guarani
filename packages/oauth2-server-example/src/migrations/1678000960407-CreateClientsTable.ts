@@ -137,6 +137,17 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
         {
           name: 'id_token_signed_response_algorithm',
           type: 'varchar',
+          default: "'RS256'",
+          isNullable: false,
+        },
+        {
+          name: 'id_token_encrypted_response_key_wrap',
+          type: 'varchar',
+          isNullable: true,
+        },
+        {
+          name: 'id_token_encrypted_response_content_encryption',
+          type: 'varchar',
           isNullable: true,
         },
         // {
@@ -296,8 +307,15 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
         },
         {
           name: 'check_id_token_signed_response_algorithm',
-          columnNames: ['authentication_signing_algorithm'],
+          columnNames: ['id_token_signed_response_algorithm'],
           expression: '"id_token_signed_response_algorithm" <> \'none\'',
+        },
+        {
+          name: 'check_id_token_encrypted_response_key_wrap_and_id_token_encrypted_response_content_encryption',
+          columnNames: ['id_token_encrypted_response_key_wrap', 'id_token_encrypted_response_content_encryption'],
+          expression:
+            '"id_token_encrypted_response_key_wrap" IS NOT NULL OR ' +
+            '"id_token_encrypted_response_content_encryption" IS NULL',
         },
         // {
         //   name: 'check_userinfo_signed_response_algorithm',

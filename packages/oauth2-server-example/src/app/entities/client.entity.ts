@@ -1,4 +1,9 @@
-import { JsonWebKeySetParameters, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import {
+  JsonWebEncryptionContentEncryptionAlgorithm,
+  JsonWebEncryptionKeyWrapAlgorithm,
+  JsonWebKeySetParameters,
+  JsonWebSignatureAlgorithm,
+} from '@guarani/jose';
 import {
   ApplicationType,
   Client as OAuth2Client,
@@ -35,6 +40,10 @@ import {
   'check_subject_type_and_pairwise_salt',
   '("subject_type" = \'pairwise\' AND "pairwise_salt" IS NOT NULL) OR ' +
     '("subject_type" = \'public\' AND "pairwise_salt" IS NULL)'
+)
+@Check(
+  'check_id_token_encrypted_response_key_wrap_and_id_token_encrypted_response_content_encryption',
+  '"id_token_encrypted_response_key_wrap" IS NOT NULL OR "id_token_encrypted_response_content_encryption" IS NULL'
 )
 export class Client extends BaseEntity implements OAuth2Client {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'clients_pk' })
@@ -107,15 +116,15 @@ export class Client extends BaseEntity implements OAuth2Client {
   @Check('check_pairwise_salt_length', 'length("pairwise_salt") = 32')
   public pairwiseSalt!: string | null;
 
-  @Column({ name: 'id_token_signed_response_algorithm', type: 'varchar', nullable: true })
+  @Column({ name: 'id_token_signed_response_algorithm', type: 'varchar', nullable: false })
   @Check('check_id_token_signed_response_algorithm', '"id_token_signed_response_algorithm" <> \'none\'')
-  public idTokenSignedResponseAlgorithm!: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
+  public idTokenSignedResponseAlgorithm!: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
-  // @Column({ name: 'id_token_encrypted_response_key_wrap', type: 'varchar', nullable: true })
-  // public idTokenEncryptedResponseKeyWrap!: JsonWebEncryptionKeyWrapAlgorithm | null;
+  @Column({ name: 'id_token_encrypted_response_key_wrap', type: 'varchar', nullable: true })
+  public idTokenEncryptedResponseKeyWrap!: JsonWebEncryptionKeyWrapAlgorithm | null;
 
-  // @Column({ name: 'id_token_encrypted_response_content_encryption', type: 'varchar', nullable: true })
-  // public idTokenEncryptedResponseContentEncryption!: JsonWebEncryptionContentEncryptionAlgorithm | null;
+  @Column({ name: 'id_token_encrypted_response_content_encryption', type: 'varchar', nullable: true })
+  public idTokenEncryptedResponseContentEncryption!: JsonWebEncryptionContentEncryptionAlgorithm | null;
 
   // @Column({ name: 'userinfo_signed_response_algorithm', type: 'varchar', nullable: true })
   // @Check('check_userinfo_signed_response_algorithm', '"userinfo_signed_response_algorithm" <> \'none\'')

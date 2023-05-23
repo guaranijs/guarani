@@ -50,6 +50,8 @@ const invalidJwks: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Bu
 const invalidSubjectTypes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidSectorIdentifierUris: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidIdTokenJWSAlgorithms: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidIdTokenJWEAlgs: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidIdTokenJWEEncs: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidAuthenticationMethods: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidJWTClientAssertionJWSAlgorithms: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidDefaultMaxAges: any[] = [null, true, 1n, 'a', Symbol('a'), Buffer, () => 1, {}, []];
@@ -127,6 +129,32 @@ describe('Registration Request Validator', () => {
       'RS256',
       'RS384',
       'RS512',
+    ],
+    idTokenKeyWrapAlgorithms: [
+      'A128GCMKW',
+      'A128KW',
+      'A192GCMKW',
+      'A192KW',
+      'A256GCMKW',
+      'A256KW',
+      'ECDH-ES',
+      'ECDH-ES+A128KW',
+      'ECDH-ES+A192KW',
+      'ECDH-ES+A256KW',
+      'RSA-OAEP',
+      'RSA-OAEP-256',
+      'RSA-OAEP-384',
+      'RSA-OAEP-512',
+      'RSA1_5',
+      'dir',
+    ],
+    idTokenContentEncryptionAlgorithms: [
+      'A128CBC-HS256',
+      'A128GCM',
+      'A192CBC-HS384',
+      'A192GCM',
+      'A256CBC-HS512',
+      'A256GCM',
     ],
     clientAuthenticationMethods: [
       'client_secret_basic',
@@ -222,8 +250,8 @@ describe('Registration Request Validator', () => {
           subject_type: 'pairwise',
           sector_identifier_uri: 'https://client.example.com/redirect_uris.json',
           id_token_signed_response_alg: 'RS256',
-          // id_token_encrypted_response_alg: '',
-          // id_token_encrypted_response_enc: '',
+          id_token_encrypted_response_alg: 'RSA-OAEP',
+          id_token_encrypted_response_enc: 'A128GCM',
           // userinfo_signed_response_alg: '',
           // userinfo_encrypted_response_alg: '',
           // userinfo_encrypted_response_enc: '',
@@ -861,6 +889,76 @@ describe('Registration Request Validator', () => {
       );
     });
 
+    it.each(invalidIdTokenJWEAlgs)(
+      'should throw when providing an invalid "id_token_encrypted_response_alg" parameter.',
+      async (algorithm) => {
+        request.body.id_token_encrypted_response_alg = algorithm;
+
+        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePost(request)).rejects.toThrow(
+          new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_alg".' })
+        );
+      }
+    );
+
+    it('should throw when providing an unsupported id token encrypted response key wrap algorithm.', async () => {
+      request.body.id_token_encrypted_response_alg = 'unknown';
+
+      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePost(request)).rejects.toThrow(
+        new InvalidClientMetadataException({ description: 'Unsupported id_token_encrypted_response_alg "unknown".' })
+      );
+    });
+
+    it.each(invalidIdTokenJWEEncs)(
+      'should throw when providing an invalid "id_token_encrypted_response_enc" parameter.',
+      async (algorithm) => {
+        request.body.id_token_encrypted_response_enc = algorithm;
+
+        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePost(request)).rejects.toThrow(
+          new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_enc".' })
+        );
+      }
+    );
+
+    it('should throw when not providing the parameter "id_token_encrypted_response_alg" together with the parameter "id_token_encrypted_response_enc".', async () => {
+      delete request.body.id_token_encrypted_response_alg;
+
+      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePost(request)).rejects.toThrow(
+        new InvalidClientMetadataException({
+          description:
+            'The parameter "id_token_encrypted_response_enc" must be presented together ' +
+            'with the parameter "id_token_encrypted_response_alg".',
+        })
+      );
+    });
+
+    it('should throw when providing an unsupported id token encrypted response content encryption algorithm.', async () => {
+      request.body.id_token_encrypted_response_enc = 'unknown';
+
+      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePost(request)).rejects.toThrow(
+        new InvalidClientMetadataException({ description: 'Unsupported id_token_encrypted_response_enc "unknown".' })
+      );
+    });
+
     it.each(invalidAuthenticationMethods)(
       'should throw when providing an invalid "token_endpoint_auth_method" parameter.',
       async (authenticationMethod) => {
@@ -1226,8 +1324,8 @@ describe('Registration Request Validator', () => {
         subjectType: 'pairwise',
         sectorIdentifierUri: new URL('https://client.example.com/redirect_uris.json'),
         idTokenSignedResponseAlgorithm: 'RS256',
-        // idTokenEncryptedResponseKeyWrap: ,
-        // idTokenEncryptedResponseContentEncryption: ,
+        idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+        idTokenEncryptedResponseContentEncryption: 'A128GCM',
         // userinfoSignedResponseAlgorithm: ,
         // userinfoEncryptedResponseKeyWrap: ,
         // userinfoEncryptedResponseContentEncryption: ,
@@ -1438,8 +1536,8 @@ describe('Registration Request Validator', () => {
           subject_type: 'pairwise',
           sector_identifier_uri: 'https://client.example.com/redirect_uris.json',
           id_token_signed_response_alg: 'RS256',
-          // id_token_encrypted_response_alg: '',
-          // id_token_encrypted_response_enc: '',
+          id_token_encrypted_response_alg: 'RSA-OAEP',
+          id_token_encrypted_response_enc: 'A128GCM',
           // userinfo_signed_response_alg: '',
           // userinfo_encrypted_response_alg: '',
           // userinfo_encrypted_response_enc: '',
@@ -2321,6 +2419,96 @@ describe('Registration Request Validator', () => {
       );
     });
 
+    it.each(invalidIdTokenJWEAlgs)(
+      'should throw when providing an invalid "id_token_encrypted_response_alg" parameter.',
+      async (algorithm) => {
+        request.body.id_token_encrypted_response_alg = algorithm;
+
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          scopes: ['client:update'],
+          client: { id: 'client_id' },
+        };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePut(request)).rejects.toThrow(
+          new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_alg".' })
+        );
+      }
+    );
+
+    it('should throw when providing an unsupported id token encrypted response key wrap algorithm.', async () => {
+      request.body.id_token_encrypted_response_alg = 'unknown';
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['client:update'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePut(request)).rejects.toThrow(
+        new InvalidClientMetadataException({ description: 'Unsupported id_token_encrypted_response_alg "unknown".' })
+      );
+    });
+
+    it.each(invalidIdTokenJWEEncs)(
+      'should throw when providing an invalid "id_token_encrypted_response_enc" parameter.',
+      async (algorithm) => {
+        request.body.id_token_encrypted_response_enc = algorithm;
+
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          scopes: ['client:update'],
+          client: { id: 'client_id' },
+        };
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        await expect(validator.validatePut(request)).rejects.toThrow(
+          new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_enc".' })
+        );
+      }
+    );
+
+    it('should throw when not providing the parameter "id_token_encrypted_response_alg" together with the parameter "id_token_encrypted_response_enc".', async () => {
+      delete request.body.id_token_encrypted_response_alg;
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['client:update'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePut(request)).rejects.toThrow(
+        new InvalidClientMetadataException({
+          description:
+            'The parameter "id_token_encrypted_response_enc" must be presented together ' +
+            'with the parameter "id_token_encrypted_response_alg".',
+        })
+      );
+    });
+
+    it('should throw when providing an unsupported id token encrypted response content encryption algorithm.', async () => {
+      request.body.id_token_encrypted_response_enc = 'unknown';
+
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['client:update'],
+        client: { id: 'client_id' },
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      await expect(validator.validatePut(request)).rejects.toThrow(
+        new InvalidClientMetadataException({ description: 'Unsupported id_token_encrypted_response_enc "unknown".' })
+      );
+    });
+
     it.each(invalidAuthenticationMethods)(
       'should throw when providing an invalid "token_endpoint_auth_method" parameter.',
       async (authenticationMethod) => {
@@ -2786,8 +2974,8 @@ describe('Registration Request Validator', () => {
         subjectType: 'pairwise',
         sectorIdentifierUri: new URL('https://client.example.com/redirect_uris.json'),
         idTokenSignedResponseAlgorithm: 'RS256',
-        // idTokenEncryptedResponseKeyWrap: ,
-        // idTokenEncryptedResponseContentEncryption: ,
+        idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+        idTokenEncryptedResponseContentEncryption: 'A128GCM',
         // userinfoSignedResponseAlgorithm: ,
         // userinfoEncryptedResponseKeyWrap: ,
         // userinfoEncryptedResponseContentEncryption: ,

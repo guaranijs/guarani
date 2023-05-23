@@ -1,5 +1,10 @@
 import { Inject, Injectable } from '@guarani/di';
-import { JsonWebKeySet, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import {
+  JsonWebEncryptionContentEncryptionAlgorithm,
+  JsonWebEncryptionKeyWrapAlgorithm,
+  JsonWebKeySet,
+  JsonWebSignatureAlgorithm,
+} from '@guarani/jose';
 import { isPlainObject } from '@guarani/primitives';
 
 import { Buffer } from 'buffer';
@@ -115,8 +120,8 @@ export class RegistrationRequestValidator {
     const subjectType = this.getSubjectType(parameters);
     const sectorIdentifierUri = this.getSectorIdentifierUri(parameters);
     const idTokenSignedResponseAlgorithm = this.getIdTokenSignedResponseAlgorithm(parameters);
-    // const idTokenEncryptedResponseKeyWrap = this.getIdTokenEncryptedResponseKeyWrap(parameters);
-    // const idTokenEncryptedResponseContentEncryption = this.getIdTokenEncryptedResponseContentEncryption(parameters);
+    const idTokenEncryptedResponseKeyWrap = this.getIdTokenEncryptedResponseKeyWrap(parameters);
+    const idTokenEncryptedResponseContentEncryption = this.getIdTokenEncryptedResponseContentEncryption(parameters);
     // const userinfoSignedResponseAlgorithm = this.getUserinfoSignedResponseAlgorithm(parameters);
     // const userinfoEncryptedResponseKeyWrap = this.getUserinfoEncryptedResponseKeyWrap(parameters);
     // const userinfoEncryptedResponseContentEncryption = this.getUserinfoEncryptedResponseContentEncryption(parameters);
@@ -159,8 +164,8 @@ export class RegistrationRequestValidator {
       subjectType,
       sectorIdentifierUri,
       idTokenSignedResponseAlgorithm,
-      // idTokenEncryptedResponseKeyWrap,
-      // idTokenEncryptedResponseContentEncryption,
+      idTokenEncryptedResponseKeyWrap,
+      idTokenEncryptedResponseContentEncryption,
       // userinfoSignedResponseAlgorithm,
       // userinfoEncryptedResponseKeyWrap,
       // userinfoEncryptedResponseContentEncryption,
@@ -258,8 +263,8 @@ export class RegistrationRequestValidator {
     const subjectType = this.getSubjectType(bodyParameters);
     const sectorIdentifierUri = this.getSectorIdentifierUri(bodyParameters);
     const idTokenSignedResponseAlgorithm = this.getIdTokenSignedResponseAlgorithm(bodyParameters);
-    // const idTokenEncryptedResponseKeyWrap = this.getIdTokenEncryptedResponseKeyWrap(bodyParameters);
-    // const idTokenEncryptedResponseContentEncryption = this.getIdTokenEncryptedResponseContentEncryption(bodyParameters);
+    const idTokenEncryptedResponseKeyWrap = this.getIdTokenEncryptedResponseKeyWrap(bodyParameters);
+    const idTokenEncryptedResponseContentEncryption = this.getIdTokenEncryptedResponseContentEncryption(bodyParameters);
     // const userinfoSignedResponseAlgorithm = this.getUserinfoSignedResponseAlgorithm(bodyParameters);
     // const userinfoEncryptedResponseKeyWrap = this.getUserinfoEncryptedResponseKeyWrap(bodyParameters);
     // const userinfoEncryptedResponseContentEncryption = this.getUserinfoEncryptedResponseContentEncryption(bodyParameters);
@@ -306,8 +311,8 @@ export class RegistrationRequestValidator {
       subjectType,
       sectorIdentifierUri,
       idTokenSignedResponseAlgorithm,
-      // idTokenEncryptedResponseKeyWrap,
-      // idTokenEncryptedResponseContentEncryption,
+      idTokenEncryptedResponseKeyWrap,
+      idTokenEncryptedResponseContentEncryption,
       // userinfoSignedResponseAlgorithm,
       // userinfoEncryptedResponseKeyWrap,
       // userinfoEncryptedResponseContentEncryption,
@@ -944,9 +949,76 @@ export class RegistrationRequestValidator {
     return parameters.id_token_signed_response_alg;
   }
 
-  // private getIdTokenEncryptedResponseKeyWrap(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionKeyWrapAlgorithm {}
+  /**
+   * Returns the ID Token JSON Web Encryption Key Wrap Algorithm provided by the Client.
+   *
+   * @param parameters Parameters of the Post Client Registration Request.
+   * @returns ID Token JSON Web Encryption Key Wrap Algorithm provided by the Client.
+   */
+  private getIdTokenEncryptedResponseKeyWrap(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): JsonWebEncryptionKeyWrapAlgorithm | undefined {
+    if (
+      typeof parameters.id_token_encrypted_response_alg !== 'undefined' &&
+      typeof parameters.id_token_encrypted_response_alg !== 'string'
+    ) {
+      throw new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_alg".' });
+    }
 
-  // private getIdTokenEncryptedResponseContentEncryption(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionContentEncryptionAlgorithm {}
+    if (typeof parameters.id_token_encrypted_response_alg === 'undefined') {
+      return parameters.id_token_encrypted_response_alg;
+    }
+
+    if (this.settings.idTokenKeyWrapAlgorithms?.includes(parameters.id_token_encrypted_response_alg) !== true) {
+      throw new InvalidClientMetadataException({
+        description: `Unsupported id_token_encrypted_response_alg "${parameters.id_token_encrypted_response_alg}".`,
+      });
+    }
+
+    return parameters.id_token_encrypted_response_alg;
+  }
+
+  /**
+   * Returns the ID Token JSON Web Encryption Content Encryption Algorithm provided by the Client.
+   *
+   * @param parameters Parameters of the Post Client Registration Request.
+   * @returns ID Token JSON Web Encryption Content Encryption Algorithm provided by the Client.
+   */
+  private getIdTokenEncryptedResponseContentEncryption(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): JsonWebEncryptionContentEncryptionAlgorithm | undefined {
+    if (
+      typeof parameters.id_token_encrypted_response_enc !== 'undefined' &&
+      typeof parameters.id_token_encrypted_response_enc !== 'string'
+    ) {
+      throw new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_enc".' });
+    }
+
+    if (
+      typeof parameters.id_token_encrypted_response_enc !== 'undefined' &&
+      typeof parameters.id_token_encrypted_response_alg === 'undefined'
+    ) {
+      throw new InvalidClientMetadataException({
+        description:
+          'The parameter "id_token_encrypted_response_enc" must be presented together ' +
+          'with the parameter "id_token_encrypted_response_alg".',
+      });
+    }
+
+    if (typeof parameters.id_token_encrypted_response_enc === 'undefined') {
+      return 'A128CBC-HS256';
+    }
+
+    if (
+      this.settings.idTokenContentEncryptionAlgorithms?.includes(parameters.id_token_encrypted_response_enc) !== true
+    ) {
+      throw new InvalidClientMetadataException({
+        description: `Unsupported id_token_encrypted_response_enc "${parameters.id_token_encrypted_response_enc}".`,
+      });
+    }
+
+    return parameters.id_token_encrypted_response_enc;
+  }
 
   // private getUserinfoSignedResponseAlgorithm(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
 

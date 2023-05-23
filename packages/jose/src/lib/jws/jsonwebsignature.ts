@@ -115,7 +115,7 @@ export class JsonWebSignature {
       const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
       const b64Payload = payload.toString('base64url');
 
-      const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
+      const message = Buffer.from(`${b64Header}.${b64Payload}`, 'ascii');
 
       await backend.verify(signature, message, key ?? undefined);
 
@@ -147,7 +147,7 @@ export class JsonWebSignature {
 
       const key = keyOrKeyLoader instanceof JsonWebKey ? keyOrKeyLoader : await keyOrKeyLoader?.(header);
 
-      const message = Buffer.from(`${b64Header}.${b64Payload}`, 'utf8');
+      const message = Buffer.from(`${b64Header}.${b64Payload}`, 'ascii');
       const signature = await header.backend.sign(message, key ?? undefined);
 
       const b64Signature = signature.toString('base64url');

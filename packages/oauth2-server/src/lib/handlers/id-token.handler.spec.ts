@@ -1,5 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
-import { EllipticCurveKey, JsonWebKeySet, JsonWebSignature, RsaKey } from '@guarani/jose';
+import { EllipticCurveKey, JsonWebEncryption, JsonWebKeySet, JsonWebSignature, RsaKey } from '@guarani/jose';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
@@ -18,12 +18,6 @@ const login = <Login>{
   createdAt: new Date(),
 };
 
-const consent = <Consent>{
-  client: { id: 'client_id', subjectType: 'public' },
-  scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-  user: { id: 'user_id' },
-};
-
 const accessToken = <AccessToken>{ handle: 'access_token' };
 const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
 
@@ -31,18 +25,18 @@ describe('ID Token Handler', () => {
   let container: DependencyInjectionContainer;
   let idTokenHandler: IdTokenHandler;
 
-  const eckey = new EllipticCurveKey({
+  const ecSignkey = new EllipticCurveKey({
     kty: 'EC',
     crv: 'P-256',
     x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
     y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
     d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo',
     alg: 'ES256',
-    kid: 'ec-key',
+    kid: 'ec-sign-key',
     use: 'sig',
   });
 
-  const rsaKey = new RsaKey({
+  const rsaSignKey = new RsaKey({
     kty: 'RSA',
     n:
       'xjpFydzTbByzL5jhEa2yQO63dpS9d9SKaN107AR69skKiTR4uK1c4SzDt4YcurDB' +
@@ -80,11 +74,53 @@ describe('ID Token Handler', () => {
       'XaTWU4bdVN0GgktVLUDPLrSj533W1cOQZb_mm_7BFNrleelruT87bZhWPYQ979kl' +
       '6590ySgbH81pEM8FQW1JBATz0MYtUNZAt8N360vayE4',
     alg: 'RS256',
-    kid: 'rsa-key',
+    kid: 'rsa-sign-key',
     use: 'sig',
   });
 
-  const jwks = new JsonWebKeySet([eckey, rsaKey]);
+  const rsaKeyWrapKey = new RsaKey({
+    kty: 'RSA',
+    n:
+      'sXchDaQebHnPiGvyDOAT4saGEUetSyo9MKLOoWFsueri23bOdgWp4Dy1WlUzewbg' +
+      'BHod5pcM9H95GQRV3JDXboIRROSBigeC5yjU1hGzHHyXss8UDprecbAYxknTcQkh' +
+      'slANGRUZmdTOQ5qTRsLAt6BTYuyvVRdhS8exSZEy_c4gs_7svlJJQ4H9_NxsiIoL' +
+      'wAEk7-Q3UXERGYw_75IDrGA84-lA_-Ct4eTlXHBIY2EaV7t7LjJaynVJCpkv4LKj' +
+      'TTAumiGUIuQhrNhZLuF_RJLqHpM2kgWFLU7-VTdL1VbC2tejvcI2BlMkEpk1BzBZ' +
+      'I0KQB0GaDWFLN-aEAw3vRw',
+    e: 'AQAB',
+    d:
+      'VFCWOqXr8nvZNyaaJLXdnNPXZKRaWCjkU5Q2egQQpTBMwhprMzWzpR8Sxq1OPThh' +
+      '_J6MUD8Z35wky9b8eEO0pwNS8xlh1lOFRRBoNqDIKVOku0aZb-rynq8cxjDTLZQ6' +
+      'Fz7jSjR1Klop-YKaUHc9GsEofQqYruPhzSA-QgajZGPbE_0ZaVDJHfyd7UUBUKun' +
+      'FMScbflYAAOYJqVIVwaYR5zWEEceUjNnTNo_CVSj-VvXLO5VZfCUAVLgW4dpf1Sr' +
+      'tZjSt34YLsRarSb127reG_DUwg9Ch-KyvjT1SkHgUWRVGcyly7uvVGRSDwsXypdr' +
+      'NinPA4jlhoNdizK2zF2CWQ',
+    p:
+      '9gY2w6I6S6L0juEKsbeDAwpd9WMfgqFoeA9vEyEUuk4kLwBKcoe1x4HG68ik918h' +
+      'dDSE9vDQSccA3xXHOAFOPJ8R9EeIAbTi1VwBYnbTp87X-xcPWlEPkrdoUKW60tgs' +
+      '1aNd_Nnc9LEVVPMS390zbFxt8TN_biaBgelNgbC95sM',
+    q:
+      'uKlCKvKv_ZJMVcdIs5vVSU_6cPtYI1ljWytExV_skstvRSNi9r66jdd9-yBhVfuG' +
+      '4shsp2j7rGnIio901RBeHo6TPKWVVykPu1iYhQXw1jIABfw-MVsN-3bQ76WLdt2S' +
+      'DxsHs7q7zPyUyHXmps7ycZ5c72wGkUwNOjYelmkiNS0',
+    dp:
+      'w0kZbV63cVRvVX6yk3C8cMxo2qCM4Y8nsq1lmMSYhG4EcL6FWbX5h9yuvngs4iLE' +
+      'Fk6eALoUS4vIWEwcL4txw9LsWH_zKI-hwoReoP77cOdSL4AVcraHawlkpyd2TWjE' +
+      '5evgbhWtOxnZee3cXJBkAi64Ik6jZxbvk-RR3pEhnCs',
+    dq:
+      'o_8V14SezckO6CNLKs_btPdFiO9_kC1DsuUTd2LAfIIVeMZ7jn1Gus_Ff7B7IVx3' +
+      'p5KuBGOVF8L-qifLb6nQnLysgHDh132NDioZkhH7mI7hPG-PYE_odApKdnqECHWw' +
+      '0J-F0JWnUd6D2B_1TvF9mXA2Qx-iGYn8OVV1Bsmp6qU',
+    qi:
+      'eNho5yRBEBxhGBtQRww9QirZsB66TrfFReG_CcteI1aCneT0ELGhYlRlCtUkTRcl' +
+      'IfuEPmNsNDPbLoLqqCVznFbvdB7x-Tl-m0l_eFTj2KiqwGqE9PZB9nNTwMVvH3VR' +
+      'RSLWACvPnSiwP8N5Usy-WRXS-V7TbpxIhvepTfE0NNo',
+    alg: 'RSA-OAEP',
+    kid: 'rsa-keywrap-key',
+    use: 'enc',
+  });
+
+  const jwks = new JsonWebKeySet([ecSignkey, rsaSignKey, rsaKeyWrapKey]);
   const settings = <Settings>{ issuer: 'https://server.example.com', idTokenSignatureAlgorithms: ['ES256', 'RS256'] };
 
   const userServiceMock = jest.mocked<UserServiceInterface>(
@@ -127,93 +163,80 @@ describe('ID Token Handler', () => {
   });
 
   describe('generateIdToken()', () => {
-    it('should throw when no key has the "alg" parameter.', async () => {
-      const keysWithoutAlg = await Promise.all([
-        EllipticCurveKey.generate('EC', { curve: 'P-256' }),
-        RsaKey.generate('RSA', { modulus: 2048 }),
-      ]);
-
-      Reflect.set(jwks, 'keys', keysWithoutAlg);
-
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
-
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrow(
-        new Error('Could not find a JSON Web Key suitable for Signing an ID Token.')
-      );
-
-      Reflect.set(jwks, 'keys', [eckey, rsaKey]);
-    });
-
-    it('should throw when the keys have "none" as their "alg" parameter.', async () => {
-      const keysWithNoneAlg = await Promise.all([
-        EllipticCurveKey.generate('EC', { curve: 'P-256' }, { alg: 'none' }),
-        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'none' }),
-      ]);
-
-      Reflect.set(jwks, 'keys', keysWithNoneAlg);
-
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
-
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrow(
-        new Error('Could not find a JSON Web Key suitable for Signing an ID Token.')
-      );
-
-      Reflect.set(jwks, 'keys', [eckey, rsaKey]);
-    });
-
-    it('should throw when no key has a supported "alg" parameter.', async () => {
+    it('should throw when no signing key has an "alg" parameter supported by the client.', async () => {
       const keysWithUnsupportedAlg = await Promise.all([
         EllipticCurveKey.generate('EC', { curve: 'P-384' }, { alg: 'ES384' }),
         RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RS384' }),
       ]);
 
-      Reflect.set(jwks, 'keys', keysWithUnsupportedAlg);
+      container.delete(JsonWebKeySet);
+      container.delete(IdTokenHandler);
+
+      container.bind(JsonWebKeySet).toValue(new JsonWebKeySet(keysWithUnsupportedAlg));
+      container.bind(IdTokenHandler).toSelf().asSingleton();
+
+      idTokenHandler = container.resolve(IdTokenHandler);
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
 
       const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
 
       await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrow(
         new Error('Could not find a JSON Web Key suitable for Signing an ID Token.')
       );
-
-      Reflect.set(jwks, 'keys', [eckey, rsaKey]);
     });
 
-    it('should throw when no key has "sig" as its "use" parameter.', async () => {
+    it('should throw when no signing key has "sig" as its "use" parameter.', async () => {
       const keysWithInvalidSig = await Promise.all([
         EllipticCurveKey.generate('EC', { curve: 'P-256' }, { alg: 'ES256' }),
         RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RS256', use: 'enc' }),
       ]);
 
-      Reflect.set(jwks, 'keys', keysWithInvalidSig);
+      container.delete(JsonWebKeySet);
+      container.delete(IdTokenHandler);
+
+      container.bind(JsonWebKeySet).toValue(new JsonWebKeySet(keysWithInvalidSig));
+      container.bind(IdTokenHandler).toSelf().asSingleton();
+
+      idTokenHandler = container.resolve(IdTokenHandler);
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
 
       const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
 
       await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrow(
         new Error('Could not find a JSON Web Key suitable for Signing an ID Token.')
       );
-
-      Reflect.set(jwks, 'keys', [eckey, rsaKey]);
     });
 
-    it('should throw when the keys have a "key_ops" parameter without "sign" included.', async () => {
-      const keysWithInvalidSig = await Promise.all([
-        EllipticCurveKey.generate('EC', { curve: 'P-256' }, { alg: 'ES256', use: 'sig', key_ops: ['verify'] }),
-        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RS256', use: 'sig', key_ops: ['verify'] }),
-      ]);
-
-      Reflect.set(jwks, 'keys', keysWithInvalidSig);
-
+    it('should generate a signed id token with the default claims.', async () => {
       const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
 
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrow(
-        new Error('Could not find a JSON Web Key suitable for Signing an ID Token.')
-      );
-
-      Reflect.set(jwks, 'keys', [eckey, rsaKey]);
-    });
-
-    it('should generate an id token with the default claims.', async () => {
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
@@ -233,8 +256,18 @@ describe('ID Token Handler', () => {
       expect(claims.auth_time).toEqual(Math.floor(login.createdAt.getTime() / 1000));
     });
 
-    it('should generate an id token with the default claims and the "at_hash" claim.', async () => {
+    it('should generate a signed id token with the default claims and the "at_hash" claim.', async () => {
       const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
@@ -254,8 +287,18 @@ describe('ID Token Handler', () => {
       expect(claims.at_hash).toEqual('hrOQHuo3oE6FR82RIiX1SA');
     });
 
-    it('should generate an id token with the default claims and the "c_hash" claim.', async () => {
+    it('should generate a signed id token with the default claims and the "c_hash" claim.', async () => {
       const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
@@ -275,8 +318,18 @@ describe('ID Token Handler', () => {
       expect(claims.c_hash).toEqual('pk3JJWstBOegJTRDDozDaw');
     });
 
-    it('should generate an id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
+    it('should generate a signed id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
       const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
@@ -286,6 +339,237 @@ describe('ID Token Handler', () => {
 
       const { payload } = await JsonWebSignature.verify(
         idToken,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['ES256', 'RS256']
+      );
+
+      const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(claims).toHaveProperty('at_hash');
+      expect(claims).toHaveProperty('c_hash');
+
+      expect(claims.at_hash).toEqual('hrOQHuo3oE6FR82RIiX1SA');
+      expect(claims.c_hash).toEqual('pk3JJWstBOegJTRDDozDaw');
+    });
+
+    it('should throw when no key wrap key has an "alg" parameter supported by the client.', async () => {
+      const keysWithUnsupportedAlg = await Promise.all([
+        EllipticCurveKey.generate('EC', { curve: 'P-256' }, { alg: 'ES256', use: 'sig' }),
+        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RS256', use: 'sig' }),
+        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256', use: 'enc' }),
+      ]);
+
+      container.delete(JsonWebKeySet);
+      container.delete(IdTokenHandler);
+
+      container.bind(JsonWebKeySet).toValue(new JsonWebKeySet(keysWithUnsupportedAlg));
+      container.bind(IdTokenHandler).toSelf().asSingleton();
+
+      idTokenHandler = container.resolve(IdTokenHandler);
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
+
+      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
+
+      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrow(
+        new Error('Could not find a JSON Web Key suitable for Encrypting an ID Token.')
+      );
+    });
+
+    it('should throw when no key wrap key has "enc" as its "use" parameter.', async () => {
+      const keysWithInvalidSig = await Promise.all([
+        EllipticCurveKey.generate('EC', { curve: 'P-256' }, { alg: 'ES256', use: 'sig' }),
+        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RS256', use: 'sig' }),
+        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256' }),
+      ]);
+
+      container.delete(JsonWebKeySet);
+      container.delete(IdTokenHandler);
+
+      container.bind(JsonWebKeySet).toValue(new JsonWebKeySet(keysWithInvalidSig));
+      container.bind(IdTokenHandler).toSelf().asSingleton();
+
+      idTokenHandler = container.resolve(IdTokenHandler);
+
+      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
+
+      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrow(
+        new Error('Could not find a JSON Web Key suitable for Encrypting an ID Token.')
+      );
+    });
+
+    it('should generate a nested id token with the default claims.', async () => {
+      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
+
+      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+
+      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, null, null);
+
+      expect(idToken).toEqual(expect.any(String));
+
+      const { plaintext } = await JsonWebEncryption.decrypt(
+        idToken,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid),
+        ['RSA-OAEP'],
+        ['A128CBC-HS256']
+      );
+
+      const { payload } = await JsonWebSignature.verify(
+        plaintext.toString('ascii'),
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['ES256', 'RS256']
+      );
+
+      const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(claims.nonce).toEqual('nonce');
+      expect(claims.auth_time).toEqual(Math.floor(login.createdAt.getTime() / 1000));
+    });
+
+    it('should generate a nested id token with the default claims and the "at_hash" claim.', async () => {
+      const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
+
+      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+
+      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, accessToken, null);
+
+      expect(idToken).toEqual(expect.any(String));
+
+      const { plaintext } = await JsonWebEncryption.decrypt(
+        idToken,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid),
+        ['RSA-OAEP'],
+        ['A128CBC-HS256']
+      );
+
+      const { payload } = await JsonWebSignature.verify(
+        plaintext.toString('ascii'),
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['ES256', 'RS256']
+      );
+
+      const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(claims).toHaveProperty('at_hash');
+      expect(claims.at_hash).toEqual('hrOQHuo3oE6FR82RIiX1SA');
+    });
+
+    it('should generate a nested id token with the default claims and the "c_hash" claim.', async () => {
+      const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
+
+      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+
+      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, null, authorizationCode);
+
+      expect(idToken).toEqual(expect.any(String));
+
+      const { plaintext } = await JsonWebEncryption.decrypt(
+        idToken,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid),
+        ['RSA-OAEP'],
+        ['A128CBC-HS256']
+      );
+
+      const { payload } = await JsonWebSignature.verify(
+        plaintext.toString('ascii'),
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['ES256', 'RS256']
+      );
+
+      const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(claims).toHaveProperty('c_hash');
+      expect(claims.c_hash).toEqual('pk3JJWstBOegJTRDDozDaw');
+    });
+
+    it('should generate a nested id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
+      const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
+
+      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+
+      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, accessToken, authorizationCode);
+
+      expect(idToken).toEqual(expect.any(String));
+
+      const { plaintext } = await JsonWebEncryption.decrypt(
+        idToken,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid),
+        ['RSA-OAEP'],
+        ['A128CBC-HS256']
+      );
+
+      const { payload } = await JsonWebSignature.verify(
+        plaintext.toString('ascii'),
         async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
         ['ES256', 'RS256']
       );

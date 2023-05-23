@@ -1,4 +1,9 @@
-import { JsonWebKeySet, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import {
+  JsonWebEncryptionContentEncryptionAlgorithm,
+  JsonWebEncryptionKeyWrapAlgorithm,
+  JsonWebKeySet,
+  JsonWebSignatureAlgorithm,
+} from '@guarani/jose';
 
 import { URL } from 'url';
 
@@ -102,17 +107,17 @@ export interface PostRegistrationContext {
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.
    */
-  readonly idTokenSignedResponseAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
+  readonly idTokenSignedResponseAlgorithm: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the ID Token issued to the Client.
    */
-  // readonly idTokenEncryptedResponseKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm;
+  readonly idTokenEncryptedResponseKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the ID Token issued to the Client.
    */
-  // readonly idTokenEncryptedResponseContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm;
+  readonly idTokenEncryptedResponseContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
    * JSON Web Signature Algorithm used to sign the Userinfo JWT Response.

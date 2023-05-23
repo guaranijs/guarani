@@ -1,4 +1,9 @@
-import { JsonWebKeySetParameters, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import {
+  JsonWebEncryptionContentEncryptionAlgorithm,
+  JsonWebEncryptionKeyWrapAlgorithm,
+  JsonWebKeySetParameters,
+  JsonWebSignatureAlgorithm,
+} from '@guarani/jose';
 
 import { ClientAuthentication } from '../../client-authentication/client-authentication.type';
 import { GrantType } from '../../grant-types/grant-type.type';
@@ -120,17 +125,17 @@ export interface PutRegistrationResponse {
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.
    */
-  readonly id_token_signed_response_alg?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
+  readonly id_token_signed_response_alg: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the ID Token issued to the Client.
    */
-  // readonly id_token_encrypted_response_alg?: JsonWebEncryptionKeyWrapAlgorithm;
+  readonly id_token_encrypted_response_alg?: JsonWebEncryptionKeyWrapAlgorithm;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the ID Token issued to the Client.
    */
-  // readonly id_token_encrypted_response_enc?: JsonWebEncryptionContentEncryptionAlgorithm;
+  readonly id_token_encrypted_response_enc?: JsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
    * JSON Web Signature Algorithm used to sign the Userinfo JWT Response.

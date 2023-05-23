@@ -1,4 +1,9 @@
-import { JsonWebKeySet, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import {
+  JsonWebEncryptionContentEncryptionAlgorithm,
+  JsonWebEncryptionKeyWrapAlgorithm,
+  JsonWebKeySet,
+  JsonWebSignatureAlgorithm,
+} from '@guarani/jose';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { Display } from '../displays/display.type';
@@ -37,6 +42,16 @@ export interface Settings {
    * JSON Web Signature Algorithms for ID Token Signature registered at the Authorization Server.
    */
   readonly idTokenSignatureAlgorithms: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithms for ID Token Encryption registered at the Authorization Server.
+   */
+  readonly idTokenKeyWrapAlgorithms?: JsonWebEncryptionKeyWrapAlgorithm[];
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithms for ID Token Encryption registered at the Authorization Server.
+   */
+  readonly idTokenContentEncryptionAlgorithms?: JsonWebEncryptionContentEncryptionAlgorithm[];
 
   /**
    * Grant Types registered at the Authorization Server.

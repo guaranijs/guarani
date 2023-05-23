@@ -1,4 +1,9 @@
-import { JsonWebKeySetParameters, JsonWebSignatureAlgorithm } from '@guarani/jose';
+import {
+  JsonWebEncryptionContentEncryptionAlgorithm,
+  JsonWebEncryptionKeyWrapAlgorithm,
+  JsonWebKeySetParameters,
+  JsonWebSignatureAlgorithm,
+} from '@guarani/jose';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { GrantType } from '../grant-types/grant-type.type';
@@ -127,17 +132,17 @@ export interface Client extends Record<string, any> {
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.
    */
-  idTokenSignedResponseAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
+  idTokenSignedResponseAlgorithm: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the ID Token issued to the Client.
    */
-  // idTokenEncryptedResponseKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm | null;
+  idTokenEncryptedResponseKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm | null;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the ID Token issued to the Client.
    */
-  // idTokenEncryptedResponseContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm | null;
+  idTokenEncryptedResponseContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm | null;
 
   /**
    * JSON Web Signature Algorithm used to sign the Userinfo JWT Response.

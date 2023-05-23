@@ -1005,11 +1005,8 @@ export class RegistrationRequestValidator {
       });
     }
 
-    if (typeof parameters.id_token_encrypted_response_enc === 'undefined') {
-      return 'A128CBC-HS256';
-    }
-
     if (
+      typeof parameters.id_token_encrypted_response_enc !== 'undefined' &&
       this.settings.idTokenContentEncryptionAlgorithms?.includes(parameters.id_token_encrypted_response_enc) !== true
     ) {
       throw new InvalidClientMetadataException({

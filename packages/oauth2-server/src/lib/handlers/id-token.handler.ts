@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@guarani/di';
 import {
+  JsonWebEncryption,
+  JsonWebEncryptionHeader,
   JsonWebKey,
   JsonWebKeySet,
   JsonWebSignature,
@@ -62,15 +64,20 @@ export class IdTokenHandler {
     accessToken: AccessToken | null,
     authorizationCode: AuthorizationCode | null
   ): Promise<string> {
-    const jwk = this.getJsonWebKey();
-
     const now = Math.ceil(Date.now() / 1000);
 
     const { client, scopes, user } = consent;
 
     const userinfo = await this.userService.getUserinfo!(user, scopes);
 
-    const header = new JsonWebSignatureHeader({ alg: <JsonWebSignatureAlgorithm>jwk.alg, kid: jwk.kid, typ: 'JWT' });
+    const signKey = this.getSigningJsonWebKey(client);
+
+    const jwsHeader = new JsonWebSignatureHeader({
+      alg: client.idTokenSignedResponseAlgorithm,
+      kid: signKey.kid,
+      typ: 'JWT',
+    });
+
     const claims = new IdTokenClaims({
       iss: this.settings.issuer,
       sub: calculateSubjectIdentifier(user, client, this.settings),
@@ -83,14 +90,31 @@ export class IdTokenHandler {
       amr: login.amr ?? undefined,
       acr: login.acr ?? undefined,
       azp: client.id,
-      at_hash: accessToken !== null ? this.getLeftHash(accessToken.handle, header.alg) : undefined,
-      c_hash: authorizationCode !== null ? this.getLeftHash(authorizationCode.code, header.alg) : undefined,
+      at_hash: accessToken !== null ? this.getLeftHash(accessToken.handle, jwsHeader.alg) : undefined,
+      c_hash: authorizationCode !== null ? this.getLeftHash(authorizationCode.code, jwsHeader.alg) : undefined,
       ...userinfo,
     });
 
-    const jws = new JsonWebSignature(header, claims.toBuffer());
+    const jws = new JsonWebSignature(jwsHeader, claims.toBuffer());
 
-    return await jws.sign(jwk);
+    const signedJwt = await jws.sign(signKey);
+
+    if (client.idTokenEncryptedResponseKeyWrap == null) {
+      return signedJwt;
+    }
+
+    const keyWrapKey = this.getKeyWrapJsonWebKey(client);
+
+    const jweHeader = new JsonWebEncryptionHeader({
+      alg: client.idTokenEncryptedResponseKeyWrap,
+      enc: client.idTokenEncryptedResponseContentEncryption!,
+      cty: 'JWT',
+      kid: keyWrapKey.kid,
+    });
+
+    const jwe = new JsonWebEncryption(jweHeader, Buffer.from(signedJwt, 'ascii'));
+
+    return await jwe.encrypt(keyWrapKey);
   }
 
   /**
@@ -128,20 +152,31 @@ export class IdTokenHandler {
 
   /**
    * Gets a JSON Web Key suitable for signing an ID Token from the Authorization Server's JSON Web Key Set.
+   *
+   * @param client Client requesting authorization.
+   * @returns JSON Web Key used to sign the ID Token.
    */
-  private getJsonWebKey(): JsonWebKey {
-    const jwk = this.jwks.find((jwk) => {
-      return (
-        jwk.alg !== undefined &&
-        jwk.alg !== 'none' &&
-        this.settings.idTokenSignatureAlgorithms.includes(<Exclude<JsonWebSignatureAlgorithm, 'none'>>jwk.alg) &&
-        jwk.use === 'sig' &&
-        (jwk.key_ops === undefined || jwk.key_ops.includes('sign'))
-      );
-    });
+  private getSigningJsonWebKey(client: Client): JsonWebKey {
+    const jwk = this.jwks.find((jwk) => jwk.alg === client.idTokenSignedResponseAlgorithm && jwk.use === 'sig');
 
     if (jwk === null) {
       throw new Error('Could not find a JSON Web Key suitable for Signing an ID Token.');
+    }
+
+    return jwk;
+  }
+
+  /**
+   * Gets a JSON Web Key suitable for signing an ID Token from the Authorization Server's JSON Web Key Set.
+   *
+   * @param client Client requesting authorization.
+   * @returns JSON Web Key used to sign the ID Token.
+   */
+  private getKeyWrapJsonWebKey(client: Client): JsonWebKey {
+    const jwk = this.jwks.find((jwk) => jwk.alg === client.idTokenEncryptedResponseKeyWrap! && jwk.use === 'enc');
+
+    if (jwk === null) {
+      throw new Error('Could not find a JSON Web Key suitable for Encrypting an ID Token.');
     }
 
     return jwk;

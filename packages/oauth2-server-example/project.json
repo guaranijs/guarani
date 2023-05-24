@@ -5,7 +5,7 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/webpack:webpack",
+      "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "options": {
         "target": "node",
@@ -18,7 +18,8 @@
           "packages/oauth2-server-example/src/views",
           "packages/oauth2-server-example/src/.env"
         ],
-        "webpackConfig": "packages/oauth2-server-example/webpack.config.js"
+        "webpackConfig": "packages/oauth2-server-example/webpack.config.js",
+        "babelUpwardRootMode": true
       },
       "configurations": {
         "production": {
@@ -29,7 +30,7 @@
       }
     },
     "serve": {
-      "executor": "@nrwl/js:node",
+      "executor": "@nx/js:node",
       "options": {
         "buildTarget": "oauth2-server-example:build"
       },
@@ -40,7 +41,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/oauth2-server-example/**/*.ts"]

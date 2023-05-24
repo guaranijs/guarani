@@ -10,6 +10,8 @@ import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 import { JsonWebSignatureHeaderParameters } from './jsonwebsignature.header.parameters';
 import { JsonWebSignatureParameters } from './jsonwebsignature.parameters';
 
+type SplitJsonWebSignatureToken = [string, string, string];
+
 /**
  * Implementation of a JSON Web Signature.
  *
@@ -42,6 +44,21 @@ export class JsonWebSignature {
   }
 
   /**
+   * Checks if the provided data has a valid JSON Web Signature Compact Serialization format.
+   *
+   * @param data Data to be checked.
+   */
+  public static isJsonWebSignature(data: unknown): boolean {
+    if (typeof data !== 'string') {
+      return false;
+    }
+
+    const splitToken = data.split('.');
+
+    return splitToken.length === 3 && splitToken.every((component) => component.length !== 0);
+  }
+
+  /**
    * Decodes the Parameters of the provided JSON Web Signature Compact Token.
    *
    * ***note: this method does not validate the signature of the token.***
@@ -50,24 +67,18 @@ export class JsonWebSignature {
    * @returns Decoded Parameters of the JSON Web Signature Compact Token.
    */
   public static decode(token: string): JsonWebSignatureParameters {
-    if (typeof token !== 'string') {
-      throw new InvalidJsonWebSignatureException();
-    }
-
-    const splitToken = token.split('.');
-
-    if (splitToken.length !== 3) {
+    if (!JsonWebSignature.isJsonWebSignature(token)) {
       throw new InvalidJsonWebSignatureException();
     }
 
     try {
-      const [b64Header, b64Payload, b64Signature] = splitToken;
+      const [b64Header, b64Payload, b64Signature] = <SplitJsonWebSignatureToken>token.split('.');
 
-      const headerParameters = JSON.parse(Buffer.from(<string>b64Header, 'base64url').toString('utf8'));
+      const headerParameters = JSON.parse(Buffer.from(b64Header, 'base64url').toString('utf8'));
 
       const header = new JsonWebSignatureHeader(headerParameters);
-      const payload = Buffer.from(<string>b64Payload, 'base64url');
-      const signature = Buffer.from(<string>b64Signature, 'base64url');
+      const payload = Buffer.from(b64Payload, 'base64url');
+      const signature = Buffer.from(b64Signature, 'base64url');
 
       return { header, payload, signature };
     } catch (exc: unknown) {
@@ -99,7 +110,7 @@ export class JsonWebSignature {
       throw new InvalidJsonWebKeyException();
     }
 
-    const { header, payload, signature } = this.decode(token);
+    const { header, payload, signature } = JsonWebSignature.decode(token);
 
     const { backend } = header;
 

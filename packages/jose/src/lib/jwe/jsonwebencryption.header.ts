@@ -80,9 +80,26 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryp
     this.#keyWrapBackend = JSONWEBENCRYPTION_KEYWRAP_REGISTRY[parameters.alg];
     this.#contentEncryptionBackend = JSONWEBENCRYPTION_CONTENT_ENCRYPTION_REGISTRY[parameters.enc];
 
-    if (parameters.zip !== undefined) {
+    if (typeof parameters.zip !== 'undefined') {
       this.#compressionBackend = JSONWEBENCRYPTION_COMPRESSION_REGISTRY[parameters.zip];
     }
+  }
+
+  /**
+   * Checks if the provided data is a valid JSON Web Encryption Header.
+   *
+   * @param data Data to be checked.
+   */
+  public static override isValidHeader(data: unknown): data is JsonWebEncryptionHeaderParameters {
+    return (
+      super.isValidHeader(data) &&
+      typeof data.alg === 'string' &&
+      Object.keys(JSONWEBENCRYPTION_KEYWRAP_REGISTRY).includes(data.alg) &&
+      typeof data.enc === 'string' &&
+      Object.keys(JSONWEBENCRYPTION_CONTENT_ENCRYPTION_REGISTRY).includes(data.enc) &&
+      (typeof data.zip === 'undefined' ||
+        (typeof data.zip === 'string' && Object.keys(JSONWEBENCRYPTION_COMPRESSION_REGISTRY).includes(data.zip)))
+    );
   }
 
   /**
@@ -99,7 +116,7 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryp
       throw new InvalidJoseHeaderException('Invalid header parameter "enc".');
     }
 
-    if (parameters.zip !== undefined && typeof parameters.zip !== 'string') {
+    if (typeof parameters.zip !== 'undefined' && typeof parameters.zip !== 'string') {
       throw new InvalidJoseHeaderException('Invalid header parameter "zip".');
     }
 
@@ -115,7 +132,7 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryp
       );
     }
 
-    if (parameters.zip !== undefined) {
+    if (typeof parameters.zip !== 'undefined') {
       if (!Object.hasOwn(JSONWEBENCRYPTION_COMPRESSION_REGISTRY, parameters.zip)) {
         throw new UnsupportedAlgorithmException(
           `Unsupported JSON Web Encryption Compression Algorithm "${parameters.zip}".`

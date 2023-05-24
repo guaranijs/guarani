@@ -2,19 +2,67 @@ import { Buffer } from 'buffer';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { JoseHeader } from './jose.header';
+import { JoseHeaderParameters } from './jose.header.parameters';
+
+const invalidJoseHeaders: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  'a',
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  [],
+];
+
+const invalidJkus: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidJwks: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidKids: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidX5Us: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidX5Cs: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidX5Ts: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidX5TS256s: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidCrits: any[] = [
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+  [null],
+  [true],
+  [1],
+  [1.2],
+  [1n],
+  [Symbol('a')],
+  [Buffer],
+  [Buffer.alloc(1)],
+  [() => 1],
+  [{}],
+  [[]],
+];
 
 describe('JOSE Header', () => {
+  describe('isValidHeader()', () => {
+    it('should return true if the provided data is an instance of JoseHeader.', () => {
+      expect(JoseHeader.isValidHeader(Reflect.construct(JoseHeader, [{}]))).toBe(true);
+    });
+
+    it.each(invalidJoseHeaders)('should return false if the provided data is not a plain object.', (header) =>
+      expect(JoseHeader.isValidHeader(header)).toBe(false)
+    );
+  });
+
   describe('constructor', () => {
-    const invalidKids: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
-    const invalidCrits: any[] = [...invalidKids, ...invalidKids.map((value) => ['kid', value])];
-
-    const invalidJkus: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
-    const invalidJwks: any[] = [...invalidJkus];
-    const invalidX5Us: any[] = [...invalidJkus];
-    const invalidX5Cs: any[] = [...invalidJkus];
-    const invalidX5Ts: any[] = [...invalidJkus];
-    const invalidX5TS256s: any[] = [...invalidJkus];
-
     it.each(invalidJkus)('should throw when providing the unsupported parameter "jku".', (jku) => {
       expect(() => Reflect.construct(JoseHeader, [{ jku }])).toThrow(
         new InvalidJoseHeaderException('Unsupported header parameter "jku".')
@@ -67,6 +115,11 @@ describe('JOSE Header', () => {
       expect(() => Reflect.construct(JoseHeader, [{ crit: ['kid'] }])).toThrow(
         new InvalidJoseHeaderException('Missing required header parameter "kid".')
       );
+    });
+
+    it('should create an instance of a jose header.', () => {
+      const parameters: JoseHeaderParameters = { cty: 'JWT', kid: 'jwk-id' };
+      expect(Reflect.construct(JoseHeader, [parameters])).toMatchObject(parameters);
     });
   });
 });

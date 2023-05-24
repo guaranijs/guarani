@@ -11,6 +11,8 @@ import { JsonWebEncryptionHeader } from './jsonwebencryption.header';
 import { JsonWebEncryptionHeaderParameters } from './jsonwebencryption.header.parameters';
 import { JsonWebEncryptionParameters } from './jsonwebencryption.parameters';
 
+type SplitJsonWebEncryptionToken = [string, string, string, string, string];
+
 /**
  * Implementation of a JSON Web Encryption.
  *
@@ -43,6 +45,21 @@ export class JsonWebEncryption {
   }
 
   /**
+   * Checks if the provided data has a valid JSON Web Encryption Compact Serialization format.
+   *
+   * @param data Data to be checked.
+   */
+  public static isJsonWebEncryption(data: unknown): boolean {
+    if (typeof data !== 'string') {
+      return false;
+    }
+
+    const splitToken = <SplitJsonWebEncryptionToken>data.split('.');
+
+    return splitToken.length === 5 && splitToken.every((component) => component.length !== 0);
+  }
+
+  /**
    * Decodes the provided JSON Web Encryption Token and returns its parsed Parameters.
    *
    * @example
@@ -53,18 +70,12 @@ export class JsonWebEncryption {
    * @returns Parsed Parameters of the JSON Web Encryption Token.
    */
   public static decode(token: string): JsonWebEncryptionParameters {
-    if (typeof token !== 'string') {
-      throw new InvalidJsonWebEncryptionException();
-    }
-
-    const splitToken = <[string, string, string, string, string]>token.split('.');
-
-    if (splitToken.length !== 5) {
+    if (!JsonWebEncryption.isJsonWebEncryption(token)) {
       throw new InvalidJsonWebEncryptionException();
     }
 
     try {
-      const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = splitToken;
+      const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = <SplitJsonWebEncryptionToken>token.split('.');
 
       const headerParameters = JSON.parse(Buffer.from(b64Header, 'base64url').toString('utf8'));
 
@@ -107,7 +118,7 @@ export class JsonWebEncryption {
       throw new InvalidJsonWebKeyException();
     }
 
-    const { header, ek, iv, ciphertext, tag, aad } = this.decode(token);
+    const { header, ek, iv, ciphertext, tag, aad } = JsonWebEncryption.decode(token);
 
     const { compressionBackend, contentEncryptionBackend, keyWrapBackend } = header;
 

@@ -29,7 +29,8 @@
       "@guarani/di": ["packages/di/src/index.ts"],
       "@guarani/jose": ["packages/jose/src/index.ts"],
       "@guarani/oauth2-server": ["packages/oauth2-server/src/index.ts"],
-      "@guarani/primitives": ["packages/primitives/src/index.ts"]
+      "@guarani/primitives": ["packages/primitives/src/index.ts"],
+      "@guarani/types": ["packages/types/src/index.ts"]
     },
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,

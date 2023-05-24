@@ -3,7 +3,7 @@ import { JsonWebKeyParameters } from '../jwk/jsonwebkey.parameters';
 /**
  * Parameters of the generic JOSE Header.
  */
-export interface JoseHeaderParameters extends Record<string, any> {
+export interface JoseHeaderParameters extends Record<string, unknown> {
   /**
    * URI of a Set of Public JSON Web Keys that contains the JSON Web Key.
    */
@@ -50,7 +50,7 @@ export interface JoseHeaderParameters extends Record<string, any> {
   cty?: string;
 
   /**
-   * Defines the parameters that MUST be present in the JOSE Header.
+   * Defines the parameters that must be present in the JOSE Header.
    */
   crit?: string[];
 }

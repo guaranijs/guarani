@@ -7,17 +7,22 @@ import { JsonWebSignatureHeaderParameters } from './jsonwebsignature.header.para
 
 const invalidAlgs: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
 
-const parameters: JsonWebSignatureHeaderParameters = { alg: 'HS256' };
-
 describe('JSON Web Signature Header', () => {
-  describe('constructor', () => {
-    it('should throw when no "alg" is provided.', () => {
-      // @ts-expect-error Invalid Type
-      expect(() => new JsonWebSignatureHeader({})).toThrow(
-        new InvalidJoseHeaderException('Invalid header parameter "alg".')
-      );
+  describe('isValidHeader()', () => {
+    it.each(invalidAlgs)('should return false when the provided header parameter "alg" is invalid.', (alg) => {
+      expect(JsonWebSignatureHeader.isValidHeader({ alg })).toBe(false);
     });
 
+    it('should return false when the provided header parameter "alg" is unsupported.', () => {
+      expect(JsonWebSignatureHeader.isValidHeader({ alg: 'unknown' })).toBe(false);
+    });
+
+    it('should return true when the provided data is a valid json web signature header.', () => {
+      expect(JsonWebSignatureHeader.isValidHeader({ alg: 'HS256' })).toBe(true);
+    });
+  });
+
+  describe('constructor', () => {
     it.each(invalidAlgs)('should throw when the provided header parameter "alg" is invalid.', (alg) => {
       expect(() => new JsonWebSignatureHeader({ alg })).toThrow(
         new InvalidJoseHeaderException('Invalid header parameter "alg".')
@@ -32,6 +37,7 @@ describe('JSON Web Signature Header', () => {
     });
 
     it('should create an instance of a json web signature header.', () => {
+      const parameters: JsonWebSignatureHeaderParameters = { alg: 'HS256' };
       expect(new JsonWebSignatureHeader(parameters)).toMatchObject(parameters);
     });
   });

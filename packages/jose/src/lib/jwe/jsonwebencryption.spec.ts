@@ -45,6 +45,23 @@ describe('JSON Web Encryption', () => {
     });
   });
 
+  describe('isJsonWebEncryption()', () => {
+    it.each(invalidTokens)('should return false when the provided data is not a string.', (invalidToken) => {
+      expect(JsonWebEncryption.isJsonWebEncryption(invalidToken)).toBe(false);
+    });
+
+    it.each(invalidTokenFormats)(
+      'should return false when the format of the provided token is invalid.',
+      (invalidToken) => {
+        expect(JsonWebEncryption.isJsonWebEncryption(invalidToken)).toBe(false);
+      }
+    );
+
+    it('should return true when the provided data has a valid json web encryption token format.', () => {
+      expect(JsonWebEncryption.isJsonWebEncryption(token)).toBe(true);
+    });
+  });
+
   describe('decode()', () => {
     it.each(invalidTokens)('should throw when the provided token is invalid.', (invalidToken) => {
       expect(() => JsonWebEncryption.decode(invalidToken)).toThrow(new InvalidJsonWebEncryptionException());

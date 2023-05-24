@@ -1,4 +1,4 @@
-import { removeUndefined } from '@guarani/primitives';
+import { isPlainObject, removeUndefined } from '@guarani/primitives';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
@@ -54,14 +54,14 @@ export abstract class JoseHeader implements JoseHeaderParameters {
   public cty?: string;
 
   /**
-   * Defines the parameters that MUST be present in the JOSE Header.
+   * Defines the parameters that must be present in the JOSE Header.
    */
   public crit?: string[];
 
   /**
    * Additional JOSE Header Parameters.
    */
-  [parameter: string]: any;
+  [parameter: string]: unknown;
 
   /**
    * Instantiates a new JOSE Header based on the provided Parameters.
@@ -79,40 +79,49 @@ export abstract class JoseHeader implements JoseHeaderParameters {
   }
 
   /**
+   * Checks if the provided data is a valid JOSE Header.
+   *
+   * @param data Data to be checked.
+   */
+  public static isValidHeader(data: unknown): data is JoseHeaderParameters {
+    return data instanceof JoseHeader || isPlainObject(data);
+  }
+
+  /**
    * Validates the provided JOSE Header Parameters.
    *
    * @param parameters Parameters of the JOSE Header.
    */
   protected validateParameters(parameters: JoseHeaderParameters): void {
-    if (parameters.jku !== undefined) {
+    if (typeof parameters.jku !== 'undefined') {
       throw new InvalidJoseHeaderException('Unsupported header parameter "jku".');
     }
 
-    if (parameters.jwk !== undefined) {
+    if (typeof parameters.jwk !== 'undefined') {
       throw new InvalidJoseHeaderException('Unsupported header parameter "jwk".');
     }
 
-    if (parameters.kid !== undefined && typeof parameters.kid !== 'string') {
+    if (typeof parameters.kid !== 'undefined' && typeof parameters.kid !== 'string') {
       throw new InvalidJoseHeaderException('Invalid header parameter "kid".');
     }
 
-    if (parameters.x5u !== undefined) {
+    if (typeof parameters.x5u !== 'undefined') {
       throw new InvalidJoseHeaderException('Unsupported header parameter "x5u".');
     }
 
-    if (parameters.x5c !== undefined) {
+    if (typeof parameters.x5c !== 'undefined') {
       throw new InvalidJoseHeaderException('Unsupported header parameter "x5c".');
     }
 
-    if (parameters.x5t !== undefined) {
+    if (typeof parameters.x5t !== 'undefined') {
       throw new InvalidJoseHeaderException('Unsupported header parameter "x5t".');
     }
 
-    if (parameters['x5t#S256'] !== undefined) {
+    if (typeof parameters['x5t#S256'] !== 'undefined') {
       throw new InvalidJoseHeaderException('Unsupported header parameter "x5t#S256".');
     }
 
-    if (parameters.crit !== undefined) {
+    if (typeof parameters.crit !== 'undefined') {
       if (!Array.isArray(parameters.crit) || parameters.crit.length === 0) {
         throw new InvalidJoseHeaderException('Invalid header parameter "crit".');
       }

@@ -41,6 +41,19 @@ export class JsonWebSignatureHeader extends JoseHeader implements JsonWebSignatu
   }
 
   /**
+   * Checks if the provided data is a valid JSON Web Signature Header.
+   *
+   * @param data Data to be checked.
+   */
+  public static override isValidHeader(data: unknown): data is JsonWebSignatureHeaderParameters {
+    return (
+      super.isValidHeader(data) &&
+      typeof data.alg === 'string' &&
+      Object.keys(JSONWEBSIGNATURE_REGISTRY).includes(data.alg)
+    );
+  }
+
+  /**
    * Validates the provided JSON Web Signature Header Parameters.
    *
    * @param parameters Parameters of the JSON Web Signature Header.

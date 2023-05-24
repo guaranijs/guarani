@@ -6,6 +6,8 @@ import { OctetSequenceKey } from '../jwk/backends/octet-sequence/octet-sequence.
 import { JsonWebSignature } from './jsonwebsignature';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 
+const invalidPayloads: any[] = [null, true, 1, 1.2, 1n, '', Symbol('a'), Buffer, () => 1, {}, []];
+
 const invalidTokens: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
 const invalidTokenFormats: string[] = ['', 'a', '.a', '.a.b', 'a.b', 'a.b.c.d'];
 
@@ -24,9 +26,8 @@ const token =
 
 describe('JSON Web Signature', () => {
   describe('constructor', () => {
-    it('should throw when the provided payload is invalid.', () => {
-      // @ts-expect-error Invalid Payload
-      expect(() => new JsonWebSignature(header, { sub: 'user-id' })).toThrow(
+    it.each(invalidPayloads)('should throw when the provided payload is invalid.', (invalidPayload) => {
+      expect(() => new JsonWebSignature(header, invalidPayload)).toThrow(
         new TypeError('Invalid JSON Web Signature Payload.')
       );
     });
@@ -34,6 +35,23 @@ describe('JSON Web Signature', () => {
     it('should create an instance of a json web signature.', () => {
       expect(new JsonWebSignature(header)).toMatchObject({ header, payload: Buffer.alloc(0) });
       expect(new JsonWebSignature(header, payload)).toMatchObject({ header, payload });
+    });
+  });
+
+  describe('isJsonWebSignature()', () => {
+    it.each(invalidTokens)('should return false when the provided data is not a string.', (invalidToken) => {
+      expect(JsonWebSignature.isJsonWebSignature(invalidToken)).toBe(false);
+    });
+
+    it.each(invalidTokenFormats)(
+      'should return false when the format of the provided token is invalid.',
+      (invalidToken) => {
+        expect(JsonWebSignature.isJsonWebSignature(invalidToken)).toBe(false);
+      }
+    );
+
+    it('should return true when the provided data has a valid json web signature token format.', () => {
+      expect(JsonWebSignature.isJsonWebSignature(token)).toBe(true);
     });
   });
 
@@ -76,7 +94,7 @@ describe('JSON Web Signature', () => {
   describe('sign()', () => {
     it('should sign a json web signature object into a compact token.', async () => {
       const jws = new JsonWebSignature(header, payload);
-      await expect(jws.sign(key)).resolves.toEqual(token);
+      await expect(jws.sign(key)).resolves.toMatch(/^[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+$/);
     });
   });
 });

@@ -30,7 +30,8 @@
       "@guarani/jose": ["packages/jose/src/index.ts"],
       "@guarani/oauth2-server": ["packages/oauth2-server/src/index.ts"],
       "@guarani/primitives": ["packages/primitives/src/index.ts"],
-      "@guarani/types": ["packages/types/src/index.ts"]
+      "@guarani/types": ["packages/types/src/index.ts"],
+      "@guarani/uuid": ["packages/uuid/src/index.ts"]
     },
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,

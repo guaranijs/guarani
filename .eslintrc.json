@@ -24,7 +24,9 @@
         "no-useless-constructor": "off",
         "dot-notation": "off",
         "no-labels": "off",
-        "no-unused-expressions": "off"
+        "no-unused-expressions": "off",
+        "no-use-before-define": "off",
+        "@typescript-eslint/no-use-before-define": "error"
       }
     },
     {

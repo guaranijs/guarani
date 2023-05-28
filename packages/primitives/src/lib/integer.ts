@@ -1,4 +1,4 @@
-import { bufferToUnsignedInteger, flipBufferBits } from './buffer';
+import { bufferToInteger } from './buffer';
 
 /**
  * Encodes the provided unsigned Integer into a Buffer.
@@ -22,23 +22,19 @@ function unsignedIntegerToBuffer(integer: bigint): Buffer {
  * Encodes the provided Integer into a Buffer.
  *
  * @param integer Integer to be encoded.
- * @param asTwosComplement Represents Natural Number Buffers starting in
- * **0b1xxxxxxx** as positive by appending a **0x00** byte at the beginning.
+ * @param asTwosComplement Represents Natural Number Buffers starting in **0b1xxxxxxx** as positive
+ * by appending a **0x00** byte at the beginning of the resulting Buffer.
  * @returns Encoded Buffer.
  */
 export function integerToBuffer(integer: number | bigint, asTwosComplement?: true): Buffer {
-  if (typeof integer !== 'bigint' && typeof integer !== 'number') {
-    throw new TypeError('Invalid parameter "integer".');
-  }
-
   if (typeof integer === 'number' && !Number.isInteger(integer)) {
-    throw new TypeError('Invalid parameter "integer".');
+    throw new TypeError('The parameter "integer" is not a valid integer.');
   }
 
   const data = BigInt(integer);
   const unsignedInteger = data < 0n ? data * -1n : data;
 
-  let unsignedBuffer = unsignedIntegerToBuffer(unsignedInteger);
+  const unsignedBuffer = unsignedIntegerToBuffer(unsignedInteger);
 
   if (data >= 0n) {
     return asTwosComplement === true && (unsignedBuffer[0]! & 0x80) !== 0x00
@@ -46,12 +42,8 @@ export function integerToBuffer(integer: number | bigint, asTwosComplement?: tru
       : unsignedBuffer;
   }
 
-  if (data > 0 && (unsignedBuffer[0]! & 0x80) !== 0x00) {
-    unsignedBuffer = Buffer.from([0x00, ...unsignedBuffer]);
-  }
-
-  const reciprocal = flipBufferBits(unsignedBuffer);
-  const complementedInteger = bufferToUnsignedInteger(reciprocal) + 1n;
+  const reciprocal = Buffer.from(unsignedBuffer.map((byte) => ~byte));
+  const complementedInteger = bufferToInteger(reciprocal) + 1n;
 
   let complemented = unsignedIntegerToBuffer(complementedInteger);
 

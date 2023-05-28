@@ -183,7 +183,10 @@ importers:
       supertest: 6.3.3
 
   packages/primitives:
-    specifiers: {}
+    specifiers:
+      '@guarani/types': link:../types
+    devDependencies:
+      '@guarani/types': link:../types
 
   packages/types:
     specifiers: {}

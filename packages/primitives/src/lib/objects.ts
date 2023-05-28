@@ -3,18 +3,18 @@ import { Comparable } from '@guarani/types';
 import { Buffer } from 'buffer';
 
 /**
- * Removes undefined values from the properties of an object or an array of objects.
+ * Removes null and undefined values from the properties of an object or an array of objects.
  *
  * @param data Object or array of objects to be cleansed.
- * @returns Object or array of objects without undefined values.
+ * @returns Object or array of objects without null and undefined values.
  */
-export function removeUndefined<T>(data: T): T {
-  if (data == null || typeof data !== 'object') {
+export function removeNullishValues<T extends object>(data: T): T {
+  if (typeof data !== 'object' || data === null) {
     return data;
   }
 
   return Object.entries(data).reduce((result, [key, value]) => {
-    if (value === undefined) {
+    if (value == null) {
       return result;
     }
 
@@ -22,14 +22,14 @@ export function removeUndefined<T>(data: T): T {
       Object.defineProperty(result, key, {
         configurable: true,
         enumerable: true,
-        value: value.filter((e) => e !== undefined).map((e) => removeUndefined<T>(e)),
+        value: value.filter((v) => v != null).map((v) => removeNullishValues<T>(v)),
         writable: true,
       });
     } else if (typeof value === 'object') {
       Object.defineProperty(result, key, {
         configurable: true,
         enumerable: true,
-        value: removeUndefined<T>(value),
+        value: removeNullishValues<T>(value),
         writable: true,
       });
     } else {

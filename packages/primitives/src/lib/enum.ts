@@ -1,10 +1,12 @@
+import { Nullable } from '@guarani/types';
+
 /**
  * Returns the keys of the Enum.
  *
  * @param enumObj Enum object to be inspected.
  * @returns Collection of the keys of the Enum.
  */
-export function keys<T extends Record<string, any>>(enumObj: T): string[] {
+export function getKeys<T extends Record<string, unknown>>(enumObj: T): (keyof T)[] {
   return Object.keys(enumObj).filter((key) => Number.isNaN(Number(key)));
 }
 
@@ -15,8 +17,8 @@ export function keys<T extends Record<string, any>>(enumObj: T): string[] {
  * @param value Value to be searched.
  * @returns Key of the first Enum member based on the provided value.
  */
-export function key<T extends Record<string, any>>(enumObj: T, value: string | number): string | undefined {
-  return keys(enumObj).find((key) => enumObj[key] === value);
+export function getKey<T extends Record<string, unknown>>(enumObj: T, value: unknown): Nullable<keyof T> {
+  return getKeys(enumObj).find((key) => enumObj[key] === value) ?? null;
 }
 
 /**
@@ -26,8 +28,8 @@ export function key<T extends Record<string, any>>(enumObj: T, value: string | n
  * @param key Key to be checked.
  * @returns Whether the provided Enum has the provided key as its member.
  */
-export function hasKey<T extends Record<string, any>>(enumObj: T, key: string): boolean {
-  return keys(enumObj).find((memberKey) => memberKey === key) !== undefined;
+export function hasKey<T extends Record<string, unknown>>(enumObj: T, key: unknown): key is keyof T {
+  return typeof key === 'string' && getKeys(enumObj).includes(key);
 }
 
 /**
@@ -36,8 +38,8 @@ export function hasKey<T extends Record<string, any>>(enumObj: T, key: string): 
  * @param enumObj Enum object to be inspected.
  * @returns Collection of the Values of the Enum.
  */
-export function values<T extends Record<string, any>>(enumObj: T): any[] {
-  return keys(enumObj).map((key) => enumObj[key]);
+export function getValues<T extends Record<string, unknown>>(enumObj: T): T[keyof T][] {
+  return getKeys(enumObj).map((key) => enumObj[key]);
 }
 
 /**
@@ -47,8 +49,8 @@ export function values<T extends Record<string, any>>(enumObj: T): any[] {
  * @param value Value to be searched.
  * @returns Enum member based on the provided value.
  */
-export function parse<T extends Record<string, any>>(enumObj: T, value: string | number): T[keyof T] | undefined {
-  return values(enumObj).find((attr) => attr === value);
+export function parse<T extends Record<string, unknown>>(enumObj: T, value: unknown): Nullable<T[keyof T]> {
+  return getValues(enumObj).find((attr) => attr === value) ?? null;
 }
 
 /**
@@ -58,8 +60,8 @@ export function parse<T extends Record<string, any>>(enumObj: T, value: string |
  * @param value Value to be checked.
  * @returns Whether the provided Enum has the provided value as its member.
  */
-export function hasValue<T extends Record<string, any>>(enumObj: T, value: string | number): boolean {
-  return parse(enumObj, value) !== undefined;
+export function hasValue<T extends Record<string, unknown>>(enumObj: T, value: unknown): value is T[keyof T] {
+  return getKey(enumObj, value) !== null;
 }
 
 /**
@@ -68,6 +70,6 @@ export function hasValue<T extends Record<string, any>>(enumObj: T, value: strin
  * @param enumObj Enum object to be inspected.
  * @returns Entries of the provided Enum.
  */
-export function entries<T extends Record<string, any>>(enumObj: T): [string, T[keyof T]][] {
-  return keys(enumObj).map((key) => [key, enumObj[key]]);
+export function getEntries<T extends Record<string, unknown>>(enumObj: T): [keyof T, T[keyof T]][] {
+  return getKeys(enumObj).map((key) => [key, enumObj[key]]);
 }

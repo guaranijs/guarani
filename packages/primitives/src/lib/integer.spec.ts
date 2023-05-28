@@ -39,4 +39,17 @@ describe('integerToBuffer()', () => {
   ])("should convert a negative integer into a two's complemented buffer.", (integer, array) => {
     expect(integerToBuffer(integer)).toEqual(Buffer.from(array));
   });
+
+  it.each([
+    [-0n, [0x00]],
+    [-1n, [0xff]],
+    [-127n, [0x81]],
+    [-128n, [0x80]],
+    [-129n, [0xff, 0x7f]],
+    [-255n, [0xff, 0x01]],
+    [-256n, [0xff, 0x00]],
+    [-257n, [0xfe, 0xff]],
+  ])("should convert a negative integer into a two's complemented buffer.", (integer, array) => {
+    expect(integerToBuffer(integer, true)).toEqual(Buffer.from(array));
+  });
 });

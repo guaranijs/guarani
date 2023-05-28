@@ -4,7 +4,7 @@ import { Buffer } from 'buffer';
 
 import { compare, isPlainObject, removeNullishValues } from './objects';
 
-describe('removeUndefined()', () => {
+describe('removeNullishValues()', () => {
   it('should remove all undefined values from an object.', () => {
     expect(
       removeNullishValues({

@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 import { JsonWebSignatureAlgorithm } from '@guarani/jose';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { Buffer } from 'buffer';
 import { URL } from 'url';
@@ -233,7 +233,7 @@ describe('Registration Request Validator', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: removeUndefined<PostRegistrationRequest>({
+        body: removeNullishValues<PostRegistrationRequest>({
           redirect_uris: ['https://client.example.com/oauth/callback'],
           response_types: ['code'],
           grant_types: ['authorization_code', 'refresh_token'],
@@ -1517,7 +1517,7 @@ describe('Registration Request Validator', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: removeUndefined<PutBodyRegistrationRequest>({
+        body: removeNullishValues<PutBodyRegistrationRequest>({
           client_id: 'client_id',
           client_secret: 'client_secret',
           redirect_uris: ['https://client.example.com/oauth/callback'],

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
@@ -205,7 +205,7 @@ export class RegistrationEndpoint implements EndpointInterface {
 
     registrationClientUri.searchParams.set('client_id', client.id);
 
-    return removeUndefined<PostRegistrationResponse>({
+    return removeNullishValues<PostRegistrationResponse>({
       client_id: client.id,
       client_secret: client.secret ?? undefined,
       client_id_issued_at:
@@ -268,7 +268,7 @@ export class RegistrationEndpoint implements EndpointInterface {
 
     registrationClientUri.searchParams.set('client_id', client.id);
 
-    return removeUndefined<GetRegistrationResponse>({
+    return removeNullishValues<GetRegistrationResponse>({
       client_id: client.id,
       client_secret: client.secret ?? undefined,
       client_id_issued_at:
@@ -343,7 +343,7 @@ export class RegistrationEndpoint implements EndpointInterface {
 
     registrationClientUri.searchParams.set('client_id', client.id);
 
-    return removeUndefined<PostRegistrationResponse>({
+    return removeNullishValues<PostRegistrationResponse>({
       client_id: client.id,
       client_secret: client.secret ?? undefined,
       client_id_issued_at:

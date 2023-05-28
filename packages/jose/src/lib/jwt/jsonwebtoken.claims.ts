@@ -1,4 +1,4 @@
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { Buffer } from 'buffer';
 import { isDeepStrictEqual } from 'util';
@@ -68,7 +68,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
       return claims;
     }
 
-    Object.assign(this, removeUndefined<JsonWebTokenClaimsParameters>(claims));
+    Object.assign(this, removeNullishValues<JsonWebTokenClaimsParameters>(claims));
   }
 
   /**
@@ -226,7 +226,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
    * Returns the Stringified JSON representation of the JSON Web Token Claims.
    */
   public toString(): string {
-    return JSON.stringify(removeUndefined<JsonWebTokenClaims>(this));
+    return JSON.stringify(removeNullishValues<JsonWebTokenClaims>(this));
   }
 
   /**

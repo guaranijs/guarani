@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -82,7 +82,7 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
       const { client, scopes } = await this.validator.validate(request);
       const deviceCode = await this.deviceCodeService.create(scopes, client);
 
-      const deviceAuthorizationResponse = removeUndefined<DeviceAuthorizationResponse>({
+      const deviceAuthorizationResponse = removeNullishValues<DeviceAuthorizationResponse>({
         device_code: deviceCode.id,
         user_code: deviceCode.userCode,
         verification_uri: deviceCode.verificationUri,

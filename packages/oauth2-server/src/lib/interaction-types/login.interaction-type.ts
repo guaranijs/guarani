@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { URL, URLSearchParams } from 'url';
 
@@ -105,7 +105,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
       }
     }
 
-    return removeUndefined<LoginContextInteractionResponse>({
+    return removeNullishValues<LoginContextInteractionResponse>({
       skip,
       request_url: url.href,
       client: grant.client.id,

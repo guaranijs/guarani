@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { URL, URLSearchParams } from 'url';
 
@@ -76,7 +76,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return removeUndefined<CreateContextInteractionResponse>({
+    return removeNullishValues<CreateContextInteractionResponse>({
       skip: grant.interactions.includes('create'),
       request_url: url.href,
       context: {

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { Consent } from '../entities/consent.entity';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
@@ -64,6 +64,6 @@ export class TokenResponseType implements ResponseTypeInterface {
     const accessToken = await this.accessTokenService.create(scopes, client, user);
     const token = createTokenResponse(accessToken);
 
-    return removeUndefined<TokenAuthorizationResponse>({ ...token, state: parameters.state });
+    return removeNullishValues<TokenAuthorizationResponse>({ ...token, state: parameters.state });
   }
 }

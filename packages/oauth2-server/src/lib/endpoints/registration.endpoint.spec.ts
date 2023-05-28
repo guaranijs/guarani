@@ -1,5 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
@@ -370,7 +370,7 @@ describe('Dynamic Client Registration Endpoint', () => {
         });
 
         expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(
-          removeUndefined<PostRegistrationResponse>(registrationResponse)
+          removeNullishValues<PostRegistrationResponse>(registrationResponse)
         );
 
         expect(clientServiceMock.create).toHaveBeenCalledTimes(1);
@@ -501,7 +501,7 @@ describe('Dynamic Client Registration Endpoint', () => {
       });
 
       expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(
-        removeUndefined<GetRegistrationResponse>(clientMetadataResponse)
+        removeNullishValues<GetRegistrationResponse>(clientMetadataResponse)
       );
     });
   });
@@ -707,7 +707,7 @@ describe('Dynamic Client Registration Endpoint', () => {
       });
 
       expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(
-        removeUndefined<PutRegistrationResponse>(registrationResponse)
+        removeNullishValues<PutRegistrationResponse>(registrationResponse)
       );
     });
   });

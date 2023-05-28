@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { URL } from 'url';
 
@@ -63,7 +63,7 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
 
     await this.checkGrant(grant);
 
-    return removeUndefined<SelectAccountContextInteractionResponse>({
+    return removeNullishValues<SelectAccountContextInteractionResponse>({
       logins: session.logins.map((login) => login.id),
       context: {
         display: grant.parameters.display,

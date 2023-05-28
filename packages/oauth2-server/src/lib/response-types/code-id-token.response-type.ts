@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
 import { Consent } from '../entities/consent.entity';
@@ -75,7 +75,7 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
     const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);
     const idToken = await this.idTokenHandler.generateIdToken(parameters, login, consent, null, authorizationCode);
 
-    return removeUndefined<CodeAuthorizationResponse & IdTokenAuthorizationResponse>({
+    return removeNullishValues<CodeAuthorizationResponse & IdTokenAuthorizationResponse>({
       code: authorizationCode.code,
       id_token: idToken,
       state: parameters.state,

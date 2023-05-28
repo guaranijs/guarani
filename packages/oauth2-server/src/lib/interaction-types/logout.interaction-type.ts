@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { URL, URLSearchParams } from 'url';
 
@@ -85,7 +85,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return removeUndefined<LogoutContextInteractionResponse>({
+    return removeNullishValues<LogoutContextInteractionResponse>({
       skip: logoutTicket.session.activeLogin == null,
       request_url: url.href,
       client: logoutTicket.client.id,

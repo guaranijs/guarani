@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
@@ -164,7 +164,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
 
     // TODO: Add check for username and jti.
     // TODO: Add policy to restrict or add parameters.
-    return removeUndefined<IntrospectionResponse>({
+    return removeNullishValues<IntrospectionResponse>({
       active: true,
       scope: token.scopes.join(' '),
       client_id: token.client!.id,

@@ -1,4 +1,4 @@
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { InvalidJsonWebKeySetException } from '../exceptions/invalid-jsonwebkeyset.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
@@ -106,6 +106,6 @@ export class JsonWebKeySet implements JsonWebKeySetParameters {
    * @param exportPublic Exports only the Public Parameters of the JSON Web Keys.
    */
   public toJSON(exportPublic = true): JsonWebKeySetParameters {
-    return removeUndefined<JsonWebKeySetParameters>({ keys: this.keys.map((key) => key.toJSON(exportPublic)) });
+    return removeNullishValues<JsonWebKeySetParameters>({ keys: this.keys.map((key) => key.toJSON(exportPublic)) });
   }
 }

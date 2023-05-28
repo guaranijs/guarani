@@ -48,7 +48,7 @@ const invalidPublicValues: any[] = [
   [],
 ];
 
-const invalidPrivateValues: any[] = [null, true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('foo'), () => 1, {}, []];
+const invalidPrivateValues: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('foo'), () => 1, {}, []];
 
 describe('Octet Key Pair Key', () => {
   describe('constructor', () => {

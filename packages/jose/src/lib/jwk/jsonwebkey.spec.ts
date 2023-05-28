@@ -31,16 +31,14 @@ const privateParameters: EllipticCurveKeyParameters = {
   d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo',
 };
 
-const invalidUses: any[] = [null, true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('a'), () => 1, {}, []];
-const invalidKeyOps: any[] = [null, true, 1, 1.2, 1n, 'a', Buffer, Buffer.alloc(1), Symbol('a'), () => 1, {}];
-
-const invalidAlgs: any[] = [...invalidUses];
-const invalidKids: any[] = [...invalidUses];
-
-const invalidX5Us: any[] = [null, true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), 'a', Symbol('a'), () => 1, {}, []];
-const invalidX5Cs: any[] = [...invalidX5Us];
-const invalidX5Ts: any[] = [...invalidX5Us];
-const invalidX5T256s: any[] = [...invalidX5Us];
+const invalidUses: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('a'), () => 1, {}, []];
+const invalidKeyOps: any[] = [true, 1, 1.2, 1n, 'a', Buffer, Buffer.alloc(1), Symbol('a'), () => 1, {}];
+const invalidAlgs: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('a'), () => 1, {}, []];
+const invalidKids: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('a'), () => 1, {}, []];
+const invalidX5Us: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), 'a', Symbol('a'), () => 1, {}, []];
+const invalidX5Cs: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), 'a', Symbol('a'), () => 1, {}, []];
+const invalidX5Ts: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), 'a', Symbol('a'), () => 1, {}, []];
+const invalidX5T256s: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), 'a', Symbol('a'), () => 1, {}, []];
 
 const invalidLoadParameters: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, () => 1];
 

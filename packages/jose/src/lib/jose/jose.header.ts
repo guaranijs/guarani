@@ -1,4 +1,4 @@
-import { isPlainObject, removeUndefined } from '@guarani/primitives';
+import { isPlainObject, removeNullishValues } from '@guarani/primitives';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
@@ -75,7 +75,7 @@ export abstract class JoseHeader implements JoseHeaderParameters {
 
     this.validateParameters(parameters);
 
-    Object.assign(this, removeUndefined<JoseHeaderParameters>(parameters));
+    Object.assign(this, removeNullishValues<JoseHeaderParameters>(parameters));
   }
 
   /**

@@ -1,4 +1,4 @@
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { Buffer } from 'buffer';
 import { createHash, KeyObject } from 'crypto';
@@ -8,18 +8,18 @@ import { JoseException } from '../exceptions/jose.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../jwe/jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebSignatureAlgorithm } from '../jws/jsonwebsignature-algorithm.type';
-import type { EllipticCurveKey } from './backends/elliptic-curve/elliptic-curve.key';
+import { EllipticCurveKey } from './backends/elliptic-curve/elliptic-curve.key';
 import { EllipticCurveKeyParameters } from './backends/elliptic-curve/elliptic-curve.key.parameters';
 import { GenerateEllipticCurveKeyOptions } from './backends/elliptic-curve/generate-elliptic-curve-key.options';
 import { JSONWEBKEY_REGISTRY } from './backends/jsonwebkey.registry';
 import { GenerateOctetKeyPairKeyOptions } from './backends/octet-key-pair/generate-octet-key-pair-key.options';
-import type { OctetKeyPairKey } from './backends/octet-key-pair/octet-key-pair.key';
+import { OctetKeyPairKey } from './backends/octet-key-pair/octet-key-pair.key';
 import { OctetKeyPairKeyParameters } from './backends/octet-key-pair/octet-key-pair.key.parameters';
 import { GenerateOctetSequenceKeyOptions } from './backends/octet-sequence/generate-octet-sequence-key.options';
-import type { OctetSequenceKey } from './backends/octet-sequence/octet-sequence.key';
+import { OctetSequenceKey } from './backends/octet-sequence/octet-sequence.key';
 import { OctetSequenceKeyParameters } from './backends/octet-sequence/octet-sequence.key.parameters';
 import { GenerateRsaKeyOptions } from './backends/rsa/generate-rsa-key.options';
-import type { RsaKey } from './backends/rsa/rsa.key';
+import { RsaKey } from './backends/rsa/rsa.key';
 import { RsaKeyParameters } from './backends/rsa/rsa.key.parameters';
 import { JsonWebKeyOperation } from './jsonwebkey-operation.type';
 import { JsonWebKeyType } from './jsonwebkey-type.type';
@@ -124,7 +124,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
    * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
    */
   public constructor(parameters: T, additionalParameters: Partial<T> = {}) {
-    const params = removeUndefined<T>({ ...parameters, ...additionalParameters });
+    const params = removeNullishValues<T>({ ...parameters, ...additionalParameters });
 
     this.validateParameters(params);
 
@@ -368,6 +368,6 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
 
     const parameters = <T>Object.fromEntries(entries);
 
-    return removeUndefined<T>(parameters);
+    return removeNullishValues<T>(parameters);
   }
 }

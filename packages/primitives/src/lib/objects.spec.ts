@@ -2,12 +2,12 @@ import { Comparable } from '@guarani/types';
 
 import { Buffer } from 'buffer';
 
-import { compare, isPlainObject, removeUndefined } from './objects';
+import { compare, isPlainObject, removeNullishValues } from './objects';
 
 describe('removeUndefined()', () => {
   it('should remove all undefined values from an object.', () => {
     expect(
-      removeUndefined({
+      removeNullishValues({
         name: 'John Doe',
         occupation: null,
         vehicle: undefined,
@@ -17,9 +17,8 @@ describe('removeUndefined()', () => {
       })
     ).toStrictEqual({
       name: 'John Doe',
-      occupation: null,
       age: 23,
-      address: { streetAddress: '123 1st Avenue', referencePoint: null, trees: ['Oak', null] },
+      address: { streetAddress: '123 1st Avenue', trees: ['Oak'] },
       hobbies: ['Jogging', { name: 'Gambling', skills: ['Poker', 'Black Jack'] }],
     });
   });
@@ -177,13 +176,31 @@ describe('compare()', () => {
 
   it('should successfully compare two arrays.', () => {
     expect(compare([], [])).toBe(0);
-    expect(compare([0x00], [0x00])).toBe(0);
+    expect(compare([], [0])).toBe(-1);
+    expect(compare([0], [])).toBe(1);
 
-    expect(compare([0x00], [0x01])).toBe(-1);
-    expect(compare([0x00], [0x00, 0x00])).toBe(-1);
+    expect(compare([0], [0])).toBe(0);
+    expect(compare([0], [1])).toBe(-1);
+    expect(compare([1], [0])).toBe(1);
+    expect(compare([1], [1])).toBe(0);
 
-    expect(compare([0x01], [0x00])).toBe(1);
-    expect(compare([0x01], [0x00, 0x00])).toBe(1);
+    expect(compare([0], [0, 0])).toBe(-1);
+    expect(compare([0], [0, 1])).toBe(-1);
+    expect(compare([0], [1, 0])).toBe(-1);
+    expect(compare([0], [1, 1])).toBe(-1);
+    expect(compare([1], [0, 0])).toBe(1);
+    expect(compare([1], [0, 1])).toBe(1);
+    expect(compare([1], [1, 0])).toBe(-1);
+    expect(compare([1], [1, 1])).toBe(-1);
+
+    expect(compare([0, 0], [0])).toBe(1);
+    expect(compare([0, 1], [0])).toBe(1);
+    expect(compare([1, 0], [0])).toBe(1);
+    expect(compare([1, 1], [0])).toBe(1);
+    expect(compare([0, 0], [1])).toBe(-1);
+    expect(compare([0, 1], [1])).toBe(-1);
+    expect(compare([1, 0], [1])).toBe(1);
+    expect(compare([1, 1], [1])).toBe(1);
   });
 
   it('should successfully compare two objects of the same type.', () => {

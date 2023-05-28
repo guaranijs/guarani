@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { URL, URLSearchParams } from 'url';
 
@@ -84,7 +84,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return removeUndefined<ConsentContextInteractionResponse>({
+    return removeNullishValues<ConsentContextInteractionResponse>({
       skip: grant.consent != null,
       requested_scope: grant.parameters.scope,
       subject: calculateSubjectIdentifier(grant.session.activeLogin!.user, grant.client, this.settings),

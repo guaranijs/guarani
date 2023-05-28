@@ -1,5 +1,5 @@
 import { Inject, Injectable, LazyInject } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { URL } from 'url';
 
@@ -57,7 +57,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async handle(_request: HttpRequest): Promise<HttpResponse> {
-    const discoveryResponse = removeUndefined<DiscoveryResponse>({
+    const discoveryResponse = removeNullishValues<DiscoveryResponse>({
       issuer: this.settings.issuer,
       authorization_endpoint: this.getEndpointPath('authorization'),
       token_endpoint: this.getEndpointPath('token'),

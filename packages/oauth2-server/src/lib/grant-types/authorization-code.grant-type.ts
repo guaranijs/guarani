@@ -1,5 +1,5 @@
 import { Inject, Injectable, InjectAll, Optional } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
@@ -91,7 +91,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
         response.id_token = await this.idTokenHandler!.generateIdToken(parameters, login, consent, null, null);
       }
 
-      return removeUndefined(response);
+      return removeNullishValues(response);
     } finally {
       await this.authorizationCodeService.revoke(authorizationCode);
     }

@@ -1,4 +1,4 @@
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 
@@ -87,7 +87,7 @@ export abstract class OAuth2Exception extends Error {
    * Body of the OAuth 2.0 Error Response.
    */
   public toJSON(): OAuth2ExceptionResponse {
-    return removeUndefined<OAuth2ExceptionResponse>({
+    return removeNullishValues<OAuth2ExceptionResponse>({
       error: this.code,
       error_description: this.parameters.description,
       error_uri: this.parameters.uri,

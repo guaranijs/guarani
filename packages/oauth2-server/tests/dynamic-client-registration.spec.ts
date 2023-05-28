@@ -1,5 +1,5 @@
 import { getContainer } from '@guarani/di';
-import { removeUndefined } from '@guarani/primitives';
+import { removeNullishValues } from '@guarani/primitives';
 
 import express, { Application, json } from 'express';
 import request, { SuperAgentTest } from 'supertest';
@@ -47,7 +47,7 @@ describe('Dynamic Client Registration', () => {
 
     const initialAccessToken = await accessTokenService.createInitialAccessToken();
 
-    const requestBody = removeUndefined<PostRegistrationRequest>({
+    const requestBody = removeNullishValues<PostRegistrationRequest>({
       redirect_uris: ['https://client.example.com/oauth/callback/'],
       response_types: ['code'],
       grant_types: ['authorization_code', 'refresh_token'],
@@ -196,7 +196,7 @@ describe('Dynamic Client Registration', () => {
   });
 
   it('PUT /oauth/register', async () => {
-    const requestBody = removeUndefined<PutBodyRegistrationRequest>({
+    const requestBody = removeNullishValues<PutBodyRegistrationRequest>({
       client_id: clientId,
       client_secret: clientSecret,
       redirect_uris: ['https://client.example.com/oauth/callback/'],

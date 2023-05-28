@@ -1,12 +1,4 @@
-export {
-  Endianness,
-  binaryToBuffer,
-  bufferToBinary,
-  bufferToInteger,
-  bufferToUnsignedInteger,
-  flipBufferBits,
-  padBits,
-} from './lib/buffer';
+export { bitstringToBuffer, bufferToBitstring, bufferToInteger } from './lib/buffer';
 
 export * as Enum from './lib/enum';
 

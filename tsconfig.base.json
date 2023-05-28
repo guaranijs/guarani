@@ -25,7 +25,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "@guarani/asn1": ["packages/asn1/src/index.ts"],
       "@guarani/di": ["packages/di/src/index.ts"],
       "@guarani/jose": ["packages/jose/src/index.ts"],
       "@guarani/oauth2-server": ["packages/oauth2-server/src/index.ts"],

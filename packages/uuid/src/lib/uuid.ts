@@ -1,4 +1,4 @@
-import { bufferToUnsignedInteger, integerToBuffer } from '@guarani/primitives';
+import { bufferToInteger, integerToBuffer } from '@guarani/primitives';
 import { Comparable, Nullable } from '@guarani/types';
 
 import { Buffer } from 'buffer';
@@ -51,7 +51,7 @@ export class UUID implements Comparable<UUID> {
 
     lastTimestamp = timestamp;
 
-    const clockSequence = options.clockSequence ?? bufferToUnsignedInteger(randomBytes(2)) & 0x3fffn;
+    const clockSequence = options.clockSequence ?? bufferToInteger(randomBytes(2)) & 0x3fffn;
 
     const timestampLowField = timestamp & 0xffffffffn;
     const timestampMiddleField = (timestamp >> 32n) & 0xffffn;
@@ -59,7 +59,7 @@ export class UUID implements Comparable<UUID> {
     const clockSequenceLowField = clockSequence & 0xffn;
     const clockSequenceHighFieldAndVariant = (clockSequence >> 8n) & 0x3fn;
 
-    const node = options.node ?? bufferToUnsignedInteger(getMacAddress() ?? randomBytes(6));
+    const node = options.node ?? bufferToInteger(getMacAddress() ?? randomBytes(6));
 
     let uuidInteger =
       (timestampLowField << 96n) |
@@ -139,7 +139,7 @@ export class UUID implements Comparable<UUID> {
    * Integer representation of the UUID.
    */
   public get int(): bigint {
-    return bufferToUnsignedInteger(this.#bytes);
+    return bufferToInteger(this.#bytes);
   }
 
   /**

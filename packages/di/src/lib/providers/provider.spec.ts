@@ -1,13 +1,13 @@
 import { isProvider, Provider } from './provider';
 
-describe('Provider', () => {
-  const providers: Provider<unknown>[] = [
-    { useClass: class {} },
-    { useFactory: () => 1 },
-    { useToken: 'TOKEN' },
-    { useValue: 'Value' },
-  ];
+const providers: Provider<unknown>[] = [
+  { useClass: class {} },
+  { useFactory: () => 1 },
+  { useToken: Symbol('TOKEN') },
+  { useValue: 'Value' },
+];
 
+describe('Provider', () => {
   it('should return false when the provider has multiple "use" items.', () => {
     expect(isProvider({ useClass: class {}, useValue: 'Value' })).toBe(false);
   });

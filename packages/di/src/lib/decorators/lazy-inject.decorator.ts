@@ -1,7 +1,7 @@
+import { AbstractConstructor, Constructor } from '@guarani/types';
+
 import { PARAM_TOKENS, PROP_TOKENS } from '../metadata/metadata.keys';
 import { setTokenDescriptor } from '../metadata/set-token-descriptor';
-import { AbstractConstructor } from '../types/abstract-constructor.interface';
-import { Constructor } from '../types/constructor.interface';
 import { LazyToken } from '../types/lazy-token';
 
 /**
@@ -10,22 +10,24 @@ import { LazyToken } from '../types/lazy-token';
  *
  * @param wrappedToken Function that wraps the Constructor Injectable Token to be lazy injected.
  */
-export function LazyInject(wrappedToken: () => Constructor<any>): PropertyDecorator & ParameterDecorator {
+export function LazyInject<T>(
+  wrappedToken: () => AbstractConstructor<T> | Constructor<T>
+): PropertyDecorator & ParameterDecorator {
   return function (
-    target: object | AbstractConstructor<any> | Constructor<any>,
-    propertyKey: string | symbol | undefined,
+    target: object | AbstractConstructor<T> | Constructor<T>,
+    propertyKey?: string | symbol,
     parameterIndex?: number
   ): void {
-    const lazyToken = new LazyToken(wrappedToken);
+    const lazyToken = new LazyToken<T>(wrappedToken);
 
     // Injects into an argument of the constructor.
-    if (propertyKey === undefined && parameterIndex !== undefined && typeof target !== 'object') {
-      setTokenDescriptor<any>(PARAM_TOKENS, target, parameterIndex, { token: lazyToken, multiple: false });
+    if (typeof propertyKey === 'undefined' && typeof parameterIndex !== 'undefined' && typeof target !== 'object') {
+      setTokenDescriptor<unknown>(PARAM_TOKENS, target, parameterIndex, { token: lazyToken, multiple: false });
     }
 
     // Injects into a property of the target.
-    if (propertyKey !== undefined && parameterIndex === undefined) {
-      setTokenDescriptor<any>(PROP_TOKENS, target, propertyKey, { token: lazyToken, multiple: false });
+    if (typeof propertyKey !== 'undefined' && typeof parameterIndex === 'undefined') {
+      setTokenDescriptor<unknown>(PROP_TOKENS, target, propertyKey, { token: lazyToken, multiple: false });
     }
   };
 }

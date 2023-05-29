@@ -9,11 +9,11 @@ export class InvalidProviderException extends DependencyInjectionException {
    *
    * @param obj Object used as a Provider.
    */
-  public constructor(obj: unknown) {
+  public constructor(obj: unknown, options?: ErrorOptions) {
     const serializedObject = InvalidProviderException.getSerializedObject(obj);
     const message = `The object "${serializedObject}" is not a valid Provider.`;
 
-    super(message);
+    super(message, options);
   }
 
   /**

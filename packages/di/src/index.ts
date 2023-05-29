@@ -26,8 +26,6 @@ export { TokenProvider, isTokenProvider } from './lib/providers/token.provider';
 export { ValueProvider, isValueProvider } from './lib/providers/value.provider';
 
 // Types
-export { AbstractConstructor } from './lib/types/abstract-constructor.interface';
-export { Constructor } from './lib/types/constructor.interface';
 export { Factory } from './lib/types/factory.type';
 export { InjectableToken, isInjectableToken } from './lib/types/injectable-token.type';
 export { Lifecycle } from './lib/types/lifecycle.enum';

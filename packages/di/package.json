@@ -30,5 +30,8 @@
   },
   "dependencies": {
     "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@guarani/types": "link:../types"
   }
 }

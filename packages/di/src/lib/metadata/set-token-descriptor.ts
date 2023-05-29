@@ -1,4 +1,5 @@
-import { Constructor } from '../types/constructor.interface';
+import { AbstractConstructor, Constructor } from '@guarani/types';
+
 import { TokenDescriptor } from '../types/token.descriptor';
 
 /**
@@ -11,7 +12,7 @@ import { TokenDescriptor } from '../types/token.descriptor';
  */
 export function setTokenDescriptor<T>(
   metadataKey: string | symbol,
-  target: object | Constructor<T>,
+  target: object | AbstractConstructor<T> | Constructor<T>,
   propertyOrIndex: string | symbol | number,
   descriptor: Partial<TokenDescriptor<T>>
 ): void {
@@ -22,7 +23,7 @@ export function setTokenDescriptor<T>(
 
   const tokenDescriptor = tokenDescriptors.get(propertyOrIndex) ?? <TokenDescriptor<T>>{};
 
-  Object.assign<TokenDescriptor<T>, Partial<TokenDescriptor<T>>>(tokenDescriptor, descriptor);
+  Object.assign(tokenDescriptor, descriptor);
   tokenDescriptors.set(propertyOrIndex, tokenDescriptor);
   Reflect.defineMetadata(metadataKey, tokenDescriptors, target);
 }

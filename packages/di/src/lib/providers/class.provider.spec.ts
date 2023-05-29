@@ -3,25 +3,55 @@ import { Buffer } from 'buffer';
 import { isClassProvider } from './class.provider';
 import { Provider } from './provider';
 
-const nonProviders: unknown[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer.alloc(0), () => 1, []];
+const invalidProviders: unknown[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  'a',
+  Symbol('a'),
+  Buffer.alloc(0),
+  Buffer,
+  () => 1,
+  [],
+];
+
+const invalidConstructors: unknown[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  'a',
+  Symbol('a'),
+  Buffer.alloc(0),
+  () => 1,
+  [],
+];
+
+const invalidClassProviders: Provider<unknown>[] = [
+  { useFactory: () => 1 },
+  { useToken: Symbol('TOKEN') },
+  { useValue: 'Value' },
+];
 
 describe('Class Provider', () => {
-  const invalidCtors: unknown[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer.alloc(0), () => 1, []];
-  const invalidProviders: Provider<unknown>[] = [{ useFactory: () => 1 }, { useToken: 'TOKEN' }, { useValue: 'Value' }];
-
-  it.each(nonProviders)('should return false when not checking a POJO.', (nonProvider) => {
-    expect(isClassProvider(nonProvider)).toBe(false);
-  });
-
-  it.each(invalidCtors)('should return false when "useClass" is not a valid constructor.', (constructor) => {
-    expect(isClassProvider({ useClass: constructor })).toBe(false);
-  });
-
-  it.each(invalidProviders)('should return false when the provider is not a class provider.', (provider) => {
+  it.each(invalidProviders)('should return false when providing an invalid provider.', (provider) => {
     expect(isClassProvider(provider)).toBe(false);
   });
 
-  it('should return true when checking a valid class provider.', () => {
+  it.each(invalidConstructors)('should return false when "useClass" is not a valid constructor.', (constructor) => {
+    expect(isClassProvider({ useClass: constructor })).toBe(false);
+  });
+
+  it.each(invalidClassProviders)('should return false when providing an invalid class provider.', (provider) => {
+    expect(isClassProvider(provider)).toBe(false);
+  });
+
+  it('should return true when providing a valid factory provider.', () => {
     expect(isClassProvider({ useClass: class {} })).toBe(true);
   });
 });

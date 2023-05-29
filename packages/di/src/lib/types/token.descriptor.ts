@@ -18,4 +18,9 @@ export interface TokenDescriptor<T> {
    * Informs if the resolution of the Token is optional.
    */
   optional: boolean;
+
+  /**
+   * Name of the property that should be resolved.
+   */
+  property?: string | symbol | number;
 }

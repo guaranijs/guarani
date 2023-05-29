@@ -137,17 +137,14 @@ importers:
       typescript: 5.0.4
       validator: 13.9.0
 
-  packages/asn1:
-    specifiers:
-      '@guarani/primitives': link:../primitives
-    dependencies:
-      '@guarani/primitives': link:../primitives
-
   packages/di:
     specifiers:
+      '@guarani/types': link:../types
       reflect-metadata: ^0.1.13
     dependencies:
       reflect-metadata: 0.1.13
+    devDependencies:
+      '@guarani/types': link:../types
 
   packages/jose:
     specifiers:

@@ -201,13 +201,34 @@ describe('Dependency Injection Container', () => {
       expect(foo.issuer).toBe('https://example.com');
     });
 
-    it('should inject "undefined" when a token is not registered and the descriptor is marked as optional.', () => {
+    it('should inject "undefined" when a token is not registered and the constructor descriptor is marked as optional.', () => {
       @Injectable()
       class Foo {
         public constructor(
           @Inject('Issuer') public readonly issuer: string,
           @Optional() @Inject('Value') public readonly value?: number
         ) {}
+      }
+
+      container.bind(Foo).toSelf();
+      container.bind<string>('Issuer').toValue('https://example.com');
+
+      let foo!: Foo;
+
+      expect(() => (foo = container.resolve(Foo))).not.toThrow();
+      expect(foo).toBeInstanceOf(Foo);
+      expect(foo.issuer).toBe('https://example.com');
+      expect(foo.value).toBeUndefined();
+    });
+
+    it('should inject "undefined" when a token is not registered and the property descriptor is marked as optional.', () => {
+      @Injectable()
+      class Foo {
+        @Optional()
+        @Inject('Value')
+        public readonly value?: number;
+
+        public constructor(@Inject('Issuer') public readonly issuer: string) {}
       }
 
       container.bind(Foo).toSelf();

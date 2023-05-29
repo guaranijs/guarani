@@ -1,4 +1,23 @@
-import { Constructor } from './constructor.interface';
+import { AbstractConstructor, Constructor } from '@guarani/types';
+
+/**
+ * Reflect's Methods used to create a Proxy Handler.
+ */
+const reflectMethods: (keyof ProxyHandler<object>)[] = [
+  'apply',
+  'construct',
+  'defineProperty',
+  'deleteProperty',
+  'get',
+  'getOwnPropertyDescriptor',
+  'getPrototypeOf',
+  'has',
+  'isExtensible',
+  'ownKeys',
+  'preventExtensions',
+  'set',
+  'setPrototypeOf',
+];
 
 /**
  * Wrapper class used to delay the resolution of a **Constructor** Injectable Token.
@@ -10,30 +29,11 @@ import { Constructor } from './constructor.interface';
  */
 export class LazyToken<T> {
   /**
-   * Reflect's Methods used to create the Proxy Handler.
-   */
-  private static readonly reflectMethods: (keyof ProxyHandler<object>)[] = [
-    'apply',
-    'construct',
-    'defineProperty',
-    'deleteProperty',
-    'get',
-    'getOwnPropertyDescriptor',
-    'getPrototypeOf',
-    'has',
-    'isExtensible',
-    'ownKeys',
-    'preventExtensions',
-    'set',
-    'setPrototypeOf',
-  ];
-
-  /**
    * Wraps a Constructor Injectable Token to delay its resolution.
    *
    * @param wrappedToken Wrapped Injectable Token.
    */
-  public constructor(private readonly wrappedToken: () => Constructor<T>) {}
+  public constructor(private readonly wrappedToken: () => AbstractConstructor<T> | Constructor<T>) {}
 
   /**
    * Resolves the wrapped Injectable Token.
@@ -41,7 +41,7 @@ export class LazyToken<T> {
    * @param callback Callback function used to resolve the Injectable Token.
    * @returns Proxy that acts in lieu of the wrapped Injectable Token.
    */
-  public resolve(callback: (lazyToken: Constructor<T>) => T): T {
+  public resolve(callback: (lazyToken: AbstractConstructor<T> | Constructor<T>) => T): T {
     const callbackResolver = () => {
       return callback(this.wrappedToken());
     };
@@ -58,7 +58,7 @@ export class LazyToken<T> {
   private createHandler(callbackResolver: () => T): ProxyHandler<object> {
     const handler: ProxyHandler<object> = {};
 
-    for (const method of LazyToken.reflectMethods) {
+    for (const method of reflectMethods) {
       const handlerMethod = (...args: unknown[]) => {
         return (<CallableFunction>Reflect[method])(callbackResolver(), ...args.slice(1));
       };

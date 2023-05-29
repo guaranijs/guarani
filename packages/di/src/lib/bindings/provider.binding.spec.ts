@@ -8,14 +8,12 @@ import { Binding } from './binding';
 import { LifecycleBinding } from './lifecycle.binding';
 import { ProviderBinding } from './provider.binding';
 
-const TOKEN = Symbol('TOKEN');
-
 describe('Provider Binding', () => {
   let binding: Binding<Buffer>;
   let providerBinding: ProviderBinding<Buffer>;
 
   beforeEach(() => {
-    binding = new Binding<Buffer>(TOKEN);
+    binding = new Binding<Buffer>(Symbol('TOKEN'));
     providerBinding = new ProviderBinding<Buffer>(binding);
   });
 
@@ -30,7 +28,7 @@ describe('Provider Binding', () => {
     it("should bind a factory function as the token's provider.", () => {
       const factory = () => Buffer.alloc(0);
 
-      expect(providerBinding.toFactory(factory)).toBeUndefined();
+      providerBinding.toFactory(factory);
       expect(binding.provider).toStrictEqual<FactoryProvider<Buffer>>({ useFactory: factory });
     });
   });
@@ -44,7 +42,7 @@ describe('Provider Binding', () => {
 
   describe('toValue()', () => {
     it("should bind a value as the token's provider.", () => {
-      expect(providerBinding.toValue(Buffer.alloc(0))).toBeUndefined();
+      providerBinding.toValue(Buffer.alloc(0));
       expect(binding.provider).toStrictEqual<ValueProvider<Buffer>>({ useValue: Buffer.alloc(0) });
     });
   });

@@ -1,5 +1,5 @@
-import { AbstractConstructor } from '../types/abstract-constructor.interface';
-import { Constructor } from '../types/constructor.interface';
+import { AbstractConstructor, Constructor } from '@guarani/types';
+
 import { Factory } from '../types/factory.type';
 import { InjectableToken } from '../types/injectable-token.type';
 import { Binding } from './binding';
@@ -58,7 +58,7 @@ export class ProviderBinding<T> {
    * Binds a Constructor Token to itself.
    */
   public toSelf(): LifecycleBinding<T> {
-    if (typeof this.binding.token !== 'function' || this.binding.token.prototype === undefined) {
+    if (typeof this.binding.token !== 'function' || typeof this.binding.token.prototype === 'undefined') {
       throw new TypeError(`The Token "${String(this.binding.token)}" is not a valid Constructor.`);
     }
 

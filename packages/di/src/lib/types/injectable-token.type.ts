@@ -1,5 +1,5 @@
-import { AbstractConstructor } from './abstract-constructor.interface';
-import { Constructor } from './constructor.interface';
+import { AbstractConstructor, Constructor } from '@guarani/types';
+
 import { LazyToken } from './lazy-token';
 
 /**
@@ -16,7 +16,7 @@ export function isInjectableToken<T>(obj: unknown): obj is InjectableToken<T> {
   return (
     typeof obj === 'string' ||
     typeof obj === 'symbol' ||
-    (typeof obj === 'function' && obj.prototype !== undefined) ||
+    (typeof obj === 'function' && typeof obj.prototype !== 'undefined') ||
     obj instanceof LazyToken<T>
   );
 }

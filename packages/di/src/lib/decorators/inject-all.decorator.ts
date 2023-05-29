@@ -1,7 +1,7 @@
+import { AbstractConstructor, Constructor } from '@guarani/types';
+
 import { PARAM_TOKENS, PROP_TOKENS } from '../metadata/metadata.keys';
 import { setTokenDescriptor } from '../metadata/set-token-descriptor';
-import { AbstractConstructor } from '../types/abstract-constructor.interface';
-import { Constructor } from '../types/constructor.interface';
 import { InjectableToken } from '../types/injectable-token.type';
 
 /**
@@ -9,20 +9,20 @@ import { InjectableToken } from '../types/injectable-token.type';
  *
  * @param token Token used to resolve the dependencies.
  */
-export function InjectAll(token: InjectableToken<any>): ParameterDecorator & PropertyDecorator {
+export function InjectAll<T>(token: InjectableToken<T>): ParameterDecorator & PropertyDecorator {
   return function (
-    target: object | AbstractConstructor<any> | Constructor<any>,
-    propertyKey: string | symbol | undefined,
+    target: object | AbstractConstructor<T> | Constructor<T>,
+    propertyKey?: string | symbol,
     parameterIndex?: number
   ): void {
     // Injects into an argument of the constructor.
-    if (propertyKey === undefined && parameterIndex !== undefined && typeof target !== 'object') {
-      setTokenDescriptor<any>(PARAM_TOKENS, target, parameterIndex, { token, multiple: true });
+    if (typeof propertyKey === 'undefined' && typeof parameterIndex !== 'undefined' && typeof target !== 'object') {
+      setTokenDescriptor<unknown>(PARAM_TOKENS, target, parameterIndex, { token, multiple: true });
     }
 
     // Injects into a property of the target.
-    if (propertyKey !== undefined && parameterIndex === undefined) {
-      setTokenDescriptor<any>(PROP_TOKENS, target, propertyKey, { token, multiple: true });
+    if (typeof propertyKey !== 'undefined' && typeof parameterIndex === 'undefined') {
+      setTokenDescriptor<unknown>(PROP_TOKENS, target, propertyKey, { token, multiple: true });
     }
   };
 }

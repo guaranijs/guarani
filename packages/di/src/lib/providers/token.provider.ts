@@ -15,12 +15,12 @@ export interface TokenProvider<T> {
  *
  * @param obj Object to be checked.
  */
-export function isTokenProvider<T = any>(obj: unknown): obj is TokenProvider<T> {
+export function isTokenProvider<T>(obj: unknown): obj is TokenProvider<T> {
   if (typeof obj !== 'object' || obj === null) {
     return false;
   }
 
   const { useToken } = <TokenProvider<T>>obj;
 
-  return isInjectableToken(useToken);
+  return isInjectableToken<T>(useToken);
 }

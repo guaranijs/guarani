@@ -13,7 +13,7 @@ export interface ValueProvider<T> {
  *
  * @param obj Object to be checked.
  */
-export function isValueProvider<T = any>(obj: unknown): obj is ValueProvider<T> {
+export function isValueProvider<T>(obj: unknown): obj is ValueProvider<T> {
   if (typeof obj !== 'object' || obj === null) {
     return false;
   }

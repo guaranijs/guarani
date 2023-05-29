@@ -15,12 +15,12 @@ export interface FactoryProvider<T> {
  *
  * @param obj Object to be checked.
  */
-export function isFactoryProvider<T = any>(obj: unknown): obj is FactoryProvider<T> {
+export function isFactoryProvider<T>(obj: unknown): obj is FactoryProvider<T> {
   if (typeof obj !== 'object' || obj === null) {
     return false;
   }
 
   const { useFactory } = <FactoryProvider<T>>obj;
 
-  return typeof useFactory === 'function' && useFactory.prototype === undefined;
+  return typeof useFactory === 'function' && typeof useFactory.prototype === 'undefined';
 }

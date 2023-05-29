@@ -10,10 +10,10 @@ export class TokenNotRegisteredException<T> extends DependencyInjectionException
    *
    * @param token Token not registered in the Dependency Injection Container.
    */
-  public constructor(token: InjectableToken<T>) {
+  public constructor(token: InjectableToken<T>, options?: ErrorOptions) {
     const tokenName = typeof token === 'function' ? token.name : String(token);
     const message = `The Token "${tokenName}" is not registered.`;
 
-    super(message);
+    super(message, options);
   }
 }

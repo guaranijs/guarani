@@ -6,11 +6,11 @@ const invalidTokens: unknown[] = [undefined, null, true, 1, 1.2, 1n, Buffer.allo
 const validTokens: InjectableToken<unknown>[] = ['TOKEN', Symbol('TOKEN'), class {}];
 
 describe('Injectable Token', () => {
-  it.each(invalidTokens)('should return false when the provided object is not a valid injectable token.', (token) => {
+  it.each(invalidTokens)('should return false when providing an invalid injectable token.', (token) => {
     expect(isInjectableToken(token)).toBe(false);
   });
 
-  it.each(validTokens)('should return true when the provided object is a valid injectable token.', (token) => {
+  it.each(validTokens)('should return true when providing a valid injectable token.', (token) => {
     expect(isInjectableToken(token)).toBe(true);
   });
 });

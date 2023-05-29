@@ -1,3 +1,5 @@
+import { AbstractConstructor, Constructor } from '@guarani/types';
+
 import { Binding } from '../bindings/binding';
 import { ProviderBinding } from '../bindings/provider.binding';
 import { InvalidProviderException } from '../exceptions/invalid-provider.exception';
@@ -8,8 +10,6 @@ import { isFactoryProvider } from '../providers/factory.provider';
 import { isProvider, Provider } from '../providers/provider';
 import { isTokenProvider } from '../providers/token.provider';
 import { isValueProvider } from '../providers/value.provider';
-import { AbstractConstructor } from '../types/abstract-constructor.interface';
-import { Constructor } from '../types/constructor.interface';
 import { InjectableToken } from '../types/injectable-token.type';
 import { LazyToken } from '../types/lazy-token';
 import { Lifecycle } from '../types/lifecycle.enum';
@@ -95,7 +95,7 @@ export class DependencyInjectionContainer {
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
    * @returns Resolved instance or valued based on the Token.
    */
-  private _resolve<T>(token: InjectableToken<T>, requestResolutions = new Map<InjectableToken<any>, any>()): T {
+  private _resolve<T>(token: InjectableToken<T>, requestResolutions = new Map<InjectableToken<T>, T>()): T {
     if (token instanceof LazyToken<T>) {
       return token.resolve((lazyToken) => this._resolve<T>(lazyToken, requestResolutions));
     }
@@ -112,7 +112,7 @@ export class DependencyInjectionContainer {
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
    * @returns Array of the resolved instances based on the Token.
    */
-  private _resolveAll<T>(token: InjectableToken<T>, requestResolutions = new Map<InjectableToken<any>, any>()): T[] {
+  private _resolveAll<T>(token: InjectableToken<T>, requestResolutions = new Map<InjectableToken<T>, T>()): T[] {
     if (token instanceof LazyToken) {
       throw new ResolutionException('The resolution of multiple Lazy Tokens is unsupported.');
     }
@@ -128,7 +128,7 @@ export class DependencyInjectionContainer {
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
    * @returns Resolved instance.
    */
-  private resolveBinding<T>(binding: Binding<T>, requestResolutions: Map<InjectableToken<any>, any>): T {
+  private resolveBinding<T>(binding: Binding<T>, requestResolutions: Map<InjectableToken<T>, T>): T {
     switch (binding.lifecycle) {
       case Lifecycle.Singleton: {
         return (binding.singleton ??= this.resolveProvider(binding.provider, requestResolutions));
@@ -137,7 +137,7 @@ export class DependencyInjectionContainer {
       case Lifecycle.Request: {
         let instance = requestResolutions.get(binding.token);
 
-        if (instance === undefined) {
+        if (typeof instance === 'undefined') {
           instance = this.resolveProvider(binding.provider, requestResolutions);
           requestResolutions.set(binding.token, instance);
         }
@@ -147,10 +147,6 @@ export class DependencyInjectionContainer {
 
       case Lifecycle.Transient:
         return this.resolveProvider(binding.provider, requestResolutions);
-
-      default:
-        // The only reason I put this is so that the compiler does not complain about the return type.
-        throw new TypeError(`Invalid Lifecycle "${binding.lifecycle}".`);
     }
   }
 
@@ -161,7 +157,7 @@ export class DependencyInjectionContainer {
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
    * @returns Resolved instance.
    */
-  private resolveProvider<T>(provider: Provider<T>, requestResolutions: Map<InjectableToken<any>, any>): T {
+  private resolveProvider<T>(provider: Provider<T>, requestResolutions: Map<InjectableToken<T>, T>): T {
     if (!isProvider(provider)) {
       throw new InvalidProviderException(provider);
     }
@@ -189,17 +185,38 @@ export class DependencyInjectionContainer {
   /**
    * Creates a new instance of the requested Constructor with all its dependencies resolved.
    *
-   * @param constructor Constructor to be instantiated.
+   * @param class_ Constructor to be instantiated.
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
    * @returns Resolved instance.
    */
   private construct<T>(
-    constructor: AbstractConstructor<T> | Constructor<T>,
-    requestResolutions: Map<InjectableToken<any>, any>
+    class_: AbstractConstructor<T> | Constructor<T>,
+    requestResolutions: Map<InjectableToken<T>, T>
   ): T {
-    const paramTypeDescriptors: TokenDescriptor<any>[] = Reflect.getMetadata(PARAM_TYPES, constructor) ?? [];
+    const resolvedParamDependencies = this.resolveConstructorDependencies(class_, requestResolutions);
 
-    const resolvedParamDependencies = paramTypeDescriptors.map((descriptor) => {
+    const instance = Reflect.construct(class_, resolvedParamDependencies);
+
+    this.resolvePropertiesDependencies(class_, requestResolutions);
+    this.resolvePropertiesDependencies(instance, requestResolutions);
+
+    return instance as T;
+  }
+
+  /**
+   * Resolves the dependencies of the constructor of the provided class.
+   *
+   * @param class_ Constructor to be instantiated.
+   * @param requestResolutions Mapping of the Request-scoped resolved instances.
+   * @returns Resolved constructor parameters of the provided class.
+   */
+  private resolveConstructorDependencies<T>(
+    class_: AbstractConstructor<T> | Constructor<T>,
+    requestResolutions: Map<InjectableToken<T>, T>
+  ): unknown[] {
+    const paramTypeDescriptors: TokenDescriptor<unknown>[] = Reflect.getMetadata(PARAM_TYPES, class_) ?? [];
+
+    return paramTypeDescriptors.map((descriptor) => {
       const { multiple, optional, token } = descriptor;
 
       if (!this.registry.has(token) && optional) {
@@ -208,43 +225,37 @@ export class DependencyInjectionContainer {
 
       return multiple ? this._resolveAll(token, requestResolutions) : this._resolve(token, requestResolutions);
     });
+  }
 
-    const staticPropTokens: Map<string | symbol, TokenDescriptor<any>> = Reflect.getMetadata(PROP_TOKENS, constructor);
-
-    if (staticPropTokens !== undefined) {
-      for (const [property, descriptor] of staticPropTokens) {
-        const { multiple, optional, token } = descriptor;
-
-        if (this.registry.has(token) || !optional) {
-          // @ts-expect-error Constructor does not exist on type T.
-          constructor[property] = multiple
-            ? this._resolveAll(token, requestResolutions)
-            : this._resolve(token, requestResolutions);
-        }
-      }
-    }
-
-    const instance = <T>Reflect.construct(constructor, resolvedParamDependencies);
-
-    const instancePropTokens: Map<string | symbol, TokenDescriptor<any>> = Reflect.getMetadata(
+  /**
+   * Resolves the dependencies of the properties of the provided class or instance.
+   *
+   * @param classOrInstance Constructor or instance to be resolved.
+   * @param requestResolutions Mapping of the Request-scoped resolved instances.
+   * @returns Resolved properties of the provided class or instance.
+   */
+  private resolvePropertiesDependencies<T>(
+    classOrInstance: object | AbstractConstructor<T> | Constructor<T>,
+    requestResolutions: Map<InjectableToken<T>, T>
+  ): void {
+    const propTokens: Map<string | symbol, TokenDescriptor<unknown>> | undefined = Reflect.getMetadata(
       PROP_TOKENS,
-      <object>instance
+      classOrInstance
     );
 
-    if (instancePropTokens !== undefined) {
-      for (const [property, descriptor] of instancePropTokens) {
+    if (propTokens instanceof Map<string | symbol, TokenDescriptor<unknown>>) {
+      propTokens.forEach((descriptor, property) => {
         const { multiple, optional, token } = descriptor;
 
-        if (this.registry.has(token) || !optional) {
-          // @ts-expect-error Cannot index type unknown.
-          instance[property] = multiple
-            ? this._resolveAll(token, requestResolutions)
-            : this._resolve(token, requestResolutions);
-        }
-      }
-    }
+        let value: unknown;
 
-    return instance;
+        if (this.registry.has(token) || !optional) {
+          value = multiple ? this._resolveAll(token, requestResolutions) : this._resolve(token, requestResolutions);
+        }
+
+        Reflect.set(classOrInstance, property, value);
+      });
+    }
   }
 }
 
@@ -401,6 +412,5 @@ export function getContainer(name: string | symbol = 'default'): DependencyInjec
     containers.set(name, new DependencyInjectionContainer());
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return containers.get(name)!;
 }

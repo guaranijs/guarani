@@ -1,7 +1,7 @@
+import { AbstractConstructor, Constructor } from '@guarani/types';
+
 import { PARAM_TOKENS, PROP_TOKENS } from '../metadata/metadata.keys';
 import { setTokenDescriptor } from '../metadata/set-token-descriptor';
-import { AbstractConstructor } from '../types/abstract-constructor.interface';
-import { Constructor } from '../types/constructor.interface';
 
 /**
  * Marks the dependency as **optional**.
@@ -11,18 +11,18 @@ import { Constructor } from '../types/constructor.interface';
  */
 export function Optional(): ParameterDecorator & PropertyDecorator {
   return function (
-    target: object | AbstractConstructor<any> | Constructor<any>,
-    propertyKey: string | symbol | undefined,
+    target: object | AbstractConstructor<unknown> | Constructor<unknown>,
+    propertyKey?: string | symbol,
     parameterIndex?: number
   ): void {
     // Constructor parameters
-    if (propertyKey === undefined && parameterIndex !== undefined && typeof target !== 'object') {
-      setTokenDescriptor<any>(PARAM_TOKENS, target, parameterIndex, { optional: true });
+    if (typeof propertyKey === 'undefined' && typeof parameterIndex !== 'undefined' && typeof target !== 'object') {
+      setTokenDescriptor<unknown>(PARAM_TOKENS, target, parameterIndex, { optional: true });
     }
 
     // Target's property
-    if (propertyKey !== undefined && parameterIndex === undefined) {
-      setTokenDescriptor<any>(PROP_TOKENS, target, propertyKey, { optional: true });
+    if (typeof propertyKey !== 'undefined' && typeof parameterIndex === 'undefined') {
+      setTokenDescriptor<unknown>(PROP_TOKENS, target, propertyKey, { optional: true });
     }
   };
 }

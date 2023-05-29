@@ -22,7 +22,7 @@ export class DependencyInjectionRegistry {
       this.bindings.set(token, []);
     }
 
-    this.bindings.get(token)?.push(binding);
+    this.bindings.get(token)!.push(binding);
   }
 
   /**

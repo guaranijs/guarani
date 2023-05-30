@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { integerToBuffer } from '../lib/integer';
 
 describe('integerToBuffer()', () => {

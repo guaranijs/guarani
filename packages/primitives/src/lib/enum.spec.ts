@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import * as Enum from '../lib/enum';
 
 enum IntEnum {
@@ -30,18 +32,18 @@ describe('getKey()', () => {
   });
 
   it('should return the first member that matches the requested key.', () => {
-    expect(Enum.getKey(IntEnum, 1)).toBe('One');
-    expect(Enum.getKey(StringEnum, 'foo')).toBe('Foo');
+    expect(Enum.getKey(IntEnum, 1)).toEqual('One');
+    expect(Enum.getKey(StringEnum, 'foo')).toEqual('Foo');
   });
 });
 
 describe('hasKey()', () => {
   it('should return whether or not the provided key is a member of the enum.', () => {
-    expect(Enum.hasKey(IntEnum, 'Eight')).toBe(true);
-    expect(Enum.hasKey(StringEnum, 'Baz')).toBe(true);
+    expect(Enum.hasKey(IntEnum, 'Eight')).toBeTrue();
+    expect(Enum.hasKey(StringEnum, 'Baz')).toBeTrue();
 
-    expect(Enum.hasKey(IntEnum, 'Unknown')).toBe(false);
-    expect(Enum.hasKey(StringEnum, 'Unknown')).toBe(false);
+    expect(Enum.hasKey(IntEnum, 'Unknown')).toBeFalse();
+    expect(Enum.hasKey(StringEnum, 'Unknown')).toBeFalse();
   });
 });
 
@@ -59,18 +61,18 @@ describe('parse()', () => {
   });
 
   it('should return the parsed member of the enum.', () => {
-    expect(Enum.parse(IntEnum, 2)).toBe(2);
-    expect(Enum.parse(StringEnum, 'qux')).toBe('qux');
+    expect(Enum.parse(IntEnum, 2)).toEqual(2);
+    expect(Enum.parse(StringEnum, 'qux')).toEqual('qux');
   });
 });
 
 describe('hasValue()', () => {
   it('should return whether or not the provided value is a member of the enum.', () => {
-    expect(Enum.hasValue(IntEnum, 2)).toBe(true);
-    expect(Enum.hasValue(StringEnum, 'qux')).toBe(true);
+    expect(Enum.hasValue(IntEnum, 2)).toBeTrue();
+    expect(Enum.hasValue(StringEnum, 'qux')).toBeTrue();
 
-    expect(Enum.hasValue(IntEnum, 32)).toBe(false);
-    expect(Enum.hasValue(StringEnum, 'unknown')).toBe(false);
+    expect(Enum.hasValue(IntEnum, 32)).toBeFalse();
+    expect(Enum.hasValue(StringEnum, 'unknown')).toBeFalse();
   });
 });
 

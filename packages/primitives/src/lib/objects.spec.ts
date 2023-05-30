@@ -1,8 +1,25 @@
+import 'jest-extended';
+
 import { Comparable } from '@guarani/types';
 
 import { Buffer } from 'buffer';
 
 import { compare, isPlainObject, removeNullishValues } from './objects';
+
+const invalidPlainObjects: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  'a',
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  [],
+];
 
 describe('removeNullishValues()', () => {
   it('should remove all undefined values from an object.', () => {
@@ -25,21 +42,18 @@ describe('removeNullishValues()', () => {
 });
 
 describe('isPlainObject()', () => {
-  it.each([undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, []])(
-    'should return false when the data is not a plain javascript object.',
-    (data) => {
-      expect(isPlainObject(data)).toBe(false);
-    }
-  );
+  it.each(invalidPlainObjects)('should return false when the data is not a plain javascript object.', (data) => {
+    expect(isPlainObject(data)).toBeFalse();
+  });
 
   it.each([{}, Object.create(null)])('should return true when the data is a plain javascript object.', (data) => {
-    expect(isPlainObject(data)).toBe(true);
+    expect(isPlainObject(data)).toBeTrue();
   });
 });
 
 describe('compare()', () => {
   it('should successfully compare two undefineds.', () => {
-    expect(compare(undefined, undefined)).toBe(0);
+    expect(compare(undefined, undefined)).toEqual(0);
   });
 
   it('should throw when comparing at least one symbol.', () => {
@@ -109,23 +123,23 @@ describe('compare()', () => {
   });
 
   it('should successfully compare two bigints.', () => {
-    expect(compare(123n, 124n)).toBe(-1);
-    expect(compare(123n, 123n)).toBe(0);
-    expect(compare(124n, 123n)).toBe(1);
+    expect(compare(123n, 124n)).toEqual(-1);
+    expect(compare(123n, 123n)).toEqual(0);
+    expect(compare(124n, 123n)).toEqual(1);
   });
 
   it('should successfully compare two booleans.', () => {
-    expect(compare(false, false)).toBe(0);
-    expect(compare(false, true)).toBe(-1);
-    expect(compare(true, false)).toBe(1);
-    expect(compare(true, true)).toBe(0);
+    expect(compare(false, false)).toEqual(0);
+    expect(compare(false, true)).toEqual(-1);
+    expect(compare(true, false)).toEqual(1);
+    expect(compare(true, true)).toEqual(0);
   });
 
   it('should successfully compare two NaNs.', () => {
-    expect(compare(NaN, NaN)).toBe(0);
-    expect(compare(NaN, Number.NaN)).toBe(0);
-    expect(compare(Number.NaN, NaN)).toBe(0);
-    expect(compare(Number.NaN, Number.NaN)).toBe(0);
+    expect(compare(NaN, NaN)).toEqual(0);
+    expect(compare(NaN, Number.NaN)).toEqual(0);
+    expect(compare(Number.NaN, NaN)).toEqual(0);
+    expect(compare(Number.NaN, Number.NaN)).toEqual(0);
   });
 
   it('should throw when comparing a NaN with a valid number.', () => {
@@ -136,71 +150,71 @@ describe('compare()', () => {
   });
 
   it('should successfully compare two numbers.', () => {
-    expect(compare(123, 124)).toBe(-1);
-    expect(compare(123, 123)).toBe(0);
-    expect(compare(124, 123)).toBe(1);
+    expect(compare(123, 124)).toEqual(-1);
+    expect(compare(123, 123)).toEqual(0);
+    expect(compare(124, 123)).toEqual(1);
 
-    expect(compare(-1.72, -1.71)).toBe(-1);
-    expect(compare(-1.72, -1.72)).toBe(0);
-    expect(compare(-1.71, -1.72)).toBe(1);
+    expect(compare(-1.72, -1.71)).toEqual(-1);
+    expect(compare(-1.72, -1.72)).toEqual(0);
+    expect(compare(-1.71, -1.72)).toEqual(1);
   });
 
   it('should successfully compare two strings.', () => {
-    expect(compare('Foostring123', 'foostring123')).toBe(-1);
-    expect(compare('foostring123', 'foostring123')).toBe(0);
-    expect(compare('foostring123', 'Foostring123')).toBe(1);
+    expect(compare('Foostring123', 'foostring123')).toEqual(-1);
+    expect(compare('foostring123', 'foostring123')).toEqual(0);
+    expect(compare('foostring123', 'Foostring123')).toEqual(1);
   });
 
   it('should successfully compare two nulls.', () => {
-    expect(compare(null, null)).toBe(0);
+    expect(compare(null, null)).toEqual(0);
   });
 
   it('should successfully compare two buffers.', () => {
-    expect(compare(Buffer.from([]), Buffer.from([]))).toBe(0);
-    expect(compare(Buffer.from([0x00]), Buffer.from([0x00]))).toBe(0);
+    expect(compare(Buffer.from([]), Buffer.from([]))).toEqual(0);
+    expect(compare(Buffer.from([0x00]), Buffer.from([0x00]))).toEqual(0);
 
-    expect(compare(Buffer.from([0x00]), Buffer.from([0x01]))).toBe(-1);
-    expect(compare(Buffer.from([0x00]), Buffer.from([0x00, 0x00]))).toBe(-1);
+    expect(compare(Buffer.from([0x00]), Buffer.from([0x01]))).toEqual(-1);
+    expect(compare(Buffer.from([0x00]), Buffer.from([0x00, 0x00]))).toEqual(-1);
 
-    expect(compare(Buffer.from([0x01]), Buffer.from([0x00]))).toBe(1);
-    expect(compare(Buffer.from([0x01]), Buffer.from([0x00, 0x00]))).toBe(1);
+    expect(compare(Buffer.from([0x01]), Buffer.from([0x00]))).toEqual(1);
+    expect(compare(Buffer.from([0x01]), Buffer.from([0x00, 0x00]))).toEqual(1);
   });
 
   it('should successfully compare two dates.', () => {
     const now = Date.now();
 
-    expect(compare(new Date(now), new Date(now))).toBe(0);
-    expect(compare(new Date(now), new Date(now + 1))).toBe(-1);
-    expect(compare(new Date(now + 1), new Date(now))).toBe(1);
+    expect(compare(new Date(now), new Date(now))).toEqual(0);
+    expect(compare(new Date(now), new Date(now + 1))).toEqual(-1);
+    expect(compare(new Date(now + 1), new Date(now))).toEqual(1);
   });
 
   it('should successfully compare two arrays.', () => {
-    expect(compare([], [])).toBe(0);
-    expect(compare([], [0])).toBe(-1);
-    expect(compare([0], [])).toBe(1);
+    expect(compare([], [])).toEqual(0);
+    expect(compare([], [0])).toEqual(-1);
+    expect(compare([0], [])).toEqual(1);
 
-    expect(compare([0], [0])).toBe(0);
-    expect(compare([0], [1])).toBe(-1);
-    expect(compare([1], [0])).toBe(1);
-    expect(compare([1], [1])).toBe(0);
+    expect(compare([0], [0])).toEqual(0);
+    expect(compare([0], [1])).toEqual(-1);
+    expect(compare([1], [0])).toEqual(1);
+    expect(compare([1], [1])).toEqual(0);
 
-    expect(compare([0], [0, 0])).toBe(-1);
-    expect(compare([0], [0, 1])).toBe(-1);
-    expect(compare([0], [1, 0])).toBe(-1);
-    expect(compare([0], [1, 1])).toBe(-1);
-    expect(compare([1], [0, 0])).toBe(1);
-    expect(compare([1], [0, 1])).toBe(1);
-    expect(compare([1], [1, 0])).toBe(-1);
-    expect(compare([1], [1, 1])).toBe(-1);
+    expect(compare([0], [0, 0])).toEqual(-1);
+    expect(compare([0], [0, 1])).toEqual(-1);
+    expect(compare([0], [1, 0])).toEqual(-1);
+    expect(compare([0], [1, 1])).toEqual(-1);
+    expect(compare([1], [0, 0])).toEqual(1);
+    expect(compare([1], [0, 1])).toEqual(1);
+    expect(compare([1], [1, 0])).toEqual(-1);
+    expect(compare([1], [1, 1])).toEqual(-1);
 
-    expect(compare([0, 0], [0])).toBe(1);
-    expect(compare([0, 1], [0])).toBe(1);
-    expect(compare([1, 0], [0])).toBe(1);
-    expect(compare([1, 1], [0])).toBe(1);
-    expect(compare([0, 0], [1])).toBe(-1);
-    expect(compare([0, 1], [1])).toBe(-1);
-    expect(compare([1, 0], [1])).toBe(1);
-    expect(compare([1, 1], [1])).toBe(1);
+    expect(compare([0, 0], [0])).toEqual(1);
+    expect(compare([0, 1], [0])).toEqual(1);
+    expect(compare([1, 0], [0])).toEqual(1);
+    expect(compare([1, 1], [0])).toEqual(1);
+    expect(compare([0, 0], [1])).toEqual(-1);
+    expect(compare([0, 1], [1])).toEqual(-1);
+    expect(compare([1, 0], [1])).toEqual(1);
+    expect(compare([1, 1], [1])).toEqual(1);
   });
 
   it('should successfully compare two objects of the same type.', () => {
@@ -212,9 +226,9 @@ describe('compare()', () => {
       }
     }
 
-    expect(compare(new Foo(123), new Foo(124))).toBe(-1);
-    expect(compare(new Foo(123), new Foo(123))).toBe(0);
-    expect(compare(new Foo(124), new Foo(123))).toBe(1);
+    expect(compare(new Foo(123), new Foo(124))).toEqual(-1);
+    expect(compare(new Foo(123), new Foo(123))).toEqual(0);
+    expect(compare(new Foo(124), new Foo(123))).toEqual(1);
   });
 
   it('should throw when at least one of the objects does not implement the method compare().', () => {
@@ -236,17 +250,17 @@ describe('compare()', () => {
 
     class Bar extends Foo implements Comparable<Bar> {}
 
-    expect(compare(new Foo(123), new Foo(124))).toBe(-1);
-    expect(compare(new Foo(123), new Foo(123))).toBe(0);
-    expect(compare(new Foo(124), new Foo(123))).toBe(1);
+    expect(compare(new Foo(123), new Foo(124))).toEqual(-1);
+    expect(compare(new Foo(123), new Foo(123))).toEqual(0);
+    expect(compare(new Foo(124), new Foo(123))).toEqual(1);
 
-    expect(compare(new Bar(123), new Bar(124))).toBe(-1);
-    expect(compare(new Bar(123), new Bar(123))).toBe(0);
-    expect(compare(new Bar(124), new Bar(123))).toBe(1);
+    expect(compare(new Bar(123), new Bar(124))).toEqual(-1);
+    expect(compare(new Bar(123), new Bar(123))).toEqual(0);
+    expect(compare(new Bar(124), new Bar(123))).toEqual(1);
 
-    expect(compare(new Foo(123), new Bar(124))).toBe(-1);
-    expect(compare(new Foo(123), new Bar(123))).toBe(0);
-    expect(compare(new Foo(124), new Bar(123))).toBe(1);
+    expect(compare(new Foo(123), new Bar(124))).toEqual(-1);
+    expect(compare(new Foo(123), new Bar(123))).toEqual(0);
+    expect(compare(new Foo(124), new Bar(123))).toEqual(1);
   });
 
   it('should throw when comparing two objects of different types.', () => {

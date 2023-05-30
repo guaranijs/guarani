@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 
 import { Provider } from './provider';
@@ -42,18 +44,18 @@ const values: unknown[] = [
 
 describe('Value Provider', () => {
   it.each(invalidProviders)('should return false when providing an invalid provider.', (provider) => {
-    expect(isValueProvider(provider)).toBe(false);
+    expect(isValueProvider(provider)).toBeFalse();
   });
 
   it('should return false when "useValue" is not present in the provider.', () => {
-    expect(isValueProvider({})).toBe(false);
+    expect(isValueProvider({})).toBeFalse();
   });
 
   it.each(invalidValueProviders)('should return false when providing an invalid value provider.', (provider) => {
-    expect(isValueProvider(provider)).toBe(false);
+    expect(isValueProvider(provider)).toBeFalse();
   });
 
   it.each(values)('should return true when providing a valid value provider.', (value) => {
-    expect(isValueProvider({ useValue: value })).toBe(true);
+    expect(isValueProvider({ useValue: value })).toBeTrue();
   });
 });

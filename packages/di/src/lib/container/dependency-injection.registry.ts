@@ -9,7 +9,7 @@ export class DependencyInjectionRegistry {
   /**
    * Registry of the Bindings indexed by their respective Tokens.
    */
-  private readonly bindings = new Map<InjectableToken<any>, Binding<any>[]>();
+  private readonly bindings = new Map<InjectableToken<unknown>, Binding<unknown>[]>();
 
   /**
    * Registers the provided Binding at the Registry indexed by the provided Token.
@@ -37,7 +37,7 @@ export class DependencyInjectionRegistry {
       throw new TokenNotRegisteredException(token);
     }
 
-    return this.bindings.get(token)!.at(-1)!;
+    return this.bindings.get(token)!.at(-1)! as Binding<T>;
   }
 
   /**
@@ -52,7 +52,7 @@ export class DependencyInjectionRegistry {
       throw new TokenNotRegisteredException(token);
     }
 
-    return this.bindings.get(token)!;
+    return this.bindings.get(token)! as Binding<T>[];
   }
 
   /**

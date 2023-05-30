@@ -1,8 +1,8 @@
+import 'jest-extended';
+
 import { Binding } from '../bindings/binding';
 import { TokenNotRegisteredException } from '../exceptions/token-not-registered.exception';
 import { DependencyInjectionRegistry } from './dependency-injection.registry';
-
-const TOKEN = Symbol('TOKEN');
 
 describe('Dependency Injection Registry', () => {
   let registry: DependencyInjectionRegistry;
@@ -11,54 +11,124 @@ describe('Dependency Injection Registry', () => {
     registry = new DependencyInjectionRegistry();
   });
 
-  it('should add a token entry to the registry.', () => {
-    const binding = Object.assign(new Binding<string>(TOKEN), { provider: { useValue: 'foo' } });
+  describe('set()', () => {
+    it('should add a binding to the registry.', () => {
+      const binding = Object.assign(new Binding<string>('Foo'), { provider: { useValue: 'foo' } });
 
-    expect(registry.has<string>('Foo')).toBe(false);
-    expect(() => registry.set<string>('Foo', binding)).not.toThrow();
-    expect(registry.has<string>('Foo')).toBe(true);
+      expect(registry['bindings'].has('Foo')).toBeFalse();
+      expect(registry['bindings'].get('Foo')).toBeUndefined();
+
+      registry.set<string>('Foo', binding);
+
+      expect(registry['bindings'].has('Foo')).toBeTrue();
+      expect(registry['bindings'].get('Foo')).toStrictEqual<Binding<string>[]>([binding]);
+    });
+
+    it('should add multiple bindings under the same token to the registry.', () => {
+      const binding1 = Object.assign(new Binding<string>('Foo'), { provider: { useValue: 'foo' } });
+      const binding2 = Object.assign(new Binding<string>('Foo'), { provider: { useValue: 'bar' } });
+
+      expect(registry['bindings'].has('Foo')).toBeFalse();
+      expect(registry['bindings'].get('Foo')).toBeUndefined();
+
+      registry.set<string>('Foo', binding1);
+      registry.set<string>('Foo', binding2);
+
+      expect(registry['bindings'].has('Foo')).toBeTrue();
+      expect(registry['bindings'].get('Foo')).toStrictEqual<Binding<string>[]>([binding1, binding2]);
+    });
   });
 
-  it('should return the only entry of a token from the registry.', () => {
-    const binding = Object.assign(new Binding<string>(TOKEN), { provider: { useValue: 'foo' } });
+  describe('get()', () => {
+    it('should throw when the requested token is not registered.', () => {
+      expect(() => registry.get<string>('Foo')).toThrow(new TokenNotRegisteredException('Foo'));
+    });
 
-    registry.set<string>('Foo', binding);
+    it('should return the only entry of a token from the registry.', () => {
+      const binding = Object.assign(new Binding<string>('Foo'), { provider: { useValue: 'foo' } });
 
-    expect(registry.get<string>('Foo')).toStrictEqual<Binding<string>>(binding);
+      registry.set<string>('Foo', binding);
+
+      expect(registry.get<string>('Foo')).toBe<Binding<string>>(binding);
+    });
+
+    it('should return the last entry of a token from the registry.', () => {
+      const binding1 = Object.assign(new Binding<string>('Foo'), { provider: { useValue: 'foo1' } });
+      const binding2 = Object.assign(new Binding<string>('Foo'), { provider: { useValue: 'foo2' } });
+
+      registry.set<string>('Foo', binding1);
+      registry.set<string>('Foo', binding2);
+
+      expect(registry.get<string>('Foo')).toBe<Binding<string>>(binding2);
+    });
   });
 
-  it('should return the last entry of a token from the registry.', () => {
-    const binding1 = Object.assign(new Binding<string>(TOKEN), { provider: { useValue: 'foo1' } });
-    const binding2 = Object.assign(new Binding<string>(TOKEN), { provider: { useValue: 'foo2' } });
+  describe('getAll()', () => {
+    it('should reject when the requested token is not registered.', () => {
+      expect(() => registry.getAll<string>('Foo')).toThrow(new TokenNotRegisteredException('Foo'));
+    });
 
-    registry.set<string>('Foo', binding1);
-    registry.set<string>('Foo', binding2);
+    it('should return all the entries of a token from the registry.', () => {
+      const binding1 = Object.assign(new Binding<string>('Foo'), { provider: { useValue: 'foo1' } });
+      const binding2 = Object.assign(new Binding<string>('Foo'), { provider: { useValue: 'foo2' } });
 
-    expect(registry.get<string>('Foo')).toStrictEqual<Binding<string>>(binding2);
+      registry.set<string>('Foo', binding1);
+      registry.set<string>('Foo', binding2);
+
+      expect(registry.getAll<string>('Foo')).toStrictEqual<Binding<string>[]>([binding1, binding2]);
+    });
   });
 
-  it('should return all the entries of a token from the registry.', () => {
-    const binding1 = Object.assign(new Binding<string>(TOKEN), { provider: { useValue: 'foo1' } });
-    const binding2 = Object.assign(new Binding<string>(TOKEN), { provider: { useValue: 'foo2' } });
+  describe('has()', () => {
+    it('should return false when the provided token is not registered.', () => {
+      expect(registry.has<string>('Foo')).toBeFalse();
+    });
 
-    registry.set<string>('Foo', binding1);
-    registry.set<string>('Foo', binding2);
-
-    expect(registry.getAll<string>('Foo')).toStrictEqual<Binding<string>[]>([binding1, binding2]);
+    it('should return true when the provided token is registered.', () => {
+      const binding = Object.assign(new Binding<string>('Foo'), { provider: { useValue: 'foo1' } });
+      registry.set<string>('Foo', binding);
+      expect(registry.has<string>('Foo')).toBeTrue();
+    });
   });
 
-  it('should reject when the requested token is not registered.', () => {
-    expect(() => registry.get<string>('Foo')).toThrow(TokenNotRegisteredException);
-    expect(() => registry.getAll<string>('Foo')).toThrow(TokenNotRegisteredException);
+  describe('delete()', () => {
+    it('should remove a token from the registry.', () => {
+      const binding = Object.assign(new Binding<string>('Foo'), { provider: { useValue: 'foo' } });
+      expect(registry.has<string>('Foo')).toBeFalse();
+
+      registry.set<string>('Foo', binding);
+      expect(registry.has<string>('Foo')).toBeTrue();
+
+      registry.delete<string>('Foo');
+      expect(registry.has<string>('Foo')).toBeFalse();
+    });
   });
 
-  it('should remove an entry of a token from the registry.', () => {
-    const binding = Object.assign(new Binding<string>(TOKEN), { provider: { useValue: 'foo' } });
+  describe('clear()', () => {
+    it('should remove a token from the registry.', () => {
+      const binding1 = Object.assign(new Binding<string>('Foo'), { provider: { useValue: 'foo' } });
+      const binding2 = Object.assign(new Binding<string>('Bar'), { provider: { useValue: 'foo' } });
+      const binding3 = Object.assign(new Binding<string>('Baz'), { provider: { useValue: 'foo' } });
 
-    registry.set<string>('Foo', binding);
-    expect(registry.has<string>('Foo')).toBe(true);
+      expect(registry.has<string>('Foo')).toBeFalse();
+      expect(registry.has<string>('Bar')).toBeFalse();
+      expect(registry.has<string>('Baz')).toBeFalse();
 
-    registry.delete<string>('Foo');
-    expect(registry.has<string>('Foo')).toBe(false);
+      registry.set<string>('Foo', binding1);
+      registry.set<string>('Bar', binding2);
+      registry.set<string>('Baz', binding3);
+
+      expect(registry.has<string>('Foo')).toBeTrue();
+      expect(registry.has<string>('Bar')).toBeTrue();
+      expect(registry.has<string>('Baz')).toBeTrue();
+
+      console.log(registry['bindings']);
+
+      registry.clear();
+
+      expect(registry.has<string>('Foo')).toBeFalse();
+      expect(registry.has<string>('Bar')).toBeFalse();
+      expect(registry.has<string>('Baz')).toBeFalse();
+    });
   });
 });

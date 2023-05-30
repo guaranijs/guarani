@@ -17,12 +17,12 @@ export function InjectAll<T>(token: InjectableToken<T>): ParameterDecorator & Pr
   ): void {
     // Injects into an argument of the constructor.
     if (typeof propertyKey === 'undefined' && typeof parameterIndex !== 'undefined' && typeof target !== 'object') {
-      setTokenDescriptor<unknown>(PARAM_TOKENS, target, parameterIndex, { token, multiple: true });
+      setTokenDescriptor<T>(PARAM_TOKENS, target, parameterIndex, { token, multiple: true });
     }
 
     // Injects into a property of the target.
     if (typeof propertyKey !== 'undefined' && typeof parameterIndex === 'undefined') {
-      setTokenDescriptor<unknown>(PROP_TOKENS, target, propertyKey, { token, multiple: true });
+      setTokenDescriptor<T>(PROP_TOKENS, target, propertyKey, { token, multiple: true });
     }
   };
 }

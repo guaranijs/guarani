@@ -5,7 +5,7 @@ import { Buffer } from 'buffer';
 import { isClassProvider } from './class.provider';
 import { Provider } from './provider';
 
-const invalidProviders: unknown[] = [
+const invalidProviders: any[] = [
   undefined,
   null,
   true,
@@ -20,19 +20,7 @@ const invalidProviders: unknown[] = [
   [],
 ];
 
-const invalidConstructors: unknown[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  'a',
-  Symbol('a'),
-  Buffer.alloc(0),
-  () => 1,
-  [],
-];
+const invalidConstructors: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer.alloc(0), () => 1, []];
 
 const invalidClassProviders: Provider<unknown>[] = [
   { useFactory: () => 1 },

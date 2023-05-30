@@ -21,7 +21,7 @@ describe('Dependency Injection Registry', () => {
       registry.set<string>('Foo', binding);
 
       expect(registry['bindings'].has('Foo')).toBeTrue();
-      expect(registry['bindings'].get('Foo')).toStrictEqual<Binding<string>[]>([binding]);
+      expect(registry['bindings'].get('Foo')).toEqual<Binding<string>[]>([binding]);
     });
 
     it('should add multiple bindings under the same token to the registry.', () => {
@@ -35,7 +35,7 @@ describe('Dependency Injection Registry', () => {
       registry.set<string>('Foo', binding2);
 
       expect(registry['bindings'].has('Foo')).toBeTrue();
-      expect(registry['bindings'].get('Foo')).toStrictEqual<Binding<string>[]>([binding1, binding2]);
+      expect(registry['bindings'].get('Foo')).toEqual<Binding<string>[]>([binding1, binding2]);
     });
   });
 
@@ -75,7 +75,7 @@ describe('Dependency Injection Registry', () => {
       registry.set<string>('Foo', binding1);
       registry.set<string>('Foo', binding2);
 
-      expect(registry.getAll<string>('Foo')).toStrictEqual<Binding<string>[]>([binding1, binding2]);
+      expect(registry.getAll<string>('Foo')).toEqual<Binding<string>[]>([binding1, binding2]);
     });
   });
 

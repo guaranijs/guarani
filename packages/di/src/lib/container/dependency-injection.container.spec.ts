@@ -50,20 +50,20 @@ describe('Dependency Injection Container', () => {
 
     it('should resolve a value provider.', () => {
       container.bind<string>('Issuer').toValue('https://example.com');
-      expect(container.resolve<string>('Issuer')).toBe('https://example.com');
+      expect(container.resolve<string>('Issuer')).toEqual('https://example.com');
     });
 
     it('should resolve a token provider.', () => {
       container.bind<string>('Issuer').toValue('https://example.com');
       container.bind<string>('OldIssuer').toToken('Issuer');
 
-      expect(container.resolve<string>('OldIssuer')).toBe('https://example.com');
+      expect(container.resolve<string>('OldIssuer')).toEqual('https://example.com');
     });
 
     it('should resolve a factory provider.', () => {
       const user = { name: 'John Doe' };
       container.bind<string>('Name').toFactory(() => user.name);
-      expect(container.resolve<string>('Name')).toBe('John Doe');
+      expect(container.resolve<string>('Name')).toEqual('John Doe');
     });
 
     it('should resolve a class provider.', () => {
@@ -192,7 +192,7 @@ describe('Dependency Injection Container', () => {
 
       expect(() => (foo = container.resolve(Foo))).not.toThrow();
       expect(foo).toBeInstanceOf(Foo);
-      expect(foo.issuer).toBe('https://example.com');
+      expect(foo.issuer).toEqual('https://example.com');
     });
 
     it('should inject "undefined" when a token is not registered and the constructor descriptor is marked as optional.', () => {
@@ -211,7 +211,7 @@ describe('Dependency Injection Container', () => {
 
       expect(() => (foo = container.resolve(Foo))).not.toThrow();
       expect(foo).toBeInstanceOf(Foo);
-      expect(foo.issuer).toBe('https://example.com');
+      expect(foo.issuer).toEqual('https://example.com');
       expect(foo.value).toBeUndefined();
     });
 
@@ -232,7 +232,7 @@ describe('Dependency Injection Container', () => {
 
       expect(() => (foo = container.resolve(Foo))).not.toThrow();
       expect(foo).toBeInstanceOf(Foo);
-      expect(foo.issuer).toBe('https://example.com');
+      expect(foo.issuer).toEqual('https://example.com');
       expect(foo.value).toBeUndefined();
     });
 

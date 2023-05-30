@@ -17,14 +17,14 @@ export function Inject<T>(token?: InjectableToken<T>): ParameterDecorator & Prop
   ): void {
     // Injects into an argument of the constructor.
     if (typeof propertyKey === 'undefined' && typeof parameterIndex !== 'undefined' && typeof target !== 'object') {
-      const paramType: InjectableToken<unknown> = Reflect.getMetadata('design:paramtypes', target)[parameterIndex];
-      setTokenDescriptor<unknown>(PARAM_TOKENS, target, parameterIndex, { token: token ?? paramType, multiple: false });
+      const paramType: InjectableToken<any> = Reflect.getMetadata('design:paramtypes', target)[parameterIndex];
+      setTokenDescriptor<T>(PARAM_TOKENS, target, parameterIndex, { token: token ?? paramType, multiple: false });
     }
 
     // Injects into a property of the target.
     if (typeof propertyKey !== 'undefined' && typeof parameterIndex === 'undefined') {
       const propType = Reflect.getMetadata('design:type', target, propertyKey);
-      setTokenDescriptor<unknown>(PROP_TOKENS, target, propertyKey, { token: token ?? propType, multiple: false });
+      setTokenDescriptor<T>(PROP_TOKENS, target, propertyKey, { token: token ?? propType, multiple: false });
     }
   };
 }

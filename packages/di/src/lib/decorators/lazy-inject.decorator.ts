@@ -22,12 +22,12 @@ export function LazyInject<T>(
 
     // Injects into an argument of the constructor.
     if (typeof propertyKey === 'undefined' && typeof parameterIndex !== 'undefined' && typeof target !== 'object') {
-      setTokenDescriptor<unknown>(PARAM_TOKENS, target, parameterIndex, { token: lazyToken, multiple: false });
+      setTokenDescriptor<T>(PARAM_TOKENS, target, parameterIndex, { token: lazyToken, multiple: false });
     }
 
     // Injects into a property of the target.
     if (typeof propertyKey !== 'undefined' && typeof parameterIndex === 'undefined') {
-      setTokenDescriptor<unknown>(PROP_TOKENS, target, propertyKey, { token: lazyToken, multiple: false });
+      setTokenDescriptor<T>(PROP_TOKENS, target, propertyKey, { token: lazyToken, multiple: false });
     }
   };
 }

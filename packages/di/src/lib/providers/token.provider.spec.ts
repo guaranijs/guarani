@@ -6,7 +6,7 @@ import { InjectableToken } from '../types/injectable-token.type';
 import { Provider } from './provider';
 import { isTokenProvider } from './token.provider';
 
-const invalidProviders: unknown[] = [
+const invalidProviders: any[] = [
   undefined,
   null,
   true,
@@ -21,7 +21,7 @@ const invalidProviders: unknown[] = [
   [],
 ];
 
-const invalidTokens: unknown[] = [undefined, null, true, 1, 1.2, 1n, Buffer.alloc(0), () => 1, [], {}];
+const invalidTokens: any[] = [undefined, null, true, 1, 1.2, 1n, Buffer.alloc(0), () => 1, [], {}];
 
 const invalidTokenProviders: Provider<unknown>[] = [
   { useClass: class {} },

@@ -5,7 +5,7 @@ import { Buffer } from 'buffer';
 import { Provider } from './provider';
 import { isValueProvider } from './value.provider';
 
-const invalidProviders: unknown[] = [
+const invalidProviders: any[] = [
   undefined,
   null,
   true,
@@ -26,21 +26,7 @@ const invalidValueProviders: Provider<unknown>[] = [
   { useToken: Symbol('TOKEN') },
 ];
 
-const values: unknown[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  'a',
-  Symbol('a'),
-  Buffer.alloc(0),
-  Buffer,
-  () => 1,
-  [],
-  {},
-];
+const values: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer.alloc(0), Buffer, () => 1, [], {}];
 
 describe('Value Provider', () => {
   it.each(invalidProviders)('should return false when providing an invalid provider.', (provider) => {

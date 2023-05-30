@@ -11,18 +11,18 @@ import { setTokenDescriptor } from '../metadata/set-token-descriptor';
  */
 export function Optional(): ParameterDecorator & PropertyDecorator {
   return function (
-    target: object | AbstractConstructor<unknown> | Constructor<unknown>,
+    target: object | AbstractConstructor<object> | Constructor<object>,
     propertyKey?: string | symbol,
     parameterIndex?: number
   ): void {
     // Constructor parameters
     if (typeof propertyKey === 'undefined' && typeof parameterIndex !== 'undefined' && typeof target !== 'object') {
-      setTokenDescriptor<unknown>(PARAM_TOKENS, target, parameterIndex, { optional: true });
+      setTokenDescriptor<object>(PARAM_TOKENS, target, parameterIndex, { optional: true });
     }
 
     // Target's property
     if (typeof propertyKey !== 'undefined' && typeof parameterIndex === 'undefined') {
-      setTokenDescriptor<unknown>(PROP_TOKENS, target, propertyKey, { optional: true });
+      setTokenDescriptor<object>(PROP_TOKENS, target, propertyKey, { optional: true });
     }
   };
 }

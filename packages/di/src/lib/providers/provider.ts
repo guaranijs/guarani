@@ -6,11 +6,7 @@ import { isValueProvider, ValueProvider } from './value.provider';
 /**
  * Denotes a Provider.
  */
-export type Provider<T> =
-  | Partial<ClassProvider<T>>
-  | Partial<FactoryProvider<T>>
-  | Partial<TokenProvider<T>>
-  | Partial<ValueProvider<T>>;
+export type Provider<T> = ClassProvider<T> | FactoryProvider<T> | TokenProvider<T> | ValueProvider<T>;
 
 /**
  * Checks if the provided object is a Provider.

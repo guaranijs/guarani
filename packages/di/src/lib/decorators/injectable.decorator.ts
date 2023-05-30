@@ -7,7 +7,7 @@ import { TokenDescriptor } from '../types/token.descriptor';
  * Marks the decorated class as an Injectable Token to be resolved by the Dependency Injection Container.
  */
 export function Injectable(): ClassDecorator {
-  return function (target: AbstractConstructor<any> | Constructor<any>): void {
+  return function (target: AbstractConstructor<object> | Constructor<object>): void {
     // Constructor
     const designParamTypes: any[] = Reflect.getMetadata('design:paramtypes', target) ?? [];
     const paramTokenDescriptors: Map<string | symbol | number, TokenDescriptor<any>> = Reflect.getMetadata(

@@ -14,21 +14,21 @@ describe('Lifecycle Binding', () => {
   describe('asSingleton()', () => {
     it('should set the scope as Singleton.', () => {
       lifecycleBinding.asSingleton();
-      expect(binding.lifecycle).toBe(Lifecycle.Singleton);
+      expect(binding.lifecycle).toEqual(Lifecycle.Singleton);
     });
   });
 
   describe('asRequestScoped()', () => {
     it('should set the scope as Request.', () => {
       lifecycleBinding.asRequest();
-      expect(binding.lifecycle).toBe(Lifecycle.Request);
+      expect(binding.lifecycle).toEqual(Lifecycle.Request);
     });
   });
 
   describe('asTransient()', () => {
     it('should set the scope as Transient.', () => {
       lifecycleBinding.asTransient();
-      expect(binding.lifecycle).toBe(Lifecycle.Transient);
+      expect(binding.lifecycle).toEqual(Lifecycle.Transient);
     });
   });
 });

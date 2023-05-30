@@ -25,7 +25,7 @@ export class InvalidProviderException extends DependencyInjectionException {
   private static getSerializedObject(obj: unknown): string {
     switch (typeof obj) {
       case 'bigint':
-        return String(obj);
+        return obj.toString();
 
       case 'function':
         return obj.name;

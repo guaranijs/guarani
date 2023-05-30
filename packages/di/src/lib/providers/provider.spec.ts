@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { isProvider, Provider } from './provider';
 
 const providers: Provider<unknown>[] = [
@@ -9,10 +11,10 @@ const providers: Provider<unknown>[] = [
 
 describe('Provider', () => {
   it('should return false when the provider has multiple "use" items.', () => {
-    expect(isProvider({ useClass: class {}, useValue: 'Value' })).toBe(false);
+    expect(isProvider({ useClass: class {}, useValue: 'Value' })).toBeFalse();
   });
 
   it.each(providers)('should return true when checking a valid provider.', (provider) => {
-    expect(isProvider(provider)).toBe(true);
+    expect(isProvider(provider)).toBeTrue();
   });
 });

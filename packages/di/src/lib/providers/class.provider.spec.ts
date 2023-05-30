@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 
 import { isClassProvider } from './class.provider';
@@ -40,18 +42,18 @@ const invalidClassProviders: Provider<unknown>[] = [
 
 describe('Class Provider', () => {
   it.each(invalidProviders)('should return false when providing an invalid provider.', (provider) => {
-    expect(isClassProvider(provider)).toBe(false);
+    expect(isClassProvider(provider)).toBeFalse();
   });
 
   it.each(invalidConstructors)('should return false when "useClass" is not a valid constructor.', (constructor) => {
-    expect(isClassProvider({ useClass: constructor })).toBe(false);
+    expect(isClassProvider({ useClass: constructor })).toBeFalse();
   });
 
   it.each(invalidClassProviders)('should return false when providing an invalid class provider.', (provider) => {
-    expect(isClassProvider(provider)).toBe(false);
+    expect(isClassProvider(provider)).toBeFalse();
   });
 
   it('should return true when providing a valid factory provider.', () => {
-    expect(isClassProvider({ useClass: class {} })).toBe(true);
+    expect(isClassProvider({ useClass: class {} })).toBeTrue();
   });
 });

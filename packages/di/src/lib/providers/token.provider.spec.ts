@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 
 import { InjectableToken } from '../types/injectable-token.type';
@@ -31,18 +33,18 @@ const tokens: InjectableToken<unknown>[] = ['TOKEN', Symbol('TOKEN'), class {}];
 
 describe('Token Provider', () => {
   it.each(invalidProviders)('should return false when providing an invalid provider.', (provider) => {
-    expect(isTokenProvider(provider)).toBe(false);
+    expect(isTokenProvider(provider)).toBeFalse();
   });
 
   it.each(invalidTokens)('should return false when "useToken" is not a valid token.', (token) => {
-    expect(isTokenProvider({ useToken: token })).toBe(false);
+    expect(isTokenProvider({ useToken: token })).toBeFalse();
   });
 
   it.each(invalidTokenProviders)('should return false when providing an invalid token provider.', (provider) => {
-    expect(isTokenProvider(provider)).toBe(false);
+    expect(isTokenProvider(provider)).toBeFalse();
   });
 
   it.each(tokens)('should return true when providing a valid token provider.', (token) => {
-    expect(isTokenProvider({ useToken: token })).toBe(true);
+    expect(isTokenProvider({ useToken: token })).toBeTrue();
   });
 });

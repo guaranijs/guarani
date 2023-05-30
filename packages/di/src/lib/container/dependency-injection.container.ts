@@ -53,6 +53,7 @@ export class DependencyInjectionContainer {
    *
    * @param token Token to be resolved.
    * @throws {TokenNotRegisteredException} The Token is not registered at the Container.
+   * @throws {InvalidProviderException} Attempted to resolve an invalid provider.
    * @returns Resolved instance or value based on the Token.
    */
   public resolve<T>(token: InjectableToken<T>): T {
@@ -65,6 +66,9 @@ export class DependencyInjectionContainer {
    * The Token **MUST** be known by the Container.
    *
    * @param token Token to be resolved.
+   * @throws {TokenNotRegisteredException} The Token is not registered at the Container.
+   * @throws {InvalidProviderException} Attempted to resolve an invalid provider.
+   * @throws {ResolutionException} Could not resolve a token.
    * @returns Array of the resolved instances based on the Token.
    */
   public resolveAll<T>(token: InjectableToken<T>): T[] {
@@ -93,6 +97,8 @@ export class DependencyInjectionContainer {
    *
    * @param token Token to be resolved.
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
+   * @throws {TokenNotRegisteredException} The Token is not registered at the Container.
+   * @throws {InvalidProviderException} Attempted to resolve an invalid provider.
    * @returns Resolved instance or valued based on the Token.
    */
   private _resolve<T>(token: InjectableToken<T>, requestResolutions = new Map<InjectableToken<T>, T>()): T {
@@ -110,6 +116,9 @@ export class DependencyInjectionContainer {
    *
    * @param token Token to be resolved.
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
+   * @throws {TokenNotRegisteredException} The Token is not registered at the Container.
+   * @throws {InvalidProviderException} Attempted to resolve an invalid provider.
+   * @throws {ResolutionException} Could not resolve a token.
    * @returns Array of the resolved instances based on the Token.
    */
   private _resolveAll<T>(token: InjectableToken<T>, requestResolutions = new Map<InjectableToken<T>, T>()): T[] {
@@ -126,6 +135,8 @@ export class DependencyInjectionContainer {
    *
    * @param binding Binding to be resolved.
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
+   * @throws {TokenNotRegisteredException} The Token is not registered at the Container.
+   * @throws {InvalidProviderException} Attempted to resolve an invalid provider.
    * @returns Resolved instance.
    */
   private resolveBinding<T>(binding: Binding<T>, requestResolutions: Map<InjectableToken<T>, T>): T {
@@ -155,6 +166,8 @@ export class DependencyInjectionContainer {
    *
    * @param provider Provider to be resolved.
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
+   * @throws {TokenNotRegisteredException} The Token is not registered at the Container.
+   * @throws {InvalidProviderException} Attempted to resolve an invalid provider.
    * @returns Resolved instance.
    */
   private resolveProvider<T>(provider: Provider<T>, requestResolutions: Map<InjectableToken<T>, T>): T {
@@ -187,6 +200,8 @@ export class DependencyInjectionContainer {
    *
    * @param class_ Constructor to be instantiated.
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
+   * @throws {TokenNotRegisteredException} The Token is not registered at the Container.
+   * @throws {InvalidProviderException} Attempted to resolve an invalid provider.
    * @returns Resolved instance.
    */
   private construct<T>(
@@ -208,6 +223,8 @@ export class DependencyInjectionContainer {
    *
    * @param class_ Constructor to be instantiated.
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
+   * @throws {TokenNotRegisteredException} The Token is not registered at the Container.
+   * @throws {InvalidProviderException} Attempted to resolve an invalid provider.
    * @returns Resolved constructor parameters of the provided class.
    */
   private resolveConstructorDependencies<T>(
@@ -232,6 +249,8 @@ export class DependencyInjectionContainer {
    *
    * @param classOrInstance Constructor or instance to be resolved.
    * @param requestResolutions Mapping of the Request-scoped resolved instances.
+   * @throws {TokenNotRegisteredException} The Token is not registered at the Container.
+   * @throws {InvalidProviderException} Attempted to resolve an invalid provider.
    * @returns Resolved properties of the provided class or instance.
    */
   private resolvePropertiesDependencies<T>(

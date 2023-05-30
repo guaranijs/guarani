@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 
 import { isFactoryProvider } from './factory.provider';
@@ -41,18 +43,18 @@ const invalidFactoryProviders: Provider<unknown>[] = [
 
 describe('Factory Provider', () => {
   it.each(invalidProviders)('should return false when providing an invalid provider.', (provider) => {
-    expect(isFactoryProvider(provider)).toBe(false);
+    expect(isFactoryProvider(provider)).toBeFalse();
   });
 
   it.each(invalidFunctions)('should return false when "useFactory" is not a valid function.', (function_) => {
-    expect(isFactoryProvider({ useFactory: function_ })).toBe(false);
+    expect(isFactoryProvider({ useFactory: function_ })).toBeFalse();
   });
 
   it.each(invalidFactoryProviders)('should return false when providing an invalid factory provider.', (provider) => {
-    expect(isFactoryProvider(provider)).toBe(false);
+    expect(isFactoryProvider(provider)).toBeFalse();
   });
 
   it('should return true when providing a valid factory provider.', () => {
-    expect(isFactoryProvider({ useFactory: () => 1 })).toBe(true);
+    expect(isFactoryProvider({ useFactory: () => 1 })).toBeTrue();
   });
 });

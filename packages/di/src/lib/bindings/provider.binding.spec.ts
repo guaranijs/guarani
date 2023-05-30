@@ -48,8 +48,10 @@ describe('Provider Binding', () => {
   });
 
   describe('toSelf()', () => {
-    it('should reject binding to itself when the token is not a constructor.', () => {
-      expect(() => providerBinding.toSelf()).toThrow(TypeError);
+    it('should throw when binding to itself if the token is not a constructor.', () => {
+      expect(() => providerBinding.toSelf()).toThrow(
+        new TypeError('The Token "Symbol(TOKEN)" is not a valid Constructor.')
+      );
     });
 
     it('should bind a constructor token to itself.', () => {

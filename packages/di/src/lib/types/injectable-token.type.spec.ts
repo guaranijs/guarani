@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 
 import { InjectableToken, isInjectableToken } from './injectable-token.type';
@@ -7,10 +9,10 @@ const validTokens: InjectableToken<unknown>[] = ['TOKEN', Symbol('TOKEN'), class
 
 describe('Injectable Token', () => {
   it.each(invalidTokens)('should return false when providing an invalid injectable token.', (token) => {
-    expect(isInjectableToken(token)).toBe(false);
+    expect(isInjectableToken(token)).toBeFalse();
   });
 
   it.each(validTokens)('should return true when providing a valid injectable token.', (token) => {
-    expect(isInjectableToken(token)).toBe(true);
+    expect(isInjectableToken(token)).toBeTrue();
   });
 });

@@ -1,3 +1,4 @@
+import 'jest-extended';
 import 'reflect-metadata';
 
 import { ProviderBinding } from '../bindings/provider.binding';
@@ -13,7 +14,6 @@ import { LazyClass02Stub } from './__stubs__/lazy-class-02.stub';
 import { LazyClass03Stub } from './__stubs__/lazy-class-03.stub';
 import { LazyClass04Stub } from './__stubs__/lazy-class-04.stub';
 import { DependencyInjectionContainer } from './dependency-injection.container';
-import { DependencyInjectionRegistry } from './dependency-injection.registry';
 
 const TOKEN = Symbol('TOKEN');
 
@@ -24,34 +24,28 @@ describe('Dependency Injection Container', () => {
     container = new DependencyInjectionContainer();
   });
 
-  describe('registry', () => {
-    it('should be an instance of "Registry".', () => {
-      expect(container['registry']).toBeInstanceOf(DependencyInjectionRegistry);
-    });
-  });
-
   describe('bind()', () => {
     it('should register a token at the container.', () => {
-      expect(container['registry'].has(TOKEN)).toBe(false);
+      expect(container['registry'].has(TOKEN)).toBeFalse();
       expect(container.bind(TOKEN)).toBeInstanceOf(ProviderBinding);
-      expect(container['registry'].has(TOKEN)).toBe(true);
+      expect(container['registry'].has(TOKEN)).toBeTrue();
     });
   });
 
   describe('isRegistered()', () => {
     it('should return false when a token is not registered at the container.', () => {
-      expect(container.isRegistered(TOKEN)).toBe(false);
+      expect(container.isRegistered(TOKEN)).toBeFalse();
     });
 
     it('should return true when a token is registered at the container.', () => {
       container.bind(TOKEN).toValue('TOKEN_VALUE');
-      expect(container.isRegistered(TOKEN)).toBe(true);
+      expect(container.isRegistered(TOKEN)).toBeTrue();
     });
   });
 
   describe('resolve()', () => {
     it('should reject when the token is not registered.', () => {
-      expect(() => container.resolve('Unbound')).toThrow(TokenNotRegisteredException);
+      expect(() => container.resolve('Unbound')).toThrow(new TokenNotRegisteredException('Unbound'));
     });
 
     it('should resolve a value provider.', () => {
@@ -162,7 +156,7 @@ describe('Dependency Injection Container', () => {
       expect(bar.foo).toBeInstanceOf(Foo);
     });
 
-    it('should inject a dependency based on the provided token over the infered type.', () => {
+    it('should inject a dependency based on the provided token over the inferred type.', () => {
       @Injectable()
       class Foo {}
 
@@ -440,26 +434,28 @@ describe('Dependency Injection Container', () => {
   // TODO: Add more tests.
   describe('resolveAll()', () => {
     it('should reject when the token is a lazy token.', () => {
-      expect(() => container.resolveAll(new LazyToken(() => class {}))).toThrow(ResolutionException);
+      expect(() => container.resolveAll(new LazyToken(() => class {}))).toThrow(
+        new ResolutionException('The resolution of multiple Lazy Tokens is unsupported.')
+      );
     });
 
     it('should reject when the token is not registered.', () => {
-      expect(() => container.resolveAll('Unbound')).toThrow(TokenNotRegisteredException);
+      expect(() => container.resolveAll('Unbound')).toThrow(new TokenNotRegisteredException('Unbound'));
     });
   });
 
   describe('delete()', () => {
     it('should ignore when removing an unregistered token from the container.', () => {
       expect(() => container.delete(TOKEN)).not.toThrow();
-      expect(container['registry'].has(TOKEN)).toBe(false);
+      expect(container['registry'].has(TOKEN)).toBeFalse();
     });
 
     it('should remove a token from the container.', () => {
       container.bind(TOKEN);
-      expect(container['registry'].has(TOKEN)).toBe(true);
+      expect(container['registry'].has(TOKEN)).toBeTrue();
 
       container.delete(TOKEN);
-      expect(container['registry'].has(TOKEN)).toBe(false);
+      expect(container['registry'].has(TOKEN)).toBeFalse();
     });
   });
 });

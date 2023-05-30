@@ -1,5 +1,6 @@
 import { Nullable } from '@guarani/types';
 
+import { Buffer } from 'buffer';
 import { networkInterfaces } from 'os';
 
 /**

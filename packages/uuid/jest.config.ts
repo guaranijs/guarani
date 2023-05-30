@@ -1,5 +1,5 @@
 export default {
-  displayName: 'uuid',
+  displayName: '@guarani/uuid',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {

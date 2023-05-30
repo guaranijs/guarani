@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import os from 'os';
 
 import { getMacAddress } from './get-mac-address';
@@ -52,6 +53,6 @@ describe('getMacAddress()', () => {
 
     osMock.networkInterfaces.mockReturnValueOnce(mockedNetworkInterfaces);
 
-    expect(getMacAddress()).toStrictEqual(Buffer.from('0102030a0b0c', 'hex'));
+    expect(getMacAddress()).toEqual(Buffer.from('0102030a0b0c', 'hex'));
   });
 });

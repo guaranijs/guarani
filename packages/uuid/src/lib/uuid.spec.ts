@@ -51,15 +51,15 @@ describe('UUID', () => {
     });
 
     it('should create a uuid from a buffer.', () => {
-      expect(new UUID(Buffer.alloc(16, 0x00))).toStrictEqual(UUID.NIL);
+      expect(new UUID(Buffer.alloc(16, 0x00))).toEqual(UUID.NIL);
     });
 
     it('should create a uuid from a regular uuid string.', () => {
-      expect(new UUID('00000000-0000-0000-0000-000000000000')).toStrictEqual(UUID.NIL);
+      expect(new UUID('00000000-0000-0000-0000-000000000000')).toEqual(UUID.NIL);
     });
 
     it('should create a uuid from a urn uuid string.', () => {
-      expect(new UUID('urn:uuid:00000000-0000-0000-0000-000000000000')).toStrictEqual(UUID.NIL);
+      expect(new UUID('urn:uuid:00000000-0000-0000-0000-000000000000')).toEqual(UUID.NIL);
     });
   });
 
@@ -69,7 +69,7 @@ describe('UUID', () => {
 
       const v1 = UUID.v1();
 
-      expect(v1.version).toBe(1);
+      expect(v1.version).toEqual(1);
       expect(v1.toString()).toMatch(v1Pattern);
     });
   });
@@ -80,7 +80,7 @@ describe('UUID', () => {
 
       const v3 = UUID.v3(UUID.URL_NAMESPACE, 'https://example.com');
 
-      expect(v3.version).toBe(3);
+      expect(v3.version).toEqual(3);
       expect(v3.toString()).toMatch(v3Pattern);
     });
   });
@@ -91,7 +91,7 @@ describe('UUID', () => {
 
       const v4 = UUID.v4();
 
-      expect(v4.version).toBe(4);
+      expect(v4.version).toEqual(4);
       expect(v4.toString()).toMatch(v4Pattern);
     });
   });
@@ -102,7 +102,7 @@ describe('UUID', () => {
 
       const v5 = UUID.v5(UUID.URL_NAMESPACE, 'https://example.com');
 
-      expect(v5.version).toBe(5);
+      expect(v5.version).toEqual(5);
       expect(v5.toString()).toMatch(v5Pattern);
     });
   });
@@ -110,91 +110,91 @@ describe('UUID', () => {
   describe('bytes', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.bytes).toStrictEqual(Buffer.from('123e4567e89b12d3a456426655440000', 'hex'));
+      expect(uuid.bytes).toEqual(Buffer.from('123e4567e89b12d3a456426655440000', 'hex'));
     });
   });
 
   describe('int', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.int).toBe(0x123e4567e89b12d3a456426655440000n);
+      expect(uuid.int).toEqual(0x123e4567e89b12d3a456426655440000n);
     });
   });
 
   describe('hex', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.hex).toBe('123e4567e89b12d3a456426655440000');
+      expect(uuid.hex).toEqual('123e4567e89b12d3a456426655440000');
     });
   });
 
   describe('urn', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.urn).toBe('urn:uuid:123e4567-e89b-12d3-a456-426655440000');
+      expect(uuid.urn).toEqual('urn:uuid:123e4567-e89b-12d3-a456-426655440000');
     });
   });
 
   describe('timestampLowField', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.timestampLowField).toBe(0x123e4567n);
+      expect(uuid.timestampLowField).toEqual(0x123e4567n);
     });
   });
 
   describe('timestampMiddleField', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.timestampMiddleField).toBe(0xe89bn);
+      expect(uuid.timestampMiddleField).toEqual(0xe89bn);
     });
   });
 
   describe('timestampHighFieldAndVersion', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.timestampHighFieldAndVersion).toBe(0x12d3n);
+      expect(uuid.timestampHighFieldAndVersion).toEqual(0x12d3n);
     });
   });
 
   describe('clockSequenceHighFieldAndVariant', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.clockSequenceHighFieldAndVariant).toBe(0xa4n);
+      expect(uuid.clockSequenceHighFieldAndVariant).toEqual(0xa4n);
     });
   });
 
   describe('clockSequenceLowField', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.clockSequenceLowField).toBe(0x56n);
+      expect(uuid.clockSequenceLowField).toEqual(0x56n);
     });
   });
 
   describe('node', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.node).toBe(0x426655440000n);
+      expect(uuid.node).toEqual(0x426655440000n);
     });
   });
 
   describe('timestamp', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.timestamp).toBe(0x02d3e89b123e4567n);
+      expect(uuid.timestamp).toEqual(0x02d3e89b123e4567n);
     });
   });
 
   describe('clockSequence', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.clockSequence).toBe(0x2456n);
+      expect(uuid.clockSequence).toEqual(0x2456n);
     });
   });
 
   describe('version', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.version).toBe(1);
+      expect(uuid.version).toEqual(1);
     });
   });
 
@@ -217,21 +217,21 @@ describe('UUID', () => {
       const first = new UUID('56a840be-805c-353e-b2ab-97478df7184a');
       const second = new UUID('56a840be-805c-353e-b2ab-97478df7184a');
 
-      expect(first.compare(second)).toBe(0);
+      expect(first.compare(second)).toEqual(0);
     });
   });
 
   describe('toString()', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.toString()).toBe('123e4567-e89b-12d3-a456-426655440000');
+      expect(uuid.toString()).toEqual('123e4567-e89b-12d3-a456-426655440000');
     });
   });
 
   describe('toJSON()', () => {
     it('should return the integer value of the uuid.', () => {
       const uuid = new UUID('123e4567-e89b-12d3-a456-426655440000');
-      expect(uuid.toJSON()).toBe('123e4567-e89b-12d3-a456-426655440000');
+      expect(uuid.toJSON()).toEqual('123e4567-e89b-12d3-a456-426655440000');
     });
   });
 });

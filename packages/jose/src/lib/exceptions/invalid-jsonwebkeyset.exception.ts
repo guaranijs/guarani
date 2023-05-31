@@ -9,7 +9,7 @@ export class InvalidJsonWebKeySetException extends JoseException {
    *
    * @param message Error Message.
    */
-  public constructor(message = 'The provided JSON Web Key Set is invalid.') {
-    super(message);
+  public constructor(message = 'The provided JSON Web Key Set is invalid.', options?: ErrorOptions) {
+    super(message, options);
   }
 }

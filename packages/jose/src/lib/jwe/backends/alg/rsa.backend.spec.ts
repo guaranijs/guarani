@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 import { constants } from 'crypto';
 
@@ -68,11 +70,11 @@ describe('JSON Web Encryption Key Wrap RSA1_5 Backend', () => {
   });
 
   it('should have "crypto.constants.RSA_PKCS1_PADDING" as its "padding".', () => {
-    expect(RSA1_5['padding']).toBe(constants.RSA_PKCS1_PADDING);
+    expect(RSA1_5['padding']).toEqual(constants.RSA_PKCS1_PADDING);
   });
 
-  it('should have "undefined" as its "hash".', () => {
-    expect(RSA1_5['hash']).toBeUndefined();
+  it('should have "null" as its "hash".', () => {
+    expect(RSA1_5['hash']).toBeNull();
   });
 
   it('should throw when not using an "RSA" key.', () => {
@@ -103,7 +105,7 @@ describe('JSON Web Encryption Key Wrap RSA1_5 Backend', () => {
       (async () => ([, wrappedKey] = await RSA1_5.wrap(contentEncryptionBackend, publicKey)))()
     ).resolves.not.toThrow();
 
-    expect(wrappedKey.byteLength).toBe(256);
+    expect(wrappedKey.byteLength).toEqual(256);
 
     let contentEncryptionKey!: Buffer;
 
@@ -121,7 +123,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP Backend', () => {
   });
 
   it('should have "crypto.constants.RSA_PKCS1_OAEP_PADDING" as its "padding".', () => {
-    expect(RSA_OAEP['padding']).toBe(constants.RSA_PKCS1_OAEP_PADDING);
+    expect(RSA_OAEP['padding']).toEqual(constants.RSA_PKCS1_OAEP_PADDING);
   });
 
   it('should have "SHA1" as its "hash".', () => {
@@ -156,7 +158,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP Backend', () => {
       (async () => ([, wrappedKey] = await RSA_OAEP.wrap(contentEncryptionBackend, publicKey)))()
     ).resolves.not.toThrow();
 
-    expect(wrappedKey.byteLength).toBe(256);
+    expect(wrappedKey.byteLength).toEqual(256);
 
     let contentEncryptionKey!: Buffer;
 
@@ -174,7 +176,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-256 Backend', () => {
   });
 
   it('should have "crypto.constants.RSA_PKCS1_OAEP_PADDING" as its "padding".', () => {
-    expect(RSA_OAEP_256['padding']).toBe(constants.RSA_PKCS1_OAEP_PADDING);
+    expect(RSA_OAEP_256['padding']).toEqual(constants.RSA_PKCS1_OAEP_PADDING);
   });
 
   it('should have "SHA256" as its "hash".', () => {
@@ -209,7 +211,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-256 Backend', () => {
       (async () => ([, wrappedKey] = await RSA_OAEP_256.wrap(contentEncryptionBackend, publicKey)))()
     ).resolves.not.toThrow();
 
-    expect(wrappedKey.byteLength).toBe(256);
+    expect(wrappedKey.byteLength).toEqual(256);
 
     let contentEncryptionKey!: Buffer;
 
@@ -229,7 +231,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-384 Backend', () => {
   });
 
   it('should have "crypto.constants.RSA_PKCS1_OAEP_PADDING" as its "padding".', () => {
-    expect(RSA_OAEP_384['padding']).toBe(constants.RSA_PKCS1_OAEP_PADDING);
+    expect(RSA_OAEP_384['padding']).toEqual(constants.RSA_PKCS1_OAEP_PADDING);
   });
 
   it('should have "SHA384" as its "hash".', () => {
@@ -264,7 +266,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-384 Backend', () => {
       (async () => ([, wrappedKey] = await RSA_OAEP_384.wrap(contentEncryptionBackend, publicKey)))()
     ).resolves.not.toThrow();
 
-    expect(wrappedKey.byteLength).toBe(256);
+    expect(wrappedKey.byteLength).toEqual(256);
 
     let contentEncryptionKey!: Buffer;
 
@@ -284,7 +286,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-512 Backend', () => {
   });
 
   it('should have "crypto.constants.RSA_PKCS1_OAEP_PADDING" as its "padding".', () => {
-    expect(RSA_OAEP_512['padding']).toBe(constants.RSA_PKCS1_OAEP_PADDING);
+    expect(RSA_OAEP_512['padding']).toEqual(constants.RSA_PKCS1_OAEP_PADDING);
   });
 
   it('should have "SHA512" as its "hash".', () => {
@@ -319,7 +321,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-512 Backend', () => {
       (async () => ([, wrappedKey] = await RSA_OAEP_512.wrap(contentEncryptionBackend, publicKey)))()
     ).resolves.not.toThrow();
 
-    expect(wrappedKey.byteLength).toBe(256);
+    expect(wrappedKey.byteLength).toEqual(256);
 
     let contentEncryptionKey!: Buffer;
 

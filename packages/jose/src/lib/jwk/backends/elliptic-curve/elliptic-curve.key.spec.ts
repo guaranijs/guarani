@@ -26,37 +26,37 @@ const invalidCurves: any[] = [
   1,
   1.2,
   1n,
+  Symbol('foo'),
   Buffer,
   Buffer.alloc(1),
-  Symbol('foo'),
   () => 1,
   {},
   [],
 ];
 
-const invalidCoords: any[] = [
+const invalidCoordinates: any[] = [
   undefined,
   null,
   true,
   1,
   1.2,
   1n,
+  Symbol('foo'),
   Buffer,
   Buffer.alloc(1),
-  Symbol('foo'),
   () => 1,
   {},
   [],
 ];
 
-const invalidPrivateValues: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('foo'), () => 1, {}, []];
+const invalidPrivateValues: any[] = [true, 1, 1.2, 1n, Symbol('foo'), Buffer, Buffer.alloc(1), () => 1, {}, []];
 
 describe('Elliptic Curve Key', () => {
   describe('constructor', () => {
     it('should throw when providing a "kty" different than "EC".', () => {
       // @ts-expect-error Invalid JSON Web Key Type.
       expect(() => new EllipticCurveKey({ kty: 'unknown' })).toThrow(
-        new TypeError('Unexpected JSON Web Key Type "unknown" for EllipticCurveKey.')
+        new TypeError('Invalid jwk parameter "kty". Expected "EC", got "unknown".')
       );
     });
 
@@ -73,13 +73,13 @@ describe('Elliptic Curve Key', () => {
       );
     });
 
-    it.each(invalidCoords)('should throw when passing an invalid x coordinate.', (x) => {
+    it.each(invalidCoordinates)('should throw when passing an invalid x coordinate.', (x) => {
       expect(() => new EllipticCurveKey({ ...publicParameters, x })).toThrow(
         new InvalidJsonWebKeyException('Invalid jwk parameter "x".')
       );
     });
 
-    it.each(invalidCoords)('should throw when passing an invalid y coordinate.', (y) => {
+    it.each(invalidCoordinates)('should throw when passing an invalid y coordinate.', (y) => {
       expect(() => new EllipticCurveKey({ ...publicParameters, y })).toThrow(
         new InvalidJsonWebKeyException('Invalid jwk parameter "y".')
       );

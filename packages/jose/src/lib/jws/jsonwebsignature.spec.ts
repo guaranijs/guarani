@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
@@ -40,18 +42,18 @@ describe('JSON Web Signature', () => {
 
   describe('isJsonWebSignature()', () => {
     it.each(invalidTokens)('should return false when the provided data is not a string.', (invalidToken) => {
-      expect(JsonWebSignature.isJsonWebSignature(invalidToken)).toBe(false);
+      expect(JsonWebSignature.isJsonWebSignature(invalidToken)).toBeFalse();
     });
 
     it.each(invalidTokenFormats)(
       'should return false when the format of the provided token is invalid.',
       (invalidToken) => {
-        expect(JsonWebSignature.isJsonWebSignature(invalidToken)).toBe(false);
+        expect(JsonWebSignature.isJsonWebSignature(invalidToken)).toBeFalse();
       }
     );
 
     it('should return true when the provided data has a valid json web signature token format.', () => {
-      expect(JsonWebSignature.isJsonWebSignature(token)).toBe(true);
+      expect(JsonWebSignature.isJsonWebSignature(token)).toBeTrue();
     });
   });
 
@@ -65,7 +67,9 @@ describe('JSON Web Signature', () => {
     });
 
     it('should throw when the header of the token is not a valid json object.', () => {
-      expect(() => JsonWebSignature.decode('a.b.c')).toThrow(new InvalidJsonWebSignatureException());
+      expect(() => JsonWebSignature.decode('a.b.c')).toThrow(
+        new InvalidJsonWebSignatureException(undefined, { cause: new Error('Unexpected end of JSON input') })
+      );
     });
 
     it('should decode the data of a valid token.', () => {

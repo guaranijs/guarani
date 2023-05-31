@@ -1,4 +1,4 @@
-# JOSE
+# @guarani/jose
 
 Implementation of the works of the JOSE Work Group.
 

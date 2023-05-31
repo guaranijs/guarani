@@ -26,19 +26,19 @@ describe('JSON Web Encryption Content Encryption AES Galois Counter Mode using 1
   });
 
   it('should have "A128GCM" as its algorithm.', () => {
-    expect(A128GCM['algorithm']).toBe<JsonWebEncryptionContentEncryptionAlgorithm>('A128GCM');
+    expect(A128GCM['algorithm']).toEqual<JsonWebEncryptionContentEncryptionAlgorithm>('A128GCM');
   });
 
   it('should have 128 as its "cekSize" value.', () => {
-    expect(A128GCM['cekSize']).toBe(128);
+    expect(A128GCM['cekSize']).toEqual(128);
   });
 
   it('should have 96 as its "ivSize" value.', () => {
-    expect(A128GCM['ivSize']).toBe(96);
+    expect(A128GCM['ivSize']).toEqual(96);
   });
 
   it('should have 16 as its "authTagLength" value.', () => {
-    expect(A128GCM['authTagLength']).toBe(16);
+    expect(A128GCM['authTagLength']).toEqual(16);
   });
 
   it('should have "aes-128-gcm" as its "cipher" value.', () => {
@@ -100,19 +100,19 @@ describe('JSON Web Encryption Content Encryption AES Galois Counter Mode using 1
   });
 
   it('should have "A192GCM" as its algorithm.', () => {
-    expect(A192GCM['algorithm']).toBe<JsonWebEncryptionContentEncryptionAlgorithm>('A192GCM');
+    expect(A192GCM['algorithm']).toEqual<JsonWebEncryptionContentEncryptionAlgorithm>('A192GCM');
   });
 
   it('should have 192 as its "cekSize" value.', () => {
-    expect(A192GCM['cekSize']).toBe(192);
+    expect(A192GCM['cekSize']).toEqual(192);
   });
 
   it('should have 96 as its "ivSize" value.', () => {
-    expect(A192GCM['ivSize']).toBe(96);
+    expect(A192GCM['ivSize']).toEqual(96);
   });
 
   it('should have 16 as its "authTagLength" value.', () => {
-    expect(A192GCM['authTagLength']).toBe(16);
+    expect(A192GCM['authTagLength']).toEqual(16);
   });
 
   it('should have "aes-192-gcm" as its "cipher" value.', () => {
@@ -174,19 +174,19 @@ describe('JSON Web Encryption Content Encryption AES Galois Counter Mode using 2
   });
 
   it('should have "A256GCM" as its algorithm.', () => {
-    expect(A256GCM['algorithm']).toBe<JsonWebEncryptionContentEncryptionAlgorithm>('A256GCM');
+    expect(A256GCM['algorithm']).toEqual<JsonWebEncryptionContentEncryptionAlgorithm>('A256GCM');
   });
 
   it('should have 256 as its "cekSize" value.', () => {
-    expect(A256GCM['cekSize']).toBe(256);
+    expect(A256GCM['cekSize']).toEqual(256);
   });
 
   it('should have 96 as its "ivSize" value.', () => {
-    expect(A256GCM['ivSize']).toBe(96);
+    expect(A256GCM['ivSize']).toEqual(96);
   });
 
   it('should have 16 as its "authTagLength" value.', () => {
-    expect(A256GCM['authTagLength']).toBe(16);
+    expect(A256GCM['authTagLength']).toEqual(16);
   });
 
   it('should have "aes-256-gcm" as its "cipher" value.', () => {

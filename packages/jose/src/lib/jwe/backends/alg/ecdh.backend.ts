@@ -24,7 +24,7 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
   /**
    * Elliptic Curves used by the JSON Web Encryption Key Wrap ECDH-ES Backend.
    */
-  protected readonly curves: Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521' | 'X25519' | 'X448'>[] = [
+  private readonly curves: Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521' | 'X25519' | 'X448'>[] = [
     'P-256',
     'P-384',
     'P-521',
@@ -37,7 +37,7 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
    *
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
    */
-  public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
+  public constructor(protected override readonly algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
     super(algorithm);
   }
 
@@ -58,7 +58,7 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
 
     const { alg, apu, apv, epk } = header;
 
-    const ephemeralPublicKey = <EllipticCurveKey | OctetKeyPairKey>await JsonWebKey.load(epk);
+    const ephemeralPublicKey = (await JsonWebKey.load(epk)) as EllipticCurveKey | OctetKeyPairKey;
 
     this.validateJsonWebKey(ephemeralPublicKey);
 
@@ -74,8 +74,8 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
       return [sharedSecret, Buffer.alloc(0), headerParameters];
     }
 
-    const aesKeyWrapAlgorithm = <JsonWebEncryptionKeyWrapAlgorithm>alg.substring(8);
-    const aesKeyWrapBackend = <AesBackend>JSONWEBENCRYPTION_KEYWRAP_REGISTRY[aesKeyWrapAlgorithm];
+    const aesKeyWrapAlgorithm = alg.substring(8) as JsonWebEncryptionKeyWrapAlgorithm;
+    const aesKeyWrapBackend = JSONWEBENCRYPTION_KEYWRAP_REGISTRY[aesKeyWrapAlgorithm] as AesBackend;
 
     const [contentEncryptionKey, wrappedKey] = await aesKeyWrapBackend.wrap(
       contentEncryptionBackend,
@@ -104,7 +104,7 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
 
     const { alg, epk } = header;
 
-    const ephemeralPublicKey = <EllipticCurveKey | OctetKeyPairKey>await JsonWebKey.load(epk);
+    const ephemeralPublicKey = (await JsonWebKey.load(epk)) as EllipticCurveKey | OctetKeyPairKey;
 
     this.validateJsonWebKey(ephemeralPublicKey);
 
@@ -118,8 +118,8 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
       return sharedSecret;
     }
 
-    const aesKeyWrapAlgorithm = <JsonWebEncryptionKeyWrapAlgorithm>alg.substring(8);
-    const aesKeyWrapBackend = <AesBackend>JSONWEBENCRYPTION_KEYWRAP_REGISTRY[aesKeyWrapAlgorithm];
+    const aesKeyWrapAlgorithm = alg.substring(8) as JsonWebEncryptionKeyWrapAlgorithm;
+    const aesKeyWrapBackend = JSONWEBENCRYPTION_KEYWRAP_REGISTRY[aesKeyWrapAlgorithm] as AesBackend;
 
     const unwrapJwk = new OctetSequenceKey({ kty: 'oct', k: sharedSecret.toString('base64url') });
 
@@ -172,8 +172,8 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
 
     const value = Buffer.concat([
       this.lengthAndInput(Buffer.from(alg === 'ECDH-ES' ? enc : alg, 'ascii')),
-      this.lengthAndInput(apu !== undefined ? Buffer.from(apu, 'base64url') : Buffer.alloc(0)),
-      this.lengthAndInput(apv !== undefined ? Buffer.from(apv, 'base64url') : Buffer.alloc(0)),
+      this.lengthAndInput(typeof apu !== 'undefined' ? Buffer.from(apu, 'base64url') : Buffer.alloc(0)),
+      this.lengthAndInput(typeof apv !== 'undefined' ? Buffer.from(apv, 'base64url') : Buffer.alloc(0)),
       keyLengthBuffer,
     ]);
 

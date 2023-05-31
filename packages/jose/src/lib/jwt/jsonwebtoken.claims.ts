@@ -1,4 +1,5 @@
 import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
 import { Buffer } from 'buffer';
 import { isDeepStrictEqual } from 'util';
@@ -31,7 +32,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
   /**
    * Identifier of the Audience the Token is intended to.
    */
-  public aud?: string | string[];
+  public aud?: OneOrMany<string>;
 
   /**
    * UTC time denoting the Expiration Time of the Token.
@@ -56,7 +57,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
   /**
    * Additional JSON Web Token Claims.
    */
-  [claim: string]: any;
+  [claim: string]: unknown;
 
   /**
    * Instantiates a new JSON Web Token Claims for usage with JSON Web Tokens.
@@ -179,7 +180,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
    */
   private static validateClaimsOptions(
     claims: JsonWebTokenClaimsParameters,
-    options: Record<string, JsonWebTokenClaimValidationOptions | null>
+    options: Dictionary<Nullable<JsonWebTokenClaimValidationOptions>>
   ): void {
     Object.entries(options).forEach(([claim, option]) => {
       if (option === null) {

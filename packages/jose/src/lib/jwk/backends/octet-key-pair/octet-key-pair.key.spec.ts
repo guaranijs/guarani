@@ -25,9 +25,9 @@ const invalidCurves: any[] = [
   1,
   1.2,
   1n,
+  Symbol('foo'),
   Buffer,
   Buffer.alloc(1),
-  Symbol('foo'),
   () => 1,
   {},
   [],
@@ -40,22 +40,22 @@ const invalidPublicValues: any[] = [
   1,
   1.2,
   1n,
+  Symbol('foo'),
   Buffer,
   Buffer.alloc(1),
-  Symbol('foo'),
   () => 1,
   {},
   [],
 ];
 
-const invalidPrivateValues: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('foo'), () => 1, {}, []];
+const invalidPrivateValues: any[] = [true, 1, 1.2, 1n, Symbol('foo'), Buffer, Buffer.alloc(1), () => 1, {}, []];
 
 describe('Octet Key Pair Key', () => {
   describe('constructor', () => {
     it('should throw when providing a "kty" different than "OKP".', () => {
       // @ts-expect-error Invalid JSON Web Key Type.
       expect(() => new OctetKeyPairKey({ kty: 'unknown' })).toThrow(
-        new TypeError('Unexpected JSON Web Key Type "unknown" for OctetKeyPairKey.')
+        new TypeError('Invalid jwk parameter "kty". Expected "OKP", got "unknown".')
       );
     });
 

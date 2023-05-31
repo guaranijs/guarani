@@ -9,7 +9,7 @@ export class UnsupportedAlgorithmException extends JoseException {
    *
    * @param message Error Message.
    */
-  public constructor(message = 'The requested Algorithm is not supported.') {
-    super(message);
+  public constructor(message = 'The requested Algorithm is not supported.', options?: ErrorOptions) {
+    super(message, options);
   }
 }

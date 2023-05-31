@@ -9,7 +9,7 @@ export class InvalidJoseHeaderException extends JoseException {
    *
    * @param message Error Message.
    */
-  public constructor(message = 'The provided JOSE Header is invalid.') {
-    super(message);
+  public constructor(message = 'The provided JOSE Header is invalid.', options?: ErrorOptions) {
+    super(message, options);
   }
 }

@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 
 /**

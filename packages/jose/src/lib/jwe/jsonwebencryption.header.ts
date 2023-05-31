@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { JoseHeader } from '../jose/jose.header';
@@ -46,7 +48,7 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryp
   /**
    * JSON Web Encryption Compression Backend.
    */
-  readonly #compressionBackend?: JsonWebEncryptionCompressionBackend;
+  readonly #compressionBackend!: Nullable<JsonWebEncryptionCompressionBackend>;
 
   /**
    * JSON Web Encryption Key Wrap Backend.
@@ -65,7 +67,7 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryp
   /**
    * JSON Web Encryption Compression Backend.
    */
-  public get compressionBackend(): JsonWebEncryptionCompressionBackend | undefined {
+  public get compressionBackend(): Nullable<JsonWebEncryptionCompressionBackend> {
     return this.#compressionBackend;
   }
 
@@ -79,10 +81,8 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryp
 
     this.#keyWrapBackend = JSONWEBENCRYPTION_KEYWRAP_REGISTRY[parameters.alg];
     this.#contentEncryptionBackend = JSONWEBENCRYPTION_CONTENT_ENCRYPTION_REGISTRY[parameters.enc];
-
-    if (typeof parameters.zip !== 'undefined') {
-      this.#compressionBackend = JSONWEBENCRYPTION_COMPRESSION_REGISTRY[parameters.zip];
-    }
+    this.#compressionBackend =
+      typeof parameters.zip !== 'undefined' ? JSONWEBENCRYPTION_COMPRESSION_REGISTRY[parameters.zip] : null;
   }
 
   /**

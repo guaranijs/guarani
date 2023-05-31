@@ -18,7 +18,7 @@ describe('JSON Web Signature HMAC using SHA-256 Backend', () => {
   });
 
   it('should have 32 as its "keySize".', () => {
-    expect(HS256['keySize']).toBe(32);
+    expect(HS256['keySize']).toEqual(32);
   });
 
   it('should throw when not using an "oct" key.', () => {
@@ -46,7 +46,7 @@ describe('JSON Web Signature HMAC using SHA-256 Backend', () => {
     await expect((async () => (signature = await HS256.sign(message, key)))()).resolves.not.toThrow();
 
     expect(signature).toEqual(expect.any(Buffer));
-    expect(signature.byteLength).toBe(32);
+    expect(signature.byteLength).toEqual(32);
 
     await expect(HS256.verify(signature, message, key)).resolves.not.toThrow();
   });
@@ -62,7 +62,7 @@ describe('JSON Web Signature HMAC using SHA-384 Backend', () => {
   });
 
   it('should have 48 as its "keySize".', () => {
-    expect(HS384['keySize']).toBe(48);
+    expect(HS384['keySize']).toEqual(48);
   });
 
   it('should throw when not using an "oct" key.', () => {
@@ -90,7 +90,7 @@ describe('JSON Web Signature HMAC using SHA-384 Backend', () => {
     await expect((async () => (signature = await HS384.sign(message, key)))()).resolves.not.toThrow();
 
     expect(signature).toEqual(expect.any(Buffer));
-    expect(signature.byteLength).toBe(48);
+    expect(signature.byteLength).toEqual(48);
 
     await expect(HS384.verify(signature, message, key)).resolves.not.toThrow();
   });
@@ -106,7 +106,7 @@ describe('JSON Web Signature HMAC using SHA-512 Backend', () => {
   });
 
   it('should have 64 as its "keySize".', () => {
-    expect(HS512['keySize']).toBe(64);
+    expect(HS512['keySize']).toEqual(64);
   });
 
   it('should throw when not using an "oct" key.', () => {
@@ -134,7 +134,7 @@ describe('JSON Web Signature HMAC using SHA-512 Backend', () => {
     await expect((async () => (signature = await HS512.sign(message, key)))()).resolves.not.toThrow();
 
     expect(signature).toEqual(expect.any(Buffer));
-    expect(signature.byteLength).toBe(64);
+    expect(signature.byteLength).toEqual(64);
 
     await expect(HS512.verify(signature, message, key)).resolves.not.toThrow();
   });

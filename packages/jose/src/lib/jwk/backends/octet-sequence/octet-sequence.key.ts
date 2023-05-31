@@ -51,7 +51,7 @@ export class OctetSequenceKey extends JsonWebKey<OctetSequenceKeyParameters> imp
    */
   protected override validateParameters(parameters: OctetSequenceKeyParameters): void {
     if (parameters.kty !== 'oct') {
-      throw new TypeError(`Unexpected JSON Web Key Type "${parameters.kty}" for OctetSequenceKey.`);
+      throw new TypeError(`Invalid jwk parameter "kty". Expected "oct", got "${parameters.kty}".`);
     }
 
     if (typeof parameters.k !== 'string') {

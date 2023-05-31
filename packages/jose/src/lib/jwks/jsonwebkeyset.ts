@@ -1,4 +1,5 @@
 import { removeNullishValues } from '@guarani/primitives';
+import { Nullable } from '@guarani/types';
 
 import { InvalidJsonWebKeySetException } from '../exceptions/invalid-jsonwebkeyset.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
@@ -96,7 +97,7 @@ export class JsonWebKeySet implements JsonWebKeySetParameters {
    * @param predicate Predicate used to locate the requested JSON Web Key.
    * @returns JSON Web Key that satisfies the provided predicate.
    */
-  public find<T extends JsonWebKey>(predicate: (key: JsonWebKeyParameters) => boolean): T | null {
+  public find<T extends JsonWebKey>(predicate: (key: JsonWebKeyParameters) => boolean): Nullable<T> {
     return <T>this.keys.find(predicate) ?? null;
   }
 

@@ -9,7 +9,7 @@ export class UnsupportedEllipticCurveException extends JoseException {
    *
    * @param message Error Message.
    */
-  public constructor(message = 'The provided Elliptic Curve is not supported.') {
-    super(message);
+  public constructor(message = 'The provided Elliptic Curve is not supported.', options?: ErrorOptions) {
+    super(message, options);
   }
 }

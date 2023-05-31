@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
@@ -12,31 +14,31 @@ const invalidZips: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.
 describe('JSON Web Encryption Header', () => {
   describe('isValidHeader()', () => {
     it.each(invalidAlgs)('should return false when the provided header parameter "alg" is invalid.', (alg) => {
-      expect(JsonWebEncryptionHeader.isValidHeader({ alg })).toBe(false);
+      expect(JsonWebEncryptionHeader.isValidHeader({ alg })).toBeFalse();
     });
 
     it('should return false when the provided header parameter "alg" is unsupported.', () => {
-      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'unknown' })).toBe(false);
+      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'unknown' })).toBeFalse();
     });
 
     it.each(invalidEncs)('should return false when the provided header parameter "enc" is invalid.', (enc) => {
-      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'A128KW', enc })).toBe(false);
+      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'A128KW', enc })).toBeFalse();
     });
 
     it('should return false when the provided header parameter "enc" is unsupported.', () => {
-      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'A128KW', enc: 'unknown' })).toBe(false);
+      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'A128KW', enc: 'unknown' })).toBeFalse();
     });
 
     it.each(invalidZips)('should return false when the provided header parameter "zip" is invalid.', (zip) => {
-      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'A128KW', enc: 'A128GCM', zip })).toBe(false);
+      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'A128KW', enc: 'A128GCM', zip })).toBeFalse();
     });
 
     it('should return false when the provided header parameter "zip" is unsupported.', () => {
-      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'A128KW', enc: 'A128GCM', zip: 'unknown' })).toBe(false);
+      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'A128KW', enc: 'A128GCM', zip: 'unknown' })).toBeFalse();
     });
 
     it('should return true when the provided data is a valid json web encryption header.', () => {
-      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'A128KW', enc: 'A128CBC-HS256' })).toBe(true);
+      expect(JsonWebEncryptionHeader.isValidHeader({ alg: 'A128KW', enc: 'A128CBC-HS256' })).toBeTrue();
     });
   });
 

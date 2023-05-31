@@ -55,9 +55,9 @@ const invalidParameters: any[] = [
   1,
   1.2,
   1n,
+  Symbol('foo'),
   Buffer,
   Buffer.alloc(1),
-  Symbol('foo'),
   () => 1,
   {},
   [],
@@ -68,7 +68,7 @@ describe('RSA JSON Web Key', () => {
     it('should throw when providing a "kty" different than "RSA".', () => {
       // @ts-expect-error Invalid JSON Web Key Type.
       expect(() => new RsaKey({ kty: 'unknown' })).toThrow(
-        new TypeError('Unexpected JSON Web Key Type "unknown" for RsaKey.')
+        new TypeError('Invalid jwk parameter "kty". Expected "RSA", got "unknown".')
       );
     });
 
@@ -80,7 +80,7 @@ describe('RSA JSON Web Key', () => {
 
     it('should throw when passing a modulus smaller than 2048 bits.', () => {
       expect(() => new RsaKey({ ...publicParameters, n: Buffer.alloc(255, 'a').toString('base64url') })).toThrow(
-        new InvalidJsonWebKeyException('The RSA Modulus MUST be at least 2048.')
+        new InvalidJsonWebKeyException('The RSA Modulus must be at least 2048.')
       );
     });
 

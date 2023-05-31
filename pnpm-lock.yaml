@@ -149,8 +149,11 @@ importers:
   packages/jose:
     specifiers:
       '@guarani/primitives': link:../primitives
+      '@guarani/types': link:../types
     dependencies:
       '@guarani/primitives': link:../primitives
+    devDependencies:
+      '@guarani/types': link:../types
 
   packages/oauth2-server:
     specifiers:

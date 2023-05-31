@@ -17,32 +17,17 @@ const randomBytesAsync = promisify(randomBytes);
  */
 export abstract class JsonWebEncryptionContentEncryptionBackend {
   /**
-   * Name of the JSON Web Encryption Content Encryption Backend.
-   */
-  protected readonly algorithm: JsonWebEncryptionContentEncryptionAlgorithm;
-
-  /**
-   * Size of the Content Encryption Key in bits.
-   */
-  public readonly cekSize: number;
-
-  /**
-   * Size of the Initialization Vector in bits.
-   */
-  public readonly ivSize: number;
-
-  /**
    * Instantiates a new JSON Web Encryption Content Encryption Algorithm to Encrypt and Decrypt a Plaintext.
    *
    * @param algorithm Name of the JSON Web Encryption Content Encryption Backend.
    * @param cekSize Size of the Content Encryption Key in bits.
    * @param ivSize Size of the Initialization Vector in bits.
    */
-  public constructor(algorithm: JsonWebEncryptionContentEncryptionAlgorithm, cekSize: number, ivSize: number) {
-    this.algorithm = algorithm;
-    this.cekSize = cekSize;
-    this.ivSize = ivSize;
-  }
+  public constructor(
+    protected readonly algorithm: JsonWebEncryptionContentEncryptionAlgorithm,
+    public readonly cekSize: number,
+    public readonly ivSize: number
+  ) {}
 
   /**
    * Generates a new Content Encryption Key.

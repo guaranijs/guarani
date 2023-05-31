@@ -25,23 +25,23 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 128-bits 
   });
 
   it('should have "A128CBC-HS256" as its algorithm.', () => {
-    expect(A128CBC_HS256['algorithm']).toBe<JsonWebEncryptionContentEncryptionAlgorithm>('A128CBC-HS256');
+    expect(A128CBC_HS256['algorithm']).toEqual<JsonWebEncryptionContentEncryptionAlgorithm>('A128CBC-HS256');
   });
 
   it('should have 256 as its "cekSize" value.', () => {
-    expect(A128CBC_HS256['cekSize']).toBe(256);
+    expect(A128CBC_HS256['cekSize']).toEqual(256);
   });
 
   it('should have 128 as its "ivSize" value.', () => {
-    expect(A128CBC_HS256['ivSize']).toBe(128);
+    expect(A128CBC_HS256['ivSize']).toEqual(128);
   });
 
   it('should have 128 as its "keySize" value.', () => {
-    expect(A128CBC_HS256['keySize']).toBe(128);
+    expect(A128CBC_HS256['keySize']).toEqual(128);
   });
 
   it('should have "SHA256" as its "hash" value.', () => {
-    expect(A128CBC_HS256['hash']).toEqual('SHA256');
+    expect(A128CBC_HS256['hash']).toEqual('sha256');
   });
 
   it('should have "aes-128-gcm" as its "cipher" value.', () => {
@@ -103,23 +103,23 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 192-bits 
   });
 
   it('should have "A192CBC-HS384" as its algorithm.', () => {
-    expect(A192CBC_HS384['algorithm']).toBe<JsonWebEncryptionContentEncryptionAlgorithm>('A192CBC-HS384');
+    expect(A192CBC_HS384['algorithm']).toEqual<JsonWebEncryptionContentEncryptionAlgorithm>('A192CBC-HS384');
   });
 
   it('should have 384 as its "cekSize" value.', () => {
-    expect(A192CBC_HS384['cekSize']).toBe(384);
+    expect(A192CBC_HS384['cekSize']).toEqual(384);
   });
 
   it('should have 128 as its "ivSize" value.', () => {
-    expect(A192CBC_HS384['ivSize']).toBe(128);
+    expect(A192CBC_HS384['ivSize']).toEqual(128);
   });
 
   it('should have 192 as its "keySize" value.', () => {
-    expect(A192CBC_HS384['keySize']).toBe(192);
+    expect(A192CBC_HS384['keySize']).toEqual(192);
   });
 
   it('should have "SHA384" as its "hash" value.', () => {
-    expect(A192CBC_HS384['hash']).toEqual('SHA384');
+    expect(A192CBC_HS384['hash']).toEqual('sha384');
   });
 
   it('should have "aes-192-gcm" as its "cipher" value.', () => {
@@ -181,23 +181,23 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 256-bits 
   });
 
   it('should have "A256CBC-HS512" as its algorithm.', () => {
-    expect(A256CBC_HS512['algorithm']).toBe<JsonWebEncryptionContentEncryptionAlgorithm>('A256CBC-HS512');
+    expect(A256CBC_HS512['algorithm']).toEqual<JsonWebEncryptionContentEncryptionAlgorithm>('A256CBC-HS512');
   });
 
   it('should have 512 as its "cekSize" value.', () => {
-    expect(A256CBC_HS512['cekSize']).toBe(512);
+    expect(A256CBC_HS512['cekSize']).toEqual(512);
   });
 
   it('should have 128 as its "ivSize" value.', () => {
-    expect(A256CBC_HS512['ivSize']).toBe(128);
+    expect(A256CBC_HS512['ivSize']).toEqual(128);
   });
 
   it('should have 256 as its "keySize" value.', () => {
-    expect(A256CBC_HS512['keySize']).toBe(256);
+    expect(A256CBC_HS512['keySize']).toEqual(256);
   });
 
   it('should have "SHA512" as its "hash" value.', () => {
-    expect(A256CBC_HS512['hash']).toEqual('SHA512');
+    expect(A256CBC_HS512['hash']).toEqual('sha512');
   });
 
   it('should have "aes-256-gcm" as its "cipher" value.', () => {

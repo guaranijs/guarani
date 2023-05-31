@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
@@ -35,7 +37,7 @@ export class JsonWebSignature {
    * @param payload Buffer to be used as the Payload.
    */
   public constructor(header: JsonWebSignatureHeaderParameters, payload?: Buffer) {
-    if (payload !== undefined && !Buffer.isBuffer(payload)) {
+    if (typeof payload !== 'undefined' && !Buffer.isBuffer(payload)) {
       throw new TypeError('Invalid JSON Web Signature Payload.');
     }
 
@@ -72,7 +74,7 @@ export class JsonWebSignature {
     }
 
     try {
-      const [b64Header, b64Payload, b64Signature] = <SplitJsonWebSignatureToken>token.split('.');
+      const [b64Header, b64Payload, b64Signature] = token.split('.') as SplitJsonWebSignatureToken;
 
       const headerParameters = JSON.parse(Buffer.from(b64Header, 'base64url').toString('utf8'));
 
@@ -103,7 +105,7 @@ export class JsonWebSignature {
    */
   public static async verify(
     token: string,
-    keyOrKeyLoader: JsonWebKey | JsonWebKeyLoader | null,
+    keyOrKeyLoader: Nullable<JsonWebKey | JsonWebKeyLoader>,
     expectedAlgorithms: JsonWebSignatureAlgorithm[]
   ): Promise<JsonWebSignature> {
     if (keyOrKeyLoader !== null && !(keyOrKeyLoader instanceof JsonWebKey) && typeof keyOrKeyLoader !== 'function') {
@@ -128,7 +130,7 @@ export class JsonWebSignature {
 
       const message = Buffer.from(`${b64Header}.${b64Payload}`, 'ascii');
 
-      await backend.verify(signature, message, key ?? undefined);
+      await backend.verify(signature, message, key);
 
       return new JsonWebSignature(header, payload);
     } catch (exc: unknown) {
@@ -149,17 +151,17 @@ export class JsonWebSignature {
    * @param keyOrKeyLoader JSON Web Key used to Sign the JSON Web Signature Token.
    * @returns JSON Web Signature Compact Token.
    */
-  public async sign(keyOrKeyLoader?: JsonWebKey | JsonWebKeyLoader): Promise<string> {
+  public async sign(keyOrKeyLoader: Nullable<JsonWebKey | JsonWebKeyLoader>): Promise<string> {
     try {
       const { header, payload } = this;
 
       const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
       const b64Payload = payload.toString('base64url');
 
-      const key = keyOrKeyLoader instanceof JsonWebKey ? keyOrKeyLoader : await keyOrKeyLoader?.(header);
+      const key = typeof keyOrKeyLoader === 'function' ? await keyOrKeyLoader(header) : keyOrKeyLoader;
 
       const message = Buffer.from(`${b64Header}.${b64Payload}`, 'ascii');
-      const signature = await header.backend.sign(message, key ?? undefined);
+      const signature = await header.backend.sign(message, key);
 
       const b64Signature = signature.toString('base64url');
 

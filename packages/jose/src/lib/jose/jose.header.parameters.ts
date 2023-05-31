@@ -1,9 +1,11 @@
+import { Dictionary } from '@guarani/types';
+
 import { JsonWebKeyParameters } from '../jwk/jsonwebkey.parameters';
 
 /**
  * Parameters of the generic JOSE Header.
  */
-export interface JoseHeaderParameters extends Record<string, unknown> {
+export interface JoseHeaderParameters extends Dictionary<unknown> {
   /**
    * URI of a Set of Public JSON Web Keys that contains the JSON Web Key.
    */

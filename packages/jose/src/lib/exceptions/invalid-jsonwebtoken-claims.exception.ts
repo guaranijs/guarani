@@ -9,7 +9,7 @@ export class InvalidJsonWebTokenClaimsException extends JoseException {
    *
    * @param message Error Message.
    */
-  public constructor(message = 'The provided JSON Web Token Claims is invalid.') {
-    super(message);
+  public constructor(message = 'The provided JSON Web Token Claims is invalid.', options?: ErrorOptions) {
+    super(message, options);
   }
 }

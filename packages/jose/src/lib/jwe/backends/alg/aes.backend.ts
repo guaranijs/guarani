@@ -28,7 +28,7 @@ export class AesBackend extends JsonWebEncryptionKeyWrapBackend {
    *
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
    */
-  public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
+  public constructor(protected override readonly algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
     super(algorithm);
 
     this.keySize = Number.parseInt(this.algorithm.substring(1, 4));

@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
@@ -54,12 +56,16 @@ const invalidCrits: any[] = [
 describe('JOSE Header', () => {
   describe('isValidHeader()', () => {
     it('should return true if the provided data is an instance of JoseHeader.', () => {
-      expect(JoseHeader.isValidHeader(Reflect.construct(JoseHeader, [{}]))).toBe(true);
+      expect(JoseHeader.isValidHeader(Reflect.construct(JoseHeader, [{}]))).toBeTrue();
     });
 
-    it.each(invalidJoseHeaders)('should return false if the provided data is not a plain object.', (header) =>
-      expect(JoseHeader.isValidHeader(header)).toBe(false)
-    );
+    it.each(invalidJoseHeaders)('should return false if the provided data is not a plain object.', (header) => {
+      return expect(JoseHeader.isValidHeader(header)).toBeFalse();
+    });
+
+    it('should return true if the provided data is a plain object.', () => {
+      expect(JoseHeader.isValidHeader({})).toBeTrue();
+    });
   });
 
   describe('constructor', () => {
@@ -105,7 +111,7 @@ describe('JOSE Header', () => {
       );
     });
 
-    it.each(invalidCrits)('should throw when the provided header parameter "crit" is invalid.', (crit) => {
+    it.each(invalidCrits)('should throw when the providing an invalid "crit" parameter.', (crit) => {
       expect(() => Reflect.construct(JoseHeader, [{ crit }])).toThrow(
         new InvalidJoseHeaderException('Invalid header parameter "crit".')
       );

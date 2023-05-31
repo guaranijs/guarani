@@ -33,15 +33,15 @@ describe('JSON Web Encryption Key Wrap AES GCM using 128-bit key Backend', () =>
   });
 
   it('should have 96 as its "ivSize".', () => {
-    expect(A128GCMKW['ivSize']).toBe(96);
+    expect(A128GCMKW['ivSize']).toEqual(96);
   });
 
   it('should have 16 as its "authTagLength".', () => {
-    expect(A128GCMKW['authTagLength']).toBe(16);
+    expect(A128GCMKW['authTagLength']).toEqual(16);
   });
 
   it('should have 128 as its "keySize".', () => {
-    expect(A128GCMKW['keySize']).toBe(128);
+    expect(A128GCMKW['keySize']).toEqual(128);
   });
 
   it('should have "aes-128-gcm" as its "cipher".', () => {
@@ -128,15 +128,15 @@ describe('JSON Web Encryption Key Wrap AES GCM using 192-bit key Backend', () =>
   });
 
   it('should have 96 as its "ivSize".', () => {
-    expect(A192GCMKW['ivSize']).toBe(96);
+    expect(A192GCMKW['ivSize']).toEqual(96);
   });
 
   it('should have 16 as its "authTagLength".', () => {
-    expect(A192GCMKW['authTagLength']).toBe(16);
+    expect(A192GCMKW['authTagLength']).toEqual(16);
   });
 
   it('should have 192 as its "keySize".', () => {
-    expect(A192GCMKW['keySize']).toBe(192);
+    expect(A192GCMKW['keySize']).toEqual(192);
   });
 
   it('should have "aes-192-gcm" as its "cipher".', () => {
@@ -223,15 +223,15 @@ describe('JSON Web Encryption Key Wrap AES GCM using 256-bit key Backend', () =>
   });
 
   it('should have 96 as its "ivSize".', () => {
-    expect(A256GCMKW['ivSize']).toBe(96);
+    expect(A256GCMKW['ivSize']).toEqual(96);
   });
 
   it('should have 16 as its "authTagLength".', () => {
-    expect(A256GCMKW['authTagLength']).toBe(16);
+    expect(A256GCMKW['authTagLength']).toEqual(16);
   });
 
   it('should have 256 as its "keySize".', () => {
-    expect(A256GCMKW['keySize']).toBe(256);
+    expect(A256GCMKW['keySize']).toEqual(256);
   });
 
   it('should have "aes-256-gcm" as its "cipher".', () => {

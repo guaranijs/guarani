@@ -51,7 +51,7 @@ export class EllipticCurveKey extends JsonWebKey<EllipticCurveKeyParameters> imp
    */
   protected getCryptoKey(parameters: EllipticCurveKeyParameters): KeyObject {
     const input: CryptoJsonWebKeyInput = { format: 'jwk', key: parameters };
-    return parameters.d !== undefined ? createPrivateKey(input) : createPublicKey(input);
+    return typeof parameters.d !== 'undefined' ? createPrivateKey(input) : createPublicKey(input);
   }
 
   /**
@@ -75,7 +75,7 @@ export class EllipticCurveKey extends JsonWebKey<EllipticCurveKeyParameters> imp
    */
   protected override validateParameters(parameters: EllipticCurveKeyParameters): void {
     if (parameters.kty !== 'EC') {
-      throw new TypeError(`Unexpected JSON Web Key Type "${parameters.kty}" for EllipticCurveKey.`);
+      throw new TypeError(`Invalid jwk parameter "kty". Expected "EC", got "${parameters.kty}".`);
     }
 
     if (typeof parameters.crv !== 'string') {
@@ -94,10 +94,8 @@ export class EllipticCurveKey extends JsonWebKey<EllipticCurveKeyParameters> imp
       throw new InvalidJsonWebKeyException('Invalid jwk parameter "y".');
     }
 
-    if (parameters.d !== undefined) {
-      if (typeof parameters.d !== 'string') {
-        throw new InvalidJsonWebKeyException('Invalid jwk parameter "d".');
-      }
+    if (typeof parameters.d !== 'undefined' && typeof parameters.d !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "d".');
     }
 
     super.validateParameters(parameters);

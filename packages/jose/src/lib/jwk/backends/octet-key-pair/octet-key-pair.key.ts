@@ -46,7 +46,7 @@ export class OctetKeyPairKey extends JsonWebKey<OctetKeyPairKeyParameters> imple
    */
   protected getCryptoKey(parameters: OctetKeyPairKeyParameters): KeyObject {
     const input: CryptoJsonWebKeyInput = { format: 'jwk', key: parameters };
-    return parameters.d !== undefined ? createPrivateKey(input) : createPublicKey(input);
+    return typeof parameters.d !== 'undefined' ? createPrivateKey(input) : createPublicKey(input);
   }
 
   /**
@@ -70,7 +70,7 @@ export class OctetKeyPairKey extends JsonWebKey<OctetKeyPairKeyParameters> imple
    */
   protected override validateParameters(parameters: OctetKeyPairKeyParameters): void {
     if (parameters.kty !== 'OKP') {
-      throw new TypeError(`Unexpected JSON Web Key Type "${parameters.kty}" for OctetKeyPairKey.`);
+      throw new TypeError(`Invalid jwk parameter "kty". Expected "OKP", got "${parameters.kty}".`);
     }
 
     if (typeof parameters.crv !== 'string') {
@@ -85,10 +85,8 @@ export class OctetKeyPairKey extends JsonWebKey<OctetKeyPairKeyParameters> imple
       throw new InvalidJsonWebKeyException('Invalid jwk parameter "x".');
     }
 
-    if (parameters.d !== undefined) {
-      if (typeof parameters.d !== 'string') {
-        throw new InvalidJsonWebKeyException('Invalid jwk parameter "d".');
-      }
+    if (typeof parameters.d !== 'undefined' && typeof parameters.d !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "d".');
     }
 
     super.validateParameters(parameters);

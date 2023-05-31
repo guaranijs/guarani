@@ -42,5 +42,8 @@
   },
   "dependencies": {
     "@guarani/primitives": "link:../primitives"
+  },
+  "devDependencies": {
+    "@guarani/types": "link:../types"
   }
 }

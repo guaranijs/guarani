@@ -31,7 +31,7 @@ export class HmacBackend extends JsonWebSignatureBackend {
   public constructor(keySize: number) {
     const bitSize = keySize << 3;
 
-    const algorithm = <JsonWebSignatureAlgorithm>`HS${bitSize}`;
+    const algorithm = `HS${bitSize}` as JsonWebSignatureAlgorithm;
 
     super(algorithm);
 

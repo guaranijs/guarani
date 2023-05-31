@@ -3,7 +3,7 @@ import { Buffer } from 'buffer';
 import { InvalidJsonWebEncryptionException } from '../../../exceptions/invalid-jsonwebencryption.exception';
 import { JsonWebEncryptionContentEncryptionBackend } from './jsonwebencryption-content-encryption.backend';
 
-const invalidCeks: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol.for('foo'), Buffer, () => 1, {}, []];
+const invalidCeks: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, () => 1, {}, []];
 
 const backend: JsonWebEncryptionContentEncryptionBackend = Reflect.construct(
   JsonWebEncryptionContentEncryptionBackend,

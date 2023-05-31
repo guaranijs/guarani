@@ -9,7 +9,7 @@ export class JsonWebTokenNotValidYetException extends JoseException {
    *
    * @param message Error Message.
    */
-  public constructor(message = 'The provided JSON Web Token is not valid yet.') {
-    super(message);
+  public constructor(message = 'The provided JSON Web Token is not valid yet.', options?: ErrorOptions) {
+    super(message, options);
   }
 }

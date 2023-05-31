@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeySetException } from '../exceptions/invalid-jsonwebkeyset.exception';
@@ -8,6 +10,7 @@ import { RsaKeyParameters } from '../jwk/backends/rsa/rsa.key.parameters';
 import { JsonWebKey } from '../jwk/jsonwebkey';
 import { JsonWebKeySet } from './jsonwebkeyset';
 import { JsonWebKeySetParameters } from './jsonwebkeyset.parameters';
+import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 
 const publicEllipticCurveParameters: EllipticCurveKeyParameters = {
   kty: 'EC',
@@ -72,36 +75,17 @@ const invalidJwkSets: any[] = [
   1.2,
   1n,
   'a',
+  Symbol('a'),
   Buffer,
   Buffer.alloc(0),
-  Symbol('a'),
   () => 1,
   {},
   [],
   ['a'],
 ];
 
-const invalidParameters: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  'a',
-  Buffer,
-  /* Buffer.alloc(0) */
-  Symbol('a'),
-  () => 1,
-  /* [] */
-];
-
-const invalidKeysParameters: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Buffer, Symbol('a'), () => 1, []];
-
-const jwkSetWithRepeatedKeyIdentifiers: JsonWebKey[] = [
-  new EllipticCurveKey(publicEllipticCurveParameters, { kid: 'static-id' }),
-  new RsaKey(publicRsaParameters, { kid: 'static-id' }),
-];
+const invalidParameters: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Buffer, Symbol('a'), () => 1];
+const invalidKeysParameters: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, () => 1, []];
 
 describe('JSON Web Key Set', () => {
   describe('constructor', () => {
@@ -110,6 +94,11 @@ describe('JSON Web Key Set', () => {
     });
 
     it('should reject a set containing json web keys with duplicate key identifiers.', () => {
+      const jwkSetWithRepeatedKeyIdentifiers: JsonWebKey[] = [
+        new EllipticCurveKey(publicEllipticCurveParameters, { kid: 'static-id' }),
+        new RsaKey(publicRsaParameters, { kid: 'static-id' }),
+      ];
+
       expect(() => new JsonWebKeySet(jwkSetWithRepeatedKeyIdentifiers)).toThrow(
         new InvalidJsonWebKeySetException('The use of duplicate Key Identifiers is forbidden.')
       );
@@ -125,7 +114,7 @@ describe('JSON Web Key Set', () => {
         ]));
       }).not.toThrow();
 
-      jwks.keys.forEach((jwk) => expect(typeof jwk.kid).toBe('string'));
+      jwks.keys.forEach((jwk) => expect(typeof jwk.kid).toEqual('string'));
     });
   });
 
@@ -144,16 +133,27 @@ describe('JSON Web Key Set', () => {
       'should throw when the "keys" json web key set parameter is an array of invalid values.',
       async (keyParameter) => {
         await expect(JsonWebKeySet.load({ keys: [keyParameter] })).rejects.toThrow(
-          new InvalidJsonWebKeySetException('The provided data is not a valid JSON Web Key Set object.')
+          new InvalidJsonWebKeySetException('The provided data is not a valid JSON Web Key Set object.', {
+            cause: new InvalidJsonWebKeyException('The provided data is not a valid JSON Web Key object.'),
+          })
         );
       }
     );
+
+    it('should throw when the "keys" json web key set parameter has an object missing the parameter "kty".', async () => {
+      // @ts-expect-error Missing required parameter "kty".
+      await expect(JsonWebKeySet.load({ keys: [{}] })).rejects.toThrow(
+        new InvalidJsonWebKeySetException('The provided data is not a valid JSON Web Key Set object.', {
+          cause: new InvalidJsonWebKeyException('The provided data does not have a "kty" parameter.'),
+        })
+      );
+    });
 
     it('should create a json web key set based on valid parameters.', async () => {
       const parameters: JsonWebKeySetParameters = { keys: [{ ...publicEllipticCurveParameters, kid: 'foo' }] };
       const jwks = await JsonWebKeySet.load(parameters);
 
-      expect(jwks.toJSON()).toMatchObject(parameters);
+      expect(jwks.toJSON()).toStrictEqual(parameters);
     });
   });
 
@@ -165,7 +165,7 @@ describe('JSON Web Key Set', () => {
 
       const jwks = await JsonWebKeySet.parse(jsonEncoded);
 
-      expect(jwks.toJSON()).toMatchObject(parameters);
+      expect(jwks.toJSON()).toStrictEqual(parameters);
     });
   });
 
@@ -180,8 +180,8 @@ describe('JSON Web Key Set', () => {
     });
 
     it('should return the key that matches the provided predicate.', () => {
-      expect(jwks.find((key) => key.kid === 'ec-key')).toMatchObject(jwks.keys[0]!);
-      expect(jwks.find((key) => key.key_ops?.includes('encrypt') ?? false)).toMatchObject(jwks.keys[1]!);
+      expect(jwks.find((key) => key.kid === 'ec-key')).toStrictEqual(jwks.keys[0]!);
+      expect(jwks.find((key) => key.key_ops?.includes('encrypt') ?? false)).toStrictEqual(jwks.keys[1]!);
     });
   });
 

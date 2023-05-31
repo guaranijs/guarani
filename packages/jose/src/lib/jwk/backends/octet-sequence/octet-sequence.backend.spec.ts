@@ -9,7 +9,7 @@ const secretParameters: OctetSequenceKeyParameters = {
   k: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ',
 };
 
-const invalidLength: any[] = [undefined, null, true, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('foo'), () => 1, {}, []];
+const invalidLength: any[] = [undefined, null, true, 1.2, 1n, Symbol('foo'), Buffer, Buffer.alloc(1), () => 1, {}, []];
 
 describe('Octet Sequence JSON Web Key Backend', () => {
   const backend = new OctetSequenceBackend();
@@ -23,19 +23,19 @@ describe('Octet Sequence JSON Web Key Backend', () => {
   describe('generate()', () => {
     it.each(invalidLength)('should throw when passing an invalid length.', async (length) => {
       await expect(backend.generate({ length })).rejects.toThrow(
-        new TypeError('The length of the Octet Sequence Secret MUST be an integer.')
+        new TypeError('The length of the Octet Sequence Secret must be an integer.')
       );
     });
 
     it('should throw when providing a length zero.', async () => {
       await expect(backend.generate({ length: 0 })).rejects.toThrow(
-        new TypeError('The length of the Octet Sequence Secret MUST be greater than zero.')
+        new TypeError('The length of the Octet Sequence Secret must be greater than zero.')
       );
     });
 
     it('should throw when providing a negative length.', async () => {
       await expect(backend.generate({ length: -1 })).rejects.toThrow(
-        new TypeError('The length of the Octet Sequence Secret MUST be greater than zero.')
+        new TypeError('The length of the Octet Sequence Secret must be greater than zero.')
       );
     });
 
@@ -43,7 +43,7 @@ describe('Octet Sequence JSON Web Key Backend', () => {
       let key!: OctetSequenceKey;
 
       expect((key = await backend.generate({ length: 32 }))).toBeInstanceOf(OctetSequenceKey);
-      expect(Buffer.byteLength(key.k, 'base64url')).toBe(32);
+      expect(Buffer.byteLength(key.k, 'base64url')).toEqual(32);
     });
   });
 });

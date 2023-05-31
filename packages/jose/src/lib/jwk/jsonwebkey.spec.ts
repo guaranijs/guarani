@@ -31,16 +31,18 @@ const privateParameters: EllipticCurveKeyParameters = {
   d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo',
 };
 
-const invalidUses: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('a'), () => 1, {}, []];
-const invalidKeyOps: any[] = [true, 1, 1.2, 1n, 'a', Buffer, Buffer.alloc(1), Symbol('a'), () => 1, {}];
-const invalidAlgs: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('a'), () => 1, {}, []];
-const invalidKids: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), Symbol('a'), () => 1, {}, []];
-const invalidX5Us: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), 'a', Symbol('a'), () => 1, {}, []];
-const invalidX5Cs: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), 'a', Symbol('a'), () => 1, {}, []];
-const invalidX5Ts: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), 'a', Symbol('a'), () => 1, {}, []];
-const invalidX5T256s: any[] = [true, 1, 1.2, 1n, Buffer, Buffer.alloc(1), 'a', Symbol('a'), () => 1, {}, []];
+const invalidUses: any[] = [true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidKeyOps: any[] = [true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}];
+const invalidAlgs: any[] = [true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidKids: any[] = [true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidX5Us: any[] = [true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidX5Cs: any[] = [true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidX5Ts: any[] = [true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidX5T256s: any[] = [true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
 
 const invalidLoadParameters: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, () => 1];
+
+const invalidKtys: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
 
 const invalidJwkStrings: any[] = [
   undefined,
@@ -191,6 +193,12 @@ describe('JSON Web Key', () => {
     it('should throw when the provided data does not have a "kty" attribute.', async () => {
       await expect(JsonWebKey.load({})).rejects.toThrow(
         new InvalidJsonWebKeyException('The provided data does not have a "kty" parameter.')
+      );
+    });
+
+    it.each(invalidKtys)('should throw when providing an invalid "kty" parameter.', async (kty) => {
+      await expect(JsonWebKey.load({ kty })).rejects.toThrow(
+        new InvalidJsonWebKeyException('Invalid jwk parameter "kty".')
       );
     });
 

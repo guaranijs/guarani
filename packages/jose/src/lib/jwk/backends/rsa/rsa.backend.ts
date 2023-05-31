@@ -34,15 +34,15 @@ export class RsaBackend implements JsonWebKeyBackend {
     additionalParameters?: Partial<RsaKeyParameters>
   ): Promise<RsaKey> {
     if (!Number.isInteger(options.modulus)) {
-      throw new TypeError('The value of the RSA Modulus MUST be an integer.');
+      throw new TypeError('The value of the RSA Modulus must be an integer.');
     }
 
     if (options.modulus < 2048) {
-      throw new TypeError('The value of the RSA Modulus MUST be at least 2048.');
+      throw new TypeError('The value of the RSA Modulus must be at least 2048.');
     }
 
-    if (options.publicExponent !== undefined && !Number.isInteger(options.publicExponent)) {
-      throw new TypeError('The value of the RSA Public Exponent MUST be an integer.');
+    if (typeof options.publicExponent !== 'undefined' && !Number.isInteger(options.publicExponent)) {
+      throw new TypeError('The value of the RSA Public Exponent must be an integer.');
     }
 
     const { privateKey } = await generateKeyPairAsync('rsa', {
@@ -50,7 +50,7 @@ export class RsaBackend implements JsonWebKeyBackend {
       publicExponent: options.publicExponent ?? 0x010001,
     });
 
-    const data = <RsaKeyParameters>privateKey.export({ format: 'jwk' });
+    const data = privateKey.export({ format: 'jwk' }) as RsaKeyParameters;
 
     return new (await import('./rsa.key')).RsaKey(data, additionalParameters);
   }

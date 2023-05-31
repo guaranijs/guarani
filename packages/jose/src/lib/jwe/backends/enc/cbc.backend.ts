@@ -31,17 +31,18 @@ class CbcBackend extends JsonWebEncryptionContentEncryptionBackend {
    *
    * @param algorithm Name of the JSON Web Encryption Content Encryption Backend.
    */
-  public constructor(algorithm: JsonWebEncryptionContentEncryptionAlgorithm) {
+  public constructor(protected override readonly algorithm: JsonWebEncryptionContentEncryptionAlgorithm) {
     const regex = /^A([0-9]{3})CBC-HS([0-9]{3})$/;
 
-    const [keySize, hashSize] = <[number, number]>(
-      (<RegExpExecArray>regex.exec(algorithm)).slice(1).map((value) => Number.parseInt(value))
-    );
+    const [keySize, hashSize] = <[number, number]>regex
+      .exec(algorithm)!
+      .slice(1)
+      .map((value) => Number.parseInt(value));
 
     super(algorithm, keySize * 2, 128);
 
     this.keySize = keySize;
-    this.hash = `SHA${hashSize}`;
+    this.hash = `sha${hashSize}`;
     this.cipher = `aes-${keySize}-cbc`;
   }
 

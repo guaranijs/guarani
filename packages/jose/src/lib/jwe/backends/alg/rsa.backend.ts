@@ -1,11 +1,12 @@
 import { Buffer } from 'buffer';
-import { constants, privateDecrypt, publicEncrypt } from 'crypto';
+import { RsaPrivateKey, constants, privateDecrypt, publicEncrypt } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { RsaKey } from '../../../jwk/backends/rsa/rsa.key';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
 import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.backend';
+import { Nullable } from '@guarani/types';
 
 /**
  * Implementation of the JSON Web Encryption RSA Key Wrap Backend.
@@ -15,27 +16,18 @@ import { JsonWebEncryptionKeyWrapBackend } from './jsonwebencryption-keywrap.bac
  */
 class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
   /**
-   * RSA Encryption Padding used by the JSON Web Encryption Key Wrap Backend.
-   */
-  private readonly padding: number;
-
-  /**
-   * Name of the Hash Algorithm.
-   */
-  private readonly hash?: string;
-
-  /**
    * Instantiates a new JSON Web Encryption RSA Key Wrap Backend to Wrap and Unwrap Content Encryption Keys.
    *
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
    * @param padding RSA Encryption Padding used by the JSON Web Encryption Key Wrap Backend.
    * @param hash Name of the Hash Algorithm.
    */
-  public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm, padding: number, hash?: string) {
+  public constructor(
+    protected override readonly algorithm: JsonWebEncryptionKeyWrapAlgorithm,
+    private readonly padding: number,
+    private readonly hash: Nullable<string> = null
+  ) {
     super(algorithm);
-
-    this.padding = padding;
-    this.hash = hash;
   }
 
   /**
@@ -53,10 +45,13 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
 
     const contentEncryptionKey = await contentEncryptionBackend.generateContentEncryptionKey();
 
-    const wrappedKey = publicEncrypt(
-      { key: wrapKey.cryptoKey, oaepHash: this.hash, padding: this.padding },
-      contentEncryptionKey
-    );
+    const key: RsaPrivateKey = { key: wrapKey.cryptoKey, padding: this.padding };
+
+    if (this.hash !== null) {
+      key.oaepHash = this.hash;
+    }
+
+    const wrappedKey = publicEncrypt(key, contentEncryptionKey);
 
     return [contentEncryptionKey, wrappedKey];
   }
@@ -84,10 +79,13 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
       );
     }
 
-    const contentEncryptionKey = privateDecrypt(
-      { key: cryptoKey, oaepHash: this.hash, padding: this.padding },
-      wrappedKey
-    );
+    const key: RsaPrivateKey = { key: cryptoKey, padding: this.padding };
+
+    if (this.hash !== null) {
+      key.oaepHash = this.hash;
+    }
+
+    const contentEncryptionKey = privateDecrypt(key, wrappedKey);
 
     contentEncryptionBackend.validateContentEncryptionKey(contentEncryptionKey);
 

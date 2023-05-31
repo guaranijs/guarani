@@ -11,7 +11,7 @@ describe('JSON Web Signature none Backend', () => {
   });
 
   it('should sign and verify a message.', async () => {
-    await expect(none.sign(message)).resolves.toEqual(Buffer.alloc(0));
-    await expect(none.verify(Buffer.alloc(0), message)).resolves.not.toThrow();
+    await expect(none.sign(message, null)).resolves.toEqual(Buffer.alloc(0));
+    await expect(none.verify(Buffer.alloc(0), message, null)).resolves.not.toThrow();
   });
 });

@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import { JsonWebKey } from '../jsonwebkey';
 import { JsonWebKeyParameters } from '../jsonwebkey.parameters';
 
@@ -20,5 +22,5 @@ export interface JsonWebKeyBackend {
    * @param options Options used to generate the JSON Web Key.
    * @param additionalParameters Additional JSON Web Key Parameters. Overrides the attributes of `parameters`.
    */
-  generate(options: Record<string, any>, additionalParameters?: Partial<JsonWebKeyParameters>): Promise<JsonWebKey>;
+  generate(options: Dictionary<any>, additionalParameters?: Partial<JsonWebKeyParameters>): Promise<JsonWebKey>;
 }

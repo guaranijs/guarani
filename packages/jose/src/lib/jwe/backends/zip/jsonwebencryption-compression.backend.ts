@@ -9,18 +9,11 @@ import { JsonWebEncryptionCompressionAlgorithm } from '../../jsonwebencryption-c
  */
 export abstract class JsonWebEncryptionCompressionBackend {
   /**
-   * Name of the JSON Web Encryption Compression Backend.
-   */
-  protected readonly algorithm: JsonWebEncryptionCompressionAlgorithm;
-
-  /**
    * Instantiates a new JSON Web Encryption Compression Backend to Compress and Decompress a Plaintext.
    *
    * @param algorithm Name of the JSON Web Encryption Compression Backend.
    */
-  public constructor(algorithm: JsonWebEncryptionCompressionAlgorithm) {
-    this.algorithm = algorithm;
-  }
+  public constructor(protected readonly algorithm: JsonWebEncryptionCompressionAlgorithm) {}
 
   /**
    * Compresses the provided Plaintext before Encryption.

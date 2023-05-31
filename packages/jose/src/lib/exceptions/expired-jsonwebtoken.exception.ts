@@ -9,7 +9,7 @@ export class ExpiredJsonWebTokenException extends JoseException {
    *
    * @param message Error Message.
    */
-  public constructor(message = 'The provided JSON Web Token is expired.') {
-    super(message);
+  public constructor(message = 'The provided JSON Web Token is expired.', options?: ErrorOptions) {
+    super(message, options);
   }
 }

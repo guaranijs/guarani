@@ -12,9 +12,9 @@ const invalidSecrets: any[] = [
   1,
   1.2,
   1n,
+  Symbol('foo'),
   Buffer,
   Buffer.alloc(1),
-  Symbol('foo'),
   () => 1,
   {},
   [],
@@ -27,7 +27,7 @@ describe('Octet Sequence Key', () => {
     it('should throw when providing a "kty" different than "oct".', () => {
       // @ts-expect-error Invalid JSON Web Key Type.
       expect(() => new OctetSequenceKey({ kty: 'unknown' })).toThrow(
-        new TypeError('Unexpected JSON Web Key Type "unknown" for OctetSequenceKey.')
+        new TypeError('Invalid jwk parameter "kty". Expected "oct", got "unknown".')
       );
     });
 

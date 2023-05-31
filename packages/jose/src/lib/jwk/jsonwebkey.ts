@@ -1,4 +1,5 @@
-import { removeNullishValues } from '@guarani/primitives';
+import { isPlainObject, removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { Buffer } from 'buffer';
 import { createHash, KeyObject } from 'crypto';
@@ -25,6 +26,7 @@ import { JsonWebKeyOperation } from './jsonwebkey-operation.type';
 import { JsonWebKeyType } from './jsonwebkey-type.type';
 import { JsonWebKeyUse } from './jsonwebkey-use.type';
 import { JsonWebKeyParameters } from './jsonwebkey.parameters';
+import { JsonWebKeyBackend } from './backends/jsonwebkey.backend';
 
 /**
  * Abstract Base Class of a JSON Web Key.
@@ -82,7 +84,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
   /**
    * Additional JSON Web Key Parameters.
    */
-  [parameter: string]: any;
+  [parameter: string]: unknown;
 
   /**
    * Thumbprint Buffer.
@@ -101,8 +103,9 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
    *
    * @see https://www.rfc-editor.org/rfc/rfc7638.html
    */
+  // TODO: Move this to the Backend.
   public get thumbprint(): Buffer {
-    if (!Buffer.isBuffer(this._thumbprint)) {
+    if (!Buffer.isBuffer(this.#thumbprint)) {
       const parameters = this.getThumbprintParameters();
       this.#thumbprint = createHash('sha256').update(JSON.stringify(parameters), 'utf8').digest();
     }
@@ -156,11 +159,11 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
    * @param parameters Parameters of the JSON Web Key.
    */
   protected validateParameters(parameters: T): void {
-    if (parameters.use !== undefined && typeof parameters.use !== 'string') {
+    if (typeof parameters.use !== 'undefined' && typeof parameters.use !== 'string') {
       throw new InvalidJsonWebKeyException('Invalid jwk parameter "use".');
     }
 
-    if (parameters.key_ops !== undefined) {
+    if (typeof parameters.key_ops !== 'undefined') {
       if (
         !Array.isArray(parameters.key_ops) ||
         parameters.key_ops.length === 0 ||
@@ -174,7 +177,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
       }
     }
 
-    if (parameters.use !== undefined && parameters.key_ops !== undefined) {
+    if (typeof parameters.use !== 'undefined' && typeof parameters.key_ops !== 'undefined') {
       const signatureOperations: JsonWebKeyOperation[] = ['sign', 'verify'];
       const encryptionOperations: JsonWebKeyOperation[] = [
         'encrypt',
@@ -195,27 +198,27 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
       }
     }
 
-    if (parameters.alg !== undefined && typeof parameters.alg !== 'string') {
+    if (typeof parameters.alg !== 'undefined' && typeof parameters.alg !== 'string') {
       throw new InvalidJsonWebKeyException('Invalid jwk parameter "alg".');
     }
 
-    if (parameters.kid !== undefined && typeof parameters.kid !== 'string') {
+    if (typeof parameters.kid !== 'undefined' && typeof parameters.kid !== 'string') {
       throw new InvalidJsonWebKeyException('Invalid jwk parameter "kid".');
     }
 
-    if (parameters.x5u !== undefined) {
+    if (typeof parameters.x5u !== 'undefined') {
       throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5u".');
     }
 
-    if (parameters.x5c !== undefined) {
+    if (typeof parameters.x5c !== 'undefined') {
       throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5c".');
     }
 
-    if (parameters.x5t !== undefined) {
+    if (typeof parameters.x5t !== 'undefined') {
       throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5t".');
     }
 
-    if (parameters['x5t#S256'] !== undefined) {
+    if (typeof parameters['x5t#S256'] !== 'undefined') {
       throw new InvalidJsonWebKeyException('Unsupported jwk parameter "x5t#S256".');
     }
   }
@@ -235,7 +238,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
       return data;
     }
 
-    if (typeof data !== 'object' || data === null) {
+    if (!isPlainObject(data)) {
       throw new InvalidJsonWebKeyException('The provided data is not a valid JSON Web Key object.');
     }
 
@@ -243,13 +246,17 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
       throw new InvalidJsonWebKeyException('The provided data does not have a "kty" parameter.');
     }
 
-    const kty: JsonWebKeyType = Reflect.get(data, 'kty');
+    const kty: unknown = Reflect.get(data, 'kty');
+
+    if (typeof kty !== 'string') {
+      throw new InvalidJsonWebKeyException('Invalid jwk parameter "kty".');
+    }
 
     if (!Object.hasOwn(JSONWEBKEY_REGISTRY, kty)) {
       throw new UnsupportedAlgorithmException(`Unsupported JSON Web Key Type "${kty}".`);
     }
 
-    const backend = JSONWEBKEY_REGISTRY[kty];
+    const backend = Reflect.get(JSONWEBKEY_REGISTRY, kty) as JsonWebKeyBackend;
 
     return (await backend.load(<T>data, additionalParameters)) as JsonWebKey<T>;
   }
@@ -340,7 +347,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
    */
   public static async generate<T extends JsonWebKeyParameters>(
     keyType: JsonWebKeyType,
-    options: Record<string, any>,
+    options: Dictionary<any>,
     additionalParameters: Partial<T> = {}
   ): Promise<JsonWebKey<T>> {
     if (!Object.hasOwn(JSONWEBKEY_REGISTRY, keyType)) {

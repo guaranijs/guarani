@@ -9,7 +9,7 @@ export class InvalidJsonWebEncryptionException extends JoseException {
    *
    * @param message Error Message.
    */
-  public constructor(message = 'The provided JSON Web Encryption is invalid.') {
-    super(message);
+  public constructor(message = 'The provided JSON Web Encryption is invalid.', options?: ErrorOptions) {
+    super(message, options);
   }
 }

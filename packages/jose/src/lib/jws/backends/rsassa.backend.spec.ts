@@ -63,7 +63,7 @@ describe('JSON Web Signature RSASSA-PSS using SHA-256 and MGF1 with SHA-256 Back
   });
 
   it('should have "crypto.constants.RSA_PKCS1_PSS_PADDING" as its "padding".', () => {
-    expect(PS256['padding']).toBe(constants.RSA_PKCS1_PSS_PADDING);
+    expect(PS256['padding']).toEqual(constants.RSA_PKCS1_PSS_PADDING);
   });
 
   it('should throw when not using an "RSA" key.', () => {
@@ -112,7 +112,7 @@ describe('JSON Web Signature RSASSA-PSS using SHA-384 and MGF1 with SHA-384 Back
   });
 
   it('should have "crypto.constants.RSA_PKCS1_PSS_PADDING" as its "padding".', () => {
-    expect(PS384['padding']).toBe(constants.RSA_PKCS1_PSS_PADDING);
+    expect(PS384['padding']).toEqual(constants.RSA_PKCS1_PSS_PADDING);
   });
 
   it('should throw when not using an "RSA" key.', () => {
@@ -161,7 +161,7 @@ describe('JSON Web Signature RSASSA-PSS using SHA-512 and MGF1 with SHA-512 Back
   });
 
   it('should have "crypto.constants.RSA_PKCS1_PSS_PADDING" as its "padding".', () => {
-    expect(PS512['padding']).toBe(constants.RSA_PKCS1_PSS_PADDING);
+    expect(PS512['padding']).toEqual(constants.RSA_PKCS1_PSS_PADDING);
   });
 
   it('should throw when not using an "RSA" key.', () => {
@@ -210,7 +210,7 @@ describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-256 Backend', () => {
   });
 
   it('should have "crypto.constants.RSA_PKCS1_PADDING" as its "padding".', () => {
-    expect(RS256['padding']).toBe(constants.RSA_PKCS1_PADDING);
+    expect(RS256['padding']).toEqual(constants.RSA_PKCS1_PADDING);
   });
 
   it('should throw when not using an "RSA" key.', () => {
@@ -259,7 +259,7 @@ describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-384 Backend', () => {
   });
 
   it('should have "crypto.constants.RSA_PKCS1_PADDING" as its "padding".', () => {
-    expect(RS384['padding']).toBe(constants.RSA_PKCS1_PADDING);
+    expect(RS384['padding']).toEqual(constants.RSA_PKCS1_PADDING);
   });
 
   it('should throw when not using an "RSA" key.', () => {
@@ -308,7 +308,7 @@ describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-512 Backend', () => {
   });
 
   it('should have "crypto.constants.RSA_PKCS1_PADDING" as its "padding".', () => {
-    expect(RS512['padding']).toBe(constants.RSA_PKCS1_PADDING);
+    expect(RS512['padding']).toEqual(constants.RSA_PKCS1_PADDING);
   });
 
   it('should throw when not using an "RSA" key.', () => {

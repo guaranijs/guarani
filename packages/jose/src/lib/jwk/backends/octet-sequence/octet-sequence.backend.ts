@@ -37,16 +37,16 @@ export class OctetSequenceBackend implements JsonWebKeyBackend {
     additionalParameters?: Partial<OctetSequenceKeyParameters>
   ): Promise<OctetSequenceKey> {
     if (!Number.isInteger(options.length)) {
-      throw new TypeError('The length of the Octet Sequence Secret MUST be an integer.');
+      throw new TypeError('The length of the Octet Sequence Secret must be an integer.');
     }
 
     if (options.length <= 0) {
-      throw new TypeError('The length of the Octet Sequence Secret MUST be greater than zero.');
+      throw new TypeError('The length of the Octet Sequence Secret must be greater than zero.');
     }
 
     const bytes = await randomBytesAsync(options.length);
     const secretKey = createSecretKey(bytes);
-    const data = <OctetSequenceKeyParameters>secretKey.export({ format: 'jwk' });
+    const data = secretKey.export({ format: 'jwk' }) as OctetSequenceKeyParameters;
 
     return new (await import('./octet-sequence.key')).OctetSequenceKey(data, additionalParameters);
   }

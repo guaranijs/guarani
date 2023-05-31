@@ -1,7 +1,9 @@
+import { Dictionary, OneOrMany } from '@guarani/types';
+
 /**
  * Parameters of the JSON Web Token Claims.
  */
-export interface JsonWebTokenClaimsParameters extends Record<string, any> {
+export interface JsonWebTokenClaimsParameters extends Dictionary<unknown> {
   /**
    * Identifier of the Issuer of the Token.
    */
@@ -15,7 +17,7 @@ export interface JsonWebTokenClaimsParameters extends Record<string, any> {
   /**
    * Identifier of the Audience the Token is intended to.
    */
-  aud?: string | string[];
+  aud?: OneOrMany<string>;
 
   /**
    * UTC time denoting the Expiration Time of the Token.

@@ -52,7 +52,7 @@ export class OctetKeyPairBackend implements JsonWebKeyBackend {
     }
 
     const { privateKey } = await generateKeyPairAsync(<any>this.curves[options.curve]);
-    const data = <OctetKeyPairKeyParameters>privateKey.export({ format: 'jwk' });
+    const data = privateKey.export({ format: 'jwk' }) as OctetKeyPairKeyParameters;
 
     return new (await import('./octet-key-pair.key')).OctetKeyPairKey(data, additionalParameters);
   }

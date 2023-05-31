@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';
@@ -10,15 +12,15 @@ const invalidAlgs: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buff
 describe('JSON Web Signature Header', () => {
   describe('isValidHeader()', () => {
     it.each(invalidAlgs)('should return false when the provided header parameter "alg" is invalid.', (alg) => {
-      expect(JsonWebSignatureHeader.isValidHeader({ alg })).toBe(false);
+      expect(JsonWebSignatureHeader.isValidHeader({ alg })).toBeFalse();
     });
 
     it('should return false when the provided header parameter "alg" is unsupported.', () => {
-      expect(JsonWebSignatureHeader.isValidHeader({ alg: 'unknown' })).toBe(false);
+      expect(JsonWebSignatureHeader.isValidHeader({ alg: 'unknown' })).toBeFalse();
     });
 
     it('should return true when the provided data is a valid json web signature header.', () => {
-      expect(JsonWebSignatureHeader.isValidHeader({ alg: 'HS256' })).toBe(true);
+      expect(JsonWebSignatureHeader.isValidHeader({ alg: 'HS256' })).toBeTrue();
     });
   });
 

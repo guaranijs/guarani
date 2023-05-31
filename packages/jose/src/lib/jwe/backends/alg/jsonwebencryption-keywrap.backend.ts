@@ -15,18 +15,11 @@ import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencrypt
  */
 export abstract class JsonWebEncryptionKeyWrapBackend {
   /**
-   * Name of the JSON Web Encryption Key Wrap Backend.
-   */
-  protected readonly algorithm: JsonWebEncryptionKeyWrapAlgorithm;
-
-  /**
    * Instantiates a new JSON Web Encryption Key Wrap Backend to Wrap and Unwrap Content Encryption Keys.
    *
    * @param algorithm Name of the JSON Web Encryption Key Wrap Backend.
    */
-  public constructor(algorithm: JsonWebEncryptionKeyWrapAlgorithm) {
-    this.algorithm = algorithm;
-  }
+  public constructor(protected readonly algorithm: JsonWebEncryptionKeyWrapAlgorithm) {}
 
   /**
    * Wraps the provided Content Encryption Key using the provide JSON Web Key.
@@ -69,7 +62,7 @@ export abstract class JsonWebEncryptionKeyWrapBackend {
       throw new InvalidJsonWebKeyException();
     }
 
-    if (key.alg !== undefined && key.alg !== this.algorithm) {
+    if (typeof key.alg !== 'undefined' && key.alg !== this.algorithm) {
       throw new InvalidJsonWebKeyException(`This JSON Web Key is intended to be used by the Algorithm "${key.alg}".`);
     }
   }

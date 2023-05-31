@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../jwe/jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebSignatureAlgorithm } from '../jws/jsonwebsignature-algorithm.type';
 import { JsonWebKeyOperation } from './jsonwebkey-operation.type';
@@ -7,7 +9,7 @@ import { JsonWebKeyUse } from './jsonwebkey-use.type';
 /**
  * Parameters of the JSON Web Key.
  */
-export interface JsonWebKeyParameters extends Record<string, any> {
+export interface JsonWebKeyParameters extends Dictionary<unknown> {
   /**
    * JSON Web Key Type.
    */

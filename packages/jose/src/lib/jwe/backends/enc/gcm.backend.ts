@@ -25,7 +25,7 @@ class GcmBackend extends JsonWebEncryptionContentEncryptionBackend {
    *
    * @param algorithm Name of the JSON Web Encryption Content Encryption Backend.
    */
-  public constructor(algorithm: JsonWebEncryptionContentEncryptionAlgorithm) {
+  public constructor(protected override readonly algorithm: JsonWebEncryptionContentEncryptionAlgorithm) {
     const cekSize = Number.parseInt(algorithm.substring(1, 4));
 
     super(algorithm, cekSize, 96);

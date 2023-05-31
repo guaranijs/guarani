@@ -36,7 +36,7 @@ export class JsonWebEncryption {
    * @param plaintext Buffer to be used as the Plaintext.
    */
   public constructor(header: JsonWebEncryptionHeaderParameters, plaintext?: Buffer) {
-    if (plaintext !== undefined && !Buffer.isBuffer(plaintext)) {
+    if (typeof plaintext !== 'undefined' && !Buffer.isBuffer(plaintext)) {
       throw new TypeError('Invalid JSON Web Encryption Plaintext.');
     }
 
@@ -54,7 +54,7 @@ export class JsonWebEncryption {
       return false;
     }
 
-    const splitToken = <SplitJsonWebEncryptionToken>data.split('.');
+    const splitToken = data.split('.') as SplitJsonWebEncryptionToken;
 
     return splitToken.length === 5 && splitToken.every((component) => component.length !== 0);
   }
@@ -75,7 +75,7 @@ export class JsonWebEncryption {
     }
 
     try {
-      const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = <SplitJsonWebEncryptionToken>token.split('.');
+      const [b64Header, b64Ek, b64Iv, b64Ciphertext, b64Tag] = token.split('.') as SplitJsonWebEncryptionToken;
 
       const headerParameters = JSON.parse(Buffer.from(b64Header, 'base64url').toString('utf8'));
 
@@ -145,7 +145,7 @@ export class JsonWebEncryption {
 
       let plaintext = await contentEncryptionBackend.decrypt(ciphertext, aad, iv, tag, cek);
 
-      if (compressionBackend !== undefined) {
+      if (compressionBackend !== null) {
         plaintext = await compressionBackend.decompress(plaintext);
       }
 
@@ -184,14 +184,14 @@ export class JsonWebEncryption {
 
       const [cek, ek, additionalHeaderParams] = await keyWrapBackend.wrap(contentEncryptionBackend, key, header);
 
-      if (additionalHeaderParams !== undefined) {
+      if (typeof additionalHeaderParams !== 'undefined') {
         Object.assign(header, additionalHeaderParams);
       }
 
       const b64Header = Buffer.from(JSON.stringify(header), 'utf8').toString('base64url');
       const aad = Buffer.from(b64Header, 'ascii');
 
-      if (compressionBackend !== undefined) {
+      if (compressionBackend !== null) {
         plaintext = await compressionBackend.compress(plaintext);
       }
 

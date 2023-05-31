@@ -63,7 +63,7 @@ export class RsaKey extends JsonWebKey<RsaKeyParameters> implements RsaKeyParame
    */
   protected getCryptoKey(parameters: RsaKeyParameters): KeyObject {
     const input: CryptoJsonWebKeyInput = { format: 'jwk', key: parameters };
-    return parameters.d !== undefined ? createPrivateKey(input) : createPublicKey(input);
+    return typeof parameters.d !== 'undefined' ? createPrivateKey(input) : createPublicKey(input);
   }
 
   /**
@@ -87,7 +87,7 @@ export class RsaKey extends JsonWebKey<RsaKeyParameters> implements RsaKeyParame
    */
   protected override validateParameters(parameters: RsaKeyParameters): void {
     if (parameters.kty !== 'RSA') {
-      throw new TypeError(`Unexpected JSON Web Key Type "${parameters.kty}" for RsaKey.`);
+      throw new TypeError(`Invalid jwk parameter "kty". Expected "RSA", got "${parameters.kty}".`);
     }
 
     if (typeof parameters.n !== 'string') {
@@ -95,14 +95,14 @@ export class RsaKey extends JsonWebKey<RsaKeyParameters> implements RsaKeyParame
     }
 
     if (Buffer.byteLength(parameters.n, 'base64url') < 256) {
-      throw new InvalidJsonWebKeyException('The RSA Modulus MUST be at least 2048.');
+      throw new InvalidJsonWebKeyException('The RSA Modulus must be at least 2048.');
     }
 
     if (typeof parameters.e !== 'string') {
       throw new InvalidJsonWebKeyException('Invalid jwk parameter "e".');
     }
 
-    if (this.getPrivateParameters().some((parameter) => parameters[parameter] !== undefined)) {
+    if (this.getPrivateParameters().some((parameter) => typeof parameters[parameter] !== 'undefined')) {
       if (typeof parameters.d !== 'string') {
         throw new InvalidJsonWebKeyException('Invalid jwk parameter "d".');
       }

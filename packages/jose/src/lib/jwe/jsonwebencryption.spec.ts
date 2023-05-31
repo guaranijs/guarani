@@ -1,3 +1,5 @@
+import 'jest-extended';
+
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebEncryptionException } from '../exceptions/invalid-jsonwebencryption.exception';
@@ -6,7 +8,7 @@ import { OctetSequenceKey } from '../jwk/backends/octet-sequence/octet-sequence.
 import { JsonWebEncryption } from './jsonwebencryption';
 import { JsonWebEncryptionHeader } from './jsonwebencryption.header';
 
-const invalidPlaintexts: any[] = [null, true, 1, 1.2, 1n, '', Symbol('a'), Buffer, () => 1, {}, []];
+const invalidPlaintexts: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, () => 1, {}, []];
 
 const invalidTokens: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
 const invalidTokenFormats: string[] = ['', 'a', '.a', '.a.b.c.d', 'a.b', 'a.b.c.d.e.f'];
@@ -47,18 +49,18 @@ describe('JSON Web Encryption', () => {
 
   describe('isJsonWebEncryption()', () => {
     it.each(invalidTokens)('should return false when the provided data is not a string.', (invalidToken) => {
-      expect(JsonWebEncryption.isJsonWebEncryption(invalidToken)).toBe(false);
+      expect(JsonWebEncryption.isJsonWebEncryption(invalidToken)).toBeFalse();
     });
 
     it.each(invalidTokenFormats)(
       'should return false when the format of the provided token is invalid.',
       (invalidToken) => {
-        expect(JsonWebEncryption.isJsonWebEncryption(invalidToken)).toBe(false);
+        expect(JsonWebEncryption.isJsonWebEncryption(invalidToken)).toBeFalse();
       }
     );
 
     it('should return true when the provided data has a valid json web encryption token format.', () => {
-      expect(JsonWebEncryption.isJsonWebEncryption(token)).toBe(true);
+      expect(JsonWebEncryption.isJsonWebEncryption(token)).toBeTrue();
     });
   });
 

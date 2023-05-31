@@ -20,7 +20,7 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
   });
 
   it('should have 128 as its "keySize".', () => {
-    expect(A128KW['keySize']).toBe(128);
+    expect(A128KW['keySize']).toEqual(128);
   });
 
   it('should have "aes128-wrap" as its "cipher".', () => {
@@ -87,7 +87,7 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
   });
 
   it('should have 192 as its "keySize".', () => {
-    expect(A192KW['keySize']).toBe(192);
+    expect(A192KW['keySize']).toEqual(192);
   });
 
   it('should have "aes192-wrap" as its "cipher".', () => {
@@ -154,7 +154,7 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
   });
 
   it('should have 256 as its "keySize".', () => {
-    expect(A256KW['keySize']).toBe(256);
+    expect(A256KW['keySize']).toEqual(256);
   });
 
   it('should have "aes256-wrap" as its "cipher".', () => {

@@ -19,11 +19,12 @@ class NoneBackend extends JsonWebSignatureBackend {
    * Signs a Message with the provided JSON Web Key.
    *
    * @param message Message to be Signed.
+   * @param key ~JSON Web Key used to Sign the provided Message.~
    * @returns Resulting Signature of the provided Message.
    */
   // @ts-expect-error Unused parameter.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async sign(message: Buffer): Promise<Buffer> {
+  public async sign(message: Buffer, key: null): Promise<Buffer> {
     return Buffer.alloc(0);
   }
 
@@ -32,10 +33,11 @@ class NoneBackend extends JsonWebSignatureBackend {
    *
    * @param signature Signature to be matched against the provided Message.
    * @param message Message to be matched against the provided Signature.
+   * @param key ~JSON Web Key used to verify the Signature and Message.~
    */
   // @ts-expect-error Unused parameter.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
-  public async verify(signature: Buffer, message: Buffer): Promise<void> {}
+  public async verify(signature: Buffer, message: Buffer, key: null): Promise<void> {}
 }
 
 /**

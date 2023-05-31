@@ -6,12 +6,12 @@ import { JsonWebTokenClaims } from './jsonwebtoken.claims';
 import { JsonWebTokenClaimsParameters } from './jsonwebtoken.claims.parameters';
 
 const invalidIss: any[] = [null, true, 1, 1.2, {}, []];
-const invalidSubs: any[] = [...invalidIss];
+const invalidSubs: any[] = [null, true, 1, 1.2, {}, []];
 const invalidAuds: any[] = [null, true, 1, 1.2, {}];
 const invalidExps: any[] = [null, true, 1.2, 'a', {}, []];
-const invalidNbfs: any[] = [...invalidExps];
-const invalidIats: any[] = [...invalidExps];
-const invalidJtis: any[] = [...invalidIss];
+const invalidNbfs: any[] = [null, true, 1.2, 'a', {}, []];
+const invalidIats: any[] = [null, true, 1.2, 'a', {}, []];
+const invalidJtis: any[] = [null, true, 1, 1.2, {}, []];
 const invalidValuesOptions: any[] = [null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, () => 1, {}];
 const valuesOptions: string[][][] = [[[]], [['https://example.org']], [['https://example.org', 'https://example.xyz']]];
 
@@ -88,7 +88,7 @@ describe('JSON Web Token Claims', () => {
 
       await expect(CustomClaims.parse(data)).resolves.not.toThrow();
 
-      expect(validateCustomClaimsSpy).toHaveBeenCalled();
+      expect(validateCustomClaimsSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should throw when providing both "value" and "values" validation options.', async () => {

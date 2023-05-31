@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
@@ -33,7 +35,7 @@ export abstract class JsonWebSignatureBackend {
    * @param key JSON Web Key used to Sign the provided Message.
    * @returns Resulting Signature of the provided Message.
    */
-  public abstract sign(message: Buffer, key?: JsonWebKey): Promise<Buffer>;
+  public abstract sign(message: Buffer, key: Nullable<JsonWebKey>): Promise<Buffer>;
 
   /**
    * Checks if the provided Signature matches the provided Message based on the provided JSON Web Key.
@@ -42,7 +44,7 @@ export abstract class JsonWebSignatureBackend {
    * @param message Message to be matched against the provided Signature.
    * @param key JSON Web Key used to verify the Signature and Message.
    */
-  public abstract verify(signature: Buffer, message: Buffer, key?: JsonWebKey): Promise<void>;
+  public abstract verify(signature: Buffer, message: Buffer, key: Nullable<JsonWebKey>): Promise<void>;
 
   /**
    * Checks if the provided JSON Web Key can be used by the requesting JSON Web Signature Backend.
@@ -55,7 +57,7 @@ export abstract class JsonWebSignatureBackend {
       throw new InvalidJsonWebKeyException();
     }
 
-    if (key.alg !== undefined && key.alg !== this.algorithm) {
+    if (typeof key.alg !== 'undefined' && key.alg !== this.algorithm) {
       throw new InvalidJsonWebKeyException(`This JSON Web Key is intended to be used by the Algorithm "${key.alg}".`);
     }
   }

@@ -51,7 +51,7 @@ export class EllipticCurveBackend implements JsonWebKeyBackend {
     }
 
     const { privateKey } = await generateKeyPairAsync('ec', { namedCurve: this.curves[options.curve] });
-    const data = <EllipticCurveKeyParameters>privateKey.export({ format: 'jwk' });
+    const data = privateKey.export({ format: 'jwk' }) as EllipticCurveKeyParameters;
 
     return new (await import('./elliptic-curve.key')).EllipticCurveKey(data, additionalParameters);
   }

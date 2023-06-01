@@ -123,20 +123,4 @@ describe('Octet Key Pair Key', () => {
       ]);
     });
   });
-
-  describe('getThumbprintParameters()', () => {
-    it('should return an object with the parameters ["crv", "kty", "x"] in this exact order.', () => {
-      const key = new OctetKeyPairKey(publicParameters);
-      const parameters = Object.keys(key['getThumbprintParameters']());
-
-      expect(parameters).toEqual<string[]>(['crv', 'kty', 'x']);
-    });
-  });
-
-  describe('getPrivateParameters()', () => {
-    it('should return ["d"].', () => {
-      const key = new OctetKeyPairKey(publicParameters);
-      expect(key['getPrivateParameters']()).toEqual<string[]>(['d']);
-    });
-  });
 });

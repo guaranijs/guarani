@@ -1,5 +1,4 @@
 import { Buffer } from 'buffer';
-import { createPrivateKey, createPublicKey, JsonWebKeyInput as CryptoJsonWebKeyInput, KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../jsonwebkey';
@@ -57,30 +56,6 @@ export class RsaKey extends JsonWebKey<RsaKeyParameters> implements RsaKeyParame
   public readonly qi?: string;
 
   /**
-   * Parses the Parameters of the JSON Web Key into a NodeJS Crypto Key.
-   *
-   * @param parameters Parameters of the JSON Web Key.
-   */
-  protected getCryptoKey(parameters: RsaKeyParameters): KeyObject {
-    const input: CryptoJsonWebKeyInput = { format: 'jwk', key: parameters };
-    return typeof parameters.d !== 'undefined' ? createPrivateKey(input) : createPublicKey(input);
-  }
-
-  /**
-   * Returns the parameters used to calculate the Thumbprint of the JSON Web Key in lexicographic order.
-   */
-  protected getThumbprintParameters(): RsaKeyParameters {
-    return { e: this.e, kty: this.kty, n: this.n };
-  }
-
-  /**
-   * Returns a list with the private parameters of the JSON Web Key.
-   */
-  protected getPrivateParameters(): string[] {
-    return ['d', 'p', 'q', 'dp', 'dq', 'qi'];
-  }
-
-  /**
    * Validates the provided RSA JSON Web Key Parameters.
    *
    * @param parameters Parameters of the RSA JSON Web Key.
@@ -102,7 +77,7 @@ export class RsaKey extends JsonWebKey<RsaKeyParameters> implements RsaKeyParame
       throw new InvalidJsonWebKeyException('Invalid jwk parameter "e".');
     }
 
-    if (this.getPrivateParameters().some((parameter) => typeof parameters[parameter] !== 'undefined')) {
+    if (['d', 'p', 'q', 'dp', 'dq', 'qi'].some((parameter) => typeof parameters[parameter] !== 'undefined')) {
       if (typeof parameters.d !== 'string') {
         throw new InvalidJsonWebKeyException('Invalid jwk parameter "d".');
       }

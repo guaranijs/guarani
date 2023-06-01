@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer';
+import { KeyObjectType } from 'crypto';
 
 import { OctetSequenceBackend } from './octet-sequence.backend';
 import { OctetSequenceKey } from './octet-sequence.key';
@@ -44,6 +45,27 @@ describe('Octet Sequence JSON Web Key Backend', () => {
 
       expect((key = await backend.generate({ length: 32 }))).toBeInstanceOf(OctetSequenceKey);
       expect(Buffer.byteLength(key.k, 'base64url')).toEqual(32);
+    });
+  });
+
+  describe('getCryptoKey()', () => {
+    it('should generate a secret octet sequence key.', () => {
+      const key = backend.getCryptoKey(secretParameters);
+
+      expect(key.type).toEqual<KeyObjectType>('secret');
+    });
+  });
+
+  describe('getPrivateParameters()', () => {
+    it('should return [].', () => {
+      expect(backend.getPrivateParameters()).toEqual<string[]>([]);
+    });
+  });
+
+  describe('getThumbprintParameters()', () => {
+    it('should return an object with the parameters ["k", "kty"] in this exact order.', () => {
+      const parameters = Object.keys(backend['getThumbprintParameters'](secretParameters));
+      expect(parameters).toEqual<string[]>(['k', 'kty']);
     });
   });
 });

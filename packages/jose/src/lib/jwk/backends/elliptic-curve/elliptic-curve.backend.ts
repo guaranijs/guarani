@@ -1,4 +1,10 @@
-import { generateKeyPair } from 'crypto';
+import {
+  JsonWebKeyInput as CryptoJsonWebKeyInput,
+  KeyObject,
+  createPrivateKey,
+  createPublicKey,
+  generateKeyPair,
+} from 'crypto';
 import { promisify } from 'util';
 
 import { EllipticCurve } from '../elliptic-curve.type';
@@ -12,7 +18,7 @@ const generateKeyPairAsync = promisify(generateKeyPair);
 /**
  * Implementation of the Elliptic Curve JSON Web Key Backend.
  */
-export class EllipticCurveBackend implements JsonWebKeyBackend {
+export class EllipticCurveBackend extends JsonWebKeyBackend {
   /**
    * Elliptic Curves supported by the Backend.
    */
@@ -54,5 +60,31 @@ export class EllipticCurveBackend implements JsonWebKeyBackend {
     const data = privateKey.export({ format: 'jwk' }) as EllipticCurveKeyParameters;
 
     return new (await import('./elliptic-curve.key')).EllipticCurveKey(data, additionalParameters);
+  }
+
+  /**
+   * Parses the Parameters of the Elliptic Curve JSON Web Key into a NodeJS Crypto Key.
+   *
+   * @param parameters Parameters of the Elliptic Curve JSON Web Key.
+   */
+  public getCryptoKey(parameters: EllipticCurveKeyParameters): KeyObject {
+    const input: CryptoJsonWebKeyInput = { format: 'jwk', key: parameters };
+    return typeof parameters.d !== 'undefined' ? createPrivateKey(input) : createPublicKey(input);
+  }
+
+  /**
+   * Returns a list with the private parameters of the Elliptic Curve JSON Web Key.
+   */
+  public getPrivateParameters(): string[] {
+    return ['d'];
+  }
+
+  /**
+   * Returns the parameters used to calculate the Thumbprint of the Elliptic Curve JSON Web Key in lexicographic order.
+   *
+   * @param parameters Parameters of the Elliptic Curve JSON Web Key.
+   */
+  protected getThumbprintParameters(parameters: EllipticCurveKeyParameters): EllipticCurveKeyParameters {
+    return { crv: parameters.crv, kty: parameters.kty, x: parameters.x, y: parameters.y };
   }
 }

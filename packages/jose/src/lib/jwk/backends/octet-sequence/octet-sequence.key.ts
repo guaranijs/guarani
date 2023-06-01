@@ -1,5 +1,4 @@
 import { Buffer } from 'buffer';
-import { createSecretKey, KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../jsonwebkey';
@@ -20,29 +19,6 @@ export class OctetSequenceKey extends JsonWebKey<OctetSequenceKeyParameters> imp
    * Base64Url encoded Octet Sequence Secret.
    */
   public readonly k!: string;
-
-  /**
-   * Parses the Parameters of the JSON Web Key into a NodeJS Crypto Key.
-   *
-   * @param parameters Parameters of the JSON Web Key.
-   */
-  protected getCryptoKey(parameters: OctetSequenceKeyParameters): KeyObject {
-    return createSecretKey(parameters.k, 'base64url');
-  }
-
-  /**
-   * Returns the parameters used to calculate the Thumbprint of the JSON Web Key in lexicographic order.
-   */
-  protected getThumbprintParameters(): OctetSequenceKeyParameters {
-    return { k: this.k, kty: this.kty };
-  }
-
-  /**
-   * Returns a list with the private parameters of the JSON Web Key.
-   */
-  protected getPrivateParameters(): string[] {
-    return [];
-  }
 
   /**
    * Validates the provided Octet Sequence JSON Web Key Parameters.

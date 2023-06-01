@@ -1,4 +1,10 @@
-import { generateKeyPair } from 'crypto';
+import {
+  JsonWebKeyInput as CryptoJsonWebKeyInput,
+  KeyObject,
+  createPrivateKey,
+  createPublicKey,
+  generateKeyPair,
+} from 'crypto';
 import { promisify } from 'util';
 
 import { EllipticCurve } from '../elliptic-curve.type';
@@ -12,7 +18,7 @@ const generateKeyPairAsync = promisify(generateKeyPair);
 /**
  * Implementation of the Octet Key Pair JSON Web Key Backend.
  */
-export class OctetKeyPairBackend implements JsonWebKeyBackend {
+export class OctetKeyPairBackend extends JsonWebKeyBackend {
   /**
    * Elliptic Curves supported by the Backend.
    */
@@ -55,5 +61,31 @@ export class OctetKeyPairBackend implements JsonWebKeyBackend {
     const data = privateKey.export({ format: 'jwk' }) as OctetKeyPairKeyParameters;
 
     return new (await import('./octet-key-pair.key')).OctetKeyPairKey(data, additionalParameters);
+  }
+
+  /**
+   * Parses the Parameters of the Octet Key Pair JSON Web Key into a NodeJS Crypto Key.
+   *
+   * @param parameters Parameters of the Octet Key Pair JSON Web Key.
+   */
+  public getCryptoKey(parameters: OctetKeyPairKeyParameters): KeyObject {
+    const input: CryptoJsonWebKeyInput = { format: 'jwk', key: parameters };
+    return typeof parameters.d !== 'undefined' ? createPrivateKey(input) : createPublicKey(input);
+  }
+
+  /**
+   * Returns a list with the private parameters of the Octet Key Pair JSON Web Key.
+   */
+  public getPrivateParameters(): string[] {
+    return ['d'];
+  }
+
+  /**
+   * Returns the parameters used to calculate the Thumbprint of the Octet Key Pair JSON Web Key in lexicographic order.
+   *
+   * @param parameters Parameters of the Octet Key Pair JSON Web Key.
+   */
+  protected getThumbprintParameters(parameters: OctetKeyPairKeyParameters): OctetKeyPairKeyParameters {
+    return { crv: parameters.crv, kty: parameters.kty, x: parameters.x };
   }
 }

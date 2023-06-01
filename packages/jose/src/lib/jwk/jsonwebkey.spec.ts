@@ -1,5 +1,4 @@
 import { Buffer } from 'buffer';
-import { KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
@@ -13,6 +12,7 @@ import { JsonWebKey } from './jsonwebkey';
 import { JsonWebKeyOperation } from './jsonwebkey-operation.type';
 import { JsonWebKeyUse } from './jsonwebkey-use.type';
 import { JsonWebKeyParameters } from './jsonwebkey.parameters';
+import { JSONWEBKEY_REGISTRY } from './backends/jsonwebkey.registry';
 
 const secretParameters: OctetSequenceKeyParameters = {
   kty: 'oct',
@@ -72,12 +72,6 @@ const invalidUseKeyOps: [JsonWebKeyUse, JsonWebKeyOperation[]][] = [
   ['sig', ['wrapKey']],
   ['sig', ['sign', 'decrypt']],
 ];
-
-JsonWebKey.prototype['getCryptoKey'] = function (): KeyObject {
-  return null!;
-};
-
-const key: JsonWebKey = Reflect.construct(JsonWebKey, []);
 
 describe('JSON Web Key', () => {
   afterEach(() => {
@@ -162,24 +156,30 @@ describe('JSON Web Key', () => {
   });
 
   describe('thumbprint', () => {
-    it('should return the sha-256 thumbprint of a json web key.', () => {
-      key['getThumbprintParameters'] = function (): JsonWebKeyParameters {
-        return {
-          e: 'AQAB',
-          kty: 'RSA',
-          n:
-            '0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86z' +
-            'wu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5Js' +
-            'GY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMic' +
-            'AtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-' +
-            'bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csF' +
-            'Cur-kEgU8awapJzKnqDKgw',
-        };
-      };
+    const parameters: JsonWebKeyParameters = {
+      e: 'AQAB',
+      kty: 'RSA',
+      n:
+        '0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86z' +
+        'wu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5Js' +
+        'GY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMic' +
+        'AtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-' +
+        'bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csF' +
+        'Cur-kEgU8awapJzKnqDKgw',
+    };
 
+    const key = Reflect.construct(JsonWebKey, [parameters]);
+
+    const getThumbprintSpy = jest.spyOn(JSONWEBKEY_REGISTRY.RSA, 'getThumbprint');
+
+    it('should calculate and return the sha-256 thumbprint of a json web key.', () => {
       expect(key.thumbprint.toString('base64url')).toEqual('NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs');
+      expect(getThumbprintSpy).toHaveBeenCalledTimes(1);
+    });
 
-      Reflect.deleteProperty(key, 'getThumbprintParameters');
+    it('should return the cached sha-256 thumbprint of a json web key.', () => {
+      expect(key.thumbprint.toString('base64url')).toEqual('NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs');
+      expect(getThumbprintSpy).not.toHaveBeenCalled();
     });
   });
 

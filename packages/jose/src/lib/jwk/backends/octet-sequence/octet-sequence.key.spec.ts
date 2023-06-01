@@ -62,20 +62,4 @@ describe('Octet Sequence Key', () => {
       expect(cryptoKey.type).toEqual<CryptoKeyObjectType>('secret');
     });
   });
-
-  describe('getThumbprintParameters()', () => {
-    it('should return an object with the parameters ["k", "kty"] in this exact order.', () => {
-      const key = new OctetSequenceKey(secretParameters);
-      const parameters = Object.keys(key['getThumbprintParameters']());
-
-      expect(parameters).toEqual<string[]>(['k', 'kty']);
-    });
-  });
-
-  describe('getPrivateParameters()', () => {
-    it('should return [].', () => {
-      const key = new OctetSequenceKey(secretParameters);
-      expect(key['getPrivateParameters']()).toEqual<string[]>([]);
-    });
-  });
 });

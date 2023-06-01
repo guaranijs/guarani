@@ -1,4 +1,10 @@
-import { generateKeyPair } from 'crypto';
+import {
+  JsonWebKeyInput as CryptoJsonWebKeyInput,
+  KeyObject,
+  createPrivateKey,
+  createPublicKey,
+  generateKeyPair,
+} from 'crypto';
 import { promisify } from 'util';
 
 import { JsonWebKeyBackend } from '../jsonwebkey.backend';
@@ -11,7 +17,7 @@ const generateKeyPairAsync = promisify(generateKeyPair);
 /**
  * Implementation of the RSA JSON Web Key Backend.
  */
-export class RsaBackend implements JsonWebKeyBackend {
+export class RsaBackend extends JsonWebKeyBackend {
   /**
    * Loads the provided RSA JSON Web Key Parameters into an RSA JSON Web Key.
    *
@@ -53,5 +59,31 @@ export class RsaBackend implements JsonWebKeyBackend {
     const data = privateKey.export({ format: 'jwk' }) as RsaKeyParameters;
 
     return new (await import('./rsa.key')).RsaKey(data, additionalParameters);
+  }
+
+  /**
+   * Parses the Parameters of the RSA JSON Web Key into a NodeJS Crypto Key.
+   *
+   * @param parameters Parameters of the RSA JSON Web Key.
+   */
+  public getCryptoKey(parameters: RsaKeyParameters): KeyObject {
+    const input: CryptoJsonWebKeyInput = { format: 'jwk', key: parameters };
+    return typeof parameters.d !== 'undefined' ? createPrivateKey(input) : createPublicKey(input);
+  }
+
+  /**
+   * Returns a list with the private parameters of the RSA JSON Web Key.
+   */
+  public getPrivateParameters(): string[] {
+    return ['d', 'p', 'q', 'dp', 'dq', 'qi'];
+  }
+
+  /**
+   * Returns the parameters used to calculate the Thumbprint of the RSA JSON Web Key in lexicographic order.
+   *
+   * @param parameters Parameters of the RSA JSON Web Key.
+   */
+  protected getThumbprintParameters(parameters: RsaKeyParameters): RsaKeyParameters {
+    return { e: parameters.e, kty: parameters.kty, n: parameters.n };
   }
 }

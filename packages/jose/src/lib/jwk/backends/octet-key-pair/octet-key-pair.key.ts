@@ -1,5 +1,3 @@
-import { createPrivateKey, createPublicKey, JsonWebKeyInput as CryptoJsonWebKeyInput, KeyObject } from 'crypto';
-
 import { InvalidJsonWebKeyException } from '../../../exceptions/invalid-jsonwebkey.exception';
 import { UnsupportedEllipticCurveException } from '../../../exceptions/unsupported-elliptic-curve.exception';
 import { JsonWebKey } from '../../jsonwebkey';
@@ -37,30 +35,6 @@ export class OctetKeyPairKey extends JsonWebKey<OctetKeyPairKeyParameters> imple
    */
   public get supportedEllipticCurves(): Extract<EllipticCurve, 'Ed25519' | 'Ed448' | 'X25519' | 'X448'>[] {
     return ['Ed25519', 'Ed448', 'X25519', 'X448'];
-  }
-
-  /**
-   * Parses the Parameters of the JSON Web Key into a NodeJS Crypto Key.
-   *
-   * @param parameters Parameters of the JSON Web Key.
-   */
-  protected getCryptoKey(parameters: OctetKeyPairKeyParameters): KeyObject {
-    const input: CryptoJsonWebKeyInput = { format: 'jwk', key: parameters };
-    return typeof parameters.d !== 'undefined' ? createPrivateKey(input) : createPublicKey(input);
-  }
-
-  /**
-   * Returns the parameters used to calculate the Thumbprint of the JSON Web Key in lexicographic order.
-   */
-  protected getThumbprintParameters(): OctetKeyPairKeyParameters {
-    return { crv: this.crv, kty: this.kty, x: this.x };
-  }
-
-  /**
-   * Returns a list with the private parameters of the JSON Web Key.
-   */
-  protected getPrivateParameters(): string[] {
-    return ['d'];
   }
 
   /**

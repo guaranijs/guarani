@@ -129,20 +129,4 @@ describe('Elliptic Curve Key', () => {
       ]);
     });
   });
-
-  describe('getThumbprintParameters()', () => {
-    it('should return an object with the parameters ["crv", "kty", "x", "y"] in this exact order.', () => {
-      const key = new EllipticCurveKey(publicParameters);
-      const parameters = Object.keys(key['getThumbprintParameters']());
-
-      expect(parameters).toEqual<string[]>(['crv', 'kty', 'x', 'y']);
-    });
-  });
-
-  describe('getPrivateParameters()', () => {
-    it('should return ["d"].', () => {
-      const key = new EllipticCurveKey(publicParameters);
-      expect(key['getPrivateParameters']()).toEqual<string[]>(['d']);
-    });
-  });
 });

@@ -1,8 +1,7 @@
 import { isPlainObject, removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
-import { Buffer } from 'buffer';
-import { createHash, KeyObject } from 'crypto';
+import { KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { JoseException } from '../exceptions/jose.exception';
@@ -12,6 +11,7 @@ import { JsonWebSignatureAlgorithm } from '../jws/jsonwebsignature-algorithm.typ
 import { EllipticCurveKey } from './backends/elliptic-curve/elliptic-curve.key';
 import { EllipticCurveKeyParameters } from './backends/elliptic-curve/elliptic-curve.key.parameters';
 import { GenerateEllipticCurveKeyOptions } from './backends/elliptic-curve/generate-elliptic-curve-key.options';
+import { JsonWebKeyBackend } from './backends/jsonwebkey.backend';
 import { JSONWEBKEY_REGISTRY } from './backends/jsonwebkey.registry';
 import { GenerateOctetKeyPairKeyOptions } from './backends/octet-key-pair/generate-octet-key-pair-key.options';
 import { OctetKeyPairKey } from './backends/octet-key-pair/octet-key-pair.key';
@@ -26,7 +26,6 @@ import { JsonWebKeyOperation } from './jsonwebkey-operation.type';
 import { JsonWebKeyType } from './jsonwebkey-type.type';
 import { JsonWebKeyUse } from './jsonwebkey-use.type';
 import { JsonWebKeyParameters } from './jsonwebkey.parameters';
-import { JsonWebKeyBackend } from './backends/jsonwebkey.backend';
 
 /**
  * Abstract Base Class of a JSON Web Key.
@@ -87,14 +86,14 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
   [parameter: string]: unknown;
 
   /**
-   * Thumbprint Buffer.
-   */
-  #thumbprint!: Buffer;
-
-  /**
    * NodeJS Crypto Key.
    */
-  readonly #cryptoKey!: KeyObject;
+  #cryptoKey!: KeyObject;
+
+  /**
+   * JSON Web Key Backend.
+   */
+  readonly #backend!: JsonWebKeyBackend;
 
   /**
    * Thumbprint of the JSON Web Key according to **RFC 7638 JSON Web Key (JWK) Thumbprint**.
@@ -103,21 +102,34 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
    *
    * @see https://www.rfc-editor.org/rfc/rfc7638.html
    */
-  // TODO: Move this to the Backend.
-  public get thumbprint(): Buffer {
-    if (!Buffer.isBuffer(this.#thumbprint)) {
-      const parameters = this.getThumbprintParameters();
-      this.#thumbprint = createHash('sha256').update(JSON.stringify(parameters), 'utf8').digest();
-    }
-
-    return this.#thumbprint;
-  }
+  #thumbprint!: Buffer;
 
   /**
    * NodeJS Crypto Key.
    */
   public get cryptoKey(): KeyObject {
+    if (!(this.#cryptoKey instanceof KeyObject)) {
+      this.#cryptoKey = this.#backend.getCryptoKey(this);
+    }
+
     return this.#cryptoKey;
+  }
+
+  /**
+   * Returns the thumbprint of the JSON Web Key according to **RFC 7638 JSON Web Key (JWK) Thumbprint**.
+   *
+   * The hash algorithm **SHA-256** is used to generate the thumbprint.
+   *
+   * @see https://www.rfc-editor.org/rfc/rfc7638.html
+   *
+   * @param parameters Parameters of the JSON Web Key.
+   */
+  public get thumbprint(): Buffer {
+    if (!Buffer.isBuffer(this.#thumbprint)) {
+      this.#thumbprint = this.#backend.getThumbprint(this);
+    }
+
+    return this.#thumbprint;
   }
 
   /**
@@ -133,25 +145,8 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
 
     Object.assign(this, params);
 
-    this.#cryptoKey = this.getCryptoKey(params);
+    this.#backend = JSONWEBKEY_REGISTRY[params.kty];
   }
-
-  /**
-   * Parses the Parameters of the JSON Web Key into a NodeJS Crypto Key.
-   *
-   * @param parameters Parameters of the JSON Web Key.
-   */
-  protected abstract getCryptoKey(parameters: T): KeyObject;
-
-  /**
-   * Returns the parameters used to calculate the Thumbprint of the JSON Web Key in lexicographic order.
-   */
-  protected abstract getThumbprintParameters(): T;
-
-  /**
-   * Returns a list with the private parameters of the JSON Web Key.
-   */
-  protected abstract getPrivateParameters(): string[];
 
   /**
    * Validates the provided JSON Web Key Parameters.
@@ -365,7 +360,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
    * @param exportPublic Exports only the Public Parameters of the JSON Web Key. (defaults to true)
    */
   public toJSON(exportPublic = true): T {
-    const privateParameters: string[] = this.getPrivateParameters();
+    const privateParameters: string[] = this.#backend.getPrivateParameters();
 
     let entries = Object.entries(this);
 

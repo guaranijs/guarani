@@ -1,3 +1,5 @@
+import { KeyObjectType, KeyType } from 'crypto';
+
 import { EllipticCurve } from '../elliptic-curve.type';
 import { OctetKeyPairBackend } from './octet-key-pair.backend';
 import { OctetKeyPairKey } from './octet-key-pair.key';
@@ -7,6 +9,11 @@ const publicParameters: OctetKeyPairKeyParameters = {
   kty: 'OKP',
   crv: 'Ed25519',
   x: 'aNoALKSUE1UsotuZvHUj1HEGqhpzLtsSTLmkBITDMAk',
+};
+
+const privateParameters: OctetKeyPairKeyParameters = {
+  ...publicParameters,
+  d: 'tccuS3jrlRwPaNsn2YxpUuMCqvnlsIgy_T0S7qVmo-A',
 };
 
 describe('Octet Key Pair JSON Web Key Backend', () => {
@@ -65,6 +72,35 @@ describe('Octet Key Pair JSON Web Key Backend', () => {
 
       expect((key = await backend.generate({ curve: 'X448' }))).toBeInstanceOf(OctetKeyPairKey);
       expect(key.crv).toEqual<EllipticCurve>('X448');
+    });
+  });
+
+  describe('getCryptoKey()', () => {
+    it('should generate a public octet key pair key.', () => {
+      const key = backend.getCryptoKey(publicParameters);
+
+      expect(key.type).toEqual<KeyObjectType>('public');
+      expect(key.asymmetricKeyType).toEqual<KeyType>('ed25519');
+    });
+
+    it('should generate a private octet key pair key.', () => {
+      const key = backend.getCryptoKey(privateParameters);
+
+      expect(key.type).toEqual<KeyObjectType>('private');
+      expect(key.asymmetricKeyType).toEqual<KeyType>('ed25519');
+    });
+  });
+
+  describe('getPrivateParameters()', () => {
+    it('should return ["d"].', () => {
+      expect(backend.getPrivateParameters()).toEqual<string[]>(['d']);
+    });
+  });
+
+  describe('getThumbprintParameters()', () => {
+    it('should return an object with the parameters ["crv", "kty", "x"] in this exact order.', () => {
+      const parameters = Object.keys(backend['getThumbprintParameters'](publicParameters));
+      expect(parameters).toEqual<string[]>(['crv', 'kty', 'x']);
     });
   });
 });

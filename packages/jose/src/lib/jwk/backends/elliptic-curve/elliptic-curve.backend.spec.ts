@@ -1,3 +1,5 @@
+import { KeyObjectType, KeyType } from 'crypto';
+
 import { EllipticCurve } from '../elliptic-curve.type';
 import { EllipticCurveBackend } from './elliptic-curve.backend';
 import { EllipticCurveKey } from './elliptic-curve.key';
@@ -8,6 +10,11 @@ const publicParameters: EllipticCurveKeyParameters = {
   crv: 'P-256',
   x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
   y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
+};
+
+const privateParameters: EllipticCurveKeyParameters = {
+  ...publicParameters,
+  d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo',
 };
 
 describe('Elliptic Curve JSON Web Key Backend', () => {
@@ -56,6 +63,35 @@ describe('Elliptic Curve JSON Web Key Backend', () => {
 
       expect((key = await backend.generate({ curve: 'P-521' }))).toBeInstanceOf(EllipticCurveKey);
       expect(key.crv).toEqual<EllipticCurve>('P-521');
+    });
+  });
+
+  describe('getCryptoKey()', () => {
+    it('should generate a public elliptic curve key.', () => {
+      const key = backend.getCryptoKey(publicParameters);
+
+      expect(key.type).toEqual<KeyObjectType>('public');
+      expect(key.asymmetricKeyType).toEqual<KeyType>('ec');
+    });
+
+    it('should generate a private elliptic curve key.', () => {
+      const key = backend.getCryptoKey(privateParameters);
+
+      expect(key.type).toEqual<KeyObjectType>('private');
+      expect(key.asymmetricKeyType).toEqual<KeyType>('ec');
+    });
+  });
+
+  describe('getPrivateParameters()', () => {
+    it('should return ["d"].', () => {
+      expect(backend.getPrivateParameters()).toEqual<string[]>(['d']);
+    });
+  });
+
+  describe('getThumbprintParameters()', () => {
+    it('should return an object with the parameters ["crv", "kty", "x", "y"] in this exact order.', () => {
+      const parameters = Object.keys(backend['getThumbprintParameters'](publicParameters));
+      expect(parameters).toEqual<string[]>(['crv', 'kty', 'x', 'y']);
     });
   });
 });

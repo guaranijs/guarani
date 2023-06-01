@@ -152,20 +152,4 @@ describe('RSA JSON Web Key', () => {
       expect(cryptoKey.type).toEqual<CryptoKeyObjectType>('private');
     });
   });
-
-  describe('getThumbprintParameters()', () => {
-    it('should return an object with the parameters ["e", "kty", "n"] in this exact order.', () => {
-      const key = new RsaKey(publicParameters);
-      const parameters = Object.keys(key['getThumbprintParameters']());
-
-      expect(parameters).toEqual<string[]>(['e', 'kty', 'n']);
-    });
-  });
-
-  describe('getPrivateParameters()', () => {
-    it('should return ["d", "p", "q", "dp", "dq", "qi"].', () => {
-      const key = new RsaKey(publicParameters);
-      expect(key['getPrivateParameters']()).toEqual<string[]>(['d', 'p', 'q', 'dp', 'dq', 'qi']);
-    });
-  });
 });

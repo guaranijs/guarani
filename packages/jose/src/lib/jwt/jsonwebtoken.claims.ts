@@ -104,8 +104,9 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
   }
 
   /**
-   * Validates the Default JSON Web Token Claims based on the rules of
-   * {@link https://www.rfc-editor.org/rfc/rfc7519.html#section-4 RFC 7519 Section 4}.
+   * Validates the Default JSON Web Token Claims based on the rules of RFC 7519 Section 4.
+   *
+   * @see https://www.rfc-editor.org/rfc/rfc7519.html#section-4
    *
    * @param claims JSON Web Token Claims.
    * @param ignoreExpired Informs if the **exp** claim should be ignored.

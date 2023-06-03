@@ -3,7 +3,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { OutgoingHttpHeaders } from 'http';
 import { URL, URLSearchParams } from 'url';
 
-import { AuthorizationContext } from '../context/authorization/authorization.context';
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';

@@ -1,7 +1,7 @@
 /**
  * OAuth 2.0 End User Entity.
  */
-export interface User extends Record<string, any> {
+export interface User {
   /**
    * Identifier of the End User.
    */

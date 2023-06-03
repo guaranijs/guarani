@@ -2,7 +2,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { OutgoingHttpHeaders } from 'http';
 
-import { InteractionContext } from '../context/interaction/interaction.context';
+import { InteractionContext } from '../context/interaction/interaction-context';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { UnsupportedInteractionTypeException } from '../exceptions/unsupported-interaction-type.exception';

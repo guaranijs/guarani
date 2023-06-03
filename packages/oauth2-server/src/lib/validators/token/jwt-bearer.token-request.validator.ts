@@ -14,7 +14,7 @@ import { Buffer } from 'buffer';
 import https from 'https';
 import { URL } from 'url';
 
-import { JwtBearerTokenContext } from '../../context/token/jwt-bearer.token.context';
+import { JwtBearerTokenContext } from '../../context/token/jwt-bearer.token-context';
 import { Client } from '../../entities/client.entity';
 import { User } from '../../entities/user.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';

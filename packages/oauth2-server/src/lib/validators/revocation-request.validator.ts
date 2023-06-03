@@ -1,6 +1,6 @@
 import { Inject, Injectable, Optional } from '@guarani/di';
 
-import { RevocationContext } from '../context/revocation.context';
+import { RevocationContext } from '../context/revocation-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';

@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomBytes } from 'crypto';
 import { promisify } from 'util';
@@ -18,7 +19,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     console.warn('Using default Access Token Service. This is only recommended for development.');
   }
 
-  public async create(scopes: string[], client: Client, user?: User): Promise<AccessToken> {
+  public async create(scopes: string[], client: Client, user: Nullable<User>): Promise<AccessToken> {
     const now = Date.now();
 
     const accessToken: AccessToken = {
@@ -47,6 +48,8 @@ export class AccessTokenService implements AccessTokenServiceInterface {
       issuedAt: new Date(now),
       expiresAt: new Date(now + 300000),
       validAfter: new Date(now),
+      client: null,
+      user: null,
     };
 
     this.accessTokens.push(accessToken);
@@ -65,6 +68,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
       expiresAt: new Date(now + 86400000),
       validAfter: new Date(now),
       client,
+      user: null,
     };
 
     this.accessTokens.push(accessToken);
@@ -72,7 +76,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     return accessToken;
   }
 
-  public async findOne(handle: string): Promise<AccessToken | null> {
+  public async findOne(handle: string): Promise<Nullable<AccessToken>> {
     return this.accessTokens.find((accessToken) => accessToken.handle === handle) ?? null;
   }
 

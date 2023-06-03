@@ -11,8 +11,6 @@ import { ExpressBackend } from './express.backend';
  */
 export async function expressAuthorizationServer(options: AuthorizationServerOptions): Promise<Router> {
   const provider = await AuthorizationServerFactory.create(ExpressBackend, options);
-
   await provider.bootstrap();
-
   return provider.router;
 }

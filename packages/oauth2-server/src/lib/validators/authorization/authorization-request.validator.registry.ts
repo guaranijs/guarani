@@ -1,6 +1,6 @@
-import { Constructor } from '@guarani/di';
+import { Constructor } from '@guarani/types';
 
-import { AuthorizationContext } from '../../context/authorization/authorization.context';
+import { AuthorizationContext } from '../../context/authorization/authorization-context';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseType } from '../../response-types/response-type.type';
 import { AuthorizationRequestValidator } from './authorization-request.validator';

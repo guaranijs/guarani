@@ -1,7 +1,7 @@
 import { Grant } from '../../entities/grant.entity';
 import { LoginDecision } from '../../interaction-types/login-decision.type';
 import { LoginDecisionInteractionRequest } from '../../requests/interaction/login-decision.interaction-request';
-import { InteractionContext } from './interaction.context';
+import { InteractionContext } from './interaction-context';
 
 /**
  * Parameters of the Login Decision Interaction Context.

@@ -3,7 +3,7 @@ import { AccessTokenType } from '../types/access-token-type.type';
 /**
  * Parameters of the OAuth 2.0 Token Response.
  */
-export interface TokenResponse extends Record<string, any> {
+export interface TokenResponse {
   /**
    * Access Token issued to the Client.
    */

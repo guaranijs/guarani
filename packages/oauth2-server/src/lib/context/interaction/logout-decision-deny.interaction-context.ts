@@ -1,5 +1,5 @@
 import { OAuth2Exception } from '../../exceptions/oauth2.exception';
-import { LogoutDecisionInteractionContext } from './logout-decision.interaction.context';
+import { LogoutDecisionInteractionContext } from './logout-decision.interaction-context';
 
 /**
  * Parameters of the Logout Decision Deny Interaction Context.

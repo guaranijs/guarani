@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { DeviceCodeTokenContext } from '../context/token/device-code.token.context';
+import { DeviceCodeTokenContext } from '../context/token/device-code.token-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { DeviceCode } from '../entities/device-code.entity';

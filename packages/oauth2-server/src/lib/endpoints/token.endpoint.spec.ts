@@ -2,7 +2,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { OutgoingHttpHeaders } from 'http';
 
-import { TokenContext } from '../context/token/token.context';
+import { TokenContext } from '../context/token/token-context';
 import { Client } from '../entities/client.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { UnsupportedGrantTypeException } from '../exceptions/unsupported-grant-type.exception';

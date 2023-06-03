@@ -2,7 +2,7 @@ import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { URL } from 'url';
 
-import { AuthorizationCodeTokenContext } from '../../context/token/authorization-code.token.context';
+import { AuthorizationCodeTokenContext } from '../../context/token/authorization-code.token-context';
 import { AuthorizationCode } from '../../entities/authorization-code.entity';
 import { Client } from '../../entities/client.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';

@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import { Display } from '../../displays/display.type';
 import { ResponseMode } from '../../response-modes/response-mode.type';
 import { ResponseType } from '../../response-types/response-type.type';
@@ -5,7 +7,7 @@ import { ResponseType } from '../../response-types/response-type.type';
 /**
  * Parameters of the OAuth 2.0 Authorization Request.
  */
-export interface AuthorizationRequest extends Record<string, any> {
+export interface AuthorizationRequest extends Dictionary<unknown> {
   /**
    * Response Type requested by the Client.
    */

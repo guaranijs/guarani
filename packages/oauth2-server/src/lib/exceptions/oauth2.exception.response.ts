@@ -1,13 +1,13 @@
-import { ErrorCode } from './error-code.type';
+import { Dictionary } from '@guarani/types';
 
 /**
  * Interface of the Body of the OAuth 2.0 Error Response.
  */
-export interface OAuth2ExceptionResponse extends Record<string, any> {
+export interface OAuth2ExceptionResponse extends Dictionary<unknown> {
   /**
    * Error Code of the OAuth 2.0 Exception.
    */
-  readonly error: ErrorCode;
+  readonly error: string;
 
   /**
    * Description of the OAuth 2.0 Exception.

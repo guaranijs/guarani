@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
@@ -21,10 +23,10 @@ export interface RevocationContext {
   /**
    * Instance of the Token provided by the Client.
    */
-  readonly token: AccessToken | RefreshToken | null;
+  readonly token: Nullable<AccessToken | RefreshToken>;
 
   /**
    * Type of the Token provided by the Client.
    */
-  readonly tokenType: TokenTypeHint | null;
+  readonly tokenType: Nullable<TokenTypeHint>;
 }

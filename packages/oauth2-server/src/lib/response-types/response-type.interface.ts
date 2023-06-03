@@ -1,4 +1,4 @@
-import { AuthorizationContext } from '../context/authorization/authorization.context';
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';

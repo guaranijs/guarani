@@ -3,8 +3,8 @@ import { removeNullishValues } from '@guarani/primitives';
 
 import { URL, URLSearchParams } from 'url';
 
-import { CreateContextInteractionContext } from '../context/interaction/create-context.interaction.context';
-import { CreateDecisionInteractionContext } from '../context/interaction/create-decision.interaction.context';
+import { CreateContextInteractionContext } from '../context/interaction/create-context.interaction-context';
+import { CreateDecisionInteractionContext } from '../context/interaction/create-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';

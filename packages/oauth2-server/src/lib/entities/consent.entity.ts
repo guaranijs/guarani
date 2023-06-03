@@ -1,10 +1,12 @@
+import { Nullable } from '@guarani/types';
+
 import { Client } from './client.entity';
 import { User } from './user.entity';
 
 /**
  * OAuth 2.0 Consent Entity.
  */
-export interface Consent extends Record<string, any> {
+export interface Consent {
   /**
    * Identifier of the Consent.
    */
@@ -25,7 +27,7 @@ export interface Consent extends Record<string, any> {
    *
    * *note: a **null** or **undefined** value indicates that the consent does not expire.*
    */
-  readonly expiresAt?: Date | null;
+  readonly expiresAt: Nullable<Date>;
 
   /**
    * Client authorized by the Authenticated End User.

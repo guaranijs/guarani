@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { ClientCredentialsTokenContext } from '../context/token/client-credentials.token.context';
+import { ClientCredentialsTokenContext } from '../context/token/client-credentials.token-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { TokenResponse } from '../responses/token-response';

@@ -1,4 +1,5 @@
 import { removeNullishValues } from '@guarani/primitives';
+import { Nullable } from '@guarani/types';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
@@ -11,7 +12,7 @@ import { TokenResponse } from '../responses/token-response';
  * @param refreshToken Refresh Token issued to the Client.
  * @returns Formatted Token Response.
  */
-export function createTokenResponse(accessToken: AccessToken, refreshToken?: RefreshToken): TokenResponse {
+export function createTokenResponse(accessToken: AccessToken, refreshToken: Nullable<RefreshToken>): TokenResponse {
   return removeNullishValues<TokenResponse>({
     access_token: accessToken.handle,
     token_type: 'Bearer',

@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { User } from '../entities/user.entity';
@@ -25,7 +27,7 @@ export interface ConsentServiceInterface {
    * @param user Authenticated End User.
    * @returns Consent based on the provided Client's and User's Identifiers.
    */
-  findOne(client: Client, user: User): Promise<Consent | null>;
+  findOne(client: Client, user: User): Promise<Nullable<Consent>>;
 
   /**
    * Persists the provided Consent into the application's storage.

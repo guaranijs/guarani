@@ -1,7 +1,9 @@
+import { Dictionary } from '@guarani/types';
+
 /**
  * Parameters of the OAuth 2.0 Put Client Registration Request Query Parameters.
  */
-export interface PutQueryRegistrationRequest extends Record<string, any> {
+export interface PutQueryRegistrationRequest extends Dictionary<unknown> {
   /**
    * Identifier of the Client.
    */

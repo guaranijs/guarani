@@ -1,4 +1,4 @@
-import { ErrorCode } from './error-code.type';
+import { ErrorCode } from './error-code.enum';
 import { OAuth2Exception } from './oauth2.exception';
 
 /**
@@ -8,5 +8,5 @@ export class UnsupportedResponseTypeException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public override readonly code: ErrorCode = 'unsupported_response_type';
+  public readonly code = ErrorCode.UnsupportedResponseType;
 }

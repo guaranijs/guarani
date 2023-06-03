@@ -2,7 +2,7 @@ import { Injectable, InjectAll } from '@guarani/di';
 
 import { OutgoingHttpHeaders } from 'http';
 
-import { TokenContext } from '../context/token/token.context';
+import { TokenContext } from '../context/token/token-context';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';

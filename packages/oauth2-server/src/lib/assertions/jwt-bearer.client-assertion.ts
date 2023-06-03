@@ -62,7 +62,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
-    const parameters = <ClientAssertionParameters>request.body;
+    const parameters = request.body as ClientAssertionParameters;
 
     return (
       parameters.client_assertion_type === this.clientAssertionType && typeof parameters.client_assertion === 'string'
@@ -76,7 +76,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @returns Authenticated Client.
    */
   public async authenticate(request: HttpRequest): Promise<Client> {
-    const { client_assertion: clientAssertion } = <ClientAssertionParameters>request.body;
+    const { client_assertion: clientAssertion } = request.body as ClientAssertionParameters;
 
     try {
       const [header, claims] = await this.getClientAssertionComponents(clientAssertion, request);
@@ -113,10 +113,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
         throw exc;
       }
 
-      const exception = new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' });
-      exception.cause = exc;
-
-      throw exception;
+      throw new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' }, { cause: exc });
     }
   }
 

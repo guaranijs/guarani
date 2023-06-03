@@ -12,12 +12,12 @@ describe('OAuth 2.0 Exception', () => {
   });
 
   it('should instantiate a new oauth 2.0 exception.', () => {
-    expect(Reflect.construct(OAuth2Exception, [parameters])).toBeDefined();
+    expect(Reflect.construct(OAuth2Exception, [parameters])).toBeInstanceOf(OAuth2Exception);
   });
 
   it('should set the "error_description" parameter as the error\'s "message".', () => {
     const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
-    expect(exception.message).toBe('Sample description.');
+    expect(exception.message).toEqual('Sample description.');
   });
 
   it('should set the constructor\'s "parameters" as the exception\'s "parameters" attribute.', () => {
@@ -27,7 +27,7 @@ describe('OAuth 2.0 Exception', () => {
 
   it('should have 400 as the default http status code.', () => {
     const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
-    expect(exception.statusCode).toBe(400);
+    expect(exception.statusCode).toEqual(400);
   });
 
   it('should have an empty object as the default http headers.', () => {
@@ -53,6 +53,7 @@ describe('OAuth 2.0 Exception', () => {
     const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
 
     expect(() => exception.setParameter('iss', 'https://server.example.com')).not.toThrow();
+
     expect(exception['parameters']).toStrictEqual<OAuth2ExceptionParameters>({
       description: 'Sample description.',
       iss: 'https://server.example.com',
@@ -63,6 +64,7 @@ describe('OAuth 2.0 Exception', () => {
     const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
 
     expect(() => exception.setParameters({ iss: 'https://server.example.com', state: 'client_state' })).not.toThrow();
+
     expect(exception['parameters']).toStrictEqual<OAuth2ExceptionParameters>({
       description: 'Sample description.',
       state: 'client_state',

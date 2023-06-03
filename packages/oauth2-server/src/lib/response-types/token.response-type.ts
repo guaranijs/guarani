@@ -11,7 +11,7 @@ import { createTokenResponse } from '../utils/create-token-response';
 import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
 import { Login } from '../entities/login.entity';
-import { AuthorizationContext } from '../context/authorization/authorization.context';
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 
 /**
  * Implementation of the **Token** Response Type.

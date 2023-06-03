@@ -2,10 +2,10 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { URLSearchParams } from 'url';
 
-import { LoginContextInteractionContext } from '../context/interaction/login-context.interaction.context';
-import { LoginDecisionAcceptInteractionContext } from '../context/interaction/login-decision-accept.interaction.context';
-import { LoginDecisionDenyInteractionContext } from '../context/interaction/login-decision-deny.interaction.context';
-import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction.context';
+import { LoginContextInteractionContext } from '../context/interaction/login-context.interaction-context';
+import { LoginDecisionAcceptInteractionContext } from '../context/interaction/login-decision-accept.interaction-context';
+import { LoginDecisionDenyInteractionContext } from '../context/interaction/login-decision-deny.interaction-context';
+import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';

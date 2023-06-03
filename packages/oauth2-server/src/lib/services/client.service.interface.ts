@@ -1,5 +1,7 @@
-import { PostRegistrationContext } from '../context/registration/post.registration.context';
-import { PutRegistrationContext } from '../context/registration/put.registration.context';
+import { Nullable } from '@guarani/types';
+
+import { PostRegistrationContext } from '../context/registration/post.registration-context';
+import { PutRegistrationContext } from '../context/registration/put.registration-context';
 import { Client } from '../entities/client.entity';
 
 /**
@@ -24,7 +26,7 @@ export interface ClientServiceInterface {
    * @param id Identifier of the Client.
    * @returns Client based on the provided Identifier.
    */
-  findOne(id: string): Promise<Client | null>;
+  findOne(id: string): Promise<Nullable<Client>>;
 
   /**
    * Removes the provided Client from the Authorization Server.

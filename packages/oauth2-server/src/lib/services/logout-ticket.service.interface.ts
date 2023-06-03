@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { Client } from '../entities/client.entity';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { Session } from '../entities/session.entity';
@@ -25,7 +27,7 @@ export interface LogoutTicketServiceInterface {
    * @param id Identifier of the Logout Ticket.
    * @returns Logout Ticket based on the provided Identifier.
    */
-  findOne(id: string): Promise<LogoutTicket | null>;
+  findOne(id: string): Promise<Nullable<LogoutTicket>>;
 
   /**
    * Searches the application's storage for a Logout Ticket containing the provided Logout Challenge.
@@ -33,7 +35,7 @@ export interface LogoutTicketServiceInterface {
    * @param logoutChallenge Logout Challenge of the Logout Ticket.
    * @returns Logout Ticket based on the provided Logout Challenge.
    */
-  findOneByLogoutChallenge(logoutChallenge: string): Promise<LogoutTicket | null>;
+  findOneByLogoutChallenge(logoutChallenge: string): Promise<Nullable<LogoutTicket>>;
 
   /**
    * Persists the provided Logout Ticket into the application's storage.

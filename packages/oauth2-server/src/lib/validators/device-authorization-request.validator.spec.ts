@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { DeviceAuthorizationContext } from '../context/device-authorization.context';
+import { DeviceAuthorizationContext } from '../context/device-authorization-context';
 import { Client } from '../entities/client.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';

@@ -1,6 +1,6 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { ResourceOwnerPasswordCredentialsTokenContext } from '../../context/token/resource-owner-password-credentials.token.context';
+import { ResourceOwnerPasswordCredentialsTokenContext } from '../../context/token/resource-owner-password-credentials.token-context';
 import { Client } from '../../entities/client.entity';
 import { User } from '../../entities/user.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';

@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { Session } from '../entities/session.entity';
 
 /**
@@ -19,7 +21,7 @@ export interface SessionServiceInterface {
    * @param id Identifier of the Session Entity.
    * @returns Session Entity based on the provided Identifier.
    */
-  findOne(id: string): Promise<Session | null>;
+  findOne(id: string): Promise<Nullable<Session>>;
 
   /**
    * Persists the provided Session Entity into the application's storage.

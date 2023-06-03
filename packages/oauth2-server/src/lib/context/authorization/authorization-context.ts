@@ -1,3 +1,5 @@
+import { Dictionary, Nullable } from '@guarani/types';
+
 import { URL } from 'url';
 
 import { DisplayInterface } from '../../displays/display.interface';
@@ -19,7 +21,7 @@ export interface AuthorizationContext<T extends AuthorizationRequest> {
   /**
    * Cookies of the Http Request.
    */
-  readonly cookies: Record<string, any>;
+  readonly cookies: Dictionary<unknown>;
 
   /**
    * Response Type requested by the Client.
@@ -44,7 +46,7 @@ export interface AuthorizationContext<T extends AuthorizationRequest> {
   /**
    * State of the Client prior to the Authorization Request.
    */
-  readonly state?: string;
+  readonly state: Nullable<string>;
 
   /**
    * Response Mode used to generate the Authorization Response.
@@ -55,7 +57,7 @@ export interface AuthorizationContext<T extends AuthorizationRequest> {
    * Nonce provided by the Client to associate itself to a login and to prevent Replay Attacks.
    * This value is passed unmodified from the Authorization Request to the ID Token.
    */
-  readonly nonce?: string;
+  readonly nonce: Nullable<string>;
 
   /**
    * Prompts requested by the Client.
@@ -71,17 +73,17 @@ export interface AuthorizationContext<T extends AuthorizationRequest> {
    * Number of seconds since the User's last active authentication in which the Authorization Server
    * **MUST** actively try to re-authenticate the User.
    */
-  readonly maxAge?: number;
+  readonly maxAge: Nullable<number>;
 
   /**
    * Hint about the Identifier that the User might use for authentication.
    */
-  readonly loginHint?: string;
+  readonly loginHint: Nullable<string>;
 
   /**
    * ID Token used as a hint about the User that the Client expects to be authenticated.
    */
-  readonly idTokenHint?: string;
+  readonly idTokenHint: Nullable<string>;
 
   /**
    * End-User's preferred languages and scripts for the User Interface.

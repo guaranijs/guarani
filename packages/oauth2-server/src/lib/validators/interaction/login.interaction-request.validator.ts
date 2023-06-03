@@ -1,9 +1,9 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { LoginContextInteractionContext } from '../../context/interaction/login-context.interaction.context';
-import { LoginDecisionAcceptInteractionContext } from '../../context/interaction/login-decision-accept.interaction.context';
-import { LoginDecisionDenyInteractionContext } from '../../context/interaction/login-decision-deny.interaction.context';
-import { LoginDecisionInteractionContext } from '../../context/interaction/login-decision.interaction.context';
+import { LoginContextInteractionContext } from '../../context/interaction/login-context.interaction-context';
+import { LoginDecisionAcceptInteractionContext } from '../../context/interaction/login-decision-accept.interaction-context';
+import { LoginDecisionDenyInteractionContext } from '../../context/interaction/login-decision-deny.interaction-context';
+import { LoginDecisionInteractionContext } from '../../context/interaction/login-decision.interaction-context';
 import { Client } from '../../entities/client.entity';
 import { Grant } from '../../entities/grant.entity';
 import { User } from '../../entities/user.entity';
@@ -27,6 +27,7 @@ import { Settings } from '../../settings/settings';
 import { SETTINGS } from '../../settings/settings.token';
 import { retrieveSubjectIdentifier } from '../../utils/retrieve-subject-identifier';
 import { InteractionRequestValidator } from './interaction-request.validator';
+import { Nullable } from '@guarani/types';
 
 /**
  * Implementation of the Login Interaction Request Validator.
@@ -67,7 +68,7 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<LoginContextInteractionContext> {
-    const parameters = <LoginContextInteractionRequest>request.query;
+    const parameters = request.query as LoginContextInteractionRequest;
 
     const context = await super.validateContext(request);
 
@@ -85,7 +86,7 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
   public override async validateDecision(
     request: HttpRequest
   ): Promise<LoginDecisionInteractionContext<LoginDecision>> {
-    const parameters = <LoginDecisionInteractionRequest<LoginDecision>>request.body;
+    const parameters = request.body as LoginDecisionInteractionRequest<LoginDecision>;
 
     const context = await super.validateDecision(request);
 
@@ -178,7 +179,7 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns Authentication Methods provided by the Client.
    */
   private getAuthenticationMethods(parameters: LoginDecisionAcceptInteractionRequest): string[] {
-    if (parameters.amr !== undefined && typeof parameters.amr !== 'string') {
+    if (typeof parameters.amr !== 'undefined' && typeof parameters.amr !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "amr".' });
     }
 
@@ -191,12 +192,12 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param parameters Parameters of the Interaction Request.
    * @returns Authentication Context Class provided by the Client.
    */
-  private getAuthenticationContextClass(parameters: LoginDecisionAcceptInteractionRequest): string | undefined {
-    if (parameters.acr !== undefined && typeof parameters.acr !== 'string') {
+  private getAuthenticationContextClass(parameters: LoginDecisionAcceptInteractionRequest): Nullable<string> {
+    if (typeof parameters.acr !== 'undefined' && typeof parameters.acr !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "acr".' });
     }
 
-    return parameters.acr;
+    return parameters.acr ?? null;
   }
 
   /**

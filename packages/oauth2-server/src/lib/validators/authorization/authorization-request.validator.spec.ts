@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import { URL } from 'url';
 
-import { AuthorizationContext } from '../../context/authorization/authorization.context';
+import { AuthorizationContext } from '../../context/authorization/authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
 import { Client } from '../../entities/client.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
@@ -20,14 +20,44 @@ import { AuthorizationRequestValidator } from './authorization-request.validator
 
 jest.mock('../../handlers/scope.handler');
 
-const invalidStates: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidClientIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidRedirectUris: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidScopes: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidResponseModes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidNonces: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidPrompts: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidDisplays: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidStates: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+
+const invalidClientIds: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidRedirectUris: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidScopes: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidResponseModes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidNonces: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidPrompts: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidDisplays: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+
 const invalidMaxAges: any[] = [
   null,
   true,
@@ -36,6 +66,7 @@ const invalidMaxAges: any[] = [
   1n,
   Symbol('a'),
   Buffer,
+  Buffer.alloc(1),
   () => 1,
   {},
   [],
@@ -47,15 +78,16 @@ const invalidMaxAges: any[] = [
   '-0x12',
   '-07',
 ];
-const invalidLoginHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidIdTokenHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidUiLocales: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidAcrValues: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+
+const invalidLoginHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidIdTokenHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidUiLocales: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidAcrValues: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
 
 describe('Authorization Request Validator', () => {
   let validator: AuthorizationRequestValidator<AuthorizationRequest, AuthorizationContext<AuthorizationRequest>>;
 
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   const settings = <Settings>{ uiLocales: ['en', 'pt-BR'], acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'] };
 

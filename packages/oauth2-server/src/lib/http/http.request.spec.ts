@@ -8,9 +8,9 @@ const invalidHttpMethods: any[] = [
   1,
   1.2,
   1n,
+  Symbol('a'),
   Buffer,
   Buffer.alloc(1),
-  Symbol('a'),
   () => 1,
   {},
   [],
@@ -47,8 +47,6 @@ describe('Http Request', () => {
   });
 
   it('should return a valid http delete request.', () => {
-    let httpRequest!: HttpRequest;
-
     const parameters: HttpRequestParameters = {
       method: 'DELETE',
       path: '/p/a/t/h',
@@ -58,14 +56,12 @@ describe('Http Request', () => {
       body: {},
     };
 
-    expect(() => (httpRequest = new HttpRequest(parameters))).not.toThrow();
+    const httpRequest = new HttpRequest(parameters);
 
     expect(httpRequest).toMatchObject(parameters);
   });
 
   it('should return a valid http get request.', () => {
-    let httpRequest!: HttpRequest;
-
     const parameters: HttpRequestParameters = {
       method: 'GET',
       path: '/p/a/t/h',
@@ -75,14 +71,12 @@ describe('Http Request', () => {
       body: {},
     };
 
-    expect(() => (httpRequest = new HttpRequest(parameters))).not.toThrow();
+    const httpRequest = new HttpRequest(parameters);
 
     expect(httpRequest).toMatchObject(parameters);
   });
 
   it('should return a valid http post request.', () => {
-    let httpRequest!: HttpRequest;
-
     const parameters: HttpRequestParameters = {
       method: 'POST',
       path: '/p/a/t/h',
@@ -92,14 +86,12 @@ describe('Http Request', () => {
       body: { foo: 'foo', bar: 'bar' },
     };
 
-    expect(() => (httpRequest = new HttpRequest(parameters))).not.toThrow();
+    const httpRequest = new HttpRequest(parameters);
 
     expect(httpRequest).toMatchObject(parameters);
   });
 
   it('should return a valid http put request.', () => {
-    let httpRequest!: HttpRequest;
-
     const parameters: HttpRequestParameters = {
       method: 'PUT',
       path: '/p/a/t/h',
@@ -109,7 +101,7 @@ describe('Http Request', () => {
       body: { foo: 'foo', bar: 'bar' },
     };
 
-    expect(() => (httpRequest = new HttpRequest(parameters))).not.toThrow();
+    const httpRequest = new HttpRequest(parameters);
 
     expect(httpRequest).toMatchObject(parameters);
   });

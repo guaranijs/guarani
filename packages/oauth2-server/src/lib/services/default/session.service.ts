@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomUUID } from 'crypto';
 
@@ -14,12 +15,18 @@ export class SessionService implements SessionServiceInterface {
   }
 
   public async create(): Promise<Session> {
-    const session: Session = { id: randomUUID(), logins: [] };
+    const session: Session = {
+      id: randomUUID(),
+      activeLogin: null,
+      logins: [],
+    };
+
     this.sessions.push(session);
+
     return session;
   }
 
-  public async findOne(id: string): Promise<Session | null> {
+  public async findOne(id: string): Promise<Nullable<Session>> {
     return this.sessions.find((session) => session.id === id) ?? null;
   }
 

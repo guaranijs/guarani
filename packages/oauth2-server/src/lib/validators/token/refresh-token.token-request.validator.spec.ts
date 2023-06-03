@@ -2,7 +2,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 
-import { RefreshTokenTokenContext } from '../../context/token/refresh-token.token.context';
+import { RefreshTokenTokenContext } from '../../context/token/refresh-token.token-context';
 import { Client } from '../../entities/client.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';

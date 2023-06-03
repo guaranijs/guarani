@@ -1,6 +1,6 @@
 import { Grant } from '../../entities/grant.entity';
 import { ConsentContextInteractionRequest } from '../../requests/interaction/consent-context.interaction-request';
-import { InteractionContext } from './interaction.context';
+import { InteractionContext } from './interaction-context';
 
 /**
  * Parameters of the Consent Context Interaction Context.

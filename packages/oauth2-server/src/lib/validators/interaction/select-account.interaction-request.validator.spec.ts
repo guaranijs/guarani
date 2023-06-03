@@ -2,8 +2,8 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 
-import { SelectAccountContextInteractionContext } from '../../context/interaction/select-account-context.interaction.context';
-import { SelectAccountDecisionInteractionContext } from '../../context/interaction/select-account-decision.interaction.context';
+import { SelectAccountContextInteractionContext } from '../../context/interaction/select-account-context.interaction-context';
+import { SelectAccountDecisionInteractionContext } from '../../context/interaction/select-account-decision.interaction-context';
 import { Grant } from '../../entities/grant.entity';
 import { Login } from '../../entities/login.entity';
 import { Session } from '../../entities/session.entity';
@@ -23,9 +23,50 @@ import { SessionServiceInterface } from '../../services/session.service.interfac
 import { SESSION_SERVICE } from '../../services/session.service.token';
 import { SelectAccountInteractionRequestValidator } from './select-account.interaction-request.validator';
 
-const invalidSessionIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidLoginChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidLoginIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidSessionIds: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidLoginChallenges: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidLoginIds: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
 
 describe('Select Account Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -161,7 +202,7 @@ describe('Select Account Interaction Request Validator', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<SelectAccountContextInteractionContext>({
-        parameters: <SelectAccountContextInteractionRequest>request.query,
+        parameters: request.query as SelectAccountContextInteractionRequest,
         interactionType: interactionTypesMocks[2]!,
         grant,
         session,
@@ -234,7 +275,7 @@ describe('Select Account Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<SelectAccountDecisionInteractionContext>(
         {
-          parameters: <SelectAccountDecisionInteractionRequest>request.body,
+          parameters: request.body as SelectAccountDecisionInteractionRequest,
           interactionType: interactionTypesMocks[2]!,
           grant,
           login,

@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomUUID } from 'crypto';
 
@@ -15,17 +16,13 @@ export class LoginService implements LoginServiceInterface {
     console.warn('Using default Login Service. This is only recommended for development.');
   }
 
-  public async create(
-    user: User,
-    session: Session,
-    amr: string[] | undefined,
-    acr: string | undefined
-  ): Promise<Login> {
+  public async create(user: User, session: Session, amr: Nullable<string[]>, acr: Nullable<string>): Promise<Login> {
     const login: Login = {
       id: randomUUID(),
       amr,
       acr,
       createdAt: new Date(),
+      expiresAt: null,
       user,
       session,
     };
@@ -35,7 +32,7 @@ export class LoginService implements LoginServiceInterface {
     return login;
   }
 
-  public async findOne(id: string): Promise<Login | null> {
+  public async findOne(id: string): Promise<Nullable<Login>> {
     return this.logins.find((login) => login.id === id) ?? null;
   }
 

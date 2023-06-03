@@ -2,7 +2,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 
-import { DeviceCodeTokenContext } from '../../context/token/device-code.token.context';
+import { DeviceCodeTokenContext } from '../../context/token/device-code.token-context';
 import { Client } from '../../entities/client.entity';
 import { DeviceCode } from '../../entities/device-code.entity';
 import { InvalidGrantException } from '../../exceptions/invalid-grant.exception';

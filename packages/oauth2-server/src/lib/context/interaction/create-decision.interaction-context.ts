@@ -1,6 +1,6 @@
 import { Grant } from '../../entities/grant.entity';
 import { CreateDecisionInteractionRequest } from '../../requests/interaction/create-decision.interaction-request';
-import { InteractionContext } from './interaction.context';
+import { InteractionContext } from './interaction-context';
 
 /**
  * Parameters of the Create Decision Interaction Context.

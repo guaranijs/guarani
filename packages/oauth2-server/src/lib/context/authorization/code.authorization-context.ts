@@ -1,6 +1,6 @@
 import { PkceInterface } from '../../pkces/pkce.interface';
 import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
-import { AuthorizationContext } from './authorization.context';
+import { AuthorizationContext } from './authorization-context';
 
 /**
  * Parameters of the Code Authorization Context.

@@ -1,6 +1,5 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { AuthorizationContext } from '../../context/authorization/authorization.context';
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
@@ -21,10 +20,7 @@ import { AuthorizationRequestValidator } from './authorization-request.validator
  * Implementation of the **ID Token & Token** Authorization Request Validator.
  */
 @Injectable()
-export class IdTokenTokenAuthorizationRequestValidator extends AuthorizationRequestValidator<
-  AuthorizationRequest,
-  AuthorizationContext<AuthorizationRequest>
-> {
+export class IdTokenTokenAuthorizationRequestValidator extends AuthorizationRequestValidator {
   /**
    * Name of the Response Type that uses this Validator.
    */

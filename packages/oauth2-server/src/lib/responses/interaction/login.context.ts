@@ -4,7 +4,7 @@ import { Prompt } from '../../types/prompt.type';
 /**
  * Parameters of the Login Context.
  */
-export interface LoginContext extends Record<string, any> {
+export interface LoginContext {
   /**
    * Prompts requested by the Client.
    */

@@ -1,6 +1,6 @@
 import { Constructor } from '@guarani/di';
 
-import { TokenContext } from '../../context/token/token.context';
+import { TokenContext } from '../../context/token/token-context';
 import { GrantType } from '../../grant-types/grant-type.type';
 import { TokenRequest } from '../../requests/token/token-request';
 import { AuthorizationCodeTokenRequestValidator } from './authorization-code.token-request.validator';

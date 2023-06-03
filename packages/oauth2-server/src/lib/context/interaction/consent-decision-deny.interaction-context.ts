@@ -1,5 +1,5 @@
 import { OAuth2Exception } from '../../exceptions/oauth2.exception';
-import { ConsentDecisionInteractionContext } from './consent-decision.interaction.context';
+import { ConsentDecisionInteractionContext } from './consent-decision.interaction-context';
 
 /**
  * Parameters of the Consent Decision Deny Interaction Context.

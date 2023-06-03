@@ -2,7 +2,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { URL } from 'url';
 
-import { AuthorizationCodeTokenContext } from '../context/token/authorization-code.token.context';
+import { AuthorizationCodeTokenContext } from '../context/token/authorization-code.token-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';

@@ -11,7 +11,7 @@ import {
 
 import { Buffer } from 'buffer';
 
-import { JwtBearerTokenContext } from '../../context/token/jwt-bearer.token.context';
+import { JwtBearerTokenContext } from '../../context/token/jwt-bearer.token-context';
 import { Client } from '../../entities/client.entity';
 import { User } from '../../entities/user.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';

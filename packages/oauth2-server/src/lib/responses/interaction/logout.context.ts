@@ -1,7 +1,7 @@
 /**
  * Parameters of the Login Context.
  */
-export interface LogoutContext extends Record<string, any> {
+export interface LogoutContext {
   /**
    * Hint about the Identifier that the User might use for logout.
    */

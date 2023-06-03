@@ -1,6 +1,6 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { DeviceCodeTokenContext } from '../../context/token/device-code.token.context';
+import { DeviceCodeTokenContext } from '../../context/token/device-code.token-context';
 import { DeviceCode } from '../../entities/device-code.entity';
 import { InvalidGrantException } from '../../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';

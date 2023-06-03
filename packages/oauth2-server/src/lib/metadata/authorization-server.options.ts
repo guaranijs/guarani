@@ -1,10 +1,10 @@
-import { Constructor } from '@guarani/di';
 import {
   JsonWebEncryptionContentEncryptionAlgorithm,
   JsonWebEncryptionKeyWrapAlgorithm,
   JsonWebKeySetParameters,
   JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
+import { ConstructorOrInstance } from '@guarani/types';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { GrantType } from '../grant-types/grant-type.type';
@@ -185,57 +185,55 @@ export interface AuthorizationServerOptions {
   /**
    * Access Token Service.
    */
-  readonly accessTokenService?: AccessTokenServiceInterface | Constructor<AccessTokenServiceInterface>;
+  readonly accessTokenService?: ConstructorOrInstance<AccessTokenServiceInterface>;
 
   /**
    * Authorization Code Service.
    */
-  readonly authorizationCodeService?:
-    | AuthorizationCodeServiceInterface
-    | Constructor<AuthorizationCodeServiceInterface>;
+  readonly authorizationCodeService?: ConstructorOrInstance<AuthorizationCodeServiceInterface>;
 
   /**
    * Client Service.
    */
-  readonly clientService?: ClientServiceInterface | Constructor<ClientServiceInterface>;
+  readonly clientService?: ConstructorOrInstance<ClientServiceInterface>;
 
   /**
    * Consent Service.
    */
-  readonly consentService?: ConsentServiceInterface | Constructor<ConsentServiceInterface>;
+  readonly consentService?: ConstructorOrInstance<ConsentServiceInterface>;
 
   /**
    * Device Code Service.
    */
-  readonly deviceCodeService?: DeviceCodeServiceInterface | Constructor<DeviceCodeServiceInterface>;
+  readonly deviceCodeService?: ConstructorOrInstance<DeviceCodeServiceInterface>;
 
   /**
    * Session Service.
    */
-  readonly sessionService?: SessionServiceInterface | Constructor<SessionServiceInterface>;
+  readonly sessionService?: ConstructorOrInstance<SessionServiceInterface>;
 
   /**
    * Grant Service.
    */
-  readonly grantService?: GrantServiceInterface | Constructor<GrantServiceInterface>;
+  readonly grantService?: ConstructorOrInstance<GrantServiceInterface>;
 
   /**
    * Login Service.
    */
-  readonly loginService?: LoginServiceInterface | Constructor<LoginServiceInterface>;
+  readonly loginService?: ConstructorOrInstance<LoginServiceInterface>;
 
   /**
    * Logout Service.
    */
-  readonly logoutTicketService?: LogoutTicketServiceInterface | Constructor<LogoutTicketServiceInterface>;
+  readonly logoutTicketService?: ConstructorOrInstance<LogoutTicketServiceInterface>;
 
   /**
    * Refresh Token Service.
    */
-  readonly refreshTokenService?: RefreshTokenServiceInterface | Constructor<RefreshTokenServiceInterface>;
+  readonly refreshTokenService?: ConstructorOrInstance<RefreshTokenServiceInterface>;
 
   /**
    * User Service.
    */
-  readonly userService?: UserServiceInterface | Constructor<UserServiceInterface>;
+  readonly userService?: ConstructorOrInstance<UserServiceInterface>;
 }

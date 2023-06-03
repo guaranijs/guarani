@@ -4,7 +4,7 @@ import { Prompt } from '../../types/prompt.type';
 /**
  * Parameters of the Select Account Context.
  */
-export interface SelectAccountContext extends Record<string, any> {
+export interface SelectAccountContext {
   /**
    * Prompts requested by the Client.
    */

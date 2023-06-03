@@ -2,8 +2,8 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 
-import { CreateContextInteractionContext } from '../../context/interaction/create-context.interaction.context';
-import { CreateDecisionInteractionContext } from '../../context/interaction/create-decision.interaction.context';
+import { CreateContextInteractionContext } from '../../context/interaction/create-context.interaction-context';
+import { CreateDecisionInteractionContext } from '../../context/interaction/create-decision.interaction-context';
 import { Grant } from '../../entities/grant.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
@@ -17,7 +17,20 @@ import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { CreateInteractionRequestValidator } from './create.interaction-request.validator';
 
-const invalidLoginChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidLoginChallenges: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
 
 describe('Create Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -110,7 +123,7 @@ describe('Create Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<CreateContextInteractionContext>({
-        parameters: <CreateContextInteractionRequest>request.query,
+        parameters: request.query as CreateContextInteractionRequest,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });
@@ -159,7 +172,7 @@ describe('Create Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<CreateDecisionInteractionContext>({
-        parameters: <CreateDecisionInteractionRequest>request.body,
+        parameters: request.body as CreateDecisionInteractionRequest,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });

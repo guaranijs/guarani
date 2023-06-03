@@ -6,10 +6,10 @@ import { Buffer } from 'buffer';
 import { URL } from 'url';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
-import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
-import { GetRegistrationContext } from '../context/registration/get.registration.context';
-import { PostRegistrationContext } from '../context/registration/post.registration.context';
-import { PutRegistrationContext } from '../context/registration/put.registration.context';
+import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';
+import { GetRegistrationContext } from '../context/registration/get.registration-context';
+import { PostRegistrationContext } from '../context/registration/post.registration-context';
+import { PutRegistrationContext } from '../context/registration/put.registration-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
 import { InvalidClientMetadataException } from '../exceptions/invalid-client-metadata.exception';

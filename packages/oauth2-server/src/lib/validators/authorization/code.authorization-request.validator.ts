@@ -1,6 +1,6 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { CodeAuthorizationContext } from '../../context/authorization/code.authorization.context';
+import { CodeAuthorizationContext } from '../../context/authorization/code.authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
@@ -63,7 +63,7 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
    * @returns Authorization Context.
    */
   public override async validate(request: HttpRequest): Promise<CodeAuthorizationContext> {
-    const parameters = <CodeAuthorizationRequest>request.query;
+    const parameters = request.query as CodeAuthorizationRequest;
 
     const authorizationRequest = await super.validate(request);
 
@@ -97,7 +97,10 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
    * @returns PKCE Method requested by the Client.
    */
   protected getCodeChallengeMethod(parameters: CodeAuthorizationRequest): PkceInterface {
-    if (parameters.code_challenge_method !== undefined && typeof parameters.code_challenge_method !== 'string') {
+    if (
+      typeof parameters.code_challenge_method !== 'undefined' &&
+      typeof parameters.code_challenge_method !== 'string'
+    ) {
       throw new InvalidRequestException({
         description: 'Invalid parameter "code_challenge_method".',
         state: parameters.state,
@@ -107,7 +110,7 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
     const codeChallengeMethodName = parameters.code_challenge_method ?? 'S256';
     const codeChallengeMethod = this.pkces.find((pkceMethod) => pkceMethod.name === codeChallengeMethodName);
 
-    if (codeChallengeMethod === undefined) {
+    if (typeof codeChallengeMethod === 'undefined') {
       throw new InvalidRequestException({
         description: `Unsupported code_challenge_method "${codeChallengeMethodName}".`,
         state: parameters.state,

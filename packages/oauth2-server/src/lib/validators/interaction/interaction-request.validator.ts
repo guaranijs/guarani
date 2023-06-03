@@ -1,4 +1,4 @@
-import { InteractionContext } from '../../context/interaction/interaction.context';
+import { InteractionContext } from '../../context/interaction/interaction-context';
 import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
@@ -32,7 +32,7 @@ export abstract class InteractionRequestValidator<
    * @returns Context Interaction Context.
    */
   public async validateContext(request: HttpRequest): Promise<TContextContext> {
-    const parameters = <TContextRequest>request.query;
+    const parameters = request.query as TContextRequest;
 
     const interactionType = this.getInteractionType(parameters);
 
@@ -46,7 +46,7 @@ export abstract class InteractionRequestValidator<
    * @returns Decision Interaction Context.
    */
   public async validateDecision(request: HttpRequest): Promise<TDecisionContext> {
-    const parameters = <TDecisionRequest>request.body;
+    const parameters = request.body as TDecisionRequest;
 
     const interactionType = this.getInteractionType(parameters);
 

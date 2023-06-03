@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomBytes, randomUUID } from 'crypto';
 
@@ -32,11 +33,11 @@ export class LogoutTicketService implements LogoutTicketServiceInterface {
     return logoutTicket;
   }
 
-  public async findOne(id: string): Promise<LogoutTicket | null> {
+  public async findOne(id: string): Promise<Nullable<LogoutTicket>> {
     return this.logoutTickets.find((logoutTicket) => logoutTicket.id === id) ?? null;
   }
 
-  public async findOneByLogoutChallenge(logoutChallenge: string): Promise<LogoutTicket | null> {
+  public async findOneByLogoutChallenge(logoutChallenge: string): Promise<Nullable<LogoutTicket>> {
     return this.logoutTickets.find((logoutTicket) => logoutTicket.logoutChallenge === logoutChallenge) ?? null;
   }
 

@@ -2,7 +2,7 @@ import { URL } from 'url';
 
 import { AuthorizationCode } from '../../entities/authorization-code.entity';
 import { AuthorizationCodeTokenRequest } from '../../requests/token/authorization-code.token-request';
-import { TokenContext } from './token.context';
+import { TokenContext } from './token-context';
 
 /**
  * Parameters of the **Authorization Code** Token Context.

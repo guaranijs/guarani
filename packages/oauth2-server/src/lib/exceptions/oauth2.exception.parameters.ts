@@ -1,7 +1,9 @@
+import { Dictionary } from '@guarani/types';
+
 /**
  * Parameters of the OAuth 2.0 Exception.
  */
-export interface OAuth2ExceptionParameters {
+export interface OAuth2ExceptionParameters extends Dictionary<unknown> {
   /**
    * Description of the OAuth 2.0 Exception.
    */

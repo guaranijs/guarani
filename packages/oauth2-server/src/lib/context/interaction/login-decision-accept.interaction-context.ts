@@ -1,5 +1,7 @@
+import { Nullable } from '@guarani/types';
+
 import { User } from '../../entities/user.entity';
-import { LoginDecisionInteractionContext } from './login-decision.interaction.context';
+import { LoginDecisionInteractionContext } from './login-decision.interaction-context';
 
 /**
  * Parameters of the Login Decision Accept Interaction Context.
@@ -18,5 +20,5 @@ export interface LoginDecisionAcceptInteractionContext extends LoginDecisionInte
   /**
    * Authentication Context Class Reference satisfied by the Authentication process.
    */
-  readonly acr?: string;
+  readonly acr: Nullable<string>;
 }

@@ -1,6 +1,6 @@
 import { Inject, Injectable, Optional } from '@guarani/di';
 
-import { ResourceOwnerPasswordCredentialsTokenContext } from '../context/token/resource-owner-password-credentials.token.context';
+import { ResourceOwnerPasswordCredentialsTokenContext } from '../context/token/resource-owner-password-credentials.token-context';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';

@@ -26,7 +26,7 @@ describe('Code & Token Authorization Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: CodeTokenAuthorizationRequestValidator;
 
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   const settings = <Settings>{ uiLocales: ['en', 'pt-BR'], acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'] };
 

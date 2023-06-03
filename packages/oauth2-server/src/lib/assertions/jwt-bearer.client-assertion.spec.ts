@@ -17,6 +17,7 @@ import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { ClientAssertion } from './client-assertion.type';
 import { JwtBearerClientAssertion } from './jwt-bearer.client-assertion';
+import { Dictionary } from '@guarani/types';
 
 const now = Math.floor(Date.now() / 1000);
 
@@ -32,7 +33,7 @@ const claims: JsonWebTokenClaimsParameters = {
   jti: 'unique_assertion_id',
 };
 
-const methodRequests: [Record<string, any>, boolean][] = [
+const methodRequests: [Dictionary<unknown>, boolean][] = [
   [{}, false],
   [{ client_assertion_type: '' }, false],
   [{ client_assertion_type: 'foo' }, false],

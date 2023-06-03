@@ -1,9 +1,9 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { ConsentContextInteractionContext } from '../../context/interaction/consent-context.interaction.context';
-import { ConsentDecisionAcceptInteractionContext } from '../../context/interaction/consent-decision-accept.interaction.context';
-import { ConsentDecisionDenyInteractionContext } from '../../context/interaction/consent-decision-deny.interaction.context';
-import { ConsentDecisionInteractionContext } from '../../context/interaction/consent-decision.interaction.context';
+import { ConsentContextInteractionContext } from '../../context/interaction/consent-context.interaction-context';
+import { ConsentDecisionAcceptInteractionContext } from '../../context/interaction/consent-decision-accept.interaction-context';
+import { ConsentDecisionDenyInteractionContext } from '../../context/interaction/consent-decision-deny.interaction-context';
+import { ConsentDecisionInteractionContext } from '../../context/interaction/consent-decision.interaction-context';
 import { Grant } from '../../entities/grant.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
@@ -59,7 +59,7 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<ConsentContextInteractionContext> {
-    const parameters = <ConsentContextInteractionRequest>request.query;
+    const parameters = request.query as ConsentContextInteractionRequest;
 
     const context = await super.validateContext(request);
 
@@ -77,7 +77,7 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
   public override async validateDecision(
     request: HttpRequest
   ): Promise<ConsentDecisionInteractionContext<ConsentDecision>> {
-    const parameters = <ConsentDecisionInteractionRequest<ConsentDecision>>request.body;
+    const parameters = request.body as ConsentDecisionInteractionRequest<ConsentDecision>;
 
     const context = await super.validateDecision(request);
 

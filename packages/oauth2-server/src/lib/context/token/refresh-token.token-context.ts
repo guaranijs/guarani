@@ -1,6 +1,6 @@
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { RefreshTokenTokenRequest } from '../../requests/token/refresh-token.token-request';
-import { TokenContext } from './token.context';
+import { TokenContext } from './token-context';
 
 /**
  * Parameters of the **Refresh Token** Token Context.

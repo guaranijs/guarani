@@ -2,9 +2,9 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 
-import { LogoutContextInteractionContext } from '../../context/interaction/logout-context.interaction.context';
-import { LogoutDecisionAcceptInteractionContext } from '../../context/interaction/logout-decision-accept.interaction.context';
-import { LogoutDecisionDenyInteractionContext } from '../../context/interaction/logout-decision-deny.interaction.context';
+import { LogoutContextInteractionContext } from '../../context/interaction/logout-context.interaction-context';
+import { LogoutDecisionAcceptInteractionContext } from '../../context/interaction/logout-decision-accept.interaction-context';
+import { LogoutDecisionDenyInteractionContext } from '../../context/interaction/logout-decision-deny.interaction-context';
 import { LogoutTicket } from '../../entities/logout-ticket.entity';
 import { Session } from '../../entities/session.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
@@ -25,11 +25,67 @@ import { SessionServiceInterface } from '../../services/session.service.interfac
 import { SESSION_SERVICE } from '../../services/session.service.token';
 import { LogoutInteractionRequestValidator } from './logout.interaction-request.validator';
 
-const invalidLogoutChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidDecisions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidSessionIdentifiers: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidErrors: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidErrorDescriptions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidLogoutChallenges: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidDecisions: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidSessionIdentifiers: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidErrors: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+
+const invalidErrorDescriptions: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
 
 describe('Logout Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -120,7 +176,7 @@ describe('Logout Interaction Request Validator', () => {
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<LogoutContextInteractionContext>({
-        parameters: <LogoutContextInteractionRequest>request.query,
+        parameters: request.query as LogoutContextInteractionRequest,
         interactionType: interactionTypesMocks[2]!,
         logoutTicket,
       });
@@ -226,7 +282,7 @@ describe('Logout Interaction Request Validator', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LogoutDecisionAcceptInteractionContext>({
-        parameters: <LogoutDecisionAcceptInteractionRequest>request.body,
+        parameters: request.body as LogoutDecisionAcceptInteractionRequest,
         interactionType: interactionTypesMocks[2]!,
         logoutTicket,
         decision: 'accept',
@@ -274,13 +330,13 @@ describe('Logout Interaction Request Validator', () => {
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
         Reflect.construct(OAuth2Exception, [{ description: request.body.error_description }]),
-        { code: request.body.error }
+        { code: request.body.error as string }
       );
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LogoutDecisionDenyInteractionContext>({
-        parameters: <LogoutDecisionDenyInteractionRequest>request.body,
+        parameters: request.body as LogoutDecisionDenyInteractionRequest,
         interactionType: interactionTypesMocks[2]!,
         logoutTicket,
         decision: 'deny',

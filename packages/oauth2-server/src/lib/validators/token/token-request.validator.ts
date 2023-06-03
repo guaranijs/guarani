@@ -1,4 +1,4 @@
-import { TokenContext } from '../../context/token/token.context';
+import { TokenContext } from '../../context/token/token-context';
 import { Client } from '../../entities/client.entity';
 import { UnauthorizedClientException } from '../../exceptions/unauthorized-client.exception';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';

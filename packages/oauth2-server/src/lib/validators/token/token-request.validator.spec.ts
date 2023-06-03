@@ -1,4 +1,4 @@
-import { TokenContext } from '../../context/token/token.context';
+import { TokenContext } from '../../context/token/token-context';
 import { Client } from '../../entities/client.entity';
 import { InvalidClientException } from '../../exceptions/invalid-client.exception';
 import { UnauthorizedClientException } from '../../exceptions/unauthorized-client.exception';

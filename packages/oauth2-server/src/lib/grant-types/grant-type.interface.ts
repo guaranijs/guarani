@@ -1,4 +1,4 @@
-import { TokenContext } from '../context/token/token.context';
+import { TokenContext } from '../context/token/token-context';
 import { TokenRequest } from '../requests/token/token-request';
 import { TokenResponse } from '../responses/token-response';
 import { GrantType } from './grant-type.type';

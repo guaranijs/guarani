@@ -1,9 +1,11 @@
+import { Dictionary } from '@guarani/types';
+
 import { ClientAssertion } from './client-assertion.type';
 
 /**
  * Parameters of a Client Assertion.
  */
-export interface ClientAssertionParameters extends Record<string, any> {
+export interface ClientAssertionParameters extends Dictionary<unknown> {
   /**
    * Client Assertion provided by the Client.
    */

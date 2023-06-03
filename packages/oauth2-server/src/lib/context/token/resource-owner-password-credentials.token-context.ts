@@ -1,6 +1,6 @@
 import { User } from '../../entities/user.entity';
 import { ResourceOwnerPasswordCredentialsTokenRequest } from '../../requests/token/resource-owner-password-credentials.token-request';
-import { TokenContext } from './token.context';
+import { TokenContext } from './token-context';
 
 /**
  * Parameters of the **Resource Owner Password Credentials** Token Context.

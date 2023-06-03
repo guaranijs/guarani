@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { JwtBearerTokenContext } from '../context/token/jwt-bearer.token.context';
+import { JwtBearerTokenContext } from '../context/token/jwt-bearer.token-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';

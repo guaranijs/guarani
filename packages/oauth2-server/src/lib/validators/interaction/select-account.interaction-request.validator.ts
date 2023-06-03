@@ -1,7 +1,7 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { SelectAccountContextInteractionContext } from '../../context/interaction/select-account-context.interaction.context';
-import { SelectAccountDecisionInteractionContext } from '../../context/interaction/select-account-decision.interaction.context';
+import { SelectAccountContextInteractionContext } from '../../context/interaction/select-account-context.interaction-context';
+import { SelectAccountDecisionInteractionContext } from '../../context/interaction/select-account-decision.interaction-context';
 import { Grant } from '../../entities/grant.entity';
 import { Login } from '../../entities/login.entity';
 import { Session } from '../../entities/session.entity';
@@ -60,7 +60,7 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<SelectAccountContextInteractionContext> {
-    const parameters = <SelectAccountContextInteractionRequest>request.query;
+    const parameters = request.query as SelectAccountContextInteractionRequest;
 
     const context = await super.validateContext(request);
 
@@ -77,7 +77,7 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(request: HttpRequest): Promise<SelectAccountDecisionInteractionContext> {
-    const parameters = <SelectAccountDecisionInteractionRequest>request.body;
+    const parameters = request.body as SelectAccountDecisionInteractionRequest;
 
     const context = await super.validateDecision(request);
 

@@ -1,6 +1,6 @@
 import { DeviceCode } from '../../entities/device-code.entity';
 import { DeviceCodeTokenRequest } from '../../requests/token/device-code.token-request';
-import { TokenContext } from './token.context';
+import { TokenContext } from './token-context';
 
 /**
  * Parameters of the **Device Code** Token Context.

@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
@@ -16,7 +18,7 @@ export interface AccessTokenServiceInterface {
    * @param user End-User that granted authorization.
    * @returns Issued Access Token.
    */
-  create(scopes: string[], client: Client, user?: User): Promise<AccessToken>;
+  create(scopes: string[], client: Client, user: Nullable<User>): Promise<AccessToken>;
 
   /**
    * Creates a Registration Access Token for authorized use by the Client on the Registration Endpoint.
@@ -34,7 +36,7 @@ export interface AccessTokenServiceInterface {
    * @param handle Handle of the Access Token.
    * @returns Access Token based on the provided Handle.
    */
-  findOne(handle: string): Promise<AccessToken | null>;
+  findOne(handle: string): Promise<Nullable<AccessToken>>;
 
   /**
    * Revokes the provided Access Token.

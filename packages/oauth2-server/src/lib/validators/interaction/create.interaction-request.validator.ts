@@ -1,7 +1,7 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { CreateContextInteractionContext } from '../../context/interaction/create-context.interaction.context';
-import { CreateDecisionInteractionContext } from '../../context/interaction/create-decision.interaction.context';
+import { CreateContextInteractionContext } from '../../context/interaction/create-context.interaction-context';
+import { CreateDecisionInteractionContext } from '../../context/interaction/create-decision.interaction-context';
 import { Grant } from '../../entities/grant.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
@@ -50,7 +50,7 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<CreateContextInteractionContext> {
-    const parameters = <CreateContextInteractionRequest>request.query;
+    const parameters = request.query as CreateContextInteractionRequest;
 
     const context = await super.validateContext(request);
 
@@ -66,7 +66,7 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(request: HttpRequest): Promise<CreateDecisionInteractionContext> {
-    const parameters = <CreateDecisionInteractionRequest>request.body;
+    const parameters = request.body as CreateDecisionInteractionRequest;
 
     const context = await super.validateDecision(request);
 

@@ -4,10 +4,10 @@ import { removeNullishValues } from '@guarani/primitives';
 import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
 
-import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
-import { GetRegistrationContext } from '../context/registration/get.registration.context';
-import { PostRegistrationContext } from '../context/registration/post.registration.context';
-import { PutRegistrationContext } from '../context/registration/put.registration.context';
+import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';
+import { GetRegistrationContext } from '../context/registration/get.registration-context';
+import { PostRegistrationContext } from '../context/registration/post.registration-context';
+import { PutRegistrationContext } from '../context/registration/put.registration-context';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpMethod } from '../http/http-method.type';

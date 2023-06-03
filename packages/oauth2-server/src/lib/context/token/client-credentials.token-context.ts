@@ -1,5 +1,5 @@
 import { ClientCredentialsTokenRequest } from '../../requests/token/client-credentials.token-request';
-import { TokenContext } from './token.context';
+import { TokenContext } from './token-context';
 
 /**
  * Parameters of the **Client Credentials** Token Context.

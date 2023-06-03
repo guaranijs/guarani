@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomBytes } from 'crypto';
 import { promisify } from 'util';
@@ -37,7 +38,7 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
     return refreshToken;
   }
 
-  public async findOne(handle: string): Promise<RefreshToken | null> {
+  public async findOne(handle: string): Promise<Nullable<RefreshToken>> {
     return this.refreshTokens.find((refreshToken) => refreshToken.handle === handle) ?? null;
   }
 

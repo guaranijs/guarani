@@ -5,7 +5,7 @@ import { timingSafeEqual } from 'crypto';
 import { URL, URLSearchParams } from 'url';
 import { isDeepStrictEqual } from 'util';
 
-import { EndSessionContext } from '../context/end-session.context';
+import { EndSessionContext } from '../context/end-session-context';
 import { Client } from '../entities/client.entity';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { Session } from '../entities/session.entity';

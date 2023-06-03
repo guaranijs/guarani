@@ -2,7 +2,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 
-import { ClientCredentialsTokenContext } from '../../context/token/client-credentials.token.context';
+import { ClientCredentialsTokenContext } from '../../context/token/client-credentials.token-context';
 import { Client } from '../../entities/client.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';

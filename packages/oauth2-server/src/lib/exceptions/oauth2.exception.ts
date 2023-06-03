@@ -2,7 +2,6 @@ import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 
-import { ErrorCode } from './error-code.type';
 import { OAuth2ExceptionParameters } from './oauth2.exception.parameters';
 import { OAuth2ExceptionResponse } from './oauth2.exception.response';
 
@@ -13,7 +12,7 @@ export abstract class OAuth2Exception extends Error {
   /**
    * OAuth 2.0 Error Code.
    */
-  public abstract readonly code: ErrorCode;
+  public abstract readonly code: string;
 
   /**
    * Http Response Status Code of the OAuth 2.0 Exception.
@@ -35,8 +34,8 @@ export abstract class OAuth2Exception extends Error {
    *
    * @param parameters Parameters of the OAuth 2.0 Exception.
    */
-  public constructor(parameters: OAuth2ExceptionParameters = {}) {
-    super(parameters.description);
+  public constructor(parameters: OAuth2ExceptionParameters = {}, options?: ErrorOptions) {
+    super(parameters.description, options);
 
     this.parameters = parameters;
   }
@@ -68,7 +67,7 @@ export abstract class OAuth2Exception extends Error {
    * @param parameter Name of the OAuth 2.0 Exception Parameter.
    * @param value Value of the OAuth 2.0 Exception Parameter.
    */
-  public setParameter(parameter: keyof OAuth2ExceptionParameters, value: any): OAuth2Exception {
+  public setParameter(parameter: keyof OAuth2ExceptionParameters, value: unknown): OAuth2Exception {
     this.parameters[parameter] = value;
     return this;
   }

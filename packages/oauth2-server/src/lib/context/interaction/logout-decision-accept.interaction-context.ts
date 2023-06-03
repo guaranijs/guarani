@@ -1,5 +1,5 @@
 import { Session } from '../../entities/session.entity';
-import { LogoutDecisionInteractionContext } from './logout-decision.interaction.context';
+import { LogoutDecisionInteractionContext } from './logout-decision.interaction-context';
 
 /**
  * Parameters of the Logout Decision Accept Interaction Context.

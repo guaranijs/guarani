@@ -3,7 +3,7 @@ import { URL } from 'url';
 
 import { HttpResponse } from './http.response';
 
-describe('HttpResponse', () => {
+describe('Http Response', () => {
   it('should create a standard http response.', () => {
     expect(new HttpResponse()).toMatchObject<Partial<HttpResponse>>({
       body: Buffer.alloc(0),

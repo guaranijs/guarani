@@ -3,7 +3,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { OutgoingHttpHeaders } from 'http';
 import { URL, URLSearchParams } from 'url';
 
-import { EndSessionContext } from '../context/end-session.context';
+import { EndSessionContext } from '../context/end-session-context';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';

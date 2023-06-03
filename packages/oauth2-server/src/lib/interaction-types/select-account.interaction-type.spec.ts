@@ -2,8 +2,8 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { URLSearchParams } from 'url';
 
-import { SelectAccountContextInteractionContext } from '../context/interaction/select-account-context.interaction.context';
-import { SelectAccountDecisionInteractionContext } from '../context/interaction/select-account-decision.interaction.context';
+import { SelectAccountContextInteractionContext } from '../context/interaction/select-account-context.interaction-context';
+import { SelectAccountDecisionInteractionContext } from '../context/interaction/select-account-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';

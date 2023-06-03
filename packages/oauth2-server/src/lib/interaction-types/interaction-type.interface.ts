@@ -1,4 +1,4 @@
-import { InteractionContext } from '../context/interaction/interaction.context';
+import { InteractionContext } from '../context/interaction/interaction-context';
 import { InteractionRequest } from '../requests/interaction/interaction-request';
 import { InteractionType } from './interaction-type.type';
 

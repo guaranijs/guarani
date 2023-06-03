@@ -1,7 +1,7 @@
 /**
  * Parameters of the OAuth 2.0 Device Authorization Response.
  */
-export interface DeviceAuthorizationResponse extends Record<string, any> {
+export interface DeviceAuthorizationResponse {
   /**
    * Device Verification Code.
    */

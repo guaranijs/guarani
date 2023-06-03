@@ -3,7 +3,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { Buffer } from 'buffer';
 import { URL } from 'url';
 
-import { EndSessionContext } from '../context/end-session.context';
+import { EndSessionContext } from '../context/end-session-context';
 import { Client } from '../entities/client.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';

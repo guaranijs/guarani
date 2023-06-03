@@ -1,7 +1,7 @@
 /**
  * Parameters of the OpenID Connect's Userinfo Address Claim.
  */
-export interface AddressClaimParameters extends Record<string, any> {
+export interface AddressClaimParameters {
   /**
    * Formatted Address of the User.
    */

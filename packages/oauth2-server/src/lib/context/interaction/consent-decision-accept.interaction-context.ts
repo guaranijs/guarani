@@ -1,4 +1,4 @@
-import { ConsentDecisionInteractionContext } from './consent-decision.interaction.context';
+import { ConsentDecisionInteractionContext } from './consent-decision.interaction-context';
 
 /**
  * Parameters of the Consent Decision Accept Interaction Context.

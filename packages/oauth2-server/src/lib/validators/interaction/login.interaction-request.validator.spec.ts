@@ -2,9 +2,9 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 
-import { LoginContextInteractionContext } from '../../context/interaction/login-context.interaction.context';
-import { LoginDecisionAcceptInteractionContext } from '../../context/interaction/login-decision-accept.interaction.context';
-import { LoginDecisionDenyInteractionContext } from '../../context/interaction/login-decision-deny.interaction.context';
+import { LoginContextInteractionContext } from '../../context/interaction/login-context.interaction-context';
+import { LoginDecisionAcceptInteractionContext } from '../../context/interaction/login-decision-accept.interaction-context';
+import { LoginDecisionDenyInteractionContext } from '../../context/interaction/login-decision-deny.interaction-context';
 import { Grant } from '../../entities/grant.entity';
 import { User } from '../../entities/user.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
@@ -25,13 +25,95 @@ import { Settings } from '../../settings/settings';
 import { SETTINGS } from '../../settings/settings.token';
 import { LoginInteractionRequestValidator } from './login.interaction-request.validator';
 
-const invalidLoginChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidDecisions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidSubjects: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidAuthenticationMethods: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidAuthenticationContextClasses: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidErrors: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidErrorDescriptions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidLoginChallenges: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidDecisions: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidSubjects: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidAuthenticationMethods: any[] = [
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidAuthenticationContextClasses: any[] = [
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidErrors: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+
+const invalidErrorDescriptions: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
 
 describe('Login Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -125,7 +207,7 @@ describe('Login Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<LoginContextInteractionContext>({
-        parameters: <LoginContextInteractionRequest>request.query,
+        parameters: request.query as LoginContextInteractionRequest,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });
@@ -239,6 +321,7 @@ describe('Login Interaction Request Validator', () => {
         loginChallenge: 'login_challenge',
         client: { id: 'client_id', subjectType: 'public' },
       };
+
       const user = <User>{ id: 'user_id' };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
@@ -259,6 +342,7 @@ describe('Login Interaction Request Validator', () => {
           loginChallenge: 'login_challenge',
           client: { id: 'client_id', subjectType: 'public' },
         };
+
         const user = <User>{ id: 'user_id' };
 
         grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
@@ -278,13 +362,14 @@ describe('Login Interaction Request Validator', () => {
         loginChallenge: 'login_challenge',
         client: { id: 'client_id', subjectType: 'public' },
       };
+
       const user = <User>{ id: 'user_id' };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
       userServiceMock.findOne.mockResolvedValueOnce(user);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LoginDecisionAcceptInteractionContext>({
-        parameters: <LoginDecisionAcceptInteractionRequest>request.body,
+        parameters: request.body as LoginDecisionAcceptInteractionRequest,
         interactionType: interactionTypesMocks[1]!,
         grant,
         decision: 'accept',
@@ -346,13 +431,13 @@ describe('Login Interaction Request Validator', () => {
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
         Reflect.construct(OAuth2Exception, [{ description: request.body.error_description }]),
-        { code: request.body.error }
+        { code: request.body.error as string }
       );
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LoginDecisionDenyInteractionContext>({
-        parameters: <LoginDecisionDenyInteractionRequest>request.body,
+        parameters: request.body as LoginDecisionDenyInteractionRequest,
         interactionType: interactionTypesMocks[1]!,
         grant,
         decision: 'deny',

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 
-import { JwtBearerTokenContext } from '../context/token/jwt-bearer.token.context';
+import { JwtBearerTokenContext } from '../context/token/jwt-bearer.token-context';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';

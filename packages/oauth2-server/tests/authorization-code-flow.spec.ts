@@ -15,7 +15,6 @@ import { LoginContextInteractionRequest } from '../src/lib/requests/interaction/
 import { LoginDecisionAcceptInteractionRequest } from '../src/lib/requests/interaction/login-decision-accept.interaction-request';
 import { TokenResponse } from '../src/lib/responses/token-response';
 
-// TODO: Add test for multiple logins.
 describe('Authorization Code Flow', () => {
   let app: Application;
   let agent: SuperAgentTest;

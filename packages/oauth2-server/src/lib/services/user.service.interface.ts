@@ -1,3 +1,5 @@
+import { Dictionary, Nullable } from '@guarani/types';
+
 import { User } from '../entities/user.entity';
 import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
 
@@ -13,7 +15,7 @@ export interface UserServiceInterface {
    * @param parameters Parameters of the User Registration.
    * @returns Generated User.
    */
-  create(parameters: Record<string, any>): Promise<User>;
+  create(parameters: Dictionary<unknown>): Promise<User>;
 
   /**
    * Searches the application's storage for an End User containing the provided Identifier.
@@ -21,7 +23,7 @@ export interface UserServiceInterface {
    * @param id Identifier of the End User.
    * @returns End User based on the provided Identifier.
    */
-  findOne(id: string): Promise<User | null>;
+  findOne(id: string): Promise<Nullable<User>>;
 
   /**
    * Searches the application's storage for a User containing the provided Username.
@@ -37,7 +39,7 @@ export interface UserServiceInterface {
    * @param password Password of the User to be fetched.
    * @returns User based on the provided Username.
    */
-  findByResourceOwnerCredentials?(username: string, password: string): Promise<User | null>;
+  findByResourceOwnerCredentials?(username: string, password: string): Promise<Nullable<User>>;
 
   /**
    * Retrieves claims about the provided User based on the provided scopes.

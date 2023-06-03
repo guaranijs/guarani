@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { Client } from '../entities/client.entity';
 import { DeviceCode } from '../entities/device-code.entity';
 
@@ -22,7 +24,7 @@ export interface DeviceCodeServiceInterface {
    * @param id Identifier of the Device Code.
    * @returns Device Code based on the provided Identifier.
    */
-  findOne(id: string): Promise<DeviceCode | null>;
+  findOne(id: string): Promise<Nullable<DeviceCode>>;
 
   /**
    * Informs the Authorization Server if it should return a `slow_down` exception to the Client.

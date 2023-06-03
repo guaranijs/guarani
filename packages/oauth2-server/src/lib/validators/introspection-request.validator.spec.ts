@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { IntrospectionContext } from '../context/introspection.context';
+import { IntrospectionContext } from '../context/introspection-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';

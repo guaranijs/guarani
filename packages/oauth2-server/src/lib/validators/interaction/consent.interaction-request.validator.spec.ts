@@ -2,9 +2,9 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 
-import { ConsentContextInteractionContext } from '../../context/interaction/consent-context.interaction.context';
-import { ConsentDecisionAcceptInteractionContext } from '../../context/interaction/consent-decision-accept.interaction.context';
-import { ConsentDecisionDenyInteractionContext } from '../../context/interaction/consent-decision-deny.interaction.context';
+import { ConsentContextInteractionContext } from '../../context/interaction/consent-context.interaction-context';
+import { ConsentDecisionAcceptInteractionContext } from '../../context/interaction/consent-decision-accept.interaction-context';
+import { ConsentDecisionDenyInteractionContext } from '../../context/interaction/consent-decision-deny.interaction-context';
 import { Grant } from '../../entities/grant.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
@@ -24,17 +24,73 @@ import { InvalidScopeException } from '../../exceptions/invalid-scope.exception'
 
 jest.mock('../../handlers/scope.handler');
 
-const invalidConsentChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidDecisions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidGrantedScopes: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidErrors: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidErrorDescriptions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidConsentChallenges: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidDecisions: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidGrantedScopes: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidErrors: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+
+const invalidErrorDescriptions: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
 
 describe('Consent Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: ConsentInteractionRequestValidator;
 
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   const grantServiceMock = jest.mocked<GrantServiceInterface>({
     create: jest.fn(),
@@ -114,7 +170,7 @@ describe('Consent Interaction Request Validator', () => {
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<ConsentContextInteractionContext>({
-        parameters: <ConsentContextInteractionRequest>request.query,
+        parameters: request.query as ConsentContextInteractionRequest,
         interactionType: interactionTypesMocks[0]!,
         grant,
       });
@@ -233,7 +289,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<ConsentDecisionAcceptInteractionContext>(
         {
-          parameters: <ConsentDecisionAcceptInteractionRequest>request.body,
+          parameters: request.body as ConsentDecisionAcceptInteractionRequest,
           interactionType: interactionTypesMocks[0]!,
           grant,
           decision: 'accept',
@@ -282,13 +338,13 @@ describe('Consent Interaction Request Validator', () => {
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
         Reflect.construct(OAuth2Exception, [{ description: request.body.error_description }]),
-        { code: request.body.error }
+        { code: request.body.error as string }
       );
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<ConsentDecisionDenyInteractionContext>({
-        parameters: <ConsentDecisionDenyInteractionRequest>request.body,
+        parameters: request.body as ConsentDecisionDenyInteractionRequest,
         interactionType: interactionTypesMocks[0]!,
         grant,
         decision: 'deny',

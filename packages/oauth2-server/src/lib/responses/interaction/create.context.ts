@@ -4,7 +4,7 @@ import { Prompt } from '../../types/prompt.type';
 /**
  * Parameters of the Create Context.
  */
-export interface CreateContext extends Record<string, any> {
+export interface CreateContext {
   /**
    * Prompts requested by the Client.
    */

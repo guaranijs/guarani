@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { AuthorizationContext } from '../context/authorization/authorization.context';
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';

@@ -3,7 +3,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { Buffer } from 'buffer';
 import { URL } from 'url';
 
-import { CodeAuthorizationContext } from '../../context/authorization/code.authorization.context';
+import { CodeAuthorizationContext } from '../../context/authorization/code.authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
 import { Client } from '../../entities/client.entity';
@@ -26,14 +26,40 @@ import { CodeAuthorizationRequestValidator } from './code.authorization-request.
 
 jest.mock('../../handlers/scope.handler');
 
-const invalidCodeChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidCodeChallengeMethods: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidCodeChallenges: any[] = [
+  undefined,
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
+
+const invalidCodeChallengeMethods: any[] = [
+  null,
+  true,
+  1,
+  1.2,
+  1n,
+  Symbol('a'),
+  Buffer,
+  Buffer.alloc(1),
+  () => 1,
+  {},
+  [],
+];
 
 describe('Code Authorization Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: CodeAuthorizationRequestValidator;
 
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   const settings = <Settings>{ uiLocales: ['en', 'pt-BR'], acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'] };
 

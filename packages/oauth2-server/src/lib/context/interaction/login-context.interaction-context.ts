@@ -1,6 +1,6 @@
 import { Grant } from '../../entities/grant.entity';
 import { LoginContextInteractionRequest } from '../../requests/interaction/login-context.interaction-request';
-import { InteractionContext } from './interaction.context';
+import { InteractionContext } from './interaction-context';
 
 /**
  * Parameters of the Login Context Interaction Context.

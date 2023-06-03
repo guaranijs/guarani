@@ -1,6 +1,8 @@
+import { Nullable } from '@guarani/types';
+
 import { URL } from 'url';
 
-import { AuthorizationContext } from '../../context/authorization/authorization.context';
+import { AuthorizationContext } from '../../context/authorization/authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
 import { Client } from '../../entities/client.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
@@ -21,8 +23,8 @@ import { Prompt } from '../../types/prompt.type';
  * Implementation of the Authorization Request Validator.
  */
 export abstract class AuthorizationRequestValidator<
-  TRequest extends AuthorizationRequest,
-  TContext extends AuthorizationContext<TRequest>
+  TRequest extends AuthorizationRequest = AuthorizationRequest,
+  TContext extends AuthorizationContext<TRequest> = AuthorizationContext<TRequest>
 > {
   /**
    * Name of the Response Type that uses this Validator.
@@ -55,7 +57,7 @@ export abstract class AuthorizationRequestValidator<
    * @returns Authorization Context.
    */
   public async validate(request: HttpRequest): Promise<TContext> {
-    const parameters = <TRequest>request.query;
+    const parameters = request.query as TRequest;
     const cookies = request.cookies;
 
     const state = this.getState(parameters);
@@ -99,12 +101,12 @@ export abstract class AuthorizationRequestValidator<
    * @param parameters Parameters of the Authorization Request.
    * @returns State provided by the Client.
    */
-  protected getState(parameters: AuthorizationRequest): string | undefined {
-    if (parameters.state !== undefined && typeof parameters.state !== 'string') {
+  protected getState(parameters: AuthorizationRequest): Nullable<string> {
+    if (typeof parameters.state !== 'undefined' && typeof parameters.state !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "state".' });
     }
 
-    return parameters.state;
+    return parameters.state ?? null;
   }
 
   /**
@@ -135,7 +137,7 @@ export abstract class AuthorizationRequestValidator<
    * @returns Response Type.
    */
   protected getResponseType(parameters: AuthorizationRequest, client: Client): ResponseTypeInterface {
-    const name = <ResponseType>parameters.response_type.split(' ').sort().join(' ');
+    const name = parameters.response_type.split(' ').sort().join(' ') as ResponseType;
     const responseType = this.responseTypes.find((responseType) => responseType.name === name)!;
 
     if (!client.responseTypes.includes(responseType.name)) {
@@ -220,14 +222,14 @@ export abstract class AuthorizationRequestValidator<
     parameters: AuthorizationRequest,
     responseType: ResponseTypeInterface
   ): ResponseModeInterface {
-    if (parameters.response_mode !== undefined && typeof parameters.response_mode !== 'string') {
+    if (typeof parameters.response_mode !== 'undefined' && typeof parameters.response_mode !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "response_mode".', state: parameters.state });
     }
 
     const responseModeName = parameters.response_mode ?? responseType.defaultResponseMode;
     const responseMode = this.responseModes.find((responseMode) => responseMode.name === responseModeName);
 
-    if (responseMode === undefined) {
+    if (typeof responseMode === 'undefined') {
       throw new InvalidRequestException({
         description: `Unsupported response_mode "${responseModeName}".`,
         state: parameters.state,
@@ -243,12 +245,12 @@ export abstract class AuthorizationRequestValidator<
    * @param parameters Parameters of the Authorization Request.
    * @returns Nonce provided by the Client.
    */
-  protected getNonce(parameters: AuthorizationRequest): string | undefined {
-    if (parameters.nonce !== undefined && typeof parameters.nonce !== 'string') {
+  protected getNonce(parameters: AuthorizationRequest): Nullable<string> {
+    if (typeof parameters.nonce !== 'undefined' && typeof parameters.nonce !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: parameters.state });
     }
 
-    return parameters.nonce;
+    return parameters.nonce ?? null;
   }
 
   /**
@@ -258,7 +260,7 @@ export abstract class AuthorizationRequestValidator<
    * @returns Prompts requested by the Client.
    */
   protected getPrompts(parameters: AuthorizationRequest): Prompt[] {
-    if (parameters.prompt !== undefined && typeof parameters.prompt !== 'string') {
+    if (typeof parameters.prompt !== 'undefined' && typeof parameters.prompt !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "prompt".', state: parameters.state });
     }
 
@@ -309,14 +311,14 @@ export abstract class AuthorizationRequestValidator<
    * @returns Display.
    */
   protected getDisplay(parameters: AuthorizationRequest): DisplayInterface {
-    if (parameters.display !== undefined && typeof parameters.display !== 'string') {
+    if (typeof parameters.display !== 'undefined' && typeof parameters.display !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "display".', state: parameters.state });
     }
 
     const displayName = parameters.display ?? 'page';
     const display = this.displays.find((display) => display.name === displayName);
 
-    if (display === undefined) {
+    if (typeof display === 'undefined') {
       throw new InvalidRequestException({
         description: `Unsupported display "${displayName}".`,
         state: parameters.state,
@@ -332,9 +334,9 @@ export abstract class AuthorizationRequestValidator<
    * @param parameters Parameters of the Authorization Request.
    * @returns Parsed Max Age.
    */
-  protected getMaxAge(parameters: AuthorizationRequest): number | undefined {
-    if (parameters.max_age === undefined) {
-      return undefined;
+  protected getMaxAge(parameters: AuthorizationRequest): Nullable<number> {
+    if (typeof parameters.max_age === 'undefined') {
+      return null;
     }
 
     if (typeof parameters.max_age !== 'string') {
@@ -354,12 +356,12 @@ export abstract class AuthorizationRequestValidator<
    * @param parameters Parameters of the Authorization Request.
    * @returns Login Hint provided by the Client.
    */
-  protected getLoginHint(parameters: AuthorizationRequest): string | undefined {
-    if (parameters.login_hint !== undefined && typeof parameters.login_hint !== 'string') {
+  protected getLoginHint(parameters: AuthorizationRequest): Nullable<string> {
+    if (typeof parameters.login_hint !== 'undefined' && typeof parameters.login_hint !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "login_hint".', state: parameters.state });
     }
 
-    return parameters.login_hint;
+    return parameters.login_hint ?? null;
   }
 
   /**
@@ -368,12 +370,12 @@ export abstract class AuthorizationRequestValidator<
    * @param parameters Parameters of the Authorization Request.
    * @returns ID Token Hint provided by the Client.
    */
-  protected getIdTokenHint(parameters: AuthorizationRequest): string | undefined {
-    if (parameters.id_token_hint !== undefined && typeof parameters.id_token_hint !== 'string') {
+  protected getIdTokenHint(parameters: AuthorizationRequest): Nullable<string> {
+    if (typeof parameters.id_token_hint !== 'undefined' && typeof parameters.id_token_hint !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "id_token_hint".', state: parameters.state });
     }
 
-    return parameters.id_token_hint;
+    return parameters.id_token_hint ?? null;
   }
 
   /**
@@ -383,7 +385,7 @@ export abstract class AuthorizationRequestValidator<
    * @returns UI Locales requested by the Client.
    */
   protected getUiLocales(parameters: AuthorizationRequest): string[] {
-    if (parameters.ui_locales !== undefined && typeof parameters.ui_locales !== 'string') {
+    if (typeof parameters.ui_locales !== 'undefined' && typeof parameters.ui_locales !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "ui_locales".', state: parameters.state });
     }
 
@@ -408,7 +410,7 @@ export abstract class AuthorizationRequestValidator<
    * @returns Authentication Context Class References requested by the Client.
    */
   protected getAcrValues(parameters: AuthorizationRequest): string[] {
-    if (parameters.acr_values !== undefined && typeof parameters.acr_values !== 'string') {
+    if (typeof parameters.acr_values !== 'undefined' && typeof parameters.acr_values !== 'string') {
       throw new InvalidRequestException({ description: 'Invalid parameter "acr_values".', state: parameters.state });
     }
 

@@ -1,6 +1,6 @@
 import { User } from '../../entities/user.entity';
 import { JwtBearerTokenRequest } from '../../requests/token/jwt-bearer.token-request';
-import { TokenContext } from './token.context';
+import { TokenContext } from './token-context';
 
 /**
  * Parameters of the **JWT Bearer** Token Context.

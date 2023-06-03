@@ -1,9 +1,9 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { LogoutContextInteractionContext } from '../../context/interaction/logout-context.interaction.context';
-import { LogoutDecisionAcceptInteractionContext } from '../../context/interaction/logout-decision-accept.interaction.context';
-import { LogoutDecisionDenyInteractionContext } from '../../context/interaction/logout-decision-deny.interaction.context';
-import { LogoutDecisionInteractionContext } from '../../context/interaction/logout-decision.interaction.context';
+import { LogoutContextInteractionContext } from '../../context/interaction/logout-context.interaction-context';
+import { LogoutDecisionAcceptInteractionContext } from '../../context/interaction/logout-decision-accept.interaction-context';
+import { LogoutDecisionDenyInteractionContext } from '../../context/interaction/logout-decision-deny.interaction-context';
+import { LogoutDecisionInteractionContext } from '../../context/interaction/logout-decision.interaction-context';
 import { LogoutTicket } from '../../entities/logout-ticket.entity';
 import { Session } from '../../entities/session.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
@@ -61,7 +61,7 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<LogoutContextInteractionContext> {
-    const parameters = <LogoutContextInteractionRequest>request.query;
+    const parameters = request.query as LogoutContextInteractionRequest;
 
     const context = await super.validateContext(request);
 
@@ -79,7 +79,7 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
   public override async validateDecision(
     request: HttpRequest
   ): Promise<LogoutDecisionInteractionContext<LogoutDecision>> {
-    const parameters = <LogoutDecisionInteractionRequest<LogoutDecision>>request.body;
+    const parameters = request.body as LogoutDecisionInteractionRequest<LogoutDecision>;
 
     const context = await super.validateDecision(request);
 

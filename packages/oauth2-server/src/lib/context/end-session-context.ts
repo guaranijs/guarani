@@ -1,3 +1,5 @@
+import { Dictionary, Nullable } from '@guarani/types';
+
 import { URL } from 'url';
 
 import { Client } from '../entities/client.entity';
@@ -15,7 +17,7 @@ export interface EndSessionContext {
   /**
    * Cookies of the Http Request.
    */
-  readonly cookies: Record<string, any>;
+  readonly cookies: Dictionary<unknown>;
 
   /**
    * ID Token used as a hint about the User that the Client expects to be authenticated.
@@ -30,17 +32,17 @@ export interface EndSessionContext {
   /**
    * Post Logout Redirect URI provided by the Client.
    */
-  readonly postLogoutRedirectUri?: URL;
+  readonly postLogoutRedirectUri: Nullable<URL>;
 
   /**
    * State of the Client prior to the End Session Request.
    */
-  readonly state?: string;
+  readonly state: Nullable<string>;
 
   /**
    * Hint to the Authorization Server about the User being logged out.
    */
-  readonly logoutHint?: string;
+  readonly logoutHint: Nullable<string>;
 
   /**
    * End-User's preferred languages and scripts for the User Interface.

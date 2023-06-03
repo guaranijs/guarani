@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { Login } from './login.entity';
 
 /**
@@ -12,7 +14,7 @@ export interface Session {
   /**
    * Currently active Login.
    */
-  activeLogin?: Login | null;
+  activeLogin: Nullable<Login>;
 
   /**
    * Logins created within the Session.

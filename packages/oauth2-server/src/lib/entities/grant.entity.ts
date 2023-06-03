@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { InteractionType } from '../interaction-types/interaction-type.type';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { Client } from './client.entity';
@@ -7,7 +9,7 @@ import { Session } from './session.entity';
 /**
  * OAuth 2.0 Grant Entity.
  */
-export interface Grant extends Record<string, any> {
+export interface Grant {
   /**
    * Identifier of the Grant.
    */
@@ -56,5 +58,5 @@ export interface Grant extends Record<string, any> {
   /**
    * End User Consent.
    */
-  consent?: Consent | null;
+  consent: Nullable<Consent>;
 }

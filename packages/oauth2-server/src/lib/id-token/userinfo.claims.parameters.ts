@@ -1,9 +1,11 @@
+import { Dictionary } from '@guarani/types';
+
 import { AddressClaimParameters } from './address.claim.parameters';
 
 /**
  * OpenID Connect Userinfo Claims.
  */
-export interface UserinfoClaimsParameters extends Record<string, any> {
+export interface UserinfoClaimsParameters extends Dictionary<unknown> {
   /**
    * Formatted name of the User.
    */

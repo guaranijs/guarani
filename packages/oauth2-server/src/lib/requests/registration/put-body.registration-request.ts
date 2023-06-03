@@ -4,6 +4,7 @@ import {
   JsonWebKeySetParameters,
   JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
+import { Dictionary } from '@guarani/types';
 
 import { ClientAuthentication } from '../../client-authentication/client-authentication.type';
 import { GrantType } from '../../grant-types/grant-type.type';
@@ -14,7 +15,7 @@ import { SubjectType } from '../../types/subject-type.type';
 /**
  * Parameters of the OAuth 2.0 Put Client Registration Request Body Parameters.
  */
-export interface PutBodyRegistrationRequest extends Record<string, any> {
+export interface PutBodyRegistrationRequest extends Dictionary<unknown> {
   /**
    * Unique Identifier of the Client.
    */

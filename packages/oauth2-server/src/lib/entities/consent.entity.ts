@@ -25,7 +25,7 @@ export interface Consent {
   /**
    * Expiration Date of the Consent.
    *
-   * *note: a **null** or **undefined** value indicates that the consent does not expire.*
+   * *note: a **null** value indicates that the consent does not expire.*
    */
   readonly expiresAt: Nullable<Date>;
 

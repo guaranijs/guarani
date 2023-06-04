@@ -9,8 +9,6 @@ import { User } from './user.entity';
 export interface DeviceCode {
   /**
    * Identifier of the Device Code.
-   *
-   * This attribute is the **Primary Key** (or other related classification) of the Entity.
    */
   readonly id: string;
 

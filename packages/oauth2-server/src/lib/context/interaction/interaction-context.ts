@@ -4,7 +4,7 @@ import { InteractionRequest } from '../../requests/interaction/interaction-reque
 /**
  * Parameters of the Interaction Context.
  */
-export interface InteractionContext<T extends InteractionRequest> {
+export interface InteractionContext<T extends InteractionRequest = InteractionRequest> {
   /**
    * Parameters of the Interaction Context.
    */

@@ -6,7 +6,7 @@ import { InteractionContext } from './interaction-context';
 /**
  * Parameters of the Consent Decision Interaction Context.
  */
-export interface ConsentDecisionInteractionContext<TDecision extends ConsentDecision>
+export interface ConsentDecisionInteractionContext<TDecision extends ConsentDecision = ConsentDecision>
   extends InteractionContext<ConsentDecisionInteractionRequest<TDecision>> {
   /**
    * Grant based on the Consent Challenge provided by the Client.

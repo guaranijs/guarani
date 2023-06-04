@@ -6,7 +6,7 @@ import { InteractionContext } from './interaction-context';
 /**
  * Parameters of the Login Decision Interaction Context.
  */
-export interface LoginDecisionInteractionContext<TDecision extends LoginDecision>
+export interface LoginDecisionInteractionContext<TDecision extends LoginDecision = LoginDecision>
   extends InteractionContext<LoginDecisionInteractionRequest<TDecision>> {
   /**
    * Grant based on the Login Challenge provided by the Client.

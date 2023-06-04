@@ -12,7 +12,7 @@ import { Prompt } from '../../types/prompt.type';
 /**
  * Parameters of the Authorization Context.
  */
-export interface AuthorizationContext<T extends AuthorizationRequest> {
+export interface AuthorizationContext<T extends AuthorizationRequest = AuthorizationRequest> {
   /**
    * Parameters of the Authorization Request.
    */

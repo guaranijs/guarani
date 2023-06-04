@@ -6,7 +6,7 @@ import { InteractionContext } from './interaction-context';
 /**
  * Parameters of the Logout Decision Interaction Context.
  */
-export interface LogoutDecisionInteractionContext<TDecision extends LogoutDecision>
+export interface LogoutDecisionInteractionContext<TDecision extends LogoutDecision = LogoutDecision>
   extends InteractionContext<LogoutDecisionInteractionRequest<TDecision>> {
   /**
    * Logout Ticket based on the Logout Challenge provided by the Client.

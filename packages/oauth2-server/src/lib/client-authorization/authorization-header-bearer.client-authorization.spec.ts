@@ -82,24 +82,27 @@ describe('Authorization Header Bearer Client Authorization', () => {
     it('should throw when providing an authorization header without a token.', async () => {
       request.headers.authorization = 'Bearer';
 
-      await expect(clientAuthorization.authorize(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Missing Bearer Token.' })
+      await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Missing Bearer Token.'
       );
     });
 
     it('should throw when providing an invalid token.', async () => {
       request.headers.authorization = 'Bearer $';
 
-      await expect(clientAuthorization.authorize(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'Invalid Bearer Token.' })
+      await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'Invalid Bearer Token.'
       );
     });
 
     it('should throw when no access token is found.', async () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(clientAuthorization.authorize(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'Invalid Access Token.' })
+      await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'Invalid Access Token.'
       );
     });
 
@@ -108,8 +111,9 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
       accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
 
-      await expect(clientAuthorization.authorize(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'Expired Access Token.' })
+      await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'Expired Access Token.'
       );
     });
 
@@ -122,8 +126,9 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
       accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
 
-      await expect(clientAuthorization.authorize(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'The provided Access Token is not yet valid.' })
+      await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'The provided Access Token is not yet valid.'
       );
     });
 
@@ -137,8 +142,9 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
       accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
 
-      await expect(clientAuthorization.authorize(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'Revoked Access Token.' })
+      await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'Revoked Access Token.'
       );
     });
 

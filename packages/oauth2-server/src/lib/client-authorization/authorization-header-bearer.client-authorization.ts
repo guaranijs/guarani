@@ -55,30 +55,30 @@ export class AuthorizationHeaderBearerClientAuthorization implements ClientAutho
 
     const [, accessTokenHandle] = authorization!.split(' ', 2);
 
-    if (accessTokenHandle === undefined) {
-      throw new InvalidRequestException({ description: 'Missing Bearer Token.' });
+    if (typeof accessTokenHandle === 'undefined') {
+      throw new InvalidRequestException('Missing Bearer Token.');
     }
 
     if (!/^[a-zA-Z0-9+/\-_.~=]+$/.test(accessTokenHandle)) {
-      throw new InvalidTokenException({ description: 'Invalid Bearer Token.' });
+      throw new InvalidTokenException('Invalid Bearer Token.');
     }
 
     const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
 
     if (accessToken === null) {
-      throw new InvalidTokenException({ description: 'Invalid Access Token.' });
+      throw new InvalidTokenException('Invalid Access Token.');
     }
 
     if (new Date() > accessToken.expiresAt) {
-      throw new InvalidTokenException({ description: 'Expired Access Token.' });
+      throw new InvalidTokenException('Expired Access Token.');
     }
 
     if (new Date() < accessToken.validAfter) {
-      throw new InvalidTokenException({ description: 'The provided Access Token is not yet valid.' });
+      throw new InvalidTokenException('The provided Access Token is not yet valid.');
     }
 
     if (accessToken.isRevoked) {
-      throw new InvalidTokenException({ description: 'Revoked Access Token.' });
+      throw new InvalidTokenException('Revoked Access Token.');
     }
 
     return accessToken;

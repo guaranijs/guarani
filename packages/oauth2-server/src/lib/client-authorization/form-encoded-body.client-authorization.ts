@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
@@ -11,7 +12,7 @@ import { ClientAuthorization } from './client-authorization.type';
 /**
  * Parameters passed by the Client on the Http Request Body.
  */
-interface FormEncodedBodyCredentials {
+export interface FormEncodedBodyCredentials extends Dictionary<unknown> {
   /**
    * Access Token Handle.
    */
@@ -54,7 +55,7 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
-    const { access_token: accessTokenHandle } = <FormEncodedBodyCredentials>request.body;
+    const { access_token: accessTokenHandle } = request.body as FormEncodedBodyCredentials;
     return request.method === 'POST' && typeof accessTokenHandle === 'string';
   }
 
@@ -65,24 +66,24 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
    * @returns Access Token based on the provided Access Token Handle.
    */
   public async authorize(request: HttpRequest): Promise<AccessToken> {
-    const { access_token: accessTokenHandle } = <FormEncodedBodyCredentials>request.body;
+    const { access_token: accessTokenHandle } = request.body as FormEncodedBodyCredentials;
 
     const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
 
     if (accessToken === null) {
-      throw new InvalidTokenException({ description: 'Invalid Access Token.' });
+      throw new InvalidTokenException('Invalid Access Token.');
     }
 
     if (new Date() > accessToken.expiresAt) {
-      throw new InvalidTokenException({ description: 'Expired Access Token.' });
+      throw new InvalidTokenException('Expired Access Token.');
     }
 
     if (new Date() < accessToken.validAfter) {
-      throw new InvalidTokenException({ description: 'The provided Access Token is not yet valid.' });
+      throw new InvalidTokenException('The provided Access Token is not yet valid.');
     }
 
     if (accessToken.isRevoked) {
-      throw new InvalidTokenException({ description: 'Revoked Access Token.' });
+      throw new InvalidTokenException('Revoked Access Token.');
     }
 
     return accessToken;

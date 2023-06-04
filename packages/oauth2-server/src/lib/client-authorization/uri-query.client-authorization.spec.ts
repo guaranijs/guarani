@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
@@ -6,7 +7,7 @@ import { HttpRequest } from '../http/http.request';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { ClientAuthorization } from './client-authorization.type';
-import { UriQueryClientAuthorization } from './uri-query.client-authorization';
+import { UriQueryClientAuthorization, UriQueryCredentials } from './uri-query.client-authorization';
 
 describe('URI Query Client Authorization', () => {
   let container: DependencyInjectionContainer;
@@ -38,7 +39,7 @@ describe('URI Query Client Authorization', () => {
   });
 
   describe('hasBeenRequested()', () => {
-    const methodRequests: [Record<string, any>, boolean][] = [
+    const methodRequests: [Dictionary<unknown>, boolean][] = [
       [{}, false],
       [{ access_token: '' }, true],
       [{ access_token: 'foo' }, true],
@@ -68,25 +69,30 @@ describe('URI Query Client Authorization', () => {
         headers: {},
         method: 'GET',
         path: '/oauth/userinfo',
-        query: { access_token: 'access_token' },
+        query: <UriQueryCredentials>{ access_token: 'access_token' },
       });
     });
 
     it('should throw when no access token is found.', async () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(clientAuthorization.authorize(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'Invalid Access Token.' })
+      await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'Invalid Access Token.'
       );
     });
 
     it('should throw when the access token is expired.', async () => {
-      const accessToken = <AccessToken>{ handle: 'access_token', expiresAt: new Date(Date.now() - 3600000) };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        expiresAt: new Date(Date.now() - 3600000),
+      };
 
       accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
 
-      await expect(clientAuthorization.authorize(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'Expired Access Token.' })
+      await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'Expired Access Token.'
       );
     });
 
@@ -99,8 +105,9 @@ describe('URI Query Client Authorization', () => {
 
       accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
 
-      await expect(clientAuthorization.authorize(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'The provided Access Token is not yet valid.' })
+      await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'The provided Access Token is not yet valid.'
       );
     });
 
@@ -114,8 +121,9 @@ describe('URI Query Client Authorization', () => {
 
       accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
 
-      await expect(clientAuthorization.authorize(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'Revoked Access Token.' })
+      await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'Revoked Access Token.'
       );
     });
 

@@ -48,7 +48,9 @@ export class HttpRequest {
    * @param parameters Parameters of the Http Request.
    */
   public constructor(parameters: HttpRequestParameters) {
-    this.method = this.checkHttpMethod(parameters.method);
+    this.checkHttpMethod(parameters.method);
+
+    this.method = parameters.method;
     this.headers = parameters.headers;
     this.cookies = parameters.cookies;
     this.body = parameters.body;
@@ -61,15 +63,13 @@ export class HttpRequest {
    *
    * @param method Http Method provided by the application.
    */
-  private checkHttpMethod(method: HttpMethod): HttpMethod {
+  private checkHttpMethod(method: HttpMethod): void {
     if (typeof method !== 'string') {
-      throw new Error('The Http Method must be a valid string.');
+      throw new TypeError('Invalid Http Method.');
     }
 
     if (method !== 'DELETE' && method !== 'GET' && method !== 'POST' && method !== 'PUT') {
-      throw new Error(`The Http Method "${method}" is invalid.`);
+      throw new TypeError(`Unsupported Http Method "${method}".`);
     }
-
-    return method;
   }
 }

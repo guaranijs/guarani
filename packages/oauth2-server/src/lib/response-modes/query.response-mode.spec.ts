@@ -1,6 +1,8 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
-import { HttpResponse } from '../http/http.response';
+import { OutgoingHttpHeaders } from 'http';
+
 import { QueryResponseMode } from './query.response-mode';
 import { ResponseMode } from './response-mode.type';
 
@@ -24,9 +26,27 @@ describe('Query Response Mode', () => {
 
   describe('createHttpResponse()', () => {
     it('should create a redirect http response with a populated uri query.', () => {
-      expect(
-        responseMode.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })
-      ).toStrictEqual(new HttpResponse().redirect('https://example.com/?foo=foo&bar=bar&baz=baz'));
+      const response = responseMode.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' });
+
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://example.com/?foo=foo&bar=bar&baz=baz',
+      });
+    });
+
+    it('should create a redirect http response with a populated uri query preserving the previous parameters.', () => {
+      const response = responseMode.createHttpResponse('https://example.com/?tenant=tenant_id', {
+        foo: 'foo',
+        bar: 'bar',
+        baz: 'baz',
+      });
+
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://example.com/?tenant=tenant_id&foo=foo&bar=bar&baz=baz',
+      });
     });
   });
 });

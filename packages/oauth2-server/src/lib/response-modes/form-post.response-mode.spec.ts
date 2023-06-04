@@ -1,10 +1,13 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
-import { HttpResponse } from '../http/http.response';
+import { OutgoingHttpHeaders } from 'http';
+
 import { FormPostResponseMode } from './form-post.response-mode';
 import { ResponseMode } from './response-mode.type';
 
-const body = `<!DOCTYPE html>
+const body = `
+<!DOCTYPE html>
 <html>
 <head>
   <title>Authorizing...</title>
@@ -20,7 +23,8 @@ const body = `<!DOCTYPE html>
     </noscript>
   </form>
 </body>
-</html>`;
+</html>
+`;
 
 describe('Form Post Response Mode', () => {
   let container: DependencyInjectionContainer;
@@ -42,9 +46,12 @@ describe('Form Post Response Mode', () => {
 
   describe('createHttpResponse()', () => {
     it('should create a http response with a populated html body.', () => {
-      expect(
-        responseMode.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })
-      ).toStrictEqual(new HttpResponse().html(body));
+      const response = responseMode.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ 'Content-Type': 'text/html; charset=UTF-8' });
+      expect(response.body).toEqual(Buffer.from(body.trim(), 'utf8'));
     });
   });
 });

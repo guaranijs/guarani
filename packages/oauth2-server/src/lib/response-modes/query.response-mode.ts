@@ -1,6 +1,7 @@
 import { Injectable } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { HttpResponse } from '../http/http.response';
 import { ResponseMode } from './response-mode.type';
@@ -25,12 +26,9 @@ export class QueryResponseMode implements ResponseModeInterface {
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns Http Response containing the Authorization Response Parameters.
    */
-  public createHttpResponse(redirectUri: string, parameters: Record<string, any>): HttpResponse {
+  public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
     const url = new URL(redirectUri);
-    const searchParameters = new URLSearchParams(parameters);
-
-    url.search = searchParameters.toString();
-
+    Object.entries(parameters).forEach(([name, value]) => url.searchParams.set(name, value));
     return new HttpResponse().redirect(url);
   }
 }

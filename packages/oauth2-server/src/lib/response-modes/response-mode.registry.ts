@@ -1,4 +1,4 @@
-import { Constructor } from '@guarani/di';
+import { Constructor } from '@guarani/types';
 
 import { FormPostResponseMode } from './form-post.response-mode';
 import { FragmentResponseMode } from './fragment.response-mode';

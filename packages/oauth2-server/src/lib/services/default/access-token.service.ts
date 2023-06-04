@@ -2,14 +2,11 @@ import { Injectable } from '@guarani/di';
 import { Nullable } from '@guarani/types';
 
 import { randomBytes } from 'crypto';
-import { promisify } from 'util';
 
 import { AccessToken } from '../../entities/access-token.entity';
 import { Client } from '../../entities/client.entity';
 import { User } from '../../entities/user.entity';
 import { AccessTokenServiceInterface } from '../access-token.service.interface';
-
-const randomBytesAsync = promisify(randomBytes);
 
 @Injectable()
 export class AccessTokenService implements AccessTokenServiceInterface {
@@ -23,7 +20,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     const now = Date.now();
 
     const accessToken: AccessToken = {
-      handle: (await randomBytesAsync(16)).toString('hex'),
+      handle: randomBytes(16).toString('hex'),
       scopes,
       isRevoked: false,
       issuedAt: new Date(now),
@@ -42,7 +39,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     const now = Date.now();
 
     const accessToken: AccessToken = {
-      handle: (await randomBytesAsync(16)).toString('hex'),
+      handle: randomBytes(16).toString('hex'),
       scopes: ['client:create'],
       isRevoked: false,
       issuedAt: new Date(now),
@@ -61,7 +58,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     const now = Date.now();
 
     const accessToken: AccessToken = {
-      handle: (await randomBytesAsync(16)).toString('hex'),
+      handle: randomBytes(16).toString('hex'),
       scopes: ['client:manage'],
       isRevoked: false,
       issuedAt: new Date(now),

@@ -21,6 +21,7 @@ export class UserService implements UserServiceInterface {
       middle_name: 'Michael',
       family_name: 'Doe',
       nickname: 'j.doe',
+      preferred_username: 'johndoe',
       profile: 'https://server.example.com/users/16907c32-687b-493c-85ba-f41f2c9d4daa/profile',
       picture: 'https://server.example.com/users/16907c32-687b-493c-85ba-f41f2c9d4daa/picture.jpg',
       website: 'https://server.example.com/users/16907c32-687b-493c-85ba-f41f2c9d4daa',

@@ -1,9 +1,11 @@
+import { Dictionary } from '@guarani/types';
+
 import { AccessTokenType } from '../types/access-token-type.type';
 
 /**
  * Parameters of the OAuth 2.0 Token Response.
  */
-export interface TokenResponse {
+export interface TokenResponse extends Dictionary<any> {
   /**
    * Access Token issued to the Client.
    */

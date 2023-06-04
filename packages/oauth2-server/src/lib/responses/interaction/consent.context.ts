@@ -1,10 +1,12 @@
+import { Dictionary } from '@guarani/types';
+
 import { Display } from '../../displays/display.type';
 import { Prompt } from '../../types/prompt.type';
 
 /**
  * Parameters of the Consent Context.
  */
-export interface ConsentContext {
+export interface ConsentContext extends Dictionary<any> {
   /**
    * Prompts requested by the Client.
    */

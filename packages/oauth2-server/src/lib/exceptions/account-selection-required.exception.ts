@@ -9,7 +9,7 @@ export class AccountSelectionRequiredException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.AccountSelectionRequired;
+  public readonly error = ErrorCode.AccountSelectionRequired;
 
   /**
    * Http Response Status Code of the OAuth 2.0 Exception.

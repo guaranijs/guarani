@@ -8,5 +8,5 @@ export class AccessDeniedException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.AccessDenied;
+  public readonly error = ErrorCode.AccessDenied;
 }

@@ -1,8 +1,8 @@
-import { removeNullishValues } from '@guarani/primitives';
+import { isPlainObject } from '@guarani/primitives';
+import { Nullable } from '@guarani/types';
 
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 
-import { OAuth2ExceptionParameters } from './oauth2.exception.parameters';
 import { OAuth2ExceptionResponse } from './oauth2.exception.response';
 
 /**
@@ -12,7 +12,7 @@ export abstract class OAuth2Exception extends Error {
   /**
    * OAuth 2.0 Error Code.
    */
-  public abstract readonly code: string;
+  public abstract readonly error: string;
 
   /**
    * Http Response Status Code of the OAuth 2.0 Exception.
@@ -25,19 +25,27 @@ export abstract class OAuth2Exception extends Error {
   public readonly headers: OutgoingHttpHeaders = {};
 
   /**
-   * Parameters of the OAuth 2.0 Exception.
+   * Description of the OAuth 2.0 Exception.
    */
-  private readonly parameters: OAuth2ExceptionParameters;
+  private description: Nullable<string> = null;
+
+  /**
+   * Error Page URI of the OAuth 2.0 Exception.
+   */
+  private uri: Nullable<string> = null;
 
   /**
    * Instantiates a new OAuth 2.0 Exception.
    *
    * @param parameters Parameters of the OAuth 2.0 Exception.
    */
-  public constructor(parameters: OAuth2ExceptionParameters = {}, options?: ErrorOptions) {
-    super(parameters.description, options);
+  public constructor(description: Nullable<string> = null, options?: ErrorOptions) {
+    if (typeof description !== 'string' && description !== null) {
+      throw new TypeError('Invalid parameter "description".');
+    }
 
-    this.parameters = parameters;
+    super(description ?? '', options);
+    this.description = description;
   }
 
   /**
@@ -47,7 +55,20 @@ export abstract class OAuth2Exception extends Error {
    * @param value Value of the Http Response Header.
    */
   public setHeader(header: string, value: OutgoingHttpHeader): OAuth2Exception {
+    if (typeof header !== 'string') {
+      throw new TypeError('Invalid parameter "header".');
+    }
+
+    if (
+      typeof value !== 'string' &&
+      typeof value !== 'number' &&
+      (!Array.isArray(value) || value.length === 0 || value.some((element) => typeof element !== 'string'))
+    ) {
+      throw new TypeError('Invalid parameter "value".');
+    }
+
     this.headers[header] = value;
+
     return this;
   }
 
@@ -57,28 +78,53 @@ export abstract class OAuth2Exception extends Error {
    * @param headers Http Response Headers.
    */
   public setHeaders(headers: OutgoingHttpHeaders): OAuth2Exception {
+    if (!isPlainObject(headers)) {
+      throw new TypeError('Invalid parameter "headers".');
+    }
+
+    Object.values(headers).forEach((value) => {
+      if (
+        typeof value !== 'string' &&
+        typeof value !== 'number' &&
+        (!Array.isArray(value) || value.length === 0 || value.some((element) => typeof element !== 'string'))
+      ) {
+        throw new TypeError('Invalid parameter "headers".');
+      }
+    });
+
     Object.assign(this.headers, headers);
+
     return this;
   }
 
   /**
-   * Sets an OAuth 2.0 Exception Parameter.
+   * Sets the Description of the OAuth 2.0 Exception.
    *
-   * @param parameter Name of the OAuth 2.0 Exception Parameter.
-   * @param value Value of the OAuth 2.0 Exception Parameter.
+   * @param description Description of the OAuth 2.0 Exception.
    */
-  public setParameter(parameter: keyof OAuth2ExceptionParameters, value: unknown): OAuth2Exception {
-    this.parameters[parameter] = value;
+  public setDescription(description: string): OAuth2Exception {
+    if (typeof description !== 'string') {
+      throw new TypeError('Invalid parameter "description".');
+    }
+
+    this.description = description;
+    this.message = description;
+
     return this;
   }
 
   /**
-   * Sets multiple OAuth 2.0 Exception Parameters.
+   * Sets the Error Page URI of the OAuth 2.0 Exception.
    *
-   * @param parameters OAuth 2.0 Exception Parameters.
+   * @param uri Error Page URI of the OAuth 2.0 Exception.
    */
-  public setParameters(parameters: OAuth2ExceptionParameters): OAuth2Exception {
-    Object.assign(this.parameters, parameters);
+  public setUri(uri: string): OAuth2Exception {
+    if (typeof uri !== 'string') {
+      throw new TypeError('Invalid parameter "uri".');
+    }
+
+    this.uri = uri;
+
     return this;
   }
 
@@ -86,12 +132,10 @@ export abstract class OAuth2Exception extends Error {
    * Body of the OAuth 2.0 Error Response.
    */
   public toJSON(): OAuth2ExceptionResponse {
-    return removeNullishValues<OAuth2ExceptionResponse>({
-      error: this.code,
-      error_description: this.parameters.description,
-      error_uri: this.parameters.uri,
-      state: this.parameters.state,
-      iss: this.parameters.iss,
-    });
+    return {
+      error: this.error,
+      error_description: this.description,
+      error_uri: this.uri,
+    };
   }
 }

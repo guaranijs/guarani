@@ -8,7 +8,7 @@ export class TemporarilyUnavailableException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.TemporarilyUnavailable;
+  public readonly error = ErrorCode.TemporarilyUnavailable;
 
   /**
    * Http Response Status Code of the OAuth 2.0 Exception.

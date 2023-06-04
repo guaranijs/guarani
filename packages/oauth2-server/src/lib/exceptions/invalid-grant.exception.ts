@@ -8,5 +8,5 @@ export class InvalidGrantException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.InvalidGrant;
+  public readonly error = ErrorCode.InvalidGrant;
 }

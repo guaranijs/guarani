@@ -8,5 +8,5 @@ export class UnsupportedInteractionTypeException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.UnsupportedInteractionType;
+  public readonly error = ErrorCode.UnsupportedInteractionType;
 }

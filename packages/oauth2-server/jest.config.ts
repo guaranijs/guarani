@@ -8,5 +8,5 @@ export default {
     '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  setupFilesAfterEnv: [path.join(__dirname, 'jest.setup.ts')],
+  setupFilesAfterEnv: ['jest-extended/all', path.join(__dirname, 'jest.setup.ts')],
 };

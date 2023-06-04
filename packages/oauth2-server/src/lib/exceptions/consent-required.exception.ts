@@ -8,7 +8,7 @@ export class ConsentRequiredException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.ConsentRequired;
+  public readonly error = ErrorCode.ConsentRequired;
 
   /**
    * Http Response Status Code of the OAuth 2.0 Exception.

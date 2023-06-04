@@ -94,7 +94,6 @@ export { InvalidScopeException } from './lib/exceptions/invalid-scope.exception'
 export { InvalidTokenException } from './lib/exceptions/invalid-token.exception';
 export { LoginRequiredException } from './lib/exceptions/login-required.exception';
 export { OAuth2Exception } from './lib/exceptions/oauth2.exception';
-export { OAuth2ExceptionParameters } from './lib/exceptions/oauth2.exception.parameters';
 export { OAuth2ExceptionResponse } from './lib/exceptions/oauth2.exception.response';
 export { ServerErrorException } from './lib/exceptions/server-error.exception';
 export { SlowDownException } from './lib/exceptions/slow-down.exception';

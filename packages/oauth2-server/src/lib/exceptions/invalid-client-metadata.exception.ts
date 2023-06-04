@@ -8,5 +8,5 @@ export class InvalidClientMetadataException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.InvalidClientMetadata;
+  public readonly error = ErrorCode.InvalidClientMetadata;
 }

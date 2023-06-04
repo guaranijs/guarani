@@ -8,5 +8,5 @@ export class InvalidRequestException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.InvalidRequest;
+  public readonly error = ErrorCode.InvalidRequest;
 }

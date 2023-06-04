@@ -8,5 +8,5 @@ export class UnsupportedResponseTypeException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.UnsupportedResponseType;
+  public readonly error = ErrorCode.UnsupportedResponseType;
 }

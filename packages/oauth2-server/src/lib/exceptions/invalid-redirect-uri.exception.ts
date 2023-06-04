@@ -8,5 +8,5 @@ export class InvalidRedirectUriException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.InvalidRedirectUri;
+  public readonly error = ErrorCode.InvalidRedirectUri;
 }

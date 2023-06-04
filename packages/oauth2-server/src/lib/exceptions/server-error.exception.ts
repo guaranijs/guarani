@@ -8,7 +8,7 @@ export class ServerErrorException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.ServerError;
+  public readonly error = ErrorCode.ServerError;
 
   /**
    * Http Response Status Code of the OAuth 2.0 Exception.

@@ -8,7 +8,7 @@ export class LoginRequiredException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.LoginRequired;
+  public readonly error = ErrorCode.LoginRequired;
 
   /**
    * Http Response Status Code of the OAuth 2.0 Exception.

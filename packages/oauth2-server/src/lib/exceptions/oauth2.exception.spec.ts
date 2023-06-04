@@ -1,85 +1,230 @@
 import { OutgoingHttpHeaders } from 'http';
 
 import { OAuth2Exception } from './oauth2.exception';
-import { OAuth2ExceptionParameters } from './oauth2.exception.parameters';
 import { OAuth2ExceptionResponse } from './oauth2.exception.response';
 
+const invalidConstructorDescriptions: any[] = [true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+
+const invalidHeaderNames: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidHeaderValues: any[] = [
+  undefined,
+  null,
+  true,
+  1n,
+  Symbol('a'),
+  Buffer,
+  () => 1,
+  {},
+  [],
+  [undefined],
+  [null],
+  [true],
+  [1],
+  [1.2],
+  [1n],
+  [Symbol('a')],
+  [Buffer],
+  [() => 1],
+  [{}],
+  [[]],
+];
+
+const invalidHeaderObjects: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'), Buffer, () => 1, []];
+
+const invalidDescriptions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidUris: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+
 describe('OAuth 2.0 Exception', () => {
-  let parameters: OAuth2ExceptionParameters;
+  describe('constructor', () => {
+    it.each(invalidConstructorDescriptions)('should throw when providing an invalid description.', (description) => {
+      expect(() => Reflect.construct(OAuth2Exception, [description])).toThrowWithMessage(
+        TypeError,
+        'Invalid parameter "description".'
+      );
+    });
 
-  beforeEach(() => {
-    parameters = { description: 'Sample description.' };
-  });
+    it('should instantiate a new oauth 2.0 exception with a null description.', () => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, []),
+        { error: 'lorem_ipsum' }
+      );
 
-  it('should instantiate a new oauth 2.0 exception.', () => {
-    expect(Reflect.construct(OAuth2Exception, [parameters])).toBeInstanceOf(OAuth2Exception);
-  });
+      expect(exception.message).toBeEmpty();
+      expect(exception.statusCode).toEqual(400);
+      expect(exception.headers).toStrictEqual<OutgoingHttpHeaders>({});
 
-  it('should set the "error_description" parameter as the error\'s "message".', () => {
-    const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
-    expect(exception.message).toEqual('Sample description.');
-  });
+      expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
+        error: 'lorem_ipsum',
+        error_description: null,
+        error_uri: null,
+      });
+    });
 
-  it('should set the constructor\'s "parameters" as the exception\'s "parameters" attribute.', () => {
-    const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
-    expect(exception['parameters']).toStrictEqual(parameters);
-  });
+    it('should instantiate a new oauth 2.0 exception with a null description.', () => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, [null]),
+        { error: 'lorem_ipsum' }
+      );
 
-  it('should have 400 as the default http status code.', () => {
-    const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
-    expect(exception.statusCode).toEqual(400);
-  });
+      expect(exception.message).toBeEmpty();
+      expect(exception.statusCode).toEqual(400);
+      expect(exception.headers).toStrictEqual<OutgoingHttpHeaders>({});
 
-  it('should have an empty object as the default http headers.', () => {
-    const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
-    expect(exception.headers).toStrictEqual<OutgoingHttpHeaders>({});
-  });
+      expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
+        error: 'lorem_ipsum',
+        error_description: null,
+        error_uri: null,
+      });
+    });
 
-  it('should add a single entry to the headers attribute.', () => {
-    const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
+    it('should instantiate a new oauth 2.0 exception with the provided description.', () => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, ['Lorem ipsum dolor sit amet...']),
+        { error: 'lorem_ipsum' }
+      );
 
-    expect(() => exception.setHeader('x-custom', 'custom-header-value')).not.toThrow();
-    expect(exception.headers).toStrictEqual<OutgoingHttpHeaders>({ 'x-custom': 'custom-header-value' });
-  });
+      expect(exception.message).toEqual('Lorem ipsum dolor sit amet...');
+      expect(exception.statusCode).toEqual(400);
+      expect(exception.headers).toStrictEqual<OutgoingHttpHeaders>({});
 
-  it('should add multiple entries to the headers attribute.', () => {
-    const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
-
-    expect(() => exception.setHeaders({ 'x-foo': 'foo', 'x-bar': 'bar' })).not.toThrow();
-    expect(exception.headers).toStrictEqual<OutgoingHttpHeaders>({ 'x-foo': 'foo', 'x-bar': 'bar' });
-  });
-
-  it('should add a single entry to the parameters attribute.', () => {
-    const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
-
-    expect(() => exception.setParameter('iss', 'https://server.example.com')).not.toThrow();
-
-    expect(exception['parameters']).toStrictEqual<OAuth2ExceptionParameters>({
-      description: 'Sample description.',
-      iss: 'https://server.example.com',
+      expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
+        error: 'lorem_ipsum',
+        error_description: 'Lorem ipsum dolor sit amet...',
+        error_uri: null,
+      });
     });
   });
 
-  it('should add multiple entries to the parameters attribute.', () => {
-    const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
+  describe('setHeader()', () => {
+    it.each(invalidHeaderNames)('should throw when providing an invalid header name.', (header) => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, ['Lorem ipsum dolor sit amet...']),
+        { error: 'lorem_ipsum' }
+      );
 
-    expect(() => exception.setParameters({ iss: 'https://server.example.com', state: 'client_state' })).not.toThrow();
+      expect(() => exception.setHeader(header, 'custom-header-value')).toThrowWithMessage(
+        TypeError,
+        'Invalid parameter "header".'
+      );
+    });
 
-    expect(exception['parameters']).toStrictEqual<OAuth2ExceptionParameters>({
-      description: 'Sample description.',
-      state: 'client_state',
-      iss: 'https://server.example.com',
+    it.each(invalidHeaderValues)('should throw when providing an invalid header name.', (value) => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, ['Lorem ipsum dolor sit amet...']),
+        { error: 'lorem_ipsum' }
+      );
+
+      expect(() => exception.setHeader('x-custom', value)).toThrowWithMessage(TypeError, 'Invalid parameter "value".');
+    });
+
+    it('should add a single entry to the headers attribute.', () => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, ['Lorem ipsum dolor sit amet...']),
+        { error: 'lorem_ipsum' }
+      );
+
+      exception.setHeader('x-custom', 'custom-header-value');
+      expect(exception.headers).toStrictEqual<OutgoingHttpHeaders>({ 'x-custom': 'custom-header-value' });
     });
   });
 
-  it('should return a valid oauth 2.0 error parameters object.', () => {
-    const exception: OAuth2Exception = Reflect.construct(OAuth2Exception, [parameters]);
+  describe('setHeaders()', () => {
+    it.each(invalidHeaderObjects)('should throw when providing an invalid headers object.', (headers) => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, ['Lorem ipsum dolor sit amet...']),
+        { error: 'lorem_ipsum' }
+      );
 
-    Reflect.set(exception, 'code', 'custom_code');
+      expect(() => exception.setHeaders(headers)).toThrowWithMessage(TypeError, 'Invalid parameter "headers".');
+    });
+
+    it.each(invalidHeaderValues)('should throw when providing a headers object with invalid values.', (value) => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, ['Lorem ipsum dolor sit amet...']),
+        { error: 'lorem_ipsum' }
+      );
+
+      expect(() => exception.setHeaders({ 'x-custom': value })).toThrowWithMessage(
+        TypeError,
+        'Invalid parameter "headers".'
+      );
+    });
+
+    it('should add multiple entries to the headers attribute.', () => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, ['Lorem ipsum dolor sit amet...']),
+        { error: 'lorem_ipsum' }
+      );
+
+      exception.setHeaders({ 'x-foo': 'foo', 'x-bar': 'bar' });
+      expect(exception.headers).toStrictEqual<OutgoingHttpHeaders>({ 'x-foo': 'foo', 'x-bar': 'bar' });
+    });
+  });
+
+  describe('setDescription()', () => {
+    it.each(invalidDescriptions)('should throw when providing an invalid description.', (description) => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, ['Lorem ipsum dolor sit amet...']),
+        { error: 'lorem_ipsum' }
+      );
+
+      expect(() => exception.setDescription(description)).toThrowWithMessage(
+        TypeError,
+        'Invalid parameter "description".'
+      );
+    });
+
+    it('should set the description of the oauth 2.0 exception.', () => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, ['Lorem ipsum dolor sit amet...']),
+        { error: 'lorem_ipsum' }
+      );
+
+      expect(exception.message).toEqual('Lorem ipsum dolor sit amet...');
+      expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
+        error: 'lorem_ipsum',
+        error_description: 'Lorem ipsum dolor sit amet...',
+        error_uri: null,
+      });
+
+      exception.setDescription('Changed lorem ipsum.');
+
+      expect(exception.message).toEqual('Changed lorem ipsum.');
+      expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
+        error: 'lorem_ipsum',
+        error_description: 'Changed lorem ipsum.',
+        error_uri: null,
+      });
+    });
+  });
+
+  describe('setUri()', () => {
+    it.each(invalidUris)('should throw when providing an invalid uri.', (uri) => {
+      const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+        Reflect.construct(OAuth2Exception, ['Lorem ipsum dolor sit amet...']),
+        { error: 'lorem_ipsum' }
+      );
+
+      expect(() => exception.setUri(uri)).toThrowWithMessage(TypeError, 'Invalid parameter "uri".');
+    });
+
+    const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+      Reflect.construct(OAuth2Exception, ['Lorem ipsum dolor sit amet...']),
+      { error: 'lorem_ipsum' }
+    );
 
     expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
-      error: <any>'custom_code',
-      error_description: 'Sample description.',
+      error: 'lorem_ipsum',
+      error_description: 'Lorem ipsum dolor sit amet...',
+      error_uri: null,
+    });
+
+    exception.setUri('https://server.example.com/docs/oidc/lorem_ipsum');
+
+    expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
+      error: 'lorem_ipsum',
+      error_description: 'Lorem ipsum dolor sit amet...',
+      error_uri: 'https://server.example.com/docs/oidc/lorem_ipsum',
     });
   });
 });

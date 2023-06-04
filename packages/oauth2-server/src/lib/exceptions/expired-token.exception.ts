@@ -8,5 +8,5 @@ export class ExpiredTokenException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.ExpiredToken;
+  public readonly error = ErrorCode.ExpiredToken;
 }

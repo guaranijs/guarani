@@ -8,5 +8,5 @@ export class UnauthorizedClientException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.UnauthorizedClient;
+  public readonly error = ErrorCode.UnauthorizedClient;
 }

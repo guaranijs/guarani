@@ -8,5 +8,5 @@ export class InvalidScopeException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.InvalidScope;
+  public readonly error = ErrorCode.InvalidScope;
 }

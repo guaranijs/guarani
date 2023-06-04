@@ -8,5 +8,5 @@ export class UnsupportedGrantTypeException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.UnsupportedGrantType;
+  public readonly error = ErrorCode.UnsupportedGrantType;
 }

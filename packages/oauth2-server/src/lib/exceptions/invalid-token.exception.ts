@@ -8,7 +8,7 @@ export class InvalidTokenException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public readonly code = ErrorCode.InvalidToken;
+  public readonly error = ErrorCode.InvalidToken;
 
   /**
    * Http Response Status Code of the OAuth 2.0 Exception.

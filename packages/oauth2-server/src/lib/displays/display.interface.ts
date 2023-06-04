@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import { HttpResponse } from '../http/http.response';
 import { Display } from './display.type';
 
@@ -14,5 +16,5 @@ export interface DisplayInterface {
    * @param parameters Parameters used to build the Http Response.
    * @returns Http Response to the provided Redirect URI.
    */
-  createHttpResponse(redirectUri: string, parameters: Record<string, any>): HttpResponse;
+  createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse;
 }

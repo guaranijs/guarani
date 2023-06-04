@@ -1,6 +1,8 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
-import { HttpResponse } from '../http/http.response';
+import { OutgoingHttpHeaders } from 'http';
+
 import { Display } from './display.type';
 import { PopupDisplay } from './popup.display';
 
@@ -49,9 +51,12 @@ describe('Page Display', () => {
 
   describe('createHttpResponse()', () => {
     it('should create a http response with a populated html body.', () => {
-      expect(display.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })).toStrictEqual(
-        new HttpResponse().html(body)
-      );
+      const response = display.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ 'Content-Type': 'text/html; charset=UTF-8' });
+      expect(response.body).toEqual(Buffer.from(body.trim(), 'utf8'));
     });
   });
 });

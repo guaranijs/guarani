@@ -57,7 +57,7 @@ export class JsonWebSignature {
 
     const splitToken = data.split('.');
 
-    return splitToken.length === 3 && splitToken.every((component) => component.length !== 0);
+    return splitToken.length === 3 && splitToken.slice(0, 2).every((component) => component.length !== 0);
   }
 
   /**

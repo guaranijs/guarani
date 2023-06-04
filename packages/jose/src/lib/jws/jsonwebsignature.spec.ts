@@ -52,6 +52,10 @@ describe('JSON Web Signature', () => {
       }
     );
 
+    it('should return true when the provided data is a json web signature token without signature.', () => {
+      expect(JsonWebSignature.isJsonWebSignature(token.split('.').slice(0, 2).join('.').concat('.'))).toBeTrue();
+    });
+
     it('should return true when the provided data has a valid json web signature token format.', () => {
       expect(JsonWebSignature.isJsonWebSignature(token)).toBeTrue();
     });

@@ -3,7 +3,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { ClientAuthorizationInterface } from '../client-authorization/client-authorization.interface';
 import { CLIENT_AUTHORIZATION } from '../client-authorization/client-authorization.token';
 import { AccessToken } from '../entities/access-token.entity';
-import { InvalidClientException } from '../exceptions/invalid-client.exception';
+import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { HttpRequest } from '../http/http.request';
 import { ClientAuthorizationHandler } from './client-authorization.handler';
 
@@ -62,16 +62,18 @@ describe('Client Authorization Handler', () => {
     it('should throw when not using a client authorization method.', async () => {
       clientAuthorizationMethodsMocks.forEach((method) => method.hasBeenRequested.mockReturnValueOnce(false));
 
-      await expect(clientAuthorizationHandler.authorize(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'No Client Authorization Method detected.' })
+      await expect(clientAuthorizationHandler.authorize(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'No Client Authorization Method detected.'
       );
     });
 
     it('should throw when using multiple client authorization methods.', async () => {
       clientAuthorizationMethodsMocks.forEach((method) => method.hasBeenRequested.mockReturnValueOnce(true));
 
-      await expect(clientAuthorizationHandler.authorize(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Multiple Client Authorization Methods detected.' })
+      await expect(clientAuthorizationHandler.authorize(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Multiple Client Authorization Methods detected.'
       );
     });
 

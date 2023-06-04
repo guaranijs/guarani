@@ -30,11 +30,11 @@ export class ClientAuthenticationHandler {
     const methods = this.clientAuthenticationMethods.filter((method) => method.hasBeenRequested(request));
 
     if (methods.length === 0) {
-      throw new InvalidClientException({ description: 'No Client Authentication Method detected.' });
+      throw new InvalidClientException('No Client Authentication Method detected.');
     }
 
     if (methods.length > 1) {
-      throw new InvalidClientException({ description: 'Multiple Client Authentication Methods detected.' });
+      throw new InvalidClientException('Multiple Client Authentication Methods detected.');
     }
 
     const [method] = methods;

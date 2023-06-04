@@ -62,7 +62,8 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
-    const parameters = request.body as ClientAssertionParameters;
+    const parameters =
+      request.body as ClientAssertionParameters<'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'>;
 
     return (
       parameters.client_assertion_type === this.clientAssertionType && typeof parameters.client_assertion === 'string'
@@ -76,7 +77,8 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @returns Authenticated Client.
    */
   public async authenticate(request: HttpRequest): Promise<Client> {
-    const { client_assertion: clientAssertion } = request.body as ClientAssertionParameters;
+    const { client_assertion: clientAssertion } =
+      request.body as ClientAssertionParameters<'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'>;
 
     try {
       const [header, claims] = await this.getClientAssertionComponents(clientAssertion, request);
@@ -86,21 +88,15 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
       // TODO: allow the application to validate the claims as it sees fit.
 
       if (client.authenticationMethod !== this.name) {
-        throw new InvalidClientException({
-          description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-        });
+        throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
       }
 
       if (typeof client.authenticationSigningAlgorithm !== 'string') {
-        throw new InvalidClientException({
-          description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-        });
+        throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
       }
 
       if (client.authenticationSigningAlgorithm !== header.alg) {
-        throw new InvalidClientException({
-          description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-        });
+        throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
       }
 
       const clientKey = await this.getClientKey(client, header);
@@ -109,11 +105,9 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
 
       return client;
     } catch (exc: unknown) {
-      if (exc instanceof OAuth2Exception) {
-        throw exc;
-      }
-
-      throw new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' }, { cause: exc });
+      throw exc instanceof OAuth2Exception
+        ? exc
+        : new InvalidClientException('Invalid JSON Web Token Client Assertion.', { cause: exc });
     }
   }
 
@@ -131,22 +125,22 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
     const { header, payload } = JsonWebSignature.decode(clientAssertion);
 
     if (header.alg === 'none') {
-      throw new InvalidClientException({
-        description: 'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
-      });
+      throw new InvalidClientException(
+        'The Authorization Server disallows using the JSON Web Signature Algorithm "none".'
+      );
     }
 
     if (!this.settings.clientAuthenticationSignatureAlgorithms.includes(header.alg)) {
-      throw new InvalidClientException({ description: `Unsupported JSON Web Signature Algorithm "${header.alg}".` });
+      throw new InvalidClientException(`Unsupported JSON Web Signature Algorithm "${header.alg}".`);
     }
 
     if (!this.algorithms.includes(header.alg)) {
-      throw new InvalidClientException({
-        description: `Unsupported JSON Web Signature Algorithm "${header.alg}" for Authentication Method "${this.name}".`,
-      });
+      throw new InvalidClientException(
+        `Unsupported JSON Web Signature Algorithm "${header.alg}" for Authentication Method "${this.name}".`
+      );
     }
 
-    const idTokenAudience = new URL(request.path, this.settings.issuer).href;
+    const { href: idTokenAudience } = new URL(request.path, this.settings.issuer);
 
     const claims = await JsonWebTokenClaims.parse(payload, {
       validationOptions: {
@@ -159,7 +153,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
     });
 
     if (claims.iss !== claims.sub) {
-      throw new InvalidClientException({ description: 'The values of "iss" and "sub" are different.' });
+      throw new InvalidClientException('The values of "iss" and "sub" are different.');
     }
 
     return [header, claims];
@@ -175,7 +169,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
     const client = await this.clientService.findOne(id);
 
     if (client === null) {
-      throw new InvalidClientException({ description: 'Invalid Client.' });
+      throw new InvalidClientException('Invalid Client.');
     }
 
     return client;

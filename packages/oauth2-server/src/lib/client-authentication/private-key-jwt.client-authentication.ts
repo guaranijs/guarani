@@ -6,6 +6,7 @@ import {
   JsonWebKeySet,
   InvalidJsonWebKeySetException,
 } from '@guarani/jose';
+import { Nullable } from '@guarani/types';
 
 import https from 'https';
 
@@ -50,32 +51,28 @@ export class PrivateKeyJwtClientAuthentication extends JwtBearerClientAssertion 
    * @returns JSON Web Key of the Client based on the JSON Web Signature Header.
    */
   protected async getClientKey(client: Client, header: JsonWebSignatureHeaderParameters): Promise<JsonWebKey> {
-    let clientJwks: JsonWebKeySet | null = null;
+    let clientJwks: Nullable<JsonWebKeySet> = null;
 
-    if (client.jwksUri != null) {
+    if (client.jwksUri !== null) {
       clientJwks = await this.getClientJwksFromUri(client.jwksUri);
-    } else if (client.jwks != null) {
+    } else if (client.jwks !== null) {
       clientJwks = await JsonWebKeySet.load(client.jwks);
     }
 
     if (clientJwks === null) {
-      throw new InvalidClientException({
-        description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-      });
+      throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
     }
 
     const jwk = clientJwks.find((key) => {
       return (
         key.kid === header.kid &&
         (key.key_ops?.includes('verify') ?? true) &&
-        (key.use !== undefined ? key.use === 'sig' : true)
+        (typeof key.use !== 'undefined' ? key.use === 'sig' : true)
       );
     });
 
     if (jwk === null) {
-      throw new InvalidClientException({
-        description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-      });
+      throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
     }
 
     return jwk;
@@ -99,19 +96,13 @@ export class PrivateKeyJwtClientAuthentication extends JwtBearerClientAssertion 
           try {
             resolve(await JsonWebKeySet.parse(responseBody));
           } catch (exc: unknown) {
-            const exception = new InvalidJsonWebKeySetException();
-            exception.cause = exc;
-
-            reject(exception);
+            reject(new InvalidJsonWebKeySetException(undefined, { cause: exc }));
           }
         });
       });
 
       request.on('error', (error) => {
-        const exception = new InvalidJsonWebKeySetException();
-        exception.cause = error;
-
-        reject(exception);
+        reject(new InvalidJsonWebKeySetException(undefined, { cause: error }));
       });
 
       request.end();

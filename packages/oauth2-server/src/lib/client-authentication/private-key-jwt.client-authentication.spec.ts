@@ -72,12 +72,15 @@ describe('Private Key JWT Client Authentication Method', () => {
 
   describe('getClientKey()', () => {
     it('should throw when the client does not have a jwks registered.', async () => {
-      const client = <Client>{ id: 'client_id' };
+      const client = <Client>{
+        id: 'client_id',
+        jwks: null,
+        jwksUri: null,
+      };
 
-      await expect(clientAuthentication['getClientKey'](client, header)).rejects.toThrow(
-        new InvalidClientException({
-          description: 'This Client is not allowed to use the Authentication Method "private_key_jwt".',
-        })
+      await expect(clientAuthentication['getClientKey'](client, header)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'This Client is not allowed to use the Authentication Method "private_key_jwt".'
       );
     });
 
@@ -86,12 +89,14 @@ describe('Private Key JWT Client Authentication Method', () => {
         id: 'client_id',
         authenticationMethod: 'private_key_jwt',
         jwks: jwks.toJSON(),
+        jwksUri: null,
       };
 
-      await expect(clientAuthentication['getClientKey'](client, { ...header, kid: 'rsa-key' })).rejects.toThrow(
-        new InvalidClientException({
-          description: 'This Client is not allowed to use the Authentication Method "private_key_jwt".',
-        })
+      await expect(
+        clientAuthentication['getClientKey'](client, { ...header, kid: 'rsa-key' })
+      ).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'This Client is not allowed to use the Authentication Method "private_key_jwt".'
       );
     });
 
@@ -103,6 +108,7 @@ describe('Private Key JWT Client Authentication Method', () => {
       const client = <Client>{
         id: 'client_id',
         authenticationMethod: 'private_key_jwt',
+        jwks: null,
         jwksUri: 'https://client.example.com/jwks',
       };
 
@@ -114,6 +120,7 @@ describe('Private Key JWT Client Authentication Method', () => {
         id: 'client_id',
         authenticationMethod: 'private_key_jwt',
         jwks: jwks.toJSON(),
+        jwksUri: null,
       };
 
       await expect(clientAuthentication['getClientKey'](client, header)).resolves.toMatchObject(ecKey);

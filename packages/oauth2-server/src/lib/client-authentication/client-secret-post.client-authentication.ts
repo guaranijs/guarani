@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
@@ -14,7 +15,7 @@ import { ClientAuthenticationInterface } from './client-authentication.interface
 /**
  * Parameters passed by the Client on the Http Request Body.
  */
-interface ClientSecretPostCredentials {
+export interface ClientSecretPostCredentials extends Dictionary<unknown> {
   /**
    * Client Identifier.
    */
@@ -64,7 +65,7 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
-    const { client_id: clientId, client_secret: clientSecret } = <ClientSecretPostCredentials>request.body;
+    const { client_id: clientId, client_secret: clientSecret } = request.body as ClientSecretPostCredentials;
     return typeof clientId === 'string' && typeof clientSecret === 'string';
   }
 
@@ -75,39 +76,35 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
    * @returns Authenticated Client.
    */
   public async authenticate(request: HttpRequest): Promise<Client> {
-    const { client_id: clientId, client_secret: clientSecret } = <ClientSecretPostCredentials>request.body;
+    const { client_id: clientId, client_secret: clientSecret } = request.body as ClientSecretPostCredentials;
 
     const client = await this.clientService.findOne(clientId);
 
     if (client === null) {
-      throw new InvalidClientException({ description: 'Invalid Credentials.' });
+      throw new InvalidClientException('Invalid Credentials.');
     }
 
-    if (client.secret == null) {
-      throw new InvalidClientException({
-        description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-      });
+    if (client.secret === null) {
+      throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
     }
 
     const expectedClientSecret = Buffer.from(client.secret, 'utf8');
     const receivedClientSecret = Buffer.from(clientSecret, 'utf8');
 
     if (expectedClientSecret.length !== receivedClientSecret.length) {
-      throw new InvalidClientException({ description: 'Invalid Credentials.' });
+      throw new InvalidClientException('Invalid Credentials.');
     }
 
     if (!timingSafeEqual(expectedClientSecret, receivedClientSecret)) {
-      throw new InvalidClientException({ description: 'Invalid Credentials.' });
+      throw new InvalidClientException('Invalid Credentials.');
     }
 
-    if (client.secretExpiresAt != null && new Date() >= client.secretExpiresAt) {
-      throw new InvalidClientException({ description: 'Invalid Credentials.' });
+    if (client.secretExpiresAt !== null && new Date() >= client.secretExpiresAt) {
+      throw new InvalidClientException('Invalid Credentials.');
     }
 
     if (client.authenticationMethod !== this.name) {
-      throw new InvalidClientException({
-        description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-      });
+      throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
     }
 
     return client;

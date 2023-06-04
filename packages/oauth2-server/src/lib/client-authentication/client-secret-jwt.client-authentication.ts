@@ -32,10 +32,8 @@ export class ClientSecretJwtClientAuthentication extends JwtBearerClientAssertio
    * @returns Secret of the Client as a JSON Web Key.
    */
   protected async getClientKey(client: Client): Promise<JsonWebKey> {
-    if (client.secret == null || (client.secretExpiresAt != null && new Date() >= client.secretExpiresAt)) {
-      throw new InvalidClientException({
-        description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-      });
+    if (client.secret === null || (client.secretExpiresAt !== null && new Date() >= client.secretExpiresAt)) {
+      throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
     }
 
     return new OctetSequenceKey({ kty: 'oct', k: Buffer.from(client.secret, 'utf8').toString('base64url') });

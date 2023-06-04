@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -6,7 +7,7 @@ import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { ClientAuthentication } from './client-authentication.type';
-import { NoneClientAuthentication } from './none.client-authentication';
+import { NoneClientAuthentication, NoneCredentials } from './none.client-authentication';
 
 describe('None Client Authentication Method', () => {
   let container: DependencyInjectionContainer;
@@ -32,7 +33,7 @@ describe('None Client Authentication Method', () => {
   });
 
   describe('hasBeenRequested()', () => {
-    const methodRequests: [Record<string, any>, boolean][] = [
+    const methodRequests: [Dictionary<unknown>, boolean][] = [
       [{}, false],
       [{ client_id: '' }, true],
       [{ client_id: 'foo' }, true],
@@ -54,7 +55,7 @@ describe('None Client Authentication Method', () => {
         query: {},
       });
 
-      expect(clientAuthentication.hasBeenRequested(request)).toBe(expected);
+      expect(clientAuthentication.hasBeenRequested(request)).toEqual(expected);
     });
   });
 
@@ -63,7 +64,7 @@ describe('None Client Authentication Method', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: { client_id: 'client_id' },
+        body: <NoneCredentials>{ client_id: 'client_id' },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -75,39 +76,41 @@ describe('None Client Authentication Method', () => {
     it('should throw when a client is not found.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Invalid Credentials.' })
+      await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'Invalid Credentials.'
       );
     });
 
     it('should throw when requesting with a client with a secret.', async () => {
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{ id: 'client_id', secret: 'client_secret' });
+      const client = <Client>{ id: 'client_id', secret: 'client_secret' };
 
-      await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({
-          description: 'This Client is not allowed to use the Authentication Method "none".',
-        })
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+
+      await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'This Client is not allowed to use the Authentication Method "none".'
       );
     });
 
     it('should throw when requesting with a client not authorized to use this authentication method.', async () => {
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
+      const client = <Client>{
         id: 'client_id',
-        authenticationMethod: <ClientAuthentication>'unknown',
-      });
+        secret: null,
+        authenticationMethod: 'unknown' as ClientAuthentication,
+      };
 
-      await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({
-          description: 'This Client is not allowed to use the Authentication Method "none".',
-        })
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+
+      await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'This Client is not allowed to use the Authentication Method "none".'
       );
     });
 
     it('should return an instance of a client.', async () => {
-      const client = <Client>{ id: 'client_id', authenticationMethod: 'none' };
-
+      const client = <Client>{ id: 'client_id', secret: null, authenticationMethod: 'none' };
       clientServiceMock.findOne.mockResolvedValueOnce(client);
-
       await expect(clientAuthentication.authenticate(request)).resolves.toBe(client);
     });
   });

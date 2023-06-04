@@ -23,11 +23,11 @@ describe('S256 PKCE', () => {
 
   describe('verify()', () => {
     it('should return false when comparing a challenge to a different verifier.', () => {
-      expect(pkce.verify('8xJ5XjIsh0YabzxJ4JiXxZyg1aNiRdKgDwjLxm7ul20', 'abc123')).toBe(false);
+      expect(pkce.verify('8xJ5XjIsh0YabzxJ4JiXxZyg1aNiRdKgDwjLxm7ul20', 'abc123')).toBeFalse();
     });
 
     it('should return true when comparing a challenge to its verifier.', () => {
-      expect(pkce.verify('8xJ5XjIsh0YabzxJ4JiXxZyg1aNiRdKgDwjLxm7ul20', 'abcxyz')).toBe(true);
+      expect(pkce.verify('8xJ5XjIsh0YabzxJ4JiXxZyg1aNiRdKgDwjLxm7ul20', 'abcxyz')).toBeTrue();
     });
   });
 });

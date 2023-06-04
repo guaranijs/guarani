@@ -1,4 +1,4 @@
-import { Constructor } from '@guarani/di';
+import { Constructor } from '@guarani/types';
 
 import { S256Pkce } from './S256.pkce';
 import { PkceInterface } from './pkce.interface';

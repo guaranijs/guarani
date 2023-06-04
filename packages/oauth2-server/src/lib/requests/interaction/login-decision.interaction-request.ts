@@ -4,7 +4,8 @@ import { InteractionRequest } from './interaction-request';
 /**
  * Parameters of the custom OAuth 2.0 Login Decision Interaction Request.
  */
-export interface LoginDecisionInteractionRequest<TDecision extends LoginDecision> extends InteractionRequest {
+export interface LoginDecisionInteractionRequest<TDecision extends LoginDecision = LoginDecision>
+  extends InteractionRequest {
   /**
    * Login Challenge provided by the Client.
    */

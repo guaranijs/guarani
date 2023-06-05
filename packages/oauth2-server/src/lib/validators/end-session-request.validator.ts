@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { URL } from 'url';
 
@@ -67,12 +68,12 @@ export class EndSessionRequestValidator {
    * @returns Parameters of the End Session Request.
    */
   public getEndSessionParameters(request: HttpRequest): EndSessionRequest {
-    switch (<Extract<HttpMethod, 'GET' | 'POST'>>request.method) {
+    switch (request.method as Extract<HttpMethod, 'GET' | 'POST'>) {
       case 'GET':
-        return <EndSessionRequest>request.query;
+        return request.query as EndSessionRequest;
 
       case 'POST':
-        return <EndSessionRequest>request.body;
+        return request.body as EndSessionRequest;
     }
   }
 
@@ -82,12 +83,12 @@ export class EndSessionRequestValidator {
    * @param parameters Parameters of the End Session Request.
    * @returns State provided by the Client.
    */
-  private getState(parameters: EndSessionRequest): string | undefined {
+  private getState(parameters: EndSessionRequest): Nullable<string> {
     if (typeof parameters.state !== 'undefined' && typeof parameters.state !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "state".' });
+      throw new InvalidRequestException('Invalid parameter "state".');
     }
 
-    return parameters.state;
+    return parameters.state ?? null;
   }
 
   /**
@@ -98,7 +99,7 @@ export class EndSessionRequestValidator {
    */
   private getIdTokenHint(parameters: EndSessionRequest): string {
     if (typeof parameters.id_token_hint !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "id_token_hint".', state: parameters.state });
+      throw new InvalidRequestException('Invalid parameter "id_token_hint".');
     }
 
     return parameters.id_token_hint;
@@ -112,13 +113,13 @@ export class EndSessionRequestValidator {
    */
   private async getClient(parameters: EndSessionRequest): Promise<Client> {
     if (typeof parameters.client_id !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "client_id".', state: parameters.state });
+      throw new InvalidRequestException('Invalid parameter "client_id".');
     }
 
     const client = await this.clientService.findOne(parameters.client_id);
 
     if (client === null) {
-      throw new InvalidClientException({ description: 'Invalid Client.', state: parameters.state });
+      throw new InvalidClientException('Invalid Client.');
     }
 
     return client;
@@ -131,19 +132,16 @@ export class EndSessionRequestValidator {
    * @param client Client of the Request.
    * @returns Parsed and validated Post Logout Redirect URI.
    */
-  private getPostLogoutRedirectUri(parameters: EndSessionRequest, client: Client): URL | undefined {
+  private getPostLogoutRedirectUri(parameters: EndSessionRequest, client: Client): Nullable<URL> {
     if (
       typeof parameters.post_logout_redirect_uri !== 'undefined' &&
       typeof parameters.post_logout_redirect_uri !== 'string'
     ) {
-      throw new InvalidRequestException({
-        description: 'Invalid parameter "post_logout_redirect_uri".',
-        state: parameters.state,
-      });
+      throw new InvalidRequestException('Invalid parameter "post_logout_redirect_uri".');
     }
 
     if (typeof parameters.post_logout_redirect_uri === 'undefined') {
-      return undefined;
+      return null;
     }
 
     let postLogoutRedirectUri: URL;
@@ -151,21 +149,15 @@ export class EndSessionRequestValidator {
     try {
       postLogoutRedirectUri = new URL(parameters.post_logout_redirect_uri);
     } catch (exc: unknown) {
-      throw new InvalidRequestException({
-        description: 'Invalid parameter "post_logout_redirect_uri".',
-        state: parameters.state,
-      });
+      throw new InvalidRequestException('Invalid parameter "post_logout_redirect_uri".', { cause: exc });
     }
 
     if (postLogoutRedirectUri.hash.length !== 0) {
-      throw new InvalidRequestException({
-        description: 'The Post Logout Redirect URI MUST NOT have a fragment component.',
-        state: parameters.state,
-      });
+      throw new InvalidRequestException('The Post Logout Redirect URI MUST NOT have a fragment component.');
     }
 
     if (!client.postLogoutRedirectUris.includes(postLogoutRedirectUri.href)) {
-      throw new AccessDeniedException({ description: 'Invalid Post Logout Redirect URI.', state: parameters.state });
+      throw new AccessDeniedException('Invalid Post Logout Redirect URI.');
     }
 
     return postLogoutRedirectUri;
@@ -177,12 +169,12 @@ export class EndSessionRequestValidator {
    * @param parameters Parameters of the End Session Request.
    * @returns Logout Hint provided by the Client.
    */
-  private getLogoutHint(parameters: EndSessionRequest): string | undefined {
+  private getLogoutHint(parameters: EndSessionRequest): Nullable<string> {
     if (typeof parameters.logout_hint !== 'undefined' && typeof parameters.logout_hint !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "logout_hint".', state: parameters.state });
+      throw new InvalidRequestException('Invalid parameter "logout_hint".');
     }
 
-    return parameters.logout_hint;
+    return parameters.logout_hint ?? null;
   }
 
   /**
@@ -193,17 +185,14 @@ export class EndSessionRequestValidator {
    */
   private getUiLocales(parameters: EndSessionRequest): string[] {
     if (typeof parameters.ui_locales !== 'undefined' && typeof parameters.ui_locales !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "ui_locales".', state: parameters.state });
+      throw new InvalidRequestException('Invalid parameter "ui_locales".');
     }
 
     const requestedUiLocales = parameters.ui_locales?.split(' ') ?? [];
 
     requestedUiLocales.forEach((requestedUiLocale) => {
       if (!this.settings.uiLocales.includes(requestedUiLocale)) {
-        throw new InvalidRequestException({
-          description: `Unsupported UI Locale "${requestedUiLocale}".`,
-          state: parameters.state,
-        });
+        throw new InvalidRequestException(`Unsupported UI Locale "${requestedUiLocale}".`);
       }
     });
 

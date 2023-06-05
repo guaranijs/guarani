@@ -120,18 +120,15 @@ describe('ID Token Handler', () => {
     use: 'enc',
   });
 
-  const jwks = new JsonWebKeySet([ecSignkey, rsaSignKey, rsaKeyWrapKey]);
+  const jwks = new JsonWebKeySet([ecSignkey, rsaSignKey]);
   const settings = <Settings>{ issuer: 'https://server.example.com', idTokenSignatureAlgorithms: ['ES256', 'RS256'] };
 
-  const userServiceMock = jest.mocked<UserServiceInterface>(
-    {
-      create: jest.fn(),
-      findByResourceOwnerCredentials: jest.fn(),
-      findOne: jest.fn(),
-      getUserinfo: jest.fn(),
-    },
-    true
-  );
+  const userServiceMock = jest.mocked<UserServiceInterface>({
+    create: jest.fn(),
+    findByResourceOwnerCredentials: jest.fn(),
+    findOne: jest.fn(),
+    getUserinfo: jest.fn(),
+  });
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
@@ -156,8 +153,9 @@ describe('ID Token Handler', () => {
       container.bind<UserServiceInterface>(USER_SERVICE).toValue({ create: jest.fn(), findOne: jest.fn() });
       container.bind(IdTokenHandler).toSelf().asSingleton();
 
-      expect(() => container.resolve(IdTokenHandler)).toThrow(
-        new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".')
+      expect(() => container.resolve(IdTokenHandler)).toThrowWithMessage(
+        TypeError,
+        'Missing implementation of required method "UserServiceInterface.getUserinfo".'
       );
     });
   });
@@ -189,8 +187,9 @@ describe('ID Token Handler', () => {
 
       const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
 
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrow(
-        new Error('Could not find a JSON Web Key suitable for Signing an ID Token.')
+      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrowWithMessage(
+        Error,
+        'Could not find a JSON Web Key suitable for Signing an ID Token.'
       );
     });
 
@@ -220,8 +219,9 @@ describe('ID Token Handler', () => {
 
       const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
 
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrow(
-        new Error('Could not find a JSON Web Key suitable for Signing an ID Token.')
+      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrowWithMessage(
+        Error,
+        'Could not find a JSON Web Key suitable for Signing an ID Token.'
       );
     });
 
@@ -233,6 +233,7 @@ describe('ID Token Handler', () => {
           id: 'client_id',
           subjectType: 'public',
           idTokenSignedResponseAlgorithm: 'ES256',
+          idTokenEncryptedResponseKeyWrap: null,
         },
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
         user: { id: 'user_id' },
@@ -264,6 +265,7 @@ describe('ID Token Handler', () => {
           id: 'client_id',
           subjectType: 'public',
           idTokenSignedResponseAlgorithm: 'ES256',
+          idTokenEncryptedResponseKeyWrap: null,
         },
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
         user: { id: 'user_id' },
@@ -295,6 +297,7 @@ describe('ID Token Handler', () => {
           id: 'client_id',
           subjectType: 'public',
           idTokenSignedResponseAlgorithm: 'ES256',
+          idTokenEncryptedResponseKeyWrap: null,
         },
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
         user: { id: 'user_id' },
@@ -326,6 +329,7 @@ describe('ID Token Handler', () => {
           id: 'client_id',
           subjectType: 'public',
           idTokenSignedResponseAlgorithm: 'ES256',
+          idTokenEncryptedResponseKeyWrap: null,
         },
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
         user: { id: 'user_id' },
@@ -352,24 +356,12 @@ describe('ID Token Handler', () => {
       expect(claims.c_hash).toEqual('pk3JJWstBOegJTRDDozDaw');
     });
 
-    it('should throw when no key wrap key has an "alg" parameter supported by the client.', async () => {
-      const keysWithUnsupportedAlg = await Promise.all([
-        EllipticCurveKey.generate('EC', { curve: 'P-256' }, { alg: 'ES256', use: 'sig' }),
-        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RS256', use: 'sig' }),
-        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256', use: 'enc' }),
-      ]);
-
-      container.delete(JsonWebKeySet);
-      container.delete(IdTokenHandler);
-
-      container.bind(JsonWebKeySet).toValue(new JsonWebKeySet(keysWithUnsupportedAlg));
-      container.bind(IdTokenHandler).toSelf().asSingleton();
-
-      idTokenHandler = container.resolve(IdTokenHandler);
-
+    it('should throw when the client does not have a json web key set registered.', async () => {
       const consent = <Consent>{
         client: {
           id: 'client_id',
+          jwksUri: null,
+          jwks: null,
           subjectType: 'public',
           idTokenSignedResponseAlgorithm: 'ES256',
           idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
@@ -381,8 +373,38 @@ describe('ID Token Handler', () => {
 
       const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
 
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrow(
-        new Error('Could not find a JSON Web Key suitable for Encrypting an ID Token.')
+      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrowWithMessage(
+        Error,
+        'The Client does not have a JSON Web Key Set registered.'
+      );
+    });
+
+    it('should throw when no key wrap key has an "alg" parameter supported by the client.', async () => {
+      const keysWithUnsupportedAlg = await Promise.all([
+        EllipticCurveKey.generate('EC', { curve: 'P-256' }, { alg: 'ES256', use: 'sig' }),
+        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RS256', use: 'sig' }),
+        RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256', use: 'enc' }),
+      ]);
+
+      const consent = <Consent>{
+        client: {
+          id: 'client_id',
+          jwksUri: null,
+          jwks: new JsonWebKeySet(keysWithUnsupportedAlg).toJSON(true),
+          subjectType: 'public',
+          idTokenSignedResponseAlgorithm: 'ES256',
+          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+        },
+        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        user: { id: 'user_id' },
+      };
+
+      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
+
+      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrowWithMessage(
+        Error,
+        'Could not find a JSON Web Key suitable for Encrypting an ID Token.'
       );
     });
 
@@ -393,19 +415,13 @@ describe('ID Token Handler', () => {
         RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256' }),
       ]);
 
-      container.delete(JsonWebKeySet);
-      container.delete(IdTokenHandler);
-
-      container.bind(JsonWebKeySet).toValue(new JsonWebKeySet(keysWithInvalidSig));
-      container.bind(IdTokenHandler).toSelf().asSingleton();
-
-      idTokenHandler = container.resolve(IdTokenHandler);
-
       const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
 
       const consent = <Consent>{
         client: {
           id: 'client_id',
+          jwksUri: null,
+          jwks: new JsonWebKeySet(keysWithInvalidSig).toJSON(true),
           subjectType: 'public',
           idTokenSignedResponseAlgorithm: 'ES256',
           idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
@@ -415,8 +431,9 @@ describe('ID Token Handler', () => {
         user: { id: 'user_id' },
       };
 
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrow(
-        new Error('Could not find a JSON Web Key suitable for Encrypting an ID Token.')
+      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrowWithMessage(
+        Error,
+        'Could not find a JSON Web Key suitable for Encrypting an ID Token.'
       );
     });
 
@@ -426,6 +443,8 @@ describe('ID Token Handler', () => {
       const consent = <Consent>{
         client: {
           id: 'client_id',
+          jwksUri: null,
+          jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
           subjectType: 'public',
           idTokenSignedResponseAlgorithm: 'ES256',
           idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
@@ -441,12 +460,7 @@ describe('ID Token Handler', () => {
 
       expect(idToken).toEqual(expect.any(String));
 
-      const { plaintext } = await JsonWebEncryption.decrypt(
-        idToken,
-        async (header) => jwks.find((jwk) => jwk.kid === header.kid),
-        ['RSA-OAEP'],
-        ['A128CBC-HS256']
-      );
+      const { plaintext } = await JsonWebEncryption.decrypt(idToken, rsaKeyWrapKey, ['RSA-OAEP'], ['A128CBC-HS256']);
 
       const { payload } = await JsonWebSignature.verify(
         plaintext.toString('ascii'),
@@ -466,6 +480,8 @@ describe('ID Token Handler', () => {
       const consent = <Consent>{
         client: {
           id: 'client_id',
+          jwksUri: null,
+          jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
           subjectType: 'public',
           idTokenSignedResponseAlgorithm: 'ES256',
           idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
@@ -481,12 +497,7 @@ describe('ID Token Handler', () => {
 
       expect(idToken).toEqual(expect.any(String));
 
-      const { plaintext } = await JsonWebEncryption.decrypt(
-        idToken,
-        async (header) => jwks.find((jwk) => jwk.kid === header.kid),
-        ['RSA-OAEP'],
-        ['A128CBC-HS256']
-      );
+      const { plaintext } = await JsonWebEncryption.decrypt(idToken, rsaKeyWrapKey, ['RSA-OAEP'], ['A128CBC-HS256']);
 
       const { payload } = await JsonWebSignature.verify(
         plaintext.toString('ascii'),
@@ -506,6 +517,8 @@ describe('ID Token Handler', () => {
       const consent = <Consent>{
         client: {
           id: 'client_id',
+          jwksUri: null,
+          jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
           subjectType: 'public',
           idTokenSignedResponseAlgorithm: 'ES256',
           idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
@@ -521,12 +534,7 @@ describe('ID Token Handler', () => {
 
       expect(idToken).toEqual(expect.any(String));
 
-      const { plaintext } = await JsonWebEncryption.decrypt(
-        idToken,
-        async (header) => jwks.find((jwk) => jwk.kid === header.kid),
-        ['RSA-OAEP'],
-        ['A128CBC-HS256']
-      );
+      const { plaintext } = await JsonWebEncryption.decrypt(idToken, rsaKeyWrapKey, ['RSA-OAEP'], ['A128CBC-HS256']);
 
       const { payload } = await JsonWebSignature.verify(
         plaintext.toString('ascii'),
@@ -546,6 +554,8 @@ describe('ID Token Handler', () => {
       const consent = <Consent>{
         client: {
           id: 'client_id',
+          jwksUri: null,
+          jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
           subjectType: 'public',
           idTokenSignedResponseAlgorithm: 'ES256',
           idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
@@ -561,12 +571,7 @@ describe('ID Token Handler', () => {
 
       expect(idToken).toEqual(expect.any(String));
 
-      const { plaintext } = await JsonWebEncryption.decrypt(
-        idToken,
-        async (header) => jwks.find((jwk) => jwk.kid === header.kid),
-        ['RSA-OAEP'],
-        ['A128CBC-HS256']
-      );
+      const { plaintext } = await JsonWebEncryption.decrypt(idToken, rsaKeyWrapKey, ['RSA-OAEP'], ['A128CBC-HS256']);
 
       const { payload } = await JsonWebSignature.verify(
         plaintext.toString('ascii'),

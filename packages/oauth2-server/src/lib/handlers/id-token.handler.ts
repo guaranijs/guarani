@@ -9,8 +9,10 @@ import {
   JsonWebSignatureHeader,
   JsonWebTokenClaims,
 } from '@guarani/jose';
+import { Nullable } from '@guarani/types';
 
 import { createHash } from 'crypto';
+import https from 'https';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
@@ -61,8 +63,8 @@ export class IdTokenHandler {
     parameters: AuthorizationRequest,
     login: Login,
     consent: Consent,
-    accessToken: AccessToken | null,
-    authorizationCode: AuthorizationCode | null
+    accessToken: Nullable<AccessToken>,
+    authorizationCode: Nullable<AuthorizationCode>
   ): Promise<string> {
     const now = Math.ceil(Date.now() / 1000);
 
@@ -99,11 +101,11 @@ export class IdTokenHandler {
 
     const signedJwt = await jws.sign(signKey);
 
-    if (client.idTokenEncryptedResponseKeyWrap == null) {
+    if (client.idTokenEncryptedResponseKeyWrap === null) {
       return signedJwt;
     }
 
-    const keyWrapKey = this.getKeyWrapJsonWebKey(client);
+    const keyWrapKey = await this.getKeyWrapJsonWebKey(client);
 
     const jweHeader = new JsonWebEncryptionHeader({
       alg: client.idTokenEncryptedResponseKeyWrap,
@@ -151,6 +153,25 @@ export class IdTokenHandler {
   }
 
   /**
+   * Creates a left hash of the provided handle.
+   *
+   * A left hash is created by hashing the provided handle with a SHA-2 algorithm based on the provided
+   * JSON Web Signature Algorithm (i.e. the algorithm RS256 uses SHA-256), then Base64Url encoding the left-most
+   * portion of the hash.
+   *
+   * @param token Handle used to create the left hash.
+   * @param alg JSON Web Signature Algorithm used to create the ID Token.
+   * @returns Base64Url encoded left hash of the provided handle.
+   */
+  private getLeftHash(token: string, alg: JsonWebSignatureAlgorithm): string {
+    const hashAlgorithm = `sha${alg.substring(2)}`;
+    const hash = createHash(hashAlgorithm).update(token, 'ascii').digest();
+    const halfHash = hash.subarray(0, hash.length / 2);
+
+    return halfHash.toString('base64url');
+  }
+
+  /**
    * Gets a JSON Web Key suitable for signing an ID Token from the Authorization Server's JSON Web Key Set.
    *
    * @param client Client requesting authorization.
@@ -172,8 +193,24 @@ export class IdTokenHandler {
    * @param client Client requesting authorization.
    * @returns JSON Web Key used to sign the ID Token.
    */
-  private getKeyWrapJsonWebKey(client: Client): JsonWebKey {
-    const jwk = this.jwks.find((jwk) => jwk.alg === client.idTokenEncryptedResponseKeyWrap! && jwk.use === 'enc');
+  private async getKeyWrapJsonWebKey(client: Client): Promise<JsonWebKey> {
+    let clientJwks: Nullable<JsonWebKeySet> = null;
+
+    if (client.jwksUri !== null) {
+      clientJwks = await this.getClientJwksFromUri(client.jwksUri);
+    } else if (client.jwks !== null) {
+      clientJwks = await JsonWebKeySet.load(client.jwks);
+    }
+
+    if (clientJwks === null) {
+      throw new Error('The Client does not have a JSON Web Key Set registered.');
+    }
+
+    const jwk = clientJwks.find((key) => {
+      return (
+        key.alg === client.idTokenEncryptedResponseKeyWrap! && (typeof key.use === 'undefined' || key.use === 'enc')
+      );
+    });
 
     if (jwk === null) {
       throw new Error('Could not find a JSON Web Key suitable for Encrypting an ID Token.');
@@ -183,21 +220,33 @@ export class IdTokenHandler {
   }
 
   /**
-   * Creates a left hash of the provided handle.
+   * Fetches the JSON Web Key Set of the Client hosted at the provided URI.
    *
-   * A left hash is created by hashing the provided handle with a SHA-2 algorithm based on the provided
-   * JSON Web Signature Algorithm (i.e. the algorithm RS256 uses SHA-256), then Base64Url encoding the left-most
-   * portion of the hash.
-   *
-   * @param token Handle used to create the left hash.
-   * @param alg JSON Web Signature Algorithm used to create the ID Token.
-   * @returns Base64Url encoded left hash of the provided handle.
+   * @param jwksUri URI of the JSON Web Key Set of the Client.
+   * @returns JSON Web Key Set of the Client.
    */
-  private getLeftHash(token: string, alg: JsonWebSignatureAlgorithm): string {
-    const hashAlgorithm = `SHA${alg.substring(2)}`;
-    const hash = createHash(hashAlgorithm).update(token, 'ascii').digest();
-    const halfHash = hash.subarray(0, hash.length / 2);
+  private getClientJwksFromUri(jwksUri: string): Promise<JsonWebKeySet> {
+    return new Promise((resolve, reject) => {
+      const request = https.request(jwksUri, (res) => {
+        let responseBody = '';
 
-    return halfHash.toString('base64url');
+        res.setEncoding('utf8');
+
+        res.on('data', (chunk) => (responseBody += chunk));
+        res.on('end', async () => {
+          try {
+            resolve(await JsonWebKeySet.parse(responseBody));
+          } catch (exc: unknown) {
+            reject(new Error('Could not load the JSON Web Key Set of the Client.', { cause: exc }));
+          }
+        });
+      });
+
+      request.on('error', (error) => {
+        reject(new Error('Could not load the JSON Web Key Set of the Client.', { cause: error }));
+      });
+
+      request.end();
+    });
   }
 }

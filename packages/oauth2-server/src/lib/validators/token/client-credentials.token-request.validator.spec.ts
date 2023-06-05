@@ -4,7 +4,6 @@ import { Buffer } from 'buffer';
 
 import { ClientCredentialsTokenContext } from '../../context/token/client-credentials.token-context';
 import { Client } from '../../entities/client.entity';
-import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
 import { GRANT_TYPE } from '../../grant-types/grant-type.token';
@@ -24,8 +23,8 @@ describe('Client Credentials Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: ClientCredentialsTokenRequestValidator;
 
-  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   const grantTypesMocks = [
     jest.mocked<GrantTypeInterface>({ name: 'authorization_code', handle: jest.fn() }),
@@ -66,7 +65,7 @@ describe('Client Credentials Token Request Validator', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: { grant_type: 'client_credentials' },
+        body: <ClientCredentialsTokenRequest>{ grant_type: 'client_credentials' },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -82,21 +81,9 @@ describe('Client Credentials Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "scope".' })
-      );
-    });
-
-    it("should throw when the client requests a scope it's not allowed to.", async () => {
-      request.body.scope = 'foo bar qux';
-
-      const client = <Client>{ id: 'client_id', grantTypes: ['client_credentials'], scopes: ['foo', 'bar', 'baz'] };
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-      scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
-
-      await expect(validator.validate(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'The Client is not allowed to request the scope "qux".' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "scope".'
       );
     });
 
@@ -112,7 +99,7 @@ describe('Client Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ClientCredentialsTokenContext>({
-        parameters: <ClientCredentialsTokenRequest>request.body,
+        parameters: request.body as ClientCredentialsTokenRequest,
         client,
         grantType: grantTypesMocks[1]!,
         scopes,
@@ -128,7 +115,7 @@ describe('Client Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(client.scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ClientCredentialsTokenContext>({
-        parameters: <ClientCredentialsTokenRequest>request.body,
+        parameters: request.body as ClientCredentialsTokenRequest,
         client,
         grantType: grantTypesMocks[1]!,
         scopes: client.scopes,

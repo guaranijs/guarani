@@ -1,8 +1,6 @@
-import { Constructor } from '@guarani/di';
+import { Constructor } from '@guarani/types';
 
-import { TokenContext } from '../../context/token/token-context';
 import { GrantType } from '../../grant-types/grant-type.type';
-import { TokenRequest } from '../../requests/token/token-request';
 import { AuthorizationCodeTokenRequestValidator } from './authorization-code.token-request.validator';
 import { ClientCredentialsTokenRequestValidator } from './client-credentials.token-request.validator';
 import { DeviceCodeTokenRequestValidator } from './device-code.token-request.validator';
@@ -14,10 +12,7 @@ import { TokenRequestValidator } from './token-request.validator';
 /**
  * Token Request Validators Registry.
  */
-export const tokenRequestValidatorsRegistry: Record<
-  GrantType,
-  Constructor<TokenRequestValidator<TokenRequest, TokenContext<TokenRequest>>>
-> = {
+export const tokenRequestValidatorsRegistry: Record<GrantType, Constructor<TokenRequestValidator>> = {
   authorization_code: AuthorizationCodeTokenRequestValidator,
   client_credentials: ClientCredentialsTokenRequestValidator,
   password: ResourceOwnerPasswordCredentialsTokenRequestValidator,

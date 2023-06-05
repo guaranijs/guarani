@@ -53,7 +53,7 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<AuthorizationCodeTokenContext> {
-    const parameters = <AuthorizationCodeTokenRequest>request.body;
+    const parameters = request.body as AuthorizationCodeTokenRequest;
 
     const context = await super.validate(request);
 
@@ -72,13 +72,13 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    */
   private async getAuthorizationCode(parameters: AuthorizationCodeTokenRequest): Promise<AuthorizationCode> {
     if (typeof parameters.code !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "code".' });
+      throw new InvalidRequestException('Invalid parameter "code".');
     }
 
     const authorizationCode = await this.authorizationCodeService.findOne(parameters.code);
 
     if (authorizationCode === null) {
-      throw new InvalidGrantException({ description: 'Invalid Authorization Code.' });
+      throw new InvalidGrantException('Invalid Authorization Code.');
     }
 
     return authorizationCode;
@@ -93,7 +93,7 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    */
   protected getRedirectUri(parameters: AuthorizationCodeTokenRequest, client: Client): URL {
     if (typeof parameters.redirect_uri !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".' });
+      throw new InvalidRequestException('Invalid parameter "redirect_uri".');
     }
 
     let redirectUri: URL;
@@ -101,15 +101,15 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
     try {
       redirectUri = new URL(parameters.redirect_uri);
     } catch (exc: unknown) {
-      throw new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".' });
+      throw new InvalidRequestException('Invalid parameter "redirect_uri".');
     }
 
     if (redirectUri.hash.length !== 0) {
-      throw new InvalidRequestException({ description: 'The Redirect URI MUST NOT have a fragment component.' });
+      throw new InvalidRequestException('The Redirect URI MUST NOT have a fragment component.');
     }
 
     if (!client.redirectUris.includes(redirectUri.href)) {
-      throw new AccessDeniedException({ description: 'Invalid Redirect URI.' });
+      throw new AccessDeniedException('Invalid Redirect URI.');
     }
 
     return redirectUri;
@@ -123,7 +123,7 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    */
   private getCodeVerifier(parameters: AuthorizationCodeTokenRequest): string {
     if (typeof parameters.code_verifier !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "code_verifier".' });
+      throw new InvalidRequestException('Invalid parameter "code_verifier".');
     }
 
     return parameters.code_verifier;

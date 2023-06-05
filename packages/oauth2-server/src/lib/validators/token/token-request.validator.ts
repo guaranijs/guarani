@@ -10,7 +10,10 @@ import { TokenRequest } from '../../requests/token/token-request';
 /**
  * Implementation of the Token Request Validator.
  */
-export abstract class TokenRequestValidator<TRequest extends TokenRequest, TContext extends TokenContext<TRequest>> {
+export abstract class TokenRequestValidator<
+  TRequest extends TokenRequest = TokenRequest,
+  TContext extends TokenContext<TRequest> = TokenContext<TRequest>
+> {
   /**
    * Name of the Grant Type that uses this Validator.
    */
@@ -34,7 +37,7 @@ export abstract class TokenRequestValidator<TRequest extends TokenRequest, TCont
    * @returns Token Context.
    */
   public async validate(request: HttpRequest): Promise<TContext> {
-    const parameters = <TRequest>request.body;
+    const parameters = request.body as TRequest;
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
     const grantType = this.getGrantType(parameters, client);
@@ -53,9 +56,9 @@ export abstract class TokenRequestValidator<TRequest extends TokenRequest, TCont
     const grantType = this.grantTypes.find((grantType) => grantType.name === parameters.grant_type)!;
 
     if (!client.grantTypes.includes(grantType.name)) {
-      throw new UnauthorizedClientException({
-        description: `This Client is not allowed to request the grant_type "${grantType.name}".`,
-      });
+      throw new UnauthorizedClientException(
+        `This Client is not allowed to request the grant_type "${grantType.name}".`
+      );
     }
 
     return grantType;

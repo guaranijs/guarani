@@ -9,6 +9,7 @@ import {
   JsonWebTokenClaims,
   OctetSequenceKey,
 } from '@guarani/jose';
+import { Nullable } from '@guarani/types';
 
 import { Buffer } from 'buffer';
 import https from 'https';
@@ -17,7 +18,6 @@ import { URL } from 'url';
 import { JwtBearerTokenContext } from '../../context/token/jwt-bearer.token-context';
 import { Client } from '../../entities/client.entity';
 import { User } from '../../entities/user.entity';
-import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidGrantException } from '../../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../../exceptions/oauth2.exception';
@@ -92,7 +92,7 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<JwtBearerTokenContext> {
-    const parameters = <JwtBearerTokenRequest>request.body;
+    const parameters = request.body as JwtBearerTokenRequest;
 
     const context = await super.validate(request);
 
@@ -111,16 +111,16 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    */
   private async getSubjectFromAssertion(parameters: JwtBearerTokenRequest, client: Client): Promise<User> {
     if (typeof parameters.assertion !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "assertion".' });
+      throw new InvalidRequestException('Invalid parameter "assertion".');
     }
 
     try {
       const { header, payload } = JsonWebSignature.decode(parameters.assertion);
 
       if (header.alg === 'none') {
-        throw new InvalidGrantException({
-          description: 'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
-        });
+        throw new InvalidGrantException(
+          'The Authorization Server disallows using the JSON Web Signature Algorithm "none".'
+        );
       }
 
       const idTokenAudience = new URL('/oauth/token', this.settings.issuer).href;
@@ -140,14 +140,9 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
 
       return await this.getUser(claims.sub!);
     } catch (exc: unknown) {
-      if (exc instanceof OAuth2Exception) {
-        throw exc;
-      }
-
-      const exception = new InvalidGrantException({ description: 'The provided Assertion is invalid.' });
-      exception.cause = exc;
-
-      throw exception;
+      throw exc instanceof OAuth2Exception
+        ? exc
+        : new InvalidGrantException('The provided Assertion is invalid.', { cause: exc });
     }
   }
 
@@ -171,8 +166,8 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * @returns JSON Web Key of the Client Secret.
    */
   private async getClientSecretKey(client: Client): Promise<JsonWebKey> {
-    if (client.secret == null || (client.secretExpiresAt != null && new Date() >= client.secretExpiresAt)) {
-      throw new InvalidGrantException({ description: 'The provided Assertion is invalid.' });
+    if (client.secret === null || (client.secretExpiresAt !== null && new Date() >= client.secretExpiresAt)) {
+      throw new InvalidGrantException('The provided Assertion is invalid.');
     }
 
     return new OctetSequenceKey({ kty: 'oct', k: Buffer.from(client.secret, 'utf8').toString('base64url') });
@@ -186,29 +181,30 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * @returns JSON Web Key of the Client based on the JSON Web Signature Header.
    */
   private async getClientPublicKey(client: Client, header: JsonWebSignatureHeaderParameters): Promise<JsonWebKey> {
-    let clientJwks: JsonWebKeySet | null = null;
+    let clientJwks: Nullable<JsonWebKeySet> = null;
 
-    if (client.jwksUri != null) {
+    if (client.jwksUri !== null) {
       clientJwks = await this.getClientJwksFromUri(client.jwksUri);
-    } else if (client.jwks != null) {
+    } else if (client.jwks !== null) {
       clientJwks = await JsonWebKeySet.load(client.jwks);
     }
 
     if (clientJwks === null) {
-      throw new InvalidGrantException({ description: 'The provided Assertion is invalid.' });
+      throw new InvalidGrantException('The provided Assertion is invalid.');
     }
 
     const jwk = clientJwks.find((key) => {
       return (
         key.kid === header.kid &&
-        (key.alg === undefined || this.algorithms.includes(<Exclude<JsonWebSignatureAlgorithm, 'none'>>key.alg)) &&
+        (typeof key.alg === 'undefined' ||
+          this.algorithms.includes(<Exclude<JsonWebSignatureAlgorithm, 'none'>>key.alg)) &&
         (key.key_ops?.includes('verify') ?? true) &&
-        (key.use === undefined || key.use === 'sig')
+        (typeof key.use === 'undefined' || key.use === 'sig')
       );
     });
 
     if (jwk === null) {
-      throw new InvalidGrantException({ description: 'The provided Assertion is invalid.' });
+      throw new InvalidGrantException('The provided Assertion is invalid.');
     }
 
     return jwk;
@@ -232,19 +228,13 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
           try {
             resolve(await JsonWebKeySet.parse(responseBody));
           } catch (exc: unknown) {
-            const exception = new InvalidJsonWebKeySetException();
-            exception.cause = exc;
-
-            reject(exception);
+            reject(new InvalidJsonWebKeySetException(undefined, { cause: exc }));
           }
         });
       });
 
       request.on('error', (error) => {
-        const exception = new InvalidJsonWebKeySetException();
-        exception.cause = error;
-
-        reject(exception);
+        reject(new InvalidJsonWebKeySetException(undefined, { cause: error }));
       });
 
       request.end();
@@ -261,7 +251,7 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
     const user = await this.userService.findOne(id);
 
     if (user === null) {
-      throw new InvalidGrantException({ description: 'The provided Assertion is invalid.' });
+      throw new InvalidGrantException('The provided Assertion is invalid.');
     }
 
     return user;
@@ -276,22 +266,11 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * @returns Scopes granted to the Client.
    */
   protected getScopes(parameters: JwtBearerTokenRequest, client: Client): string[] {
-    if (parameters.scope !== undefined && typeof parameters.scope !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "scope".' });
+    if (typeof parameters.scope !== 'undefined' && typeof parameters.scope !== 'string') {
+      throw new InvalidRequestException('Invalid parameter "scope".');
     }
 
-    this.scopeHandler.checkRequestedScope(parameters.scope);
-
-    if (parameters.scope !== undefined) {
-      parameters.scope.split(' ').forEach((requestedScope) => {
-        if (!client.scopes.includes(requestedScope)) {
-          throw new AccessDeniedException({
-            description: `The Client is not allowed to request the scope "${requestedScope}".`,
-          });
-        }
-      });
-    }
-
-    return this.scopeHandler.getAllowedScopes(client, parameters.scope);
+    this.scopeHandler.checkRequestedScope(parameters.scope ?? null);
+    return this.scopeHandler.getAllowedScopes(client, parameters.scope ?? null);
   }
 }

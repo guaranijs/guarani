@@ -5,10 +5,8 @@ import { Buffer } from 'buffer';
 import { RefreshTokenTokenContext } from '../../context/token/refresh-token.token-context';
 import { Client } from '../../entities/client.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
-import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidGrantException } from '../../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
-import { InvalidScopeException } from '../../exceptions/invalid-scope.exception';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
 import { GRANT_TYPE } from '../../grant-types/grant-type.token';
 import { GrantType } from '../../grant-types/grant-type.type';
@@ -30,8 +28,8 @@ describe('Refresh Token Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: RefreshTokenTokenRequestValidator;
 
-  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>({
     create: jest.fn(),
@@ -79,7 +77,10 @@ describe('Refresh Token Token Request Validator', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: { grant_type: 'refresh_token', refresh_token: 'refresh_token' },
+        body: <RefreshTokenTokenRequest>{
+          grant_type: 'refresh_token',
+          refresh_token: 'refresh_token',
+        },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -97,8 +98,9 @@ describe('Refresh Token Token Request Validator', () => {
 
         clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "refresh_token".' })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "refresh_token".'
         );
       }
     );
@@ -109,8 +111,9 @@ describe('Refresh Token Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Invalid Refresh Token.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Invalid Refresh Token.'
       );
     });
 
@@ -123,46 +126,9 @@ describe('Refresh Token Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "scope".' })
-      );
-    });
-
-    it('should throw when requesting an unsupported scope.', async () => {
-      request.body.scope = 'foo bar unknown';
-
-      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code', 'refresh_token'] };
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token' };
-
-      const error = new InvalidScopeException({ description: 'Unsupported scope "unknown".' });
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
-
-      scopeHandlerMock.checkRequestedScope.mockImplementationOnce(() => {
-        throw error;
-      });
-
-      await expect(validator.validate(request)).rejects.toThrow(error);
-    });
-
-    it("should throw when the client requests a scope it's not allowed to.", async () => {
-      request.body.scope = 'foo bar qux';
-
-      const client = <Client>{
-        id: 'client_id',
-        grantTypes: ['authorization_code', 'refresh_token'],
-        scopes: ['foo', 'bar', 'baz'],
-      };
-
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token' };
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
-      scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
-
-      await expect(validator.validate(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'The Client is not allowed to request the scope "qux".' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "scope".'
       );
     });
 
@@ -179,10 +145,13 @@ describe('Refresh Token Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
-      scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The scope "baz" was not previously granted.' })
+      scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The scope "baz" was not previously granted.'
       );
     });
 
@@ -199,10 +168,12 @@ describe('Refresh Token Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
+
       scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar']);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RefreshTokenTokenContext>({
-        parameters: <RefreshTokenTokenRequest>request.body,
+        parameters: request.body as RefreshTokenTokenRequest,
         client,
         grantType: grantTypesMocks[3]!,
         refreshToken,
@@ -224,7 +195,7 @@ describe('Refresh Token Token Request Validator', () => {
       scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RefreshTokenTokenContext>({
-        parameters: <RefreshTokenTokenRequest>request.body,
+        parameters: request.body as RefreshTokenTokenRequest,
         client,
         grantType: grantTypesMocks[3]!,
         refreshToken,

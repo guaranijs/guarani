@@ -49,7 +49,7 @@ export class DeviceCodeTokenRequestValidator extends TokenRequestValidator<
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<DeviceCodeTokenContext> {
-    const parameters = <DeviceCodeTokenRequest>request.body;
+    const parameters = request.body as DeviceCodeTokenRequest;
 
     const context = await super.validate(request);
 
@@ -66,13 +66,13 @@ export class DeviceCodeTokenRequestValidator extends TokenRequestValidator<
    */
   private async getDeviceCode(parameters: DeviceCodeTokenRequest): Promise<DeviceCode> {
     if (typeof parameters.device_code !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "device_code".' });
+      throw new InvalidRequestException('Invalid parameter "device_code".');
     }
 
     const deviceCode = await this.deviceCodeService.findOne(parameters.device_code);
 
     if (deviceCode === null) {
-      throw new InvalidGrantException({ description: 'Invalid Device Code.' });
+      throw new InvalidGrantException('Invalid Device Code.');
     }
 
     return deviceCode;

@@ -14,7 +14,6 @@ import { Buffer } from 'buffer';
 import { JwtBearerTokenContext } from '../../context/token/jwt-bearer.token-context';
 import { Client } from '../../entities/client.entity';
 import { User } from '../../entities/user.entity';
-import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidGrantException } from '../../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
@@ -41,9 +40,9 @@ describe('JWT Bearer Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: JwtBearerTokenRequestValidator;
 
-  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
+  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
 
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
@@ -115,7 +114,10 @@ describe('JWT Bearer Token Request Validator', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: { grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: '' },
+        body: <JwtBearerTokenRequest>{
+          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+          assertion: '',
+        },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -131,8 +133,9 @@ describe('JWT Bearer Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "assertion".' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "assertion".'
       );
     });
 
@@ -143,8 +146,9 @@ describe('JWT Bearer Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -170,10 +174,9 @@ describe('JWT Bearer Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({
-          description: 'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The Authorization Server disallows using the JSON Web Signature Algorithm "none".'
       );
     });
 
@@ -198,8 +201,9 @@ describe('JWT Bearer Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -225,8 +229,9 @@ describe('JWT Bearer Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -251,8 +256,9 @@ describe('JWT Bearer Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -277,8 +283,9 @@ describe('JWT Bearer Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -304,8 +311,9 @@ describe('JWT Bearer Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -330,8 +338,9 @@ describe('JWT Bearer Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -353,12 +362,17 @@ describe('JWT Bearer Token Request Validator', () => {
 
       request.body.assertion = assertion;
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
+      const client = <Client>{
+        id: 'client_id',
+        secret: null,
+        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+      };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -389,8 +403,9 @@ describe('JWT Bearer Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -426,12 +441,19 @@ describe('JWT Bearer Token Request Validator', () => {
 
       request.body.assertion = assertion;
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
+      const client = <Client>{
+        id: 'client_id',
+        secret: null,
+        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+        jwks: null,
+        jwksUri: null,
+      };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -471,14 +493,17 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const client = <Client>{
         id: 'client_id',
+        secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: jwks.toJSON(),
+        jwksUri: null,
       };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -518,14 +543,17 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const client = <Client>{
         id: 'client_id',
+        secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: jwks.toJSON(),
+        jwksUri: null,
       };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -565,14 +593,17 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const client = <Client>{
         id: 'client_id',
+        secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: jwks.toJSON(),
+        jwksUri: null,
       };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -612,14 +643,17 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const client = <Client>{
         id: 'client_id',
+        secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: jwks.toJSON(),
+        jwksUri: null,
       };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -659,15 +693,18 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const client = <Client>{
         id: 'client_id',
+        secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: jwks.toJSON(),
+        jwksUri: null,
       };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       userServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'The provided Assertion is invalid.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'The provided Assertion is invalid.'
       );
     });
 
@@ -707,8 +744,10 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const client = <Client>{
         id: 'client_id',
+        secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: jwks.toJSON(),
+        jwksUri: null,
       };
 
       const user = <User>{ id: 'user_id' };
@@ -716,60 +755,9 @@ describe('JWT Bearer Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       userServiceMock.findOne.mockResolvedValueOnce(user);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "scope".' })
-      );
-    });
-
-    it("should throw when the client requests a scope it's not allowed to.", async () => {
-      const now = Math.floor(Date.now() / 1000);
-
-      const claims: JsonWebTokenClaimsParameters = {
-        iss: 'client_id',
-        sub: 'user_id',
-        aud: ['https://server.example.com/oauth/token'],
-        iat: now,
-        exp: now + 86400,
-      };
-
-      const key = new EllipticCurveKey({
-        kty: 'EC',
-        crv: 'P-256',
-        x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
-        y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
-        d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo',
-      });
-
-      const jws = new JsonWebSignature(
-        {
-          alg: 'ES256',
-          kid: 'LHM5p37TAesdI-tFqs7LOmDufKjrU0nq1jFRwI_7mvI',
-          typ: 'JWT',
-        },
-        new JsonWebTokenClaims(claims).toBuffer()
-      );
-
-      const assertion = await jws.sign(key);
-
-      const jwks = new JsonWebKeySet([key]);
-
-      Object.assign(request.body, { assertion, scope: 'foo bar qux' });
-
-      const client = <Client>{
-        id: 'client_id',
-        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
-        scopes: ['foo', 'bar', 'baz'],
-        jwks: jwks.toJSON(),
-      };
-
-      const user = <User>{ id: 'user_id' };
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-      userServiceMock.findOne.mockResolvedValueOnce(user);
-      scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
-
-      await expect(validator.validate(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'The Client is not allowed to request the scope "qux".' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "scope".'
       );
     });
 
@@ -809,9 +797,11 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const client = <Client>{
         id: 'client_id',
+        secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         scopes: ['foo', 'bar', 'baz'],
         jwks: jwks.toJSON(),
+        jwksUri: null,
       };
 
       const user = <User>{ id: 'user_id' };
@@ -825,7 +815,7 @@ describe('JWT Bearer Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<JwtBearerTokenContext>({
-        parameters: <JwtBearerTokenRequest>request.body,
+        parameters: request.body as JwtBearerTokenRequest,
         client,
         grantType: grantTypesMocks[5]!,
         user,
@@ -869,9 +859,11 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const client = <Client>{
         id: 'client_id',
+        secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         scopes: ['foo', 'bar', 'baz'],
         jwks: jwks.toJSON(),
+        jwksUri: null,
       };
 
       const user = <User>{ id: 'user_id' };
@@ -883,7 +875,7 @@ describe('JWT Bearer Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(client.scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<JwtBearerTokenContext>({
-        parameters: <JwtBearerTokenRequest>request.body,
+        parameters: request.body as JwtBearerTokenRequest,
         client,
         grantType: grantTypesMocks[5]!,
         user,

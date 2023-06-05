@@ -81,10 +81,7 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
    */
   protected getCodeChallenge(parameters: CodeAuthorizationRequest): string {
     if (typeof parameters.code_challenge !== 'string') {
-      throw new InvalidRequestException({
-        description: 'Invalid parameter "code_challenge".',
-        state: parameters.state,
-      });
+      throw new InvalidRequestException('Invalid parameter "code_challenge".');
     }
 
     return parameters.code_challenge;
@@ -101,20 +98,14 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
       typeof parameters.code_challenge_method !== 'undefined' &&
       typeof parameters.code_challenge_method !== 'string'
     ) {
-      throw new InvalidRequestException({
-        description: 'Invalid parameter "code_challenge_method".',
-        state: parameters.state,
-      });
+      throw new InvalidRequestException('Invalid parameter "code_challenge_method".');
     }
 
     const codeChallengeMethodName = parameters.code_challenge_method ?? 'S256';
     const codeChallengeMethod = this.pkces.find((pkceMethod) => pkceMethod.name === codeChallengeMethodName);
 
     if (typeof codeChallengeMethod === 'undefined') {
-      throw new InvalidRequestException({
-        description: `Unsupported code_challenge_method "${codeChallengeMethodName}".`,
-        state: parameters.state,
-      });
+      throw new InvalidRequestException(`Unsupported code_challenge_method "${codeChallengeMethodName}".`);
     }
 
     return codeChallengeMethod;

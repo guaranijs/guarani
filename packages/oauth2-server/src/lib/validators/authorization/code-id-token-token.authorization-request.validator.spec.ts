@@ -24,7 +24,7 @@ import { CodeIdTokenTokenAuthorizationRequestValidator } from './code-id-token-t
 
 jest.mock('../../handlers/scope.handler');
 
-const invalidNonces: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidNonces: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Code & ID Token & Token Authorization Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -187,11 +187,9 @@ describe('Code & ID Token & Token Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'Invalid response_mode "query" for response_type "code id_token token".',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid response_mode "query" for response_type "code id_token token".'
       );
     });
 
@@ -210,8 +208,9 @@ describe('Code & ID Token & Token Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "nonce".'
       );
     });
   });

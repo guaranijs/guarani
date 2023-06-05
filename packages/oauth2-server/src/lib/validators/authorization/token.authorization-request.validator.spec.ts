@@ -170,11 +170,9 @@ describe('Token Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'Invalid response_mode "query" for response_type "token".',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid response_mode "query" for response_type "token".'
       );
     });
   });

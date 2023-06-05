@@ -65,10 +65,7 @@ export class CodeTokenAuthorizationRequestValidator extends CodeAuthorizationReq
     const responseMode = super.getResponseMode(parameters, responseType);
 
     if (responseMode.name === 'query') {
-      throw new InvalidRequestException({
-        description: 'Invalid response_mode "query" for response_type "code token".',
-        state: parameters.state,
-      });
+      throw new InvalidRequestException('Invalid response_mode "query" for response_type "code token".');
     }
 
     return responseMode;

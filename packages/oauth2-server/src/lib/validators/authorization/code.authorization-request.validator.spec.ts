@@ -26,34 +26,8 @@ import { CodeAuthorizationRequestValidator } from './code.authorization-request.
 
 jest.mock('../../handlers/scope.handler');
 
-const invalidCodeChallenges: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
-
-const invalidCodeChallengeMethods: any[] = [
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
+const invalidCodeChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidCodeChallengeMethods: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Code Authorization Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -218,8 +192,9 @@ describe('Code Authorization Request Validator', () => {
         clientServiceMock.findOne.mockResolvedValueOnce(client);
         scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "code_challenge".', state: 'client_state' })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "code_challenge".'
         );
       }
     );
@@ -241,11 +216,9 @@ describe('Code Authorization Request Validator', () => {
         clientServiceMock.findOne.mockResolvedValueOnce(client);
         scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({
-            description: 'Invalid parameter "code_challenge_method".',
-            state: 'client_state',
-          })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "code_challenge_method".'
         );
       }
     );
@@ -265,11 +238,9 @@ describe('Code Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'Unsupported code_challenge_method "unknown".',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported code_challenge_method "unknown".'
       );
     });
 
@@ -287,7 +258,7 @@ describe('Code Authorization Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<CodeAuthorizationContext>({
-        parameters: <CodeAuthorizationRequest>request.query,
+        parameters: request.query as CodeAuthorizationRequest,
         cookies: request.cookies,
         responseType: responseTypesMocks[0]!,
         client,

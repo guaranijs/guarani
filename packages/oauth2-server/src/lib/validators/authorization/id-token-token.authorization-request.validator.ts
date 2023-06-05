@@ -61,10 +61,7 @@ export class IdTokenTokenAuthorizationRequestValidator extends AuthorizationRequ
     const responseMode = super.getResponseMode(parameters, responseType);
 
     if (responseMode.name === 'query') {
-      throw new InvalidRequestException({
-        description: 'Invalid response_mode "query" for response_type "id_token token".',
-        state: parameters.state,
-      });
+      throw new InvalidRequestException('Invalid response_mode "query" for response_type "id_token token".');
     }
 
     return responseMode;
@@ -78,7 +75,7 @@ export class IdTokenTokenAuthorizationRequestValidator extends AuthorizationRequ
    */
   protected override getNonce(parameters: AuthorizationRequest): string {
     if (typeof parameters.nonce !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: parameters.state });
+      throw new InvalidRequestException('Invalid parameter "nonce".');
     }
 
     return parameters.nonce;

@@ -1,7 +1,5 @@
 import { Constructor } from '@guarani/types';
 
-import { AuthorizationContext } from '../../context/authorization/authorization-context';
-import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseType } from '../../response-types/response-type.type';
 import { AuthorizationRequestValidator } from './authorization-request.validator';
 import { CodeIdTokenTokenAuthorizationRequestValidator } from './code-id-token-token.authorization-request.validator';
@@ -17,7 +15,7 @@ import { TokenAuthorizationRequestValidator } from './token.authorization-reques
  */
 export const authorizationRequestValidatorsRegistry: Record<
   ResponseType,
-  Constructor<AuthorizationRequestValidator<AuthorizationRequest, AuthorizationContext<AuthorizationRequest>>>
+  Constructor<AuthorizationRequestValidator>
 > = {
   code: CodeAuthorizationRequestValidator,
   'code id_token': CodeIdTokenAuthorizationRequestValidator,

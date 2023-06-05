@@ -61,10 +61,7 @@ export class TokenAuthorizationRequestValidator extends AuthorizationRequestVali
     const responseMode = super.getResponseMode(parameters, responseType);
 
     if (responseMode.name === 'query') {
-      throw new InvalidRequestException({
-        description: 'Invalid response_mode "query" for response_type "token".',
-        state: parameters.state,
-      });
+      throw new InvalidRequestException('Invalid response_mode "query" for response_type "token".');
     }
 
     return responseMode;

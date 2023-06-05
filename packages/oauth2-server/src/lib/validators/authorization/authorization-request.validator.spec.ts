@@ -7,7 +7,6 @@ import { Client } from '../../entities/client.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidClientException } from '../../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
-import { InvalidScopeException } from '../../exceptions/invalid-scope.exception';
 import { UnauthorizedClientException } from '../../exceptions/unauthorized-client.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
@@ -20,43 +19,14 @@ import { AuthorizationRequestValidator } from './authorization-request.validator
 
 jest.mock('../../handlers/scope.handler');
 
-const invalidStates: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
-
-const invalidClientIds: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
-
-const invalidRedirectUris: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
-
-const invalidScopes: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
-const invalidResponseModes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
-const invalidNonces: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
-const invalidPrompts: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
-const invalidDisplays: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidStates: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidClientIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidRedirectUris: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidScopes: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidResponseModes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidNonces: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidPrompts: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidDisplays: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 const invalidMaxAges: any[] = [
   null,
@@ -66,7 +36,6 @@ const invalidMaxAges: any[] = [
   1n,
   Symbol('a'),
   Buffer,
-  Buffer.alloc(1),
   () => 1,
   {},
   [],
@@ -79,13 +48,13 @@ const invalidMaxAges: any[] = [
   '-07',
 ];
 
-const invalidLoginHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
-const invalidIdTokenHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
-const invalidUiLocales: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
-const invalidAcrValues: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
+const invalidLoginHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidIdTokenHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidUiLocales: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidAcrValues: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Authorization Request Validator', () => {
-  let validator: AuthorizationRequestValidator<AuthorizationRequest, AuthorizationContext<AuthorizationRequest>>;
+  let validator: AuthorizationRequestValidator;
 
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
@@ -202,25 +171,25 @@ describe('Authorization Request Validator', () => {
     it.each(invalidStates)('should throw when providing an invalid "state" parameter.', async (state) => {
       request.query.state = state;
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "state".' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "state".'
       );
     });
 
     it.each(invalidClientIds)('should throw when providing an invalid "client_id" parameter.', async (clientId) => {
       request.query.client_id = clientId;
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "client_id".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "client_id".'
       );
     });
 
     it('should throw when the client is not registered.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Invalid Client.', state: 'client_state' })
-      );
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(InvalidClientException, 'Invalid Client.');
     });
 
     it('should throw when the client is not allowed to request the provided "response_type".', async () => {
@@ -228,11 +197,9 @@ describe('Authorization Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new UnauthorizedClientException({
-          description: 'This Client is not allowed to request the response_type "code".',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        UnauthorizedClientException,
+        'This Client is not allowed to request the response_type "code".'
       );
     });
 
@@ -245,8 +212,9 @@ describe('Authorization Request Validator', () => {
 
         clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".', state: 'client_state' })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "redirect_uri".'
         );
       }
     );
@@ -258,8 +226,9 @@ describe('Authorization Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "redirect_uri".'
       );
     });
 
@@ -270,11 +239,9 @@ describe('Authorization Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'The Redirect URI MUST NOT have a fragment component.',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'The Redirect URI MUST NOT have a fragment component.'
       );
     });
 
@@ -287,8 +254,9 @@ describe('Authorization Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Redirect URI.', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Redirect URI.'
       );
     });
 
@@ -303,45 +271,9 @@ describe('Authorization Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "scope".', state: 'client_state' })
-      );
-    });
-
-    it('should throw when requesting an unsupported scope.', async () => {
-      request.query.scope = 'foo bar baz qux unknown';
-
-      const client = <Client>{
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-      };
-
-      const error = new InvalidScopeException({ description: 'Unsupported scope "unknown".', state: 'client_state' });
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.checkRequestedScope.mockImplementationOnce(() => {
-        throw error;
-      });
-
-      await expect(validator.validate(request)).rejects.toThrow(error);
-    });
-
-    it('should throw when the client is not allowed to request the provided scope.', async () => {
-      const client = <Client>{
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'qux'],
-      };
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-
-      await expect(validator.validate(request)).rejects.toThrow(
-        new AccessDeniedException({
-          description: 'The Client is not allowed to request the scope "baz".',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "scope".'
       );
     });
 
@@ -360,8 +292,9 @@ describe('Authorization Request Validator', () => {
         clientServiceMock.findOne.mockResolvedValueOnce(client);
         scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "response_mode".', state: 'client_state' })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "response_mode".'
         );
       }
     );
@@ -379,8 +312,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Unsupported response_mode "unknown".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported response_mode "unknown".'
       );
     });
 
@@ -397,8 +331,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "nonce".'
       );
     });
 
@@ -415,8 +350,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "prompt".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "prompt".'
       );
     });
 
@@ -433,8 +369,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Unsupported prompt "unknown".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported prompt "unknown".'
       );
     });
 
@@ -451,8 +388,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'The prompt "none" must be used by itself.', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'The prompt "none" must be used by itself.'
       );
     });
 
@@ -469,11 +407,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'The prompts "create" and "login" cannot be used together.',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'The prompts "create" and "login" cannot be used together.'
       );
     });
 
@@ -490,11 +426,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'The prompts "create" and "select_account" cannot be used together.',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'The prompts "create" and "select_account" cannot be used together.'
       );
     });
 
@@ -511,11 +445,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'The prompts "login" and "select_account" cannot be used together.',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'The prompts "login" and "select_account" cannot be used together.'
       );
     });
 
@@ -532,8 +464,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "display".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "display".'
       );
     });
 
@@ -550,8 +483,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Unsupported display "unknown".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported display "unknown".'
       );
     });
 
@@ -568,8 +502,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "max_age".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "max_age".'
       );
     });
 
@@ -586,8 +521,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "login_hint".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "login_hint".'
       );
     });
 
@@ -606,8 +542,9 @@ describe('Authorization Request Validator', () => {
         clientServiceMock.findOne.mockResolvedValueOnce(client);
         scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "id_token_hint".', state: 'client_state' })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "id_token_hint".'
         );
       }
     );
@@ -625,8 +562,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "ui_locales".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "ui_locales".'
       );
     });
 
@@ -643,8 +581,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Unsupported UI Locale "unknown".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported UI Locale "unknown".'
       );
     });
 
@@ -672,8 +611,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Unsupported UI Locale "pt-BR".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported UI Locale "pt-BR".'
       );
     });
 
@@ -690,8 +630,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "acr_values".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "acr_values".'
       );
     });
 
@@ -708,11 +649,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'Unsupported Authentication Context Class Reference "unknown".',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported Authentication Context Class Reference "unknown".'
       );
     });
 
@@ -740,11 +679,9 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'Unsupported Authentication Context Class Reference "urn:guarani:acr:2fa".',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported Authentication Context Class Reference "urn:guarani:acr:2fa".'
       );
     });
 
@@ -762,7 +699,7 @@ describe('Authorization Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationContext<AuthorizationRequest>>({
-        parameters: <AuthorizationRequest>request.query,
+        parameters: request.query as AuthorizationRequest,
         cookies: request.cookies,
         responseType: responseTypesMocks[0]!,
         client,

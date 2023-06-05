@@ -174,11 +174,9 @@ describe('ID Token Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'Invalid response_mode "query" for response_type "id_token".',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid response_mode "query" for response_type "id_token".'
       );
     });
 
@@ -197,8 +195,9 @@ describe('ID Token Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "nonce".'
       );
     });
   });

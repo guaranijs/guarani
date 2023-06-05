@@ -23,50 +23,9 @@ import { SessionServiceInterface } from '../../services/session.service.interfac
 import { SESSION_SERVICE } from '../../services/session.service.token';
 import { SelectAccountInteractionRequestValidator } from './select-account.interaction-request.validator';
 
-const invalidSessionIds: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
-
-const invalidLoginChallenges: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
-
-const invalidLoginIds: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
+const invalidSessionIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidLoginChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidLoginIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Select Account Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -153,8 +112,9 @@ describe('Select Account Interaction Request Validator', () => {
       async (loginChallenge) => {
         request.query.login_challenge = loginChallenge;
 
-        await expect(validator.validateContext(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "login_challenge".' })
+        await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "login_challenge".'
         );
       }
     );
@@ -162,8 +122,9 @@ describe('Select Account Interaction Request Validator', () => {
     it('should throw when no grant is found.', async () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
-      await expect(validator.validateContext(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Login Challenge.' })
+      await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Login Challenge.'
       );
     });
 
@@ -174,8 +135,9 @@ describe('Select Account Interaction Request Validator', () => {
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
-      await expect(validator.validateContext(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "session_id".' })
+      await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "session_id".'
       );
     });
 
@@ -185,8 +147,9 @@ describe('Select Account Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(validator.validateContext(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Session Identifier.' })
+      await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Session Identifier.'
       );
     });
 
@@ -215,7 +178,11 @@ describe('Select Account Interaction Request Validator', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: { interaction_type: 'select_account', login_challenge: 'login_challenge', login_id: 'login1_id' },
+        body: <SelectAccountDecisionInteractionRequest>{
+          interaction_type: 'select_account',
+          login_challenge: 'login_challenge',
+          login_id: 'login1_id',
+        },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -229,8 +196,9 @@ describe('Select Account Interaction Request Validator', () => {
       async (loginChallenge) => {
         request.body.login_challenge = loginChallenge;
 
-        await expect(validator.validateDecision(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "login_challenge".' })
+        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "login_challenge".'
         );
       }
     );
@@ -238,8 +206,9 @@ describe('Select Account Interaction Request Validator', () => {
     it('should throw when no grant is found.', async () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
-      await expect(validator.validateDecision(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Login Challenge.' })
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Login Challenge.'
       );
     });
 
@@ -250,8 +219,9 @@ describe('Select Account Interaction Request Validator', () => {
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
-      await expect(validator.validateDecision(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "login_id".' })
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "login_id".'
       );
     });
 
@@ -261,8 +231,9 @@ describe('Select Account Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
       loginServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(validator.validateDecision(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Login Identifier.' })
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Login Identifier.'
       );
     });
 

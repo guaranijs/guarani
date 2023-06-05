@@ -85,13 +85,13 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
     parameters: CreateContextInteractionRequest | CreateDecisionInteractionRequest
   ): Promise<Grant> {
     if (typeof parameters.login_challenge !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "login_challenge".' });
+      throw new InvalidRequestException('Invalid parameter "login_challenge".');
     }
 
     const grant = await this.grantService.findOneByLoginChallenge(parameters.login_challenge);
 
     if (grant === null) {
-      throw new AccessDeniedException({ description: 'Invalid Login Challenge.' });
+      throw new AccessDeniedException('Invalid Login Challenge.');
     }
 
     return grant;

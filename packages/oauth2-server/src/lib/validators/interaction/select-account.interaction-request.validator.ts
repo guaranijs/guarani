@@ -95,13 +95,13 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    */
   private async getSession(parameters: SelectAccountContextInteractionRequest): Promise<Session> {
     if (typeof parameters.session_id !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "session_id".' });
+      throw new InvalidRequestException('Invalid parameter "session_id".');
     }
 
     const session = await this.sessionService.findOne(parameters.session_id);
 
     if (session === null) {
-      throw new AccessDeniedException({ description: 'Invalid Session Identifier.' });
+      throw new AccessDeniedException('Invalid Session Identifier.');
     }
 
     return session;
@@ -117,13 +117,13 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
     parameters: SelectAccountContextInteractionRequest | SelectAccountDecisionInteractionRequest
   ): Promise<Grant> {
     if (typeof parameters.login_challenge !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "login_challenge".' });
+      throw new InvalidRequestException('Invalid parameter "login_challenge".');
     }
 
     const grant = await this.grantService.findOneByLoginChallenge(parameters.login_challenge);
 
     if (grant === null) {
-      throw new AccessDeniedException({ description: 'Invalid Login Challenge.' });
+      throw new AccessDeniedException('Invalid Login Challenge.');
     }
 
     return grant;
@@ -137,13 +137,13 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    */
   private async getLogin(parameters: SelectAccountDecisionInteractionRequest): Promise<Login> {
     if (typeof parameters.login_id !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "login_id".' });
+      throw new InvalidRequestException('Invalid parameter "login_id".');
     }
 
     const login = await this.loginService.findOne(parameters.login_id);
 
     if (login === null) {
-      throw new AccessDeniedException({ description: 'Invalid Login Identifier.' });
+      throw new AccessDeniedException('Invalid Login Identifier.');
     }
 
     return login;

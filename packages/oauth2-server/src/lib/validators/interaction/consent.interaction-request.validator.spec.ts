@@ -21,70 +21,15 @@ import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { ConsentInteractionRequestValidator } from './consent.interaction-request.validator';
 import { InvalidScopeException } from '../../exceptions/invalid-scope.exception';
+import { ConsentDecisionInteractionRequest } from '../../requests/interaction/consent-decision.interaction-request';
 
 jest.mock('../../handlers/scope.handler');
 
-const invalidConsentChallenges: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
-
-const invalidDecisions: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
-
-const invalidGrantedScopes: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
-
-const invalidErrors: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
-
-const invalidErrorDescriptions: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
+const invalidConsentChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidDecisions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidGrantedScopes: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidErrors: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidErrorDescriptions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Consent Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -141,7 +86,10 @@ describe('Consent Interaction Request Validator', () => {
         headers: {},
         method: 'GET',
         path: '/oauth/interaction',
-        query: { interaction_type: 'consent', consent_challenge: 'consent_challenge' },
+        query: <ConsentContextInteractionRequest>{
+          interaction_type: 'consent',
+          consent_challenge: 'consent_challenge',
+        },
       });
     });
 
@@ -150,8 +98,9 @@ describe('Consent Interaction Request Validator', () => {
       async (consentChallenge) => {
         request.query.consent_challenge = consentChallenge;
 
-        await expect(validator.validateContext(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "consent_challenge".' })
+        await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "consent_challenge".'
         );
       }
     );
@@ -159,8 +108,9 @@ describe('Consent Interaction Request Validator', () => {
     it('should throw when no grant is found.', async () => {
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(null);
 
-      await expect(validator.validateContext(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Consent Challenge.' })
+      await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Consent Challenge.'
       );
     });
 
@@ -182,7 +132,10 @@ describe('Consent Interaction Request Validator', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: { interaction_type: 'consent', consent_challenge: 'consent_challenge', decision: '' },
+        body: <ConsentDecisionInteractionRequest>{
+          interaction_type: 'consent',
+          consent_challenge: 'consent_challenge',
+        },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -196,8 +149,9 @@ describe('Consent Interaction Request Validator', () => {
       async (consentChallenge) => {
         request.body.consent_challenge = consentChallenge;
 
-        await expect(validator.validateDecision(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "consent_challenge".' })
+        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "consent_challenge".'
         );
       }
     );
@@ -205,8 +159,9 @@ describe('Consent Interaction Request Validator', () => {
     it('should throw when no grant is found.', async () => {
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(null);
 
-      await expect(validator.validateDecision(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Consent Challenge.' })
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Consent Challenge.'
       );
     });
 
@@ -217,8 +172,9 @@ describe('Consent Interaction Request Validator', () => {
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
-      await expect(validator.validateDecision(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "decision".' })
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "decision".'
       );
     });
 
@@ -229,8 +185,9 @@ describe('Consent Interaction Request Validator', () => {
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
-      await expect(validator.validateDecision(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Unsupported decision "unknown".' })
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported decision "unknown".'
       );
     });
 
@@ -244,8 +201,9 @@ describe('Consent Interaction Request Validator', () => {
 
         grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
-        await expect(validator.validateDecision(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "grant_scope".' })
+        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "grant_scope".'
         );
       }
     );
@@ -255,7 +213,7 @@ describe('Consent Interaction Request Validator', () => {
 
       const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
 
-      const error = new InvalidScopeException({ description: 'Unsupported scope "unknown".' });
+      const error = new InvalidScopeException('Unsupported scope "unknown".');
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
@@ -274,8 +232,9 @@ describe('Consent Interaction Request Validator', () => {
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
       scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
 
-      await expect(validator.validateDecision(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'The scope "baz" was not requested by the Client.' })
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'The scope "baz" was not requested by the Client.'
       );
     });
 
@@ -307,8 +266,9 @@ describe('Consent Interaction Request Validator', () => {
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
-      await expect(validator.validateDecision(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "error".' })
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "error".'
       );
     });
 
@@ -321,8 +281,9 @@ describe('Consent Interaction Request Validator', () => {
 
         grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
-        await expect(validator.validateDecision(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "error_description".' })
+        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "error_description".'
         );
       }
     );
@@ -337,8 +298,8 @@ describe('Consent Interaction Request Validator', () => {
       const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
-        Reflect.construct(OAuth2Exception, [{ description: request.body.error_description }]),
-        { code: request.body.error as string }
+        Reflect.construct(OAuth2Exception, [request.body.error_description as string]),
+        { error: request.body.error as string }
       );
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);

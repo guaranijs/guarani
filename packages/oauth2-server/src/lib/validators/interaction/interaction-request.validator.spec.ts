@@ -26,12 +26,12 @@ describe('Interaction Request Validator', () => {
         headers: {},
         method: 'GET',
         path: '/oauth/interaction',
-        query: { interaction_type: 'login', login_challenge: 'login_challenge' },
+        query: <InteractionRequest>{ interaction_type: 'login' },
       });
     });
 
     it('should return a context interaction context.', async () => {
-      await expect(validator.validateContext(request)).resolves.toStrictEqual<InteractionContext<InteractionRequest>>({
+      await expect(validator.validateContext(request)).resolves.toStrictEqual<InteractionContext>({
         parameters: request.query as InteractionRequest,
         interactionType: interactionTypesMocks[1]!,
       });
@@ -43,13 +43,7 @@ describe('Interaction Request Validator', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: {
-          interaction_type: 'consent',
-          consent_challenge: 'consent_challenge',
-          decision: 'deny',
-          error: 'consent_denied',
-          error_description: 'The End User denied the requested consent.',
-        },
+        body: <InteractionRequest>{ interaction_type: 'consent' },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -59,7 +53,7 @@ describe('Interaction Request Validator', () => {
     });
 
     it('should return a decision interaction context.', async () => {
-      await expect(validator.validateDecision(request)).resolves.toStrictEqual<InteractionContext<InteractionRequest>>({
+      await expect(validator.validateDecision(request)).resolves.toStrictEqual<InteractionContext>({
         parameters: request.body as InteractionRequest,
         interactionType: interactionTypesMocks[0]!,
       });

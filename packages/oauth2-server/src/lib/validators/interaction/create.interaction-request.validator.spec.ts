@@ -17,20 +17,7 @@ import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { CreateInteractionRequestValidator } from './create.interaction-request.validator';
 
-const invalidLoginChallenges: any[] = [
-  undefined,
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  Buffer.alloc(1),
-  () => 1,
-  {},
-  [],
-];
+const invalidLoginChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Create Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -103,8 +90,9 @@ describe('Create Interaction Request Validator', () => {
       async (loginChallenge) => {
         request.query.login_challenge = loginChallenge;
 
-        await expect(validator.validateContext(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "login_challenge".' })
+        await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "login_challenge".'
         );
       }
     );
@@ -112,8 +100,9 @@ describe('Create Interaction Request Validator', () => {
     it('should throw when no grant is found.', async () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
-      await expect(validator.validateContext(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Login Challenge.' })
+      await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Login Challenge.'
       );
     });
 
@@ -152,8 +141,9 @@ describe('Create Interaction Request Validator', () => {
       async (loginChallenge) => {
         request.body.login_challenge = loginChallenge;
 
-        await expect(validator.validateDecision(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "login_challenge".' })
+        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "login_challenge".'
         );
       }
     );
@@ -161,8 +151,9 @@ describe('Create Interaction Request Validator', () => {
     it('should throw when no grant is found.', async () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
-      await expect(validator.validateDecision(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Login Challenge.' })
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Login Challenge.'
       );
     });
 

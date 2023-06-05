@@ -2,24 +2,25 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { DeviceAuthorizationContext } from '../context/device-authorization-context';
 import { Client } from '../entities/client.entity';
-import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
-import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpRequest } from '../http/http.request';
 import { DeviceAuthorizationRequest } from '../requests/device-authorization-request';
 import { DeviceAuthorizationRequestValidator } from './device-authorization-request.validator';
+import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 
 jest.mock('../handlers/client-authentication.handler');
 jest.mock('../handlers/scope.handler');
+
+const invalidScopes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Device Authorization Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: DeviceAuthorizationRequestValidator;
 
-  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
@@ -50,36 +51,20 @@ describe('Device Authorization Request Validator', () => {
     });
 
     it('should throw when the client fails to authenticate.', async () => {
-      const error = new InvalidClientException({ description: 'Lorem ipsum dolor sit amet...' });
-
+      const error = new InvalidClientException('Lorem ipsum dolor sit amet...');
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
-
       await expect(validator.validate(request)).rejects.toThrow(error);
     });
 
-    it('should throw when requesting an unsupported scope.', async () => {
+    it.each(invalidScopes)('should throw when providing an invalid "scope" parameter.', async (scope) => {
+      request.body.scope = scope;
+
       const client = <Client>{ id: 'client_id' };
-      const error = new InvalidScopeException({ description: 'Unsupported scope "unknown".' });
+      const error = new InvalidRequestException('Invalid parameter "scope".');
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-      scopeHandlerMock.checkRequestedScope.mockImplementationOnce(() => {
-        throw error;
-      });
 
       await expect(validator.validate(request)).rejects.toThrow(error);
-    });
-
-    it("should throw when the client requests a scope it's not allowed to.", async () => {
-      request.body.scope = 'foo bar unknown';
-
-      const client = <Client>{ id: 'client_id', scopes: ['foo', 'bar'] };
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-      scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
-
-      await expect(validator.validate(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'The Client is not allowed to request the scope "unknown".' })
-      );
     });
 
     it('should return a device authorization context.', async () => {
@@ -91,7 +76,7 @@ describe('Device Authorization Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<DeviceAuthorizationContext>({
-        parameters: <DeviceAuthorizationRequest>request.body,
+        parameters: request.body as DeviceAuthorizationRequest,
         client,
         scopes,
       });

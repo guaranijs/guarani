@@ -2,11 +2,11 @@ import { Injectable } from '@guarani/di';
 
 import { DeviceAuthorizationContext } from '../context/device-authorization-context';
 import { Client } from '../entities/client.entity';
-import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpRequest } from '../http/http.request';
 import { DeviceAuthorizationRequest } from '../requests/device-authorization-request';
+import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 
 /**
  * Implementation of the Device Authorization Request Validator.
@@ -31,10 +31,10 @@ export class DeviceAuthorizationRequestValidator {
    * @returns Device Authorization Context.
    */
   public async validate(request: HttpRequest): Promise<DeviceAuthorizationContext> {
-    const parameters = <DeviceAuthorizationRequest>request.body;
+    const parameters = request.body as DeviceAuthorizationRequest;
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
-    const scopes = this.getScopes(client, parameters.scope);
+    const scopes = this.getScopes(client, parameters);
 
     return { parameters, client, scopes };
   }
@@ -45,17 +45,12 @@ export class DeviceAuthorizationRequestValidator {
    * @param client Client of the Request.
    * @param scope Scope requested by the Client.
    */
-  private getScopes(client: Client, scope: string | undefined): string[] {
-    this.scopeHandler.checkRequestedScope(scope);
+  private getScopes(client: Client, parameters: DeviceAuthorizationRequest): string[] {
+    if (typeof parameters.scope !== 'undefined' && typeof parameters.scope !== 'string') {
+      throw new InvalidRequestException('Invalid parameter "scope".');
+    }
 
-    scope?.split(' ').forEach((requestedScope) => {
-      if (!client.scopes.includes(requestedScope)) {
-        throw new AccessDeniedException({
-          description: `The Client is not allowed to request the scope "${requestedScope}".`,
-        });
-      }
-    });
-
-    return this.scopeHandler.getAllowedScopes(client, scope);
+    this.scopeHandler.checkRequestedScope(parameters.scope ?? null);
+    return this.scopeHandler.getAllowedScopes(client, parameters.scope ?? null);
   }
 }

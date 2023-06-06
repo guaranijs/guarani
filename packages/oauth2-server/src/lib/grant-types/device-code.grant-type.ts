@@ -73,9 +73,10 @@ export class DeviceCodeGrantType implements GrantTypeInterface {
 
     const accessToken = await this.accessTokenService.create(scopes, client, user!);
 
-    const refreshToken = client.grantTypes.includes('refresh_token')
-      ? await this.refreshTokenService?.create(scopes, client, user!, accessToken)
-      : undefined;
+    const refreshToken =
+      typeof this.refreshTokenService !== 'undefined' && client.grantTypes.includes('refresh_token')
+        ? await this.refreshTokenService.create(scopes, client, user!, accessToken)
+        : null;
 
     return createTokenResponse(accessToken, refreshToken);
   }
@@ -95,21 +96,21 @@ export class DeviceCodeGrantType implements GrantTypeInterface {
     if (deviceCodeClientId.length !== clientId.length || !timingSafeEqual(deviceCodeClientId, clientId)) {
       deviceCode.isAuthorized = false;
       await this.deviceCodeService.save(deviceCode);
-      throw new AccessDeniedException({ description: 'Authorization denied by the Authorization Server.' });
+      throw new AccessDeniedException('Authorization denied by the Authorization Server.');
     }
 
     if (new Date() >= deviceCode.expiresAt) {
-      throw new ExpiredTokenException({ description: 'Expired Device Code.' });
+      throw new ExpiredTokenException('Expired Device Code.');
     }
 
-    if (deviceCode.isAuthorized == null) {
+    if (deviceCode.isAuthorized === null) {
       throw (await this.deviceCodeService.shouldSlowDown(deviceCode))
         ? new SlowDownException()
         : new AuthorizationPendingException();
     }
 
     if (!deviceCode.isAuthorized) {
-      throw new AccessDeniedException({ description: 'Authorization denied by the User.' });
+      throw new AccessDeniedException('Authorization denied by the User.');
     }
   }
 }

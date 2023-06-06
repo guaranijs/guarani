@@ -52,7 +52,7 @@ describe('Authorization Code Grant Type', () => {
     jest.mocked<PkceInterface>({ name: 'plain', verify: jest.fn() }),
   ];
 
-  const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
+  const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype);
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
@@ -96,7 +96,10 @@ describe('Authorization Code Grant Type', () => {
           redirectUris: ['https://client.example.com/oauth/callback'],
           grantTypes: ['authorization_code', 'refresh_token'],
         },
-        grantType: jest.mocked<GrantTypeInterface>({ name: 'authorization_code', handle: jest.fn() }),
+        grantType: <GrantTypeInterface>{
+          name: 'authorization_code',
+          handle: jest.fn(),
+        },
         authorizationCode: {
           code: 'authorization_code',
           isRevoked: false,
@@ -125,7 +128,7 @@ describe('Authorization Code Grant Type', () => {
           consent: <Consent>{
             id: 'consent_id',
             scopes: ['foo', 'bar', 'baz'],
-            client: <Client>{
+            client: {
               id: 'client_id',
               redirectUris: ['https://client.example.com/oauth/callback'],
               grantTypes: ['authorization_code', 'refresh_token'],
@@ -140,8 +143,9 @@ describe('Authorization Code Grant Type', () => {
     it('should throw on a mismatching client identifier.', async () => {
       Reflect.set(context.authorizationCode.consent.client, 'id', 'another_client_id');
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Mismatching Client Identifier.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Mismatching Client Identifier.'
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -150,8 +154,9 @@ describe('Authorization Code Grant Type', () => {
     it('should throw on an authorization code not yet valid.', async () => {
       Reflect.set(context.authorizationCode, 'validAfter', new Date(Date.now() + 3600000));
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Authorization Code not yet valid.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Authorization Code not yet valid.'
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -160,8 +165,9 @@ describe('Authorization Code Grant Type', () => {
     it('should throw on an expired authorization code.', async () => {
       Reflect.set(context.authorizationCode, 'expiresAt', new Date(Date.now() - 300000));
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Expired Authorization Code.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Expired Authorization Code.'
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -170,8 +176,9 @@ describe('Authorization Code Grant Type', () => {
     it('should throw on a revoked authorization code.', async () => {
       Reflect.set(context.authorizationCode, 'isRevoked', true);
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Revoked Authorization Code.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Revoked Authorization Code.'
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -181,8 +188,9 @@ describe('Authorization Code Grant Type', () => {
       Reflect.set(context.parameters, 'redirect_uri', 'https://client.example.org/oauth/callback');
       Reflect.set(context, 'redirectUri', new URL('https://client.example.org/oauth/callback'));
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Mismatching Redirect URI.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Mismatching Redirect URI.'
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -194,8 +202,9 @@ describe('Authorization Code Grant Type', () => {
 
       pkceMethodsMocks[0]!.verify.mockReturnValueOnce(false);
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Invalid PKCE Code Challenge.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Invalid PKCE Code Challenge.'
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);

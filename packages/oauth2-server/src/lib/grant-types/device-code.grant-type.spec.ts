@@ -71,10 +71,10 @@ describe('Device Code Grant Type', () => {
           grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
           device_code: 'device_code',
         },
-        grantType: jest.mocked<GrantTypeInterface>({
+        grantType: <GrantTypeInterface>{
           name: 'urn:ietf:params:oauth:grant-type:device_code',
           handle: jest.fn(),
-        }),
+        },
         client: <Client>{
           id: 'client_id',
           grantTypes: ['urn:ietf:params:oauth:grant-type:device_code', 'refresh_token'],
@@ -100,8 +100,9 @@ describe('Device Code Grant Type', () => {
     it('should throw when the client presents a device code that was not issued to itself.', async () => {
       Reflect.set(context.deviceCode.client, 'id', 'another_client_id');
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Authorization denied by the Authorization Server.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Authorization denied by the Authorization Server.'
       );
 
       expect(deviceCodeServiceMock.save).toHaveBeenCalledTimes(1);
@@ -110,33 +111,27 @@ describe('Device Code Grant Type', () => {
 
     it('should throw when the device code has expired.', async () => {
       Reflect.set(context.deviceCode, 'expiresAt', new Date(Date.now() - 300000));
-
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new ExpiredTokenException({ description: 'Expired Device Code.' })
-      );
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(ExpiredTokenException, 'Expired Device Code.');
     });
 
     it('should throw when the application decides that the client should slow down.', async () => {
-      delete context.deviceCode.isAuthorized;
-
+      context.deviceCode.isAuthorized = null;
       deviceCodeServiceMock.shouldSlowDown.mockResolvedValueOnce(true);
-
-      await expect(grantType.handle(context)).rejects.toThrow(new SlowDownException());
+      await expect(grantType.handle(context)).rejects.toThrowError(SlowDownException);
     });
 
     it('should throw when the authorization is still pending.', async () => {
-      delete context.deviceCode.isAuthorized;
-
+      context.deviceCode.isAuthorized = null;
       deviceCodeServiceMock.shouldSlowDown.mockResolvedValueOnce(false);
-
-      await expect(grantType.handle(context)).rejects.toThrow(new AuthorizationPendingException());
+      await expect(grantType.handle(context)).rejects.toThrowError(AuthorizationPendingException);
     });
 
     it('should throw when the end user denies authorization.', async () => {
       context.deviceCode.isAuthorized = false;
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Authorization denied by the User.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Authorization denied by the User.'
       );
     });
 

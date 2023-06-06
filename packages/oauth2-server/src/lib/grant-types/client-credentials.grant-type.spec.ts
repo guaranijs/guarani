@@ -41,7 +41,7 @@ describe('Client Credentials Grant Type', () => {
     beforeEach(() => {
       context = <ClientCredentialsTokenContext>{
         parameters: { grant_type: 'client_credentials' },
-        grantType: jest.mocked<GrantTypeInterface>({ name: 'client_credentials', handle: jest.fn() }),
+        grantType: <GrantTypeInterface>{ name: 'client_credentials', handle: jest.fn() },
         client: <Client>{ id: 'client_id' },
         scopes: ['foo', 'bar', 'baz'],
       };

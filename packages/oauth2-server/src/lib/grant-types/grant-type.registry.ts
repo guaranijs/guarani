@@ -1,4 +1,4 @@
-import { Constructor } from '@guarani/di';
+import { Constructor } from '@guarani/types';
 
 import { AuthorizationCodeGrantType } from './authorization-code.grant-type';
 import { ClientCredentialsGrantType } from './client-credentials.grant-type';

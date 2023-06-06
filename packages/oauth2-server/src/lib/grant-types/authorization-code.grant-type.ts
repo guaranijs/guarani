@@ -5,7 +5,7 @@ import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 import { URL } from 'url';
 
-import { AuthorizationCodeTokenContext } from '../context/token/authorization-code.token.context';
+import { AuthorizationCodeTokenContext } from '../context/token/authorization-code.token-context';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
@@ -81,9 +81,10 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
 
       const accessToken = await this.accessTokenService.create(scopes, client, user);
 
-      const refreshToken = client.grantTypes.includes('refresh_token')
-        ? await this.refreshTokenService?.create(scopes, client, user, accessToken)
-        : undefined;
+      const refreshToken =
+        typeof this.refreshTokenService !== 'undefined' && client.grantTypes.includes('refresh_token')
+          ? await this.refreshTokenService.create(scopes, client, user, accessToken)
+          : null;
 
       const response = createTokenResponse(accessToken, refreshToken);
 
@@ -120,19 +121,19 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
       authorizationCodeClientIdBuffer.length !== clientIdBuffer.length ||
       !timingSafeEqual(authorizationCodeClientIdBuffer, clientIdBuffer)
     ) {
-      throw new InvalidGrantException({ description: 'Mismatching Client Identifier.' });
+      throw new InvalidGrantException('Mismatching Client Identifier.');
     }
 
     if (new Date() < authorizationCode.validAfter) {
-      throw new InvalidGrantException({ description: 'Authorization Code not yet valid.' });
+      throw new InvalidGrantException('Authorization Code not yet valid.');
     }
 
     if (new Date() > authorizationCode.expiresAt) {
-      throw new InvalidGrantException({ description: 'Expired Authorization Code.' });
+      throw new InvalidGrantException('Expired Authorization Code.');
     }
 
     if (authorizationCode.isRevoked) {
-      throw new InvalidGrantException({ description: 'Revoked Authorization Code.' });
+      throw new InvalidGrantException('Revoked Authorization Code.');
     }
 
     const authorizationCodeRedirectUriBuffer = Buffer.from(authorizationCodeParameters.redirect_uri, 'utf8');
@@ -142,13 +143,13 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
       authorizationCodeRedirectUriBuffer.length !== redirectUriBuffer.length ||
       !timingSafeEqual(authorizationCodeRedirectUriBuffer, redirectUriBuffer)
     ) {
-      throw new InvalidGrantException({ description: 'Mismatching Redirect URI.' });
+      throw new InvalidGrantException('Mismatching Redirect URI.');
     }
 
     const pkceMethod = this.getPkceMethod(authorizationCodeParameters.code_challenge_method ?? 'plain');
 
     if (!pkceMethod.verify(authorizationCodeParameters.code_challenge, codeVerifier)) {
-      throw new InvalidGrantException({ description: 'Invalid PKCE Code Challenge.' });
+      throw new InvalidGrantException('Invalid PKCE Code Challenge.');
     }
   }
 

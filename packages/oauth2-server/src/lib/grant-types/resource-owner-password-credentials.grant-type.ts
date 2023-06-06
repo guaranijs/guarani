@@ -51,9 +51,10 @@ export class ResourceOwnerPasswordCredentialsGrantType implements GrantTypeInter
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
 
-    const refreshToken = client.grantTypes.includes('refresh_token')
-      ? await this.refreshTokenService?.create(scopes, client, user, accessToken)
-      : undefined;
+    const refreshToken =
+      typeof this.refreshTokenService !== 'undefined' && client.grantTypes.includes('refresh_token')
+        ? await this.refreshTokenService.create(scopes, client, user, accessToken)
+        : null;
 
     return createTokenResponse(accessToken, refreshToken);
   }

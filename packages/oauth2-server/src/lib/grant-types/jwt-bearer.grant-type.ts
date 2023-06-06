@@ -46,6 +46,6 @@ export class JwtBearerGrantType implements GrantTypeInterface {
   public async handle(context: JwtBearerTokenContext): Promise<TokenResponse> {
     const { client, scopes, user } = context;
     const accessToken = await this.accessTokenService.create(scopes, client, user);
-    return createTokenResponse(accessToken);
+    return createTokenResponse(accessToken, null);
   }
 }

@@ -56,8 +56,14 @@ describe('Resource Owner Password Credentials Grant Type', () => {
           username: 'username',
           password: 'password',
         },
-        grantType: jest.mocked<GrantTypeInterface>({ name: 'password', handle: jest.fn() }),
-        client: <Client>{ id: 'client_id', grantTypes: ['password', 'refresh_token'] },
+        grantType: <GrantTypeInterface>{
+          name: 'password',
+          handle: jest.fn(),
+        },
+        client: <Client>{
+          id: 'client_id',
+          grantTypes: ['password', 'refresh_token'],
+        },
         user: <User>{ id: 'user_id' },
         scopes: ['foo', 'bar', 'baz'],
       };

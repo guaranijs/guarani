@@ -46,7 +46,7 @@ export class ClientCredentialsGrantType implements GrantTypeInterface {
    */
   public async handle(context: ClientCredentialsTokenContext): Promise<TokenResponse> {
     const { client, scopes } = context;
-    const accessToken = await this.accessTokenService.create(scopes, client);
-    return createTokenResponse(accessToken);
+    const accessToken = await this.accessTokenService.create(scopes, client, null);
+    return createTokenResponse(accessToken, null);
   }
 }

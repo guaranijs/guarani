@@ -42,10 +42,10 @@ describe('JWT Bearer Grant Type', () => {
           grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
           assertion: '',
         },
-        grantType: jest.mocked<GrantTypeInterface>({
+        grantType: <GrantTypeInterface>{
           name: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
           handle: jest.fn(),
-        }),
+        },
         client: <Client>{ id: 'client_id' },
         user: <User>{ id: 'user_id' },
         scopes: ['foo', 'bar', 'baz'],

@@ -69,7 +69,7 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
     const { scopes } = consent;
 
     if (!scopes.includes('openid')) {
-      throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
+      throw new InvalidRequestException('Missing required scope "openid".');
     }
 
     const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);

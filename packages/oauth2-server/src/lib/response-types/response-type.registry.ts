@@ -1,4 +1,4 @@
-import { Constructor } from '@guarani/di';
+import { Constructor } from '@guarani/types';
 
 import { CodeIdTokenTokenResponseType } from './code-id-token-token.response-type';
 import { CodeIdTokenResponseType } from './code-id-token.response-type';

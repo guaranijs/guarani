@@ -89,6 +89,9 @@ describe('Code Token Response Type', () => {
         nonce: 'client_nonce',
         prompts: [],
         display: jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
+        maxAge: null,
+        loginHint: null,
+        idTokenHint: null,
         uiLocales: [],
         acrValues: [],
       };

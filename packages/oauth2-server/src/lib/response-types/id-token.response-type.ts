@@ -62,7 +62,7 @@ export class IdTokenResponseType implements ResponseTypeInterface {
     const { scopes } = consent;
 
     if (!scopes.includes('openid')) {
-      throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
+      throw new InvalidRequestException('Missing required scope "openid".');
     }
 
     const idToken = await this.idTokenHandler.generateIdToken(parameters, login, consent, null, null);

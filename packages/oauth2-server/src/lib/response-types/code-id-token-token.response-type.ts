@@ -75,7 +75,7 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
     const { client, scopes, user } = consent;
 
     if (!scopes.includes('openid')) {
-      throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
+      throw new InvalidRequestException('Missing required scope "openid".');
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
@@ -88,7 +88,7 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
       authorizationCode
     );
 
-    const token = createTokenResponse(accessToken);
+    const token = createTokenResponse(accessToken, null);
 
     return removeNullishValues<CodeAuthorizationResponse & IdTokenAuthorizationResponse & TokenAuthorizationResponse>({
       ...token,

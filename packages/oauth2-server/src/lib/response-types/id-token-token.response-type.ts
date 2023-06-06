@@ -70,13 +70,13 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
     const { client, scopes, user } = consent;
 
     if (!scopes.includes('openid')) {
-      throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
+      throw new InvalidRequestException('Missing required scope "openid".');
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
     const idToken = await this.idTokenHandler.generateIdToken(parameters, login, consent, accessToken, null);
 
-    const token: TokenAuthorizationResponse = createTokenResponse(accessToken);
+    const token: TokenAuthorizationResponse = createTokenResponse(accessToken, null);
 
     token.id_token = idToken;
 

@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { URLSearchParams } from 'url';
 
@@ -85,11 +86,11 @@ describe('Logout Interaction Type', () => {
           interaction_type: 'logout',
           logout_challenge: 'logout_challenge',
         },
-        interactionType: jest.mocked<InteractionTypeInterface>({
+        interactionType: <InteractionTypeInterface>{
           name: 'logout',
           handleContext: jest.fn(),
           handleDecision: jest.fn(),
-        }),
+        },
         logoutTicket: <LogoutTicket>{
           id: 'logout_ticket_id',
           logoutChallenge: 'logout_challenge',
@@ -116,8 +117,9 @@ describe('Logout Interaction Type', () => {
     it('should throw when the logout ticket is expired.', async () => {
       Reflect.set(context.logoutTicket, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleContext(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Logout Ticket.' })
+      await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Expired Logout Ticket.'
       );
 
       expect(logoutTicketServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -125,7 +127,7 @@ describe('Logout Interaction Type', () => {
     });
 
     it('should return a valid first time logout context response.', async () => {
-      const urlParameters = new URLSearchParams(context.logoutTicket.parameters);
+      const urlParameters = new URLSearchParams(context.logoutTicket.parameters as Dictionary<any>);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LogoutContextInteractionResponse>({
         skip: false,
@@ -141,7 +143,7 @@ describe('Logout Interaction Type', () => {
     it('should return a valid skip logout context response.', async () => {
       context.logoutTicket.session.activeLogin = null;
 
-      const urlParameters = new URLSearchParams(context.logoutTicket.parameters);
+      const urlParameters = new URLSearchParams(context.logoutTicket.parameters as Dictionary<any>);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LogoutContextInteractionResponse>({
         skip: true,
@@ -161,7 +163,7 @@ describe('Logout Interaction Type', () => {
     beforeEach(() => {
       const now = Date.now();
 
-      context = <LogoutDecisionInteractionContext<LogoutDecision>>{
+      context = <LogoutDecisionInteractionContext>{
         parameters: {
           interaction_type: 'logout',
           logout_challenge: 'logout_challenge',
@@ -197,8 +199,9 @@ describe('Logout Interaction Type', () => {
     it('should throw when the logout ticket is expired.', async () => {
       Reflect.set(context.logoutTicket, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleDecision(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Logout Ticket.' })
+      await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Expired Logout Ticket.'
       );
 
       expect(logoutTicketServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -218,7 +221,7 @@ describe('Logout Interaction Type', () => {
         },
       });
 
-      const urlParameters = new URLSearchParams(context.logoutTicket.parameters);
+      const urlParameters = new URLSearchParams(context.logoutTicket.parameters as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LogoutDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/end_session?${urlParameters.toString()}`,
@@ -260,10 +263,10 @@ describe('Logout Interaction Type', () => {
         },
       });
 
-      delete context.logoutTicket.session.activeLogin;
+      context.logoutTicket.session.activeLogin = null;
       context.logoutTicket.session.logins = <Login[]>[{ id: 'login0_id' }, { id: 'login2_id' }];
 
-      const urlParameters = new URLSearchParams(context.logoutTicket.parameters);
+      const urlParameters = new URLSearchParams(context.logoutTicket.parameters as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LogoutDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/end_session?${urlParameters.toString()}`,
@@ -284,15 +287,15 @@ describe('Logout Interaction Type', () => {
           error_description: 'Lorem ipsum dolor sit amet...',
         }),
         decision: 'deny',
-        error: Object.assign(
-          Reflect.construct(OAuth2Exception, [{ description: context.parameters.error_description }]),
-          { code: context.parameters.error }
+        error: Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+          Reflect.construct(OAuth2Exception, [context.parameters.error_description as string]),
+          { error: context.parameters.error as string }
         ),
       });
 
-      const { error } = <LogoutDecisionDenyInteractionContext>context;
+      const { error } = context as LogoutDecisionDenyInteractionContext;
 
-      const urlParameters = new URLSearchParams(error.toJSON());
+      const urlParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LogoutDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,

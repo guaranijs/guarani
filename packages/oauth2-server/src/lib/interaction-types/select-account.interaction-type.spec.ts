@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { URLSearchParams } from 'url';
 
@@ -8,7 +9,6 @@ import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
-import { SelectAccountDecisionInteractionRequest } from '../requests/interaction/select-account-decision.interaction-request';
 import { SelectAccountContextInteractionResponse } from '../responses/interaction/select-account-context.interaction-response';
 import { SelectAccountDecisionInteractionResponse } from '../responses/interaction/select-account-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -76,11 +76,11 @@ describe('Select Account Interaction Type', () => {
           login_challenge: 'login_challenge',
           session_id: 'session_id',
         },
-        interactionType: jest.mocked<InteractionTypeInterface>({
+        interactionType: <InteractionTypeInterface>{
           name: 'select_account',
           handleContext: jest.fn(),
           handleDecision: jest.fn(),
-        }),
+        },
         grant: <Grant>{
           id: 'grant_id',
           loginChallenge: 'login_challenge',
@@ -102,10 +102,11 @@ describe('Select Account Interaction Type', () => {
     });
 
     it('should throw when the grant is expired.', async () => {
-      Reflect.set(context.grant!, 'expiresAt', new Date(Date.now() - 3600000));
+      Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleContext(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Grant.' })
+      await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Expired Grant.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -126,16 +127,16 @@ describe('Select Account Interaction Type', () => {
 
     beforeEach(() => {
       context = <SelectAccountDecisionInteractionContext>{
-        parameters: <SelectAccountDecisionInteractionRequest>{
+        parameters: {
           interaction_type: 'select_account',
           login_challenge: 'login_challenge',
           login_id: 'login1_id',
         },
-        interactionType: jest.mocked<InteractionTypeInterface>({
+        interactionType: <InteractionTypeInterface>{
           name: 'select_account',
           handleContext: jest.fn(),
           handleDecision: jest.fn(),
-        }),
+        },
         grant: <Grant>{
           id: 'grant_id',
           loginChallenge: 'login_challenge',
@@ -161,17 +162,18 @@ describe('Select Account Interaction Type', () => {
     });
 
     it('should throw when the grant is expired.', async () => {
-      Reflect.set(context.grant!, 'expiresAt', new Date(Date.now() - 3600000));
+      Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleDecision(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Grant.' })
+      await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Expired Grant.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
     });
 
     it('should return a valid first time select account decision interaction response.', async () => {
-      const urlParameters = new URLSearchParams(context.grant!.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(
         interactionType.handleDecision(context)
@@ -191,9 +193,9 @@ describe('Select Account Interaction Type', () => {
     });
 
     it('should return a valid subsequent select account decision interaction response.', async () => {
-      Reflect.set(context.grant!, 'interactions', ['select_account']);
+      Reflect.set(context.grant, 'interactions', ['select_account']);
 
-      const urlParameters = new URLSearchParams(context.grant!.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(
         interactionType.handleDecision(context)

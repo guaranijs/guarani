@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { URL, URLSearchParams } from 'url';
 
@@ -25,7 +26,6 @@ import { SETTINGS } from '../settings/settings.token';
 import { Prompt } from '../types/prompt.type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
-import { LoginDecision } from './login-decision.type';
 
 /**
  * Implementation of the **Login** Interaction Type.
@@ -86,14 +86,14 @@ export class LoginInteractionType implements InteractionTypeInterface {
     await this.checkGrant(grant);
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
-    let skip = grant.session.activeLogin != null;
+    let skip = grant.session.activeLogin !== null;
     let authExp: number | undefined;
 
-    if (grant.session.activeLogin != null && grant.parameters.max_age !== undefined) {
+    if (grant.session.activeLogin !== null && typeof grant.parameters.max_age !== 'undefined') {
       const authTime = grant.session.activeLogin.createdAt.getTime();
       const maxAge = Number.parseInt(grant.parameters.max_age, 10) * 1000;
 
@@ -128,9 +128,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * @param context Login Decision Interaction Request Context.
    * @returns Login Decision Interaction Response.
    */
-  public async handleDecision(
-    context: LoginDecisionInteractionContext<LoginDecision>
-  ): Promise<LoginDecisionInteractionResponse> {
+  public async handleDecision(context: LoginDecisionInteractionContext): Promise<LoginDecisionInteractionResponse> {
     const { grant } = context;
 
     await this.checkGrant(grant);
@@ -154,22 +152,22 @@ export class LoginInteractionType implements InteractionTypeInterface {
   private async acceptLogin(context: LoginDecisionAcceptInteractionContext): Promise<LoginDecisionInteractionResponse> {
     const { acr, amr, grant, user } = context;
 
-    if (typeof acr !== 'undefined' && grant.parameters.acr_values?.includes(acr) === false) {
+    if (acr !== null && grant.parameters.acr_values?.includes(acr) === false) {
       await this.grantService.remove(grant);
 
-      const error = new UnmetAuthenticationRequirementsException({
-        description: `Could not authenticate using the Authentication Context Class Reference "${grant.parameters.acr_values}".`,
-      });
+      const error = new UnmetAuthenticationRequirementsException(
+        `Could not authenticate using the Authentication Context Class Reference "${grant.parameters.acr_values}".`
+      );
 
       const url = new URL('/oauth/error', this.settings.issuer);
-      const searchParameters = new URLSearchParams(error.toJSON());
+      const searchParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
 
       url.search = searchParameters.toString();
 
       return { redirect_to: url.href };
     }
 
-    if (grant.session.activeLogin == null) {
+    if (grant.session.activeLogin === null) {
       const login = await this.loginService.create(user, grant.session, amr, acr);
       await this.updateActiveLogin(grant.session, login);
 
@@ -178,7 +176,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
     }
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
@@ -197,7 +195,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
     await this.grantService.remove(grant);
 
     const url = new URL('/oauth/error', this.settings.issuer);
-    const searchParameters = new URLSearchParams(error.toJSON());
+    const searchParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
@@ -212,7 +210,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
   private async checkGrant(grant: Grant): Promise<void> {
     if (new Date() > grant.expiresAt) {
       await this.grantService.remove(grant);
-      throw new AccessDeniedException({ description: 'Expired Grant.' });
+      throw new AccessDeniedException('Expired Grant.');
     }
   }
 

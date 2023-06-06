@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { URLSearchParams } from 'url';
 
@@ -21,7 +22,6 @@ import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
-import { ConsentDecision } from './consent-decision.type';
 import { ConsentInteractionType } from './consent.interaction-type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
@@ -82,11 +82,11 @@ describe('Consent Interaction Type', () => {
           interaction_type: 'consent',
           consent_challenge: 'consent_challenge',
         },
-        interactionType: jest.mocked<InteractionTypeInterface>({
+        interactionType: <InteractionTypeInterface>{
           name: 'consent',
           handleContext: jest.fn(),
           handleDecision: jest.fn(),
-        }),
+        },
         grant: <Grant>{
           id: 'grant_id',
           loginChallenge: 'login_challenge',
@@ -114,8 +114,9 @@ describe('Consent Interaction Type', () => {
     it('should throw when the grant is expired.', async () => {
       Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleContext(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Grant.' })
+      await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Expired Grant.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -123,11 +124,13 @@ describe('Consent Interaction Type', () => {
     });
 
     it('should throw when no active login is found at the session and the prompt includes "select_account".', async () => {
-      delete context.grant.session.activeLogin;
+      context.grant.session.activeLogin = null;
+
       Reflect.set(context.grant.parameters, 'prompt', 'select_account');
 
-      await expect(interactionType.handleContext(context)).rejects.toThrow(
-        new AccountSelectionRequiredException({ description: 'Account selection required.' })
+      await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
+        AccountSelectionRequiredException,
+        'Account selection required.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -135,10 +138,11 @@ describe('Consent Interaction Type', () => {
     });
 
     it('should throw when no active login is found at the session.', async () => {
-      Reflect.deleteProperty(context.grant.session, 'activeLogin');
+      context.grant.session.activeLogin = null;
 
-      await expect(interactionType.handleContext(context)).rejects.toThrow(
-        new LoginRequiredException({ description: 'No active login found.' })
+      await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
+        LoginRequiredException,
+        'No active login found.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -146,9 +150,9 @@ describe('Consent Interaction Type', () => {
     });
 
     it('should return a valid first time consent context response.', async () => {
-      delete context.grant.consent;
+      context.grant.consent = null;
 
-      const urlParameters = new URLSearchParams(context.grant.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<ConsentContextInteractionResponse>({
         skip: false,
@@ -162,7 +166,7 @@ describe('Consent Interaction Type', () => {
     });
 
     it('should return a valid skip consent context response.', async () => {
-      const urlParameters = new URLSearchParams(context.grant.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<ConsentContextInteractionResponse>({
         skip: true,
@@ -177,23 +181,21 @@ describe('Consent Interaction Type', () => {
   });
 
   describe('handleDecision()', () => {
-    let context: ConsentDecisionInteractionContext<ConsentDecision>;
+    let context: ConsentDecisionInteractionContext;
 
     beforeEach(() => {
       const now = Date.now();
 
-      context = <ConsentDecisionInteractionContext<ConsentDecision>>{
+      context = <ConsentDecisionInteractionContext>{
         parameters: {
           interaction_type: 'consent',
           consent_challenge: 'consent_challenge',
-          decision: <ConsentDecision>'',
         },
-        interactionType: jest.mocked<InteractionTypeInterface>({
+        interactionType: <InteractionTypeInterface>{
           name: 'consent',
           handleContext: jest.fn(),
           handleDecision: jest.fn(),
-        }),
-        decision: <ConsentDecision>'',
+        },
         grant: <Grant>{
           id: 'grant_id',
           loginChallenge: 'login_challenge',
@@ -222,8 +224,9 @@ describe('Consent Interaction Type', () => {
     it('should throw when the grant is expired.', async () => {
       Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleDecision(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Grant.' })
+      await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Expired Grant.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -231,11 +234,13 @@ describe('Consent Interaction Type', () => {
     });
 
     it('should throw when no active login is found at the session and the prompt includes "select_account".', async () => {
-      delete context.grant.session.activeLogin;
+      context.grant.session.activeLogin = null;
+
       Reflect.set(context.grant.parameters, 'prompt', 'select_account');
 
-      await expect(interactionType.handleDecision(context)).rejects.toThrow(
-        new AccountSelectionRequiredException({ description: 'Account selection required.' })
+      await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
+        AccountSelectionRequiredException,
+        'Account selection required.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -243,10 +248,11 @@ describe('Consent Interaction Type', () => {
     });
 
     it('should throw when no active login is found at the session.', async () => {
-      Reflect.deleteProperty(context.grant.session, 'activeLogin');
+      context.grant.session.activeLogin = null;
 
-      await expect(interactionType.handleDecision(context)).rejects.toThrow(
-        new LoginRequiredException({ description: 'No active login found.' })
+      await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
+        LoginRequiredException,
+        'No active login found.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -255,18 +261,18 @@ describe('Consent Interaction Type', () => {
 
     // #region Accept Decision.
     it('should return a valid first time consent accept decision interaction response.', async () => {
-      delete context.grant.consent;
+      context.grant.consent = null;
 
       Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar' });
       Object.assign(context, { decision: 'accept', grantedScopes: ['foo', 'bar'] });
 
-      const { grantedScopes } = <ConsentDecisionAcceptInteractionContext>context;
+      const { grantedScopes } = context as ConsentDecisionAcceptInteractionContext;
 
       const consent = <Consent>{ id: 'consent_id', scopes: grantedScopes };
 
       consentServiceMock.create.mockResolvedValueOnce(consent);
 
-      const urlParameters = new URLSearchParams(context.grant.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
@@ -288,18 +294,18 @@ describe('Consent Interaction Type', () => {
     });
 
     it('should return a valid first time consent accept decision interaction response with an "offline_access" scope.', async () => {
-      delete context.grant.consent;
+      context.grant.consent = null;
 
       Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar offline_access' });
       Object.assign(context, { decision: 'accept', grantedScopes: ['foo', 'bar', 'offline_access'] });
 
-      const { grantedScopes } = <ConsentDecisionAcceptInteractionContext>context;
+      const { grantedScopes } = context as ConsentDecisionAcceptInteractionContext;
 
       const consent = <Consent>{ id: 'consent_id', scopes: grantedScopes };
 
       consentServiceMock.create.mockResolvedValueOnce(consent);
 
-      const urlParameters = new URLSearchParams(context.grant.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
@@ -323,20 +329,20 @@ describe('Consent Interaction Type', () => {
     it.each(codeLessResponseTypes)(
       'should return a valid first time consent accept decision interaction response without an "offline_access" scope.',
       async (responseType) => {
-        delete context.grant.consent;
+        context.grant.consent = null;
 
         Reflect.set(context.grant.parameters, 'response_type', responseType);
 
         Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar offline_access' });
         Object.assign(context, { decision: 'accept', grantedScopes: ['foo', 'bar', 'offline_access'] });
 
-        const { grantedScopes } = <ConsentDecisionAcceptInteractionContext>context;
+        const { grantedScopes } = context as ConsentDecisionAcceptInteractionContext;
 
         const consent = <Consent>{ id: 'consent_id', scopes: grantedScopes };
 
         consentServiceMock.create.mockResolvedValueOnce(consent);
 
-        const urlParameters = new URLSearchParams(context.grant.parameters);
+        const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
         await expect(
           interactionType.handleDecision(context)
@@ -364,7 +370,7 @@ describe('Consent Interaction Type', () => {
       Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar' });
       Object.assign(context, { decision: 'accept', grantedScopes: ['foo', 'bar'] });
 
-      const urlParameters = new URLSearchParams(context.grant.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
@@ -383,15 +389,15 @@ describe('Consent Interaction Type', () => {
           error_description: 'Lorem ipsum dolor sit amet...',
         }),
         decision: 'deny',
-        error: Object.assign(
-          Reflect.construct(OAuth2Exception, [{ description: context.parameters.error_description }]),
-          { code: context.parameters.error }
+        error: Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+          Reflect.construct(OAuth2Exception, [context.parameters.error_description as string]),
+          { error: context.parameters.error as string }
         ),
       });
 
-      const { error } = <ConsentDecisionDenyInteractionContext>context;
+      const { error } = context as ConsentDecisionDenyInteractionContext;
 
-      const urlParameters = new URLSearchParams(error.toJSON());
+      const urlParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,

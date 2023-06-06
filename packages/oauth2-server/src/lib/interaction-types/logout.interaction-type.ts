@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { URL, URLSearchParams } from 'url';
 
@@ -21,7 +22,6 @@ import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
-import { LogoutDecision } from './logout-decision.type';
 
 /**
  * Implementation of the **Logout** Interaction Type.
@@ -81,12 +81,12 @@ export class LogoutInteractionType implements InteractionTypeInterface {
     await this.checkLogoutTicket(logoutTicket);
 
     const url = new URL('/oauth/end_session', this.settings.issuer);
-    const searchParameters = new URLSearchParams(logoutTicket.parameters);
+    const searchParameters = new URLSearchParams(logoutTicket.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
     return removeNullishValues<LogoutContextInteractionResponse>({
-      skip: logoutTicket.session.activeLogin == null,
+      skip: logoutTicket.session.activeLogin === null,
       request_url: url.href,
       client: logoutTicket.client.id,
       context: {
@@ -104,9 +104,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
    * @param context Logout Decision Interaction Request Context.
    * @returns Logout Decision Interaction Response.
    */
-  public async handleDecision(
-    context: LogoutDecisionInteractionContext<LogoutDecision>
-  ): Promise<LogoutDecisionInteractionResponse> {
+  public async handleDecision(context: LogoutDecisionInteractionContext): Promise<LogoutDecisionInteractionResponse> {
     const { logoutTicket } = context;
 
     await this.checkLogoutTicket(logoutTicket);
@@ -131,7 +129,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
   ): Promise<LogoutDecisionInteractionResponse> {
     const { logoutTicket, session } = context;
 
-    if (session.activeLogin != null) {
+    if (session.activeLogin !== null) {
       // Some implementations remove the ID after removing the entity.
       const loginId = session.activeLogin.id;
 
@@ -147,7 +145,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
     }
 
     const url = new URL('/oauth/end_session', this.settings.issuer);
-    const searchParameters = new URLSearchParams(logoutTicket.parameters);
+    const searchParameters = new URLSearchParams(logoutTicket.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
@@ -166,7 +164,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
     await this.logoutTicketService.remove(logoutTicket);
 
     const url = new URL('/oauth/error', this.settings.issuer);
-    const searchParameters = new URLSearchParams(error.toJSON());
+    const searchParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
@@ -181,7 +179,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
   private async checkLogoutTicket(logoutTicket: LogoutTicket): Promise<void> {
     if (new Date() > logoutTicket.expiresAt) {
       await this.logoutTicketService.remove(logoutTicket);
-      throw new AccessDeniedException({ description: 'Expired Logout Ticket.' });
+      throw new AccessDeniedException('Expired Logout Ticket.');
     }
   }
 }

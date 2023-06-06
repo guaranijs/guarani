@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { CreateContextInteractionContext } from '../context/interaction/create-context.interaction-context';
 import { CreateDecisionInteractionContext } from '../context/interaction/create-decision.interaction-context';
@@ -7,8 +8,6 @@ import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
-import { CreateContextInteractionRequest } from '../requests/interaction/create-context.interaction-request';
-import { CreateDecisionInteractionRequest } from '../requests/interaction/create-decision.interaction-request';
 import { CreateContextInteractionResponse } from '../responses/interaction/create-context.interaction-response';
 import { CreateDecisionInteractionResponse } from '../responses/interaction/create-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -88,15 +87,15 @@ describe('Create Interaction Type', () => {
       const now = Date.now();
 
       context = <CreateContextInteractionContext>{
-        parameters: <CreateContextInteractionRequest>{
+        parameters: {
           interaction_type: 'create',
           login_challenge: 'login_challenge',
         },
-        interactionType: jest.mocked<InteractionTypeInterface>({
+        interactionType: <InteractionTypeInterface>{
           name: 'create',
           handleContext: jest.fn(),
           handleDecision: jest.fn(),
-        }),
+        },
         grant: <Grant>{
           id: 'grant_id',
           loginChallenge: 'login_challenge',
@@ -124,8 +123,9 @@ describe('Create Interaction Type', () => {
     it('should throw when the grant is expired.', async () => {
       Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleContext(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Grant.' })
+      await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Expired Grant.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -135,7 +135,7 @@ describe('Create Interaction Type', () => {
     it('should return a valid skip create context response.', async () => {
       context.grant.interactions.push('create');
 
-      const parameters = new URLSearchParams(context.grant.parameters);
+      const parameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<CreateContextInteractionResponse>({
         skip: true,
@@ -147,7 +147,7 @@ describe('Create Interaction Type', () => {
     });
 
     it('should return a valid non-skip create context response.', async () => {
-      const parameters = new URLSearchParams(context.grant.parameters);
+      const parameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<CreateContextInteractionResponse>({
         skip: false,
@@ -166,7 +166,7 @@ describe('Create Interaction Type', () => {
       const now = Date.now();
 
       context = <CreateDecisionInteractionContext>{
-        parameters: <CreateDecisionInteractionRequest>{
+        parameters: {
           interaction_type: 'create',
           login_challenge: 'login_challenge',
         },
@@ -203,8 +203,9 @@ describe('Create Interaction Type', () => {
     it('should throw when the grant is expired.', async () => {
       Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleDecision(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Grant.' })
+      await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Expired Grant.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -212,7 +213,7 @@ describe('Create Interaction Type', () => {
     });
 
     it('should return a valid first time create decision interaction response.', async () => {
-      const parameters = new URLSearchParams(context.grant.parameters);
+      const parameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       const { grant } = context;
 
@@ -230,7 +231,7 @@ describe('Create Interaction Type', () => {
       expect(userServiceMock.create).toHaveBeenCalledWith(context.parameters);
 
       expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
-      expect(loginServiceMock.create).toHaveBeenCalledWith(user, grant.session, undefined, undefined);
+      expect(loginServiceMock.create).toHaveBeenCalledWith(user, grant.session, null, null);
 
       expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
       expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{
@@ -250,7 +251,7 @@ describe('Create Interaction Type', () => {
     it('should return a valid subsequent create decision interaction response.', async () => {
       context.grant.interactions.push('create');
 
-      const parameters = new URLSearchParams(context.grant.parameters);
+      const parameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<CreateDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${parameters.toString()}`,

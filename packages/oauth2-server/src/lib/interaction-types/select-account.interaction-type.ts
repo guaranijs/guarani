@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { URL } from 'url';
 
@@ -95,7 +96,7 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
     }
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
@@ -110,7 +111,7 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
   private async checkGrant(grant: Grant): Promise<void> {
     if (new Date() > grant.expiresAt) {
       await this.grantService.remove(grant);
-      throw new AccessDeniedException({ description: 'Expired Grant.' });
+      throw new AccessDeniedException('Expired Grant.');
     }
   }
 }

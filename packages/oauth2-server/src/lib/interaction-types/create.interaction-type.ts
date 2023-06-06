@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { URL, URLSearchParams } from 'url';
 
@@ -72,7 +73,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
     await this.checkGrant(grant);
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
@@ -101,7 +102,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
     if (!grant.interactions.includes('create')) {
       const user = await this.userService.create(parameters);
 
-      const login = await this.loginService.create(user, grant.session, undefined, undefined);
+      const login = await this.loginService.create(user, grant.session, null, null);
       await this.updateActiveLogin(grant.session, login);
 
       grant.interactions.push('create');
@@ -109,7 +110,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
     }
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
@@ -124,7 +125,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
   private async checkGrant(grant: Grant): Promise<void> {
     if (new Date() > grant.expiresAt) {
       await this.grantService.remove(grant);
-      throw new AccessDeniedException({ description: 'Expired Grant.' });
+      throw new AccessDeniedException('Expired Grant.');
     }
   }
 

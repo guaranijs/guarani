@@ -93,14 +93,10 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
 
       return new HttpResponse().setHeaders(this.headers).json(deviceAuthorizationResponse);
     } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
-        error.cause = exc;
-      }
+      const error =
+        exc instanceof OAuth2Exception
+          ? exc
+          : new ServerErrorException('An unexpected error occurred.', { cause: exc });
 
       return new HttpResponse()
         .setStatus(error.statusCode)

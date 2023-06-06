@@ -96,18 +96,14 @@ export class IntrospectionEndpoint implements EndpointInterface {
   public async handle(request: HttpRequest): Promise<HttpResponse> {
     try {
       const context = await this.validator.validate(request);
-      const introspectionResponse = await this.introspectToken(context);
+      const introspectionResponse = this.introspectToken(context);
 
       return new HttpResponse().setHeaders(this.headers).json(introspectionResponse);
     } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
-        error.cause = exc;
-      }
+      const error =
+        exc instanceof OAuth2Exception
+          ? exc
+          : new ServerErrorException('An unexpected error occurred.', { cause: exc });
 
       return new HttpResponse()
         .setStatus(error.statusCode)
@@ -123,7 +119,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
    * @param context Introspection Context.
    * @returns Metadata of the Token.
    */
-  private async introspectToken(context: IntrospectionContext): Promise<IntrospectionResponse> {
+  private introspectToken(context: IntrospectionContext): IntrospectionResponse {
     const { client, token, tokenType } = context;
 
     if (token === null || tokenType === null) {
@@ -170,10 +166,10 @@ export class IntrospectionEndpoint implements EndpointInterface {
       client_id: token.client!.id,
       username: undefined,
       token_type: 'Bearer',
-      exp: Math.ceil(token.expiresAt.getTime() / 1000),
-      iat: Math.ceil(token.issuedAt.getTime() / 1000),
-      nbf: Math.ceil(token.validAfter.getTime() / 1000),
-      sub: token.user != null ? calculateSubjectIdentifier(token.user, token.client!, this.settings) : undefined,
+      exp: Math.floor(token.expiresAt.getTime() / 1000),
+      iat: Math.floor(token.issuedAt.getTime() / 1000),
+      nbf: Math.floor(token.validAfter.getTime() / 1000),
+      sub: token.user !== null ? calculateSubjectIdentifier(token.user, token.client!, this.settings) : undefined,
       aud: [token.client!.id],
       iss: this.settings.issuer,
       jti: undefined,

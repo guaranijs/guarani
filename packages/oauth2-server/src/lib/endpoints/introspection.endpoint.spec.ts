@@ -1,4 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -7,7 +9,6 @@ import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
-import { HttpResponse } from '../http/http.response';
 import { IntrospectionRequest } from '../requests/introspection-request';
 import { IntrospectionResponse } from '../responses/introspection-response';
 import { Settings } from '../settings/settings';
@@ -22,7 +23,7 @@ describe('Introspection Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: IntrospectionEndpoint;
 
-  const validatorMock = jest.mocked(IntrospectionRequestValidator.prototype, true);
+  const validatorMock = jest.mocked(IntrospectionRequestValidator.prototype);
 
   const settings = <Settings>{
     issuer: 'https://server.example.com',
@@ -54,7 +55,7 @@ describe('Introspection Endpoint', () => {
 
   describe('httpMethods', () => {
     it('should have \'["POST"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['POST']);
+      expect(endpoint.httpMethods).toEqual<HttpMethod[]>(['POST']);
     });
   });
 
@@ -70,13 +71,9 @@ describe('Introspection Endpoint', () => {
   describe('handle()', () => {
     let request: HttpRequest;
 
-    const defaultResponse = new HttpResponse()
-      .setHeaders({ 'Cache-Control': 'no-store', Pragma: 'no-cache' })
-      .json({ active: false });
-
     beforeEach(() => {
       request = new HttpRequest({
-        body: { token: 'access_token' },
+        body: <IntrospectionRequest>{ token: 'access_token' },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -94,13 +91,25 @@ describe('Introspection Endpoint', () => {
       const token = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: <IntrospectionRequest>request.body,
+        parameters: request.body as IntrospectionRequest,
         client,
         token,
         tokenType: 'access_token',
       });
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Cache-Control': 'no-store',
+        Pragma: 'no-cache',
+        'Content-Type': 'application/json',
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<IntrospectionResponse>({ active: false });
     });
 
     it('should return an inactive token response when the token is revoked.', async () => {
@@ -108,13 +117,25 @@ describe('Introspection Endpoint', () => {
       const token = <AccessToken>{ handle: 'access_token', isRevoked: true, client };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: <IntrospectionRequest>request.body,
+        parameters: request.body as IntrospectionRequest,
         client,
         token,
         tokenType: 'access_token',
       });
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Cache-Control': 'no-store',
+        Pragma: 'no-cache',
+        'Content-Type': 'application/json',
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<IntrospectionResponse>({ active: false });
     });
 
     it('should return an inactive token response when the token is not yet valid.', async () => {
@@ -127,13 +148,25 @@ describe('Introspection Endpoint', () => {
       };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: <IntrospectionRequest>request.body,
+        parameters: request.body as IntrospectionRequest,
         client,
         token,
         tokenType: 'access_token',
       });
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Cache-Control': 'no-store',
+        Pragma: 'no-cache',
+        'Content-Type': 'application/json',
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<IntrospectionResponse>({ active: false });
     });
 
     it('should return an inactive token response when the token is expired.', async () => {
@@ -147,13 +180,25 @@ describe('Introspection Endpoint', () => {
       };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: <IntrospectionRequest>request.body,
+        parameters: request.body as IntrospectionRequest,
         client,
         token,
         tokenType: 'access_token',
       });
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Cache-Control': 'no-store',
+        Pragma: 'no-cache',
+        'Content-Type': 'application/json',
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<IntrospectionResponse>({ active: false });
     });
 
     it('should return the metadata of the requested token.', async () => {
@@ -174,30 +219,40 @@ describe('Introspection Endpoint', () => {
       };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: <IntrospectionRequest>request.body,
+        parameters: request.body as IntrospectionRequest,
         client,
         token,
         tokenType: 'access_token',
       });
 
-      const introspectionResponse = <IntrospectionResponse>{
+      const introspectionResponse = removeNullishValues<IntrospectionResponse>({
         active: true,
         scope: 'foo bar',
         client_id: 'client_id',
-        // username: undefined,
+        username: undefined,
         token_type: 'Bearer',
-        exp: Math.ceil((now + 3600000) / 1000),
-        iat: Math.ceil((now - 3600000) / 1000),
-        nbf: Math.ceil((now - 3600000) / 1000),
+        exp: Math.floor((now + 3600000) / 1000),
+        iat: Math.floor(now / 1000),
+        nbf: Math.floor(now / 1000),
         sub: 'user_id',
         aud: ['client_id'],
         iss: 'https://server.example.com',
-        // jti: undefined,
-      };
+        jti: undefined,
+      });
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setHeaders(endpoint['headers']).json(introspectionResponse)
-      );
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Cache-Control': 'no-store',
+        Pragma: 'no-cache',
+        'Content-Type': 'application/json',
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<IntrospectionResponse>(introspectionResponse);
     });
   });
 });

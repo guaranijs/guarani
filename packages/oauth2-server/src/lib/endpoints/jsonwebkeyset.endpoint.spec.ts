@@ -1,9 +1,11 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 import { EllipticCurveKey, JsonWebKeySet, RsaKey } from '@guarani/jose';
+import { Dictionary } from '@guarani/types';
+
+import { OutgoingHttpHeaders } from 'http';
 
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
-import { HttpResponse } from '../http/http.response';
 import { Endpoint } from './endpoint.type';
 import { JsonWebKeySetEndpoint } from './jsonwebkeyset.endpoint';
 
@@ -57,7 +59,7 @@ describe('JSON Web Key Set Endpoint', () => {
 
   describe('httpMethods', () => {
     it('should have \'["GET"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['GET']);
+      expect(endpoint.httpMethods).toEqual<HttpMethod[]>(['GET']);
     });
   });
 
@@ -76,7 +78,12 @@ describe('JSON Web Key Set Endpoint', () => {
     });
 
     it('should return the json web key set containing the keys of the authorization server.', async () => {
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(new HttpResponse().json(jsonWebKeySet));
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ 'Content-Type': 'application/json' });
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(jsonWebKeySet.toJSON(true));
     });
   });
 });

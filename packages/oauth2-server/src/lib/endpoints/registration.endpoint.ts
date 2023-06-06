@@ -111,14 +111,10 @@ export class RegistrationEndpoint implements EndpointInterface {
           return await this.handlePut(request);
       }
     } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
-        error.cause = exc;
-      }
+      const error =
+        exc instanceof OAuth2Exception
+          ? exc
+          : new ServerErrorException('An unexpected error occurred.', { cause: exc });
 
       return new HttpResponse()
         .setStatus(error.statusCode)
@@ -209,10 +205,10 @@ export class RegistrationEndpoint implements EndpointInterface {
       client_id: client.id,
       client_secret: client.secret ?? undefined,
       client_id_issued_at:
-        client.secretIssuedAt != null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
+        client.secretIssuedAt !== null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
       client_secret_expires_at:
-        client.secret != null
-          ? client.secretExpiresAt != null
+        client.secret !== null
+          ? client.secretExpiresAt !== null
             ? Math.floor(client.secretExpiresAt.getTime() / 1000)
             : 0
           : undefined,
@@ -272,10 +268,10 @@ export class RegistrationEndpoint implements EndpointInterface {
       client_id: client.id,
       client_secret: client.secret ?? undefined,
       client_id_issued_at:
-        client.secretIssuedAt != null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
+        client.secretIssuedAt !== null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
       client_secret_expires_at:
-        client.secret != null
-          ? client.secretExpiresAt != null
+        client.secret !== null
+          ? client.secretExpiresAt !== null
             ? Math.floor(client.secretExpiresAt.getTime() / 1000)
             : 0
           : undefined,
@@ -347,10 +343,10 @@ export class RegistrationEndpoint implements EndpointInterface {
       client_id: client.id,
       client_secret: client.secret ?? undefined,
       client_id_issued_at:
-        client.secretIssuedAt != null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
+        client.secretIssuedAt !== null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
       client_secret_expires_at:
-        client.secret != null
-          ? client.secretExpiresAt != null
+        client.secret !== null
+          ? client.secretExpiresAt !== null
             ? Math.floor(client.secretExpiresAt.getTime() / 1000)
             : 0
           : undefined,

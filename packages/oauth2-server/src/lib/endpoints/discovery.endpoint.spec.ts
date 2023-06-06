@@ -1,9 +1,11 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
+
+import { OutgoingHttpHeaders } from 'http';
 
 import { AuthorizationServer } from '../authorization-server';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
-import { HttpResponse } from '../http/http.response';
 import { DiscoveryResponse } from '../responses/discovery-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
@@ -74,7 +76,7 @@ describe('Discovery Endpoint', () => {
 
   describe('httpMethods', () => {
     it('should have \'["GET"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['GET']);
+      expect(endpoint.httpMethods).toEqual<HttpMethod[]>(['GET']);
     });
   });
 
@@ -130,7 +132,12 @@ describe('Discovery Endpoint', () => {
         authorization_response_iss_parameter_supported: true,
       };
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(new HttpResponse().json(discoveryResponse));
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ 'Content-Type': 'application/json' });
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(discoveryResponse);
     });
   });
 });

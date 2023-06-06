@@ -89,14 +89,10 @@ export class UserinfoEndpoint implements EndpointInterface {
 
       return new HttpResponse().setHeaders(this.headers).json(claims);
     } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
-        error.cause = exc;
-      }
+      const error =
+        exc instanceof OAuth2Exception
+          ? exc
+          : new ServerErrorException('An unexpected error occurred.', { cause: exc });
 
       return new HttpResponse()
         .setStatus(error.statusCode)
@@ -116,17 +112,15 @@ export class UserinfoEndpoint implements EndpointInterface {
     const accessToken = await this.clientAuthorizationHandler.authorize(request);
 
     if (!accessToken.scopes.includes('openid')) {
-      throw new InsufficientScopeException({
-        description: 'The provided Access Token is missing the required scope "openid".',
-      });
+      throw new InsufficientScopeException('The provided Access Token is missing the required scope "openid".');
     }
 
-    if (accessToken.client == null) {
-      throw new InvalidTokenException({ description: 'Invalid Credentials.' });
+    if (accessToken.client === null) {
+      throw new InvalidTokenException('Invalid Credentials.');
     }
 
-    if (accessToken.user == null) {
-      throw new InvalidTokenException({ description: 'Invalid Credentials.' });
+    if (accessToken.user === null) {
+      throw new InvalidTokenException('Invalid Credentials.');
     }
 
     return accessToken;

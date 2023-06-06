@@ -106,7 +106,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
   private getEndpointPath(name: Endpoint): string | undefined {
     const path = this.authorizationServer['endpoints'].find((endpoint) => endpoint.name === name)?.path;
 
-    if (path === undefined) {
+    if (typeof path === 'undefined') {
       return undefined;
     }
 

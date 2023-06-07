@@ -1,9 +1,11 @@
+import { Dictionary, OneOrMany } from '@guarani/types';
+
 import { AccessTokenType } from '../types/access-token-type.type';
 
 /**
  * Parameters of the OAuth 2.0 Introspection Response.
  */
-export interface IntrospectionResponse extends Record<string, any> {
+export interface IntrospectionResponse extends Dictionary<any> {
   /**
    * Indicates if the Token is active.
    */
@@ -52,7 +54,7 @@ export interface IntrospectionResponse extends Record<string, any> {
   /**
    * Audience to whom the Token was issued.
    */
-  readonly aud?: string | string[];
+  readonly aud?: OneOrMany<string>;
 
   /**
    * Identifier of the Authorization Server that issued the Token.

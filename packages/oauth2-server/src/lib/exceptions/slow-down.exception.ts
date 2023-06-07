@@ -1,4 +1,4 @@
-import { ErrorCode } from './error-code.type';
+import { ErrorCode } from './error-code.enum';
 import { OAuth2Exception } from './oauth2.exception';
 
 /**
@@ -9,5 +9,5 @@ export class SlowDownException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public override readonly code: ErrorCode = 'slow_down';
+  public readonly error = ErrorCode.SlowDown;
 }

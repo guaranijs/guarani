@@ -1,6 +1,8 @@
 import { Injectable } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { HttpResponse } from '../http/http.response';
 import { DisplayInterface } from './display.interface';
@@ -20,12 +22,9 @@ export class PageDisplay implements DisplayInterface {
    * @param parameters Parameters used to build the Http Response.
    * @returns Http Response to the provided Redirect URI.
    */
-  public createHttpResponse(redirectUri: string, parameters: Record<string, any>): HttpResponse {
+  public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
     const url = new URL(redirectUri);
-    const searchParameters = new URLSearchParams(parameters);
-
-    url.search = searchParameters.toString();
-
+    Object.entries(removeNullishValues(parameters)).forEach(([name, value]) => url.searchParams.set(name, value));
     return new HttpResponse().redirect(url);
   }
 }

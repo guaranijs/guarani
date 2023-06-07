@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import { Buffer } from 'buffer';
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
@@ -22,7 +24,7 @@ export class HttpResponse {
   /**
    * Internal Cookies of the Http Response.
    */
-  #cookies: Record<string, any> = {};
+  #cookies: Dictionary<unknown> = {};
 
   /**
    * Internal Encoded Body of the Http Response.
@@ -46,7 +48,7 @@ export class HttpResponse {
   /**
    * Cookies of the Http Response.
    */
-  public get cookies(): Record<string, any> {
+  public get cookies(): Dictionary<unknown> {
     return this.#cookies;
   }
 
@@ -94,7 +96,7 @@ export class HttpResponse {
    * @param cookie Name of the Cookie.
    * @param value Value of the Cookie.
    */
-  public setCookie(cookie: string, value: any): HttpResponse {
+  public setCookie(cookie: string, value: unknown): HttpResponse {
     this.#cookies[cookie] = value;
     return this;
   }
@@ -104,7 +106,7 @@ export class HttpResponse {
    *
    * @param cookies Dictionary of the Cookies.
    */
-  public setCookies(cookies: Record<string, any>): HttpResponse {
+  public setCookies(cookies: Dictionary<unknown>): HttpResponse {
     Object.assign(this.#cookies, cookies);
     return this;
   }

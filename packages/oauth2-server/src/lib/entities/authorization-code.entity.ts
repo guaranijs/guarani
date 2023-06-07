@@ -5,7 +5,7 @@ import { Login } from './login.entity';
 /**
  * OAuth 2.0 Authorization Code Entity.
  */
-export interface AuthorizationCode extends Record<string, any> {
+export interface AuthorizationCode {
   /**
    * Identifier of the Authorization Code.
    */

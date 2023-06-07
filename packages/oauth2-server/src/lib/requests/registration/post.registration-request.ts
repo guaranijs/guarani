@@ -4,6 +4,7 @@ import {
   JsonWebKeySetParameters,
   JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
+import { Dictionary } from '@guarani/types';
 
 import { ClientAuthentication } from '../../client-authentication/client-authentication.type';
 import { GrantType } from '../../grant-types/grant-type.type';
@@ -14,7 +15,7 @@ import { SubjectType } from '../../types/subject-type.type';
 /**
  * Parameters of the OAuth 2.0 Post Client Registration Request.
  */
-export interface PostRegistrationRequest extends Record<string, any> {
+export interface PostRegistrationRequest extends Dictionary<any> {
   /**
    * Redirect URIs of the Client.
    */

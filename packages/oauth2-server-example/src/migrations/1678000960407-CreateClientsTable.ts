@@ -23,12 +23,6 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
           isUnique: true,
         },
         {
-          name: 'secret_issued_at',
-          type: 'timestamp',
-          default: 'CURRENT_TIMESTAMP',
-          isNullable: true,
-        },
-        {
           name: 'secret_expires_at',
           type: 'timestamp',
           isNullable: true,
@@ -254,13 +248,6 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
         },
       ],
       checks: [
-        {
-          name: 'check_secret_issuance',
-          columnNames: ['secret', 'secret_issued_at'],
-          expression:
-            '("secret" IS NULL AND "secret_issued_at" IS NULL) OR ' +
-            '("secret" IS NOT NULL AND "secret_issued_at" IS NOT NULL)',
-        },
         {
           name: 'check_secret_expiration',
           columnNames: ['secret', 'secret_expires_at'],

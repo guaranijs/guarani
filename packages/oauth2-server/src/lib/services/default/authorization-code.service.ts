@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomUUID } from 'crypto';
 
@@ -39,7 +40,7 @@ export class AuthorizationCodeService implements AuthorizationCodeServiceInterfa
     return authorizationCode;
   }
 
-  public async findOne(code: string): Promise<AuthorizationCode | null> {
+  public async findOne(code: string): Promise<Nullable<AuthorizationCode>> {
     return this.authorizationCodes.find((authorizationCode) => authorizationCode.code === code) ?? null;
   }
 

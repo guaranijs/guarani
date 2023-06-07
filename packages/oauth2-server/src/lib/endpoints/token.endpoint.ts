@@ -1,11 +1,13 @@
 import { Injectable, InjectAll } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
-import { TokenContext } from '../context/token/token.context';
+import { TokenContext } from '../context/token/token-context';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
+import { UnsupportedGrantTypeException } from '../exceptions/unsupported-grant-type.exception';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
@@ -49,10 +51,7 @@ export class TokenEndpoint implements EndpointInterface {
    *
    * @param validators Token Request Validators registered at the Authorization Server.
    */
-  public constructor(
-    @InjectAll(TokenRequestValidator)
-    private readonly validators: TokenRequestValidator<TokenRequest, TokenContext<TokenRequest>>[]
-  ) {}
+  public constructor(@InjectAll(TokenRequestValidator) private readonly validators: TokenRequestValidator[]) {}
 
   /**
    * Creates a Http JSON Access Token Response.
@@ -72,7 +71,7 @@ export class TokenEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = <TokenRequest>request.body;
+    const parameters = request.body as TokenRequest;
 
     try {
       const validator = this.getValidator(parameters);
@@ -80,22 +79,18 @@ export class TokenEndpoint implements EndpointInterface {
       const context = await validator.validate(request);
       const tokenResponse = await context.grantType.handle(context);
 
-      return new HttpResponse().setHeaders(this.headers).json(tokenResponse);
+      return new HttpResponse().setHeaders(this.headers).json(removeNullishValues(tokenResponse));
     } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
-        error.cause = exc;
-      }
+      const error =
+        exc instanceof OAuth2Exception
+          ? exc
+          : new ServerErrorException('An unexpected error occurred.', { cause: exc });
 
       return new HttpResponse()
         .setStatus(error.statusCode)
         .setHeaders(error.headers)
         .setHeaders(this.headers)
-        .json(error.toJSON());
+        .json(removeNullishValues(error.toJSON()));
     }
   }
 
@@ -107,13 +102,13 @@ export class TokenEndpoint implements EndpointInterface {
    */
   private getValidator(parameters: TokenRequest): TokenRequestValidator<TokenRequest, TokenContext<TokenRequest>> {
     if (typeof parameters.grant_type !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "grant_type".' });
+      throw new InvalidRequestException('Invalid parameter "grant_type".');
     }
 
     const validator = this.validators.find((validator) => validator.name === parameters.grant_type);
 
-    if (validator === undefined) {
-      throw new InvalidRequestException({ description: `Unsupported grant_type "${parameters.grant_type}".` });
+    if (typeof validator === 'undefined') {
+      throw new UnsupportedGrantTypeException(`Unsupported grant_type "${parameters.grant_type}".`);
     }
 
     return validator;

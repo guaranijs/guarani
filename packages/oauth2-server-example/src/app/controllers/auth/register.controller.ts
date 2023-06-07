@@ -5,6 +5,7 @@ import {
   CreateDecisionInteractionResponse,
   Display,
 } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import axios, { AxiosError } from 'axios';
 import { plainToInstance } from 'class-transformer';
@@ -26,7 +27,7 @@ const popupTemplateFn = (redirectUri: string): string => `
 class Controller {
   public async get(request: Request, response: Response): Promise<void> {
     try {
-      const loginChallenge = <string>request.query.login_challenge;
+      const loginChallenge = request.query.login_challenge as string;
 
       if (typeof loginChallenge !== 'string') {
         const parameters: CodeAuthorizationRequest = {
@@ -61,7 +62,7 @@ class Controller {
       }
 
       if (data.skip) {
-        return this.redirectOrClosePopup(response, data.request_url, data.context.display);
+        return this.redirectOrClosePopup(response, data.request_url, data.context.display ?? null);
       }
 
       return response.render('auth/register', {
@@ -113,7 +114,7 @@ class Controller {
       const session = await Session.findOneByOrFail({ id: sessionId });
 
       request.login(session.activeLogin!.user, { session: true }, () => {
-        const display = <Display>request.cookies.display;
+        const display = request.cookies.display as Display;
         return this.redirectOrClosePopup(response, redirectTo, display);
       });
     } catch (exc: unknown) {
@@ -126,7 +127,7 @@ class Controller {
     }
   }
 
-  private redirectOrClosePopup(response: Response, url: string, display: Display | undefined): void {
+  private redirectOrClosePopup(response: Response, url: string, display: Nullable<Display>): void {
     if (display === 'popup') {
       response.clearCookie('display').send(popupTemplateFn(url));
       return;

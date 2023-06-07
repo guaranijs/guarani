@@ -1,6 +1,7 @@
 import { Inject, Injectable, Optional } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
-import { RevocationContext } from '../context/revocation.context';
+import { RevocationContext } from '../context/revocation-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
@@ -50,7 +51,7 @@ export class RevocationRequestValidator {
         throw new Error('The Authorization Server disabled using Refresh Tokens.');
       }
 
-      if (this.refreshTokenService === undefined) {
+      if (typeof this.refreshTokenService === 'undefined') {
         throw new Error('Cannot enable Refresh Token Revocation without a Refresh Token Service.');
       }
 
@@ -65,14 +66,14 @@ export class RevocationRequestValidator {
    * @returns Revocation Context.
    */
   public async validate(request: HttpRequest): Promise<RevocationContext> {
-    const parameters = <RevocationRequest>request.body;
+    const parameters = request.body as RevocationRequest;
 
     this.checkParameters(parameters);
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
-    const tokenResult = await this.findToken(parameters.token, parameters.token_type_hint);
+    const tokenResult = await this.findToken(parameters.token, parameters.token_type_hint ?? null);
 
-    if (tokenResult === null || tokenResult.token.client == null) {
+    if (tokenResult === null || tokenResult.token.client === null) {
       return { client, parameters, token: null, tokenType: null };
     }
 
@@ -88,11 +89,11 @@ export class RevocationRequestValidator {
     const { token, token_type_hint: tokenTypeHint } = parameters;
 
     if (typeof token !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "token".' });
+      throw new InvalidRequestException('Invalid parameter "token".');
     }
 
-    if (tokenTypeHint !== undefined && !this.supportedTokenTypeHints.includes(tokenTypeHint)) {
-      throw new UnsupportedTokenTypeException({ description: `Unsupported token_type_hint "${tokenTypeHint}".` });
+    if (typeof tokenTypeHint !== 'undefined' && !this.supportedTokenTypeHints.includes(tokenTypeHint)) {
+      throw new UnsupportedTokenTypeException(`Unsupported token_type_hint "${tokenTypeHint}".`);
     }
   }
 
@@ -103,7 +104,7 @@ export class RevocationRequestValidator {
    * @param tokenTypeHint Optional hint about the type of the Token.
    * @returns Resulting Token and its type.
    */
-  private async findToken(handle: string, tokenTypeHint?: TokenTypeHint): Promise<FindTokenResult | null> {
+  private async findToken(handle: string, tokenTypeHint: Nullable<TokenTypeHint>): Promise<Nullable<FindTokenResult>> {
     switch (tokenTypeHint) {
       case 'refresh_token':
         return (await this.findRefreshToken(handle)) ?? (await this.findAccessToken(handle));
@@ -120,7 +121,7 @@ export class RevocationRequestValidator {
    * @param handle Token Handle provided by the Client.
    * @returns Result of the search.
    */
-  private async findAccessToken(handle: string): Promise<FindTokenResult | null> {
+  private async findAccessToken(handle: string): Promise<Nullable<FindTokenResult>> {
     const token = await this.accessTokenService.findOne(handle);
     return token !== null ? { token, tokenType: 'access_token' } : null;
   }
@@ -131,8 +132,12 @@ export class RevocationRequestValidator {
    * @param handle Token Handle provided by the Client.
    * @returns Result of the search.
    */
-  private async findRefreshToken(handle: string): Promise<FindTokenResult | null> {
-    const token = this.settings.enableRefreshTokenRevocation ? await this.refreshTokenService?.findOne(handle) : null;
-    return token != null ? { token, tokenType: 'refresh_token' } : null;
+  private async findRefreshToken(handle: string): Promise<Nullable<FindTokenResult>> {
+    if (typeof this.refreshTokenService === 'undefined') {
+      return null;
+    }
+
+    const token = this.settings.enableRefreshTokenRevocation ? await this.refreshTokenService.findOne(handle) : null;
+    return token !== null ? { token, tokenType: 'refresh_token' } : null;
   }
 }

@@ -1,6 +1,8 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
-import { HttpResponse } from '../http/http.response';
+import { OutgoingHttpHeaders } from 'http';
+
 import { Display } from './display.type';
 import { WapDisplay } from './wap.display';
 
@@ -28,9 +30,18 @@ describe('Wap Display', () => {
 
   describe('createHttpResponse()', () => {
     it('should create a redirect http response with a populated uri query.', () => {
-      expect(display.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' })).toStrictEqual(
-        new HttpResponse().redirect('https://example.com/?foo=foo&bar=bar&baz=baz')
-      );
+      const response = display.createHttpResponse('https://example.com', {
+        foo: 'foo',
+        bar: 'bar',
+        baz: 'baz',
+        empty: null,
+      });
+
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://example.com/?foo=foo&bar=bar&baz=baz',
+      });
     });
   });
 });

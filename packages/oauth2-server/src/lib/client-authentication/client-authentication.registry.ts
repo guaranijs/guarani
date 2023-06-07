@@ -1,4 +1,4 @@
-import { Constructor } from '@guarani/di';
+import { Constructor } from '@guarani/types';
 
 import { ClientAuthenticationInterface } from './client-authentication.interface';
 import { ClientAuthentication } from './client-authentication.type';

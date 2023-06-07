@@ -1,10 +1,12 @@
+import { Nullable } from '@guarani/types';
+
 import { Client } from './client.entity';
 import { User } from './user.entity';
 
 /**
  * OAuth 2.0 Access Token Entity.
  */
-export interface AccessToken extends Record<string, any> {
+export interface AccessToken {
   /**
    * Identifier of the Access Token.
    */
@@ -38,10 +40,10 @@ export interface AccessToken extends Record<string, any> {
   /**
    * Client that requested the Access Token.
    */
-  readonly client?: Client | null;
+  readonly client: Nullable<Client>;
 
   /**
    * End User that granted authorization to the Client.
    */
-  readonly user?: User | null;
+  readonly user: Nullable<User>;
 }

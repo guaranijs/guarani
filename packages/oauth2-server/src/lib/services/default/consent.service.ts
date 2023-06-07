@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomUUID } from 'crypto';
 
@@ -20,6 +21,7 @@ export class ConsentService implements ConsentServiceInterface {
       id: randomUUID(),
       scopes,
       createdAt: new Date(),
+      expiresAt: null,
       client,
       user,
     };
@@ -29,7 +31,7 @@ export class ConsentService implements ConsentServiceInterface {
     return consent;
   }
 
-  public async findOne(client: Client, user: User): Promise<Consent | null> {
+  public async findOne(client: Client, user: User): Promise<Nullable<Consent>> {
     return this.consents.find((consent) => consent.client.id === client.id && consent.user.id === user.id) ?? null;
   }
 

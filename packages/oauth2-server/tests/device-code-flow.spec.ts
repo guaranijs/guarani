@@ -1,4 +1,5 @@
 import { getContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
@@ -71,7 +72,7 @@ describe('Device Code Flow', () => {
       device_code: deviceCode,
     };
 
-    const requestBody = new URLSearchParams(requestData);
+    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
 
     const response = await request(app)
       .post('/oauth/token')

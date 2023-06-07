@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -6,7 +7,6 @@ import { Client } from '../entities/client.entity';
 import { DeviceCode } from '../entities/device-code.entity';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
-import { HttpResponse } from '../http/http.response';
 import { DeviceAuthorizationRequest } from '../requests/device-authorization-request';
 import { DeviceAuthorizationResponse } from '../responses/device-authorization-response';
 import { DeviceCodeServiceInterface } from '../services/device-code.service.interface';
@@ -23,7 +23,7 @@ describe('Device Authorization Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: DeviceAuthorizationEndpoint;
 
-  const validatorMock = jest.mocked(DeviceAuthorizationRequestValidator.prototype, true);
+  const validatorMock = jest.mocked(DeviceAuthorizationRequestValidator.prototype);
 
   const deviceCodeServiceMock = jest.mocked<DeviceCodeServiceInterface>({
     create: jest.fn(),
@@ -59,7 +59,7 @@ describe('Device Authorization Endpoint', () => {
 
   describe('httpMethods', () => {
     it('should have \'["POST"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['POST']);
+      expect(endpoint.httpMethods).toEqual<HttpMethod[]>(['POST']);
     });
   });
 
@@ -90,6 +90,14 @@ describe('Device Authorization Endpoint', () => {
       const scopes: string[] = ['foo', 'bar'];
       const client = <Client>{ id: 'client_id', scopes };
 
+      const deviceCode = <DeviceCode>{
+        id: 'device_code',
+        userCode: 'user_code',
+        verificationUri: 'https://server.example.com/device',
+        verificationUriComplete: 'https://server.example.com/device?user_code=user_code',
+        expiresAt: new Date(Date.now() + 300000),
+      };
+
       const deviceAuthorizationResponse: DeviceAuthorizationResponse = {
         device_code: 'device_code',
         user_code: 'user_code',
@@ -100,22 +108,26 @@ describe('Device Authorization Endpoint', () => {
       };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: <DeviceAuthorizationRequest>request.body,
+        parameters: request.body as DeviceAuthorizationRequest,
         client,
         scopes,
       });
 
-      deviceCodeServiceMock.create.mockResolvedValueOnce(<DeviceCode>{
-        id: 'device_code',
-        userCode: 'user_code',
-        verificationUri: 'https://server.example.com/device',
-        verificationUriComplete: 'https://server.example.com/device?user_code=user_code',
-        expiresAt: new Date(Date.now() + 300000),
+      deviceCodeServiceMock.create.mockResolvedValueOnce(deviceCode);
+
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Cache-Control': 'no-store',
+        Pragma: 'no-cache',
+        'Content-Type': 'application/json',
       });
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setHeaders(endpoint['headers']).json(deviceAuthorizationResponse)
-      );
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(deviceAuthorizationResponse);
     });
   });
 });

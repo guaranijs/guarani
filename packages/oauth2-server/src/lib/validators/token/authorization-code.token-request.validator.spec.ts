@@ -3,7 +3,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { Buffer } from 'buffer';
 import { URL } from 'url';
 
-import { AuthorizationCodeTokenContext } from '../../context/token/authorization-code.token.context';
+import { AuthorizationCodeTokenContext } from '../../context/token/authorization-code.token-context';
 import { AuthorizationCode } from '../../entities/authorization-code.entity';
 import { Client } from '../../entities/client.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
@@ -29,7 +29,7 @@ describe('Authorization Code Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: AuthorizationCodeTokenRequestValidator;
 
-  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
+  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
 
   const authorizationCodeServiceMock = jest.mocked<AuthorizationCodeServiceInterface>({
     create: jest.fn(),
@@ -76,7 +76,7 @@ describe('Authorization Code Token Request Validator', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: {
+        body: <AuthorizationCodeTokenRequest>{
           grant_type: 'authorization_code',
           code: 'code',
           redirect_uri: 'https://client.example.com/oauth/callback',
@@ -97,8 +97,9 @@ describe('Authorization Code Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "code".' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "code".'
       );
     });
 
@@ -108,8 +109,9 @@ describe('Authorization Code Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Invalid Authorization Code.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Invalid Authorization Code.'
       );
     });
 
@@ -124,8 +126,9 @@ describe('Authorization Code Token Request Validator', () => {
         clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
         authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".' })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "redirect_uri".'
         );
       }
     );
@@ -139,8 +142,9 @@ describe('Authorization Code Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "redirect_uri".' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "redirect_uri".'
       );
     });
 
@@ -153,8 +157,9 @@ describe('Authorization Code Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'The Redirect URI MUST NOT have a fragment component.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'The Redirect URI MUST NOT have a fragment component.'
       );
     });
 
@@ -169,8 +174,9 @@ describe('Authorization Code Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Redirect URI.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Redirect URI.'
       );
     });
 
@@ -189,8 +195,9 @@ describe('Authorization Code Token Request Validator', () => {
         clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
         authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "code_verifier".' })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "code_verifier".'
         );
       }
     );
@@ -207,7 +214,7 @@ describe('Authorization Code Token Request Validator', () => {
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationCodeTokenContext>({
-        parameters: <AuthorizationCodeTokenRequest>request.body,
+        parameters: request.body as AuthorizationCodeTokenRequest,
         client,
         grantType: grantTypesMocks[0]!,
         authorizationCode,

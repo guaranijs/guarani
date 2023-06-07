@@ -4,6 +4,7 @@ import {
   JsonWebKeySetParameters,
   JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
+import { Nullable } from '@guarani/types';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { GrantType } from '../grant-types/grant-type.type';
@@ -14,7 +15,7 @@ import { SubjectType } from '../types/subject-type.type';
 /**
  * OAuth 2.0 Client Entity.
  */
-export interface Client extends Record<string, any> {
+export interface Client {
   /**
    * Identifier of the Client.
    */
@@ -23,21 +24,14 @@ export interface Client extends Record<string, any> {
   /**
    * Secret of the Client.
    */
-  secret?: string | null;
-
-  /**
-   * Creation Date of the Client Secret.
-   *
-   * A **nullish** value indicates that no Client Secret was issued.
-   */
-  secretIssuedAt?: Date | null;
+  secret: Nullable<string>;
 
   /**
    * Expiration Date of the Client Secret.
    *
    * A **nullish** value indicates that the Client Secret will not expire.
    */
-  secretExpiresAt?: Date | null;
+  secretExpiresAt: Nullable<Date>;
 
   /**
    * Name of the Client.
@@ -72,7 +66,7 @@ export interface Client extends Record<string, any> {
   /**
    * JSON Web Signature Algorithm used to validate the JWT Bearer Client Assertion.
    */
-  authenticationSigningAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
+  authenticationSigningAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   /**
    * Scopes of the Client.
@@ -82,37 +76,37 @@ export interface Client extends Record<string, any> {
   /**
    * URI of the Home Page of the Client.
    */
-  clientUri?: string | null;
+  clientUri: Nullable<string>;
 
   /**
    * URI of the Logo of the Client.
    */
-  logoUri?: string | null;
+  logoUri: Nullable<string>;
 
   /**
    * Array of email addresses of people responsible for the Client.
    */
-  contacts?: string[] | null;
+  contacts: Nullable<string[]>;
 
   /**
    * URI of the Privacy Policy page of the Client.
    */
-  policyUri?: string | null;
+  policyUri: Nullable<string>;
 
   /**
    * URI of the Terms of Services page of the Client.
    */
-  tosUri?: string | null;
+  tosUri: Nullable<string>;
 
   /**
    * JSON Web Key Set URL of the Client.
    */
-  jwksUri?: string | null;
+  jwksUri: Nullable<string>;
 
   /**
    * JSON Web Key Set object containing the JSON Web Keys of the Client.
    */
-  jwks?: JsonWebKeySetParameters | null;
+  jwks: Nullable<JsonWebKeySetParameters>;
 
   /**
    * Subject Type for responses to the Client.
@@ -122,12 +116,12 @@ export interface Client extends Record<string, any> {
   /**
    * Https Url used to calculate the Pseudonymous Identifiers of the Client.
    */
-  sectorIdentifierUri?: string | null;
+  sectorIdentifierUri: Nullable<string>;
 
   /**
    * Client Salt for the Pairwise Subject Type.
    */
-  pairwiseSalt?: string | null;
+  pairwiseSalt: Nullable<string>;
 
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.
@@ -137,47 +131,47 @@ export interface Client extends Record<string, any> {
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the ID Token issued to the Client.
    */
-  idTokenEncryptedResponseKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm | null;
+  idTokenEncryptedResponseKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the ID Token issued to the Client.
    */
-  idTokenEncryptedResponseContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm | null;
+  idTokenEncryptedResponseContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   /**
    * JSON Web Signature Algorithm used to sign the Userinfo JWT Response.
    */
-  // userinfoSignedResponseAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
+  // userinfoSignedResponseAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the Userinfo JWT Response.
    */
-  // userinfoEncryptedResponseKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm | null;
+  // userinfoEncryptedResponseKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the Userinfo JWT Response.
    */
-  // userinfoEncryptedResponseContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm | null;
+  // userinfoEncryptedResponseContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   /**
    * JSON Web Signature Algorithm used to sign the Request Object sent to the Authorization Server.
    */
-  // requestObjectSigningAlgorithm?: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
+  // requestObjectSigningAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the Request Object sent to the Authorization Server.
    */
-  // requestObjectEncryptionKeyWrap?: JsonWebEncryptionKeyWrapAlgorithm | null;
+  // requestObjectEncryptionKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the Request Object sent to the Authorization Server.
    */
-  // requestObjectEncryptionContentEncryption?: JsonWebEncryptionContentEncryptionAlgorithm | null;
+  // requestObjectEncryptionContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   /**
    * Default Maximum Authentication Age.
    */
-  defaultMaxAge?: number | null;
+  defaultMaxAge: Nullable<number>;
 
   /**
    * Indicates if the claim **auth_time** is required in the ID Token.
@@ -187,17 +181,17 @@ export interface Client extends Record<string, any> {
   /**
    * Default Authentication Context Class References of the Client.
    */
-  defaultAcrValues?: string[] | null;
+  defaultAcrValues: Nullable<string[]>;
 
   /**
    * Url that a third party can use to initiate a login by the Client.
    */
-  initiateLoginUri?: string | null;
+  initiateLoginUri: Nullable<string>;
 
   /**
    * Pre-registered Request URIs of the Client.
    */
-  // requestUris?: string[] | null;
+  // requestUris: Nullable<string[]>;
 
   /**
    * Post Logout Redirect URIs of the Client.
@@ -207,12 +201,12 @@ export interface Client extends Record<string, any> {
   /**
    * Unique Identifier of the Software of the Client.
    */
-  softwareId?: string | null;
+  softwareId: Nullable<string>;
 
   /**
    * Version of the Software of the Client.
    */
-  softwareVersion?: string | null;
+  softwareVersion: Nullable<string>;
 
   /**
    * Creation Date of the Client.

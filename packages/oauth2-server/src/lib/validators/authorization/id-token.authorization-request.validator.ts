@@ -1,6 +1,5 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { AuthorizationContext } from '../../context/authorization/authorization.context';
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
@@ -21,10 +20,7 @@ import { AuthorizationRequestValidator } from './authorization-request.validator
  * Implementation of the **ID Token** Authorization Request Validator.
  */
 @Injectable()
-export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestValidator<
-  AuthorizationRequest,
-  AuthorizationContext<AuthorizationRequest>
-> {
+export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestValidator {
   /**
    * Name of the Response Type that uses this Validator.
    */
@@ -65,10 +61,7 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
     const responseMode = super.getResponseMode(parameters, responseType);
 
     if (responseMode.name === 'query') {
-      throw new InvalidRequestException({
-        description: 'Invalid response_mode "query" for response_type "id_token".',
-        state: parameters.state,
-      });
+      throw new InvalidRequestException('Invalid response_mode "query" for response_type "id_token".');
     }
 
     return responseMode;
@@ -82,7 +75,7 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
    */
   protected override getNonce(parameters: AuthorizationRequest): string {
     if (typeof parameters.nonce !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "nonce".', state: parameters.state });
+      throw new InvalidRequestException('Invalid parameter "nonce".');
     }
 
     return parameters.nonce;

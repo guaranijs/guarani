@@ -1,9 +1,11 @@
+import { Dictionary } from '@guarani/types';
+
 import { LogoutContext } from './logout.context';
 
 /**
  * Parameters of the custom OAuth 2.0 Logout Context Interaction Response.
  */
-export interface LogoutContextInteractionResponse {
+export interface LogoutContextInteractionResponse extends Dictionary<any> {
   /**
    * Indicates if the application can skip displaying the logout screen.
    */

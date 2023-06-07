@@ -1,14 +1,12 @@
 import { Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomBytes } from 'crypto';
-import { promisify } from 'util';
 
 import { Client } from '../../entities/client.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { User } from '../../entities/user.entity';
 import { RefreshTokenServiceInterface } from '../refresh-token.service.interface';
-
-const randomBytesAsync = promisify(randomBytes);
 
 @Injectable()
 export class RefreshTokenService implements RefreshTokenServiceInterface {
@@ -22,7 +20,7 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
     const now = Date.now();
 
     const refreshToken: RefreshToken = {
-      handle: (await randomBytesAsync(12)).toString('hex'),
+      handle: randomBytes(12).toString('hex'),
       scopes,
       isRevoked: false,
       issuedAt: new Date(now),
@@ -37,7 +35,7 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
     return refreshToken;
   }
 
-  public async findOne(handle: string): Promise<RefreshToken | null> {
+  public async findOne(handle: string): Promise<Nullable<RefreshToken>> {
     return this.refreshTokens.find((refreshToken) => refreshToken.handle === handle) ?? null;
   }
 
@@ -49,7 +47,7 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
     const now = Date.now();
 
     const newRefreshToken: RefreshToken = {
-      handle: (await randomBytesAsync(12)).toString('hex'),
+      handle: randomBytes(12).toString('hex'),
       scopes: refreshToken.scopes,
       isRevoked: false,
       issuedAt: new Date(now),

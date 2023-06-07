@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 
-import { RefreshTokenTokenContext } from '../context/token/refresh-token.token.context';
+import { RefreshTokenTokenContext } from '../context/token/refresh-token.token-context';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
@@ -84,19 +84,19 @@ export class RefreshTokenGrantType implements GrantTypeInterface {
    */
   private checkRefreshToken(refreshToken: RefreshToken, client: Client): void {
     if (refreshToken.client.id !== client.id) {
-      throw new InvalidGrantException({ description: 'Mismatching Client Identifier.' });
+      throw new InvalidGrantException('Mismatching Client Identifier.');
     }
 
     if (new Date() < refreshToken.validAfter) {
-      throw new InvalidGrantException({ description: 'Refresh Token not yet valid.' });
+      throw new InvalidGrantException('Refresh Token not yet valid.');
     }
 
     if (new Date() > refreshToken.expiresAt) {
-      throw new InvalidGrantException({ description: 'Expired Refresh Token.' });
+      throw new InvalidGrantException('Expired Refresh Token.');
     }
 
     if (refreshToken.isRevoked) {
-      throw new InvalidGrantException({ description: 'Revoked Refresh Token.' });
+      throw new InvalidGrantException('Revoked Refresh Token.');
     }
   }
 }

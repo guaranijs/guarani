@@ -1,4 +1,4 @@
-import { ErrorCode } from './error-code.type';
+import { ErrorCode } from './error-code.enum';
 import { OAuth2Exception } from './oauth2.exception';
 
 /**
@@ -8,7 +8,7 @@ export class ServerErrorException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public override readonly code: ErrorCode = 'server_error';
+  public readonly error = ErrorCode.ServerError;
 
   /**
    * Http Response Status Code of the OAuth 2.0 Exception.

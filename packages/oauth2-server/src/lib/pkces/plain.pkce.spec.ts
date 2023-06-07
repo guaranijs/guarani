@@ -23,11 +23,11 @@ describe('Plain PKCE', () => {
 
   describe('verify()', () => {
     it('should return false when comparing two different strings.', () => {
-      expect(pkce.verify('abcxyz', 'abc123')).toBe(false);
+      expect(pkce.verify('abcxyz', 'abc123')).toBeFalse();
     });
 
     it('should return true when comparing the same strings.', () => {
-      expect(pkce.verify('abcxyz', 'abcxyz')).toBe(true);
+      expect(pkce.verify('abcxyz', 'abcxyz')).toBeTrue();
     });
   });
 });

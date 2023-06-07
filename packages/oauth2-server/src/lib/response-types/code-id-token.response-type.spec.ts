@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
+import { CodeAuthorizationContext } from '../context/authorization/code.authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
@@ -25,7 +25,7 @@ describe('Code ID Token Response Type', () => {
   let container: DependencyInjectionContainer;
   let responseType: CodeIdTokenResponseType;
 
-  const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
+  const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype);
 
   const authorizationCodeServiceMock = jest.mocked<AuthorizationCodeServiceInterface>({
     create: jest.fn(),
@@ -86,6 +86,9 @@ describe('Code ID Token Response Type', () => {
         nonce: 'client_nonce',
         prompts: [],
         display: jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
+        maxAge: null,
+        loginHint: null,
+        idTokenHint: null,
         uiLocales: [],
         acrValues: [],
       };
@@ -98,8 +101,9 @@ describe('Code ID Token Response Type', () => {
       const login = <Login>{};
       const consent = <Consent>{ scopes: ['foo', 'bar'] };
 
-      await expect(responseType.handle(context, login, consent)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Missing required scope "openid".', state: 'client_state' })
+      await expect(responseType.handle(context, login, consent)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Missing required scope "openid".'
       );
     });
 

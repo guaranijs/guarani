@@ -7,6 +7,7 @@ import {
   JsonWebTokenClaimsParameters,
   OctetSequenceKey,
 } from '@guarani/jose';
+import { Dictionary } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -15,6 +16,7 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { ClientAssertionParameters } from './client-assertion.parameters';
 import { ClientAssertion } from './client-assertion.type';
 import { JwtBearerClientAssertion } from './jwt-bearer.client-assertion';
 
@@ -32,7 +34,7 @@ const claims: JsonWebTokenClaimsParameters = {
   jti: 'unique_assertion_id',
 };
 
-const methodRequests: [Record<string, any>, boolean][] = [
+const methodRequests: [Dictionary<unknown>, boolean][] = [
   [{}, false],
   [{ client_assertion_type: '' }, false],
   [{ client_assertion_type: 'foo' }, false],
@@ -84,7 +86,10 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: { client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer', client_assertion: '' },
+        body: <ClientAssertionParameters<'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'>>{
+          client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+          client_assertion: '',
+        },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -95,8 +100,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
       Reflect.set(request, 'body', body);
-
-      expect(clientAssertion.hasBeenRequested(request)).toBe(expected);
+      expect(clientAssertion.hasBeenRequested(request)).toEqual(expected);
     });
   });
 
@@ -105,7 +109,10 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: { client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer', client_assertion: '' },
+        body: <ClientAssertionParameters<'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'>>{
+          client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+          client_assertion: '',
+        },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -117,8 +124,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
     it.each(invalidTokenFormats)('should throw when the provided token is invalid.', async (assertion) => {
       request.body.client_assertion = assertion;
 
-      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' })
+      await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'Invalid JSON Web Token Client Assertion.'
       );
     });
 
@@ -128,10 +136,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       request.body.client_assertion = assertion;
 
-      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({
-          description: 'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
-        })
+      await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'The Authorization Server disallows using the JSON Web Signature Algorithm "none".'
       );
     });
 
@@ -142,8 +149,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       request.body.client_assertion = assertion;
 
-      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Unsupported JSON Web Signature Algorithm "ES256".' })
+      await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'Unsupported JSON Web Signature Algorithm "ES256".'
       );
     });
 
@@ -157,11 +165,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       request.body.client_assertion = assertion;
 
-      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({
-          description:
-            'Unsupported JSON Web Signature Algorithm "RS256" for Authentication Method "client_secret_jwt".',
-        })
+      await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'Unsupported JSON Web Signature Algorithm "RS256" for Authentication Method "client_secret_jwt".'
       );
     });
 
@@ -179,8 +185,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
         request.body.client_assertion = assertion;
 
-        await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-          new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' })
+        await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
+          InvalidClientException,
+          'Invalid JSON Web Token Client Assertion.'
         );
 
         Reflect.set(claims, claim, claimValue);
@@ -199,8 +206,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
-      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' })
+      await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'Invalid JSON Web Token Client Assertion.'
       );
     });
 
@@ -216,8 +224,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
-      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Invalid JSON Web Token Client Assertion.' })
+      await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'Invalid JSON Web Token Client Assertion.'
       );
     });
 
@@ -233,8 +242,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
-      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'The values of "iss" and "sub" are different.' })
+      await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'The values of "iss" and "sub" are different.'
       );
     });
 
@@ -248,8 +258,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
-      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Invalid Client.' })
+      await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'Invalid Client.'
       );
     });
 
@@ -267,10 +278,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       Reflect.set(clientAssertion, 'name', 'client_secret_jwt');
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
-      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({
-          description: 'This Client is not allowed to use the Authentication Method "client_secret_jwt".',
-        })
+      await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'This Client is not allowed to use the Authentication Method "client_secret_jwt".'
       );
     });
 
@@ -289,10 +299,9 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       Reflect.set(clientAssertion, 'name', 'client_secret_jwt');
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
-      await expect(clientAssertion.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({
-          description: 'This Client is not allowed to use the Authentication Method "client_secret_jwt".',
-        })
+      await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'This Client is not allowed to use the Authentication Method "client_secret_jwt".'
       );
     });
 

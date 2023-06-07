@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
 import { URLSearchParams } from 'url';
@@ -36,7 +38,7 @@ describe('Access Token Introspection', () => {
       password: 'secretpassword',
     };
 
-    const requestBody = new URLSearchParams(requestData);
+    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
 
     const response = await request(app)
       .post('/oauth/token')
@@ -58,7 +60,7 @@ describe('Access Token Introspection', () => {
 
   it('POST /oauth/introspect', async () => {
     const introspectionRequestData: IntrospectionRequest = { token: accessToken, token_type_hint: 'access_token' };
-    const introspectionRequestBody = new URLSearchParams(introspectionRequestData);
+    const introspectionRequestBody = new URLSearchParams(introspectionRequestData as Dictionary<any>);
 
     const introspectionResponse = await request(app)
       .post('/oauth/introspect')

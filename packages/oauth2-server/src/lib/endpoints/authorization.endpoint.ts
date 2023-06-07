@@ -1,11 +1,13 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 import { URL, URLSearchParams } from 'url';
 import { isDeepStrictEqual } from 'util';
 
-import { AuthorizationContext } from '../context/authorization/authorization.context';
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
@@ -78,13 +80,9 @@ export class AuthorizationEndpoint implements EndpointInterface {
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
     @Inject(CONSENT_SERVICE) private readonly consentService: ConsentServiceInterface,
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
-    @InjectAll(AuthorizationRequestValidator)
-    private readonly validators: AuthorizationRequestValidator<
-      AuthorizationRequest,
-      AuthorizationContext<AuthorizationRequest>
-    >[]
+    @InjectAll(AuthorizationRequestValidator) private readonly validators: AuthorizationRequestValidator[]
   ) {
-    if (this.settings.userInteraction === undefined) {
+    if (typeof this.settings.userInteraction === 'undefined') {
       throw new TypeError('Missing User Interaction options.');
     }
   }
@@ -104,24 +102,24 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = <AuthorizationRequest>request.query;
+    const parameters = request.query as AuthorizationRequest;
 
-    let context: AuthorizationContext<AuthorizationRequest>;
+    let context: AuthorizationContext;
 
     try {
       const validator = this.getValidator(parameters);
       context = await validator.validate(request);
     } catch (exc: unknown) {
-      const error = this.asOAuth2Exception(exc, parameters);
-      return this.handleFatalAuthorizationError(error);
+      const error = this.asOAuth2Exception(exc);
+      return this.handleFatalAuthorizationError(error, null);
     }
 
     const { client, display, idTokenHint, maxAge, prompts, redirectUri, state } = context;
 
-    let grant: Grant | null = null;
-    let login: Login | null = null;
-    let consent: Consent | null = null;
-    let session: Session | null = null;
+    let grant: Nullable<Grant> = null;
+    let login: Nullable<Login> = null;
+    let consent: Nullable<Consent> = null;
+    let session: Nullable<Session> = null;
 
     // #region Login validation
     try {
@@ -148,7 +146,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
       if (prompts.includes('select_account')) {
         if (session.logins.length === 0) {
-          throw new LoginRequiredException({ state });
+          throw new LoginRequiredException();
         }
 
         grant ??= await this.grantService.create(parameters, client, session);
@@ -168,49 +166,45 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
       if (login === null) {
         if (prompts.includes('none')) {
-          throw new LoginRequiredException({ state });
+          throw new LoginRequiredException();
         }
 
         grant ??= await this.grantService.create(parameters, client, session);
         return this.redirectToLoginPage(grant, display);
       }
 
-      if (login.expiresAt != null && new Date() > login.expiresAt) {
+      if (login.expiresAt !== null && new Date() > login.expiresAt) {
         await this.removeActiveLoginFromSession(session);
 
         if (prompts.includes('none')) {
-          throw new LoginRequiredException({ state });
+          throw new LoginRequiredException();
         }
 
         grant ??= await this.grantService.create(parameters, client, session);
         return this.redirectToLoginPage(grant, display);
       }
 
-      if (typeof maxAge !== 'undefined' && new Date() >= new Date(login.createdAt.getTime() + maxAge * 1000)) {
+      if (maxAge !== null && new Date() >= new Date(login.createdAt.getTime() + maxAge * 1000)) {
         await this.removeActiveLoginFromSession(session);
 
         if (prompts.includes('none')) {
-          throw new LoginRequiredException({ state });
+          throw new LoginRequiredException();
         }
 
         grant ??= await this.grantService.create(parameters, client, session);
         return this.redirectToLoginPage(grant, display);
       }
 
-      if (
-        typeof idTokenHint !== 'undefined' &&
-        !(await this.idTokenHandler.checkIdTokenHint(idTokenHint, client, login))
-      ) {
+      if (idTokenHint !== null && !(await this.idTokenHandler.checkIdTokenHint(idTokenHint, client, login))) {
         await this.removeActiveLoginFromSession(session);
 
-        throw new LoginRequiredException({
-          description: 'The currently authenticated User is not the one expected by the ID Token Hint.',
-          state,
-        });
+        throw new LoginRequiredException(
+          'The currently authenticated User is not the one expected by the ID Token Hint.'
+        );
       }
     } catch (exc: unknown) {
-      const error = this.asOAuth2Exception(exc, parameters);
-      const response = this.handleFatalAuthorizationError(error);
+      const error = this.asOAuth2Exception(exc);
+      const response = this.handleFatalAuthorizationError(error, state);
 
       if (grant !== null) {
         await this.grantService.remove(grant);
@@ -234,9 +228,9 @@ export class AuthorizationEndpoint implements EndpointInterface {
       }
 
       if (consent === null) {
-        if (grant?.consent == null) {
+        if (grant === null || grant.consent === null) {
           if (prompts.includes('none')) {
-            throw new ConsentRequiredException({ state });
+            throw new ConsentRequiredException();
           }
 
           grant ??= await this.grantService.create(parameters, client, session);
@@ -246,19 +240,19 @@ export class AuthorizationEndpoint implements EndpointInterface {
         consent = grant.consent;
       }
 
-      if (consent.expiresAt != null && new Date() > consent.expiresAt) {
+      if (consent.expiresAt !== null && new Date() > consent.expiresAt) {
         await this.consentService.remove(consent);
 
         if (prompts.includes('none')) {
-          throw new ConsentRequiredException({ state });
+          throw new ConsentRequiredException();
         }
 
         grant ??= await this.grantService.create(parameters, client, session);
         return this.redirectToConsentPage(grant, display);
       }
     } catch (exc: unknown) {
-      const error = this.asOAuth2Exception(exc, parameters);
-      const response = this.handleFatalAuthorizationError(error);
+      const error = this.asOAuth2Exception(exc);
+      const response = this.handleFatalAuthorizationError(error, state);
 
       if (grant !== null) {
         await this.grantService.remove(grant);
@@ -272,9 +266,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
     try {
       const authorizationResponse = await context.responseType.handle(context, session.activeLogin!, consent);
 
-      if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
-        authorizationResponse.iss = this.settings.issuer;
-      }
+      this.includeAdditionalResponseParameters(authorizationResponse);
 
       const response = context.responseMode.createHttpResponse(redirectUri.href, authorizationResponse);
 
@@ -285,8 +277,12 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
       return response;
     } catch (exc: unknown) {
-      const error = this.asOAuth2Exception(exc, parameters);
-      return context.responseMode.createHttpResponse(redirectUri.href, error.toJSON());
+      const error = this.asOAuth2Exception(exc);
+      const responseParameters: Dictionary<any> = error.toJSON();
+
+      this.includeAdditionalResponseParameters(responseParameters, { state });
+
+      return context.responseMode.createHttpResponse(redirectUri.href, responseParameters);
     }
   }
 
@@ -296,18 +292,16 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param parameters Parameters of the Authorization Request.
    * @returns Authorization Request Validator.
    */
-  private getValidator(
-    parameters: AuthorizationRequest
-  ): AuthorizationRequestValidator<AuthorizationRequest, AuthorizationContext<AuthorizationRequest>> {
+  private getValidator(parameters: AuthorizationRequest): AuthorizationRequestValidator {
     if (typeof parameters.response_type !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "response_type".' });
+      throw new InvalidRequestException('Invalid parameter "response_type".');
     }
 
-    const responseTypeName = <ResponseType>parameters.response_type.split(' ').sort().join(' ');
+    const responseTypeName = parameters.response_type.split(' ').sort().join(' ') as ResponseType;
     const validator = this.validators.find((validator) => validator.name === responseTypeName);
 
-    if (validator === undefined) {
-      throw new UnsupportedResponseTypeException({ description: `Unsupported response_type "${responseTypeName}".` });
+    if (typeof validator === 'undefined') {
+      throw new UnsupportedResponseTypeException(`Unsupported response_type "${responseTypeName}".`);
     }
 
     return validator;
@@ -319,15 +313,14 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param context Authorization Request Context.
    * @returns Grant based on the Cookies.
    */
-  private async findGrant(context: AuthorizationContext<AuthorizationRequest>): Promise<Grant | null> {
+  private async findGrant(context: AuthorizationContext): Promise<Nullable<Grant>> {
     const { cookies } = context;
 
-    const grantId: string | undefined = cookies['guarani:grant'];
-
-    if (grantId === undefined) {
+    if (!Object.hasOwn(cookies, 'guarani:grant')) {
       return null;
     }
 
+    const grantId = cookies['guarani:grant'] as string;
     return await this.grantService.findOne(grantId);
   }
 
@@ -337,15 +330,14 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param context Authorization Request Context.
    * @returns Session based on the Cookies.
    */
-  private async findSession(context: AuthorizationContext<AuthorizationRequest>): Promise<Session | null> {
+  private async findSession(context: AuthorizationContext): Promise<Nullable<Session>> {
     const { cookies } = context;
 
-    const sessionId: string | undefined = cookies['guarani:session'];
-
-    if (sessionId === undefined) {
+    if (!Object.hasOwn(cookies, 'guarani:session')) {
       return null;
     }
 
+    const sessionId = cookies['guarani:session'] as string;
     return await this.sessionService.findOne(sessionId);
   }
 
@@ -361,18 +353,15 @@ export class AuthorizationEndpoint implements EndpointInterface {
     const grantClientId = Buffer.from(grant.client.id, 'utf8');
 
     if (clientId.length !== grantClientId.length || !timingSafeEqual(clientId, grantClientId)) {
-      throw new InvalidRequestException({ description: 'Mismatching Client Identifier.', state: parameters.state });
+      throw new InvalidRequestException('Mismatching Client Identifier.');
     }
 
     if (new Date() > grant.expiresAt) {
-      throw new InvalidRequestException({ description: 'Expired Grant.', state: parameters.state });
+      throw new InvalidRequestException('Expired Grant.');
     }
 
     if (!isDeepStrictEqual(parameters, grant.parameters)) {
-      throw new InvalidRequestException({
-        description: 'One or more parameters changed since the initial request.',
-        state: parameters.state,
-      });
+      throw new InvalidRequestException('One or more parameters changed since the initial request.');
     }
   }
 
@@ -385,7 +374,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private reloadAuthorizationEndpoint(session: Session, parameters: AuthorizationRequest): HttpResponse {
     const url = new URL(this.path, this.settings.issuer);
-    const urlParameters = new URLSearchParams(parameters);
+    const urlParameters = new URLSearchParams(parameters as Dictionary<any>);
 
     url.search = urlParameters.toString();
 
@@ -402,7 +391,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private redirectToRegistrationPage(grant: Grant, display: DisplayInterface): HttpResponse {
     const url = new URL(this.settings.userInteraction!.registrationUrl, this.settings.issuer);
-    const parameters: Record<string, any> = { login_challenge: grant.loginChallenge };
+    const parameters: Dictionary<unknown> = { login_challenge: grant.loginChallenge };
 
     return display.createHttpResponse(url.href, parameters).setCookie('guarani:grant', grant.id);
   }
@@ -417,7 +406,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private redirectToSelectAccountPage(grant: Grant, display: DisplayInterface): HttpResponse {
     const url = new URL(this.settings.userInteraction!.selectAccountUrl, this.settings.issuer);
-    const parameters: Record<string, any> = { login_challenge: grant.loginChallenge };
+    const parameters: Dictionary<unknown> = { login_challenge: grant.loginChallenge };
 
     return display.createHttpResponse(url.href, parameters).setCookie('guarani:grant', grant.id);
   }
@@ -431,7 +420,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private redirectToLoginPage(grant: Grant, display: DisplayInterface): HttpResponse {
     const url = new URL(this.settings.userInteraction!.loginUrl, this.settings.issuer);
-    const parameters: Record<string, any> = { login_challenge: grant.loginChallenge };
+    const parameters: Dictionary<unknown> = { login_challenge: grant.loginChallenge };
 
     return display.createHttpResponse(url.href, parameters).setCookie('guarani:grant', grant.id);
   }
@@ -445,7 +434,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private redirectToConsentPage(grant: Grant, display: DisplayInterface): HttpResponse {
     const url = new URL(this.settings.userInteraction!.consentUrl, this.settings.issuer);
-    const parameters: Record<string, any> = { consent_challenge: grant.consentChallenge };
+    const parameters: Dictionary<unknown> = { consent_challenge: grant.consentChallenge };
 
     return display.createHttpResponse(url.href, parameters).setCookie('guarani:grant', grant.id);
   }
@@ -455,11 +444,16 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * to the Authorization Server's Error Page instead of the Client's Redirect URI.
    *
    * @param error OAuth 2.0 Exception.
+   * @param state State of the Client prior to the End Session Request.
    * @returns Http Response.
    */
-  private handleFatalAuthorizationError(error: OAuth2Exception): HttpResponse {
+  private handleFatalAuthorizationError(error: OAuth2Exception, state: Nullable<string>): HttpResponse {
+    const responseParameters: Dictionary<any> = error.toJSON();
+
+    this.includeAdditionalResponseParameters(responseParameters, { state });
+
     const url = new URL(this.settings.userInteraction!.errorUrl, this.settings.issuer);
-    const parameters = new URLSearchParams(error.toJSON());
+    const parameters = new URLSearchParams(removeNullishValues(responseParameters));
 
     url.search = parameters.toString();
 
@@ -470,24 +464,31 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * Treats the caught exception into a valid OAuth 2.0 Exception.
    *
    * @param exc Exception caught.
-   * @param parameters Parameters of the Authorization Request.
    * @returns Treated OAuth 2.0 Exception.
    */
-  private asOAuth2Exception(exc: unknown, parameters: AuthorizationRequest): OAuth2Exception {
-    let error: OAuth2Exception;
-
+  private asOAuth2Exception(exc: unknown): OAuth2Exception {
     if (exc instanceof OAuth2Exception) {
-      error = exc;
-    } else {
-      error = new ServerErrorException({ description: 'An unexpected error occurred.', state: parameters.state });
-      error.cause = exc;
+      return exc;
     }
+
+    return new ServerErrorException('An unexpected error occurred.', { cause: exc });
+  }
+
+  /**
+   * Includes the provided parameters in the Authorization Response.
+   *
+   * @param response Authorization Response to be returned to the Client.
+   * @param parameters Parameters to be added to the Authorization Response.
+   */
+  private includeAdditionalResponseParameters(
+    response: Dictionary<unknown>,
+    parameters: Dictionary<unknown> = {}
+  ): void {
+    Object.entries(parameters).forEach(([name, value]) => (response[name] = value));
 
     if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
-      error.setParameter('iss', this.settings.issuer);
+      response.iss = this.settings.issuer;
     }
-
-    return error;
   }
 
   /**

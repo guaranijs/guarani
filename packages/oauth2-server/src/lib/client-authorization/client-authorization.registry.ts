@@ -1,4 +1,4 @@
-import { Constructor } from '@guarani/di';
+import { Constructor } from '@guarani/types';
 
 import { AuthorizationHeaderBearerClientAuthorization } from './authorization-header-bearer.client-authorization';
 import { ClientAuthorizationInterface } from './client-authorization.interface';

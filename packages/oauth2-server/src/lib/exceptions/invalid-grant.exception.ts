@@ -1,4 +1,4 @@
-import { ErrorCode } from './error-code.type';
+import { ErrorCode } from './error-code.enum';
 import { OAuth2Exception } from './oauth2.exception';
 
 /**
@@ -8,5 +8,5 @@ export class InvalidGrantException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public override readonly code: ErrorCode = 'invalid_grant';
+  public readonly error = ErrorCode.InvalidGrant;
 }

@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -11,7 +12,7 @@ import { ClientAuthenticationInterface } from './client-authentication.interface
 /**
  * Parameters passed by the Client on the Http Request Body.
  */
-interface NoneCredentials {
+export interface NoneCredentials extends Dictionary<unknown> {
   /**
    * Client Identifier.
    */
@@ -62,8 +63,8 @@ export class NoneClientAuthentication implements ClientAuthenticationInterface {
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
-    const { client_id: clientId, client_secret: clientSecret } = <NoneCredentials>request.body;
-    return typeof clientId === 'string' && clientSecret === undefined;
+    const { client_id: clientId, client_secret: clientSecret } = request.body as NoneCredentials;
+    return typeof clientId === 'string' && typeof clientSecret === 'undefined';
   }
 
   /**
@@ -73,24 +74,20 @@ export class NoneClientAuthentication implements ClientAuthenticationInterface {
    * @returns Authenticated Client.
    */
   public async authenticate(request: HttpRequest): Promise<Client> {
-    const { client_id: clientId } = request.body;
+    const { client_id: clientId } = request.body as NoneCredentials;
 
     const client = await this.clientService.findOne(clientId);
 
     if (client === null) {
-      throw new InvalidClientException({ description: 'Invalid Credentials.' });
+      throw new InvalidClientException('Invalid Credentials.');
     }
 
-    if (client.secret != null) {
-      throw new InvalidClientException({
-        description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-      });
+    if (client.secret !== null) {
+      throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
     }
 
     if (client.authenticationMethod !== this.name) {
-      throw new InvalidClientException({
-        description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-      });
+      throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
     }
 
     return client;

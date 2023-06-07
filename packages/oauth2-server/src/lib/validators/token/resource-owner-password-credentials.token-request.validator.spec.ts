@@ -2,13 +2,11 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 
-import { ResourceOwnerPasswordCredentialsTokenContext } from '../../context/token/resource-owner-password-credentials.token.context';
+import { ResourceOwnerPasswordCredentialsTokenContext } from '../../context/token/resource-owner-password-credentials.token-context';
 import { Client } from '../../entities/client.entity';
 import { User } from '../../entities/user.entity';
-import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidGrantException } from '../../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
-import { InvalidScopeException } from '../../exceptions/invalid-scope.exception';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
 import { GRANT_TYPE } from '../../grant-types/grant-type.token';
 import { GrantType } from '../../grant-types/grant-type.type';
@@ -31,18 +29,15 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: ResourceOwnerPasswordCredentialsTokenRequestValidator;
 
-  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
+  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
-  const userServiceMock = jest.mocked<UserServiceInterface>(
-    {
-      create: jest.fn(),
-      findOne: jest.fn(),
-      findByResourceOwnerCredentials: jest.fn(),
-      getUserinfo: jest.fn(),
-    },
-    true
-  );
+  const userServiceMock = jest.mocked<UserServiceInterface>({
+    create: jest.fn(),
+    findOne: jest.fn(),
+    findByResourceOwnerCredentials: jest.fn(),
+    getUserinfo: jest.fn(),
+  });
 
   const grantTypesMocks = [
     jest.mocked<GrantTypeInterface>({ name: 'authorization_code', handle: jest.fn() }),
@@ -106,7 +101,11 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: { grant_type: 'password', username: 'username', password: 'password' },
+        body: <ResourceOwnerPasswordCredentialsTokenRequest>{
+          grant_type: 'password',
+          username: 'username',
+          password: 'password',
+        },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -122,8 +121,9 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "username".' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "username".'
       );
     });
 
@@ -134,8 +134,9 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "password".' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "password".'
       );
     });
 
@@ -145,8 +146,9 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       userServiceMock.findByResourceOwnerCredentials!.mockResolvedValueOnce(null);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Invalid Credentials.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Invalid Credentials.'
       );
     });
 
@@ -159,41 +161,9 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       userServiceMock.findByResourceOwnerCredentials!.mockResolvedValueOnce(user);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "scope".' })
-      );
-    });
-
-    it('should throw when the client requests an unsupported scope.', async () => {
-      request.body.scope = 'foo bar unknown';
-
-      const client = <Client>{ id: 'client_id', grantTypes: ['password'] };
-      const user = <User>{ id: 'user_id', username: 'username', password: 'password' };
-
-      const error = new InvalidScopeException({ description: 'Unsupported scope "unknown".' });
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-      userServiceMock.findByResourceOwnerCredentials!.mockResolvedValueOnce(user);
-
-      scopeHandlerMock.checkRequestedScope.mockImplementationOnce(() => {
-        throw error;
-      });
-
-      await expect(validator.validate(request)).rejects.toThrow(error);
-    });
-
-    it("should throw when the client requests a scope it's not allowed to.", async () => {
-      request.body.scope = 'foo bar qux';
-
-      const client = <Client>{ id: 'client_id', grantTypes: ['password'], scopes: ['foo', 'bar', 'baz'] };
-      const user = <User>{ id: 'user_id', username: 'username', password: 'password' };
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-      userServiceMock.findByResourceOwnerCredentials!.mockResolvedValueOnce(user);
-      scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
-
-      await expect(validator.validate(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'The Client is not allowed to request the scope "qux".' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "scope".'
       );
     });
 
@@ -211,7 +181,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ResourceOwnerPasswordCredentialsTokenContext>({
-        parameters: <ResourceOwnerPasswordCredentialsTokenRequest>request.body,
+        parameters: request.body as ResourceOwnerPasswordCredentialsTokenRequest,
         client,
         grantType: grantTypesMocks[2]!,
         user,
@@ -230,7 +200,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(client.scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ResourceOwnerPasswordCredentialsTokenContext>({
-        parameters: <ResourceOwnerPasswordCredentialsTokenRequest>request.body,
+        parameters: request.body as ResourceOwnerPasswordCredentialsTokenRequest,
         client,
         grantType: grantTypesMocks[2]!,
         user,

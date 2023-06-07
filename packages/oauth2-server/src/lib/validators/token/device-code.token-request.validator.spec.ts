@@ -2,7 +2,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 
-import { DeviceCodeTokenContext } from '../../context/token/device-code.token.context';
+import { DeviceCodeTokenContext } from '../../context/token/device-code.token-context';
 import { Client } from '../../entities/client.entity';
 import { DeviceCode } from '../../entities/device-code.entity';
 import { InvalidGrantException } from '../../exceptions/invalid-grant.exception';
@@ -25,7 +25,7 @@ describe('Device Code Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: DeviceCodeTokenRequestValidator;
 
-  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype, true);
+  const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
 
   const deviceCodeServiceMock = jest.mocked<DeviceCodeServiceInterface>({
     create: jest.fn(),
@@ -73,7 +73,10 @@ describe('Device Code Token Request Validator', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: { grant_type: 'urn:ietf:params:oauth:grant-type:device_code', device_code: 'device_code' },
+        body: <DeviceCodeTokenRequest>{
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+          device_code: 'device_code',
+        },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -91,8 +94,9 @@ describe('Device Code Token Request Validator', () => {
 
         clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "device_code".' })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "device_code".'
         );
       }
     );
@@ -103,8 +107,9 @@ describe('Device Code Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       deviceCodeServiceMock.findOne.mockResolvedValueOnce(null);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Invalid Device Code.' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Invalid Device Code.'
       );
     });
 
@@ -116,7 +121,7 @@ describe('Device Code Token Request Validator', () => {
       deviceCodeServiceMock.findOne.mockResolvedValueOnce(deviceCode);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<DeviceCodeTokenContext>({
-        parameters: <DeviceCodeTokenRequest>request.body,
+        parameters: request.body as DeviceCodeTokenRequest,
         client,
         grantType: grantTypesMocks[4]!,
         deviceCode,

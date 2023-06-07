@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import { IncomingHttpHeaders } from 'http';
 
 import { HttpMethod } from './http-method.type';
@@ -23,7 +25,7 @@ export class HttpRequest {
   /**
    * Parsed Query Parameters of the Http Request.
    */
-  public readonly query: Record<string, any>;
+  public readonly query: Dictionary<unknown>;
 
   /**
    * Headers of the Http Request.
@@ -33,12 +35,12 @@ export class HttpRequest {
   /**
    * Cookies of the Http Request.
    */
-  public readonly cookies: Record<string, any>;
+  public readonly cookies: Dictionary<unknown>;
 
   /**
    * Parsed Body of the Http Request.
    */
-  public readonly body: Record<string, any>;
+  public readonly body: Dictionary<unknown>;
 
   /**
    * Instantiates a new Http Request.
@@ -46,7 +48,9 @@ export class HttpRequest {
    * @param parameters Parameters of the Http Request.
    */
   public constructor(parameters: HttpRequestParameters) {
-    this.method = this.checkHttpMethod(parameters.method);
+    this.checkHttpMethod(parameters.method);
+
+    this.method = parameters.method;
     this.headers = parameters.headers;
     this.cookies = parameters.cookies;
     this.body = parameters.body;
@@ -59,15 +63,13 @@ export class HttpRequest {
    *
    * @param method Http Method provided by the application.
    */
-  private checkHttpMethod(method: HttpMethod): HttpMethod {
+  private checkHttpMethod(method: HttpMethod): void {
     if (typeof method !== 'string') {
-      throw new Error('The Http Method must be a valid string.');
+      throw new TypeError('Invalid Http Method.');
     }
 
     if (method !== 'DELETE' && method !== 'GET' && method !== 'POST' && method !== 'PUT') {
-      throw new Error(`The Http Method "${method}" is invalid.`);
+      throw new TypeError(`Unsupported Http Method "${method}".`);
     }
-
-    return method;
   }
 }

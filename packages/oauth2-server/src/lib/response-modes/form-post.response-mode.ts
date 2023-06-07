@@ -1,8 +1,56 @@
 import { Injectable } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { HttpResponse } from '../http/http.response';
 import { ResponseMode } from './response-mode.type';
 import { ResponseModeInterface } from './response-mode.interface';
+
+/**
+ * Sanitizes an HTML string replacing the characteres used to perform XSS Attacks.
+ *
+ * @param html HTML string to be sanitized.
+ * @returns Sanitized HTML string.
+ */
+function sanitizeHtml(html: string): string {
+  const replacements: Dictionary<string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    '/': '&#x2F;',
+  };
+
+  return html.replace(/[&<>"'/]/g, (substring) => replacements[substring] ?? substring);
+}
+
+/**
+ * Returns a formatted html document to be used as the body of the Http Response.
+ *
+ * @param redirectUri Redirect URI that the User Agent will be redirected to.
+ * @param parameters Authorization Response Parameters that will be returned to the Client Application.
+ * @returns Formatted html document to be used as the body of the Http Response.
+ */
+const templateFn = (redirectUri: string, parameters: Dictionary<any>) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Authorizing...</title>
+</head>
+<body onload="document.forms[0].submit();">
+  <form method="POST" action="${sanitizeHtml(redirectUri)}">
+    ${Object.entries(parameters)
+      .map(([key, value]) => `<input type="hidden" name="${key}" value="${sanitizeHtml(value)}" />`)
+      .join('\n    ')}
+    <noscript>
+      <p>Your browser does not support javascript or it is disabled.</p>
+      <button autofocus type="submit">Continue</button>
+    </noscript>
+  </form>
+</body>
+</html>
+`;
 
 /**
  * Implementation of the **Form Post** Response Mode.
@@ -27,54 +75,8 @@ export class FormPostResponseMode implements ResponseModeInterface {
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns Http Response containing the Authorization Response Parameters.
    */
-  public createHttpResponse(redirectUri: string, parameters: Record<string, any>): HttpResponse {
-    const html = templateFn(redirectUri, parameters).slice(1, -1);
+  public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
+    const html = templateFn(redirectUri, removeNullishValues(parameters)).trim();
     return new HttpResponse().html(html);
   }
-}
-
-/**
- * Returns a formatted html document to be used as the body of the Http Response.
- *
- * @param redirectUri Redirect URI that the User Agent will be redirected to.
- * @param parameters Authorization Response Parameters that will be returned to the Client Application.
- * @returns Formatted html document to be used as the body of the Http Response.
- */
-const templateFn = (redirectUri: string, parameters: Record<string, any>) => `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Authorizing...</title>
-</head>
-<body onload="document.forms[0].submit();">
-  <form method="POST" action="${sanitizeHtml(redirectUri)}">
-    ${Object.entries(parameters)
-      .map(([key, value]) => `<input type="hidden" name="${key}" value="${sanitizeHtml(value)}" />`)
-      .join('\n    ')}
-    <noscript>
-      <p>Your browser does not support javascript or it is disabled.</p>
-      <button autofocus type="submit">Continue</button>
-    </noscript>
-  </form>
-</body>
-</html>
-`;
-
-/**
- * Sanitizes an HTML string replacing the characteres used to perform XSS Attacks.
- *
- * @param html HTML string to be sanitized.
- * @returns Sanitized HTML string.
- */
-function sanitizeHtml(html: string): string {
-  const replacements: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-    '/': '&#x2F;',
-  };
-
-  return html.replace(/[&<>"'/]/g, (substring) => replacements[substring] ?? substring);
 }

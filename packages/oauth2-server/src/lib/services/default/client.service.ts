@@ -1,19 +1,19 @@
 import { Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomBytes, randomInt, randomUUID } from 'crypto';
 
-import { PostRegistrationContext } from '../../context/registration/post.registration.context';
-import { PutRegistrationContext } from '../../context/registration/put.registration.context';
+import { PostRegistrationContext } from '../../context/registration/post.registration-context';
+import { PutRegistrationContext } from '../../context/registration/put.registration-context';
 import { Client } from '../../entities/client.entity';
 import { ClientServiceInterface } from '../client.service.interface';
 
 @Injectable()
 export class ClientService implements ClientServiceInterface {
-  protected readonly clients: Client[] = [
+  protected readonly clients = <Client[]>[
     {
       id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
       secret: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
-      secretIssuedAt: new Date(),
       name: 'Dev Client #1',
       redirectUris: ['http://localhost:4000/oauth/callback'],
       responseTypes: ['code', 'token'],
@@ -46,7 +46,6 @@ export class ClientService implements ClientServiceInterface {
     const client: Client = {
       id,
       secret: this.secretToken(),
-      secretIssuedAt: new Date(),
       secretExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
       name: context.clientName ?? id,
       redirectUris: context.redirectUris.map((redirectUri) => redirectUri.toString()),
@@ -56,16 +55,16 @@ export class ClientService implements ClientServiceInterface {
       authenticationMethod: context.authenticationMethod,
       authenticationSigningAlgorithm: context.authenticationSigningAlgorithm,
       scopes: context.scopes,
-      clientUri: context.clientUri?.toString(),
-      logoUri: context.logoUri?.toString(),
+      clientUri: context.clientUri?.toString() ?? null,
+      logoUri: context.logoUri?.toString() ?? null,
       contacts: context.contacts,
-      policyUri: context.policyUri?.toString(),
-      tosUri: context.tosUri?.toString(),
-      jwksUri: context.jwksUri?.toString(),
+      policyUri: context.policyUri?.toString() ?? null,
+      tosUri: context.tosUri?.toString() ?? null,
+      jwksUri: context.jwksUri?.toString() ?? null,
       jwks: context.jwks,
       subjectType: context.subjectType,
-      sectorIdentifierUri: context.sectorIdentifierUri?.toString(),
-      pairwiseSalt: context.subjectType === 'pairwise' ? randomBytes(16).toString('hex') : undefined,
+      sectorIdentifierUri: context.sectorIdentifierUri?.toString() ?? null,
+      pairwiseSalt: context.subjectType === 'pairwise' ? randomBytes(16).toString('hex') : null,
       idTokenSignedResponseAlgorithm: context.idTokenSignedResponseAlgorithm,
       idTokenEncryptedResponseKeyWrap: context.idTokenEncryptedResponseKeyWrap,
       idTokenEncryptedResponseContentEncryption: context.idTokenEncryptedResponseContentEncryption,
@@ -78,7 +77,7 @@ export class ClientService implements ClientServiceInterface {
       defaultMaxAge: context.defaultMaxAge,
       requireAuthTime: context.requireAuthTime,
       defaultAcrValues: context.defaultAcrValues,
-      initiateLoginUri: context.initiateLoginUri?.toString(),
+      initiateLoginUri: context.initiateLoginUri?.toString() ?? null,
       // requestUris: context.requestUris,
       postLogoutRedirectUris: context.postLogoutRedirectUris.map((postLogoutRedirectUri) => postLogoutRedirectUri.href),
       softwareId: context.softwareId,
@@ -91,7 +90,7 @@ export class ClientService implements ClientServiceInterface {
     return client;
   }
 
-  public async findOne(id: string): Promise<Client | null> {
+  public async findOne(id: string): Promise<Nullable<Client>> {
     return this.clients.find((client) => client.id === id) ?? null;
   }
 
@@ -107,7 +106,7 @@ export class ClientService implements ClientServiceInterface {
     const index = this.clients.findIndex((registeredClient) => registeredClient.id === client.id);
 
     Object.assign<Client, Partial<Client>>(client, {
-      name: context.clientName,
+      name: context.clientName ?? context.clientId,
       redirectUris: context.redirectUris.map((redirectUri) => redirectUri.toString()),
       responseTypes: context.responseTypes,
       grantTypes: context.grantTypes,
@@ -115,15 +114,15 @@ export class ClientService implements ClientServiceInterface {
       authenticationMethod: context.authenticationMethod,
       authenticationSigningAlgorithm: context.authenticationSigningAlgorithm,
       scopes: context.scopes,
-      clientUri: context.clientUri?.toString(),
-      logoUri: context.logoUri?.toString(),
+      clientUri: context.clientUri?.toString() ?? null,
+      logoUri: context.logoUri?.toString() ?? null,
       contacts: context.contacts,
-      policyUri: context.policyUri?.toString(),
-      tosUri: context.tosUri?.toString(),
-      jwksUri: context.jwksUri?.toString(),
+      policyUri: context.policyUri?.toString() ?? null,
+      tosUri: context.tosUri?.toString() ?? null,
+      jwksUri: context.jwksUri?.toString() ?? null,
       jwks: context.jwks,
       subjectType: context.subjectType,
-      sectorIdentifierUri: context.sectorIdentifierUri?.toString(),
+      sectorIdentifierUri: context.sectorIdentifierUri?.toString() ?? null,
       idTokenSignedResponseAlgorithm: context.idTokenSignedResponseAlgorithm,
       idTokenEncryptedResponseKeyWrap: context.idTokenEncryptedResponseKeyWrap,
       idTokenEncryptedResponseContentEncryption: context.idTokenEncryptedResponseContentEncryption,
@@ -136,7 +135,7 @@ export class ClientService implements ClientServiceInterface {
       defaultMaxAge: context.defaultMaxAge,
       requireAuthTime: context.requireAuthTime,
       defaultAcrValues: context.defaultAcrValues,
-      initiateLoginUri: context.initiateLoginUri?.toString(),
+      initiateLoginUri: context.initiateLoginUri?.toString() ?? null,
       // requestUris: context.requestUris,
       postLogoutRedirectUris: context.postLogoutRedirectUris.map((postLogoutRedirectUri) => postLogoutRedirectUri.href),
       softwareId: context.softwareId,

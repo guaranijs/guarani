@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import { IncomingHttpHeaders } from 'http';
 
 import { HttpMethod } from './http-method.type';
@@ -19,7 +21,7 @@ export interface HttpRequestParameters {
   /**
    * Parsed Query Parameters of the Http Request.
    */
-  readonly query: Record<string, any>;
+  readonly query: Dictionary<unknown>;
 
   /**
    * Headers of the Http Request.
@@ -29,10 +31,10 @@ export interface HttpRequestParameters {
   /**
    * Cookies of the Http Request.
    */
-  readonly cookies: Record<string, any>;
+  readonly cookies: Dictionary<unknown>;
 
   /**
    * Parsed Body of the Http Request.
    */
-  readonly body: Record<string, any>;
+  readonly body: Dictionary<unknown>;
 }

@@ -1,11 +1,12 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { URLSearchParams } from 'url';
 
-import { LoginContextInteractionContext } from '../context/interaction/login-context.interaction.context';
-import { LoginDecisionAcceptInteractionContext } from '../context/interaction/login-decision-accept.interaction.context';
-import { LoginDecisionDenyInteractionContext } from '../context/interaction/login-decision-deny.interaction.context';
-import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction.context';
+import { LoginContextInteractionContext } from '../context/interaction/login-context.interaction-context';
+import { LoginDecisionAcceptInteractionContext } from '../context/interaction/login-decision-accept.interaction-context';
+import { LoginDecisionDenyInteractionContext } from '../context/interaction/login-decision-deny.interaction-context';
+import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
@@ -88,11 +89,11 @@ describe('Login Interaction Type', () => {
           interaction_type: 'login',
           login_challenge: 'login_challenge',
         },
-        interactionType: jest.mocked<InteractionTypeInterface>({
+        interactionType: <InteractionTypeInterface>{
           name: 'login',
           handleContext: jest.fn(),
           handleDecision: jest.fn(),
-        }),
+        },
         grant: <Grant>{
           id: 'grant_id',
           loginChallenge: 'login_challenge',
@@ -118,8 +119,9 @@ describe('Login Interaction Type', () => {
     it('should throw when the grant is expired.', async () => {
       Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleContext(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Grant.' })
+      await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Expired Grant.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -127,41 +129,60 @@ describe('Login Interaction Type', () => {
     });
 
     it('should return a valid first time login context response.', async () => {
-      delete context.grant.session.activeLogin;
+      context.grant.session.activeLogin = null;
       context.grant.session.logins = [];
 
-      const urlParameters = new URLSearchParams(context.grant.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
-        context: {},
+        context: {
+          acr_values: undefined,
+          auth_exp: undefined,
+          display: undefined,
+          login_hint: undefined,
+          prompts: undefined,
+          ui_locales: undefined,
+        },
       });
     });
 
     it('should return a valid skip login context response when not providing a "max_age" authorization parameter.', async () => {
-      const urlParameters = new URLSearchParams(context.grant.parameters);
-
-      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
-        skip: true,
-        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
-        client: 'client_id',
-        context: {},
-      });
-    });
-
-    it('should return a valid skip login context response when the login is within the elapsed "max_age" time.', async () => {
-      Reflect.set(context.grant.parameters, 'max_age', '86400');
-
-      const urlParameters = new URLSearchParams(context.grant.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
         context: {
+          acr_values: undefined,
+          auth_exp: undefined,
+          display: undefined,
+          login_hint: undefined,
+          prompts: undefined,
+          ui_locales: undefined,
+        },
+      });
+    });
+
+    it('should return a valid skip login context response when the login is within the elapsed "max_age" time.', async () => {
+      Reflect.set(context.grant.parameters, 'max_age', '86400');
+
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+
+      await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
+        skip: true,
+        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        client: 'client_id',
+        context: {
+          acr_values: undefined,
           auth_exp: Math.floor((context.grant.session.activeLogin!.createdAt.getTime() + 86400000) / 1000),
+          display: undefined,
+          login_hint: undefined,
+          prompts: undefined,
+          ui_locales: undefined,
         },
       });
     });
@@ -169,7 +190,7 @@ describe('Login Interaction Type', () => {
     it('should return a valid login context response when the login is not within the elapsed "max_age" time.', async () => {
       Reflect.set(context.grant.parameters, 'max_age', '300');
 
-      const urlParameters = new URLSearchParams(context.grant.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       const removedLogin = context.grant.session.activeLogin!;
 
@@ -178,7 +199,12 @@ describe('Login Interaction Type', () => {
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
         context: {
+          acr_values: undefined,
           auth_exp: Math.floor((context.grant.session.activeLogin!.createdAt.getTime() + 300000) / 1000),
+          display: undefined,
+          login_hint: undefined,
+          prompts: undefined,
+          ui_locales: undefined,
         },
       });
 
@@ -204,14 +230,12 @@ describe('Login Interaction Type', () => {
         parameters: {
           interaction_type: 'login',
           login_challenge: 'login_challenge',
-          decision: <LoginDecision>'',
         },
-        interactionType: jest.mocked<InteractionTypeInterface>({
+        interactionType: <InteractionTypeInterface>{
           name: 'login',
           handleContext: jest.fn(),
           handleDecision: jest.fn(),
-        }),
-        decision: <LoginDecision>'',
+        },
         grant: <Grant>{
           id: 'grant_id',
           loginChallenge: 'login_challenge',
@@ -238,8 +262,9 @@ describe('Login Interaction Type', () => {
     it('should throw when the grant is expired.', async () => {
       Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
 
-      await expect(interactionType.handleDecision(context)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Expired Grant.' })
+      await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Expired Grant.'
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -267,11 +292,11 @@ describe('Login Interaction Type', () => {
         acr: 'urn:guarani:acr:1fa',
       });
 
-      const error = new UnmetAuthenticationRequirementsException({
-        description: 'Could not authenticate using the Authentication Context Class Reference "urn:guarani:acr:2fa".',
-      });
+      const error = new UnmetAuthenticationRequirementsException(
+        'Could not authenticate using the Authentication Context Class Reference "urn:guarani:acr:2fa".'
+      );
 
-      const parameters = new URLSearchParams(error.toJSON());
+      const parameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/error?${parameters.toString()}`,
@@ -282,7 +307,7 @@ describe('Login Interaction Type', () => {
     });
 
     it('should return a valid first time login accept decision interaction response.', async () => {
-      delete context.grant.session.activeLogin;
+      context.grant.session.activeLogin = null;
       context.grant.session.logins = [];
 
       Object.assign(context.parameters, {
@@ -299,13 +324,13 @@ describe('Login Interaction Type', () => {
         acr: 'guarani:acr:2fa',
       });
 
-      const { acr, amr, user } = <LoginDecisionAcceptInteractionContext>context;
+      const { acr, amr, user } = context as LoginDecisionAcceptInteractionContext;
 
       const login = <Login>{ id: 'login_id', acr, amr, user };
 
       loginServiceMock.create.mockResolvedValueOnce(login);
 
-      const urlParameters = new URLSearchParams(context.grant.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
@@ -349,7 +374,7 @@ describe('Login Interaction Type', () => {
         acr: 'guarani:acr:2fa',
       });
 
-      const urlParameters = new URLSearchParams(context.grant.parameters);
+      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
@@ -370,15 +395,15 @@ describe('Login Interaction Type', () => {
           error_description: 'Lorem ipsum dolor sit amet...',
         }),
         decision: 'deny',
-        error: Object.assign(
-          Reflect.construct(OAuth2Exception, [{ description: context.parameters.error_description }]),
-          { code: context.parameters.error }
+        error: Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+          Reflect.construct(OAuth2Exception, [context.parameters.error_description as string]),
+          { error: context.parameters.error as string }
         ),
       });
 
-      const { error } = <LoginDecisionDenyInteractionContext>context;
+      const { error } = context as LoginDecisionDenyInteractionContext;
 
-      const urlParameters = new URLSearchParams(error.toJSON());
+      const urlParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,

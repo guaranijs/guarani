@@ -61,7 +61,7 @@ describe('Client Secret Basic Authentication Method', () => {
         query: {},
       });
 
-      expect(clientAuthentication.hasBeenRequested(request)).toBe(expected);
+      expect(clientAuthentication.hasBeenRequested(request)).toEqual(expected);
     });
   });
 
@@ -83,7 +83,7 @@ describe('Client Secret Basic Authentication Method', () => {
       request.headers.authorization = 'Basic';
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Missing Token.' }).setHeaders(clientAuthentication['headers'])
+        new InvalidClientException('Missing Token.').setHeaders(clientAuthentication['headers'])
       );
     });
 
@@ -91,9 +91,7 @@ describe('Client Secret Basic Authentication Method', () => {
       request.headers.authorization = 'Basic $';
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Token is not a Base64 string.' }).setHeaders(
-          clientAuthentication['headers']
-        )
+        new InvalidClientException('Token is not a Base64 string.').setHeaders(clientAuthentication['headers'])
       );
     });
 
@@ -101,9 +99,7 @@ describe('Client Secret Basic Authentication Method', () => {
       request.headers.authorization = 'Basic ' + Buffer.from('foobar', 'utf8').toString('base64');
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Missing Semicolon Separator.' }).setHeaders(
-          clientAuthentication['headers']
-        )
+        new InvalidClientException('Missing Semicolon Separator.').setHeaders(clientAuthentication['headers'])
       );
     });
 
@@ -111,9 +107,7 @@ describe('Client Secret Basic Authentication Method', () => {
       request.headers.authorization = 'Basic ' + Buffer.from(credentials, 'utf8').toString('base64');
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Missing Client Identifier.' }).setHeaders(
-          clientAuthentication['headers']
-        )
+        new InvalidClientException('Missing Client Identifier.').setHeaders(clientAuthentication['headers'])
       );
     });
 
@@ -121,9 +115,7 @@ describe('Client Secret Basic Authentication Method', () => {
       request.headers.authorization = 'Basic ' + Buffer.from('id:', 'utf8').toString('base64');
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Missing Client Secret.' }).setHeaders(
-          clientAuthentication['headers']
-        )
+        new InvalidClientException('Missing Client Secret.').setHeaders(clientAuthentication['headers'])
       );
     });
 
@@ -131,51 +123,59 @@ describe('Client Secret Basic Authentication Method', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders(clientAuthentication['headers'])
+        new InvalidClientException('Invalid Credentials.').setHeaders(clientAuthentication['headers'])
       );
     });
 
     it('should throw when a client does not have a secret.', async () => {
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{ id: 'client_id' });
+      const client = <Client>{ id: 'client_id', secret: null };
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({
-          description: 'This Client is not allowed to use the Authentication Method "client_secret_basic".',
-        }).setHeaders(clientAuthentication['headers'])
+        new InvalidClientException(
+          'This Client is not allowed to use the Authentication Method "client_secret_basic".'
+        ).setHeaders(clientAuthentication['headers'])
       );
     });
 
     it("should throw when the provided secret does not match the client's one.", async () => {
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{ id: 'client_id', secret: 'invalid_secret' });
+      const client = <Client>{ id: 'client_id', secret: 'invalid_secret' };
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders(clientAuthentication['headers'])
+        new InvalidClientException('Invalid Credentials.').setHeaders(clientAuthentication['headers'])
       );
     });
 
     it('should throw when requesting with a client with an expired secret.', async () => {
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
+      const client = <Client>{
         id: 'client_id',
         secret: 'client_secret',
         secretExpiresAt: new Date(Date.now() - 3600000),
-      });
+      };
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders(clientAuthentication['headers'])
+        new InvalidClientException('Invalid Credentials.').setHeaders(clientAuthentication['headers'])
       );
     });
 
     it('should throw when requesting with a client not authorized to use this authentication method.', async () => {
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
+      const client = <Client>{
         id: 'client_id',
         secret: 'client_secret',
-        authenticationMethod: <ClientAuthentication>'unknown',
-      });
+        authenticationMethod: 'unknown' as ClientAuthentication,
+      };
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({
-          description: 'This Client is not allowed to use the Authentication Method "client_secret_basic".',
-        }).setHeaders(clientAuthentication['headers'])
+        new InvalidClientException(
+          'This Client is not allowed to use the Authentication Method "client_secret_basic".'
+        ).setHeaders(clientAuthentication['headers'])
       );
     });
 

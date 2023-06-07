@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
+import { CodeAuthorizationContext } from '../context/authorization/code.authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
@@ -89,6 +89,9 @@ describe('Code Token Response Type', () => {
         nonce: 'client_nonce',
         prompts: [],
         display: jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
+        maxAge: null,
+        loginHint: null,
+        idTokenHint: null,
         uiLocales: [],
         acrValues: [],
       };
@@ -119,6 +122,7 @@ describe('Code Token Response Type', () => {
         token_type: 'Bearer',
         expires_in: 3600,
         scope: 'foo bar',
+        refresh_token: undefined,
         code: 'authorization_code',
         state: 'client_state',
       });

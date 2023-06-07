@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
 
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { Consent } from '../entities/consent.entity';
-import { AuthorizationRequest } from '../requests/authorization/authorization-request';
+import { Login } from '../entities/login.entity';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
@@ -10,8 +10,6 @@ import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { createTokenResponse } from '../utils/create-token-response';
 import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
-import { Login } from '../entities/login.entity';
-import { AuthorizationContext } from '../context/authorization/authorization.context';
 
 /**
  * Implementation of the **Token** Response Type.
@@ -54,7 +52,7 @@ export class TokenResponseType implements ResponseTypeInterface {
    * @returns Access Token Response.
    */
   public async handle(
-    context: AuthorizationContext<AuthorizationRequest>,
+    context: AuthorizationContext,
     _login: Login,
     consent: Consent
   ): Promise<TokenAuthorizationResponse> {
@@ -62,8 +60,10 @@ export class TokenResponseType implements ResponseTypeInterface {
     const { client, scopes, user } = consent;
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
-    const token = createTokenResponse(accessToken);
+    const token = createTokenResponse(accessToken, null);
 
-    return removeNullishValues<TokenAuthorizationResponse>({ ...token, state: parameters.state });
+    token.state = parameters.state;
+
+    return token;
   }
 }

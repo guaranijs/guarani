@@ -1,34 +1,12 @@
 import { Injectable } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { HttpResponse } from '../http/http.response';
 import { DisplayInterface } from './display.interface';
 import { Display } from './display.type';
-
-@Injectable()
-export class PopupDisplay implements DisplayInterface {
-  /**
-   * Name of the Display.
-   */
-  public readonly name: Display = 'popup';
-
-  /**
-   * Creates a Http Response to the provided Redirect URI based on the provided Parameters.
-   *
-   * @param redirectUri Url to be redirected.
-   * @param parameters Parameters used to build the Http Response.
-   * @returns Http Response to the provided Redirect URI.
-   */
-  public createHttpResponse(redirectUri: string, parameters: Record<string, any>): HttpResponse {
-    const url = new URL(redirectUri);
-    const searchParameters = new URLSearchParams(parameters);
-
-    url.search = searchParameters.toString();
-
-    return new HttpResponse().html(templateFn(url.href));
-  }
-}
 
 /**
  * Returns a formatted html document to be used as the body of the Http Response.
@@ -56,3 +34,26 @@ const templateFn = (redirectUri: string) => `
   </body>
 </html>
 `;
+
+@Injectable()
+export class PopupDisplay implements DisplayInterface {
+  /**
+   * Name of the Display.
+   */
+  public readonly name: Display = 'popup';
+
+  /**
+   * Creates a Http Response to the provided Redirect URI based on the provided Parameters.
+   *
+   * @param redirectUri Url to be redirected.
+   * @param parameters Parameters used to build the Http Response.
+   * @returns Http Response to the provided Redirect URI.
+   */
+  public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
+    const url = new URL(redirectUri);
+    Object.entries(removeNullishValues(parameters)).forEach(([name, value]) => url.searchParams.set(name, value));
+
+    const html = templateFn(url.href).trim();
+    return new HttpResponse().html(html);
+  }
+}

@@ -1,5 +1,6 @@
 import { Injectable } from '@guarani/di';
 import { ConsentServiceInterface } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
@@ -13,7 +14,7 @@ export class ConsentService implements ConsentServiceInterface {
     return consent;
   }
 
-  public async findOne(client: Client, user: User): Promise<Consent | null> {
+  public async findOne(client: Client, user: User): Promise<Nullable<Consent>> {
     return await Consent.findOneBy({ client: { id: client.id }, user: { id: user.id } });
   }
 

@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
 import { URLSearchParams } from 'url';
@@ -33,7 +35,7 @@ describe('Resource Owner Password Credentials Flow', () => {
       password: 'secretpassword',
     };
 
-    const requestBody = new URLSearchParams(requestData);
+    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
 
     const response = await request(app)
       .post('/oauth/token')

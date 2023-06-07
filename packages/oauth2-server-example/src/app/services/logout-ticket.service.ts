@@ -1,5 +1,6 @@
 import { Injectable } from '@guarani/di';
 import { EndSessionRequest, LogoutTicketServiceInterface } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { randomBytes } from 'crypto';
 import { promisify } from 'util';
@@ -27,11 +28,11 @@ export class LogoutTicketService implements LogoutTicketServiceInterface {
     return logoutTicket;
   }
 
-  public async findOne(id: string): Promise<LogoutTicket | null> {
+  public async findOne(id: string): Promise<Nullable<LogoutTicket>> {
     return await LogoutTicket.findOneBy({ id });
   }
 
-  public async findOneByLogoutChallenge(logoutChallenge: string): Promise<LogoutTicket | null> {
+  public async findOneByLogoutChallenge(logoutChallenge: string): Promise<Nullable<LogoutTicket>> {
     return await LogoutTicket.findOneBy({ logoutChallenge });
   }
 

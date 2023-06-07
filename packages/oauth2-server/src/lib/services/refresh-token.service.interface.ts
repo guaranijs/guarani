@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
@@ -26,7 +28,7 @@ export interface RefreshTokenServiceInterface {
    * @param handle Handle of the Refresh Token.
    * @returns Refresh Token based on the provided Handle.
    */
-  findOne(handle: string): Promise<RefreshToken | null>;
+  findOne(handle: string): Promise<Nullable<RefreshToken>>;
 
   /**
    * Revokes the provided Refresh Token.

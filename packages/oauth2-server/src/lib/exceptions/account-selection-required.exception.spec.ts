@@ -1,9 +1,9 @@
 import { AccountSelectionRequiredException } from './account-selection-required.exception';
-import { ErrorCode } from './error-code.type';
+import { ErrorCode } from './error-code.enum';
 
 test('should instantiate a new account selection required exception.', () => {
-  const exception = new AccountSelectionRequiredException({});
+  const exception = new AccountSelectionRequiredException();
 
-  expect(exception.code).toEqual<ErrorCode>('account_selection_required');
-  expect(exception.statusCode).toBe(401);
+  expect(exception.error).toEqual(ErrorCode.AccountSelectionRequired);
+  expect(exception.statusCode).toEqual(401);
 });

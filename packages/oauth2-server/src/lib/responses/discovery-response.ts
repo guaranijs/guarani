@@ -3,6 +3,7 @@ import {
   JsonWebEncryptionKeyWrapAlgorithm,
   JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
+import { Dictionary } from '@guarani/types';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { Display } from '../displays/display.type';
@@ -16,7 +17,7 @@ import { SubjectType } from '../types/subject-type.type';
 /**
  * Parameters of the OAuth 2.0 Discovery Endpoint.
  */
-export interface DiscoveryResponse extends Record<string, any> {
+export interface DiscoveryResponse extends Dictionary<any> {
   /**
    * Url of the Issuer of the Authorization Server.
    */

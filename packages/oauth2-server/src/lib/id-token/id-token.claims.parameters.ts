@@ -1,4 +1,5 @@
 import { JsonWebTokenClaimsParameters } from '@guarani/jose';
+import { OneOrMany } from '@guarani/types';
 
 /**
  * OpenID Connect ID Token Claims Parameters.
@@ -19,7 +20,7 @@ export interface IdTokenClaimsParameters extends JsonWebTokenClaimsParameters {
   /**
    * Identifier of the Audience the ID Token is intended to.
    */
-  readonly aud: string | string[];
+  readonly aud: OneOrMany<string>;
 
   /**
    * UTC time denoting the Expiration Time of the ID Token.

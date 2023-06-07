@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 
-import { ClientCredentialsTokenContext } from '../context/token/client-credentials.token.context';
+import { ClientCredentialsTokenContext } from '../context/token/client-credentials.token-context';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -46,7 +46,7 @@ export class ClientCredentialsGrantType implements GrantTypeInterface {
    */
   public async handle(context: ClientCredentialsTokenContext): Promise<TokenResponse> {
     const { client, scopes } = context;
-    const accessToken = await this.accessTokenService.create(scopes, client);
-    return createTokenResponse(accessToken);
+    const accessToken = await this.accessTokenService.create(scopes, client, null);
+    return createTokenResponse(accessToken, null);
   }
 }

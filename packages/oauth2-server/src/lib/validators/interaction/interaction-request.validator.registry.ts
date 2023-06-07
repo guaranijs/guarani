@@ -1,4 +1,4 @@
-import { Constructor } from '@guarani/di';
+import { Constructor } from '@guarani/types';
 
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { ConsentInteractionRequestValidator } from './consent.interaction-request.validator';

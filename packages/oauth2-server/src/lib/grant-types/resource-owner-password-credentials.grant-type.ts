@@ -1,6 +1,6 @@
 import { Inject, Injectable, Optional } from '@guarani/di';
 
-import { ResourceOwnerPasswordCredentialsTokenContext } from '../context/token/resource-owner-password-credentials.token.context';
+import { ResourceOwnerPasswordCredentialsTokenContext } from '../context/token/resource-owner-password-credentials.token-context';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -51,9 +51,10 @@ export class ResourceOwnerPasswordCredentialsGrantType implements GrantTypeInter
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
 
-    const refreshToken = client.grantTypes.includes('refresh_token')
-      ? await this.refreshTokenService?.create(scopes, client, user, accessToken)
-      : undefined;
+    const refreshToken =
+      typeof this.refreshTokenService !== 'undefined' && client.grantTypes.includes('refresh_token')
+        ? await this.refreshTokenService.create(scopes, client, user, accessToken)
+        : null;
 
     return createTokenResponse(accessToken, refreshToken);
   }

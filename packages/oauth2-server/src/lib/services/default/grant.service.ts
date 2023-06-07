@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomBytes, randomUUID } from 'crypto';
 
@@ -27,6 +28,7 @@ export class GrantService implements GrantServiceInterface {
       expiresAt: new Date(Date.now() + 300000),
       client,
       session,
+      consent: null,
     };
 
     this.grants.push(grant);
@@ -34,15 +36,15 @@ export class GrantService implements GrantServiceInterface {
     return grant;
   }
 
-  public async findOne(id: string): Promise<Grant | null> {
+  public async findOne(id: string): Promise<Nullable<Grant>> {
     return this.grants.find((grant) => grant.id === id) ?? null;
   }
 
-  public async findOneByLoginChallenge(loginChallenge: string): Promise<Grant | null> {
+  public async findOneByLoginChallenge(loginChallenge: string): Promise<Nullable<Grant>> {
     return this.grants.find((savedGrant) => savedGrant.loginChallenge === loginChallenge) ?? null;
   }
 
-  public async findOneByConsentChallenge(consentChallenge: string): Promise<Grant | null> {
+  public async findOneByConsentChallenge(consentChallenge: string): Promise<Nullable<Grant>> {
     return this.grants.find((savedGrant) => savedGrant.consentChallenge === consentChallenge) ?? null;
   }
 

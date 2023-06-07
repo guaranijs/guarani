@@ -6,10 +6,10 @@ import { Buffer } from 'buffer';
 import { URL } from 'url';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
-import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
-import { GetRegistrationContext } from '../context/registration/get.registration.context';
-import { PostRegistrationContext } from '../context/registration/post.registration.context';
-import { PutRegistrationContext } from '../context/registration/put.registration.context';
+import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';
+import { GetRegistrationContext } from '../context/registration/get.registration-context';
+import { PostRegistrationContext } from '../context/registration/post.registration-context';
+import { PutRegistrationContext } from '../context/registration/put.registration-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
 import { InvalidClientMetadataException } from '../exceptions/invalid-client-metadata.exception';
@@ -94,8 +94,8 @@ describe('Registration Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: RegistrationRequestValidator;
 
-  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype, true);
-  const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype, true);
+  const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
+  const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype);
 
   const settings = <Settings>{
     responseTypes: [
@@ -278,30 +278,37 @@ describe('Registration Request Validator', () => {
     });
 
     it('should throw when the client fails the authorization process.', async () => {
-      const error = new InvalidTokenException({ description: 'Lorem ipsum dolor sit amet...' });
-
+      const error = new InvalidTokenException('Lorem ipsum dolor sit amet...');
       clientAuthorizationHandlerMock.authorize.mockRejectedValueOnce(error);
-
       await expect(validator.validatePost(request)).rejects.toThrow(error);
     });
 
     it('should throw when providing an access token with a client.', async () => {
-      const accessToken = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: { id: 'client_id' },
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'Invalid Credentials.' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'Invalid Credentials.'
       );
     });
 
     it('should throw when not providing an initial access token.', async () => {
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['foo', 'bar', 'baz', 'qux'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InsufficientScopeException({ description: 'Invalid Credentials.' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InsufficientScopeException,
+        'Invalid Credentials.'
       );
     });
 
@@ -310,12 +317,17 @@ describe('Registration Request Validator', () => {
       async (redirectUris) => {
         request.body.redirect_uris = redirectUris;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "redirect_uris".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "redirect_uris".'
         );
       }
     );
@@ -323,27 +335,34 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an invalid redirect uri.', async () => {
       request.body.redirect_uris = ['client.example.com/oauth/callback'];
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Redirect URI "client.example.com/oauth/callback".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidRedirectUriException,
+        'Invalid Redirect URI "client.example.com/oauth/callback".'
       );
     });
 
     it('should throw when providing a redirect uri with a fragment component.', async () => {
       request.body.redirect_uris = ['https://client.example.com/oauth/callback#fragment-component'];
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description:
-            'The Redirect URI "https://client.example.com/oauth/callback#fragment-component" MUST NOT have a fragment component.',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidRedirectUriException,
+        'The Redirect URI "https://client.example.com/oauth/callback#fragment-component" MUST NOT have a fragment component.'
       );
     });
 
@@ -352,12 +371,17 @@ describe('Registration Request Validator', () => {
       async (responseTypes) => {
         request.body.response_types = responseTypes;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "response_types".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "response_types".'
         );
       }
     );
@@ -365,12 +389,17 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported response type.', async () => {
       request.body.response_types = ['unknown'];
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported response_type "unknown".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported response_type "unknown".'
       );
     });
 
@@ -379,12 +408,17 @@ describe('Registration Request Validator', () => {
       async (grantTypes) => {
         request.body.grant_types = grantTypes;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "grant_types".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "grant_types".'
         );
       }
     );
@@ -392,12 +426,17 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported grant type.', async () => {
       request.body.grant_types = ['unknown'];
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported grant_type "unknown".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported grant_type "unknown".'
       );
     });
 
@@ -405,14 +444,17 @@ describe('Registration Request Validator', () => {
       request.body.response_types = ['code'];
       request.body.grant_types = ['implicit'];
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description: 'The Response Type "code" requires the Grant Type "authorization_code".',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Response Type "code" requires the Grant Type "authorization_code".'
       );
     });
 
@@ -422,15 +464,17 @@ describe('Registration Request Validator', () => {
         request.body.response_types = [responseTypes];
         request.body.grant_types = ['authorization_code'];
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({
-            description:
-              'The Response Types ["id_token", "id_token token", "token"] require the Grant Type "implicit".',
-          })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'The Response Types ["id_token", "id_token token", "token"] require the Grant Type "implicit".'
         );
       }
     );
@@ -441,15 +485,17 @@ describe('Registration Request Validator', () => {
         request.body.response_types = [responseType];
         request.body.grant_types = [grantType];
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({
-            description:
-              'The Response Types ["code id_token", "code id_token token", "code token"] require the Grant Types ["authorization_code", "implicit"].',
-          })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'The Response Types ["code id_token", "code id_token token", "code token"] require the Grant Types ["authorization_code", "implicit"].'
         );
       }
     );
@@ -460,15 +506,17 @@ describe('Registration Request Validator', () => {
         request.body.response_types = [responseType];
         request.body.grant_types = ['authorization_code', 'implicit'];
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({
-            description:
-              'The Grant Type "authorization_code" requires at lease one of the Response Types ["code", "code id_token", "code id_token token", "code token"].',
-          })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'The Grant Type "authorization_code" requires at lease one of the Response Types ["code", "code id_token", "code id_token token", "code token"].'
         );
       }
     );
@@ -477,15 +525,17 @@ describe('Registration Request Validator', () => {
       request.body.response_types = ['code'];
       request.body.grant_types = ['authorization_code', 'implicit'];
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description:
-            'The Grant Type "implicit" requires at lease one of the Response Types ["code id_token", "code id_token token", "code token", "id_token", "id_token token", "token"].',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Grant Type "implicit" requires at lease one of the Response Types ["code id_token", "code id_token token", "code token", "id_token", "id_token token", "token"].'
       );
     });
 
@@ -494,12 +544,17 @@ describe('Registration Request Validator', () => {
       async (applicationType) => {
         request.body.application_type = applicationType;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "application_type".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "application_type".'
         );
       }
     );
@@ -507,41 +562,51 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported application type.', async () => {
       request.body.application_type = 'unknown';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported application_type "unknown".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported application_type "unknown".'
       );
     });
 
     it('should throw when providing a http(s) redirect uri other than localhost for a native application.', async () => {
       request.body.application_type = 'native';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description:
-            'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidRedirectUriException,
+        'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.'
       );
     });
 
     it('should throw when not providing a https redirect uri for a web application.', async () => {
       request.body.redirect_uris = ['http://client.example.com/oauth/callback'];
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description: 'The Redirect URI "http://client.example.com/oauth/callback" does not use the https protocol.',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidRedirectUriException,
+        'The Redirect URI "http://client.example.com/oauth/callback" does not use the https protocol.'
       );
     });
 
@@ -550,14 +615,17 @@ describe('Registration Request Validator', () => {
       async (redirectUri) => {
         request.body.redirect_uris = [redirectUri];
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidRedirectUriException({
-            description: `The Authorization Server disallows using localhost as a Redirect URI for a "web" application.`,
-          })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidRedirectUriException,
+          'The Authorization Server disallows using localhost as a Redirect URI for a "web" application.'
         );
       }
     );
@@ -567,12 +635,17 @@ describe('Registration Request Validator', () => {
       async (clientName) => {
         request.body.client_name = clientName;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "client_name".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "client_name".'
         );
       }
     );
@@ -580,20 +653,29 @@ describe('Registration Request Validator', () => {
     it.each(invalidScopes)('should throw when providing an invalid "scope" parameter.', async (scope) => {
       request.body.scope = scope;
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "scope".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "scope".'
       );
     });
 
     it('should throw when providing an unsupported scope.', async () => {
       request.body.scope = 'foo bar unknown';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
-      const error = new InvalidClientMetadataException({ description: 'Unsupported scope "unknown".' });
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
+      const error = new InvalidClientMetadataException('Unsupported scope "unknown".');
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -609,12 +691,17 @@ describe('Registration Request Validator', () => {
       async (contacts) => {
         request.body.contacts = contacts;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "contacts".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "contacts".'
         );
       }
     );
@@ -622,134 +709,187 @@ describe('Registration Request Validator', () => {
     it.each(invalidLogoUris)('should throw when providing an invalid "logo_uri" parameter.', async (logoUri) => {
       request.body.logo_uri = logoUri;
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "logo_uri".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "logo_uri".'
       );
     });
 
     it('should throw when providing an invalid logo uri.', async () => {
       request.body.logo_uri = 'some.cdn.com/client-logo.jpg';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Logo URI.' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Logo URI.'
       );
     });
 
     it.each(invalidClientUris)('should throw when providing an invalid "client_uri" parameter.', async (clientUri) => {
       request.body.client_uri = clientUri;
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "client_uri".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "client_uri".'
       );
     });
 
     it('should throw when providing an invalid client uri.', async () => {
       request.body.client_uri = 'client.example.com';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Client URI.' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Client URI.'
       );
     });
 
     it.each(invalidPolicyUris)('should throw when providing an invalid "policy_uri" parameter.', async (policyUri) => {
       request.body.policy_uri = policyUri;
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "policy_uri".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "policy_uri".'
       );
     });
 
     it('should throw when providing an invalid policy uri.', async () => {
       request.body.policy_uri = 'client.example.com/policy';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Policy URI.' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Policy URI.'
       );
     });
 
     it.each(invalidTosUris)('should throw when providing an invalid "tos_uri" parameter.', async (tosUri) => {
       request.body.tos_uri = tosUri;
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "tos_uri".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "tos_uri".'
       );
     });
 
     it('should throw when providing an invalid terms of service uri.', async () => {
       request.body.tos_uri = 'client.example.com/terms-of-service';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Terms of Service URI.' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Terms of Service URI.'
       );
     });
 
     it('should throw when providing both the "jwks_uri" and "jwks" parameters.', async () => {
       request.body.jwks = {};
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description: 'Only one of the parameters "jwks_uri" and "jwks" must be provided.',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Only one of the parameters "jwks_uri" and "jwks" must be provided.'
       );
     });
 
     it.each(invalidJwksUris)('should throw when providing an invalid "jwks_uri" parameter.', async (jwksUri) => {
       request.body.jwks_uri = jwksUri;
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "jwks_uri".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "jwks_uri".'
       );
     });
 
     it('should throw when providing an invalid json web key set uri.', async () => {
       request.body.jwks_uri = 'client.example.com/oauth/jwks';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid JSON Web Key Set URI.' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid JSON Web Key Set URI.'
       );
     });
 
@@ -758,12 +898,17 @@ describe('Registration Request Validator', () => {
 
       request.body.jwks = jwks;
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "jwks".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "jwks".'
       );
     });
 
@@ -772,12 +917,17 @@ describe('Registration Request Validator', () => {
 
       request.body.jwks = {};
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid JSON Web Key Set.' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid JSON Web Key Set.'
       );
     });
 
@@ -785,14 +935,17 @@ describe('Registration Request Validator', () => {
       request.body.subject_type = 'pairwise';
       delete request.body.sector_identifier_uri;
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description: 'The Subject Type "pairwise" requires a Sector Identifier URI.',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Subject Type "pairwise" requires a Sector Identifier URI.'
       );
     });
 
@@ -801,12 +954,17 @@ describe('Registration Request Validator', () => {
       async (subjectType) => {
         request.body.subject_type = subjectType;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "subject_type".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "subject_type".'
         );
       }
     );
@@ -814,12 +972,17 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported subject type.', async () => {
       request.body.subject_type = 'unknown';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported subject_type "unknown".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported subject_type "unknown".'
       );
     });
 
@@ -828,12 +991,17 @@ describe('Registration Request Validator', () => {
       async (sectorIdentifierUri) => {
         request.body.sector_identifier_uri = sectorIdentifierUri;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "sector_identifier_uri".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "sector_identifier_uri".'
         );
       }
     );
@@ -841,24 +1009,34 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an invalid sector identifier uri.', async () => {
       request.body.sector_identifier_uri = 'client.example.com/redirect_uris.json';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Sector Identifier URI.' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Sector Identifier URI.'
       );
     });
 
     it('should throw when the sector identifier uri does not use the https protocol.', async () => {
       request.body.sector_identifier_uri = 'http://client.example.com/redirect_uris.json';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'The Sector Identifier URI does not use the https protocol.' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Sector Identifier URI does not use the https protocol.'
       );
     });
 
@@ -867,12 +1045,17 @@ describe('Registration Request Validator', () => {
       async (algorithm) => {
         request.body.id_token_signed_response_alg = algorithm;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_signed_response_alg".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "id_token_signed_response_alg".'
         );
       }
     );
@@ -880,12 +1063,17 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported id token signed response algorithm.', async () => {
       request.body.id_token_signed_response_alg = 'unknown';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported id_token_signed_response_alg "unknown".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported id_token_signed_response_alg "unknown".'
       );
     });
 
@@ -894,12 +1082,17 @@ describe('Registration Request Validator', () => {
       async (algorithm) => {
         request.body.id_token_encrypted_response_alg = algorithm;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_alg".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "id_token_encrypted_response_alg".'
         );
       }
     );
@@ -907,12 +1100,17 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported id token encrypted response key wrap algorithm.', async () => {
       request.body.id_token_encrypted_response_alg = 'unknown';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported id_token_encrypted_response_alg "unknown".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported id_token_encrypted_response_alg "unknown".'
       );
     });
 
@@ -921,12 +1119,17 @@ describe('Registration Request Validator', () => {
       async (algorithm) => {
         request.body.id_token_encrypted_response_enc = algorithm;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_enc".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "id_token_encrypted_response_enc".'
         );
       }
     );
@@ -934,28 +1137,35 @@ describe('Registration Request Validator', () => {
     it('should throw when not providing the parameter "id_token_encrypted_response_alg" together with the parameter "id_token_encrypted_response_enc".', async () => {
       delete request.body.id_token_encrypted_response_alg;
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description:
-            'The parameter "id_token_encrypted_response_enc" must be presented together ' +
-            'with the parameter "id_token_encrypted_response_alg".',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The parameter "id_token_encrypted_response_enc" must be presented together ' +
+          'with the parameter "id_token_encrypted_response_alg".'
       );
     });
 
     it('should throw when providing an unsupported id token encrypted response content encryption algorithm.', async () => {
       request.body.id_token_encrypted_response_enc = 'unknown';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported id_token_encrypted_response_enc "unknown".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported id_token_encrypted_response_enc "unknown".'
       );
     });
 
@@ -964,12 +1174,17 @@ describe('Registration Request Validator', () => {
       async (authenticationMethod) => {
         request.body.token_endpoint_auth_method = authenticationMethod;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "token_endpoint_auth_method".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "token_endpoint_auth_method".'
         );
       }
     );
@@ -977,12 +1192,17 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported client authentication method.', async () => {
       request.body.token_endpoint_auth_method = 'unknown';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported token_endpoint_auth_method "unknown".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported token_endpoint_auth_method "unknown".'
       );
     });
 
@@ -991,12 +1211,17 @@ describe('Registration Request Validator', () => {
       async (algorithm) => {
         request.body.token_endpoint_auth_signing_alg = algorithm;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "token_endpoint_auth_signing_alg".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "token_endpoint_auth_signing_alg".'
         );
       }
     );
@@ -1004,42 +1229,51 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported jwt client assertion json web signature algorithm.', async () => {
       request.body.token_endpoint_auth_signing_alg = 'unknown';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported token_endpoint_auth_signing_alg "unknown".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported token_endpoint_auth_signing_alg "unknown".'
       );
     });
 
     it('should throw when providing a client assertion json web signature algorithm for a client authentication method that does not use it.', async () => {
       request.body.token_endpoint_auth_method = 'client_secret_basic';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description:
-            'The Client Authentication Method "client_secret_basic" does not require a Client Authentication Signing Algorithm.',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Client Authentication Method "client_secret_basic" does not require a Client Authentication Signing Algorithm.'
       );
     });
 
     it('should throw when not providing a client assertion json web signature algorithm for a client authentication method uses it.', async () => {
       delete request.body.token_endpoint_auth_signing_alg;
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description:
-            'Missing required parameter "token_endpoint_auth_signing_alg" for Client Authentication Method "private_key_jwt".',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Missing required parameter "token_endpoint_auth_signing_alg" for Client Authentication Method "private_key_jwt".'
       );
     });
 
@@ -1047,15 +1281,17 @@ describe('Registration Request Validator', () => {
       delete request.body.jwks_uri;
       delete request.body.jwks;
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description:
-            'One of the parameters "jwks_uri" or "jwks" must be provided for Client Authentication Method "private_key_jwt".',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'One of the parameters "jwks_uri" or "jwks" must be provided for Client Authentication Method "private_key_jwt".'
       );
     });
 
@@ -1065,14 +1301,17 @@ describe('Registration Request Validator', () => {
         request.body.token_endpoint_auth_method = method;
         request.body.token_endpoint_auth_signing_alg = algorithm;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({
-            description: `Invalid JSON Web Signature Algorithm "${algorithm}" for Client Authentication Method "${method}".`,
-          })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          `Invalid JSON Web Signature Algorithm "${algorithm}" for Client Authentication Method "${method}".`
         );
       }
     );
@@ -1082,12 +1321,17 @@ describe('Registration Request Validator', () => {
       async (defaultMaxAge) => {
         request.body.default_max_age = defaultMaxAge;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "default_max_age".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "default_max_age".'
         );
       }
     );
@@ -1097,12 +1341,17 @@ describe('Registration Request Validator', () => {
       async (defaultMaxAge) => {
         request.body.default_max_age = defaultMaxAge;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'The default max age must be a positive integer.' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'The default max age must be a positive integer.'
         );
       }
     );
@@ -1112,12 +1361,17 @@ describe('Registration Request Validator', () => {
       async (requireAuthTime) => {
         request.body.require_auth_time = requireAuthTime;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "require_auth_time".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "require_auth_time".'
         );
       }
     );
@@ -1127,12 +1381,17 @@ describe('Registration Request Validator', () => {
       async (acrValues) => {
         request.body.default_acr_values = acrValues;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "default_acr_values".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "default_acr_values".'
         );
       }
     );
@@ -1140,12 +1399,17 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an unsupported acr value.', async () => {
       request.body.default_acr_values = ['unknown'];
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported acr_value "unknown".' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported acr_value "unknown".'
       );
     });
 
@@ -1154,12 +1418,17 @@ describe('Registration Request Validator', () => {
       async (initiateLoginUri) => {
         request.body.initiate_login_uri = initiateLoginUri;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "initiate_login_uri".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "initiate_login_uri".'
         );
       }
     );
@@ -1167,12 +1436,17 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an invalid initiate login uri.', async () => {
       request.body.initiate_login_uri = 'client.example.com/oauth/initiate';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid Initiate Login URI.' })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Initiate Login URI.'
       );
     });
 
@@ -1181,12 +1455,17 @@ describe('Registration Request Validator', () => {
       async (postLogoutRedirectUris) => {
         request.body.post_logout_redirect_uris = postLogoutRedirectUris;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "post_logout_redirect_uris".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "post_logout_redirect_uris".'
         );
       }
     );
@@ -1194,61 +1473,70 @@ describe('Registration Request Validator', () => {
     it('should throw when providing an invalid post logout redirect uri.', async () => {
       request.body.post_logout_redirect_uris = ['client.example.com/oauth/logout-callback'];
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description: 'Invalid Post Logout Redirect URI "client.example.com/oauth/logout-callback".',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Post Logout Redirect URI "client.example.com/oauth/logout-callback".'
       );
     });
 
     it('should throw when providing a post logout redirect uri with a fragment component.', async () => {
       request.body.post_logout_redirect_uris = ['https://client.example.com/oauth/logout-callback#fragment-component'];
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description:
-            'The Post Logout Redirect URI "https://client.example.com/oauth/logout-callback#fragment-component" ' +
-            'MUST NOT have a fragment component.',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Post Logout Redirect URI "https://client.example.com/oauth/logout-callback#fragment-component" ' +
+          'MUST NOT have a fragment component.'
       );
     });
 
     it('should throw when providing a http(s) post logout redirect uri other than localhost for a native application.', async () => {
+      request.body.redirect_uris = ['http://localhost/oauth/callback'];
       request.body.application_type = 'native';
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description:
-            'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.'
       );
     });
 
     it('should throw when not providing a https post logout redirect uri for a web application.', async () => {
       request.body.post_logout_redirect_uris = ['http://client.example.com/oauth/logout-callback'];
 
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePost(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description:
-            'The Post Logout Redirect URI "http://client.example.com/oauth/logout-callback" ' +
-            'does not use the https protocol.',
-        })
+      await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Post Logout Redirect URI "http://client.example.com/oauth/logout-callback" does not use the https protocol.'
       );
     });
 
@@ -1257,15 +1545,17 @@ describe('Registration Request Validator', () => {
       async (postLogoutRedirectUri) => {
         request.body.post_logout_redirect_uris = [postLogoutRedirectUri];
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidRedirectUriException({
-            description:
-              'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.',
-          })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.'
         );
       }
     );
@@ -1275,12 +1565,17 @@ describe('Registration Request Validator', () => {
       async (softwareId) => {
         request.body.software_id = softwareId;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "software_id".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "software_id".'
         );
       }
     );
@@ -1290,23 +1585,32 @@ describe('Registration Request Validator', () => {
       async (softwareVersion) => {
         request.body.software_version = softwareVersion;
 
-        const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+        const accessToken = <AccessToken>{
+          handle: 'access_token',
+          client: null,
+          scopes: ['client:create'],
+        };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePost(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "software_version".' })
+        await expect(validator.validatePost(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "software_version".'
         );
       }
     );
 
     it('should return a post registration request context.', async () => {
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['client:create'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        client: null,
+        scopes: ['client:create'],
+      };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
       await expect(validator.validatePost(request)).resolves.toStrictEqual<PostRegistrationContext>({
-        parameters: <PostRegistrationRequest>request.body,
+        parameters: request.body as PostRegistrationRequest,
         accessToken,
         redirectUris: [new URL('https://client.example.com/oauth/callback')],
         responseTypes: ['code'],
@@ -1320,7 +1624,7 @@ describe('Registration Request Validator', () => {
         policyUri: new URL('https://client.example.com/policy'),
         tosUri: new URL('https://client.example.com/terms-of-service'),
         jwksUri: new URL('https://client.example.com/oauth/jwks'),
-        jwks: undefined,
+        jwks: null,
         subjectType: 'pairwise',
         sectorIdentifierUri: new URL('https://client.example.com/redirect_uris.json'),
         idTokenSignedResponseAlgorithm: 'RS256',
@@ -1363,26 +1667,26 @@ describe('Registration Request Validator', () => {
     it.each(invalidClientIds)('should throw when providing an invalid "client_id" parameter.', async (clientId) => {
       request.query.client_id = clientId;
 
-      await expect(validator.validateGet(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "client_id".' })
+      await expect(validator.validateGet(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "client_id".'
       );
     });
 
     it('should throw when the client fails the authorization process.', async () => {
-      const error = new InvalidTokenException({ description: 'Lorem ipsum dolor sit amet...' });
-
+      const error = new InvalidTokenException('Lorem ipsum dolor sit amet...');
       clientAuthorizationHandlerMock.authorize.mockRejectedValueOnce(error);
-
       await expect(validator.validateGet(request)).rejects.toThrow(error);
     });
 
     it('should throw when providing an initial access token.', async () => {
-      const accessToken = <AccessToken>{ handle: 'access_token' };
+      const accessToken = <AccessToken>{ handle: 'access_token', client: null };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validateGet(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'Invalid Credentials.' })
+      await expect(validator.validateGet(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'Invalid Credentials.'
       );
     });
 
@@ -1391,8 +1695,9 @@ describe('Registration Request Validator', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validateGet(request)).rejects.toThrow(
-        new InsufficientScopeException({ description: 'Invalid Credentials.' })
+      await expect(validator.validateGet(request)).rejects.toThrowWithMessage(
+        InsufficientScopeException,
+        'Invalid Credentials.'
       );
 
       expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -1408,8 +1713,9 @@ describe('Registration Request Validator', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validateGet(request)).rejects.toThrow(
-        new InsufficientScopeException({ description: 'Invalid Credentials.' })
+      await expect(validator.validateGet(request)).rejects.toThrowWithMessage(
+        InsufficientScopeException,
+        'Invalid Credentials.'
       );
     });
 
@@ -1421,7 +1727,7 @@ describe('Registration Request Validator', () => {
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
         await expect(validator.validateGet(request)).resolves.toStrictEqual<GetRegistrationContext>({
-          parameters: <GetRegistrationRequest>request.query,
+          parameters: request.query as GetRegistrationRequest,
           accessToken,
           client: accessToken.client!,
         });
@@ -1446,26 +1752,26 @@ describe('Registration Request Validator', () => {
     it.each(invalidClientIds)('should throw when providing an invalid "client_id" parameter.', async (clientId) => {
       request.query.client_id = clientId;
 
-      await expect(validator.validateDelete(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "client_id".' })
+      await expect(validator.validateDelete(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "client_id".'
       );
     });
 
     it('should throw when the client fails the authorization process.', async () => {
-      const error = new InvalidTokenException({ description: 'Lorem ipsum dolor sit amet...' });
-
+      const error = new InvalidTokenException('Lorem ipsum dolor sit amet...');
       clientAuthorizationHandlerMock.authorize.mockRejectedValueOnce(error);
-
       await expect(validator.validateDelete(request)).rejects.toThrow(error);
     });
 
     it('should throw when providing an initial access token.', async () => {
-      const accessToken = <AccessToken>{ handle: 'access_token' };
+      const accessToken = <AccessToken>{ handle: 'access_token', client: null };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validateDelete(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'Invalid Credentials.' })
+      await expect(validator.validateDelete(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'Invalid Credentials.'
       );
     });
 
@@ -1474,8 +1780,9 @@ describe('Registration Request Validator', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validateDelete(request)).rejects.toThrow(
-        new InsufficientScopeException({ description: 'Invalid Credentials.' })
+      await expect(validator.validateDelete(request)).rejects.toThrowWithMessage(
+        InsufficientScopeException,
+        'Invalid Credentials.'
       );
 
       expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -1491,8 +1798,9 @@ describe('Registration Request Validator', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validateDelete(request)).rejects.toThrow(
-        new InsufficientScopeException({ description: 'Invalid Credentials.' })
+      await expect(validator.validateDelete(request)).rejects.toThrowWithMessage(
+        InsufficientScopeException,
+        'Invalid Credentials.'
       );
     });
 
@@ -1504,7 +1812,7 @@ describe('Registration Request Validator', () => {
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
         await expect(validator.validateDelete(request)).resolves.toStrictEqual<DeleteRegistrationContext>({
-          parameters: <DeleteRegistrationRequest>request.query,
+          parameters: request.query as DeleteRegistrationRequest,
           accessToken,
           client: accessToken.client!,
         });
@@ -1568,8 +1876,9 @@ describe('Registration Request Validator', () => {
       async (clientId) => {
         request.query.client_id = clientId;
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "client_id".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "client_id".'
         );
       }
     );
@@ -1579,8 +1888,9 @@ describe('Registration Request Validator', () => {
       async (clientId) => {
         request.body.client_id = clientId;
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "client_id".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "client_id".'
         );
       }
     );
@@ -1589,8 +1899,9 @@ describe('Registration Request Validator', () => {
       request.query.client_id = 'client1';
       request.body.client_id = 'client2';
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Mismatching Client Identifiers.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Mismatching Client Identifiers.'
       );
     });
 
@@ -1599,27 +1910,27 @@ describe('Registration Request Validator', () => {
       async (clientSecret) => {
         request.body.client_secret = clientSecret;
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "client_secret".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "client_secret".'
         );
       }
     );
 
     it('should throw when the client fails the authorization process.', async () => {
-      const error = new InvalidTokenException({ description: 'Lorem ipsum dolor sit amet...' });
-
+      const error = new InvalidTokenException('Lorem ipsum dolor sit amet...');
       clientAuthorizationHandlerMock.authorize.mockRejectedValueOnce(error);
-
       await expect(validator.validatePut(request)).rejects.toThrow(error);
     });
 
     it('should throw when providing an initial access token.', async () => {
-      const accessToken = <AccessToken>{ handle: 'access_token' };
+      const accessToken = <AccessToken>{ handle: 'access_token', client: null };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validateGet(request)).rejects.toThrow(
-        new InvalidTokenException({ description: 'Invalid Credentials.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidTokenException,
+        'Invalid Credentials.'
       );
     });
 
@@ -1628,8 +1939,9 @@ describe('Registration Request Validator', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InsufficientScopeException({ description: 'Invalid Credentials.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InsufficientScopeException,
+        'Invalid Credentials.'
       );
 
       expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -1645,8 +1957,9 @@ describe('Registration Request Validator', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InsufficientScopeException({ description: 'Invalid Credentials.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InsufficientScopeException,
+        'Invalid Credentials.'
       );
     });
 
@@ -1661,8 +1974,9 @@ describe('Registration Request Validator', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Mismatching Client Secret.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Mismatching Client Secret.'
       );
     });
 
@@ -1674,13 +1988,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "redirect_uris".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "redirect_uris".'
         );
       }
     );
@@ -1691,13 +2006,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Redirect URI "client.example.com/oauth/callback".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidRedirectUriException,
+        'Invalid Redirect URI "client.example.com/oauth/callback".'
       );
     });
 
@@ -1707,16 +2023,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description:
-            'The Redirect URI "https://client.example.com/oauth/callback#fragment-component" MUST NOT have a fragment component.',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidRedirectUriException,
+        'The Redirect URI "https://client.example.com/oauth/callback#fragment-component" MUST NOT have a fragment component.'
       );
     });
 
@@ -1728,13 +2042,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "response_types".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "response_types".'
         );
       }
     );
@@ -1745,13 +2060,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported response_type "unknown".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported response_type "unknown".'
       );
     });
 
@@ -1763,13 +2079,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "grant_types".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "grant_types".'
         );
       }
     );
@@ -1780,13 +2097,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported grant_type "unknown".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported grant_type "unknown".'
       );
     });
 
@@ -1797,15 +2115,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description: 'The Response Type "code" requires the Grant Type "authorization_code".',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Response Type "code" requires the Grant Type "authorization_code".'
       );
     });
 
@@ -1818,16 +2135,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({
-            description:
-              'The Response Types ["id_token", "id_token token", "token"] require the Grant Type "implicit".',
-          })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'The Response Types ["id_token", "id_token token", "token"] require the Grant Type "implicit".'
         );
       }
     );
@@ -1841,16 +2156,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({
-            description:
-              'The Response Types ["code id_token", "code id_token token", "code token"] require the Grant Types ["authorization_code", "implicit"].',
-          })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'The Response Types ["code id_token", "code id_token token", "code token"] require the Grant Types ["authorization_code", "implicit"].'
         );
       }
     );
@@ -1864,16 +2177,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({
-            description:
-              'The Grant Type "authorization_code" requires at lease one of the Response Types ["code", "code id_token", "code id_token token", "code token"].',
-          })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'The Grant Type "authorization_code" requires at lease one of the Response Types ["code", "code id_token", "code id_token token", "code token"].'
         );
       }
     );
@@ -1885,16 +2196,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description:
-            'The Grant Type "implicit" requires at lease one of the Response Types ["code id_token", "code id_token token", "code token", "id_token", "id_token token", "token"].',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Grant Type "implicit" requires at lease one of the Response Types ["code id_token", "code id_token token", "code token", "id_token", "id_token token", "token"].'
       );
     });
 
@@ -1906,13 +2215,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "application_type".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "application_type".'
         );
       }
     );
@@ -1923,13 +2233,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported application_type "unknown".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported application_type "unknown".'
       );
     });
 
@@ -1939,16 +2250,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description:
-            'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidRedirectUriException,
+        'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.'
       );
     });
 
@@ -1958,15 +2267,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description: 'The Redirect URI "http://client.example.com/oauth/callback" does not use the https protocol.',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidRedirectUriException,
+        'The Redirect URI "http://client.example.com/oauth/callback" does not use the https protocol.'
       );
     });
 
@@ -1978,15 +2286,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidRedirectUriException({
-            description: `The Authorization Server disallows using localhost as a Redirect URI for a "web" application.`,
-          })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidRedirectUriException,
+          'The Authorization Server disallows using localhost as a Redirect URI for a "web" application.'
         );
       }
     );
@@ -1999,13 +2306,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "client_name".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "client_name".'
         );
       }
     );
@@ -2016,13 +2324,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "scope".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "scope".'
       );
     });
 
@@ -2032,12 +2341,12 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      const error = new InvalidClientMetadataException({ description: 'Unsupported scope "unknown".' });
+      const error = new InvalidClientMetadataException('Unsupported scope "unknown".');
 
       scopeHandlerMock.checkRequestedScope.mockImplementationOnce(() => {
         throw error;
@@ -2054,13 +2363,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "contacts".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "contacts".'
         );
       }
     );
@@ -2071,13 +2381,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "logo_uri".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "logo_uri".'
       );
     });
 
@@ -2087,13 +2398,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Logo URI.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Logo URI.'
       );
     });
 
@@ -2103,13 +2415,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "client_uri".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "client_uri".'
       );
     });
 
@@ -2119,13 +2432,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Client URI.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Client URI.'
       );
     });
 
@@ -2135,13 +2449,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "policy_uri".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "policy_uri".'
       );
     });
 
@@ -2151,13 +2466,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Policy URI.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Policy URI.'
       );
     });
 
@@ -2167,13 +2483,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "tos_uri".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "tos_uri".'
       );
     });
 
@@ -2183,13 +2500,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Terms of Service URI.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Terms of Service URI.'
       );
     });
 
@@ -2199,15 +2517,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description: 'Only one of the parameters "jwks_uri" and "jwks" must be provided.',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Only one of the parameters "jwks_uri" and "jwks" must be provided.'
       );
     });
 
@@ -2217,13 +2534,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "jwks_uri".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "jwks_uri".'
       );
     });
 
@@ -2233,13 +2551,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid JSON Web Key Set URI.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid JSON Web Key Set URI.'
       );
     });
 
@@ -2251,13 +2570,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid parameter "jwks".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid parameter "jwks".'
       );
     });
 
@@ -2269,13 +2589,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid JSON Web Key Set.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid JSON Web Key Set.'
       );
     });
 
@@ -2286,15 +2607,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description: 'The Subject Type "pairwise" requires a Sector Identifier URI.',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Subject Type "pairwise" requires a Sector Identifier URI.'
       );
     });
 
@@ -2306,13 +2626,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "subject_type".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "subject_type".'
         );
       }
     );
@@ -2323,13 +2644,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported subject_type "unknown".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported subject_type "unknown".'
       );
     });
 
@@ -2341,13 +2663,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "sector_identifier_uri".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "sector_identifier_uri".'
         );
       }
     );
@@ -2358,13 +2681,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'Invalid Sector Identifier URI.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Sector Identifier URI.'
       );
     });
 
@@ -2374,13 +2698,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({ description: 'The Sector Identifier URI does not use the https protocol.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Sector Identifier URI does not use the https protocol.'
       );
     });
 
@@ -2392,13 +2717,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_signed_response_alg".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "id_token_signed_response_alg".'
         );
       }
     );
@@ -2409,13 +2735,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported id_token_signed_response_alg "unknown".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported id_token_signed_response_alg "unknown".'
       );
     });
 
@@ -2427,13 +2754,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_alg".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "id_token_encrypted_response_alg".'
         );
       }
     );
@@ -2444,13 +2772,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported id_token_encrypted_response_alg "unknown".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported id_token_encrypted_response_alg "unknown".'
       );
     });
 
@@ -2462,13 +2791,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_enc".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "id_token_encrypted_response_enc".'
         );
       }
     );
@@ -2479,17 +2809,15 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description:
-            'The parameter "id_token_encrypted_response_enc" must be presented together ' +
-            'with the parameter "id_token_encrypted_response_alg".',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The parameter "id_token_encrypted_response_enc" must be presented together ' +
+          'with the parameter "id_token_encrypted_response_alg".'
       );
     });
 
@@ -2499,13 +2827,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported id_token_encrypted_response_enc "unknown".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported id_token_encrypted_response_enc "unknown".'
       );
     });
 
@@ -2517,13 +2846,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "token_endpoint_auth_method".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "token_endpoint_auth_method".'
         );
       }
     );
@@ -2534,13 +2864,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported token_endpoint_auth_method "unknown".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported token_endpoint_auth_method "unknown".'
       );
     });
 
@@ -2552,13 +2883,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "token_endpoint_auth_signing_alg".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "token_endpoint_auth_signing_alg".'
         );
       }
     );
@@ -2569,13 +2901,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported token_endpoint_auth_signing_alg "unknown".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported token_endpoint_auth_signing_alg "unknown".'
       );
     });
 
@@ -2585,16 +2918,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description:
-            'The Client Authentication Method "client_secret_basic" does not require a Client Authentication Signing Algorithm.',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Client Authentication Method "client_secret_basic" does not require a Client Authentication Signing Algorithm.'
       );
     });
 
@@ -2604,16 +2935,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description:
-            'Missing required parameter "token_endpoint_auth_signing_alg" for Client Authentication Method "private_key_jwt".',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Missing required parameter "token_endpoint_auth_signing_alg" for Client Authentication Method "private_key_jwt".'
       );
     });
 
@@ -2624,16 +2953,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({
-          description:
-            'One of the parameters "jwks_uri" or "jwks" must be provided for Client Authentication Method "private_key_jwt".',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'One of the parameters "jwks_uri" or "jwks" must be provided for Client Authentication Method "private_key_jwt".'
       );
     });
 
@@ -2646,15 +2973,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({
-            description: `Invalid JSON Web Signature Algorithm "${algorithm}" for Client Authentication Method "${method}".`,
-          })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          `Invalid JSON Web Signature Algorithm "${algorithm}" for Client Authentication Method "${method}".`
         );
       }
     );
@@ -2667,13 +2993,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "default_max_age".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "default_max_age".'
         );
       }
     );
@@ -2686,13 +3013,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'The default max age must be a positive integer.' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'The default max age must be a positive integer.'
         );
       }
     );
@@ -2705,13 +3033,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "require_auth_time".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "require_auth_time".'
         );
       }
     );
@@ -2724,13 +3053,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "default_acr_values".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "default_acr_values".'
         );
       }
     );
@@ -2741,13 +3071,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Unsupported acr_value "unknown".' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported acr_value "unknown".'
       );
     });
 
@@ -2759,13 +3090,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "initiate_login_uri".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "initiate_login_uri".'
         );
       }
     );
@@ -2776,13 +3108,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidClientMetadataException({ description: 'Invalid Initiate Login URI.' })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Initiate Login URI.'
       );
     });
 
@@ -2794,13 +3127,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "post_logout_redirect_uris".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "post_logout_redirect_uris".'
         );
       }
     );
@@ -2811,15 +3145,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description: 'Invalid Post Logout Redirect URI "client.example.com/oauth/logout-callback".',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Post Logout Redirect URI "client.example.com/oauth/logout-callback".'
       );
     });
 
@@ -2829,36 +3162,33 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description:
-            'The Post Logout Redirect URI "https://client.example.com/oauth/logout-callback#fragment-component" ' +
-            'MUST NOT have a fragment component.',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Post Logout Redirect URI "https://client.example.com/oauth/logout-callback#fragment-component" ' +
+          'MUST NOT have a fragment component.'
       );
     });
 
     it('should throw when providing a http(s) post logout redirect uri other than localhost for a native application.', async () => {
+      request.body.redirect_uris = ['http://localhost/oauth/callback'];
       request.body.application_type = 'native';
 
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description:
-            'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.'
       );
     });
 
@@ -2868,17 +3198,15 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-      await expect(validator.validatePut(request)).rejects.toThrow(
-        new InvalidRedirectUriException({
-          description:
-            'The Post Logout Redirect URI "http://client.example.com/oauth/logout-callback" ' +
-            'does not use the https protocol.',
-        })
+      await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Post Logout Redirect URI "http://client.example.com/oauth/logout-callback" ' +
+          'does not use the https protocol.'
       );
     });
 
@@ -2890,16 +3218,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidRedirectUriException({
-            description:
-              'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.',
-          })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.'
         );
       }
     );
@@ -2912,13 +3238,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "software_id".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "software_id".'
         );
       }
     );
@@ -2931,13 +3258,14 @@ describe('Registration Request Validator', () => {
         const accessToken = <AccessToken>{
           handle: 'access_token',
           scopes: ['client:update'],
-          client: { id: 'client_id' },
+          client: { id: 'client_id', secret: 'client_secret' },
         };
 
         clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
-        await expect(validator.validatePut(request)).rejects.toThrow(
-          new InvalidClientMetadataException({ description: 'Invalid parameter "software_version".' })
+        await expect(validator.validatePut(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "software_version".'
         );
       }
     );
@@ -2946,14 +3274,14 @@ describe('Registration Request Validator', () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['client:update'],
-        client: { id: 'client_id' },
+        client: { id: 'client_id', secret: 'client_secret' },
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
       await expect(validator.validatePut(request)).resolves.toStrictEqual<PutRegistrationContext>({
-        queryParameters: <PutQueryRegistrationRequest>request.query,
-        bodyParameters: <PutBodyRegistrationRequest>request.body,
+        queryParameters: request.query as PutQueryRegistrationRequest,
+        bodyParameters: request.body as PutBodyRegistrationRequest,
         accessToken,
         client: accessToken.client!,
         clientId: 'client_id',
@@ -2970,7 +3298,7 @@ describe('Registration Request Validator', () => {
         policyUri: new URL('https://client.example.com/policy'),
         tosUri: new URL('https://client.example.com/terms-of-service'),
         jwksUri: new URL('https://client.example.com/oauth/jwks'),
-        jwks: undefined,
+        jwks: null,
         subjectType: 'pairwise',
         sectorIdentifierUri: new URL('https://client.example.com/redirect_uris.json'),
         idTokenSignedResponseAlgorithm: 'RS256',

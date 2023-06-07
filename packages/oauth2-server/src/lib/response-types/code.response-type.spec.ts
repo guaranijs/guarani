@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
+import { CodeAuthorizationContext } from '../context/authorization/code.authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
@@ -78,6 +78,9 @@ describe('Code Response Type', () => {
         nonce: 'client_nonce',
         prompts: [],
         display: jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
+        maxAge: null,
+        loginHint: null,
+        idTokenHint: null,
         uiLocales: [],
         acrValues: [],
       };

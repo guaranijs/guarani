@@ -1,12 +1,12 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { URL, URLSearchParams } from 'url';
 
-import { ConsentContextInteractionContext } from '../context/interaction/consent-context.interaction.context';
-import { ConsentDecisionAcceptInteractionContext } from '../context/interaction/consent-decision-accept.interaction.context';
-import { ConsentDecisionDenyInteractionContext } from '../context/interaction/consent-decision-deny.interaction.context';
-import { ConsentDecisionInteractionContext } from '../context/interaction/consent-decision.interaction.context';
+import { ConsentContextInteractionContext } from '../context/interaction/consent-context.interaction-context';
+import { ConsentDecisionAcceptInteractionContext } from '../context/interaction/consent-decision-accept.interaction-context';
+import { ConsentDecisionDenyInteractionContext } from '../context/interaction/consent-decision-deny.interaction-context';
+import { ConsentDecisionInteractionContext } from '../context/interaction/consent-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { AccountSelectionRequiredException } from '../exceptions/account-selection-required.exception';
@@ -21,7 +21,6 @@ import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { Prompt } from '../types/prompt.type';
 import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
-import { ConsentDecision } from './consent-decision.type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 
@@ -80,12 +79,12 @@ export class ConsentInteractionType implements InteractionTypeInterface {
     await this.checkGrant(grant);
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
-    return removeNullishValues<ConsentContextInteractionResponse>({
-      skip: grant.consent != null,
+    return {
+      skip: grant.consent !== null,
       requested_scope: grant.parameters.scope,
       subject: calculateSubjectIdentifier(grant.session.activeLogin!.user, grant.client, this.settings),
       request_url: url.href,
@@ -96,7 +95,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
         display: grant.parameters.display,
         ui_locales: grant.parameters.ui_locales?.split(' '),
       },
-    });
+    };
   }
 
   /**
@@ -108,9 +107,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * @param context Consent Decision Interaction Context.
    * @returns Consent Decision Interaction Response.
    */
-  public async handleDecision(
-    context: ConsentDecisionInteractionContext<ConsentDecision>
-  ): Promise<ConsentDecisionInteractionResponse> {
+  public async handleDecision(context: ConsentDecisionInteractionContext): Promise<ConsentDecisionInteractionResponse> {
     const { decision, grant } = context;
 
     await this.checkGrant(grant);
@@ -135,7 +132,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
   ): Promise<ConsentDecisionInteractionResponse> {
     const { grant, grantedScopes } = context;
 
-    if (grant.consent == null) {
+    if (grant.consent === null) {
       const { client, session } = grant;
 
       let scopes = grantedScopes;
@@ -154,7 +151,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
     }
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
@@ -175,7 +172,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
     await this.grantService.remove(grant);
 
     const url = new URL('/oauth/error', this.settings.issuer);
-    const searchParameters = new URLSearchParams(error.toJSON());
+    const searchParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
@@ -190,17 +187,17 @@ export class ConsentInteractionType implements InteractionTypeInterface {
   private async checkGrant(grant: Grant): Promise<void> {
     if (new Date() > grant.expiresAt) {
       await this.grantService.remove(grant);
-      throw new AccessDeniedException({ description: 'Expired Grant.' });
+      throw new AccessDeniedException('Expired Grant.');
     }
 
-    if (grant.session.activeLogin == null) {
+    if (grant.session.activeLogin === null) {
       await this.grantService.remove(grant);
 
       if (grant.parameters.prompt?.includes('select_account') === true) {
-        throw new AccountSelectionRequiredException({ description: 'Account selection required.' });
+        throw new AccountSelectionRequiredException('Account selection required.');
       }
 
-      throw new LoginRequiredException({ description: 'No active login found.' });
+      throw new LoginRequiredException('No active login found.');
     }
   }
 }

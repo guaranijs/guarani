@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 
-import { JwtBearerTokenContext } from '../context/token/jwt-bearer.token.context';
+import { JwtBearerTokenContext } from '../context/token/jwt-bearer.token-context';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -46,6 +46,6 @@ export class JwtBearerGrantType implements GrantTypeInterface {
   public async handle(context: JwtBearerTokenContext): Promise<TokenResponse> {
     const { client, scopes, user } = context;
     const accessToken = await this.accessTokenService.create(scopes, client, user);
-    return createTokenResponse(accessToken);
+    return createTokenResponse(accessToken, null);
   }
 }

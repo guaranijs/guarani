@@ -1,14 +1,12 @@
 import { Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomBytes } from 'crypto';
-import { promisify } from 'util';
 
 import { AccessToken } from '../../entities/access-token.entity';
 import { Client } from '../../entities/client.entity';
 import { User } from '../../entities/user.entity';
 import { AccessTokenServiceInterface } from '../access-token.service.interface';
-
-const randomBytesAsync = promisify(randomBytes);
 
 @Injectable()
 export class AccessTokenService implements AccessTokenServiceInterface {
@@ -18,11 +16,11 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     console.warn('Using default Access Token Service. This is only recommended for development.');
   }
 
-  public async create(scopes: string[], client: Client, user?: User): Promise<AccessToken> {
+  public async create(scopes: string[], client: Client, user: Nullable<User>): Promise<AccessToken> {
     const now = Date.now();
 
     const accessToken: AccessToken = {
-      handle: (await randomBytesAsync(16)).toString('hex'),
+      handle: randomBytes(16).toString('hex'),
       scopes,
       isRevoked: false,
       issuedAt: new Date(now),
@@ -41,12 +39,14 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     const now = Date.now();
 
     const accessToken: AccessToken = {
-      handle: (await randomBytesAsync(16)).toString('hex'),
+      handle: randomBytes(16).toString('hex'),
       scopes: ['client:create'],
       isRevoked: false,
       issuedAt: new Date(now),
       expiresAt: new Date(now + 300000),
       validAfter: new Date(now),
+      client: null,
+      user: null,
     };
 
     this.accessTokens.push(accessToken);
@@ -58,13 +58,14 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     const now = Date.now();
 
     const accessToken: AccessToken = {
-      handle: (await randomBytesAsync(16)).toString('hex'),
+      handle: randomBytes(16).toString('hex'),
       scopes: ['client:manage'],
       isRevoked: false,
       issuedAt: new Date(now),
       expiresAt: new Date(now + 86400000),
       validAfter: new Date(now),
       client,
+      user: null,
     };
 
     this.accessTokens.push(accessToken);
@@ -72,7 +73,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     return accessToken;
   }
 
-  public async findOne(handle: string): Promise<AccessToken | null> {
+  public async findOne(handle: string): Promise<Nullable<AccessToken>> {
     return this.accessTokens.find((accessToken) => accessToken.handle === handle) ?? null;
   }
 

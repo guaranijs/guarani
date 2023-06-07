@@ -1,5 +1,4 @@
-import { TokenContext } from '../context/token/token.context';
-import { TokenRequest } from '../requests/token/token-request';
+import { TokenContext } from '../context/token/token-context';
 import { TokenResponse } from '../responses/token-response';
 import { GrantType } from './grant-type.type';
 
@@ -20,5 +19,5 @@ export interface GrantTypeInterface {
    * @param context Token Request Context.
    * @returns Access Token Response.
    */
-  handle(context: TokenContext<TokenRequest>): Promise<TokenResponse>;
+  handle(context: TokenContext): Promise<TokenResponse>;
 }

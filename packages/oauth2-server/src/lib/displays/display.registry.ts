@@ -1,4 +1,4 @@
-import { Constructor } from '@guarani/di';
+import { Constructor } from '@guarani/types';
 
 import { DisplayInterface } from './display.interface';
 import { Display } from './display.type';

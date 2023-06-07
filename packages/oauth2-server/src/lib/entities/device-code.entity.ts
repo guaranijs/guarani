@@ -1,14 +1,14 @@
+import { Nullable } from '@guarani/types';
+
 import { Client } from './client.entity';
 import { User } from './user.entity';
 
 /**
  * OAuth 2.0 Device Code Entity.
  */
-export interface DeviceCode extends Record<string, any> {
+export interface DeviceCode {
   /**
    * Identifier of the Device Code.
-   *
-   * This attribute is the **Primary Key** (or other related classification) of the Entity.
    */
   readonly id: string;
 
@@ -29,7 +29,7 @@ export interface DeviceCode extends Record<string, any> {
    *
    * This URI does not have interactions, and **MUST** contain the `user_code` needed to proceed.
    */
-  readonly verificationUriComplete?: string | null;
+  readonly verificationUriComplete: Nullable<string>;
 
   /**
    * Scopes requested by the Client.
@@ -39,7 +39,7 @@ export interface DeviceCode extends Record<string, any> {
   /**
    * Authorization status of the Device Code.
    */
-  isAuthorized?: boolean | null;
+  isAuthorized: Nullable<boolean>;
 
   /**
    * Issuance Date of the Device Code.
@@ -61,5 +61,5 @@ export interface DeviceCode extends Record<string, any> {
    *
    * *note: once the device code is authorized, this attribute **must** be set.*
    */
-  user?: User | null;
+  user: Nullable<User>;
 }

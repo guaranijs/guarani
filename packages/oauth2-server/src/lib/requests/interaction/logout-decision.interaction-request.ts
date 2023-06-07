@@ -4,7 +4,8 @@ import { InteractionRequest } from './interaction-request';
 /**
  * Parameters of the custom OAuth 2.0 Logout Decision Interaction Request.
  */
-export interface LogoutDecisionInteractionRequest<TDecision extends LogoutDecision> extends InteractionRequest {
+export interface LogoutDecisionInteractionRequest<TDecision extends LogoutDecision = LogoutDecision>
+  extends InteractionRequest {
   /**
    * Logout Challenge provided by the Client.
    */

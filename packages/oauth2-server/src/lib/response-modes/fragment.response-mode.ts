@@ -1,4 +1,6 @@
 import { Injectable } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { URL, URLSearchParams } from 'url';
 
@@ -25,9 +27,9 @@ export class FragmentResponseMode implements ResponseModeInterface {
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns Http Response containing the Authorization Response Parameters.
    */
-  public createHttpResponse(redirectUri: string, parameters: Record<string, any>): HttpResponse {
+  public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
     const url = new URL(redirectUri);
-    const fragmentParameters = new URLSearchParams(parameters);
+    const fragmentParameters = new URLSearchParams(removeNullishValues(parameters));
 
     url.hash = fragmentParameters.toString();
 

@@ -1,15 +1,15 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
-import { TokenContext } from '../context/token/token.context';
+import { TokenContext } from '../context/token/token-context';
 import { Client } from '../entities/client.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { UnsupportedGrantTypeException } from '../exceptions/unsupported-grant-type.exception';
 import { GrantTypeInterface } from '../grant-types/grant-type.interface';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
-import { HttpResponse } from '../http/http.response';
 import { TokenRequest } from '../requests/token/token-request';
 import { TokenResponse } from '../responses/token-response';
 import { TokenRequestValidator } from '../validators/token/token-request.validator';
@@ -22,18 +22,19 @@ describe('Token Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: TokenEndpoint;
 
-  const validatorsMocks = [jest.mocked(TokenRequestValidator.prototype, true)];
+  const validatorMock = jest.mocked(TokenRequestValidator.prototype);
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
-    validatorsMocks.forEach((validatorMock) => {
-      container.bind(TokenRequestValidator).toValue(validatorMock);
-    });
-
+    container.bind(TokenRequestValidator).toValue(validatorMock);
     container.bind(TokenEndpoint).toSelf().asSingleton();
 
     endpoint = container.resolve(TokenEndpoint);
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   describe('name', () => {
@@ -50,7 +51,7 @@ describe('Token Endpoint', () => {
 
   describe('httpMethods', () => {
     it('should have \'["POST"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['POST']);
+      expect(endpoint.httpMethods).toEqual<HttpMethod[]>(['POST']);
     });
   });
 
@@ -67,8 +68,10 @@ describe('Token Endpoint', () => {
     let request: HttpRequest;
 
     beforeEach(() => {
+      Reflect.deleteProperty(validatorMock, 'name');
+
       request = new HttpRequest({
-        body: { grant_type: 'authorization_code' },
+        body: <TokenRequest>{ grant_type: 'authorization_code' },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -80,24 +83,46 @@ describe('Token Endpoint', () => {
     it('should return an error response when not providing a "grant_type" parameter.', async () => {
       delete request.body.grant_type;
 
-      const error = new InvalidRequestException({ description: 'Invalid parameter "grant_type".' });
+      const error = new InvalidRequestException('Invalid parameter "grant_type".');
+      const errorParameters = removeNullishValues(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
-      );
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(error.statusCode);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...error.headers,
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it('should return an error response when requesting an unsupported grant type.', async () => {
+      Reflect.set(validatorMock, 'name', 'authorization_code');
+
       request.body.grant_type = 'unknown';
 
-      const error = new UnsupportedGrantTypeException({ description: 'Unsupported grant_type "unknown".' });
+      const error = new UnsupportedGrantTypeException('Unsupported grant_type "unknown".');
+      const errorParameters = removeNullishValues(error.toJSON());
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setStatus(error.statusCode).setHeaders(endpoint['headers']).json(error.toJSON())
-      );
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(error.statusCode);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...error.headers,
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it('should return a token response.', async () => {
+      Reflect.set(validatorMock, 'name', 'authorization_code');
+
       const accessTokenResponse: TokenResponse = {
         access_token: 'access_token',
         token_type: 'Bearer',
@@ -106,20 +131,27 @@ describe('Token Endpoint', () => {
         refresh_token: 'refresh_token',
       };
 
-      const context = <TokenContext<TokenRequest>>{
-        parameters: <TokenRequest>request.body,
+      const context = <TokenContext>{
+        parameters: request.body as TokenRequest,
         client: <Client>{ id: 'client_id' },
-        grantType: jest.mocked<GrantTypeInterface>({
+        grantType: <GrantTypeInterface>{
           name: 'authorization_code',
           handle: jest.fn().mockResolvedValueOnce(accessTokenResponse),
-        }),
+        },
       };
 
-      validatorsMocks[0]!.validate.mockResolvedValueOnce(context);
+      validatorMock.validate.mockResolvedValueOnce(context);
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(
-        new HttpResponse().setHeaders(endpoint['headers']).json(accessTokenResponse)
-      );
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(accessTokenResponse);
     });
   });
 });

@@ -1,5 +1,6 @@
 import { Injectable } from '@guarani/di';
 import { AuthorizationRequest, GrantServiceInterface } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { randomBytes } from 'crypto';
 import { promisify } from 'util';
@@ -34,15 +35,15 @@ export class GrantService implements GrantServiceInterface {
     return grant;
   }
 
-  public async findOne(id: string): Promise<Grant | null> {
+  public async findOne(id: string): Promise<Nullable<Grant>> {
     return await Grant.findOneBy({ id });
   }
 
-  public async findOneByLoginChallenge(loginChallenge: string): Promise<Grant | null> {
+  public async findOneByLoginChallenge(loginChallenge: string): Promise<Nullable<Grant>> {
     return await Grant.findOneBy({ loginChallenge });
   }
 
-  public async findOneByConsentChallenge(consentChallenge: string): Promise<Grant | null> {
+  public async findOneByConsentChallenge(consentChallenge: string): Promise<Nullable<Grant>> {
     return await Grant.findOneBy({ consentChallenge });
   }
 

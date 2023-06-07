@@ -1,4 +1,5 @@
 import { AuthorizationRequest, Grant as OAuth2Grant, InteractionType } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import {
   BaseEntity,
@@ -49,9 +50,9 @@ export class Grant extends BaseEntity implements OAuth2Grant {
 
   @OneToOne(() => Session, { cascade: false, eager: true, nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'session_id', referencedColumnName: 'id', foreignKeyConstraintName: 'sessions_id_fk' })
-  public session!: Session;
+  public readonly session!: Session;
 
   @OneToOne(() => Consent, { cascade: false, eager: true, nullable: true, onDelete: 'SET NULL', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'consent_id', referencedColumnName: 'id', foreignKeyConstraintName: 'consents_id_fk' })
-  public consent!: Consent | null;
+  public consent!: Nullable<Consent>;
 }

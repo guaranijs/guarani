@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { JwtBearerTokenContext } from '../context/token/jwt-bearer.token.context';
+import { JwtBearerTokenContext } from '../context/token/jwt-bearer.token-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
@@ -42,10 +42,10 @@ describe('JWT Bearer Grant Type', () => {
           grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
           assertion: '',
         },
-        grantType: jest.mocked<GrantTypeInterface>({
+        grantType: <GrantTypeInterface>{
           name: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
           handle: jest.fn(),
-        }),
+        },
         client: <Client>{ id: 'client_id' },
         user: <User>{ id: 'user_id' },
         scopes: ['foo', 'bar', 'baz'],
@@ -68,6 +68,7 @@ describe('JWT Bearer Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo bar',
+        refresh_token: undefined,
       });
 
       expect(accessTokenServiceMock.create).toHaveBeenCalledTimes(1);
@@ -87,6 +88,7 @@ describe('JWT Bearer Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo bar baz',
+        refresh_token: undefined,
       });
 
       expect(accessTokenServiceMock.create).toHaveBeenCalledTimes(1);

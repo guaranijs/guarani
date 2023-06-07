@@ -1,5 +1,6 @@
 import { Injectable } from '@guarani/di';
 import { AuthorizationCodeServiceInterface, CodeAuthorizationRequest } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
@@ -27,7 +28,7 @@ export class AuthorizationCodeService implements AuthorizationCodeServiceInterfa
     return authorizationCode;
   }
 
-  public async findOne(code: string): Promise<AuthorizationCode | null> {
+  public async findOne(code: string): Promise<Nullable<AuthorizationCode>> {
     return await AuthorizationCode.findOneBy({ code });
   }
 

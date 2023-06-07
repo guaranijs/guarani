@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { ResourceOwnerPasswordCredentialsTokenContext } from '../context/token/resource-owner-password-credentials.token.context';
+import { ResourceOwnerPasswordCredentialsTokenContext } from '../context/token/resource-owner-password-credentials.token-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
@@ -56,8 +56,14 @@ describe('Resource Owner Password Credentials Grant Type', () => {
           username: 'username',
           password: 'password',
         },
-        grantType: jest.mocked<GrantTypeInterface>({ name: 'password', handle: jest.fn() }),
-        client: <Client>{ id: 'client_id', grantTypes: ['password', 'refresh_token'] },
+        grantType: <GrantTypeInterface>{
+          name: 'password',
+          handle: jest.fn(),
+        },
+        client: <Client>{
+          id: 'client_id',
+          grantTypes: ['password', 'refresh_token'],
+        },
         user: <User>{ id: 'user_id' },
         scopes: ['foo', 'bar', 'baz'],
       };
@@ -86,6 +92,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'foo bar',
+        refresh_token: undefined,
       });
     });
 
@@ -110,6 +117,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'foo bar baz',
+        refresh_token: undefined,
       });
     });
 
@@ -129,6 +137,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'foo bar',
+        refresh_token: undefined,
       });
     });
 
@@ -146,6 +155,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'foo bar baz',
+        refresh_token: undefined,
       });
     });
 

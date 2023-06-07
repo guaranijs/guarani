@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import { HttpResponse } from '../http/http.response';
 import { ResponseMode } from './response-mode.type';
 
@@ -19,5 +21,5 @@ export interface ResponseModeInterface {
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns Http Response containing the Authorization Response Parameters.
    */
-  createHttpResponse(redirectUri: string, parameters: Record<string, any>): HttpResponse;
+  createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse;
 }

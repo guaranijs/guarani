@@ -1,6 +1,7 @@
 import { Inject, Injectable, Optional } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
-import { IntrospectionContext } from '../context/introspection.context';
+import { IntrospectionContext } from '../context/introspection-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
@@ -50,7 +51,7 @@ export class IntrospectionRequestValidator {
         throw new Error('The Authorization Server disabled using Refresh Tokens.');
       }
 
-      if (this.refreshTokenService === undefined) {
+      if (typeof this.refreshTokenService === 'undefined') {
         throw new Error('Cannot enable Refresh Token Introspection without a Refresh Token Service.');
       }
 
@@ -65,14 +66,14 @@ export class IntrospectionRequestValidator {
    * @returns Introspection Context.
    */
   public async validate(request: HttpRequest): Promise<IntrospectionContext> {
-    const parameters = <IntrospectionRequest>request.body;
+    const parameters = request.body as IntrospectionRequest;
 
     this.checkParameters(parameters);
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
-    const tokenResult = await this.findToken(parameters.token, parameters.token_type_hint);
+    const tokenResult = await this.findToken(parameters.token, parameters.token_type_hint ?? null);
 
-    if (tokenResult === null || tokenResult.token.client == null) {
+    if (tokenResult === null || tokenResult.token.client === null) {
       return { client, parameters, token: null, tokenType: null };
     }
 
@@ -88,11 +89,11 @@ export class IntrospectionRequestValidator {
     const { token, token_type_hint: tokenTypeHint } = parameters;
 
     if (typeof token !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "token".' });
+      throw new InvalidRequestException('Invalid parameter "token".');
     }
 
-    if (tokenTypeHint !== undefined && !this.supportedTokenTypeHints.includes(tokenTypeHint)) {
-      throw new UnsupportedTokenTypeException({ description: `Unsupported token_type_hint "${tokenTypeHint}".` });
+    if (typeof tokenTypeHint !== 'undefined' && !this.supportedTokenTypeHints.includes(tokenTypeHint)) {
+      throw new UnsupportedTokenTypeException(`Unsupported token_type_hint "${tokenTypeHint}".`);
     }
   }
 
@@ -103,7 +104,7 @@ export class IntrospectionRequestValidator {
    * @param tokenTypeHint Optional hint about the type of the Token.
    * @returns Resulting Token and its type.
    */
-  private async findToken(handle: string, tokenTypeHint?: TokenTypeHint): Promise<FindTokenResult | null> {
+  private async findToken(handle: string, tokenTypeHint: Nullable<TokenTypeHint>): Promise<Nullable<FindTokenResult>> {
     switch (tokenTypeHint) {
       case 'refresh_token':
         return (await this.findRefreshToken(handle)) ?? (await this.findAccessToken(handle));
@@ -120,7 +121,7 @@ export class IntrospectionRequestValidator {
    * @param handle Token Handle provided by the Client.
    * @returns Result of the search.
    */
-  private async findAccessToken(handle: string): Promise<FindTokenResult | null> {
+  private async findAccessToken(handle: string): Promise<Nullable<FindTokenResult>> {
     const token = await this.accessTokenService.findOne(handle);
     return token !== null ? { token, tokenType: 'access_token' } : null;
   }
@@ -131,11 +132,12 @@ export class IntrospectionRequestValidator {
    * @param handle Token Handle provided by the Client.
    * @returns Result of the search.
    */
-  private async findRefreshToken(handle: string): Promise<FindTokenResult | null> {
-    const token = this.settings.enableRefreshTokenIntrospection
-      ? await this.refreshTokenService?.findOne(handle)
-      : null;
+  private async findRefreshToken(handle: string): Promise<Nullable<FindTokenResult>> {
+    if (typeof this.refreshTokenService === 'undefined') {
+      return null;
+    }
 
-    return token != null ? { token, tokenType: 'refresh_token' } : null;
+    const token = this.settings.enableRefreshTokenIntrospection ? await this.refreshTokenService.findOne(handle) : null;
+    return token !== null ? { token, tokenType: 'refresh_token' } : null;
   }
 }

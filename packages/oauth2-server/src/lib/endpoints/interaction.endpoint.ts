@@ -1,4 +1,5 @@
 import { Injectable, InjectAll } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -77,20 +78,16 @@ export class InteractionEndpoint implements EndpointInterface {
           throw new TypeError(`Unsupported Http Method "${request.method}" for Interaction Endpoint.`);
       }
     } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
-        error.cause = exc;
-      }
+      const error =
+        exc instanceof OAuth2Exception
+          ? exc
+          : new ServerErrorException('An unexpected error occurred.', { cause: exc });
 
       return new HttpResponse()
         .setStatus(error.statusCode)
         .setHeaders(error.headers)
         .setHeaders(this.headers)
-        .json(error.toJSON());
+        .json(removeNullishValues(error.toJSON()));
     }
   }
 
@@ -101,14 +98,14 @@ export class InteractionEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handleContext(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = <InteractionRequest>request.query;
+    const parameters = request.query as InteractionRequest;
 
     const validator = this.getValidator(parameters);
 
     const context = await validator.validateContext(request);
     const interactionResponse = await context.interactionType.handleContext(context);
 
-    return new HttpResponse().setHeaders(this.headers).json(interactionResponse);
+    return new HttpResponse().setHeaders(this.headers).json(removeNullishValues(interactionResponse));
   }
 
   /**
@@ -118,14 +115,14 @@ export class InteractionEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handleDecision(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = <InteractionRequest>request.body;
+    const parameters = request.body as InteractionRequest;
 
     const validator = this.getValidator(parameters);
 
     const context = await validator.validateDecision(request);
     const interactionResponse = await context.interactionType.handleDecision(context);
 
-    return new HttpResponse().setHeaders(this.headers).json(interactionResponse);
+    return new HttpResponse().setHeaders(this.headers).json(removeNullishValues(interactionResponse));
   }
 
   /**
@@ -136,15 +133,13 @@ export class InteractionEndpoint implements EndpointInterface {
    */
   private getValidator(parameters: InteractionRequest): InteractionRequestValidator {
     if (typeof parameters.interaction_type !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "interaction_type".' });
+      throw new InvalidRequestException('Invalid parameter "interaction_type".');
     }
 
     const validator = this.validators.find((validator) => validator.name === parameters.interaction_type);
 
-    if (validator === undefined) {
-      throw new UnsupportedInteractionTypeException({
-        description: `Unsupported interaction_type "${parameters.interaction_type}".`,
-      });
+    if (typeof validator === 'undefined') {
+      throw new UnsupportedInteractionTypeException(`Unsupported interaction_type "${parameters.interaction_type}".`);
     }
 
     return validator;

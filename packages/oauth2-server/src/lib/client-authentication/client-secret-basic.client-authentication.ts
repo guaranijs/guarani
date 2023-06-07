@@ -63,61 +63,61 @@ export class ClientSecretBasicClientAuthentication implements ClientAuthenticati
 
     const [, token] = authorization!.split(' ', 2);
 
-    if (token === undefined) {
-      throw new InvalidClientException({ description: 'Missing Token.' }).setHeaders(this.headers);
+    if (typeof token === 'undefined') {
+      throw new InvalidClientException('Missing Token.').setHeaders(this.headers);
     }
 
     if (!/^[a-zA-Z0-9+/=]+$/.test(token)) {
-      throw new InvalidClientException({ description: 'Token is not a Base64 string.' }).setHeaders(this.headers);
+      throw new InvalidClientException('Token is not a Base64 string.').setHeaders(this.headers);
     }
 
     const credentials = Buffer.from(token, 'base64').toString('utf8');
 
     if (!credentials.includes(':')) {
-      throw new InvalidClientException({ description: 'Missing Semicolon Separator.' }).setHeaders(this.headers);
+      throw new InvalidClientException('Missing Semicolon Separator.').setHeaders(this.headers);
     }
 
     const [clientId, clientSecret] = credentials.split(':', 2);
 
-    if (clientId === undefined || clientId === '') {
-      throw new InvalidClientException({ description: 'Missing Client Identifier.' }).setHeaders(this.headers);
+    if (typeof clientId === 'undefined' || clientId === '') {
+      throw new InvalidClientException('Missing Client Identifier.').setHeaders(this.headers);
     }
 
-    if (clientSecret === undefined || clientSecret === '') {
-      throw new InvalidClientException({ description: 'Missing Client Secret.' }).setHeaders(this.headers);
+    if (typeof clientSecret === 'undefined' || clientSecret === '') {
+      throw new InvalidClientException('Missing Client Secret.').setHeaders(this.headers);
     }
 
     const client = await this.clientService.findOne(clientId);
 
     if (client === null) {
-      throw new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders(this.headers);
+      throw new InvalidClientException('Invalid Credentials.').setHeaders(this.headers);
     }
 
-    if (client.secret == null) {
-      throw new InvalidClientException({
-        description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-      }).setHeaders(this.headers);
+    if (client.secret === null) {
+      throw new InvalidClientException(
+        `This Client is not allowed to use the Authentication Method "${this.name}".`
+      ).setHeaders(this.headers);
     }
 
     const expectedClientSecret = Buffer.from(client.secret, 'utf8');
     const receivedClientSecret = Buffer.from(clientSecret, 'utf8');
 
     if (expectedClientSecret.length !== receivedClientSecret.length) {
-      throw new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders(this.headers);
+      throw new InvalidClientException('Invalid Credentials.').setHeaders(this.headers);
     }
 
     if (!timingSafeEqual(expectedClientSecret, receivedClientSecret)) {
-      throw new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders(this.headers);
+      throw new InvalidClientException('Invalid Credentials.').setHeaders(this.headers);
     }
 
-    if (client.secretExpiresAt != null && new Date() >= client.secretExpiresAt) {
-      throw new InvalidClientException({ description: 'Invalid Credentials.' }).setHeaders(this.headers);
+    if (client.secretExpiresAt !== null && new Date() >= client.secretExpiresAt) {
+      throw new InvalidClientException('Invalid Credentials.').setHeaders(this.headers);
     }
 
     if (client.authenticationMethod !== this.name) {
-      throw new InvalidClientException({
-        description: `This Client is not allowed to use the Authentication Method "${this.name}".`,
-      }).setHeaders(this.headers);
+      throw new InvalidClientException(
+        `This Client is not allowed to use the Authentication Method "${this.name}".`
+      ).setHeaders(this.headers);
     }
 
     return client;

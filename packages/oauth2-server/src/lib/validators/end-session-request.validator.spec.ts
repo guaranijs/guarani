@@ -3,7 +3,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { Buffer } from 'buffer';
 import { URL } from 'url';
 
-import { EndSessionContext } from '../context/end-session.context';
+import { EndSessionContext } from '../context/end-session-context';
 import { Client } from '../entities/client.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -71,8 +71,9 @@ describe('End Session Request Validator', () => {
     it.each(invalidStates)('should throw when providing an invalid "state" parameter.', async (state) => {
       request.query.state = state;
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "state".' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "state".'
       );
     });
 
@@ -81,8 +82,9 @@ describe('End Session Request Validator', () => {
       async (idTokenHint) => {
         request.query.id_token_hint = idTokenHint;
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "id_token_hint".', state: 'client_state' })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "id_token_hint".'
         );
       }
     );
@@ -90,17 +92,15 @@ describe('End Session Request Validator', () => {
     it.each(invalidClientIds)('should throw when providing an invalid "client_id" parameter.', async (clientId) => {
       request.query.client_id = clientId;
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "client_id".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "client_id".'
       );
     });
 
     it('should throw when the client is not registered.', async () => {
       clientServiceMock.findOne.mockResolvedValueOnce(null);
-
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Invalid Client.', state: 'client_state' })
-      );
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(InvalidClientException, 'Invalid Client.');
     });
 
     it.each(invalidPostLogoutRedirectUris)(
@@ -112,11 +112,9 @@ describe('End Session Request Validator', () => {
 
         clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({
-            description: 'Invalid parameter "post_logout_redirect_uri".',
-            state: 'client_state',
-          })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "post_logout_redirect_uri".'
         );
       }
     );
@@ -128,11 +126,9 @@ describe('End Session Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'Invalid parameter "post_logout_redirect_uri".',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "post_logout_redirect_uri".'
       );
     });
 
@@ -143,11 +139,9 @@ describe('End Session Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({
-          description: 'The Post Logout Redirect URI MUST NOT have a fragment component.',
-          state: 'client_state',
-        })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'The Post Logout Redirect URI MUST NOT have a fragment component.'
       );
     });
 
@@ -159,8 +153,9 @@ describe('End Session Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Post Logout Redirect URI.', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Post Logout Redirect URI.'
       );
     });
 
@@ -176,8 +171,9 @@ describe('End Session Request Validator', () => {
 
         clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-        await expect(validator.validate(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "logout_hint".', state: 'client_state' })
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "logout_hint".'
         );
       }
     );
@@ -192,8 +188,9 @@ describe('End Session Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Invalid parameter "ui_locales".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "ui_locales".'
       );
     });
 
@@ -207,8 +204,9 @@ describe('End Session Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Unsupported UI Locale "unknown".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported UI Locale "unknown".'
       );
     });
 
@@ -232,8 +230,9 @@ describe('End Session Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-      await expect(validator.validate(request)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Unsupported UI Locale "pt-BR".', state: 'client_state' })
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported UI Locale "pt-BR".'
       );
     });
 
@@ -246,7 +245,7 @@ describe('End Session Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<EndSessionContext>({
-        parameters: <EndSessionRequest>request.query,
+        parameters: request.query as EndSessionRequest,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client,

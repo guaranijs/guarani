@@ -1,4 +1,5 @@
 import { JsonWebSignature, JsonWebSignatureHeader, JsonWebTokenClaims, OctetSequenceKey } from '@guarani/jose';
+import { Dictionary } from '@guarani/types';
 
 import { Buffer } from 'buffer';
 import express, { Application, urlencoded } from 'express';
@@ -47,7 +48,7 @@ describe('Client Credentials Flow', () => {
     const assertion = await jws.sign(key);
 
     const requestData: JwtBearerTokenRequest = { grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion };
-    const requestBody = new URLSearchParams(requestData);
+    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
 
     const response = await request(app)
       .post('/oauth/token')

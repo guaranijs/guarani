@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
 import { URLSearchParams } from 'url';
@@ -38,7 +40,7 @@ describe('Refresh Token Revocation', () => {
       password: 'secretpassword',
     };
 
-    const requestBody = new URLSearchParams(requestData);
+    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
 
     const response = await request(app)
       .post('/oauth/token')
@@ -65,7 +67,7 @@ describe('Refresh Token Revocation', () => {
       refresh_token: refreshToken,
     };
 
-    const refreshTokenRequestBody = new URLSearchParams(refreshTokenRequestData);
+    const refreshTokenRequestBody = new URLSearchParams(refreshTokenRequestData as Dictionary<any>);
 
     const refreshTokenResponse = await request(app)
       .post('/oauth/token')
@@ -89,7 +91,7 @@ describe('Refresh Token Revocation', () => {
 
   it('POST /oauth/revoke', async () => {
     const revocationRequestData: RevocationRequest = { token: refreshToken, token_type_hint: 'refresh_token' };
-    const revocationRequestBody = new URLSearchParams(revocationRequestData);
+    const revocationRequestBody = new URLSearchParams(revocationRequestData as Dictionary<any>);
 
     const revocationResponse = await request(app)
       .post('/oauth/revoke')
@@ -106,7 +108,7 @@ describe('Refresh Token Revocation', () => {
       refresh_token: refreshToken,
     };
 
-    const refreshTokenRequestBody = new URLSearchParams(refreshTokenRequestData);
+    const refreshTokenRequestBody = new URLSearchParams(refreshTokenRequestData as Dictionary<any>);
 
     const refreshTokenResponse = await request(app)
       .post('/oauth/token')

@@ -1,4 +1,5 @@
 import { InvalidJsonWebTokenClaimException, JsonWebTokenClaims } from '@guarani/jose';
+import { OneOrMany } from '@guarani/types';
 
 import { IdTokenClaimsParameters } from './id-token.claims.parameters';
 
@@ -21,7 +22,7 @@ export class IdTokenClaims extends JsonWebTokenClaims implements IdTokenClaimsPa
   /**
    * Identifier of the Audience the ID Token is intended to.
    */
-  public override readonly aud!: string | string[];
+  public override readonly aud!: OneOrMany<string>;
 
   /**
    * UTC time denoting the Expiration Time of the ID Token.

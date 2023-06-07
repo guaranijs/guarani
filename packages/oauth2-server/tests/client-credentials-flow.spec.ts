@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
 import { URLSearchParams } from 'url';
@@ -28,7 +30,7 @@ describe('Client Credentials Flow', () => {
 
   it('POST /oauth/token', async () => {
     const requestData: ClientCredentialsTokenRequest = { grant_type: 'client_credentials' };
-    const requestBody = new URLSearchParams(requestData);
+    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
 
     const response = await request(app)
       .post('/oauth/token')

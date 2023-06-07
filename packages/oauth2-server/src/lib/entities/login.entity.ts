@@ -1,10 +1,12 @@
+import { Nullable } from '@guarani/types';
+
 import { Session } from './session.entity';
 import { User } from './user.entity';
 
 /**
  * OAuth 2.0 Login Entity.
  */
-export interface Login extends Record<string, any> {
+export interface Login {
   /**
    * Identifier of the Login.
    */
@@ -13,12 +15,12 @@ export interface Login extends Record<string, any> {
   /**
    * Authentication Methods used in the Authentication.
    */
-  readonly amr?: string[] | null;
+  readonly amr: Nullable<string[]>;
 
   /**
    * Authentication Context Class Reference satisfied by the Authentication process.
    */
-  readonly acr?: string | null;
+  readonly acr: Nullable<string>;
 
   /**
    * Creation Date of the Login.
@@ -28,9 +30,9 @@ export interface Login extends Record<string, any> {
   /**
    * Expiration Date of the Login.
    *
-   * *note: a **null** or **undefined** value indicates that the login does not expire.*
+   * *note: a **null** value indicates that the login does not expire.*
    */
-  readonly expiresAt?: Date | null;
+  readonly expiresAt: Nullable<Date>;
 
   /**
    * Authenticated End User.

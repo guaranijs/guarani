@@ -1,5 +1,6 @@
-import { Constructor, getContainer } from '@guarani/di';
+import { getContainer } from '@guarani/di';
 import { JsonWebKeySet } from '@guarani/jose';
+import { Constructor } from '@guarani/types';
 
 import { AuthorizationServer } from '../authorization-server';
 import { ClientAuthenticationInterface } from '../client-authentication/client-authentication.interface';

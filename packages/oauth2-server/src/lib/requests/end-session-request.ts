@@ -1,7 +1,9 @@
+import { Dictionary } from '@guarani/types';
+
 /**
  * Parameters of the OAuth 2.0 End Session Request.
  */
-export interface EndSessionRequest extends Record<string, any> {
+export interface EndSessionRequest extends Dictionary<any> {
   /**
    * ID Token used as a hint about the User that the Client expects to be authenticated.
    */

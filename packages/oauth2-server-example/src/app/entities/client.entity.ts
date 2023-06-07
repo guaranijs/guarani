@@ -12,6 +12,7 @@ import {
   ResponseType,
   SubjectType,
 } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import {
   BaseEntity,
@@ -25,10 +26,6 @@ import {
 } from 'typeorm';
 
 @Entity({ name: 'clients' })
-@Check(
-  'check_secret_issuance',
-  '("secret" IS NULL AND "secret_issued_at" IS NULL) OR ("secret" IS NOT NULL AND "secret_issued_at" IS NOT NULL)'
-)
 @Check('check_secret_expiration', '"secret" IS NOT NULL OR "secret_expires_at" IS NULL')
 @Check('check_jwks_uri_and_jwks', '"jwks_uri" IS NULL OR "jwks" IS NULL')
 @Check(
@@ -51,13 +48,10 @@ export class Client extends BaseEntity implements OAuth2Client {
 
   @Column({ name: 'secret', type: 'varchar', nullable: true, unique: true })
   @Check('check_secret_length', 'length("secret") = 32')
-  public secret!: string | null;
-
-  @Column({ name: 'secret_issued_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', nullable: true })
-  public secretIssuedAt!: Date | null;
+  public secret!: Nullable<string>;
 
   @Column({ name: 'secret_expires_at', type: 'timestamp', nullable: true })
-  public secretExpiresAt!: Date | null;
+  public secretExpiresAt!: Nullable<Date>;
 
   @Column({ name: 'name', type: 'varchar', nullable: false })
   @Check('check_name_length', 'length("name") >= 4 AND length("name") <= 32')
@@ -80,96 +74,96 @@ export class Client extends BaseEntity implements OAuth2Client {
 
   @Column({ name: 'authentication_signing_algorithm', type: 'varchar', nullable: true })
   @Check('check_authentication_signing_algorithm', '"authentication_signing_algorithm" <> \'none\'')
-  public authenticationSigningAlgorithm!: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
+  public authenticationSigningAlgorithm!: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   @Column({ name: 'scopes', type: 'varchar', array: true, nullable: false })
   public scopes!: string[];
 
   @Column({ name: 'client_uri', type: 'varchar', nullable: true })
-  public clientUri!: string | null;
+  public clientUri!: Nullable<string>;
 
   @Column({ name: 'logo_uri', type: 'varchar', nullable: true })
-  public logoUri!: string | null;
+  public logoUri!: Nullable<string>;
 
   @Column({ name: 'contacts', type: 'varchar', array: true, nullable: true })
-  public contacts!: string[] | null;
+  public contacts!: Nullable<string[]>;
 
   @Column({ name: 'policy_uri', type: 'varchar', nullable: true })
-  public policyUri!: string | null;
+  public policyUri!: Nullable<string>;
 
   @Column({ name: 'tos_uri', type: 'varchar', nullable: true })
-  public tosUri!: string | null;
+  public tosUri!: Nullable<string>;
 
   @Column({ name: 'jwks_uri', type: 'varchar', nullable: true })
-  public jwksUri!: string | null;
+  public jwksUri!: Nullable<string>;
 
   @Column({ name: 'jwks', type: 'json', nullable: true })
-  public jwks!: JsonWebKeySetParameters | null;
+  public jwks!: Nullable<JsonWebKeySetParameters>;
 
   @Column({ name: 'subject_type', type: 'varchar', default: 'public', nullable: false })
   public subjectType!: SubjectType;
 
   @Column({ name: 'sector_identifier_uri', type: 'varchar', nullable: true })
-  public sectorIdentifierUri!: string | null;
+  public sectorIdentifierUri!: Nullable<string>;
 
   @Column({ name: 'pairwise_salt', type: 'varchar', nullable: true, unique: true })
   @Check('check_pairwise_salt_length', 'length("pairwise_salt") = 32')
-  public pairwiseSalt!: string | null;
+  public pairwiseSalt!: Nullable<string>;
 
   @Column({ name: 'id_token_signed_response_algorithm', type: 'varchar', nullable: false })
   @Check('check_id_token_signed_response_algorithm', '"id_token_signed_response_algorithm" <> \'none\'')
   public idTokenSignedResponseAlgorithm!: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
   @Column({ name: 'id_token_encrypted_response_key_wrap', type: 'varchar', nullable: true })
-  public idTokenEncryptedResponseKeyWrap!: JsonWebEncryptionKeyWrapAlgorithm | null;
+  public idTokenEncryptedResponseKeyWrap!: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   @Column({ name: 'id_token_encrypted_response_content_encryption', type: 'varchar', nullable: true })
-  public idTokenEncryptedResponseContentEncryption!: JsonWebEncryptionContentEncryptionAlgorithm | null;
+  public idTokenEncryptedResponseContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   // @Column({ name: 'userinfo_signed_response_algorithm', type: 'varchar', nullable: true })
   // @Check('check_userinfo_signed_response_algorithm', '"userinfo_signed_response_algorithm" <> \'none\'')
-  // public userinfoSignedResponseAlgorithm!: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
+  // public userinfoSignedResponseAlgorithm!: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   // @Column({ name: 'userinfo_encrypted_response_key_wrap', type: 'varchar', nullable: true })
-  // public userinfoEncryptedResponseKeyWrap!: JsonWebEncryptionKeyWrapAlgorithm | null;
+  // public userinfoEncryptedResponseKeyWrap!: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   // @Column({ name: 'userinfo_encrypted_response_content_encryption', type: 'varchar', nullable: true })
-  // public userinfoEncryptedResponseContentEncryption!: JsonWebEncryptionContentEncryptionAlgorithm | null;
+  // public userinfoEncryptedResponseContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   // @Column({ name: 'request_object_signing_algorithm', type: 'varchar', nullable: true })
   // @Check('check_request_object_signing_algorithm', '"request_object_signing_algorithm" <> \'none\'')
-  // public requestObjectSigningAlgorithm!: Exclude<JsonWebSignatureAlgorithm, 'none'> | null;
+  // public requestObjectSigningAlgorithm!: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   // @Column({ name: 'request_object_encryption_key_wrap', type: 'varchar', nullable: true })
-  // public requestObjectEncryptionKeyWrap!: JsonWebEncryptionKeyWrapAlgorithm | null;
+  // public requestObjectEncryptionKeyWrap!: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   // @Column({ name: 'request_object_encryption_content_encryption', type: 'varchar', nullable: true })
-  // public requestObjectEncryptionContentEncryption!: JsonWebEncryptionContentEncryptionAlgorithm | null;
+  // public requestObjectEncryptionContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   @Column({ name: 'default_max_age', type: 'integer', nullable: true })
   @Check('check_default_max_age', '"default_max_age" > 0')
-  public defaultMaxAge!: number | null;
+  public defaultMaxAge!: Nullable<number>;
 
   @Column({ name: 'require_auth_time', type: 'boolean', default: false, nullable: false })
   public requireAuthTime!: boolean;
 
   @Column({ name: 'default_acr_values', type: 'varchar', array: true, nullable: true })
-  public defaultAcrValues!: string[] | null;
+  public defaultAcrValues!: Nullable<string[]>;
 
   @Column({ name: 'initiate_login_uri', type: 'varchar', nullable: true })
-  public initiateLoginUri!: string | null;
+  public initiateLoginUri!: Nullable<string>;
 
   // @Column({ name: 'request_uris', type: 'varchar', array: true, nullable: true })
-  // public requestUris!: string[] | null;
+  // public requestUris!: Nullable<string[]>;
 
   @Column({ name: 'software_id', type: 'varchar', nullable: true })
-  public softwareId!: string | null;
+  public softwareId!: Nullable<string>;
 
   @Column({ name: 'post_logout_redirect_uris', type: 'varchar', array: true, default: "'{}'", nullable: false })
   public postLogoutRedirectUris!: string[];
 
   @Column({ name: 'software_version', type: 'varchar', nullable: true })
-  public softwareVersion!: string | null;
+  public softwareVersion!: Nullable<string>;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', nullable: false })
   public readonly createdAt!: Date;
@@ -178,5 +172,5 @@ export class Client extends BaseEntity implements OAuth2Client {
   public updatedAt!: Date;
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
-  public deletedAt!: Date | null;
+  public deletedAt!: Nullable<Date>;
 }

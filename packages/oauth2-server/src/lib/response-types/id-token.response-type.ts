@@ -1,7 +1,6 @@
 import { Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
 
-import { AuthorizationContext } from '../context/authorization/authorization.context';
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
@@ -62,11 +61,11 @@ export class IdTokenResponseType implements ResponseTypeInterface {
     const { scopes } = consent;
 
     if (!scopes.includes('openid')) {
-      throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
+      throw new InvalidRequestException('Missing required scope "openid".');
     }
 
     const idToken = await this.idTokenHandler.generateIdToken(parameters, login, consent, null, null);
 
-    return removeNullishValues<IdTokenAuthorizationResponse>({ id_token: idToken, state: parameters.state });
+    return { id_token: idToken, state: parameters.state };
   }
 }

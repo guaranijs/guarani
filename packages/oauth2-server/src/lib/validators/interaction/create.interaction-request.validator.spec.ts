@@ -2,8 +2,8 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Buffer } from 'buffer';
 
-import { CreateContextInteractionContext } from '../../context/interaction/create-context.interaction.context';
-import { CreateDecisionInteractionContext } from '../../context/interaction/create-decision.interaction.context';
+import { CreateContextInteractionContext } from '../../context/interaction/create-context.interaction-context';
+import { CreateDecisionInteractionContext } from '../../context/interaction/create-decision.interaction-context';
 import { Grant } from '../../entities/grant.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
@@ -90,8 +90,9 @@ describe('Create Interaction Request Validator', () => {
       async (loginChallenge) => {
         request.query.login_challenge = loginChallenge;
 
-        await expect(validator.validateContext(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "login_challenge".' })
+        await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "login_challenge".'
         );
       }
     );
@@ -99,8 +100,9 @@ describe('Create Interaction Request Validator', () => {
     it('should throw when no grant is found.', async () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
-      await expect(validator.validateContext(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Login Challenge.' })
+      await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Login Challenge.'
       );
     });
 
@@ -110,7 +112,7 @@ describe('Create Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<CreateContextInteractionContext>({
-        parameters: <CreateContextInteractionRequest>request.query,
+        parameters: request.query as CreateContextInteractionRequest,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });
@@ -139,8 +141,9 @@ describe('Create Interaction Request Validator', () => {
       async (loginChallenge) => {
         request.body.login_challenge = loginChallenge;
 
-        await expect(validator.validateDecision(request)).rejects.toThrow(
-          new InvalidRequestException({ description: 'Invalid parameter "login_challenge".' })
+        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+          InvalidRequestException,
+          'Invalid parameter "login_challenge".'
         );
       }
     );
@@ -148,8 +151,9 @@ describe('Create Interaction Request Validator', () => {
     it('should throw when no grant is found.', async () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
-      await expect(validator.validateDecision(request)).rejects.toThrow(
-        new AccessDeniedException({ description: 'Invalid Login Challenge.' })
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Login Challenge.'
       );
     });
 
@@ -159,7 +163,7 @@ describe('Create Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<CreateDecisionInteractionContext>({
-        parameters: <CreateDecisionInteractionRequest>request.body,
+        parameters: request.body as CreateDecisionInteractionRequest,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });

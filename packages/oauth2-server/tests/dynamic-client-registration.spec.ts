@@ -154,7 +154,6 @@ describe('Dynamic Client Registration', () => {
     expect(response.body).toStrictEqual<GetRegistrationResponse>({
       client_id: clientId,
       client_secret: clientSecret,
-      client_id_issued_at: expect.any(Number),
       client_secret_expires_at: expect.any(Number),
       registration_access_token: expect.any(String),
       registration_client_uri: `http://localhost:3000/oauth/register?client_id=${clientId}`,
@@ -247,7 +246,6 @@ describe('Dynamic Client Registration', () => {
 
     expect(response.body).toStrictEqual<PutRegistrationResponse>({
       client_id: clientId,
-      client_id_issued_at: expect.any(Number),
       client_secret: clientSecret,
       client_secret_expires_at: expect.any(Number),
       registration_access_token: registrationAccessToken,
@@ -300,7 +298,6 @@ describe('Dynamic Client Registration', () => {
     expect(response.body).toStrictEqual<GetRegistrationResponse>({
       client_id: clientId,
       client_secret: clientSecret,
-      client_id_issued_at: expect.any(Number),
       client_secret_expires_at: expect.any(Number),
       registration_access_token: expect.any(String),
       registration_client_uri: `http://localhost:3000/oauth/register?client_id=${clientId}`,
@@ -351,6 +348,8 @@ describe('Dynamic Client Registration', () => {
   });
 
   it('GET /oauth/register (Deleted Client)', async () => {
+    const error = new InvalidTokenException('Revoked Access Token.');
+
     const response = await agent
       .get('/oauth/register')
       .query({ client_id: clientId })
@@ -358,6 +357,6 @@ describe('Dynamic Client Registration', () => {
 
     expect(response.status).toBe(401);
 
-    expect(response.body).toStrictEqual(new InvalidTokenException({ description: 'Revoked Access Token.' }).toJSON());
+    expect(response.body).toStrictEqual(removeNullishValues(error.toJSON()));
   });
 });

@@ -1,9 +1,8 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { ResourceOwnerPasswordCredentialsTokenContext } from '../../context/token/resource-owner-password-credentials.token.context';
+import { ResourceOwnerPasswordCredentialsTokenContext } from '../../context/token/resource-owner-password-credentials.token-context';
 import { Client } from '../../entities/client.entity';
 import { User } from '../../entities/user.entity';
-import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidGrantException } from '../../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
@@ -60,7 +59,7 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<ResourceOwnerPasswordCredentialsTokenContext> {
-    const parameters = <ResourceOwnerPasswordCredentialsTokenRequest>request.body;
+    const parameters = request.body as ResourceOwnerPasswordCredentialsTokenRequest;
 
     const context = await super.validate(request);
 
@@ -78,17 +77,17 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    */
   private async getUser(parameters: ResourceOwnerPasswordCredentialsTokenRequest): Promise<User> {
     if (typeof parameters.username !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "username".' });
+      throw new InvalidRequestException('Invalid parameter "username".');
     }
 
     if (typeof parameters.password !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "password".' });
+      throw new InvalidRequestException('Invalid parameter "password".');
     }
 
     const user = await this.userService.findByResourceOwnerCredentials!(parameters.username, parameters.password);
 
     if (user === null) {
-      throw new InvalidGrantException({ description: 'Invalid Credentials.' });
+      throw new InvalidGrantException('Invalid Credentials.');
     }
 
     return user;
@@ -103,22 +102,11 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * @returns Scopes granted to the Client.
    */
   protected getScopes(parameters: ResourceOwnerPasswordCredentialsTokenRequest, client: Client): string[] {
-    if (parameters.scope !== undefined && typeof parameters.scope !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "scope".' });
+    if (typeof parameters.scope !== 'undefined' && typeof parameters.scope !== 'string') {
+      throw new InvalidRequestException('Invalid parameter "scope".');
     }
 
-    this.scopeHandler.checkRequestedScope(parameters.scope);
-
-    if (parameters.scope !== undefined) {
-      parameters.scope.split(' ').forEach((requestedScope) => {
-        if (!client.scopes.includes(requestedScope)) {
-          throw new AccessDeniedException({
-            description: `The Client is not allowed to request the scope "${requestedScope}".`,
-          });
-        }
-      });
-    }
-
-    return this.scopeHandler.getAllowedScopes(client, parameters.scope);
+    this.scopeHandler.checkRequestedScope(parameters.scope ?? null);
+    return this.scopeHandler.getAllowedScopes(client, parameters.scope ?? null);
   }
 }

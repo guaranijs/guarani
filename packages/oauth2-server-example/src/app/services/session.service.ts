@@ -1,5 +1,6 @@
 import { Injectable } from '@guarani/di';
 import { SessionServiceInterface } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { Session } from '../entities/session.entity';
 
@@ -11,7 +12,7 @@ export class SessionService implements SessionServiceInterface {
     return session;
   }
 
-  public async findOne(id: string): Promise<Session | null> {
+  public async findOne(id: string): Promise<Nullable<Session>> {
     return await Session.findOneBy({ id });
   }
 

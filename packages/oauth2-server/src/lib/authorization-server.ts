@@ -27,7 +27,7 @@ export class AuthorizationServer {
   public async endpoint(name: Endpoint, request: HttpRequest): Promise<HttpResponse> {
     const endpoint = this.endpoints.find((endpoint) => endpoint.name === name);
 
-    if (endpoint === undefined) {
+    if (typeof endpoint === 'undefined') {
       throw new TypeError(`Unsupported Endpoint "${name}".`);
     }
 

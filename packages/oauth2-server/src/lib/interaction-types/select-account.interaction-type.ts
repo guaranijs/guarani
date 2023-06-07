@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { URL } from 'url';
 
-import { SelectAccountContextInteractionContext } from '../context/interaction/select-account-context.interaction.context';
-import { SelectAccountDecisionInteractionContext } from '../context/interaction/select-account-decision.interaction.context';
+import { SelectAccountContextInteractionContext } from '../context/interaction/select-account-context.interaction-context';
+import { SelectAccountDecisionInteractionContext } from '../context/interaction/select-account-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { SelectAccountContextInteractionResponse } from '../responses/interaction/select-account-context.interaction-response';
@@ -63,14 +63,14 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
 
     await this.checkGrant(grant);
 
-    return removeNullishValues<SelectAccountContextInteractionResponse>({
+    return {
       logins: session.logins.map((login) => login.id),
       context: {
         display: grant.parameters.display,
         prompts: <Prompt[]>grant.parameters.prompt?.split(' '),
         ui_locales: grant.parameters.ui_locales?.split(' '),
       },
-    });
+    };
   }
 
   /**
@@ -95,7 +95,7 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
     }
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
@@ -110,7 +110,7 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
   private async checkGrant(grant: Grant): Promise<void> {
     if (new Date() > grant.expiresAt) {
       await this.grantService.remove(grant);
-      throw new AccessDeniedException({ description: 'Expired Grant.' });
+      throw new AccessDeniedException('Expired Grant.');
     }
   }
 }

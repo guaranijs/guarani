@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -7,7 +8,6 @@ import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
-import { HttpResponse } from '../http/http.response';
 import { RevocationRequest } from '../requests/revocation-request';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -23,7 +23,7 @@ describe('Revocation Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: RevocationEndpoint;
 
-  const validatorMock = jest.mocked(RevocationRequestValidator.prototype, true);
+  const validatorMock = jest.mocked(RevocationRequestValidator.prototype);
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
     create: jest.fn(),
@@ -66,7 +66,7 @@ describe('Revocation Endpoint', () => {
 
   describe('httpMethods', () => {
     it('should have \'["POST"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['POST']);
+      expect(endpoint.httpMethods).toEqual<HttpMethod[]>(['POST']);
     });
   });
 
@@ -82,11 +82,9 @@ describe('Revocation Endpoint', () => {
   describe('handle()', () => {
     let request: HttpRequest;
 
-    const defaultResponse = new HttpResponse().setHeaders({ 'Cache-Control': 'no-store', Pragma: 'no-cache' });
-
     beforeEach(() => {
       request = new HttpRequest({
-        body: { token: 'access_token' },
+        body: <RevocationRequest>{ token: 'access_token' },
         cookies: {},
         headers: {},
         method: 'POST',
@@ -100,13 +98,18 @@ describe('Revocation Endpoint', () => {
       const token = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: <RevocationRequest>request.body,
+        parameters: request.body as RevocationRequest,
         client,
         token,
         tokenType: 'access_token',
       });
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ 'Cache-Control': 'no-store', Pragma: 'no-cache' });
+      expect(response.body).toEqual(Buffer.alloc(0));
 
       expect(accessTokenServiceMock.revoke).not.toHaveBeenCalled();
       expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
@@ -117,13 +120,18 @@ describe('Revocation Endpoint', () => {
       const token = <AccessToken>{ handle: 'access_token', client };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: <RevocationRequest>request.body,
+        parameters: request.body as RevocationRequest,
         client,
         token,
         tokenType: 'access_token',
       });
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ 'Cache-Control': 'no-store', Pragma: 'no-cache' });
+      expect(response.body).toEqual(Buffer.alloc(0));
 
       expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
       expect(refreshTokenServiceMock.revoke).not.toHaveBeenCalled();
@@ -136,13 +144,18 @@ describe('Revocation Endpoint', () => {
       const token = <RefreshToken>{ handle: 'refresh_token', client };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: <RevocationRequest>request.body,
+        parameters: request.body as RevocationRequest,
         client,
         token,
         tokenType: 'refresh_token',
       });
 
-      await expect(endpoint.handle(request)).resolves.toStrictEqual(defaultResponse);
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ 'Cache-Control': 'no-store', Pragma: 'no-cache' });
+      expect(response.body).toEqual(Buffer.alloc(0));
 
       expect(accessTokenServiceMock.revoke).not.toHaveBeenCalled();
       expect(refreshTokenServiceMock.revoke).toHaveBeenCalledTimes(1);

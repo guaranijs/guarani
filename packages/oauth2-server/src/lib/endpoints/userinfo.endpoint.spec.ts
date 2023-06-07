@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -22,19 +23,16 @@ describe('Userinfo Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: UserinfoEndpoint;
 
-  const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype, true);
+  const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype);
 
   const settings = <Settings>{ secretKey: '0123456789abcdef' };
 
-  const userServiceMock = jest.mocked<UserServiceInterface>(
-    {
-      create: jest.fn(),
-      findOne: jest.fn(),
-      findByResourceOwnerCredentials: jest.fn(),
-      getUserinfo: jest.fn(),
-    },
-    true
-  );
+  const userServiceMock = jest.mocked<UserServiceInterface>({
+    create: jest.fn(),
+    findOne: jest.fn(),
+    findByResourceOwnerCredentials: jest.fn(),
+    getUserinfo: jest.fn(),
+  });
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
@@ -65,7 +63,7 @@ describe('Userinfo Endpoint', () => {
 
   describe('httpMethods', () => {
     it('should have ["GET", "POST"] as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['GET', 'POST']);
+      expect(endpoint.httpMethods).toEqual<HttpMethod[]>(['GET', 'POST']);
     });
   });
 
@@ -107,17 +105,20 @@ describe('Userinfo Endpoint', () => {
     });
 
     it('should return an error response when the access token does not have "openid" as one of its scopes.', async () => {
-      const accessToken = <AccessToken>{ handle: 'access_token', scopes: ['foo', 'bar', 'baz', 'qux'] };
+      const accessToken = <AccessToken>{
+        handle: 'access_token',
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+        client: null,
+      };
 
-      const error = new InsufficientScopeException({
-        description: 'The provided Access Token is missing the required scope "openid".',
-      });
+      const error = new InsufficientScopeException('The provided Access Token is missing the required scope "openid".');
+      const errorParameters = removeNullishValues(error.toJSON());
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(error.statusCode);
+      expect(response.statusCode).toEqual(error.statusCode);
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         'Content-Type': 'application/json',
@@ -125,22 +126,24 @@ describe('Userinfo Endpoint', () => {
         ...endpoint['headers'],
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it('should return an error response when the access token does not have a client.', async () => {
       const accessToken = <AccessToken>{
         handle: 'access_token',
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+        client: null,
       };
 
-      const error = new InvalidTokenException({ description: 'Invalid Credentials.' });
+      const error = new InvalidTokenException('Invalid Credentials.');
+      const errorParameters = removeNullishValues(error.toJSON());
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(error.statusCode);
+      expect(response.statusCode).toEqual(error.statusCode);
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         'Content-Type': 'application/json',
@@ -148,7 +151,7 @@ describe('Userinfo Endpoint', () => {
         ...endpoint['headers'],
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it('should return an error response when the access token does not have a user.', async () => {
@@ -156,15 +159,17 @@ describe('Userinfo Endpoint', () => {
         handle: 'access_token',
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
         client: { id: 'client_id' },
+        user: null,
       };
 
-      const error = new InvalidTokenException({ description: 'Invalid Credentials.' });
+      const error = new InvalidTokenException('Invalid Credentials.');
+      const errorParameters = removeNullishValues(error.toJSON());
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(error.statusCode);
+      expect(response.statusCode).toEqual(error.statusCode);
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         'Content-Type': 'application/json',
@@ -172,7 +177,7 @@ describe('Userinfo Endpoint', () => {
         ...endpoint['headers'],
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it('should return the claims of the user based on the scopes of the access token.', async () => {
@@ -217,7 +222,7 @@ describe('Userinfo Endpoint', () => {
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toEqual(200);
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         'Content-Type': 'application/json',

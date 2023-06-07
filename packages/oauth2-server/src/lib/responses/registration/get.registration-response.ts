@@ -4,6 +4,7 @@ import {
   JsonWebKeySetParameters,
   JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
+import { Dictionary } from '@guarani/types';
 
 import { ClientAuthentication } from '../../client-authentication/client-authentication.type';
 import { GrantType } from '../../grant-types/grant-type.type';
@@ -14,7 +15,7 @@ import { SubjectType } from '../../types/subject-type.type';
 /**
  * Parameters of the OAuth 2.0 Get Registration Response.
  */
-export interface GetRegistrationResponse {
+export interface GetRegistrationResponse extends Dictionary<any> {
   /**
    * Unique Identifier of the Client.
    */
@@ -24,11 +25,6 @@ export interface GetRegistrationResponse {
    * Secret of the Client.
    */
   readonly client_secret?: string;
-
-  /**
-   * Time the Identifier of the Client was issued, represented as Unix time.
-   */
-  readonly client_id_issued_at?: number;
 
   /**
    * Time the Secret of the Client will expire, represented as Unix time.

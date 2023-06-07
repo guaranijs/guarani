@@ -1,10 +1,12 @@
+import { Dictionary } from '@guarani/types';
+
 import { Display } from '../../displays/display.type';
 import { Prompt } from '../../types/prompt.type';
 
 /**
  * Parameters of the Login Context.
  */
-export interface LoginContext extends Record<string, any> {
+export interface LoginContext extends Dictionary<any> {
   /**
    * Prompts requested by the Client.
    */

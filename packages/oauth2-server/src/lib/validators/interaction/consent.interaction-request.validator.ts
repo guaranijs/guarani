@@ -1,9 +1,9 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { ConsentContextInteractionContext } from '../../context/interaction/consent-context.interaction.context';
-import { ConsentDecisionAcceptInteractionContext } from '../../context/interaction/consent-decision-accept.interaction.context';
-import { ConsentDecisionDenyInteractionContext } from '../../context/interaction/consent-decision-deny.interaction.context';
-import { ConsentDecisionInteractionContext } from '../../context/interaction/consent-decision.interaction.context';
+import { ConsentContextInteractionContext } from '../../context/interaction/consent-context.interaction-context';
+import { ConsentDecisionAcceptInteractionContext } from '../../context/interaction/consent-decision-accept.interaction-context';
+import { ConsentDecisionDenyInteractionContext } from '../../context/interaction/consent-decision-deny.interaction-context';
+import { ConsentDecisionInteractionContext } from '../../context/interaction/consent-decision.interaction-context';
 import { Grant } from '../../entities/grant.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
@@ -29,8 +29,8 @@ import { InteractionRequestValidator } from './interaction-request.validator';
 export class ConsentInteractionRequestValidator extends InteractionRequestValidator<
   ConsentContextInteractionRequest,
   ConsentContextInteractionContext,
-  ConsentDecisionInteractionRequest<ConsentDecision>,
-  ConsentDecisionInteractionContext<ConsentDecision>
+  ConsentDecisionInteractionRequest,
+  ConsentDecisionInteractionContext
 > {
   /**
    * Name of the Interaction Type that uses this Validator.
@@ -59,7 +59,7 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<ConsentContextInteractionContext> {
-    const parameters = <ConsentContextInteractionRequest>request.query;
+    const parameters = request.query as ConsentContextInteractionRequest;
 
     const context = await super.validateContext(request);
 
@@ -74,10 +74,8 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @param request Http Request.
    * @returns Decision Interaction Context.
    */
-  public override async validateDecision(
-    request: HttpRequest
-  ): Promise<ConsentDecisionInteractionContext<ConsentDecision>> {
-    const parameters = <ConsentDecisionInteractionRequest<ConsentDecision>>request.body;
+  public override async validateDecision(request: HttpRequest): Promise<ConsentDecisionInteractionContext> {
+    const parameters = request.body as ConsentDecisionInteractionRequest;
 
     const context = await super.validateDecision(request);
 
@@ -89,13 +87,11 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
     switch (decision) {
       case 'accept': {
         const grantedScopes = this.getGrantedScopes(<ConsentDecisionAcceptInteractionRequest>parameters, grant);
-
         return <ConsentDecisionAcceptInteractionContext>{ ...context, grantedScopes };
       }
 
       case 'deny': {
         const error = this.getError(<ConsentDecisionDenyInteractionRequest>parameters);
-
         return <ConsentDecisionDenyInteractionContext>{ ...context, error };
       }
     }
@@ -108,16 +104,16 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @returns Grant based on the provided Consent Challenge.
    */
   private async getGrant(
-    parameters: ConsentContextInteractionRequest | ConsentDecisionInteractionRequest<ConsentDecision>
+    parameters: ConsentContextInteractionRequest | ConsentDecisionInteractionRequest
   ): Promise<Grant> {
     if (typeof parameters.consent_challenge !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "consent_challenge".' });
+      throw new InvalidRequestException('Invalid parameter "consent_challenge".');
     }
 
     const grant = await this.grantService.findOneByConsentChallenge(parameters.consent_challenge);
 
     if (grant === null) {
-      throw new AccessDeniedException({ description: 'Invalid Consent Challenge.' });
+      throw new AccessDeniedException('Invalid Consent Challenge.');
     }
 
     return grant;
@@ -129,13 +125,13 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @param parameters Parameters of the Interaction Request.
    * @returns Consent Decision provided by the Client.
    */
-  private getDecision(parameters: ConsentDecisionInteractionRequest<ConsentDecision>): ConsentDecision {
+  private getDecision(parameters: ConsentDecisionInteractionRequest): ConsentDecision {
     if (typeof parameters.decision !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "decision".' });
+      throw new InvalidRequestException('Invalid parameter "decision".');
     }
 
     if (parameters.decision !== 'accept' && parameters.decision !== 'deny') {
-      throw new InvalidRequestException({ description: `Unsupported decision "${parameters.decision}".` });
+      throw new InvalidRequestException(`Unsupported decision "${parameters.decision}".`);
     }
 
     return parameters.decision;
@@ -149,7 +145,7 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    */
   private getGrantedScopes(parameters: ConsentDecisionAcceptInteractionRequest, grant: Grant): string[] {
     if (typeof parameters.grant_scope !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "grant_scope".' });
+      throw new InvalidRequestException('Invalid parameter "grant_scope".');
     }
 
     this.scopeHandler.checkRequestedScope(parameters.grant_scope);
@@ -159,9 +155,7 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
 
     grantedScopes.forEach((grantedScope) => {
       if (!requestedScopes.includes(grantedScope)) {
-        throw new AccessDeniedException({
-          description: `The scope "${grantedScope}" was not requested by the Client.`,
-        });
+        throw new AccessDeniedException(`The scope "${grantedScope}" was not requested by the Client.`);
       }
     });
 
@@ -176,16 +170,17 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    */
   private getError(parameters: ConsentDecisionDenyInteractionRequest): OAuth2Exception {
     if (typeof parameters.error !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "error".' });
+      throw new InvalidRequestException('Invalid parameter "error".');
     }
 
     if (typeof parameters.error_description !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "error_description".' });
+      throw new InvalidRequestException('Invalid parameter "error_description".');
     }
 
-    const error: OAuth2Exception = Reflect.construct(OAuth2Exception, [{ description: parameters.error_description }]);
-
-    Reflect.set(error, 'code', parameters.error);
+    const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+      Reflect.construct(OAuth2Exception, [parameters.error_description]),
+      { error: parameters.error }
+    );
 
     return error;
   }

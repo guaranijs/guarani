@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
@@ -25,7 +27,7 @@ export interface AuthorizationCodeServiceInterface {
    * @param code Code of the Authorization Code.
    * @returns Authorization Code based on the provided Code.
    */
-  findOne(code: string): Promise<AuthorizationCode | null>;
+  findOne(code: string): Promise<Nullable<AuthorizationCode>>;
 
   /**
    * Revokes the provided Authorization Code.

@@ -62,16 +62,18 @@ describe('Client Authentication Handler', () => {
     it('should throw when not using a client authentication method.', async () => {
       clientAuthenticationMethodsMocks.forEach((method) => method.hasBeenRequested.mockReturnValueOnce(false));
 
-      await expect(clientAuthenticationHandler.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'No Client Authentication Method detected.' })
+      await expect(clientAuthenticationHandler.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'No Client Authentication Method detected.'
       );
     });
 
     it('should throw when using multiple client authentication methods.', async () => {
       clientAuthenticationMethodsMocks.forEach((method) => method.hasBeenRequested.mockReturnValueOnce(true));
 
-      await expect(clientAuthenticationHandler.authenticate(request)).rejects.toThrow(
-        new InvalidClientException({ description: 'Multiple Client Authentication Methods detected.' })
+      await expect(clientAuthenticationHandler.authenticate(request)).rejects.toThrowWithMessage(
+        InvalidClientException,
+        'Multiple Client Authentication Methods detected.'
       );
     });
 

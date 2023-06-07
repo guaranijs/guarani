@@ -1,10 +1,12 @@
+import { Dictionary } from '@guarani/types';
+
 import { Display } from '../../displays/display.type';
 import { Prompt } from '../../types/prompt.type';
 
 /**
  * Parameters of the Create Context.
  */
-export interface CreateContext extends Record<string, any> {
+export interface CreateContext extends Dictionary<any> {
   /**
    * Prompts requested by the Client.
    */

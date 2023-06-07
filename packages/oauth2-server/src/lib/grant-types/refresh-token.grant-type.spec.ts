@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { RefreshTokenTokenContext } from '../context/token/refresh-token.token.context';
+import { RefreshTokenTokenContext } from '../context/token/refresh-token.token-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
@@ -28,15 +28,12 @@ describe('Refresh Token Grant Type', () => {
     revoke: jest.fn(),
   });
 
-  const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>(
-    {
-      create: jest.fn(),
-      findOne: jest.fn(),
-      revoke: jest.fn(),
-      rotate: jest.fn(),
-    },
-    true
-  );
+  const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>({
+    create: jest.fn(),
+    findOne: jest.fn(),
+    revoke: jest.fn(),
+    rotate: jest.fn(),
+  });
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
@@ -94,7 +91,10 @@ describe('Refresh Token Grant Type', () => {
           grant_type: 'refresh_token',
           refresh_token: 'refresh_token',
         },
-        grantType: jest.mocked<GrantTypeInterface>({ name: 'refresh_token', handle: jest.fn() }),
+        grantType: <GrantTypeInterface>{
+          name: 'refresh_token',
+          handle: jest.fn(),
+        },
         client: <Client>{
           id: 'client_id',
           grantTypes: ['authorization_code', 'refresh_token'],
@@ -117,32 +117,36 @@ describe('Refresh Token Grant Type', () => {
     it('should throw when providing a mismathching client identifier.', async () => {
       Reflect.set(context.refreshToken.client, 'id', 'another_client_id');
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Mismatching Client Identifier.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Mismatching Client Identifier.'
       );
     });
 
     it('should throw when the refresh token not yet valid.', async () => {
       Reflect.set(context.refreshToken, 'validAfter', new Date(Date.now() + 86400000));
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Refresh Token not yet valid.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Refresh Token not yet valid.'
       );
     });
 
     it('should throw when the refresh token is expired.', async () => {
       Reflect.set(context.refreshToken, 'expiresAt', new Date(Date.now() - 86400000));
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Expired Refresh Token.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Expired Refresh Token.'
       );
     });
 
     it('should throw when the refresh token is revoked.', async () => {
-      Reflect.set(context.refreshToken, 'isRevoked', true);
+      context.refreshToken.isRevoked = true;
 
-      await expect(grantType.handle(context)).rejects.toThrow(
-        new InvalidGrantException({ description: 'Revoked Refresh Token.' })
+      await expect(grantType.handle(context)).rejects.toThrowWithMessage(
+        InvalidGrantException,
+        'Revoked Refresh Token.'
       );
     });
 

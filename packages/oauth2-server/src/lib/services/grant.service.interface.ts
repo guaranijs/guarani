@@ -1,3 +1,5 @@
+import { Nullable } from '@guarani/types';
+
 import { Client } from '../entities/client.entity';
 import { Grant } from '../entities/grant.entity';
 import { Session } from '../entities/session.entity';
@@ -25,7 +27,7 @@ export interface GrantServiceInterface {
    * @param id Identifier of the Grant.
    * @returns Grant based on the provided Identifier.
    */
-  findOne(id: string): Promise<Grant | null>;
+  findOne(id: string): Promise<Nullable<Grant>>;
 
   /**
    * Searches the application's storage for a Grant containing the provided Login Challenge.
@@ -33,7 +35,7 @@ export interface GrantServiceInterface {
    * @param loginChallenge Login Challenge of the Grant.
    * @returns Grant based on the provided Login Challenge.
    */
-  findOneByLoginChallenge(loginChallenge: string): Promise<Grant | null>;
+  findOneByLoginChallenge(loginChallenge: string): Promise<Nullable<Grant>>;
 
   /**
    * Searches the application's storage for a Grant containing the provided Consent Challenge.
@@ -41,7 +43,7 @@ export interface GrantServiceInterface {
    * @param consentChallenge Consent Challenge of the Grant.
    * @returns Grant based on the provided Consent Challenge.
    */
-  findOneByConsentChallenge(consentChallenge: string): Promise<Grant | null>;
+  findOneByConsentChallenge(consentChallenge: string): Promise<Nullable<Grant>>;
 
   /**
    * Persists the provided Grant into the application's storage.

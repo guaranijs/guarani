@@ -1,4 +1,4 @@
-import { ErrorCode } from './error-code.type';
+import { ErrorCode } from './error-code.enum';
 import { OAuth2Exception } from './oauth2.exception';
 
 /**
@@ -9,7 +9,7 @@ export class AccountSelectionRequiredException extends OAuth2Exception {
   /**
    * OAuth 2.0 Error Code.
    */
-  public override readonly code: ErrorCode = 'account_selection_required';
+  public readonly error = ErrorCode.AccountSelectionRequired;
 
   /**
    * Http Response Status Code of the OAuth 2.0 Exception.

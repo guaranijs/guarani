@@ -4,10 +4,10 @@ import { removeNullishValues } from '@guarani/primitives';
 import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
 
-import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
-import { GetRegistrationContext } from '../context/registration/get.registration.context';
-import { PostRegistrationContext } from '../context/registration/post.registration.context';
-import { PutRegistrationContext } from '../context/registration/put.registration.context';
+import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';
+import { GetRegistrationContext } from '../context/registration/get.registration-context';
+import { PostRegistrationContext } from '../context/registration/post.registration-context';
+import { PutRegistrationContext } from '../context/registration/put.registration-context';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpMethod } from '../http/http-method.type';
@@ -111,20 +111,16 @@ export class RegistrationEndpoint implements EndpointInterface {
           return await this.handlePut(request);
       }
     } catch (exc: unknown) {
-      let error: OAuth2Exception;
-
-      if (exc instanceof OAuth2Exception) {
-        error = exc;
-      } else {
-        error = new ServerErrorException({ description: 'An unexpected error occurred.' });
-        error.cause = exc;
-      }
+      const error =
+        exc instanceof OAuth2Exception
+          ? exc
+          : new ServerErrorException('An unexpected error occurred.', { cause: exc });
 
       return new HttpResponse()
         .setStatus(error.statusCode)
         .setHeaders(error.headers)
         .setHeaders(this.headers)
-        .json(error.toJSON());
+        .json(removeNullishValues(error.toJSON()));
     }
   }
 
@@ -208,11 +204,10 @@ export class RegistrationEndpoint implements EndpointInterface {
     return removeNullishValues<PostRegistrationResponse>({
       client_id: client.id,
       client_secret: client.secret ?? undefined,
-      client_id_issued_at:
-        client.secretIssuedAt != null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
+      client_id_issued_at: client.secret !== null ? Math.floor(client.createdAt.getTime() / 1000) : undefined,
       client_secret_expires_at:
-        client.secret != null
-          ? client.secretExpiresAt != null
+        client.secret !== null
+          ? client.secretExpiresAt !== null
             ? Math.floor(client.secretExpiresAt.getTime() / 1000)
             : 0
           : undefined,
@@ -271,11 +266,9 @@ export class RegistrationEndpoint implements EndpointInterface {
     return removeNullishValues<GetRegistrationResponse>({
       client_id: client.id,
       client_secret: client.secret ?? undefined,
-      client_id_issued_at:
-        client.secretIssuedAt != null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
       client_secret_expires_at:
-        client.secret != null
-          ? client.secretExpiresAt != null
+        client.secret !== null
+          ? client.secretExpiresAt !== null
             ? Math.floor(client.secretExpiresAt.getTime() / 1000)
             : 0
           : undefined,
@@ -343,14 +336,12 @@ export class RegistrationEndpoint implements EndpointInterface {
 
     registrationClientUri.searchParams.set('client_id', client.id);
 
-    return removeNullishValues<PostRegistrationResponse>({
+    return removeNullishValues<PutRegistrationResponse>({
       client_id: client.id,
       client_secret: client.secret ?? undefined,
-      client_id_issued_at:
-        client.secretIssuedAt != null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
       client_secret_expires_at:
-        client.secret != null
-          ? client.secretExpiresAt != null
+        client.secret !== null
+          ? client.secretExpiresAt !== null
             ? Math.floor(client.secretExpiresAt.getTime() / 1000)
             : 0
           : undefined,

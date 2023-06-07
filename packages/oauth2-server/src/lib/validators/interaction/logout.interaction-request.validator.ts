@@ -1,9 +1,9 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { LogoutContextInteractionContext } from '../../context/interaction/logout-context.interaction.context';
-import { LogoutDecisionAcceptInteractionContext } from '../../context/interaction/logout-decision-accept.interaction.context';
-import { LogoutDecisionDenyInteractionContext } from '../../context/interaction/logout-decision-deny.interaction.context';
-import { LogoutDecisionInteractionContext } from '../../context/interaction/logout-decision.interaction.context';
+import { LogoutContextInteractionContext } from '../../context/interaction/logout-context.interaction-context';
+import { LogoutDecisionAcceptInteractionContext } from '../../context/interaction/logout-decision-accept.interaction-context';
+import { LogoutDecisionDenyInteractionContext } from '../../context/interaction/logout-decision-deny.interaction-context';
+import { LogoutDecisionInteractionContext } from '../../context/interaction/logout-decision.interaction-context';
 import { LogoutTicket } from '../../entities/logout-ticket.entity';
 import { Session } from '../../entities/session.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
@@ -31,8 +31,8 @@ import { InteractionRequestValidator } from './interaction-request.validator';
 export class LogoutInteractionRequestValidator extends InteractionRequestValidator<
   LogoutContextInteractionRequest,
   LogoutContextInteractionContext,
-  LogoutDecisionInteractionRequest<LogoutDecision>,
-  LogoutDecisionInteractionContext<LogoutDecision>
+  LogoutDecisionInteractionRequest,
+  LogoutDecisionInteractionContext
 > {
   /**
    * Name of the Interaction Type that uses this Validator.
@@ -61,7 +61,7 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<LogoutContextInteractionContext> {
-    const parameters = <LogoutContextInteractionRequest>request.query;
+    const parameters = request.query as LogoutContextInteractionRequest;
 
     const context = await super.validateContext(request);
 
@@ -76,10 +76,8 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @param request Http Request.
    * @returns Decision Interaction Context.
    */
-  public override async validateDecision(
-    request: HttpRequest
-  ): Promise<LogoutDecisionInteractionContext<LogoutDecision>> {
-    const parameters = <LogoutDecisionInteractionRequest<LogoutDecision>>request.body;
+  public override async validateDecision(request: HttpRequest): Promise<LogoutDecisionInteractionContext> {
+    const parameters = request.body as LogoutDecisionInteractionRequest;
 
     const context = await super.validateDecision(request);
 
@@ -108,16 +106,16 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @returns Logout Ticket based on the provided Logout Challenge.
    */
   private async getLogoutTicket(
-    parameters: LogoutContextInteractionRequest | LogoutDecisionInteractionRequest<LogoutDecision>
+    parameters: LogoutContextInteractionRequest | LogoutDecisionInteractionRequest
   ): Promise<LogoutTicket> {
     if (typeof parameters.logout_challenge !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "logout_challenge".' });
+      throw new InvalidRequestException('Invalid parameter "logout_challenge".');
     }
 
     const logoutTicket = await this.logoutTicketService.findOneByLogoutChallenge(parameters.logout_challenge);
 
     if (logoutTicket === null) {
-      throw new AccessDeniedException({ description: 'Invalid Logout Challenge.' });
+      throw new AccessDeniedException('Invalid Logout Challenge.');
     }
 
     return logoutTicket;
@@ -129,13 +127,13 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @param parameters Parameters of the Interaction Request.
    * @returns Logout Decision provided by the Client.
    */
-  private getDecision(parameters: LogoutDecisionInteractionRequest<LogoutDecision>): LogoutDecision {
+  private getDecision(parameters: LogoutDecisionInteractionRequest): LogoutDecision {
     if (typeof parameters.decision !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "decision".' });
+      throw new InvalidRequestException('Invalid parameter "decision".');
     }
 
     if (parameters.decision !== 'accept' && parameters.decision !== 'deny') {
-      throw new InvalidRequestException({ description: `Unsupported decision "${parameters.decision}".` });
+      throw new InvalidRequestException(`Unsupported decision "${parameters.decision}".`);
     }
 
     return parameters.decision;
@@ -149,13 +147,13 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    */
   private async getSession(parameters: LogoutDecisionAcceptInteractionRequest): Promise<Session> {
     if (typeof parameters.session_id !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "session_id".' });
+      throw new InvalidRequestException('Invalid parameter "session_id".');
     }
 
     const session = await this.sessionService.findOne(parameters.session_id);
 
     if (session === null) {
-      throw new AccessDeniedException({ description: 'Invalid Session.' });
+      throw new AccessDeniedException('Invalid Session.');
     }
 
     return session;
@@ -169,16 +167,17 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    */
   private getError(parameters: LogoutDecisionDenyInteractionRequest): OAuth2Exception {
     if (typeof parameters.error !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "error".' });
+      throw new InvalidRequestException('Invalid parameter "error".');
     }
 
     if (typeof parameters.error_description !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "error_description".' });
+      throw new InvalidRequestException('Invalid parameter "error_description".');
     }
 
-    const error: OAuth2Exception = Reflect.construct(OAuth2Exception, [{ description: parameters.error_description }]);
-
-    Reflect.set(error, 'code', parameters.error);
+    const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+      Reflect.construct(OAuth2Exception, [parameters.error_description]),
+      { error: parameters.error }
+    );
 
     return error;
   }

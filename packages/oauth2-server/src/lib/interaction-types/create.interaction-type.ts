@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { URL, URLSearchParams } from 'url';
 
-import { CreateContextInteractionContext } from '../context/interaction/create-context.interaction.context';
-import { CreateDecisionInteractionContext } from '../context/interaction/create-decision.interaction.context';
+import { CreateContextInteractionContext } from '../context/interaction/create-context.interaction-context';
+import { CreateDecisionInteractionContext } from '../context/interaction/create-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
@@ -72,11 +72,11 @@ export class CreateInteractionType implements InteractionTypeInterface {
     await this.checkGrant(grant);
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
-    return removeNullishValues<CreateContextInteractionResponse>({
+    return {
       skip: grant.interactions.includes('create'),
       request_url: url.href,
       context: {
@@ -84,7 +84,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
         prompts: <Prompt[]>grant.parameters.prompt?.split(' '),
         ui_locales: grant.parameters.ui_locales?.split(' '),
       },
-    });
+    };
   }
 
   /**
@@ -101,7 +101,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
     if (!grant.interactions.includes('create')) {
       const user = await this.userService.create(parameters);
 
-      const login = await this.loginService.create(user, grant.session, undefined, undefined);
+      const login = await this.loginService.create(user, grant.session, null, null);
       await this.updateActiveLogin(grant.session, login);
 
       grant.interactions.push('create');
@@ -109,7 +109,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
     }
 
     const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters);
+    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
 
     url.search = searchParameters.toString();
 
@@ -124,7 +124,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
   private async checkGrant(grant: Grant): Promise<void> {
     if (new Date() > grant.expiresAt) {
       await this.grantService.remove(grant);
-      throw new AccessDeniedException({ description: 'Expired Grant.' });
+      throw new AccessDeniedException('Expired Grant.');
     }
   }
 

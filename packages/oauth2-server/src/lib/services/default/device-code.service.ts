@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { randomInt, randomUUID } from 'crypto';
 import { URL } from 'url';
@@ -9,15 +10,20 @@ import { Settings } from '../../settings/settings';
 import { SETTINGS } from '../../settings/settings.token';
 import { DeviceCodeServiceInterface } from '../device-code.service.interface';
 
+interface SampleDeviceCode extends DeviceCode {
+  waitTime: number;
+  lastPolled: Nullable<Date>;
+}
+
 @Injectable()
 export class DeviceCodeService implements DeviceCodeServiceInterface {
-  protected readonly deviceCodes: DeviceCode[] = [];
+  protected readonly deviceCodes: SampleDeviceCode[] = [];
 
   public constructor(@Inject(SETTINGS) protected readonly settings: Settings) {
     console.warn('Using default Device Code Service. This is only recommended for development.');
   }
 
-  public async create(scopes: string[], client: Client): Promise<DeviceCode> {
+  public async create(scopes: string[], client: Client): Promise<SampleDeviceCode> {
     const userCode = this.secretToken();
 
     const verificationUri = new URL('/device', this.settings.issuer);
@@ -27,16 +33,19 @@ export class DeviceCodeService implements DeviceCodeServiceInterface {
 
     const now = Date.now();
 
-    const deviceCode: DeviceCode = {
+    const deviceCode: SampleDeviceCode = {
       id: randomUUID(),
       userCode,
       verificationUri: verificationUri.href,
       verificationUriComplete: verificationUriComplete.href,
       scopes,
+      isAuthorized: null,
       waitTime: 5,
+      lastPolled: null,
       issuedAt: new Date(now),
       expiresAt: new Date(now + 1800000),
       client,
+      user: null,
     };
 
     this.deviceCodes.push(deviceCode);
@@ -44,11 +53,11 @@ export class DeviceCodeService implements DeviceCodeServiceInterface {
     return deviceCode;
   }
 
-  public async findOne(id: string): Promise<DeviceCode | null> {
+  public async findOne(id: string): Promise<Nullable<SampleDeviceCode>> {
     return this.deviceCodes.find((deviceCode) => deviceCode.id === id) ?? null;
   }
 
-  public async shouldSlowDown(deviceCode: DeviceCode): Promise<boolean> {
+  public async shouldSlowDown(deviceCode: SampleDeviceCode): Promise<boolean> {
     const { lastPolled, waitTime } = deviceCode;
 
     try {
@@ -63,7 +72,7 @@ export class DeviceCodeService implements DeviceCodeServiceInterface {
     }
   }
 
-  public async save(deviceCode: DeviceCode): Promise<void> {
+  public async save(deviceCode: SampleDeviceCode): Promise<void> {
     const index = this.deviceCodes.findIndex((savedDeviceCode) => savedDeviceCode.id === deviceCode.id);
 
     if (index > -1) {

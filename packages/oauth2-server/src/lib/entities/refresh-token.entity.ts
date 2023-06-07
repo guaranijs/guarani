@@ -4,7 +4,7 @@ import { User } from './user.entity';
 /**
  * OAuth 2.0 Refresh Token Entity.
  */
-export interface RefreshToken extends Record<string, any> {
+export interface RefreshToken {
   /**
    * Identifier of the Refresh Token.
    */

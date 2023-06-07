@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { ClientCredentialsTokenContext } from '../context/token/client-credentials.token.context';
+import { ClientCredentialsTokenContext } from '../context/token/client-credentials.token-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { TokenResponse } from '../responses/token-response';
@@ -41,7 +41,7 @@ describe('Client Credentials Grant Type', () => {
     beforeEach(() => {
       context = <ClientCredentialsTokenContext>{
         parameters: { grant_type: 'client_credentials' },
-        grantType: jest.mocked<GrantTypeInterface>({ name: 'client_credentials', handle: jest.fn() }),
+        grantType: <GrantTypeInterface>{ name: 'client_credentials', handle: jest.fn() },
         client: <Client>{ id: 'client_id' },
         scopes: ['foo', 'bar', 'baz'],
       };
@@ -63,6 +63,7 @@ describe('Client Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo bar',
+        refresh_token: undefined,
       });
     });
 
@@ -80,6 +81,7 @@ describe('Client Credentials Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo bar baz',
+        refresh_token: undefined,
       });
     });
   });

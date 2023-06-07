@@ -1,9 +1,8 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
-import { RefreshTokenTokenContext } from '../../context/token/refresh-token.token.context';
+import { RefreshTokenTokenContext } from '../../context/token/refresh-token.token-context';
 import { Client } from '../../entities/client.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
-import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidGrantException } from '../../exceptions/invalid-grant.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
@@ -54,7 +53,7 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<RefreshTokenTokenContext> {
-    const parameters = <RefreshTokenTokenRequest>request.body;
+    const parameters = request.body as RefreshTokenTokenRequest;
 
     const context = await super.validate(request);
 
@@ -72,13 +71,13 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<
    */
   private async getRefreshToken(parameters: RefreshTokenTokenRequest): Promise<RefreshToken> {
     if (typeof parameters.refresh_token !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "refresh_token".' });
+      throw new InvalidRequestException('Invalid parameter "refresh_token".');
     }
 
     const refreshToken = await this.refreshTokenService.findOne(parameters.refresh_token);
 
     if (refreshToken === null) {
-      throw new InvalidGrantException({ description: 'Invalid Refresh Token.' });
+      throw new InvalidGrantException('Invalid Refresh Token.');
     }
 
     return refreshToken;
@@ -93,29 +92,21 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<
    * @returns Scopes of the new Access Token.
    */
   private getScopes(parameters: RefreshTokenTokenRequest, refreshToken: RefreshToken, client: Client): string[] {
-    if (parameters.scope !== undefined && typeof parameters.scope !== 'string') {
-      throw new InvalidRequestException({ description: 'Invalid parameter "scope".' });
+    if (typeof parameters.scope !== 'undefined' && typeof parameters.scope !== 'string') {
+      throw new InvalidRequestException('Invalid parameter "scope".');
     }
 
-    if (parameters.scope === undefined) {
+    if (typeof parameters.scope === 'undefined') {
       return refreshToken.scopes;
     }
 
     this.scopeHandler.checkRequestedScope(parameters.scope);
 
-    const requestedScopes = parameters.scope.split(' ');
-
-    requestedScopes.forEach((requestedScope) => {
-      if (!client.scopes.includes(requestedScope)) {
-        throw new AccessDeniedException({
-          description: `The Client is not allowed to request the scope "${requestedScope}".`,
-        });
-      }
-    });
+    const requestedScopes = this.scopeHandler.getAllowedScopes(client, parameters.scope);
 
     requestedScopes.forEach((requestedScope) => {
       if (!refreshToken.scopes.includes(requestedScope)) {
-        throw new InvalidGrantException({ description: `The scope "${requestedScope}" was not previously granted.` });
+        throw new InvalidGrantException(`The scope "${requestedScope}" was not previously granted.`);
       }
     });
 

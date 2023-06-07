@@ -1,9 +1,11 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary } from '@guarani/types';
 
 import { OutgoingHttpHeaders } from 'http';
 import { URL, URLSearchParams } from 'url';
 
-import { EndSessionContext } from '../context/end-session.context';
+import { EndSessionContext } from '../context/end-session-context';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
@@ -28,9 +30,9 @@ describe('End Session Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: EndSessionEndpoint;
 
-  const validatorMock = jest.mocked(EndSessionRequestValidator.prototype, true);
+  const validatorMock = jest.mocked(EndSessionRequestValidator.prototype);
 
-  const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
+  const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype);
 
   const settings = <Settings>{
     issuer: 'https://server.example.com',
@@ -85,7 +87,7 @@ describe('End Session Endpoint', () => {
 
   describe('httpMethods', () => {
     it('should have \'["GET", "POST"]\' as its supported http methods.', () => {
-      expect(endpoint.httpMethods).toStrictEqual<HttpMethod[]>(['GET', 'POST']);
+      expect(endpoint.httpMethods).toEqual<HttpMethod[]>(['GET', 'POST']);
     });
   });
 
@@ -99,7 +101,10 @@ describe('End Session Endpoint', () => {
       container.bind<Settings>(SETTINGS).toValue(settings);
       container.bind(EndSessionEndpoint).toSelf().asSingleton();
 
-      expect(() => container.resolve(EndSessionEndpoint)).toThrow(new TypeError('Missing User Interaction options.'));
+      expect(() => container.resolve(EndSessionEndpoint)).toThrowWithMessage(
+        TypeError,
+        'Missing User Interaction options.'
+      );
     });
 
     it('should throw when not providing a post logout url.', () => {
@@ -114,7 +119,7 @@ describe('End Session Endpoint', () => {
       container.bind<Settings>(SETTINGS).toValue(settings);
       container.bind(EndSessionEndpoint).toSelf().asSingleton();
 
-      expect(() => container.resolve(EndSessionEndpoint)).toThrow(new TypeError('Missing Post Logout Url.'));
+      expect(() => container.resolve(EndSessionEndpoint)).toThrowWithMessage(TypeError, 'Missing Post Logout Url.');
     });
   });
 
@@ -158,21 +163,19 @@ describe('End Session Endpoint', () => {
         client: { id: 'another_client_id' },
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
 
-      const error = new InvalidRequestException({
-        description: 'Mismatching Client Identifier.',
-        state: 'client_state',
-      });
+      const error = new InvalidRequestException('Mismatching Client Identifier.');
 
-      const parameters = new URLSearchParams(error.toJSON());
+      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
+      const parameters = new URLSearchParams(errorParameters);
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:logout': null });
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
       });
@@ -197,17 +200,19 @@ describe('End Session Endpoint', () => {
         client: { id: 'client_id' },
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
 
-      const error = new InvalidRequestException({ description: 'Expired Logout Ticket.', state: 'client_state' });
-      const parameters = new URLSearchParams(error.toJSON());
+      const error = new InvalidRequestException('Expired Logout Ticket.');
+
+      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
+      const parameters = new URLSearchParams(errorParameters);
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:logout': null });
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
       });
@@ -232,21 +237,19 @@ describe('End Session Endpoint', () => {
         client: { id: 'client_id' },
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
 
-      const error = new InvalidRequestException({
-        description: 'One or more parameters changed since the initial request.',
-        state: 'client_state',
-      });
+      const error = new InvalidRequestException('One or more parameters changed since the initial request.');
 
-      const parameters = new URLSearchParams(error.toJSON());
+      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
+      const parameters = new URLSearchParams(errorParameters);
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:logout': null });
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
       });
@@ -277,23 +280,23 @@ describe('End Session Endpoint', () => {
         logins: [{ id: 'login_id', user: { id: 'user_id' } }],
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
 
-      const error = new InvalidRequestException({
-        description: 'The currently authenticated User is not the one expected by the ID Token Hint.',
-        state: 'client_state',
-      });
+      const error = new InvalidRequestException(
+        'The currently authenticated User is not the one expected by the ID Token Hint.'
+      );
 
-      const parameters = new URLSearchParams(error.toJSON());
+      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
+      const parameters = new URLSearchParams(errorParameters);
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:logout': null });
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
       });
@@ -327,7 +330,7 @@ describe('End Session Endpoint', () => {
         client: { id: 'client_id' },
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
       idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(true);
@@ -335,8 +338,8 @@ describe('End Session Endpoint', () => {
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:logout': logoutTicket.id });
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': logoutTicket.id });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         Location: 'https://server.example.com/auth/logout?logout_challenge=logout_challenge',
       });
@@ -370,7 +373,7 @@ describe('End Session Endpoint', () => {
         logins: [{ id: 'login_id', user: { id: 'user_id' } }],
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -378,8 +381,8 @@ describe('End Session Endpoint', () => {
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:logout': logoutTicket.id });
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': logoutTicket.id });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         Location: 'https://server.example.com/auth/logout?logout_challenge=logout_challenge',
       });
@@ -402,15 +405,15 @@ describe('End Session Endpoint', () => {
         uiLocales: ['pt-BR', 'en'],
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(null);
       idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(true);
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': null });
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:session': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         Location: 'https://client.example.com/oauth/logout_callback',
       });
@@ -442,7 +445,7 @@ describe('End Session Endpoint', () => {
         logins: [{ id: 'login_id', user: { id: 'user_id' } }],
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -450,8 +453,8 @@ describe('End Session Endpoint', () => {
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:logout': null });
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         Location: 'https://client.example.com/oauth/logout_callback',
       });
@@ -488,7 +491,7 @@ describe('End Session Endpoint', () => {
         logins: [{ id: 'login_id', user: { id: 'user_id' } }],
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -496,8 +499,8 @@ describe('End Session Endpoint', () => {
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({});
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         Location: 'https://client.example.com/oauth/logout_callback',
       });
@@ -521,15 +524,15 @@ describe('End Session Endpoint', () => {
         uiLocales: ['pt-BR', 'en'],
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(null);
       idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(true);
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:session': null });
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:session': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: 'https://server.example.com' });
     });
 
@@ -560,7 +563,7 @@ describe('End Session Endpoint', () => {
         logins: [{ id: 'login_id', user: { id: 'user_id' } }],
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -568,8 +571,8 @@ describe('End Session Endpoint', () => {
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({ 'guarani:logout': null });
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: 'https://server.example.com' });
 
       expect(logoutTicketServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -605,7 +608,7 @@ describe('End Session Endpoint', () => {
         logins: [{ id: 'login_id', user: { id: 'user_id' } }],
       };
 
-      validatorMock.getEndSessionParameters.mockReturnValueOnce(<EndSessionRequest>request.query);
+      validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -613,8 +616,8 @@ describe('End Session Endpoint', () => {
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(303);
-      expect(response.cookies).toStrictEqual<Record<string, any>>({});
+      expect(response.statusCode).toEqual(303);
+      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: 'https://server.example.com' });
 
       expect(logoutTicketServiceMock.remove).not.toHaveBeenCalled();

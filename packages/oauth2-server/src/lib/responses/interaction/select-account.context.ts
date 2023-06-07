@@ -1,10 +1,12 @@
+import { Dictionary } from '@guarani/types';
+
 import { Display } from '../../displays/display.type';
 import { Prompt } from '../../types/prompt.type';
 
 /**
  * Parameters of the Select Account Context.
  */
-export interface SelectAccountContext extends Record<string, any> {
+export interface SelectAccountContext extends Dictionary<any> {
   /**
    * Prompts requested by the Client.
    */

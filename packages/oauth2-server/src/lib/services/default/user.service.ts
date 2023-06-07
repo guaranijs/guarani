@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { randomUUID } from 'crypto';
 
@@ -6,9 +7,11 @@ import { User } from '../../entities/user.entity';
 import { UserinfoClaimsParameters } from '../../id-token/userinfo.claims.parameters';
 import { UserServiceInterface } from '../user.service.interface';
 
+type SampleUser = User & UserinfoClaimsParameters;
+
 @Injectable()
 export class UserService implements UserServiceInterface {
-  protected readonly users: (User & Partial<UserinfoClaimsParameters>)[] = [
+  protected readonly users: SampleUser[] = [
     {
       id: '16907c32-687b-493c-85ba-f41f2c9d4daa',
       username: 'johndoe',
@@ -18,6 +21,7 @@ export class UserService implements UserServiceInterface {
       middle_name: 'Michael',
       family_name: 'Doe',
       nickname: 'j.doe',
+      preferred_username: 'johndoe',
       profile: 'https://server.example.com/users/16907c32-687b-493c-85ba-f41f2c9d4daa/profile',
       picture: 'https://server.example.com/users/16907c32-687b-493c-85ba-f41f2c9d4daa/picture.jpg',
       website: 'https://server.example.com/users/16907c32-687b-493c-85ba-f41f2c9d4daa',
@@ -45,24 +49,21 @@ export class UserService implements UserServiceInterface {
     console.warn('Using default User Service. This is only recommended for development.');
   }
 
-  public async create(parameters: Record<string, any>): Promise<User> {
-    const user: User = { id: randomUUID(), ...parameters };
+  public async create(parameters: Dictionary<any>): Promise<SampleUser> {
+    const user: SampleUser = { id: randomUUID(), ...parameters };
     this.users.push(user);
     return user;
   }
 
-  public async findOne(id: string): Promise<User | null> {
+  public async findOne(id: string): Promise<Nullable<SampleUser>> {
     return this.users.find((user) => user.id === id) ?? null;
   }
 
-  public async findByResourceOwnerCredentials(username: string, password: string): Promise<User | null> {
+  public async findByResourceOwnerCredentials(username: string, password: string): Promise<Nullable<SampleUser>> {
     return this.users.find((user) => user.username === username && user.password === password) ?? null;
   }
 
-  public async getUserinfo(
-    user: User & Partial<UserinfoClaimsParameters>,
-    scopes: string[]
-  ): Promise<UserinfoClaimsParameters> {
+  public async getUserinfo(user: SampleUser, scopes: string[]): Promise<UserinfoClaimsParameters> {
     const claims: UserinfoClaimsParameters = {};
 
     if (scopes.includes('profile')) {

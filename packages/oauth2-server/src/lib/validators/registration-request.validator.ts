@@ -6,16 +6,17 @@ import {
   JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
 import { isPlainObject } from '@guarani/primitives';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 import { URL } from 'url';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
-import { DeleteRegistrationContext } from '../context/registration/delete.registration.context';
-import { GetRegistrationContext } from '../context/registration/get.registration.context';
-import { PostRegistrationContext } from '../context/registration/post.registration.context';
-import { PutRegistrationContext } from '../context/registration/put.registration.context';
+import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';
+import { GetRegistrationContext } from '../context/registration/get.registration-context';
+import { PostRegistrationContext } from '../context/registration/post.registration-context';
+import { PutRegistrationContext } from '../context/registration/put.registration-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
@@ -23,7 +24,6 @@ import { InvalidClientMetadataException } from '../exceptions/invalid-client-met
 import { InvalidRedirectUriException } from '../exceptions/invalid-redirect-uri.exception';
 import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
-import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { GrantType } from '../grant-types/grant-type.type';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
@@ -90,7 +90,7 @@ export class RegistrationRequestValidator {
   public async validatePost(request: HttpRequest): Promise<PostRegistrationContext> {
     const accessToken = await this.checkInitialAccessToken(request, this.postRequestScopes);
 
-    const parameters = <PostRegistrationRequest>request.body;
+    const parameters = request.body as PostRegistrationRequest;
 
     const redirectUris = this.getRedirectUris(parameters);
     const responseTypes = this.getResponseTypes(parameters);
@@ -192,7 +192,7 @@ export class RegistrationRequestValidator {
    * @returns Get Registration Context.
    */
   public async validateGet(request: HttpRequest): Promise<GetRegistrationContext> {
-    const parameters = <GetRegistrationRequest>request.query;
+    const parameters = request.query as GetRegistrationRequest;
 
     const clientId = this.getClientId(parameters);
     const accessToken = await this.authorize(request, clientId, this.getRequestScopes);
@@ -207,7 +207,7 @@ export class RegistrationRequestValidator {
    * @returns Delete Registration Context.
    */
   public async validateDelete(request: HttpRequest): Promise<DeleteRegistrationContext> {
-    const parameters = <DeleteRegistrationRequest>request.query;
+    const parameters = request.query as DeleteRegistrationRequest;
 
     const clientId = this.getClientId(parameters);
     const accessToken = await this.authorize(request, clientId, this.deleteRequestScopes);
@@ -222,8 +222,8 @@ export class RegistrationRequestValidator {
    * @returns Put Registration Context.
    */
   public async validatePut(request: HttpRequest): Promise<PutRegistrationContext> {
-    const queryParameters = <PutQueryRegistrationRequest>request.query;
-    const bodyParameters = <PutBodyRegistrationRequest>request.body;
+    const queryParameters = request.query as PutQueryRegistrationRequest;
+    const bodyParameters = request.body as PutBodyRegistrationRequest;
 
     const queryClientId = this.getClientId(queryParameters);
     const bodyClientId = this.getClientId(bodyParameters);
@@ -338,9 +338,9 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Client Registration Request.
    * @returns Identifier of the Client of the Request.
    */
-  private getClientId<T extends Record<string, any>>(parameters: T): string {
+  private getClientId<T extends Dictionary<unknown>>(parameters: T): string {
     if (typeof parameters.client_id !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "client_id".' });
+      throw new InvalidClientMetadataException('Invalid parameter "client_id".');
     }
 
     return parameters.client_id;
@@ -361,7 +361,7 @@ export class RegistrationRequestValidator {
       queryClientIdentifier.length !== bodyClientIdentifier.length ||
       !timingSafeEqual(queryClientIdentifier, bodyClientIdentifier)
     ) {
-      throw new InvalidClientMetadataException({ description: 'Mismatching Client Identifiers.' });
+      throw new InvalidClientMetadataException('Mismatching Client Identifiers.');
     }
 
     return queryClientId;
@@ -373,12 +373,12 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Put Client Registration Request.
    * @returns Secret of the Client of the Request.
    */
-  private getClientSecret(parameters: PutBodyRegistrationRequest): string | undefined {
+  private getClientSecret(parameters: PutBodyRegistrationRequest): Nullable<string> {
     if (typeof parameters.client_secret !== 'undefined' && typeof parameters.client_secret !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "client_secret".' });
+      throw new InvalidClientMetadataException('Invalid parameter "client_secret".');
     }
 
-    return parameters.client_secret;
+    return parameters.client_secret ?? null;
   }
 
   /**
@@ -387,8 +387,8 @@ export class RegistrationRequestValidator {
    * @param client Client of the Put Registration Request.
    * @param clientSecret Secret of the Client of the Request.
    */
-  private checkClientCredentials(client: Client, clientSecret: string | undefined): void {
-    if (client.secret == null || typeof clientSecret === 'undefined') {
+  private checkClientCredentials(client: Client, clientSecret: Nullable<string>): void {
+    if (client.secret === null || clientSecret === null) {
       return;
     }
 
@@ -396,7 +396,7 @@ export class RegistrationRequestValidator {
     const providedSecret = Buffer.from(clientSecret, 'utf8');
 
     if (secret.length !== providedSecret.length || !timingSafeEqual(secret, providedSecret)) {
-      throw new InvalidClientMetadataException({ description: 'Mismatching Client Secret.' });
+      throw new InvalidClientMetadataException('Mismatching Client Secret.');
     }
   }
 
@@ -411,30 +411,23 @@ export class RegistrationRequestValidator {
       !Array.isArray(parameters.redirect_uris) ||
       parameters.redirect_uris.some((redirectUri) => typeof redirectUri !== 'string')
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "redirect_uris".' });
+      throw new InvalidClientMetadataException('Invalid parameter "redirect_uris".');
     }
 
     return parameters.redirect_uris.map((redirectUri) => {
+      let url: URL;
+
       try {
-        const url = new URL(redirectUri);
-
-        if (url.hash.length !== 0) {
-          throw new InvalidRedirectUriException({
-            description: `The Redirect URI "${redirectUri}" MUST NOT have a fragment component.`,
-          });
-        }
-
-        return url;
+        url = new URL(redirectUri);
       } catch (exc: unknown) {
-        if (exc instanceof OAuth2Exception) {
-          throw exc;
-        }
-
-        const exception = new InvalidRedirectUriException({ description: `Invalid Redirect URI "${redirectUri}".` });
-        exception.cause = exc;
-
-        throw exception;
+        throw new InvalidRedirectUriException(`Invalid Redirect URI "${redirectUri}".`);
       }
+
+      if (url.hash.length !== 0) {
+        throw new InvalidRedirectUriException(`The Redirect URI "${redirectUri}" MUST NOT have a fragment component.`);
+      }
+
+      return url;
     });
   }
 
@@ -450,7 +443,7 @@ export class RegistrationRequestValidator {
       (!Array.isArray(parameters.response_types) ||
         parameters.response_types.some((responseType) => typeof responseType !== 'string'))
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "response_types".' });
+      throw new InvalidClientMetadataException('Invalid parameter "response_types".');
     }
 
     if (typeof parameters.response_types === 'undefined') {
@@ -459,7 +452,7 @@ export class RegistrationRequestValidator {
 
     return parameters.response_types.map((responseType) => {
       if (!this.settings.responseTypes.includes(responseType)) {
-        throw new InvalidClientMetadataException({ description: `Unsupported response_type "${responseType}".` });
+        throw new InvalidClientMetadataException(`Unsupported response_type "${responseType}".`);
       }
 
       return responseType;
@@ -478,7 +471,7 @@ export class RegistrationRequestValidator {
       (!Array.isArray(parameters.grant_types) ||
         parameters.grant_types.some((grantType) => typeof grantType !== 'string'))
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "grant_types".' });
+      throw new InvalidClientMetadataException('Invalid parameter "grant_types".');
     }
 
     if (typeof parameters.grant_types === 'undefined') {
@@ -487,7 +480,7 @@ export class RegistrationRequestValidator {
 
     return parameters.grant_types.map((grantType) => {
       if (grantType !== 'implicit' && !this.settings.grantTypes.includes(grantType)) {
-        throw new InvalidClientMetadataException({ description: `Unsupported grant_type "${grantType}".` });
+        throw new InvalidClientMetadataException(`Unsupported grant_type "${grantType}".`);
       }
 
       return grantType;
@@ -512,18 +505,18 @@ export class RegistrationRequestValidator {
 
     // "code" and "authorization_code"
     if (authorizationCodeResponseTypes.some(responseTypesIncludes) && !grantTypes.includes('authorization_code')) {
-      throw new InvalidClientMetadataException({
-        description: 'The Response Type "code" requires the Grant Type "authorization_code".',
-      });
+      throw new InvalidClientMetadataException(
+        'The Response Type "code" requires the Grant Type "authorization_code".'
+      );
     }
 
     // "id_token", "id_token token", "token" and "implicit"
     if (implicitResponseTypes.some(responseTypesIncludes) && !grantTypes.includes('implicit')) {
       const implicitResponseTypesString = implicitResponseTypes.join('", "');
 
-      throw new InvalidClientMetadataException({
-        description: `The Response Types ["${implicitResponseTypesString}"] require the Grant Type "implicit".`,
-      });
+      throw new InvalidClientMetadataException(
+        `The Response Types ["${implicitResponseTypesString}"] require the Grant Type "implicit".`
+      );
     }
 
     // "code id_token", "code id_token token", "code token" and "authorization_code", "implicit"
@@ -531,9 +524,9 @@ export class RegistrationRequestValidator {
       const hybridResponseTypesString = hybridResponseTypes.join('", "');
       const hybridGrantTypesString = hybridGrantTypes.join('", "');
 
-      throw new InvalidClientMetadataException({
-        description: `The Response Types ["${hybridResponseTypesString}"] require the Grant Types ["${hybridGrantTypesString}"].`,
-      });
+      throw new InvalidClientMetadataException(
+        `The Response Types ["${hybridResponseTypesString}"] require the Grant Types ["${hybridGrantTypesString}"].`
+      );
     }
 
     // "authorization_code" and "code", "code id_token", "code id_token token", "code token"
@@ -543,9 +536,9 @@ export class RegistrationRequestValidator {
     ) {
       const codeResponseTypesString = [...authorizationCodeResponseTypes, ...hybridResponseTypes].join('", "');
 
-      throw new InvalidClientMetadataException({
-        description: `The Grant Type "authorization_code" requires at lease one of the Response Types ["${codeResponseTypesString}"].`,
-      });
+      throw new InvalidClientMetadataException(
+        `The Grant Type "authorization_code" requires at lease one of the Response Types ["${codeResponseTypesString}"].`
+      );
     }
 
     // "implicit" and "code id_token", "code id_token token", "code token", "id_token", "id_token id_token", "token"
@@ -555,9 +548,9 @@ export class RegistrationRequestValidator {
     ) {
       const implicitResponseTypesString = [...hybridResponseTypes, ...implicitResponseTypes].join('", "');
 
-      throw new InvalidClientMetadataException({
-        description: `The Grant Type "implicit" requires at lease one of the Response Types ["${implicitResponseTypesString}"].`,
-      });
+      throw new InvalidClientMetadataException(
+        `The Grant Type "implicit" requires at lease one of the Response Types ["${implicitResponseTypesString}"].`
+      );
     }
   }
 
@@ -569,7 +562,7 @@ export class RegistrationRequestValidator {
    */
   private getApplicationType(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): ApplicationType {
     if (typeof parameters.application_type !== 'undefined' && typeof parameters.application_type !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "application_type".' });
+      throw new InvalidClientMetadataException('Invalid parameter "application_type".');
     }
 
     if (typeof parameters.application_type === 'undefined') {
@@ -577,9 +570,7 @@ export class RegistrationRequestValidator {
     }
 
     if (parameters.application_type !== 'native' && parameters.application_type !== 'web') {
-      throw new InvalidClientMetadataException({
-        description: `Unsupported application_type "${parameters.application_type}".`,
-      });
+      throw new InvalidClientMetadataException(`Unsupported application_type "${parameters.application_type}".`);
     }
 
     return parameters.application_type;
@@ -596,10 +587,9 @@ export class RegistrationRequestValidator {
       switch (applicationType) {
         case 'native': {
           if (redirectUri.protocol.includes('http') && redirectUri.hostname !== 'localhost') {
-            throw new InvalidRedirectUriException({
-              description:
-                'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
-            });
+            throw new InvalidRedirectUriException(
+              'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.'
+            );
           }
 
           break;
@@ -607,16 +597,15 @@ export class RegistrationRequestValidator {
 
         case 'web': {
           if (!redirectUri.protocol.includes('https')) {
-            throw new InvalidRedirectUriException({
-              description: `The Redirect URI "${redirectUri.href}" does not use the https protocol.`,
-            });
+            throw new InvalidRedirectUriException(
+              `The Redirect URI "${redirectUri.href}" does not use the https protocol.`
+            );
           }
 
           if (redirectUri.hostname === 'localhost' || redirectUri.hostname === '127.0.0.1') {
-            throw new InvalidRedirectUriException({
-              description:
-                'The Authorization Server disallows using localhost as a Redirect URI for a "web" application.',
-            });
+            throw new InvalidRedirectUriException(
+              'The Authorization Server disallows using localhost as a Redirect URI for a "web" application.'
+            );
           }
 
           break;
@@ -631,12 +620,12 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Client Name provided by the Client.
    */
-  private getClientName(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string | undefined {
+  private getClientName(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string> {
     if (typeof parameters.client_name !== 'undefined' && typeof parameters.client_name !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "client_name".' });
+      throw new InvalidClientMetadataException('Invalid parameter "client_name".');
     }
 
-    return parameters.client_name;
+    return parameters.client_name ?? null;
   }
 
   /**
@@ -647,17 +636,13 @@ export class RegistrationRequestValidator {
    */
   private getScopes(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string[] {
     if (typeof parameters.scope !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "scope".' });
+      throw new InvalidClientMetadataException('Invalid parameter "scope".');
     }
 
     try {
       this.scopeHandler.checkRequestedScope(parameters.scope);
     } catch (exc: unknown) {
-      if (exc instanceof InvalidScopeException) {
-        throw new InvalidClientMetadataException({ description: exc.toJSON().error_description });
-      }
-
-      throw exc;
+      throw exc instanceof InvalidScopeException ? new InvalidClientMetadataException(exc.message) : exc;
     }
 
     return parameters.scope.split(' ');
@@ -669,15 +654,15 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Contacts requested by the Client.
    */
-  private getContacts(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string[] | undefined {
+  private getContacts(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string[]> {
     if (
       typeof parameters.contacts !== 'undefined' &&
       (!Array.isArray(parameters.contacts) || parameters.contacts.some((contact) => typeof contact !== 'string'))
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "contacts".' });
+      throw new InvalidClientMetadataException('Invalid parameter "contacts".');
     }
 
-    return parameters.contacts;
+    return parameters.contacts ?? null;
   }
 
   /**
@@ -686,21 +671,19 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Logo URI provided by the Client.
    */
-  private getLogoUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
+  private getLogoUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.logo_uri !== 'undefined' && typeof parameters.logo_uri !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "logo_uri".' });
+      throw new InvalidClientMetadataException('Invalid parameter "logo_uri".');
     }
 
     if (typeof parameters.logo_uri === 'undefined') {
-      return parameters.logo_uri;
+      return null;
     }
 
     try {
       return new URL(parameters.logo_uri);
     } catch (exc: unknown) {
-      const exception = new InvalidClientMetadataException({ description: 'Invalid Logo URI.' });
-      exception.cause = exc;
-      throw exception;
+      throw new InvalidClientMetadataException('Invalid Logo URI.');
     }
   }
 
@@ -710,21 +693,19 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Client URI provided by the Client.
    */
-  private getClientUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
+  private getClientUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.client_uri !== 'undefined' && typeof parameters.client_uri !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "client_uri".' });
+      throw new InvalidClientMetadataException('Invalid parameter "client_uri".');
     }
 
     if (typeof parameters.client_uri === 'undefined') {
-      return parameters.client_uri;
+      return null;
     }
 
     try {
       return new URL(parameters.client_uri);
     } catch (exc: unknown) {
-      const exception = new InvalidClientMetadataException({ description: 'Invalid Client URI.' });
-      exception.cause = exc;
-      throw exception;
+      throw new InvalidClientMetadataException('Invalid Client URI.');
     }
   }
 
@@ -734,21 +715,19 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Policy URI provided by the Client.
    */
-  private getPolicyUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
+  private getPolicyUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.policy_uri !== 'undefined' && typeof parameters.policy_uri !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "policy_uri".' });
+      throw new InvalidClientMetadataException('Invalid parameter "policy_uri".');
     }
 
     if (typeof parameters.policy_uri === 'undefined') {
-      return parameters.policy_uri;
+      return null;
     }
 
     try {
       return new URL(parameters.policy_uri);
     } catch (exc: unknown) {
-      const exception = new InvalidClientMetadataException({ description: 'Invalid Policy URI.' });
-      exception.cause = exc;
-      throw exception;
+      throw new InvalidClientMetadataException('Invalid Policy URI.');
     }
   }
 
@@ -758,21 +737,19 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Terms of Service URI provided by the Client.
    */
-  private getTosUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
+  private getTosUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.tos_uri !== 'undefined' && typeof parameters.tos_uri !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "tos_uri".' });
+      throw new InvalidClientMetadataException('Invalid parameter "tos_uri".');
     }
 
     if (typeof parameters.tos_uri === 'undefined') {
-      return parameters.tos_uri;
+      return null;
     }
 
     try {
       return new URL(parameters.tos_uri);
     } catch (exc: unknown) {
-      const exception = new InvalidClientMetadataException({ description: 'Invalid Terms of Service URI.' });
-      exception.cause = exc;
-      throw exception;
+      throw new InvalidClientMetadataException('Invalid Terms of Service URI.');
     }
   }
 
@@ -785,9 +762,7 @@ export class RegistrationRequestValidator {
     parameters: PostRegistrationRequest | PutBodyRegistrationRequest
   ): void {
     if (typeof parameters.jwks_uri !== 'undefined' && typeof parameters.jwks !== 'undefined') {
-      throw new InvalidClientMetadataException({
-        description: 'Only one of the parameters "jwks_uri" and "jwks" must be provided.',
-      });
+      throw new InvalidClientMetadataException('Only one of the parameters "jwks_uri" and "jwks" must be provided.');
     }
   }
 
@@ -797,21 +772,19 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns JSON Web Key Set URI provided by the Client.
    */
-  private getJwksUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
+  private getJwksUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.jwks_uri !== 'undefined' && typeof parameters.jwks_uri !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "jwks_uri".' });
+      throw new InvalidClientMetadataException('Invalid parameter "jwks_uri".');
     }
 
     if (typeof parameters.jwks_uri === 'undefined') {
-      return parameters.jwks_uri;
+      return null;
     }
 
     try {
       return new URL(parameters.jwks_uri);
     } catch (exc: unknown) {
-      const exception = new InvalidClientMetadataException({ description: 'Invalid JSON Web Key Set URI.' });
-      exception.cause = exc;
-      throw exception;
+      throw new InvalidClientMetadataException('Invalid JSON Web Key Set URI.');
     }
   }
 
@@ -823,21 +796,19 @@ export class RegistrationRequestValidator {
    */
   private async getJwks(
     parameters: PostRegistrationRequest | PutBodyRegistrationRequest
-  ): Promise<JsonWebKeySet | undefined> {
+  ): Promise<Nullable<JsonWebKeySet>> {
     if (typeof parameters.jwks !== 'undefined' && !isPlainObject(parameters.jwks)) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "jwks".' });
+      throw new InvalidClientMetadataException('Invalid parameter "jwks".');
     }
 
     if (typeof parameters.jwks === 'undefined') {
-      return parameters.jwks;
+      return null;
     }
 
     try {
       return await JsonWebKeySet.load(parameters.jwks);
     } catch (exc: unknown) {
-      const exception = new InvalidClientMetadataException({ description: 'Invalid JSON Web Key Set.' });
-      exception.cause = exc;
-      throw exception;
+      throw new InvalidClientMetadataException('Invalid JSON Web Key Set.', { cause: exc });
     }
   }
 
@@ -850,9 +821,7 @@ export class RegistrationRequestValidator {
     parameters: PostRegistrationRequest | PutBodyRegistrationRequest
   ): void {
     if (parameters.subject_type === 'pairwise' && typeof parameters.sector_identifier_uri === 'undefined') {
-      throw new InvalidClientMetadataException({
-        description: 'The Subject Type "pairwise" requires a Sector Identifier URI.',
-      });
+      throw new InvalidClientMetadataException('The Subject Type "pairwise" requires a Sector Identifier URI.');
     }
   }
 
@@ -864,7 +833,7 @@ export class RegistrationRequestValidator {
    */
   private getSubjectType(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): SubjectType {
     if (typeof parameters.subject_type !== 'undefined' && typeof parameters.subject_type !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "subject_type".' });
+      throw new InvalidClientMetadataException('Invalid parameter "subject_type".');
     }
 
     if (typeof parameters.subject_type === 'undefined') {
@@ -872,9 +841,7 @@ export class RegistrationRequestValidator {
     }
 
     if (!this.settings.subjectTypes.includes(parameters.subject_type)) {
-      throw new InvalidClientMetadataException({
-        description: `Unsupported subject_type "${parameters.subject_type}".`,
-      });
+      throw new InvalidClientMetadataException(`Unsupported subject_type "${parameters.subject_type}".`);
     }
 
     return parameters.subject_type;
@@ -886,38 +853,31 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Sector Identifier URI provided by the Client.
    */
-  private getSectorIdentifierUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
+  private getSectorIdentifierUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (
       typeof parameters.sector_identifier_uri !== 'undefined' &&
       typeof parameters.sector_identifier_uri !== 'string'
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "sector_identifier_uri".' });
+      throw new InvalidClientMetadataException('Invalid parameter "sector_identifier_uri".');
     }
 
     if (typeof parameters.sector_identifier_uri === 'undefined') {
-      return parameters.sector_identifier_uri;
+      return null;
     }
+
+    let url: URL;
 
     try {
-      const url = new URL(parameters.sector_identifier_uri);
-
-      if (!url.protocol.includes('https')) {
-        throw new InvalidClientMetadataException({
-          description: 'The Sector Identifier URI does not use the https protocol.',
-        });
-      }
-
-      return url;
+      url = new URL(parameters.sector_identifier_uri);
     } catch (exc: unknown) {
-      if (exc instanceof OAuth2Exception) {
-        throw exc;
-      }
-
-      const exception = new InvalidClientMetadataException({ description: 'Invalid Sector Identifier URI.' });
-      exception.cause = exc;
-
-      throw exception;
+      throw new InvalidClientMetadataException('Invalid Sector Identifier URI.');
     }
+
+    if (!url.protocol.includes('https')) {
+      throw new InvalidClientMetadataException('The Sector Identifier URI does not use the https protocol.');
+    }
+
+    return url;
   }
 
   /**
@@ -933,7 +893,7 @@ export class RegistrationRequestValidator {
       typeof parameters.id_token_signed_response_alg !== 'undefined' &&
       typeof parameters.id_token_signed_response_alg !== 'string'
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_signed_response_alg".' });
+      throw new InvalidClientMetadataException('Invalid parameter "id_token_signed_response_alg".');
     }
 
     if (typeof parameters.id_token_signed_response_alg === 'undefined') {
@@ -941,9 +901,9 @@ export class RegistrationRequestValidator {
     }
 
     if (!this.settings.idTokenSignatureAlgorithms.includes(parameters.id_token_signed_response_alg)) {
-      throw new InvalidClientMetadataException({
-        description: `Unsupported id_token_signed_response_alg "${parameters.id_token_signed_response_alg}".`,
-      });
+      throw new InvalidClientMetadataException(
+        `Unsupported id_token_signed_response_alg "${parameters.id_token_signed_response_alg}".`
+      );
     }
 
     return parameters.id_token_signed_response_alg;
@@ -957,22 +917,22 @@ export class RegistrationRequestValidator {
    */
   private getIdTokenEncryptedResponseKeyWrap(
     parameters: PostRegistrationRequest | PutBodyRegistrationRequest
-  ): JsonWebEncryptionKeyWrapAlgorithm | undefined {
+  ): Nullable<JsonWebEncryptionKeyWrapAlgorithm> {
     if (
       typeof parameters.id_token_encrypted_response_alg !== 'undefined' &&
       typeof parameters.id_token_encrypted_response_alg !== 'string'
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_alg".' });
+      throw new InvalidClientMetadataException('Invalid parameter "id_token_encrypted_response_alg".');
     }
 
     if (typeof parameters.id_token_encrypted_response_alg === 'undefined') {
-      return parameters.id_token_encrypted_response_alg;
+      return null;
     }
 
     if (this.settings.idTokenKeyWrapAlgorithms?.includes(parameters.id_token_encrypted_response_alg) !== true) {
-      throw new InvalidClientMetadataException({
-        description: `Unsupported id_token_encrypted_response_alg "${parameters.id_token_encrypted_response_alg}".`,
-      });
+      throw new InvalidClientMetadataException(
+        `Unsupported id_token_encrypted_response_alg "${parameters.id_token_encrypted_response_alg}".`
+      );
     }
 
     return parameters.id_token_encrypted_response_alg;
@@ -986,35 +946,34 @@ export class RegistrationRequestValidator {
    */
   private getIdTokenEncryptedResponseContentEncryption(
     parameters: PostRegistrationRequest | PutBodyRegistrationRequest
-  ): JsonWebEncryptionContentEncryptionAlgorithm | undefined {
+  ): Nullable<JsonWebEncryptionContentEncryptionAlgorithm> {
     if (
       typeof parameters.id_token_encrypted_response_enc !== 'undefined' &&
       typeof parameters.id_token_encrypted_response_enc !== 'string'
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "id_token_encrypted_response_enc".' });
+      throw new InvalidClientMetadataException('Invalid parameter "id_token_encrypted_response_enc".');
     }
 
     if (
       typeof parameters.id_token_encrypted_response_enc !== 'undefined' &&
       typeof parameters.id_token_encrypted_response_alg === 'undefined'
     ) {
-      throw new InvalidClientMetadataException({
-        description:
-          'The parameter "id_token_encrypted_response_enc" must be presented together ' +
-          'with the parameter "id_token_encrypted_response_alg".',
-      });
+      throw new InvalidClientMetadataException(
+        'The parameter "id_token_encrypted_response_enc" must be presented together ' +
+          'with the parameter "id_token_encrypted_response_alg".'
+      );
     }
 
     if (
       typeof parameters.id_token_encrypted_response_enc !== 'undefined' &&
       this.settings.idTokenContentEncryptionAlgorithms?.includes(parameters.id_token_encrypted_response_enc) !== true
     ) {
-      throw new InvalidClientMetadataException({
-        description: `Unsupported id_token_encrypted_response_enc "${parameters.id_token_encrypted_response_enc}".`,
-      });
+      throw new InvalidClientMetadataException(
+        `Unsupported id_token_encrypted_response_enc "${parameters.id_token_encrypted_response_enc}".`
+      );
     }
 
-    return parameters.id_token_encrypted_response_enc;
+    return parameters.id_token_encrypted_response_enc ?? null;
   }
 
   // private getUserinfoSignedResponseAlgorithm(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
@@ -1042,7 +1001,7 @@ export class RegistrationRequestValidator {
       typeof parameters.token_endpoint_auth_method !== 'undefined' &&
       typeof parameters.token_endpoint_auth_method !== 'string'
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "token_endpoint_auth_method".' });
+      throw new InvalidClientMetadataException('Invalid parameter "token_endpoint_auth_method".');
     }
 
     if (typeof parameters.token_endpoint_auth_method === 'undefined') {
@@ -1050,9 +1009,9 @@ export class RegistrationRequestValidator {
     }
 
     if (!this.settings.clientAuthenticationMethods.includes(parameters.token_endpoint_auth_method)) {
-      throw new InvalidClientMetadataException({
-        description: `Unsupported token_endpoint_auth_method "${parameters.token_endpoint_auth_method}".`,
-      });
+      throw new InvalidClientMetadataException(
+        `Unsupported token_endpoint_auth_method "${parameters.token_endpoint_auth_method}".`
+      );
     }
 
     return parameters.token_endpoint_auth_method;
@@ -1066,24 +1025,24 @@ export class RegistrationRequestValidator {
    */
   private getAuthenticationSigningAlgorithm(
     parameters: PostRegistrationRequest | PutBodyRegistrationRequest
-  ): Exclude<JsonWebSignatureAlgorithm, 'none'> | undefined {
+  ): Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>> {
     if (
       typeof parameters.token_endpoint_auth_signing_alg !== 'undefined' &&
       typeof parameters.token_endpoint_auth_signing_alg !== 'string'
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "token_endpoint_auth_signing_alg".' });
+      throw new InvalidClientMetadataException('Invalid parameter "token_endpoint_auth_signing_alg".');
     }
 
     if (
       typeof parameters.token_endpoint_auth_signing_alg !== 'undefined' &&
       !this.settings.clientAuthenticationSignatureAlgorithms.includes(parameters.token_endpoint_auth_signing_alg)
     ) {
-      throw new InvalidClientMetadataException({
-        description: `Unsupported token_endpoint_auth_signing_alg "${parameters.token_endpoint_auth_signing_alg}".`,
-      });
+      throw new InvalidClientMetadataException(
+        `Unsupported token_endpoint_auth_signing_alg "${parameters.token_endpoint_auth_signing_alg}".`
+      );
     }
 
-    return parameters.token_endpoint_auth_signing_alg;
+    return parameters.token_endpoint_auth_signing_alg ?? null;
   }
 
   /**
@@ -1105,27 +1064,24 @@ export class RegistrationRequestValidator {
         return;
       }
 
-      throw new InvalidClientMetadataException({
-        description:
-          `The Client Authentication Method "${authenticationMethod}" ` +
-          'does not require a Client Authentication Signing Algorithm.',
-      });
+      throw new InvalidClientMetadataException(
+        `The Client Authentication Method "${authenticationMethod}" ` +
+          'does not require a Client Authentication Signing Algorithm.'
+      );
     }
 
     if (typeof authenticationSigningAlgorithm === 'undefined') {
-      throw new InvalidClientMetadataException({
-        description:
-          'Missing required parameter "token_endpoint_auth_signing_alg" ' +
-          `for Client Authentication Method "${authenticationMethod}".`,
-      });
+      throw new InvalidClientMetadataException(
+        'Missing required parameter "token_endpoint_auth_signing_alg" ' +
+          `for Client Authentication Method "${authenticationMethod}".`
+      );
     }
 
     if (typeof parameters.jwks === 'undefined' && typeof parameters.jwks_uri === 'undefined') {
-      throw new InvalidClientMetadataException({
-        description:
-          'One of the parameters "jwks_uri" or "jwks" must be provided ' +
-          `for Client Authentication Method "${authenticationMethod}".`,
-      });
+      throw new InvalidClientMetadataException(
+        'One of the parameters "jwks_uri" or "jwks" must be provided ' +
+          `for Client Authentication Method "${authenticationMethod}".`
+      );
     }
 
     let isValidAlgorithmForAuthenticationMethod: boolean;
@@ -1142,11 +1098,10 @@ export class RegistrationRequestValidator {
     }
 
     if (!isValidAlgorithmForAuthenticationMethod) {
-      throw new InvalidClientMetadataException({
-        description:
-          `Invalid JSON Web Signature Algorithm "${authenticationSigningAlgorithm}" ` +
-          `for Client Authentication Method "${authenticationMethod}".`,
-      });
+      throw new InvalidClientMetadataException(
+        `Invalid JSON Web Signature Algorithm "${authenticationSigningAlgorithm}" ` +
+          `for Client Authentication Method "${authenticationMethod}".`
+      );
     }
   }
 
@@ -1156,15 +1111,17 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Default Max Age provided by the Client.
    */
-  private getDefaultMaxAge(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): number | undefined {
-    if (typeof parameters.default_max_age !== 'undefined') {
-      if (typeof parameters.default_max_age !== 'number') {
-        throw new InvalidClientMetadataException({ description: 'Invalid parameter "default_max_age".' });
-      }
+  private getDefaultMaxAge(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<number> {
+    if (typeof parameters.default_max_age === 'undefined') {
+      return null;
+    }
 
-      if (!Number.isInteger(parameters.default_max_age) || parameters.default_max_age <= 0) {
-        throw new InvalidClientMetadataException({ description: 'The default max age must be a positive integer.' });
-      }
+    if (typeof parameters.default_max_age !== 'number') {
+      throw new InvalidClientMetadataException('Invalid parameter "default_max_age".');
+    }
+
+    if (!Number.isInteger(parameters.default_max_age) || parameters.default_max_age <= 0) {
+      throw new InvalidClientMetadataException('The default max age must be a positive integer.');
     }
 
     return parameters.default_max_age;
@@ -1178,7 +1135,7 @@ export class RegistrationRequestValidator {
    */
   private getRequireAuthTime(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): boolean {
     if (typeof parameters.require_auth_time !== 'undefined' && typeof parameters.require_auth_time !== 'boolean') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "require_auth_time".' });
+      throw new InvalidClientMetadataException('Invalid parameter "require_auth_time".');
     }
 
     return parameters.require_auth_time ?? false;
@@ -1190,18 +1147,22 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Default Authentication Context Class References requested by the Client.
    */
-  private getDefaultAcrValues(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string[] | undefined {
+  private getDefaultAcrValues(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string[]> {
     if (
       typeof parameters.default_acr_values !== 'undefined' &&
       (!Array.isArray(parameters.default_acr_values) ||
         parameters.default_acr_values.some((acrValue) => typeof acrValue !== 'string'))
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "default_acr_values".' });
+      throw new InvalidClientMetadataException('Invalid parameter "default_acr_values".');
     }
 
-    return parameters.default_acr_values?.map((acrValue) => {
+    if (typeof parameters.default_acr_values === 'undefined') {
+      return null;
+    }
+
+    return parameters.default_acr_values.map((acrValue) => {
       if (!this.settings.acrValues.includes(acrValue)) {
-        throw new InvalidClientMetadataException({ description: `Unsupported acr_value "${acrValue}".` });
+        throw new InvalidClientMetadataException(`Unsupported acr_value "${acrValue}".`);
       }
 
       return acrValue;
@@ -1214,25 +1175,23 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Initiate Login URI provided by the Client.
    */
-  private getInitiateLoginUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL | undefined {
+  private getInitiateLoginUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.initiate_login_uri !== 'undefined' && typeof parameters.initiate_login_uri !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "initiate_login_uri".' });
+      throw new InvalidClientMetadataException('Invalid parameter "initiate_login_uri".');
     }
 
     if (typeof parameters.initiate_login_uri === 'undefined') {
-      return parameters.initiate_login_uri;
+      return null;
     }
 
     try {
       return new URL(parameters.initiate_login_uri);
     } catch (exc: unknown) {
-      const exception = new InvalidClientMetadataException({ description: 'Invalid Initiate Login URI.' });
-      exception.cause = exc;
-      throw exception;
+      throw new InvalidClientMetadataException('Invalid Initiate Login URI.');
     }
   }
 
-  // private getRequestUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL[] | undefined {}
+  // private getRequestUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL[]> {}
 
   /**
    * Checks and returns the Post Logout Redirect URIs of the Client.
@@ -1245,33 +1204,25 @@ export class RegistrationRequestValidator {
       !Array.isArray(parameters.post_logout_redirect_uris) ||
       parameters.post_logout_redirect_uris.some((postLogoutRedirectUri) => typeof postLogoutRedirectUri !== 'string')
     ) {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "post_logout_redirect_uris".' });
+      throw new InvalidClientMetadataException('Invalid parameter "post_logout_redirect_uris".');
     }
 
     return parameters.post_logout_redirect_uris.map((postLogoutRedirectUri) => {
+      let url: URL;
+
       try {
-        const url = new URL(postLogoutRedirectUri);
-
-        if (url.hash.length !== 0) {
-          throw new InvalidRedirectUriException({
-            description: `The Post Logout Redirect URI "${postLogoutRedirectUri}" MUST NOT have a fragment component.`,
-          });
-        }
-
-        return url;
+        url = new URL(postLogoutRedirectUri);
       } catch (exc: unknown) {
-        if (exc instanceof OAuth2Exception) {
-          throw exc;
-        }
-
-        const exception = new InvalidRedirectUriException({
-          description: `Invalid Post Logout Redirect URI "${postLogoutRedirectUri}".`,
-        });
-
-        exception.cause = exc;
-
-        throw exception;
+        throw new InvalidClientMetadataException(`Invalid Post Logout Redirect URI "${postLogoutRedirectUri}".`);
       }
+
+      if (url.hash.length !== 0) {
+        throw new InvalidClientMetadataException(
+          `The Post Logout Redirect URI "${postLogoutRedirectUri}" MUST NOT have a fragment component.`
+        );
+      }
+
+      return url;
     });
   }
 
@@ -1289,10 +1240,9 @@ export class RegistrationRequestValidator {
       switch (applicationType) {
         case 'native': {
           if (postLogoutRedirectUri.protocol.includes('http') && postLogoutRedirectUri.hostname !== 'localhost') {
-            throw new InvalidRedirectUriException({
-              description:
-                'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
-            });
+            throw new InvalidClientMetadataException(
+              'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.'
+            );
           }
 
           break;
@@ -1300,16 +1250,15 @@ export class RegistrationRequestValidator {
 
         case 'web': {
           if (!postLogoutRedirectUri.protocol.includes('https')) {
-            throw new InvalidRedirectUriException({
-              description: `The Post Logout Redirect URI "${postLogoutRedirectUri.href}" does not use the https protocol.`,
-            });
+            throw new InvalidClientMetadataException(
+              `The Post Logout Redirect URI "${postLogoutRedirectUri.href}" does not use the https protocol.`
+            );
           }
 
           if (postLogoutRedirectUri.hostname === 'localhost' || postLogoutRedirectUri.hostname === '127.0.0.1') {
-            throw new InvalidRedirectUriException({
-              description:
-                'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.',
-            });
+            throw new InvalidClientMetadataException(
+              'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.'
+            );
           }
 
           break;
@@ -1324,12 +1273,12 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Software Identifier provided by the Client.
    */
-  private getSoftwareId(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string | undefined {
+  private getSoftwareId(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string> {
     if (typeof parameters.software_id !== 'undefined' && typeof parameters.software_id !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "software_id".' });
+      throw new InvalidClientMetadataException('Invalid parameter "software_id".');
     }
 
-    return parameters.software_id;
+    return parameters.software_id ?? null;
   }
 
   /**
@@ -1338,12 +1287,12 @@ export class RegistrationRequestValidator {
    * @param parameters Parameters of the Post Client Registration Request.
    * @returns Software Version provided by the Client.
    */
-  private getSoftwareVersion(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string | undefined {
+  private getSoftwareVersion(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string> {
     if (typeof parameters.software_version !== 'undefined' && typeof parameters.software_version !== 'string') {
-      throw new InvalidClientMetadataException({ description: 'Invalid parameter "software_version".' });
+      throw new InvalidClientMetadataException('Invalid parameter "software_version".');
     }
 
-    return parameters.software_version;
+    return parameters.software_version ?? null;
   }
 
   /**
@@ -1356,12 +1305,12 @@ export class RegistrationRequestValidator {
   private async checkInitialAccessToken(request: HttpRequest, scopes: string[]): Promise<AccessToken> {
     const accessToken = await this.clientAuthorizationHandler.authorize(request);
 
-    if (accessToken.client != null) {
-      throw new InvalidTokenException({ description: 'Invalid Credentials.' });
+    if (accessToken.client !== null) {
+      throw new InvalidTokenException('Invalid Credentials.');
     }
 
     if (accessToken.scopes.every((scope) => !scopes.includes(scope))) {
-      throw new InsufficientScopeException({ description: 'Invalid Credentials.' });
+      throw new InsufficientScopeException('Invalid Credentials.');
     }
 
     return accessToken;
@@ -1378,8 +1327,8 @@ export class RegistrationRequestValidator {
   private async authorize(request: HttpRequest, clientId: string, scopes: string[]): Promise<AccessToken> {
     const accessToken = await this.clientAuthorizationHandler.authorize(request);
 
-    if (accessToken.client == null) {
-      throw new InvalidTokenException({ description: 'Invalid Credentials.' });
+    if (accessToken.client === null) {
+      throw new InvalidTokenException('Invalid Credentials.');
     }
 
     const clientIdentifier = Buffer.from(clientId, 'utf8');
@@ -1390,11 +1339,11 @@ export class RegistrationRequestValidator {
       !timingSafeEqual(clientIdentifier, accessTokenClientIdentifier)
     ) {
       await this.accessTokenService.revoke(accessToken);
-      throw new InsufficientScopeException({ description: 'Invalid Credentials.' });
+      throw new InsufficientScopeException('Invalid Credentials.');
     }
 
     if (accessToken.scopes.every((scope) => !scopes.includes(scope))) {
-      throw new InsufficientScopeException({ description: 'Invalid Credentials.' });
+      throw new InsufficientScopeException('Invalid Credentials.');
     }
 
     return accessToken;

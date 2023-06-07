@@ -1,12 +1,11 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { AuthorizationContext } from '../context/authorization/authorization.context';
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
-import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
@@ -48,10 +47,10 @@ describe('Token Response Type', () => {
   });
 
   describe('handle()', () => {
-    let context: AuthorizationContext<AuthorizationRequest>;
+    let context: AuthorizationContext;
 
     beforeEach(() => {
-      context = <AuthorizationContext<AuthorizationRequest>>{
+      context = <AuthorizationContext>{
         parameters: {
           response_type: 'token',
           client_id: 'client_id',
@@ -74,6 +73,9 @@ describe('Token Response Type', () => {
         nonce: 'client_nonce',
         prompts: [],
         display: jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
+        maxAge: null,
+        loginHint: null,
+        idTokenHint: null,
         uiLocales: [],
         acrValues: [],
       };
@@ -101,6 +103,7 @@ describe('Token Response Type', () => {
         expires_in: 3600,
         scope: 'foo bar',
         state: 'client_state',
+        refresh_token: undefined,
       });
     });
   });

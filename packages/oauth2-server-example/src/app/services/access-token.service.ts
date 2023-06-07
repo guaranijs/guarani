@@ -1,5 +1,6 @@
 import { Injectable } from '@guarani/di';
 import { AccessTokenServiceInterface } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { randomBytes } from 'crypto';
 
@@ -9,7 +10,7 @@ import { User } from '../entities/user.entity';
 
 @Injectable()
 export class AccessTokenService implements AccessTokenServiceInterface {
-  public async create(scopes: string[], client: Client, user?: User): Promise<AccessToken> {
+  public async create(scopes: string[], client: Client, user: Nullable<User>): Promise<AccessToken> {
     const now = Date.now();
 
     const accessToken = AccessToken.create({
@@ -26,7 +27,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     return accessToken;
   }
 
-  public async findOne(handle: string): Promise<AccessToken | null> {
+  public async findOne(handle: string): Promise<Nullable<AccessToken>> {
     return await AccessToken.findOneBy({ handle });
   }
 

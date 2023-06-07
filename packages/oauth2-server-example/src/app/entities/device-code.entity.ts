@@ -1,4 +1,5 @@
 import { DeviceCode as OAuth2DeviceCode } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { BaseEntity, Check, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { URL } from 'url';
@@ -22,7 +23,7 @@ export class DeviceCode extends BaseEntity implements OAuth2DeviceCode {
   public readonly scopes!: string[];
 
   @Column({ name: 'is_authorized', type: 'boolean', nullable: true })
-  public isAuthorized!: boolean | null;
+  public isAuthorized!: Nullable<boolean>;
 
   @Column({ name: 'issued_at', type: 'timestamp', nullable: false })
   public readonly issuedAt!: Date;
@@ -31,7 +32,7 @@ export class DeviceCode extends BaseEntity implements OAuth2DeviceCode {
   public readonly expiresAt!: Date;
 
   @Column({ name: 'last_polled', type: 'timestamp', nullable: true })
-  public lastPolled!: Date | null;
+  public lastPolled!: Nullable<Date>;
 
   @ManyToOne(() => Client, { cascade: false, eager: true, nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'client_id', referencedColumnName: 'id', foreignKeyConstraintName: 'clients_id_fk' })
@@ -39,7 +40,7 @@ export class DeviceCode extends BaseEntity implements OAuth2DeviceCode {
 
   @ManyToOne(() => User, { cascade: false, eager: true, nullable: true, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id', foreignKeyConstraintName: 'users_id_fk' })
-  public user!: User | null;
+  public user!: Nullable<User>;
 
   public get verificationUriComplete(): string {
     const url = new URL(this.verificationUri);

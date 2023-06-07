@@ -1,6 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { AuthorizationContext } from '../context/authorization/authorization.context';
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
@@ -25,7 +25,7 @@ describe('ID Token Token Response Type', () => {
   let container: DependencyInjectionContainer;
   let responseType: IdTokenTokenResponseType;
 
-  const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype, true);
+  const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype);
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
     create: jest.fn(),
@@ -82,6 +82,9 @@ describe('ID Token Token Response Type', () => {
         nonce: 'client_nonce',
         prompts: [],
         display: jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
+        maxAge: null,
+        loginHint: null,
+        idTokenHint: null,
         uiLocales: [],
         acrValues: [],
       };
@@ -98,8 +101,9 @@ describe('ID Token Token Response Type', () => {
         user: { id: 'user_id' },
       };
 
-      await expect(responseType.handle(context, login, consent)).rejects.toThrow(
-        new InvalidRequestException({ description: 'Missing required scope "openid".', state: 'client_state' })
+      await expect(responseType.handle(context, login, consent)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Missing required scope "openid".'
       );
     });
 
@@ -127,6 +131,7 @@ describe('ID Token Token Response Type', () => {
         token_type: 'Bearer',
         expires_in: 3600,
         scope: 'openid foo bar',
+        refresh_token: undefined,
         id_token: 'id_token',
         state: 'client_state',
       });

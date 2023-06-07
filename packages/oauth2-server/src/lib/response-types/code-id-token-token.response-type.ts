@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
 
-import { CodeAuthorizationContext } from '../context/authorization/code.authorization.context';
+import { CodeAuthorizationContext } from '../context/authorization/code.authorization-context';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
@@ -75,7 +74,7 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
     const { client, scopes, user } = consent;
 
     if (!scopes.includes('openid')) {
-      throw new InvalidRequestException({ description: 'Missing required scope "openid".', state: parameters.state });
+      throw new InvalidRequestException('Missing required scope "openid".');
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
@@ -88,13 +87,8 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
       authorizationCode
     );
 
-    const token = createTokenResponse(accessToken);
+    const token = createTokenResponse(accessToken, null);
 
-    return removeNullishValues<CodeAuthorizationResponse & IdTokenAuthorizationResponse & TokenAuthorizationResponse>({
-      ...token,
-      code: authorizationCode.code,
-      id_token: idToken,
-      state: parameters.state,
-    });
+    return { ...token, code: authorizationCode.code, id_token: idToken, state: parameters.state };
   }
 }

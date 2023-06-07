@@ -12,6 +12,7 @@ import { In } from 'typeorm';
 import { URLSearchParams } from 'url';
 
 import { Login } from '../../entities/login.entity';
+import { Nullable } from '@guarani/types';
 
 const popupTemplateFn = (redirectUri: string): string => `
 <script type="text/javascript">
@@ -25,7 +26,7 @@ class Controller {
     const loginChallenge = <string>request.query.login_challenge;
 
     if (typeof loginChallenge !== 'string') {
-      const error = new InvalidRequestException({ description: 'Invalid parameter "login_challenge".' });
+      const error = new InvalidRequestException('Invalid parameter "login_challenge".');
       response.json(error.toJSON());
       return;
     }
@@ -87,7 +88,7 @@ class Controller {
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
 
-      const display = <Display>request.cookies.display;
+      const display = request.cookies.display as Display;
 
       return this.redirectOrClosePopup(response, redirectTo, display);
     } catch (exc: unknown) {
@@ -100,7 +101,7 @@ class Controller {
     }
   }
 
-  private redirectOrClosePopup(response: Response, url: string, display: Display | undefined): void {
+  private redirectOrClosePopup(response: Response, url: string, display: Nullable<Display>): void {
     if (display === 'popup') {
       response.clearCookie('display').send(popupTemplateFn(url));
       return;

@@ -30,11 +30,11 @@ export class ClientAuthorizationHandler {
     const methods = this.clientAuthorizationMethods.filter((method) => method.hasBeenRequested(request));
 
     if (methods.length === 0) {
-      throw new InvalidRequestException({ description: 'No Client Authorization Method detected.' });
+      throw new InvalidRequestException('No Client Authorization Method detected.');
     }
 
     if (methods.length > 1) {
-      throw new InvalidRequestException({ description: 'Multiple Client Authorization Methods detected.' });
+      throw new InvalidRequestException('Multiple Client Authorization Methods detected.');
     }
 
     const [method] = methods;

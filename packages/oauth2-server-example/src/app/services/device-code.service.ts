@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@guarani/di';
 import { DeviceCodeServiceInterface, SETTINGS, Settings } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { randomInt } from 'crypto';
 import { URL } from 'url';
@@ -28,7 +29,7 @@ export class DeviceCodeService implements DeviceCodeServiceInterface {
     return deviceCode;
   }
 
-  public async findOne(id: string): Promise<DeviceCode | null> {
+  public async findOne(id: string): Promise<Nullable<DeviceCode>> {
     return DeviceCode.findOneBy({ id });
   }
 

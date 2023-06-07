@@ -5,7 +5,7 @@ import { TokenTypeHint } from '../types/token-type-hint.type';
 /**
  * Parameters of the OAuth 2.0 Introspection Request.
  */
-export interface IntrospectionRequest extends Dictionary<unknown> {
+export interface IntrospectionRequest extends Dictionary<any> {
   /**
    * Token to be revoked.
    */

@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -83,6 +84,7 @@ describe('Token Endpoint', () => {
       delete request.body.grant_type;
 
       const error = new InvalidRequestException('Invalid parameter "grant_type".');
+      const errorParameters = removeNullishValues(error.toJSON());
 
       const response = await endpoint.handle(request);
 
@@ -94,7 +96,7 @@ describe('Token Endpoint', () => {
         ...endpoint['headers'],
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it('should return an error response when requesting an unsupported grant type.', async () => {
@@ -103,6 +105,7 @@ describe('Token Endpoint', () => {
       request.body.grant_type = 'unknown';
 
       const error = new UnsupportedGrantTypeException('Unsupported grant_type "unknown".');
+      const errorParameters = removeNullishValues(error.toJSON());
 
       const response = await endpoint.handle(request);
 
@@ -114,7 +117,7 @@ describe('Token Endpoint', () => {
         ...endpoint['headers'],
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it('should return a token response.', async () => {

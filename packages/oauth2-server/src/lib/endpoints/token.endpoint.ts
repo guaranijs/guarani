@@ -1,4 +1,5 @@
 import { Injectable, InjectAll } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -78,7 +79,7 @@ export class TokenEndpoint implements EndpointInterface {
       const context = await validator.validate(request);
       const tokenResponse = await context.grantType.handle(context);
 
-      return new HttpResponse().setHeaders(this.headers).json(tokenResponse);
+      return new HttpResponse().setHeaders(this.headers).json(removeNullishValues(tokenResponse));
     } catch (exc: unknown) {
       const error =
         exc instanceof OAuth2Exception
@@ -89,7 +90,7 @@ export class TokenEndpoint implements EndpointInterface {
         .setStatus(error.statusCode)
         .setHeaders(error.headers)
         .setHeaders(this.headers)
-        .json(error.toJSON());
+        .json(removeNullishValues(error.toJSON()));
     }
   }
 

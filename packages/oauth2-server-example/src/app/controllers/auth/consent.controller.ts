@@ -1,4 +1,5 @@
 import { ConsentContextInteractionResponse, ConsentDecisionInteractionResponse, Display } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import axios from 'axios';
 import { Request, Response } from 'express';
@@ -13,7 +14,7 @@ const popupTemplateFn = (redirectUri: string): string => `
 
 class Controller {
   public async get(request: Request, response: Response): Promise<void> {
-    const consentChallenge = <string>request.query.consent_challenge;
+    const consentChallenge = request.query.consent_challenge as string;
 
     if (typeof consentChallenge !== 'string') {
       return response.render('auth/consent', {
@@ -38,7 +39,7 @@ class Controller {
     }
 
     if (data.skip) {
-      return this.redirectOrClosePopup(response, data.request_url, display);
+      return this.redirectOrClosePopup(response, data.request_url, display ?? null);
     }
 
     return response.render('auth/consent', {
@@ -83,12 +84,12 @@ class Controller {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-    const display = <Display>request.cookies.display;
+    const display = request.cookies.display as Display;
 
     return this.redirectOrClosePopup(response, redirectTo, display);
   }
 
-  private redirectOrClosePopup(response: Response, url: string, display: Display | undefined): void {
+  private redirectOrClosePopup(response: Response, url: string, display: Nullable<Display>): void {
     if (display === 'popup') {
       response.clearCookie('display').send(popupTemplateFn(url));
       return;

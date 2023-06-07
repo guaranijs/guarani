@@ -268,10 +268,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
       this.includeAdditionalResponseParameters(authorizationResponse);
 
-      const response = context.responseMode.createHttpResponse(
-        redirectUri.href,
-        removeNullishValues(authorizationResponse)
-      );
+      const response = context.responseMode.createHttpResponse(redirectUri.href, authorizationResponse);
 
       if (grant !== null) {
         await this.grantService.remove(grant);
@@ -285,7 +282,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
       this.includeAdditionalResponseParameters(responseParameters, { state });
 
-      return context.responseMode.createHttpResponse(redirectUri.href, removeNullishValues(responseParameters));
+      return context.responseMode.createHttpResponse(redirectUri.href, responseParameters);
     }
   }
 

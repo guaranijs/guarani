@@ -14,7 +14,6 @@ export class ClientService implements ClientServiceInterface {
     {
       id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
       secret: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
-      secretIssuedAt: new Date(),
       name: 'Dev Client #1',
       redirectUris: ['http://localhost:4000/oauth/callback'],
       responseTypes: ['code', 'token'],
@@ -47,7 +46,6 @@ export class ClientService implements ClientServiceInterface {
     const client: Client = {
       id,
       secret: this.secretToken(),
-      secretIssuedAt: new Date(),
       secretExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
       name: context.clientName ?? id,
       redirectUris: context.redirectUris.map((redirectUri) => redirectUri.toString()),

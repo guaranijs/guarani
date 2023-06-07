@@ -138,7 +138,14 @@ describe('Login Interaction Type', () => {
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
-        context: {},
+        context: {
+          acr_values: undefined,
+          auth_exp: undefined,
+          display: undefined,
+          login_hint: undefined,
+          prompts: undefined,
+          ui_locales: undefined,
+        },
       });
     });
 
@@ -149,7 +156,14 @@ describe('Login Interaction Type', () => {
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
-        context: {},
+        context: {
+          acr_values: undefined,
+          auth_exp: undefined,
+          display: undefined,
+          login_hint: undefined,
+          prompts: undefined,
+          ui_locales: undefined,
+        },
       });
     });
 
@@ -163,7 +177,12 @@ describe('Login Interaction Type', () => {
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
         context: {
+          acr_values: undefined,
           auth_exp: Math.floor((context.grant.session.activeLogin!.createdAt.getTime() + 86400000) / 1000),
+          display: undefined,
+          login_hint: undefined,
+          prompts: undefined,
+          ui_locales: undefined,
         },
       });
     });
@@ -180,7 +199,12 @@ describe('Login Interaction Type', () => {
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         client: 'client_id',
         context: {
+          acr_values: undefined,
           auth_exp: Math.floor((context.grant.session.activeLogin!.createdAt.getTime() + 300000) / 1000),
+          display: undefined,
+          login_hint: undefined,
+          prompts: undefined,
+          ui_locales: undefined,
         },
       });
 

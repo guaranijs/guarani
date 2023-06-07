@@ -1,4 +1,5 @@
 import { AccessToken as OAuth2AccessToken } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { BaseEntity, Check, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
@@ -35,9 +36,9 @@ export class AccessToken extends BaseEntity implements OAuth2AccessToken {
 
   @ManyToOne(() => Client, { cascade: false, eager: true, nullable: true, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'client_id', referencedColumnName: 'id', foreignKeyConstraintName: 'clients_id_fk' })
-  public readonly client!: Client | null;
+  public readonly client!: Nullable<Client>;
 
   @ManyToOne(() => User, { cascade: false, eager: true, nullable: true, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id', foreignKeyConstraintName: 'users_id_fk' })
-  public readonly user!: User | null;
+  public readonly user!: Nullable<User>;
 }

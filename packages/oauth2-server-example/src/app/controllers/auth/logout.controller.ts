@@ -12,7 +12,7 @@ import { URL, URLSearchParams } from 'url';
 class Controller {
   public async get(request: Request, response: Response): Promise<void> {
     try {
-      const logoutChallenge = <string>request.query.logout_challenge;
+      const logoutChallenge = request.query.logout_challenge as string;
 
       if (typeof logoutChallenge !== 'string') {
         const idToken: string = request.signedCookies.id_token;

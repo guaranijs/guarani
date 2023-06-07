@@ -1,4 +1,5 @@
 import { TokenResponse } from '@guarani/oauth2-server';
+import { Dictionary } from '@guarani/types';
 
 import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
@@ -14,7 +15,7 @@ class Controller {
 
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
-      code: <string>parameters.code,
+      code: parameters.code as string,
       redirect_uri: 'http://localhost:4000/oauth/callback',
       code_verifier: 'tQZ78ORvyh21XgJFNyM4xVrpyFDutQMGWz03fVWO-1c',
     });
@@ -51,13 +52,13 @@ class Controller {
     const parameters = request.query;
 
     if (parameters.error === 'login_required') {
-      request.logout(() => undefined);
+      request.logout(() => null);
     }
 
     return response.render('oauth/error', { request, title: 'OAuth 2.0 Error', parameters });
   }
 
-  private redirectToErrorPage(response: Response, parameters: Record<string, any>): void {
+  private redirectToErrorPage(response: Response, parameters: Dictionary<any>): void {
     const url = new URL('http://localhost:4000/oauth/error');
     const searchParameters = new URLSearchParams(parameters);
 

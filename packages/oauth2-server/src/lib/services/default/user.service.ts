@@ -49,7 +49,7 @@ export class UserService implements UserServiceInterface {
     console.warn('Using default User Service. This is only recommended for development.');
   }
 
-  public async create(parameters: Dictionary<unknown>): Promise<SampleUser> {
+  public async create(parameters: Dictionary<any>): Promise<SampleUser> {
     const user: SampleUser = { id: randomUUID(), ...parameters };
     this.users.push(user);
     return user;

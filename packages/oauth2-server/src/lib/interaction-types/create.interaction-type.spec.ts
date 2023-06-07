@@ -141,7 +141,9 @@ describe('Create Interaction Type', () => {
         skip: true,
         request_url: `https://server.example.com/oauth/authorize?${parameters.toString()}`,
         context: {
+          display: undefined,
           prompts: ['create'],
+          ui_locales: undefined,
         },
       });
     });
@@ -153,7 +155,9 @@ describe('Create Interaction Type', () => {
         skip: false,
         request_url: `https://server.example.com/oauth/authorize?${parameters.toString()}`,
         context: {
+          display: undefined,
           prompts: ['create'],
+          ui_locales: undefined,
         },
       });
     });

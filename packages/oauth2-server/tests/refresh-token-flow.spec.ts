@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
 import { URLSearchParams } from 'url';
@@ -35,7 +37,7 @@ describe('Refresh Token Flow', () => {
       password: 'secretpassword',
     };
 
-    const accessTokenRequestBody = new URLSearchParams(accessTokenRequestData);
+    const accessTokenRequestBody = new URLSearchParams(accessTokenRequestData as Dictionary<any>);
 
     const accessTokenResponse = await request(app)
       .post('/oauth/token')
@@ -61,7 +63,7 @@ describe('Refresh Token Flow', () => {
       refresh_token: refreshToken,
     };
 
-    const refreshTokenRequestBody = new URLSearchParams(refreshTokenRequestData);
+    const refreshTokenRequestBody = new URLSearchParams(refreshTokenRequestData as Dictionary<any>);
 
     const refreshTokenResponse = await request(app)
       .post('/oauth/token')

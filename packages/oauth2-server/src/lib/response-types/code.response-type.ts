@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
 
 import { CodeAuthorizationContext } from '../context/authorization/code.authorization-context';
 import { Consent } from '../entities/consent.entity';
@@ -72,6 +71,6 @@ export class CodeResponseType implements ResponseTypeInterface {
   ): Promise<CodeAuthorizationResponse> {
     const { parameters } = context;
     const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);
-    return removeNullishValues<CodeAuthorizationResponse>({ code: authorizationCode.code, state: parameters.state });
+    return { code: authorizationCode.code, state: parameters.state };
   }
 }

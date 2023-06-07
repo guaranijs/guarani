@@ -20,7 +20,7 @@ class Controller {
   }
 
   public async editProfile(request: Request, response: Response): Promise<void> {
-    const user = <User>request.user!;
+    const user = request.user as User;
 
     try {
       const updateUserDto = plainToInstance(UpdateUserDto, request.body);

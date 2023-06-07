@@ -30,7 +30,12 @@ describe('Touch Display', () => {
 
   describe('createHttpResponse()', () => {
     it('should create a redirect http response with a populated uri query.', () => {
-      const response = display.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' });
+      const response = display.createHttpResponse('https://example.com', {
+        foo: 'foo',
+        bar: 'bar',
+        baz: 'baz',
+        empty: null,
+      });
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});

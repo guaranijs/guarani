@@ -122,6 +122,7 @@ describe('Code Token Response Type', () => {
         token_type: 'Bearer',
         expires_in: 3600,
         scope: 'foo bar',
+        refresh_token: undefined,
         code: 'authorization_code',
         state: 'client_state',
       });

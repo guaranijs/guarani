@@ -1,4 +1,5 @@
 import { Injectable, InjectAll } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -86,7 +87,7 @@ export class InteractionEndpoint implements EndpointInterface {
         .setStatus(error.statusCode)
         .setHeaders(error.headers)
         .setHeaders(this.headers)
-        .json(error.toJSON());
+        .json(removeNullishValues(error.toJSON()));
     }
   }
 
@@ -104,7 +105,7 @@ export class InteractionEndpoint implements EndpointInterface {
     const context = await validator.validateContext(request);
     const interactionResponse = await context.interactionType.handleContext(context);
 
-    return new HttpResponse().setHeaders(this.headers).json(interactionResponse);
+    return new HttpResponse().setHeaders(this.headers).json(removeNullishValues(interactionResponse));
   }
 
   /**
@@ -121,7 +122,7 @@ export class InteractionEndpoint implements EndpointInterface {
     const context = await validator.validateDecision(request);
     const interactionResponse = await context.interactionType.handleDecision(context);
 
-    return new HttpResponse().setHeaders(this.headers).json(interactionResponse);
+    return new HttpResponse().setHeaders(this.headers).json(removeNullishValues(interactionResponse));
   }
 
   /**

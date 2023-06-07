@@ -152,6 +152,7 @@ describe('Device Code Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 3600,
         scope: 'foo bar baz',
+        refresh_token: undefined,
       });
     });
 
@@ -176,6 +177,7 @@ describe('Device Code Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 3600,
         scope: 'foo bar baz',
+        refresh_token: undefined,
       });
     });
 

@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { URL, URLSearchParams } from 'url';
@@ -85,7 +84,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return removeNullishValues<LogoutContextInteractionResponse>({
+    return {
       skip: logoutTicket.session.activeLogin === null,
       request_url: url.href,
       client: logoutTicket.client.id,
@@ -93,7 +92,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
         logout_hint: logoutTicket.parameters.logout_hint,
         ui_locales: logoutTicket.parameters.ui_locales?.split(' '),
       },
-    });
+    };
   }
 
   /**

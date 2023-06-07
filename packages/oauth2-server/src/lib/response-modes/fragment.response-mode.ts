@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { URL, URLSearchParams } from 'url';
@@ -28,7 +29,7 @@ export class FragmentResponseMode implements ResponseModeInterface {
    */
   public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
     const url = new URL(redirectUri);
-    const fragmentParameters = new URLSearchParams(parameters);
+    const fragmentParameters = new URLSearchParams(removeNullishValues(parameters));
 
     url.hash = fragmentParameters.toString();
 

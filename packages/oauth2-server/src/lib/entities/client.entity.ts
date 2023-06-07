@@ -27,13 +27,6 @@ export interface Client {
   secret: Nullable<string>;
 
   /**
-   * Creation Date of the Client Secret.
-   *
-   * A **nullish** value indicates that no Client Secret was issued.
-   */
-  secretIssuedAt: Nullable<Date>;
-
-  /**
    * Expiration Date of the Client Secret.
    *
    * A **nullish** value indicates that the Client Secret will not expire.

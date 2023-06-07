@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { Consent } from '../entities/consent.entity';
@@ -79,10 +78,8 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
     const token: TokenAuthorizationResponse = createTokenResponse(accessToken, null);
 
     token.id_token = idToken;
+    token.state = parameters.state;
 
-    return removeNullishValues(<TokenAuthorizationResponse & IdTokenAuthorizationResponse>{
-      ...token,
-      state: parameters.state,
-    });
+    return token as TokenAuthorizationResponse & IdTokenAuthorizationResponse;
   }
 }

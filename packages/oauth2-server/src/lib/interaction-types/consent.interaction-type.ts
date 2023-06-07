@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { URL, URLSearchParams } from 'url';
@@ -84,7 +83,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return removeNullishValues<ConsentContextInteractionResponse>({
+    return {
       skip: grant.consent !== null,
       requested_scope: grant.parameters.scope,
       subject: calculateSubjectIdentifier(grant.session.activeLogin!.user, grant.client, this.settings),
@@ -96,7 +95,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
         display: grant.parameters.display,
         ui_locales: grant.parameters.ui_locales?.split(' '),
       },
-    });
+    };
   }
 
   /**

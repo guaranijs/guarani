@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { URL, URLSearchParams } from 'url';
@@ -77,7 +76,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
 
     url.search = searchParameters.toString();
 
-    return removeNullishValues<CreateContextInteractionResponse>({
+    return {
       skip: grant.interactions.includes('create'),
       request_url: url.href,
       context: {
@@ -85,7 +84,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
         prompts: <Prompt[]>grant.parameters.prompt?.split(' '),
         ui_locales: grant.parameters.ui_locales?.split(' '),
       },
-    });
+    };
   }
 
   /**

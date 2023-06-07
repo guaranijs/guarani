@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { URL } from 'url';
@@ -50,7 +51,7 @@ export class PopupDisplay implements DisplayInterface {
    */
   public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
     const url = new URL(redirectUri);
-    Object.entries(parameters).forEach(([name, value]) => url.searchParams.set(name, value));
+    Object.entries(removeNullishValues(parameters)).forEach(([name, value]) => url.searchParams.set(name, value));
 
     const html = templateFn(url.href).trim();
     return new HttpResponse().html(html);

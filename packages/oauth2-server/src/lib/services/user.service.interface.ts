@@ -15,7 +15,7 @@ export interface UserServiceInterface {
    * @param parameters Parameters of the User Registration.
    * @returns Generated User.
    */
-  create(parameters: Dictionary<unknown>): Promise<User>;
+  create(parameters: Dictionary<any>): Promise<User>;
 
   /**
    * Searches the application's storage for an End User containing the provided Identifier.

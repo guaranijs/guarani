@@ -3,7 +3,7 @@ import { Dictionary } from '@guarani/types';
 /**
  * Parameters of the OAuth 2.0 Get Client Registration Request.
  */
-export interface GetRegistrationRequest extends Dictionary<unknown> {
+export interface GetRegistrationRequest extends Dictionary<any> {
   /**
    * Identifier of the Client.
    */

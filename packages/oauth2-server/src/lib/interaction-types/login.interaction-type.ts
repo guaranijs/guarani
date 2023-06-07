@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { URL, URLSearchParams } from 'url';
@@ -105,7 +104,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
       }
     }
 
-    return removeNullishValues<LoginContextInteractionResponse>({
+    return {
       skip,
       request_url: url.href,
       client: grant.client.id,
@@ -117,7 +116,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
         ui_locales: grant.parameters.ui_locales?.split(' '),
         acr_values: grant.parameters.acr_values?.split(' '),
       },
-    });
+    };
   }
 
   /**

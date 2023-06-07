@@ -68,6 +68,7 @@ describe('JWT Bearer Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo bar',
+        refresh_token: undefined,
       });
 
       expect(accessTokenServiceMock.create).toHaveBeenCalledTimes(1);
@@ -87,6 +88,7 @@ describe('JWT Bearer Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 300,
         scope: 'foo bar baz',
+        refresh_token: undefined,
       });
 
       expect(accessTokenServiceMock.create).toHaveBeenCalledTimes(1);

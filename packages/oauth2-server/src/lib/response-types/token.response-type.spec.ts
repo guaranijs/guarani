@@ -103,6 +103,7 @@ describe('Token Response Type', () => {
         expires_in: 3600,
         scope: 'foo bar',
         state: 'client_state',
+        refresh_token: undefined,
       });
     });
   });

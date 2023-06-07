@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -87,7 +88,7 @@ export class UserinfoEndpoint implements EndpointInterface {
       const { client, scopes, user } = await this.authorize(request);
       const claims = await this.getUserinfo(client!, user!, scopes);
 
-      return new HttpResponse().setHeaders(this.headers).json(claims);
+      return new HttpResponse().setHeaders(this.headers).json(removeNullishValues(claims));
     } catch (exc: unknown) {
       const error =
         exc instanceof OAuth2Exception
@@ -98,7 +99,7 @@ export class UserinfoEndpoint implements EndpointInterface {
         .setStatus(error.statusCode)
         .setHeaders(error.headers)
         .setHeaders(this.headers)
-        .json(error.toJSON());
+        .json(removeNullishValues(error.toJSON()));
     }
   }
 

@@ -5,7 +5,7 @@ import { AddressClaimParameters } from './address.claim.parameters';
 /**
  * OpenID Connect Userinfo Claims.
  */
-export interface UserinfoClaimsParameters extends Dictionary<unknown> {
+export interface UserinfoClaimsParameters extends Dictionary<any> {
   /**
    * Formatted name of the User.
    */

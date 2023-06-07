@@ -52,11 +52,10 @@ describe('OAuth 2.0 Exception', () => {
       expect(exception.message).toBeEmpty();
       expect(exception.statusCode).toEqual(400);
       expect(exception.headers).toStrictEqual<OutgoingHttpHeaders>({});
-
       expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
         error: 'lorem_ipsum',
-        error_description: null,
-        error_uri: null,
+        error_description: undefined,
+        error_uri: undefined,
       });
     });
 
@@ -69,11 +68,10 @@ describe('OAuth 2.0 Exception', () => {
       expect(exception.message).toBeEmpty();
       expect(exception.statusCode).toEqual(400);
       expect(exception.headers).toStrictEqual<OutgoingHttpHeaders>({});
-
       expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
         error: 'lorem_ipsum',
-        error_description: null,
-        error_uri: null,
+        error_description: undefined,
+        error_uri: undefined,
       });
     });
 
@@ -86,11 +84,10 @@ describe('OAuth 2.0 Exception', () => {
       expect(exception.message).toEqual('Lorem ipsum dolor sit amet...');
       expect(exception.statusCode).toEqual(400);
       expect(exception.headers).toStrictEqual<OutgoingHttpHeaders>({});
-
       expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
         error: 'lorem_ipsum',
         error_description: 'Lorem ipsum dolor sit amet...',
-        error_uri: null,
+        error_uri: undefined,
       });
     });
   });
@@ -184,7 +181,7 @@ describe('OAuth 2.0 Exception', () => {
       expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
         error: 'lorem_ipsum',
         error_description: 'Lorem ipsum dolor sit amet...',
-        error_uri: null,
+        error_uri: undefined,
       });
 
       exception.setDescription('Changed lorem ipsum.');
@@ -193,7 +190,7 @@ describe('OAuth 2.0 Exception', () => {
       expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
         error: 'lorem_ipsum',
         error_description: 'Changed lorem ipsum.',
-        error_uri: null,
+        error_uri: undefined,
       });
     });
   });
@@ -216,7 +213,7 @@ describe('OAuth 2.0 Exception', () => {
     expect(exception.toJSON()).toStrictEqual<OAuth2ExceptionResponse>({
       error: 'lorem_ipsum',
       error_description: 'Lorem ipsum dolor sit amet...',
-      error_uri: null,
+      error_uri: undefined,
     });
 
     exception.setUri('https://server.example.com/docs/oidc/lorem_ipsum');

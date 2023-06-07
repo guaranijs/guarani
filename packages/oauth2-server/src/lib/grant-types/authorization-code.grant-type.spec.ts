@@ -233,6 +233,7 @@ describe('Authorization Code Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'foo bar baz',
+        refresh_token: undefined,
       });
     });
 
@@ -255,6 +256,7 @@ describe('Authorization Code Grant Type', () => {
         token_type: 'Bearer',
         expires_in: 86400,
         scope: 'foo bar baz',
+        refresh_token: undefined,
       });
     });
 

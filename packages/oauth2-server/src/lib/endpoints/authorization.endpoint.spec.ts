@@ -263,6 +263,7 @@ describe('Authorization Endpoint', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
 
       const error = new InvalidRequestException('Expired Grant.');
+
       const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
       const parameters = new URLSearchParams(errorParameters);
 
@@ -456,6 +457,7 @@ describe('Authorization Endpoint', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
       const error = new LoginRequiredException();
+
       const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
       const parameters = new URLSearchParams(errorParameters);
 
@@ -591,6 +593,7 @@ describe('Authorization Endpoint', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
       const error = new LoginRequiredException();
+
       const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
       const parameters = new URLSearchParams(errorParameters);
 
@@ -740,6 +743,7 @@ describe('Authorization Endpoint', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
 
       const error = new LoginRequiredException();
+
       const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
       const parameters = new URLSearchParams(errorParameters);
 
@@ -788,6 +792,7 @@ describe('Authorization Endpoint', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
       const error = new LoginRequiredException();
+
       const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
       const parameters = new URLSearchParams(errorParameters);
 
@@ -964,6 +969,7 @@ describe('Authorization Endpoint', () => {
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
 
       const error = new LoginRequiredException();
+
       const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
       const parameters = new URLSearchParams(errorParameters);
 
@@ -1015,6 +1021,7 @@ describe('Authorization Endpoint', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
       const error = new LoginRequiredException();
+
       const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
       const parameters = new URLSearchParams(errorParameters);
 
@@ -1430,6 +1437,7 @@ describe('Authorization Endpoint', () => {
       consentServiceMock.findOne.mockResolvedValueOnce(null);
 
       const error = new ConsentRequiredException();
+
       const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
       const parameters = new URLSearchParams(errorParameters);
 
@@ -1598,6 +1606,7 @@ describe('Authorization Endpoint', () => {
       consentServiceMock.findOne.mockResolvedValueOnce(consent);
 
       const error = new ConsentRequiredException();
+
       const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
       const parameters = new URLSearchParams(errorParameters);
 

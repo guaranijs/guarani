@@ -1,5 +1,3 @@
-import { Nullable } from '@guarani/types';
-
 /**
  * Interface of the Body of the OAuth 2.0 Error Response.
  */
@@ -12,10 +10,10 @@ export interface OAuth2ExceptionResponse {
   /**
    * Description of the OAuth 2.0 Exception.
    */
-  error_description: Nullable<string>;
+  error_description?: string;
 
   /**
    * URI of the page containing the details of the OAuth 2.0 Exception.
    */
-  error_uri: Nullable<string>;
+  error_uri?: string;
 }

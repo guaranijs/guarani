@@ -161,7 +161,11 @@ describe('Consent Interaction Type', () => {
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         login_challenge: 'login_challenge',
         client: 'client_id',
-        context: {},
+        context: {
+          display: undefined,
+          prompts: undefined,
+          ui_locales: undefined,
+        },
       });
     });
 
@@ -175,7 +179,11 @@ describe('Consent Interaction Type', () => {
         request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
         login_challenge: 'login_challenge',
         client: 'client_id',
-        context: {},
+        context: {
+          display: undefined,
+          prompts: undefined,
+          ui_locales: undefined,
+        },
       });
     });
   });

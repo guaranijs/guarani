@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { OutgoingHttpHeaders } from 'http';
@@ -83,6 +84,7 @@ describe('Interaction Endpoint', () => {
       Reflect.set(request, 'method', 'PUT');
 
       const error = new ServerErrorException('An unexpected error occurred.');
+      const errorParameters = removeNullishValues(error.toJSON());
 
       const response = await endpoint.handle(request);
 
@@ -97,7 +99,7 @@ describe('Interaction Endpoint', () => {
         ...error.headers,
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it.each(['GET', 'POST'])(
@@ -106,6 +108,7 @@ describe('Interaction Endpoint', () => {
         Reflect.set(request, 'method', method);
 
         const error = new InvalidRequestException('Invalid parameter "interaction_type".');
+        const errorParameters = removeNullishValues(error.toJSON());
 
         const response = await endpoint.handle(request);
 
@@ -120,7 +123,7 @@ describe('Interaction Endpoint', () => {
           ...error.headers,
         });
 
-        expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
+        expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
       }
     );
 
@@ -132,6 +135,7 @@ describe('Interaction Endpoint', () => {
       Reflect.set(request, data, { interaction_type: 'unknown' });
 
       const error = new UnsupportedInteractionTypeException('Unsupported interaction_type "unknown".');
+      const errorParameters = removeNullishValues(error.toJSON());
 
       const response = await endpoint.handle(request);
 
@@ -146,7 +150,7 @@ describe('Interaction Endpoint', () => {
         ...error.headers,
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it('should return an interaction context response.', async () => {

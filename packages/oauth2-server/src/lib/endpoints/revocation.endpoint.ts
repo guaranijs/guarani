@@ -1,4 +1,5 @@
 import { Inject, Injectable, Optional } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
@@ -102,7 +103,7 @@ export class RevocationEndpoint implements EndpointInterface {
         .setStatus(error.statusCode)
         .setHeaders(error.headers)
         .setHeaders(this.headers)
-        .json(error.toJSON());
+        .json(removeNullishValues(error.toJSON()));
     }
   }
 

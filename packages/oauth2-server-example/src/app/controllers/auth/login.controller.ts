@@ -5,6 +5,7 @@ import {
   LoginDecisionAcceptInteractionRequest,
   LoginDecisionInteractionResponse,
 } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import axios, { AxiosError } from 'axios';
 import { randomUUID } from 'crypto';
@@ -23,7 +24,7 @@ const popupTemplateFn = (redirectUri: string): string => `
 class Controller {
   public async get(request: Request, response: Response): Promise<void> {
     try {
-      const loginChallenge = <string>request.query.login_challenge;
+      const loginChallenge = request.query.login_challenge as string;
 
       // TODO: Add check to select an account or login when previous login exist.
       if (typeof loginChallenge !== 'string') {
@@ -60,15 +61,15 @@ class Controller {
       }
 
       if (data.skip) {
-        return this.redirectOrClosePopup(response, data.request_url, display);
+        return this.redirectOrClosePopup(response, data.request_url, display ?? null);
       }
 
       if (
         request.isAuthenticated() &&
         prompts?.includes('login') !== true && // no prompt login
-        (authExp === undefined || new Date() <= new Date(authExp * 1000)) // no max_age or not expired yet.
+        (typeof authExp === 'undefined' || new Date() <= new Date(authExp * 1000)) // no max_age or not expired yet.
       ) {
-        return await this.doLogin(request, response, loginChallenge, <User>request.user, display);
+        return await this.doLogin(request, response, loginChallenge, request.user as User, display);
       }
 
       return response.render('auth/login', {
@@ -96,7 +97,7 @@ class Controller {
       return response.redirect(303, '/');
     }
 
-    return await this.doLogin(request, response, loginChallenge, <User>request.user);
+    return await this.doLogin(request, response, loginChallenge, request.user as User);
   }
 
   private async doLogin(
@@ -126,7 +127,7 @@ class Controller {
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
 
-      display ??= <Display>request.cookies.display;
+      display ??= request.cookies.display as Display;
 
       return this.redirectOrClosePopup(response, redirectTo, display);
     } catch (exc: unknown) {
@@ -139,7 +140,7 @@ class Controller {
     }
   }
 
-  private redirectOrClosePopup(response: Response, url: string, display: Display | undefined): void {
+  private redirectOrClosePopup(response: Response, url: string, display: Nullable<Display>): void {
     if (display === 'popup') {
       response.clearCookie('display').send(popupTemplateFn(url));
       return;

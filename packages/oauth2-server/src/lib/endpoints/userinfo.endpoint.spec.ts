@@ -1,4 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { OutgoingHttpHeaders } from 'http';
 
@@ -111,6 +112,7 @@ describe('Userinfo Endpoint', () => {
       };
 
       const error = new InsufficientScopeException('The provided Access Token is missing the required scope "openid".');
+      const errorParameters = removeNullishValues(error.toJSON());
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -124,7 +126,7 @@ describe('Userinfo Endpoint', () => {
         ...endpoint['headers'],
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it('should return an error response when the access token does not have a client.', async () => {
@@ -135,6 +137,7 @@ describe('Userinfo Endpoint', () => {
       };
 
       const error = new InvalidTokenException('Invalid Credentials.');
+      const errorParameters = removeNullishValues(error.toJSON());
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -148,7 +151,7 @@ describe('Userinfo Endpoint', () => {
         ...endpoint['headers'],
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it('should return an error response when the access token does not have a user.', async () => {
@@ -160,6 +163,7 @@ describe('Userinfo Endpoint', () => {
       };
 
       const error = new InvalidTokenException('Invalid Credentials.');
+      const errorParameters = removeNullishValues(error.toJSON());
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -173,7 +177,7 @@ describe('Userinfo Endpoint', () => {
         ...endpoint['headers'],
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(error.toJSON());
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
     it('should return the claims of the user based on the scopes of the access token.', async () => {

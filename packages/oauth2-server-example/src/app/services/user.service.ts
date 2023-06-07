@@ -1,5 +1,6 @@
 import { Injectable } from '@guarani/di';
 import { UserinfoClaimsParameters, UserServiceInterface } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import argon2 from 'argon2';
 
@@ -24,11 +25,11 @@ export class UserService implements UserServiceInterface {
     return user;
   }
 
-  public async findOne(id: string): Promise<User | null> {
+  public async findOne(id: string): Promise<Nullable<User>> {
     return await User.findOneBy({ id });
   }
 
-  public async findByResourceOwnerCredentials(username: string, password: string): Promise<User | null> {
+  public async findByResourceOwnerCredentials(username: string, password: string): Promise<Nullable<User>> {
     const user = await User.findOneBy({ email: username });
 
     if (user === null) {

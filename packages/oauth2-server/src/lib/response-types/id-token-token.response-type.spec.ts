@@ -131,6 +131,7 @@ describe('ID Token Token Response Type', () => {
         token_type: 'Bearer',
         expires_in: 3600,
         scope: 'openid foo bar',
+        refresh_token: undefined,
         id_token: 'id_token',
         state: 'client_state',
       });

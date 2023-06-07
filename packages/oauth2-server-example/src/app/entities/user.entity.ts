@@ -1,4 +1,5 @@
 import { User as OAuth2User } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import {
   BaseEntity,
@@ -24,13 +25,13 @@ export class User extends BaseEntity implements OAuth2User {
   public givenName!: string;
 
   @Column({ name: 'middle_name', type: 'varchar', nullable: true })
-  public middleName!: string | null;
+  public middleName!: Nullable<string>;
 
   @Column({ name: 'family_name', type: 'varchar', nullable: false })
   public familyName!: string;
 
   @Column({ name: 'picture', type: 'varchar', nullable: true })
-  public picture!: string | null;
+  public picture!: Nullable<string>;
 
   @Column({ name: 'email', type: 'varchar', nullable: false, unique: true })
   public email!: string;
@@ -39,7 +40,7 @@ export class User extends BaseEntity implements OAuth2User {
   public emailVerified!: boolean;
 
   @Column({ name: 'gender', type: 'varchar', nullable: true })
-  public gender!: string | null;
+  public gender!: Nullable<string>;
 
   @Column({ name: 'birthdate', type: 'date', nullable: false })
   public birthdate!: string;
@@ -60,7 +61,7 @@ export class User extends BaseEntity implements OAuth2User {
   public updatedAt!: Date;
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
-  public deletedAt!: Date | null;
+  public deletedAt!: Nullable<Date>;
 
   public get name(): string {
     const components: string[] = [this.givenName, this.familyName];

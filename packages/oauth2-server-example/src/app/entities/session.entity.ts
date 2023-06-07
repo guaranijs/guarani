@@ -1,4 +1,5 @@
 import { Session as OAuth2Session } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { BaseEntity, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -11,7 +12,7 @@ export class Session extends BaseEntity implements OAuth2Session {
 
   @OneToOne(() => Login, { cascade: false, eager: true, nullable: true, onDelete: 'SET NULL', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'active_login_id', referencedColumnName: 'id', foreignKeyConstraintName: 'logins_id_fk' })
-  public activeLogin!: Login | null;
+  public activeLogin!: Nullable<Login>;
 
   @OneToMany(() => Login, (login) => login.session, {
     cascade: true,

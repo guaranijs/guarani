@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { URL } from 'url';
@@ -64,14 +63,14 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
 
     await this.checkGrant(grant);
 
-    return removeNullishValues<SelectAccountContextInteractionResponse>({
+    return {
       logins: session.logins.map((login) => login.id),
       context: {
         display: grant.parameters.display,
         prompts: <Prompt[]>grant.parameters.prompt?.split(' '),
         ui_locales: grant.parameters.ui_locales?.split(' '),
       },
-    });
+    };
   }
 
   /**

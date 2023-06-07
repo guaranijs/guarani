@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import cookieParser from 'cookie-parser';
 import { CookieAccessInfo } from 'cookiejar';
 import express, { Application, urlencoded } from 'express';
@@ -44,7 +46,7 @@ describe('Authorization Code Flow', () => {
       response_mode: 'query',
     };
 
-    const authorizationRequestSearchParameters = new URLSearchParams(authorizationRequestData);
+    const authorizationRequestSearchParameters = new URLSearchParams(authorizationRequestData as Dictionary<any>);
 
     const firstAuthorizationResponse = await agent.get(
       `/oauth/authorize?${authorizationRequestSearchParameters.toString()}`
@@ -81,7 +83,7 @@ describe('Authorization Code Flow', () => {
       login_challenge: loginChallenge,
     };
 
-    const loginInteractionRequestBody = new URLSearchParams(loginInteractionContextRequestData);
+    const loginInteractionRequestBody = new URLSearchParams(loginInteractionContextRequestData as Dictionary<any>);
 
     const loginInteractionContextResponse = await agent.get(
       `/oauth/interaction?${loginInteractionRequestBody.toString()}`
@@ -101,7 +103,9 @@ describe('Authorization Code Flow', () => {
       subject: '16907c32-687b-493c-85ba-f41f2c9d4daa',
     };
 
-    const loginInteractionAcceptDecisionBody = new URLSearchParams(loginInteractionAcceptDecisionRequestData);
+    const loginInteractionAcceptDecisionBody = new URLSearchParams(
+      loginInteractionAcceptDecisionRequestData as Dictionary<any>
+    );
 
     const loginInteractionAcceptResponse = await agent
       .post('/oauth/interaction')
@@ -134,7 +138,7 @@ describe('Authorization Code Flow', () => {
       consent_challenge: consentChallenge,
     };
 
-    const consentInteractionRequestBody = new URLSearchParams(consentInteractionContextRequestData);
+    const consentInteractionRequestBody = new URLSearchParams(consentInteractionContextRequestData as Dictionary<any>);
 
     const consentInteractionContextResponse = await agent.get(
       `/oauth/interaction?${consentInteractionRequestBody.toString()}`
@@ -160,7 +164,9 @@ describe('Authorization Code Flow', () => {
       grant_scope: 'foo bar baz qux',
     };
 
-    const consentInteractionAcceptDecisionBody = new URLSearchParams(consentInteractionAcceptDecisionRequestData);
+    const consentInteractionAcceptDecisionBody = new URLSearchParams(
+      consentInteractionAcceptDecisionRequestData as Dictionary<any>
+    );
 
     const consentInteractionAcceptResponse = await agent
       .post('/oauth/interaction')
@@ -203,7 +209,7 @@ describe('Authorization Code Flow', () => {
       code_verifier: 'code_challenge',
     };
 
-    const requestBody = new URLSearchParams(requestData);
+    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
 
     const response = await request(app)
       .post('/oauth/token')

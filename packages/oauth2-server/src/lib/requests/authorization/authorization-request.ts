@@ -7,7 +7,7 @@ import { ResponseType } from '../../response-types/response-type.type';
 /**
  * Parameters of the OAuth 2.0 Authorization Request.
  */
-export interface AuthorizationRequest extends Dictionary<unknown> {
+export interface AuthorizationRequest extends Dictionary<any> {
   /**
    * Response Type requested by the Client.
    */

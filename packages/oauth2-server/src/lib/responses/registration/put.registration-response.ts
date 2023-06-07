@@ -27,11 +27,6 @@ export interface PutRegistrationResponse extends Dictionary<any> {
   readonly client_secret?: string;
 
   /**
-   * Time the Identifier of the Client was issued, represented as Unix time.
-   */
-  readonly client_id_issued_at?: number;
-
-  /**
    * Time the Secret of the Client will expire, represented as Unix time.
    *
    * *note: the value **0** indicates that the secret will not expire.*

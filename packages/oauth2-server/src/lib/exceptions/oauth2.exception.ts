@@ -134,8 +134,8 @@ export abstract class OAuth2Exception extends Error {
   public toJSON(): OAuth2ExceptionResponse {
     return {
       error: this.error,
-      error_description: this.description,
-      error_uri: this.uri,
+      error_description: this.description ?? undefined,
+      error_uri: this.uri ?? undefined,
     };
   }
 }

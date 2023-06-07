@@ -139,8 +139,9 @@ describe('Code ID Token Token Response Type', () => {
       >({
         access_token: 'access_token',
         token_type: 'Bearer',
-        scope: 'openid foo bar',
         expires_in: 3600,
+        scope: 'openid foo bar',
+        refresh_token: undefined,
         code: 'authorization_code',
         id_token: 'id_token',
         state: 'client_state',

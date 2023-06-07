@@ -117,7 +117,11 @@ describe('Select Account Interaction Type', () => {
         interactionType.handleContext(context)
       ).resolves.toStrictEqual<SelectAccountContextInteractionResponse>({
         logins: ['login0_id', 'login1_id', 'login2_id'],
-        context: {},
+        context: {
+          display: undefined,
+          prompts: undefined,
+          ui_locales: undefined,
+        },
       });
     });
   });

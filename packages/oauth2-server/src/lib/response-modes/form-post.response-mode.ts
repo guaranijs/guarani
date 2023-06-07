@@ -1,4 +1,5 @@
 import { Injectable } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { HttpResponse } from '../http/http.response';
@@ -75,7 +76,7 @@ export class FormPostResponseMode implements ResponseModeInterface {
    * @returns Http Response containing the Authorization Response Parameters.
    */
   public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
-    const html = templateFn(redirectUri, parameters).trim();
+    const html = templateFn(redirectUri, removeNullishValues(parameters)).trim();
     return new HttpResponse().html(html);
   }
 }

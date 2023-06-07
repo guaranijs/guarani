@@ -120,7 +120,7 @@ export class RegistrationEndpoint implements EndpointInterface {
         .setStatus(error.statusCode)
         .setHeaders(error.headers)
         .setHeaders(this.headers)
-        .json(error.toJSON());
+        .json(removeNullishValues(error.toJSON()));
     }
   }
 
@@ -204,8 +204,7 @@ export class RegistrationEndpoint implements EndpointInterface {
     return removeNullishValues<PostRegistrationResponse>({
       client_id: client.id,
       client_secret: client.secret ?? undefined,
-      client_id_issued_at:
-        client.secretIssuedAt !== null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
+      client_id_issued_at: client.secret !== null ? Math.floor(client.createdAt.getTime() / 1000) : undefined,
       client_secret_expires_at:
         client.secret !== null
           ? client.secretExpiresAt !== null
@@ -267,8 +266,6 @@ export class RegistrationEndpoint implements EndpointInterface {
     return removeNullishValues<GetRegistrationResponse>({
       client_id: client.id,
       client_secret: client.secret ?? undefined,
-      client_id_issued_at:
-        client.secretIssuedAt !== null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
       client_secret_expires_at:
         client.secret !== null
           ? client.secretExpiresAt !== null
@@ -339,11 +336,9 @@ export class RegistrationEndpoint implements EndpointInterface {
 
     registrationClientUri.searchParams.set('client_id', client.id);
 
-    return removeNullishValues<PostRegistrationResponse>({
+    return removeNullishValues<PutRegistrationResponse>({
       client_id: client.id,
       client_secret: client.secret ?? undefined,
-      client_id_issued_at:
-        client.secretIssuedAt !== null ? Math.floor(client.secretIssuedAt.getTime() / 1000) : undefined,
       client_secret_expires_at:
         client.secret !== null
           ? client.secretExpiresAt !== null

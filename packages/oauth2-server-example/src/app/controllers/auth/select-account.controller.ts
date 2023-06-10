@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
 import { In } from 'typeorm';
-import { URLSearchParams } from 'url';
+import { URL, URLSearchParams } from 'url';
 
 import {
   Display,

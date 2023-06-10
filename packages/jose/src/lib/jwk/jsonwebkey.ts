@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { KeyObject } from 'crypto';
 
 import { isPlainObject, removeNullishValues } from '@guarani/primitives';

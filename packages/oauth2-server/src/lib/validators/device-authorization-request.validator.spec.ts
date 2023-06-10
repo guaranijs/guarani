@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 
 import { DeviceAuthorizationContext } from '../context/device-authorization-context';

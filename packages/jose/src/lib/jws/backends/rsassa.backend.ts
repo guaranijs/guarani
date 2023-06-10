@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { constants, sign, verify } from 'crypto';
 import { promisify } from 'util';
 

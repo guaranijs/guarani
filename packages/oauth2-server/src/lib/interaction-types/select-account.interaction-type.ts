@@ -1,4 +1,4 @@
-import { URL } from 'url';
+import { URL, URLSearchParams } from 'url';
 
 import { Inject, Injectable } from '@guarani/di';
 import { Dictionary } from '@guarani/types';

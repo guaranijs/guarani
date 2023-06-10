@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { OutgoingHttpHeaders } from 'http';
 
 import { OAuth2Exception } from './oauth2.exception';

@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { createHash } from 'crypto';
 import https from 'https';
 

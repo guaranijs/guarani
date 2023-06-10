@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { createHash, KeyObject } from 'crypto';
 
 import { Dictionary } from '@guarani/types';

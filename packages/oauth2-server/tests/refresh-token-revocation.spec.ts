@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
 import { URLSearchParams } from 'url';

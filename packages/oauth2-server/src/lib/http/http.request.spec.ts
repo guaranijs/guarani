@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { HttpRequest } from './http.request';
 import { HttpRequestParameters } from './http-request.parameters';
 

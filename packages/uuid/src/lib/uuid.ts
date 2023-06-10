@@ -1,8 +1,8 @@
-import { bufferToInteger, integerToBuffer } from '@guarani/primitives';
-import { Comparable, Nullable } from '@guarani/types';
-
 import { Buffer } from 'buffer';
 import { createHash, randomBytes } from 'crypto';
+
+import { bufferToInteger, integerToBuffer } from '@guarani/primitives';
+import { Comparable, Nullable } from '@guarani/types';
 
 import { getMacAddress } from './utils/get-mac-address';
 import { getTimeInGregorian100Nanoseconds } from './utils/get-time-in-gregorian-100-nanoseconds';

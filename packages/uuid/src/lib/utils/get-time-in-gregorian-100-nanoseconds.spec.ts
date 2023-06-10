@@ -1,5 +1,3 @@
-import 'jest-extended';
-
 import { getTimeInGregorian100Nanoseconds } from './get-time-in-gregorian-100-nanoseconds';
 
 describe('getTimeInGregorian100Nanoseconds()', () => {

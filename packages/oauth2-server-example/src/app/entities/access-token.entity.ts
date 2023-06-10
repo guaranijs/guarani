@@ -1,7 +1,7 @@
+import { BaseEntity, Check, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+
 import { AccessToken as OAuth2AccessToken } from '@guarani/oauth2-server';
 import { Nullable } from '@guarani/types';
-
-import { BaseEntity, Check, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 import { Client } from './client.entity';
 import { User } from './user.entity';

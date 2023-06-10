@@ -1,15 +1,15 @@
-import { getContainer } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
-
 import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
 import { URLSearchParams } from 'url';
 
+import { getContainer } from '@guarani/di';
+import { Dictionary } from '@guarani/types';
+
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
-import { DeviceAuthorizationResponse } from '../src/lib/responses/device-authorization-response';
-import { DeviceCodeTokenRequest } from '../src/lib/requests/token/device-code.token-request';
-import { TokenResponse } from '../src/lib/responses/token-response';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
+import { DeviceCodeTokenRequest } from '../src/lib/requests/token/device-code.token-request';
+import { DeviceAuthorizationResponse } from '../src/lib/responses/device-authorization-response';
+import { TokenResponse } from '../src/lib/responses/token-response';
 import { DeviceCodeServiceInterface } from '../src/lib/services/device-code.service.interface';
 import { DEVICE_CODE_SERVICE } from '../src/lib/services/device-code.service.token';
 

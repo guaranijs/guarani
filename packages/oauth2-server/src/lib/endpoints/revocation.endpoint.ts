@@ -1,9 +1,9 @@
-import { Inject, Injectable, Optional } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
-
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 import { OutgoingHttpHeaders } from 'http';
+
+import { Inject, Injectable, Optional } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { RevocationContext } from '../context/revocation-context';
 import { AccessToken } from '../entities/access-token.entity';
@@ -11,9 +11,9 @@ import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { HttpMethod } from '../http/http-method.type';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';

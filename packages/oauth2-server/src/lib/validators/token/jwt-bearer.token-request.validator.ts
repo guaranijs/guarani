@@ -1,3 +1,7 @@
+import { Buffer } from 'buffer';
+import https from 'https';
+import { URL } from 'url';
+
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 import {
   InvalidJsonWebKeySetException,
@@ -10,10 +14,6 @@ import {
   OctetSequenceKey,
 } from '@guarani/jose';
 import { Nullable } from '@guarani/types';
-
-import { Buffer } from 'buffer';
-import https from 'https';
-import { URL } from 'url';
 
 import { JwtBearerTokenContext } from '../../context/token/jwt-bearer.token-context';
 import { Client } from '../../entities/client.entity';

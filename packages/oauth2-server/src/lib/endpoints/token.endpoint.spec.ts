@@ -1,15 +1,15 @@
+import { OutgoingHttpHeaders } from 'http';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-
-import { OutgoingHttpHeaders } from 'http';
 
 import { TokenContext } from '../context/token/token-context';
 import { Client } from '../entities/client.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { UnsupportedGrantTypeException } from '../exceptions/unsupported-grant-type.exception';
 import { GrantTypeInterface } from '../grant-types/grant-type.interface';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
+import { HttpMethod } from '../http/http-method.type';
 import { TokenRequest } from '../requests/token/token-request';
 import { TokenResponse } from '../responses/token-response';
 import { TokenRequestValidator } from '../validators/token/token-request.validator';

@@ -1,9 +1,9 @@
 import { Constructor } from '@guarani/types';
 
-import { S256Pkce } from './S256.pkce';
 import { PkceInterface } from './pkce.interface';
 import { Pkce } from './pkce.type';
 import { PlainPkce } from './plain.pkce';
+import { S256Pkce } from './S256.pkce';
 
 /**
  * PKCE Registry.

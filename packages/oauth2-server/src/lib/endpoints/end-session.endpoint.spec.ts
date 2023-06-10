@@ -1,17 +1,17 @@
+import { OutgoingHttpHeaders } from 'http';
+import { URL, URLSearchParams } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
-
-import { OutgoingHttpHeaders } from 'http';
-import { URL, URLSearchParams } from 'url';
 
 import { EndSessionContext } from '../context/end-session-context';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { Session } from '../entities/session.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
+import { HttpMethod } from '../http/http-method.type';
 import { EndSessionRequest } from '../requests/end-session-request';
 import { LogoutTicketServiceInterface } from '../services/logout-ticket.service.interface';
 import { LOGOUT_TICKET_SERVICE } from '../services/logout-ticket.service.token';

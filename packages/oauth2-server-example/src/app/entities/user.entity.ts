@@ -1,6 +1,3 @@
-import { User as OAuth2User } from '@guarani/oauth2-server';
-import { Nullable } from '@guarani/types';
-
 import {
   BaseEntity,
   Column,
@@ -10,6 +7,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { User as OAuth2User } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { Address } from './address.entity';
 

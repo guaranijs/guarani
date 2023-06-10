@@ -1,9 +1,9 @@
+import { OutgoingHttpHeaders } from 'http';
+import { URL, URLSearchParams } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
-
-import { OutgoingHttpHeaders } from 'http';
-import { URL, URLSearchParams } from 'url';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
@@ -16,9 +16,9 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { UnsupportedResponseTypeException } from '../exceptions/unsupported-response-type.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { HttpMethod } from '../http/http-method.type';
 import { InteractionType } from '../interaction-types/interaction-type.type';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';

@@ -1,13 +1,13 @@
+import axios, { AxiosError } from 'axios';
+import { randomUUID } from 'crypto';
+import { Request, Response } from 'express';
+import { URL, URLSearchParams } from 'url';
+
 import {
   EndSessionRequest,
   LogoutContextInteractionResponse,
   LogoutDecisionInteractionResponse,
 } from '@guarani/oauth2-server';
-
-import axios, { AxiosError } from 'axios';
-import { randomUUID } from 'crypto';
-import { Request, Response } from 'express';
-import { URL, URLSearchParams } from 'url';
 
 class Controller {
   public async get(request: Request, response: Response): Promise<void> {

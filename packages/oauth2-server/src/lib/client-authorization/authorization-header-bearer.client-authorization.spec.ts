@@ -1,6 +1,6 @@
-import { DependencyInjectionContainer } from '@guarani/di';
-
 import { IncomingHttpHeaders } from 'http';
+
+import { DependencyInjectionContainer } from '@guarani/di';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';

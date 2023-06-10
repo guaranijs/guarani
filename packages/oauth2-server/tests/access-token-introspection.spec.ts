@@ -1,15 +1,15 @@
-import { Dictionary } from '@guarani/types';
-
 import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
 import { URLSearchParams } from 'url';
 
+import { Dictionary } from '@guarani/types';
+
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
-import { IntrospectionRequest } from '../src/lib/requests/introspection-request';
-import { IntrospectionResponse } from '../src/lib/responses/introspection-response';
-import { ResourceOwnerPasswordCredentialsTokenRequest } from '../src/lib/requests/token/resource-owner-password-credentials.token-request';
-import { TokenResponse } from '../src/lib/responses/token-response';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
+import { IntrospectionRequest } from '../src/lib/requests/introspection-request';
+import { ResourceOwnerPasswordCredentialsTokenRequest } from '../src/lib/requests/token/resource-owner-password-credentials.token-request';
+import { IntrospectionResponse } from '../src/lib/responses/introspection-response';
+import { TokenResponse } from '../src/lib/responses/token-response';
 
 describe('Access Token Introspection', () => {
   let app: Application;

@@ -1,11 +1,11 @@
+import { OutgoingHttpHeaders } from 'http';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
-import { OutgoingHttpHeaders } from 'http';
-
 import { AuthorizationServer } from '../authorization-server';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
+import { HttpMethod } from '../http/http-method.type';
 import { DiscoveryResponse } from '../responses/discovery-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';

@@ -3,8 +3,8 @@ import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { HttpResponse } from '../http/http.response';
-import { ResponseMode } from './response-mode.type';
 import { ResponseModeInterface } from './response-mode.interface';
+import { ResponseMode } from './response-mode.type';
 
 /**
  * Sanitizes an HTML string replacing the characteres used to perform XSS Attacks.

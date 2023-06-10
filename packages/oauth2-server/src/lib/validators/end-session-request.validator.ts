@@ -1,15 +1,15 @@
+import { URL } from 'url';
+
 import { Inject, Injectable } from '@guarani/di';
 import { Nullable } from '@guarani/types';
-
-import { URL } from 'url';
 
 import { EndSessionContext } from '../context/end-session-context';
 import { Client } from '../entities/client.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
+import { HttpMethod } from '../http/http-method.type';
 import { EndSessionRequest } from '../requests/end-session-request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';

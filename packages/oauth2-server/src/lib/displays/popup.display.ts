@@ -1,8 +1,8 @@
+import { URL } from 'url';
+
 import { Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
-
-import { URL } from 'url';
 
 import { HttpResponse } from '../http/http.response';
 import { DisplayInterface } from './display.interface';

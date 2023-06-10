@@ -1,6 +1,6 @@
-import { Inject, Injectable, InjectAll } from '@guarani/di';
-
 import { URL } from 'url';
+
+import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { AuthorizationCodeTokenContext } from '../../context/token/authorization-code.token-context';
 import { AuthorizationCode } from '../../entities/authorization-code.entity';

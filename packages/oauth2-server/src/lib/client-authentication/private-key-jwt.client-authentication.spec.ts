@@ -2,8 +2,8 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import {
   EllipticCurveKey,
   JsonWebKeySet,
-  JsonWebSignatureHeaderParameters,
   JsonWebSignatureAlgorithm,
+  JsonWebSignatureHeaderParameters,
 } from '@guarani/jose';
 
 import { Client } from '../entities/client.entity';

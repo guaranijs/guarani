@@ -1,7 +1,7 @@
+import { OutgoingHttpHeaders } from 'http';
+
 import { Inject, Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-
-import { OutgoingHttpHeaders } from 'http';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
@@ -11,9 +11,9 @@ import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { HttpMethod } from '../http/http-method.type';
 import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';

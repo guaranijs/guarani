@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import {
   EllipticCurveKey,
@@ -8,8 +10,6 @@ import {
   JsonWebTokenClaimsParameters,
   OctetSequenceKey,
 } from '@guarani/jose';
-
-import { Buffer } from 'buffer';
 
 import { JwtBearerTokenContext } from '../../context/token/jwt-bearer.token-context';
 import { Client } from '../../entities/client.entity';

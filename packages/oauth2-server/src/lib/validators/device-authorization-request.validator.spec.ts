@@ -3,12 +3,12 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { DeviceAuthorizationContext } from '../context/device-authorization-context';
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
+import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpRequest } from '../http/http.request';
 import { DeviceAuthorizationRequest } from '../requests/device-authorization-request';
 import { DeviceAuthorizationRequestValidator } from './device-authorization-request.validator';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 
 jest.mock('../handlers/client-authentication.handler');
 jest.mock('../handlers/scope.handler');

@@ -1,11 +1,11 @@
-import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
-import { Dictionary, Nullable } from '@guarani/types';
-
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 import { URL, URLSearchParams } from 'url';
 import { isDeepStrictEqual } from 'util';
+
+import { Inject, Injectable } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { EndSessionContext } from '../context/end-session-context';
 import { Client } from '../entities/client.entity';
@@ -15,9 +15,9 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { HttpMethod } from '../http/http-method.type';
 import { EndSessionRequest } from '../requests/end-session-request';
 import { LogoutTicketServiceInterface } from '../services/logout-ticket.service.interface';
 import { LOGOUT_TICKET_SERVICE } from '../services/logout-ticket.service.token';

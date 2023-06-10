@@ -1,6 +1,6 @@
-import { DependencyInjectionContainer } from '@guarani/di';
-
 import { Buffer } from 'buffer';
+
+import { DependencyInjectionContainer } from '@guarani/di';
 
 import { LoginContextInteractionContext } from '../../context/interaction/login-context.interaction-context';
 import { LoginDecisionAcceptInteractionContext } from '../../context/interaction/login-decision-accept.interaction-context';
@@ -15,6 +15,7 @@ import { InteractionTypeInterface } from '../../interaction-types/interaction-ty
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { LoginContextInteractionRequest } from '../../requests/interaction/login-context.interaction-request';
+import { LoginDecisionInteractionRequest } from '../../requests/interaction/login-decision.interaction-request';
 import { LoginDecisionAcceptInteractionRequest } from '../../requests/interaction/login-decision-accept.interaction-request';
 import { LoginDecisionDenyInteractionRequest } from '../../requests/interaction/login-decision-deny.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
@@ -24,7 +25,6 @@ import { USER_SERVICE } from '../../services/user.service.token';
 import { Settings } from '../../settings/settings';
 import { SETTINGS } from '../../settings/settings.token';
 import { LoginInteractionRequestValidator } from './login.interaction-request.validator';
-import { LoginDecisionInteractionRequest } from '../../requests/interaction/login-decision.interaction-request';
 
 const invalidLoginChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidDecisions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];

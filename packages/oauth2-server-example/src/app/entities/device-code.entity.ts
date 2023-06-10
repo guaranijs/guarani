@@ -1,8 +1,8 @@
-import { DeviceCode as OAuth2DeviceCode } from '@guarani/oauth2-server';
-import { Nullable } from '@guarani/types';
-
 import { BaseEntity, Check, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { URL } from 'url';
+
+import { DeviceCode as OAuth2DeviceCode } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { Client } from './client.entity';
 import { User } from './user.entity';

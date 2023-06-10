@@ -1,7 +1,7 @@
+import { randomBytes, randomUUID } from 'crypto';
+
 import { Injectable } from '@guarani/di';
 import { Nullable } from '@guarani/types';
-
-import { randomBytes, randomUUID } from 'crypto';
 
 import { Client } from '../../entities/client.entity';
 import { Grant } from '../../entities/grant.entity';

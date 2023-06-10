@@ -1,8 +1,8 @@
-import { Dictionary } from '@guarani/types';
-
 import { Buffer } from 'buffer';
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
+
+import { Dictionary } from '@guarani/types';
 
 /**
  * Abstraction of the Http Response.

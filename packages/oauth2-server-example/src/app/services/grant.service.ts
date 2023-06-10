@@ -1,9 +1,9 @@
+import { randomBytes } from 'crypto';
+import { promisify } from 'util';
+
 import { Injectable } from '@guarani/di';
 import { AuthorizationRequest, GrantServiceInterface } from '@guarani/oauth2-server';
 import { Nullable } from '@guarani/types';
-
-import { randomBytes } from 'crypto';
-import { promisify } from 'util';
 
 import { Client } from '../entities/client.entity';
 import { Grant } from '../entities/grant.entity';

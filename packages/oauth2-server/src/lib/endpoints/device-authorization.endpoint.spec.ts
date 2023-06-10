@@ -1,12 +1,12 @@
+import { OutgoingHttpHeaders } from 'http';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
-import { OutgoingHttpHeaders } from 'http';
-
 import { Client } from '../entities/client.entity';
 import { DeviceCode } from '../entities/device-code.entity';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
+import { HttpMethod } from '../http/http-method.type';
 import { DeviceAuthorizationRequest } from '../requests/device-authorization-request';
 import { DeviceAuthorizationResponse } from '../responses/device-authorization-response';
 import { DeviceCodeServiceInterface } from '../services/device-code.service.interface';

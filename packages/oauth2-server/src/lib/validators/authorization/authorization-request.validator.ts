@@ -1,6 +1,6 @@
-import { Nullable } from '@guarani/types';
-
 import { URL } from 'url';
+
+import { Nullable } from '@guarani/types';
 
 import { AuthorizationContext } from '../../context/authorization/authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';

@@ -1,7 +1,7 @@
-import { DependencyInjectionContainer } from '@guarani/di';
-
 import { Buffer } from 'buffer';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
+
+import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';

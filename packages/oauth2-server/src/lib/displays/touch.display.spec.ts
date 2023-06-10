@@ -1,7 +1,7 @@
+import { OutgoingHttpHeaders } from 'http';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
-
-import { OutgoingHttpHeaders } from 'http';
 
 import { Display } from './display.type';
 import { TouchDisplay } from './touch.display';

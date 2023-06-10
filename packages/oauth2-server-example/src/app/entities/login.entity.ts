@@ -1,7 +1,7 @@
+import { BaseEntity, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+
 import { Login as OAuth2Login } from '@guarani/oauth2-server';
 import { Nullable } from '@guarani/types';
-
-import { BaseEntity, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { Session } from './session.entity';
 import { User } from './user.entity';

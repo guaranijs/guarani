@@ -1,14 +1,14 @@
+import https from 'https';
+
 import { Injectable } from '@guarani/di';
 import {
-  JsonWebSignatureAlgorithm,
-  JsonWebKey,
-  JsonWebSignatureHeaderParameters,
-  JsonWebKeySet,
   InvalidJsonWebKeySetException,
+  JsonWebKey,
+  JsonWebKeySet,
+  JsonWebSignatureAlgorithm,
+  JsonWebSignatureHeaderParameters,
 } from '@guarani/jose';
 import { Nullable } from '@guarani/types';
-
-import https from 'https';
 
 import { JwtBearerClientAssertion } from '../assertions/jwt-bearer.client-assertion';
 import { Client } from '../entities/client.entity';

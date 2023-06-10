@@ -1,13 +1,13 @@
+import { OutgoingHttpHeaders } from 'http';
+
 import { Inject, Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 
-import { OutgoingHttpHeaders } from 'http';
-
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { HttpMethod } from '../http/http-method.type';
 import { DeviceAuthorizationResponse } from '../responses/device-authorization-response';
 import { DeviceCodeServiceInterface } from '../services/device-code.service.interface';
 import { DEVICE_CODE_SERVICE } from '../services/device-code.service.token';

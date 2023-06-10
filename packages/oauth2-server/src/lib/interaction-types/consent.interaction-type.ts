@@ -1,12 +1,12 @@
+import { URL, URLSearchParams } from 'url';
+
 import { Inject, Injectable } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
-import { URL, URLSearchParams } from 'url';
-
 import { ConsentContextInteractionContext } from '../context/interaction/consent-context.interaction-context';
+import { ConsentDecisionInteractionContext } from '../context/interaction/consent-decision.interaction-context';
 import { ConsentDecisionAcceptInteractionContext } from '../context/interaction/consent-decision-accept.interaction-context';
 import { ConsentDecisionDenyInteractionContext } from '../context/interaction/consent-decision-deny.interaction-context';
-import { ConsentDecisionInteractionContext } from '../context/interaction/consent-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { AccountSelectionRequiredException } from '../exceptions/account-selection-required.exception';

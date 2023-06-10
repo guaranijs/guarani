@@ -1,7 +1,7 @@
+import { randomBytes, randomInt, randomUUID } from 'crypto';
+
 import { Injectable } from '@guarani/di';
 import { Nullable } from '@guarani/types';
-
-import { randomBytes, randomInt, randomUUID } from 'crypto';
 
 import { PostRegistrationContext } from '../../context/registration/post.registration-context';
 import { PutRegistrationContext } from '../../context/registration/put.registration-context';

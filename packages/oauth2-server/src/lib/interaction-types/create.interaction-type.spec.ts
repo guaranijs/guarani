@@ -1,3 +1,5 @@
+import { URLSearchParams } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 

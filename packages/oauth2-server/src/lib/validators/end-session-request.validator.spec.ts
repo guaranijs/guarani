@@ -1,7 +1,7 @@
-import { DependencyInjectionContainer } from '@guarani/di';
-
 import { Buffer } from 'buffer';
 import { URL } from 'url';
+
+import { DependencyInjectionContainer } from '@guarani/di';
 
 import { EndSessionContext } from '../context/end-session-context';
 import { Client } from '../entities/client.entity';

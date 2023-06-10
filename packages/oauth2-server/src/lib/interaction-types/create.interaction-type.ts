@@ -1,7 +1,7 @@
+import { URL, URLSearchParams } from 'url';
+
 import { Inject, Injectable } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
-
-import { URL, URLSearchParams } from 'url';
 
 import { CreateContextInteractionContext } from '../context/interaction/create-context.interaction-context';
 import { CreateDecisionInteractionContext } from '../context/interaction/create-decision.interaction-context';

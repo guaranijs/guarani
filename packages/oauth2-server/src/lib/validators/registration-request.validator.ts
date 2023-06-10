@@ -1,3 +1,7 @@
+import { Buffer } from 'buffer';
+import { timingSafeEqual } from 'crypto';
+import { URL } from 'url';
+
 import { Inject, Injectable } from '@guarani/di';
 import {
   JsonWebEncryptionContentEncryptionAlgorithm,
@@ -7,10 +11,6 @@ import {
 } from '@guarani/jose';
 import { isPlainObject } from '@guarani/primitives';
 import { Dictionary, Nullable } from '@guarani/types';
-
-import { Buffer } from 'buffer';
-import { timingSafeEqual } from 'crypto';
-import { URL } from 'url';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';

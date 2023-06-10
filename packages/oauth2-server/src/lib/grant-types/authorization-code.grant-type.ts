@@ -1,8 +1,8 @@
-import { Inject, Injectable, InjectAll, Optional } from '@guarani/di';
-
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 import { URL } from 'url';
+
+import { Inject, Injectable, InjectAll, Optional } from '@guarani/di';
 
 import { AuthorizationCodeTokenContext } from '../context/token/authorization-code.token-context';
 import { AuthorizationCode } from '../entities/authorization-code.entity';

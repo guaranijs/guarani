@@ -1,6 +1,6 @@
-import { Consent as OAuth2Consent } from '@guarani/oauth2-server';
-
 import { BaseEntity, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+
+import { Consent as OAuth2Consent } from '@guarani/oauth2-server';
 
 import { Client } from './client.entity';
 import { User } from './user.entity';

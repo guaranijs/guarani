@@ -1,6 +1,6 @@
-import { DependencyInjectionContainer } from '@guarani/di';
-
 import { Buffer } from 'buffer';
+
+import { DependencyInjectionContainer } from '@guarani/di';
 
 import { ClientCredentialsTokenContext } from '../../context/token/client-credentials.token-context';
 import { Client } from '../../entities/client.entity';

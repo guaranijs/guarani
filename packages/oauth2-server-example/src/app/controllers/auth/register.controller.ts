@@ -1,3 +1,10 @@
+import axios, { AxiosError } from 'axios';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { randomUUID } from 'crypto';
+import { Request, Response } from 'express';
+import { URL, URLSearchParams } from 'url';
+
 import {
   CodeAuthorizationRequest,
   CreateContextInteractionResponse,
@@ -6,13 +13,6 @@ import {
   Display,
 } from '@guarani/oauth2-server';
 import { Nullable } from '@guarani/types';
-
-import axios, { AxiosError } from 'axios';
-import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
-import { randomUUID } from 'crypto';
-import { Request, Response } from 'express';
-import { URL, URLSearchParams } from 'url';
 
 import { UserRegistrationDto } from '../../dto/user-registration.dto';
 import { Session } from '../../entities/session.entity';

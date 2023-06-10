@@ -1,7 +1,7 @@
-import { Inject, Injectable, Optional } from '@guarani/di';
-
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
+
+import { Inject, Injectable, Optional } from '@guarani/di';
 
 import { DeviceCodeTokenContext } from '../context/token/device-code.token-context';
 import { Client } from '../entities/client.entity';

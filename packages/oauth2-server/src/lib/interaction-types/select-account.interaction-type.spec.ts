@@ -1,7 +1,7 @@
+import { URLSearchParams } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
-
-import { URLSearchParams } from 'url';
 
 import { SelectAccountContextInteractionContext } from '../context/interaction/select-account-context.interaction-context';
 import { SelectAccountDecisionInteractionContext } from '../context/interaction/select-account-decision.interaction-context';

@@ -1,11 +1,11 @@
-import { Inject, Injectable, InjectAll } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
-import { Dictionary, Nullable } from '@guarani/types';
-
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 import { URL, URLSearchParams } from 'url';
 import { isDeepStrictEqual } from 'util';
+
+import { Inject, Injectable, InjectAll } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
@@ -21,9 +21,9 @@ import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { UnsupportedResponseTypeException } from '../exceptions/unsupported-response-type.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { HttpMethod } from '../http/http-method.type';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseType } from '../response-types/response-type.type';
 import { ConsentServiceInterface } from '../services/consent.service.interface';

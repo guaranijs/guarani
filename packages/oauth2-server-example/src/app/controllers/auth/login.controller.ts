@@ -1,3 +1,8 @@
+import axios, { AxiosError } from 'axios';
+import { randomUUID } from 'crypto';
+import { Request, Response } from 'express';
+import { URL, URLSearchParams } from 'url';
+
 import {
   CodeAuthorizationRequest,
   Display,
@@ -6,11 +11,6 @@ import {
   LoginDecisionInteractionResponse,
 } from '@guarani/oauth2-server';
 import { Nullable } from '@guarani/types';
-
-import axios, { AxiosError } from 'axios';
-import { randomUUID } from 'crypto';
-import { Request, Response } from 'express';
-import { URL, URLSearchParams } from 'url';
 
 import { User } from '../../entities/user.entity';
 

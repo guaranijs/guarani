@@ -1,9 +1,9 @@
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { LogoutContextInteractionContext } from '../../context/interaction/logout-context.interaction-context';
+import { LogoutDecisionInteractionContext } from '../../context/interaction/logout-decision.interaction-context';
 import { LogoutDecisionAcceptInteractionContext } from '../../context/interaction/logout-decision-accept.interaction-context';
 import { LogoutDecisionDenyInteractionContext } from '../../context/interaction/logout-decision-deny.interaction-context';
-import { LogoutDecisionInteractionContext } from '../../context/interaction/logout-decision.interaction-context';
 import { LogoutTicket } from '../../entities/logout-ticket.entity';
 import { Session } from '../../entities/session.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
@@ -15,9 +15,9 @@ import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { LogoutDecision } from '../../interaction-types/logout-decision.type';
 import { LogoutContextInteractionRequest } from '../../requests/interaction/logout-context.interaction-request';
+import { LogoutDecisionInteractionRequest } from '../../requests/interaction/logout-decision.interaction-request';
 import { LogoutDecisionAcceptInteractionRequest } from '../../requests/interaction/logout-decision-accept.interaction-request';
 import { LogoutDecisionDenyInteractionRequest } from '../../requests/interaction/logout-decision-deny.interaction-request';
-import { LogoutDecisionInteractionRequest } from '../../requests/interaction/logout-decision.interaction-request';
 import { LogoutTicketServiceInterface } from '../../services/logout-ticket.service.interface';
 import { LOGOUT_TICKET_SERVICE } from '../../services/logout-ticket.service.token';
 import { SessionServiceInterface } from '../../services/session.service.interface';

@@ -1,9 +1,9 @@
-import { TokenResponse } from '@guarani/oauth2-server';
-import { Dictionary } from '@guarani/types';
-
 import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
 import { URL, URLSearchParams } from 'url';
+
+import { TokenResponse } from '@guarani/oauth2-server';
+import { Dictionary } from '@guarani/types';
 
 class Controller {
   public async callback(request: Request, response: Response): Promise<void> {

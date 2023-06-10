@@ -1,7 +1,7 @@
+import { randomUUID } from 'crypto';
+
 import { Injectable } from '@guarani/di';
 import { Dictionary, Nullable } from '@guarani/types';
-
-import { randomUUID } from 'crypto';
 
 import { User } from '../../entities/user.entity';
 import { UserinfoClaimsParameters } from '../../id-token/userinfo.claims.parameters';

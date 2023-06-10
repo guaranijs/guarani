@@ -27,8 +27,7 @@
               ["^\\u0000"], // Side effect imports
               ["^\\w"], // Packages
               ["^@\\w"], // Workspace packages
-              ["^\\.\\.(?!/?$)"], // Parent imports
-              ["^\\./(?=.*/)(?!/?$)", "^\\.(?!/?$)"] // Relative imports
+              ["^\\.\\.(?!/?$)", "^\\./(?=.*/)(?!/?$)", "^\\.(?!/?$)"] // Parent and relative imports
             ]
           }
         ],

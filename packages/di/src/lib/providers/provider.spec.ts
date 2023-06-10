@@ -1,5 +1,3 @@
-import 'jest-extended';
-
 import { isProvider, Provider } from './provider';
 
 const providers: Provider<unknown>[] = [

@@ -1,6 +1,3 @@
-import 'jest-extended';
-import 'reflect-metadata';
-
 import { ProviderBinding } from '../bindings/provider.binding';
 import { Inject } from '../decorators/inject.decorator';
 import { InjectAll } from '../decorators/inject-all.decorator';

@@ -1,7 +1,7 @@
-import { DependencyInjectionContainer } from '@guarani/di';
-
 import { Buffer } from 'buffer';
 import { URL } from 'url';
+
+import { DependencyInjectionContainer } from '@guarani/di';
 
 import { CodeAuthorizationContext } from '../../context/authorization/code.authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';

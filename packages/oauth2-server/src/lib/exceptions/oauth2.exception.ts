@@ -1,7 +1,7 @@
+import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
+
 import { isPlainObject } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
-
-import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 
 import { OAuth2ExceptionResponse } from './oauth2.exception.response';
 

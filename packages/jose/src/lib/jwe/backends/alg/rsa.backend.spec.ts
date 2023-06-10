@@ -1,5 +1,3 @@
-import 'jest-extended';
-
 import { Buffer } from 'buffer';
 import { constants } from 'crypto';
 
@@ -8,7 +6,7 @@ import { RsaKey } from '../../../jwk/backends/rsa/rsa.key';
 import { RsaKeyParameters } from '../../../jwk/backends/rsa/rsa.key.parameters';
 import { JsonWebEncryptionKeyWrapAlgorithm } from '../../jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionContentEncryptionBackend } from '../enc/jsonwebencryption-content-encryption.backend';
-import { RSA1_5, RSA_OAEP, RSA_OAEP_256, RSA_OAEP_384, RSA_OAEP_512 } from './rsa.backend';
+import { RSA_OAEP, RSA_OAEP_256, RSA_OAEP_384, RSA_OAEP_512, RSA1_5 } from './rsa.backend';
 
 const expectedContentEncryptionKey = Buffer.from([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
 

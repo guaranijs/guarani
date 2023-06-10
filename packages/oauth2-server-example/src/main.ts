@@ -1,8 +1,5 @@
 import 'reflect-metadata';
 
-import { getContainer } from '@guarani/di';
-import { expressAuthorizationServer, User, UserServiceInterface, USER_SERVICE } from '@guarani/oauth2-server';
-
 import flash from 'connect-flash';
 import RedisStore from 'connect-redis';
 import cookieParser from 'cookie-parser';
@@ -13,6 +10,9 @@ import nunjucks from 'nunjucks';
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import path from 'path';
+
+import { getContainer } from '@guarani/di';
+import { expressAuthorizationServer, User, USER_SERVICE, UserServiceInterface } from '@guarani/oauth2-server';
 
 import { router } from './app/router';
 import { authorizationServerOptions } from './authorization-server.options';

@@ -1,6 +1,6 @@
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { HttpMethod } from '../http/http-method.type';
 import { Endpoint } from './endpoint.type';
 
 /**

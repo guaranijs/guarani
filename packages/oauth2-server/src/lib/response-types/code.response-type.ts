@@ -7,8 +7,8 @@ import { ResponseMode } from '../response-modes/response-mode.type';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { AuthorizationCodeServiceInterface } from '../services/authorization-code.service.interface';
 import { AUTHORIZATION_CODE_SERVICE } from '../services/authorization-code.service.token';
-import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
+import { ResponseType } from './response-type.type';
 
 /**
  * Implementation of the **Code** Response Type.

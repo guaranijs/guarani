@@ -1,8 +1,8 @@
-import { Inject, Injectable } from '@guarani/di';
-import { Nullable } from '@guarani/types';
-
 import { randomInt, randomUUID } from 'crypto';
 import { URL } from 'url';
+
+import { Inject, Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { Client } from '../../entities/client.entity';
 import { DeviceCode } from '../../entities/device-code.entity';

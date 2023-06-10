@@ -1,5 +1,5 @@
-import { HttpRequestParameters } from './http-request.parameters';
 import { HttpRequest } from './http.request';
+import { HttpRequestParameters } from './http-request.parameters';
 
 const invalidHttpMethods: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 

@@ -1,5 +1,3 @@
-import 'jest-extended';
-
 import { Binding } from '../bindings/binding';
 import { TokenNotRegisteredException } from '../exceptions/token-not-registered.exception';
 import { DependencyInjectionRegistry } from './dependency-injection.registry';
@@ -121,8 +119,6 @@ describe('Dependency Injection Registry', () => {
       expect(registry.has<string>('Foo')).toBeTrue();
       expect(registry.has<string>('Bar')).toBeTrue();
       expect(registry.has<string>('Baz')).toBeTrue();
-
-      console.log(registry['bindings']);
 
       registry.clear();
 

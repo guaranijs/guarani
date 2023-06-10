@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 global.console.warn = jest.fn();
 
 Reflect.set(global, 'endToEndAuthorizationServerOptions', {

@@ -1,15 +1,15 @@
 import {
-  JsonWebKeyInput as CryptoJsonWebKeyInput,
-  KeyObject,
   createPrivateKey,
   createPublicKey,
   generateKeyPair,
+  JsonWebKeyInput as CryptoJsonWebKeyInput,
+  KeyObject,
 } from 'crypto';
 import { promisify } from 'util';
 
 import { EllipticCurve } from '../elliptic-curve.type';
 import { JsonWebKeyBackend } from '../jsonwebkey.backend';
-import type { EllipticCurveKey } from './elliptic-curve.key';
+import { EllipticCurveKey } from './elliptic-curve.key';
 import { EllipticCurveKeyParameters } from './elliptic-curve.key.parameters';
 import { GenerateEllipticCurveKeyOptions } from './generate-elliptic-curve-key.options';
 

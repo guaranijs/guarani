@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebTokenClaimException } from '../exceptions/invalid-jsonwebtoken-claim.exception';
-import { JsonWebTokenClaimsParseOptions } from './jsonwebtoken-claims-parse.options';
 import { JsonWebTokenClaims } from './jsonwebtoken.claims';
 import { JsonWebTokenClaimsParameters } from './jsonwebtoken.claims.parameters';
+import { JsonWebTokenClaimsParseOptions } from './jsonwebtoken-claims-parse.options';
 
 const invalidIss: any[] = [null, true, 1, 1.2, {}, []];
 const invalidSubs: any[] = [null, true, 1, 1.2, {}, []];

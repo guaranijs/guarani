@@ -1,6 +1,6 @@
-import { Comparable } from '@guarani/types';
-
 import { Buffer } from 'buffer';
+
+import { Comparable } from '@guarani/types';
 
 /**
  * Removes null and undefined values from the properties of an object or an array of objects.

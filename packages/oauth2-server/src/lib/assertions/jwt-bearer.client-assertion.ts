@@ -1,17 +1,17 @@
+import { URL } from 'url';
+
 import { Inject, Injectable } from '@guarani/di';
 import {
   JsonWebKey,
   JsonWebSignature,
+  JsonWebSignatureAlgorithm,
   JsonWebSignatureHeader,
   JsonWebSignatureHeaderParameters,
   JsonWebTokenClaims,
-  JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
 
-import { URL } from 'url';
-
-import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { ClientAuthenticationInterface } from '../client-authentication/client-authentication.interface';
+import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';

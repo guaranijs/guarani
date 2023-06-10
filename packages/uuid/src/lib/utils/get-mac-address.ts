@@ -1,7 +1,7 @@
-import { Nullable } from '@guarani/types';
-
 import { Buffer } from 'buffer';
 import { networkInterfaces } from 'os';
+
+import { Nullable } from '@guarani/types';
 
 /**
  * Returns the parsed MAC Address of the first non internal network interface.

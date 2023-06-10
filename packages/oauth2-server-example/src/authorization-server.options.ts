@@ -1,8 +1,8 @@
-import { EllipticCurveKey, JsonWebKeySet } from '@guarani/jose';
-import { AuthorizationServerOptions } from '@guarani/oauth2-server';
-
 import dotenv from 'dotenv';
 import path from 'path';
+
+import { EllipticCurveKey, JsonWebKeySet } from '@guarani/jose';
+import { AuthorizationServerOptions } from '@guarani/oauth2-server';
 
 import { AccessTokenService } from './app/services/access-token.service';
 import { AuthorizationCodeService } from './app/services/authorization-code.service';

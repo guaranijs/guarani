@@ -1,9 +1,9 @@
-import { KeyObject, createSecretKey, randomBytes } from 'crypto';
+import { createSecretKey, KeyObject, randomBytes } from 'crypto';
 import { promisify } from 'util';
 
 import { JsonWebKeyBackend } from '../jsonwebkey.backend';
 import { GenerateOctetSequenceKeyOptions } from './generate-octet-sequence-key.options';
-import type { OctetSequenceKey } from './octet-sequence.key';
+import { OctetSequenceKey } from './octet-sequence.key';
 import { OctetSequenceKeyParameters } from './octet-sequence.key.parameters';
 
 const randomBytesAsync = promisify(randomBytes);

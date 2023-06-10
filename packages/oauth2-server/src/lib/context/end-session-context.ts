@@ -1,6 +1,6 @@
-import { Dictionary, Nullable } from '@guarani/types';
-
 import { URL } from 'url';
+
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
 import { EndSessionRequest } from '../requests/end-session-request';

@@ -1,5 +1,3 @@
-import { EndSessionRequest, LogoutTicket as OAuth2LogoutTicket } from '@guarani/oauth2-server';
-
 import {
   BaseEntity,
   Check,
@@ -11,6 +9,8 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { EndSessionRequest, LogoutTicket as OAuth2LogoutTicket } from '@guarani/oauth2-server';
 
 import { Client } from './client.entity';
 import { Session } from './session.entity';

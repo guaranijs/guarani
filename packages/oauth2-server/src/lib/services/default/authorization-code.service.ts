@@ -1,7 +1,7 @@
+import { randomUUID } from 'crypto';
+
 import { Injectable } from '@guarani/di';
 import { Nullable } from '@guarani/types';
-
-import { randomUUID } from 'crypto';
 
 import { AuthorizationCode } from '../../entities/authorization-code.entity';
 import { Consent } from '../../entities/consent.entity';

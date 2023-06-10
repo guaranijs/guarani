@@ -1,6 +1,6 @@
-import { RefreshToken as OAuth2RefreshToken } from '@guarani/oauth2-server';
-
 import { BaseEntity, Check, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+
+import { RefreshToken as OAuth2RefreshToken } from '@guarani/oauth2-server';
 
 import { Client } from './client.entity';
 import { User } from './user.entity';

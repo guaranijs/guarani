@@ -1,11 +1,11 @@
+import { URLSearchParams } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
-import { URLSearchParams } from 'url';
-
 import { LogoutContextInteractionContext } from '../context/interaction/logout-context.interaction-context';
-import { LogoutDecisionDenyInteractionContext } from '../context/interaction/logout-decision-deny.interaction-context';
 import { LogoutDecisionInteractionContext } from '../context/interaction/logout-decision.interaction-context';
+import { LogoutDecisionDenyInteractionContext } from '../context/interaction/logout-decision-deny.interaction-context';
 import { Login } from '../entities/login.entity';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { Session } from '../entities/session.entity';
@@ -23,8 +23,8 @@ import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
-import { LogoutDecision } from './logout-decision.type';
 import { LogoutInteractionType } from './logout.interaction-type';
+import { LogoutDecision } from './logout-decision.type';
 
 describe('Logout Interaction Type', () => {
   let container: DependencyInjectionContainer;

@@ -1,8 +1,8 @@
-import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
-
 import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
+
+import { Inject, Injectable } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';
 import { GetRegistrationContext } from '../context/registration/get.registration-context';
@@ -10,9 +10,9 @@ import { PostRegistrationContext } from '../context/registration/post.registrati
 import { PutRegistrationContext } from '../context/registration/put.registration-context';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { HttpMethod } from '../http/http-method.type';
 import { GetRegistrationResponse } from '../responses/registration/get.registration-response';
 import { PostRegistrationResponse } from '../responses/registration/post.registration-response';
 import { PutRegistrationResponse } from '../responses/registration/put.registration-response';

@@ -1,8 +1,8 @@
+import argon2 from 'argon2';
+
 import { Injectable } from '@guarani/di';
 import { UserinfoClaimsParameters, UserServiceInterface } from '@guarani/oauth2-server';
 import { Nullable } from '@guarani/types';
-
-import argon2 from 'argon2';
 
 import { UserRegistrationDto } from '../dto/user-registration.dto';
 import { User } from '../entities/user.entity';

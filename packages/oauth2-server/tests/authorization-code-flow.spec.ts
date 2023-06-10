@@ -1,20 +1,20 @@
-import { Dictionary } from '@guarani/types';
-
 import cookieParser from 'cookie-parser';
 import { CookieAccessInfo } from 'cookiejar';
 import express, { Application, urlencoded } from 'express';
 import request, { SuperAgentTest } from 'supertest';
 import { URL, URLSearchParams } from 'url';
 
+import { Dictionary } from '@guarani/types';
+
 import { expressAuthorizationServer } from '../src/lib/backends/express/express.middleware';
-import { AuthorizationCodeTokenRequest } from '../src/lib/requests/token/authorization-code.token-request';
 import { CodeAuthorizationRequest } from '../src/lib/requests/authorization/code.authorization-request';
-import { CodeAuthorizationResponse } from '../src/lib/responses/authorization/code.authorization-response';
 import { ConsentContextInteractionRequest } from '../src/lib/requests/interaction/consent-context.interaction-request';
-import { ConsentContextInteractionResponse } from '../src/lib/responses/interaction/consent-context.interaction-response';
 import { ConsentDecisionAcceptInteractionRequest } from '../src/lib/requests/interaction/consent-decision-accept.interaction-request';
 import { LoginContextInteractionRequest } from '../src/lib/requests/interaction/login-context.interaction-request';
 import { LoginDecisionAcceptInteractionRequest } from '../src/lib/requests/interaction/login-decision-accept.interaction-request';
+import { AuthorizationCodeTokenRequest } from '../src/lib/requests/token/authorization-code.token-request';
+import { CodeAuthorizationResponse } from '../src/lib/responses/authorization/code.authorization-response';
+import { ConsentContextInteractionResponse } from '../src/lib/responses/interaction/consent-context.interaction-response';
 import { TokenResponse } from '../src/lib/responses/token-response';
 
 describe('Authorization Code Flow', () => {

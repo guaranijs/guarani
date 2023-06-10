@@ -4,15 +4,15 @@ import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exc
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { EllipticCurveKey } from './backends/elliptic-curve/elliptic-curve.key';
 import { EllipticCurveKeyParameters } from './backends/elliptic-curve/elliptic-curve.key.parameters';
+import { JSONWEBKEY_REGISTRY } from './backends/jsonwebkey.registry';
 import { OctetKeyPairKey } from './backends/octet-key-pair/octet-key-pair.key';
 import { OctetSequenceKey } from './backends/octet-sequence/octet-sequence.key';
 import { OctetSequenceKeyParameters } from './backends/octet-sequence/octet-sequence.key.parameters';
 import { RsaKey } from './backends/rsa/rsa.key';
 import { JsonWebKey } from './jsonwebkey';
+import { JsonWebKeyParameters } from './jsonwebkey.parameters';
 import { JsonWebKeyOperation } from './jsonwebkey-operation.type';
 import { JsonWebKeyUse } from './jsonwebkey-use.type';
-import { JsonWebKeyParameters } from './jsonwebkey.parameters';
-import { JSONWEBKEY_REGISTRY } from './backends/jsonwebkey.registry';
 
 const secretParameters: OctetSequenceKeyParameters = {
   kty: 'oct',

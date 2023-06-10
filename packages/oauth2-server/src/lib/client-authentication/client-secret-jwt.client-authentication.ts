@@ -1,7 +1,7 @@
-import { JsonWebKey, JsonWebSignatureAlgorithm, OctetSequenceKey } from '@guarani/jose';
-import { Injectable } from '@guarani/di';
-
 import { Buffer } from 'buffer';
+
+import { Injectable } from '@guarani/di';
+import { JsonWebKey, JsonWebSignatureAlgorithm, OctetSequenceKey } from '@guarani/jose';
 
 import { JwtBearerClientAssertion } from '../assertions/jwt-bearer.client-assertion';
 import { Client } from '../entities/client.entity';

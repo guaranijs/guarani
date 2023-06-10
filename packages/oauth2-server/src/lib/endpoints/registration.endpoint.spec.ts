@@ -1,8 +1,8 @@
-import { DependencyInjectionContainer } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
-
 import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
+
+import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';
 import { GetRegistrationContext } from '../context/registration/get.registration-context';
@@ -10,8 +10,8 @@ import { PostRegistrationContext } from '../context/registration/post.registrati
 import { PutRegistrationContext } from '../context/registration/put.registration-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
+import { HttpMethod } from '../http/http-method.type';
 import { DeleteRegistrationRequest } from '../requests/registration/delete.registration-request';
 import { GetRegistrationRequest } from '../requests/registration/get.registration-request';
 import { PostRegistrationRequest } from '../requests/registration/post.registration-request';

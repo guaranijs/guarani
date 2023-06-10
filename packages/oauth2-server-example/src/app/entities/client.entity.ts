@@ -1,4 +1,15 @@
 import {
+  BaseEntity,
+  Check,
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
+import {
   JsonWebEncryptionContentEncryptionAlgorithm,
   JsonWebEncryptionKeyWrapAlgorithm,
   JsonWebKeySetParameters,
@@ -13,17 +24,6 @@ import {
   SubjectType,
 } from '@guarani/oauth2-server';
 import { Nullable } from '@guarani/types';
-
-import {
-  BaseEntity,
-  Check,
-  Column,
-  CreateDateColumn,
-  DeleteDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
 
 @Entity({ name: 'clients' })
 @Check('check_secret_expiration', '"secret" IS NOT NULL OR "secret_expires_at" IS NULL')

@@ -1,7 +1,7 @@
-import { DependencyInjectionContainer } from '@guarani/di';
-
 import { Buffer } from 'buffer';
 import { URL } from 'url';
+
+import { DependencyInjectionContainer } from '@guarani/di';
 
 import { AuthorizationCodeTokenContext } from '../../context/token/authorization-code.token-context';
 import { AuthorizationCode } from '../../entities/authorization-code.entity';

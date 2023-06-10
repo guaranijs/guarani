@@ -1,11 +1,11 @@
+import { OutgoingHttpHeaders } from 'http';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { EllipticCurveKey, JsonWebKeySet, RsaKey } from '@guarani/jose';
 import { Dictionary } from '@guarani/types';
 
-import { OutgoingHttpHeaders } from 'http';
-
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
+import { HttpMethod } from '../http/http-method.type';
 import { Endpoint } from './endpoint.type';
 import { JsonWebKeySetEndpoint } from './jsonwebkeyset.endpoint';
 

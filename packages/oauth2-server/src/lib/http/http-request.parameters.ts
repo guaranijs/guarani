@@ -1,6 +1,6 @@
-import { Dictionary } from '@guarani/types';
-
 import { IncomingHttpHeaders } from 'http';
+
+import { Dictionary } from '@guarani/types';
 
 import { HttpMethod } from './http-method.type';
 

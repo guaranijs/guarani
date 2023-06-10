@@ -1,12 +1,12 @@
+import { URLSearchParams } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
-import { URLSearchParams } from 'url';
-
 import { LoginContextInteractionContext } from '../context/interaction/login-context.interaction-context';
+import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction-context';
 import { LoginDecisionAcceptInteractionContext } from '../context/interaction/login-decision-accept.interaction-context';
 import { LoginDecisionDenyInteractionContext } from '../context/interaction/login-decision-deny.interaction-context';
-import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
@@ -25,8 +25,8 @@ import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
-import { LoginDecision } from './login-decision.type';
 import { LoginInteractionType } from './login.interaction-type';
+import { LoginDecision } from './login-decision.type';
 
 describe('Login Interaction Type', () => {
   let container: DependencyInjectionContainer;

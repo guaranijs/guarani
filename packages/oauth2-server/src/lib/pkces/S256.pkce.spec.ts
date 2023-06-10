@@ -1,7 +1,7 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
-import { S256Pkce } from './S256.pkce';
 import { Pkce } from './pkce.type';
+import { S256Pkce } from './S256.pkce';
 
 describe('S256 PKCE', () => {
   let container: DependencyInjectionContainer;

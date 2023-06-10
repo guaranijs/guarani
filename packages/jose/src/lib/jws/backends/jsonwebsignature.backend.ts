@@ -1,6 +1,6 @@
-import { Nullable } from '@guarani/types';
-
 import { Buffer } from 'buffer';
+
+import { Nullable } from '@guarani/types';
 
 import { InvalidJsonWebKeyException } from '../../exceptions/invalid-jsonwebkey.exception';
 import { JsonWebKey } from '../../jwk/jsonwebkey';

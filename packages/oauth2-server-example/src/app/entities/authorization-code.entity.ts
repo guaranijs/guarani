@@ -1,6 +1,6 @@
-import { AuthorizationCode as OAuth2AuthorizationCode, CodeAuthorizationRequest } from '@guarani/oauth2-server';
-
 import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+
+import { AuthorizationCode as OAuth2AuthorizationCode, CodeAuthorizationRequest } from '@guarani/oauth2-server';
 
 import { Consent } from './consent.entity';
 import { Login } from './login.entity';

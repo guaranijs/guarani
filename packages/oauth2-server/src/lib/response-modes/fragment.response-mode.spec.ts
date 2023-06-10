@@ -1,7 +1,7 @@
+import { OutgoingHttpHeaders } from 'http';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
-
-import { OutgoingHttpHeaders } from 'http';
 
 import { FragmentResponseMode } from './fragment.response-mode';
 import { ResponseMode } from './response-mode.type';

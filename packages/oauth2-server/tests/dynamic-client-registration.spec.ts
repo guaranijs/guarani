@@ -1,8 +1,8 @@
-import { getContainer } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
-
 import express, { Application, json } from 'express';
 import request, { SuperAgentTest } from 'supertest';
+
+import { getContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
 import { InvalidTokenException } from '../src/lib/exceptions/invalid-token.exception';

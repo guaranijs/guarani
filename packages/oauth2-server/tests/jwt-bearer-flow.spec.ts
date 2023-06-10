@@ -1,15 +1,15 @@
-import { JsonWebSignature, JsonWebSignatureHeader, JsonWebTokenClaims, OctetSequenceKey } from '@guarani/jose';
-import { Dictionary } from '@guarani/types';
-
 import { Buffer } from 'buffer';
 import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
 import { URLSearchParams } from 'url';
 
+import { JsonWebSignature, JsonWebSignatureHeader, JsonWebTokenClaims, OctetSequenceKey } from '@guarani/jose';
+import { Dictionary } from '@guarani/types';
+
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
+import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
 import { JwtBearerTokenRequest } from '../src/lib/requests/token/jwt-bearer.token-request';
 import { TokenResponse } from '../src/lib/responses/token-response';
-import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
 
 describe('Client Credentials Flow', () => {
   let app: Application;

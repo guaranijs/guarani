@@ -1,3 +1,5 @@
+import { URL } from 'url';
+
 import {
   JsonWebEncryptionContentEncryptionAlgorithm,
   JsonWebEncryptionKeyWrapAlgorithm,
@@ -5,8 +7,6 @@ import {
   JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
 import { Nullable } from '@guarani/types';
-
-import { URL } from 'url';
 
 import { ClientAuthentication } from '../../client-authentication/client-authentication.type';
 import { AccessToken } from '../../entities/access-token.entity';

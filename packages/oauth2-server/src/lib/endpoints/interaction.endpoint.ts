@@ -1,15 +1,15 @@
+import { OutgoingHttpHeaders } from 'http';
+
 import { Injectable, InjectAll } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-
-import { OutgoingHttpHeaders } from 'http';
 
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { UnsupportedInteractionTypeException } from '../exceptions/unsupported-interaction-type.exception';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { HttpMethod } from '../http/http-method.type';
 import { InteractionRequest } from '../requests/interaction/interaction-request';
 import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
 import { EndpointInterface } from './endpoint.interface';

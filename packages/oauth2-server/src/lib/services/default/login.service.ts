@@ -1,7 +1,7 @@
+import { randomUUID } from 'crypto';
+
 import { Injectable } from '@guarani/di';
 import { Nullable } from '@guarani/types';
-
-import { randomUUID } from 'crypto';
 
 import { Login } from '../../entities/login.entity';
 import { Session } from '../../entities/session.entity';

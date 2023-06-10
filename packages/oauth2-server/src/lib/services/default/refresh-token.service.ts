@@ -1,7 +1,7 @@
+import { randomBytes } from 'crypto';
+
 import { Injectable } from '@guarani/di';
 import { Nullable } from '@guarani/types';
-
-import { randomBytes } from 'crypto';
 
 import { Client } from '../../entities/client.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';

@@ -1,6 +1,6 @@
-import { DependencyInjectionContainer } from '@guarani/di';
-
 import { Buffer } from 'buffer';
+
+import { DependencyInjectionContainer } from '@guarani/di';
 
 import { ConsentContextInteractionContext } from '../../context/interaction/consent-context.interaction-context';
 import { ConsentDecisionAcceptInteractionContext } from '../../context/interaction/consent-decision-accept.interaction-context';
@@ -8,6 +8,7 @@ import { ConsentDecisionDenyInteractionContext } from '../../context/interaction
 import { Grant } from '../../entities/grant.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
+import { InvalidScopeException } from '../../exceptions/invalid-scope.exception';
 import { OAuth2Exception } from '../../exceptions/oauth2.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
@@ -15,13 +16,12 @@ import { InteractionTypeInterface } from '../../interaction-types/interaction-ty
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { ConsentContextInteractionRequest } from '../../requests/interaction/consent-context.interaction-request';
+import { ConsentDecisionInteractionRequest } from '../../requests/interaction/consent-decision.interaction-request';
 import { ConsentDecisionAcceptInteractionRequest } from '../../requests/interaction/consent-decision-accept.interaction-request';
 import { ConsentDecisionDenyInteractionRequest } from '../../requests/interaction/consent-decision-deny.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { ConsentInteractionRequestValidator } from './consent.interaction-request.validator';
-import { InvalidScopeException } from '../../exceptions/invalid-scope.exception';
-import { ConsentDecisionInteractionRequest } from '../../requests/interaction/consent-decision.interaction-request';
 
 jest.mock('../../handlers/scope.handler');
 

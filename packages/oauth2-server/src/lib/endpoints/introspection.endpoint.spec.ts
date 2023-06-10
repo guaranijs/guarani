@@ -1,14 +1,14 @@
+import { OutgoingHttpHeaders } from 'http';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
-import { OutgoingHttpHeaders } from 'http';
-
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
+import { HttpMethod } from '../http/http-method.type';
 import { IntrospectionRequest } from '../requests/introspection-request';
 import { IntrospectionResponse } from '../responses/introspection-response';
 import { Settings } from '../settings/settings';

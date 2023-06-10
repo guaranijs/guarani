@@ -1,9 +1,9 @@
 import { Injectable } from '@guarani/di';
 import { JsonWebKeySet } from '@guarani/jose';
 
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { HttpMethod } from '../http/http-method.type';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 

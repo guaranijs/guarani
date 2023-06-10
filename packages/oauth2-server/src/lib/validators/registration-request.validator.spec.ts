@@ -1,9 +1,9 @@
+import { Buffer } from 'buffer';
+import { URL } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import { JsonWebSignatureAlgorithm } from '@guarani/jose';
 import { removeNullishValues } from '@guarani/primitives';
-
-import { Buffer } from 'buffer';
-import { URL } from 'url';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';

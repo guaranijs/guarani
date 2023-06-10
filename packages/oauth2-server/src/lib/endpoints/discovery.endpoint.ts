@@ -1,12 +1,12 @@
+import { URL } from 'url';
+
 import { Inject, Injectable, LazyInject } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 
-import { URL } from 'url';
-
 import { AuthorizationServer } from '../authorization-server';
-import { HttpMethod } from '../http/http-method.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
+import { HttpMethod } from '../http/http-method.type';
 import { DiscoveryResponse } from '../responses/discovery-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';

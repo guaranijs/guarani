@@ -1,12 +1,12 @@
+import { URL, URLSearchParams } from 'url';
+
 import { Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
-import { URL, URLSearchParams } from 'url';
-
 import { HttpResponse } from '../http/http.response';
-import { ResponseMode } from './response-mode.type';
 import { ResponseModeInterface } from './response-mode.interface';
+import { ResponseMode } from './response-mode.type';
 
 /**
  * Implementation of the **Fragment** Response Mode.

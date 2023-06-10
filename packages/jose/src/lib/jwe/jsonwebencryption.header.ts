@@ -9,10 +9,10 @@ import { JsonWebEncryptionContentEncryptionBackend } from './backends/enc/jsonwe
 import { JSONWEBENCRYPTION_CONTENT_ENCRYPTION_REGISTRY } from './backends/enc/jsonwebencryption-content-encryption.registry';
 import { JsonWebEncryptionCompressionBackend } from './backends/zip/jsonwebencryption-compression.backend';
 import { JSONWEBENCRYPTION_COMPRESSION_REGISTRY } from './backends/zip/jsonwebencryption-compression.registry';
+import { JsonWebEncryptionHeaderParameters } from './jsonwebencryption.header.parameters';
 import { JsonWebEncryptionCompressionAlgorithm } from './jsonwebencryption-compression-algorithm.type';
 import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-content-encryption-algorithm.type';
 import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap-algorithm.type';
-import { JsonWebEncryptionHeaderParameters } from './jsonwebencryption.header.parameters';
 
 /**
  * Implementation of the JSON Web Encryption Header.

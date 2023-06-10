@@ -1,12 +1,12 @@
+import { URL, URLSearchParams } from 'url';
+
 import { Inject, Injectable } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
-import { URL, URLSearchParams } from 'url';
-
 import { LogoutContextInteractionContext } from '../context/interaction/logout-context.interaction-context';
+import { LogoutDecisionInteractionContext } from '../context/interaction/logout-decision.interaction-context';
 import { LogoutDecisionAcceptInteractionContext } from '../context/interaction/logout-decision-accept.interaction-context';
 import { LogoutDecisionDenyInteractionContext } from '../context/interaction/logout-decision-deny.interaction-context';
-import { LogoutDecisionInteractionContext } from '../context/interaction/logout-decision.interaction-context';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { LogoutContextInteractionResponse } from '../responses/interaction/logout-context.interaction-response';

@@ -8,8 +8,8 @@ import { TokenAuthorizationResponse } from '../responses/authorization/token.aut
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { createTokenResponse } from '../utils/create-token-response';
-import { ResponseType } from './response-type.type';
 import { ResponseTypeInterface } from './response-type.interface';
+import { ResponseType } from './response-type.type';
 
 /**
  * Implementation of the **Token** Response Type.

@@ -1,7 +1,7 @@
+import { KeyObject } from 'crypto';
+
 import { isPlainObject, removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
-
-import { KeyObject } from 'crypto';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { JoseException } from '../exceptions/jose.exception';
@@ -22,10 +22,10 @@ import { OctetSequenceKeyParameters } from './backends/octet-sequence/octet-sequ
 import { GenerateRsaKeyOptions } from './backends/rsa/generate-rsa-key.options';
 import { RsaKey } from './backends/rsa/rsa.key';
 import { RsaKeyParameters } from './backends/rsa/rsa.key.parameters';
+import { JsonWebKeyParameters } from './jsonwebkey.parameters';
 import { JsonWebKeyOperation } from './jsonwebkey-operation.type';
 import { JsonWebKeyType } from './jsonwebkey-type.type';
 import { JsonWebKeyUse } from './jsonwebkey-use.type';
-import { JsonWebKeyParameters } from './jsonwebkey.parameters';
 
 /**
  * Abstract Base Class of a JSON Web Key.

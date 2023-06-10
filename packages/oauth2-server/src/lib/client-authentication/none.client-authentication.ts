@@ -6,8 +6,8 @@ import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
-import { ClientAuthentication } from './client-authentication.type';
 import { ClientAuthenticationInterface } from './client-authentication.interface';
+import { ClientAuthentication } from './client-authentication.type';
 
 /**
  * Parameters passed by the Client on the Http Request Body.

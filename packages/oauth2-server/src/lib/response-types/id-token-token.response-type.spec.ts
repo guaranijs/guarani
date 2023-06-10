@@ -1,3 +1,5 @@
+import { URL } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';

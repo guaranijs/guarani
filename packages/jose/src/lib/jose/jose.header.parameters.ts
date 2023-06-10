@@ -5,7 +5,7 @@ import { JsonWebKeyParameters } from '../jwk/jsonwebkey.parameters';
 /**
  * Parameters of the generic JOSE Header.
  */
-export interface JoseHeaderParameters extends Dictionary<unknown> {
+export interface JoseHeaderParameters extends Dictionary<any> {
   /**
    * URI of a Set of Public JSON Web Keys that contains the JSON Web Key.
    */

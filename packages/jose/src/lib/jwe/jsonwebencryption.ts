@@ -5,11 +5,11 @@ import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exc
 import { JoseException } from '../exceptions/jose.exception';
 import { JsonWebKeyLoader } from '../jsonwebkey-loader.type';
 import { JsonWebKey } from '../jwk/jsonwebkey';
-import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-content-encryption-algorithm.type';
-import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap-algorithm.type';
 import { JsonWebEncryptionHeader } from './jsonwebencryption.header';
 import { JsonWebEncryptionHeaderParameters } from './jsonwebencryption.header.parameters';
 import { JsonWebEncryptionParameters } from './jsonwebencryption.parameters';
+import { JsonWebEncryptionContentEncryptionAlgorithm } from './jsonwebencryption-content-encryption-algorithm.type';
+import { JsonWebEncryptionKeyWrapAlgorithm } from './jsonwebencryption-keywrap-algorithm.type';
 
 type SplitJsonWebEncryptionToken = [string, string, string, string, string];
 

@@ -9,7 +9,7 @@ import { JsonWebKeyUse } from './jsonwebkey-use.type';
 /**
  * Parameters of the JSON Web Key.
  */
-export interface JsonWebKeyParameters extends Dictionary<unknown> {
+export interface JsonWebKeyParameters extends Dictionary<any> {
   /**
    * JSON Web Key Type.
    */

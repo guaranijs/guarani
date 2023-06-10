@@ -61,7 +61,7 @@ export abstract class JoseHeader implements JoseHeaderParameters {
   /**
    * Additional JOSE Header Parameters.
    */
-  [parameter: string]: unknown;
+  [parameter: string]: any;
 
   /**
    * Instantiates a new JOSE Header based on the provided Parameters.

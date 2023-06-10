@@ -1,9 +1,9 @@
-import { ConsentContextInteractionResponse, ConsentDecisionInteractionResponse, Display } from '@guarani/oauth2-server';
-import { Nullable } from '@guarani/types';
-
 import axios from 'axios';
 import { Request, Response } from 'express';
 import { URL, URLSearchParams } from 'url';
+
+import { ConsentContextInteractionResponse, ConsentDecisionInteractionResponse, Display } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 const popupTemplateFn = (redirectUri: string): string => `
 <script type="text/javascript">

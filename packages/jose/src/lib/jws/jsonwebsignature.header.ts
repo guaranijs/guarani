@@ -3,8 +3,8 @@ import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorit
 import { JoseHeader } from '../jose/jose.header';
 import { JsonWebSignatureBackend } from './backends/jsonwebsignature.backend';
 import { JSONWEBSIGNATURE_REGISTRY } from './backends/jsonwebsignature.registry';
-import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.type';
 import { JsonWebSignatureHeaderParameters } from './jsonwebsignature.header.parameters';
+import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.type';
 
 /**
  * Implementation of the JSON Web Signature Header.

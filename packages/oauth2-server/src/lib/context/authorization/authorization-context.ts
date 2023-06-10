@@ -1,6 +1,6 @@
-import { Dictionary, Nullable } from '@guarani/types';
-
 import { URL } from 'url';
+
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { Client } from '../../entities/client.entity';

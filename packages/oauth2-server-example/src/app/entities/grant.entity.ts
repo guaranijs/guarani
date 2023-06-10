@@ -1,6 +1,3 @@
-import { AuthorizationRequest, Grant as OAuth2Grant, InteractionType } from '@guarani/oauth2-server';
-import { Nullable } from '@guarani/types';
-
 import {
   BaseEntity,
   Check,
@@ -13,6 +10,9 @@ import {
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
+
+import { AuthorizationRequest, Grant as OAuth2Grant, InteractionType } from '@guarani/oauth2-server';
+import { Nullable } from '@guarani/types';
 
 import { Client } from './client.entity';
 import { Consent } from './consent.entity';

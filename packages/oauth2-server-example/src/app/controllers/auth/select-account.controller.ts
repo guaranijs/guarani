@@ -1,3 +1,8 @@
+import axios, { AxiosError } from 'axios';
+import { Request, Response } from 'express';
+import { In } from 'typeorm';
+import { URLSearchParams } from 'url';
+
 import {
   Display,
   InvalidRequestException,
@@ -5,14 +10,9 @@ import {
   SelectAccountDecisionInteractionRequest,
   SelectAccountDecisionInteractionResponse,
 } from '@guarani/oauth2-server';
-
-import axios, { AxiosError } from 'axios';
-import { Request, Response } from 'express';
-import { In } from 'typeorm';
-import { URLSearchParams } from 'url';
+import { Nullable } from '@guarani/types';
 
 import { Login } from '../../entities/login.entity';
-import { Nullable } from '@guarani/types';
 
 const popupTemplateFn = (redirectUri: string): string => `
 <script type="text/javascript">

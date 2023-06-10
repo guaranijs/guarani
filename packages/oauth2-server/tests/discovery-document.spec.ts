@@ -2,8 +2,8 @@ import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
-import { DiscoveryResponse } from '../src/lib/responses/discovery-response';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
+import { DiscoveryResponse } from '../src/lib/responses/discovery-response';
 
 describe('Discovery Document', () => {
   let app: Application;

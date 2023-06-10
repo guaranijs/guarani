@@ -1,7 +1,7 @@
-import { Injectable } from '@guarani/di';
-
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
+
+import { Injectable } from '@guarani/di';
 
 import { PkceInterface } from './pkce.interface';
 import { Pkce } from './pkce.type';

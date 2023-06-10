@@ -2,9 +2,9 @@ import { Inject, Injectable, InjectAll } from '@guarani/di';
 import { Nullable } from '@guarani/types';
 
 import { LoginContextInteractionContext } from '../../context/interaction/login-context.interaction-context';
+import { LoginDecisionInteractionContext } from '../../context/interaction/login-decision.interaction-context';
 import { LoginDecisionAcceptInteractionContext } from '../../context/interaction/login-decision-accept.interaction-context';
 import { LoginDecisionDenyInteractionContext } from '../../context/interaction/login-decision-deny.interaction-context';
-import { LoginDecisionInteractionContext } from '../../context/interaction/login-decision.interaction-context';
 import { Client } from '../../entities/client.entity';
 import { Grant } from '../../entities/grant.entity';
 import { User } from '../../entities/user.entity';
@@ -17,9 +17,9 @@ import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { LoginDecision } from '../../interaction-types/login-decision.type';
 import { LoginContextInteractionRequest } from '../../requests/interaction/login-context.interaction-request';
+import { LoginDecisionInteractionRequest } from '../../requests/interaction/login-decision.interaction-request';
 import { LoginDecisionAcceptInteractionRequest } from '../../requests/interaction/login-decision-accept.interaction-request';
 import { LoginDecisionDenyInteractionRequest } from '../../requests/interaction/login-decision-deny.interaction-request';
-import { LoginDecisionInteractionRequest } from '../../requests/interaction/login-decision.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { UserServiceInterface } from '../../services/user.service.interface';

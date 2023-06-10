@@ -1,3 +1,6 @@
+import { createHash } from 'crypto';
+import https from 'https';
+
 import { Inject, Injectable } from '@guarani/di';
 import {
   JsonWebEncryption,
@@ -10,9 +13,6 @@ import {
   JsonWebTokenClaims,
 } from '@guarani/jose';
 import { Nullable } from '@guarani/types';
-
-import { createHash } from 'crypto';
-import https from 'https';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';

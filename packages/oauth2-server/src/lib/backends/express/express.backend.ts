@@ -1,12 +1,12 @@
-import { Injectable } from '@guarani/di';
-
 import { Request, RequestHandler, Response, Router } from 'express';
+
+import { Injectable } from '@guarani/di';
 
 import { AuthorizationServer } from '../../authorization-server';
 import { Endpoint } from '../../endpoints/endpoint.type';
-import { HttpMethod } from '../../http/http-method.type';
 import { HttpRequest } from '../../http/http.request';
 import { HttpResponse } from '../../http/http.response';
+import { HttpMethod } from '../../http/http-method.type';
 
 type ExpressHttpMethod = 'get' | 'post';
 

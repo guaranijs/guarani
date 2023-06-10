@@ -1,16 +1,16 @@
-import { Nullable } from '@guarani/types';
-
 import { Buffer } from 'buffer';
+
+import { Nullable } from '@guarani/types';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { InvalidJsonWebSignatureException } from '../exceptions/invalid-jsonwebsignature.exception';
 import { JoseException } from '../exceptions/jose.exception';
 import { JsonWebKeyLoader } from '../jsonwebkey-loader.type';
 import { JsonWebKey } from '../jwk/jsonwebkey';
-import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.type';
 import { JsonWebSignatureHeader } from './jsonwebsignature.header';
 import { JsonWebSignatureHeaderParameters } from './jsonwebsignature.header.parameters';
 import { JsonWebSignatureParameters } from './jsonwebsignature.parameters';
+import { JsonWebSignatureAlgorithm } from './jsonwebsignature-algorithm.type';
 
 type SplitJsonWebSignatureToken = [string, string, string];
 

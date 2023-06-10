@@ -1,5 +1,3 @@
-import 'jest-extended';
-
 import * as Enum from '../lib/enum';
 
 enum IntEnum {

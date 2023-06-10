@@ -1,8 +1,8 @@
 import 'jest-extended';
 
-import { Comparable } from '@guarani/types';
-
 import { Buffer } from 'buffer';
+
+import { Comparable } from '@guarani/types';
 
 import { compare, isPlainObject, removeNullishValues } from './objects';
 

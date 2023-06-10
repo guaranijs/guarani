@@ -1,15 +1,15 @@
 import {
-  JsonWebKeyInput as CryptoJsonWebKeyInput,
-  KeyObject,
   createPrivateKey,
   createPublicKey,
   generateKeyPair,
+  JsonWebKeyInput as CryptoJsonWebKeyInput,
+  KeyObject,
 } from 'crypto';
 import { promisify } from 'util';
 
 import { JsonWebKeyBackend } from '../jsonwebkey.backend';
 import { GenerateRsaKeyOptions } from './generate-rsa-key.options';
-import type { RsaKey } from './rsa.key';
+import { RsaKey } from './rsa.key';
 import { RsaKeyParameters } from './rsa.key.parameters';
 
 const generateKeyPairAsync = promisify(generateKeyPair);

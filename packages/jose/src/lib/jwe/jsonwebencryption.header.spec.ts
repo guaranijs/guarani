@@ -1,5 +1,3 @@
-import 'jest-extended';
-
 import { Buffer } from 'buffer';
 
 import { InvalidJoseHeaderException } from '../exceptions/invalid-jose-header.exception';

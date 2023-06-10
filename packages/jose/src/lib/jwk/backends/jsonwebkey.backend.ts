@@ -1,6 +1,6 @@
-import { Dictionary } from '@guarani/types';
+import { createHash, KeyObject } from 'crypto';
 
-import { KeyObject, createHash } from 'crypto';
+import { Dictionary } from '@guarani/types';
 
 import { JsonWebKey } from '../jsonwebkey';
 import { JsonWebKeyParameters } from '../jsonwebkey.parameters';

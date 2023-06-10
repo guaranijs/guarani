@@ -1,5 +1,3 @@
-import 'jest-extended';
-
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebEncryptionException } from '../exceptions/invalid-jsonwebencryption.exception';

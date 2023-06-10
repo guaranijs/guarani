@@ -1,16 +1,16 @@
 import {
-  JsonWebKeyInput as CryptoJsonWebKeyInput,
-  KeyObject,
   createPrivateKey,
   createPublicKey,
   generateKeyPair,
+  JsonWebKeyInput as CryptoJsonWebKeyInput,
+  KeyObject,
 } from 'crypto';
 import { promisify } from 'util';
 
 import { EllipticCurve } from '../elliptic-curve.type';
 import { JsonWebKeyBackend } from '../jsonwebkey.backend';
 import { GenerateOctetKeyPairKeyOptions } from './generate-octet-key-pair-key.options';
-import type { OctetKeyPairKey } from './octet-key-pair.key';
+import { OctetKeyPairKey } from './octet-key-pair.key';
 import { OctetKeyPairKeyParameters } from './octet-key-pair.key.parameters';
 
 const generateKeyPairAsync = promisify(generateKeyPair);

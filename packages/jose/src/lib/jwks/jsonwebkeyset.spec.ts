@@ -1,7 +1,6 @@
-import 'jest-extended';
-
 import { Buffer } from 'buffer';
 
+import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { InvalidJsonWebKeySetException } from '../exceptions/invalid-jsonwebkeyset.exception';
 import { EllipticCurveKey } from '../jwk/backends/elliptic-curve/elliptic-curve.key';
 import { EllipticCurveKeyParameters } from '../jwk/backends/elliptic-curve/elliptic-curve.key.parameters';
@@ -10,7 +9,6 @@ import { RsaKeyParameters } from '../jwk/backends/rsa/rsa.key.parameters';
 import { JsonWebKey } from '../jwk/jsonwebkey';
 import { JsonWebKeySet } from './jsonwebkeyset';
 import { JsonWebKeySetParameters } from './jsonwebkeyset.parameters';
-import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 
 const publicEllipticCurveParameters: EllipticCurveKeyParameters = {
   kty: 'EC',

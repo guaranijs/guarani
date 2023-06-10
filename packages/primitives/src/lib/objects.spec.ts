@@ -1,5 +1,3 @@
-import 'jest-extended';
-
 import { Buffer } from 'buffer';
 
 import { Comparable } from '@guarani/types';

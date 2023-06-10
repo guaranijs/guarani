@@ -102,6 +102,7 @@ export { UnauthorizedClientException } from './lib/exceptions/unauthorized-clien
 export { UnmetAuthenticationRequirementsException } from './lib/exceptions/unmet-authentication-requirements.exception';
 export { UnsupportedGrantTypeException } from './lib/exceptions/unsupported-grant-type.exception';
 export { UnsupportedInteractionTypeException } from './lib/exceptions/unsupported-interaction-type.exception';
+export { UnsupportedMediaTypeException } from './lib/exceptions/unsupported-media-type.exception';
 export { UnsupportedResponseTypeException } from './lib/exceptions/unsupported-response-type.exception';
 export { UnsupportedTokenTypeException } from './lib/exceptions/unsupported-token-type.exception';
 

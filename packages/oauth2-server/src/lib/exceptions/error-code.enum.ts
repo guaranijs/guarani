@@ -108,6 +108,11 @@ export enum ErrorCode {
   UnsupportedInteractionType = 'unsupported_interaction_type',
 
   /**
+   * The Http Header **Content-Type** is not valid for the Endpoint.
+   */
+  UnsupportedMediaType = 'unsupported_media_type',
+
+  /**
    * The Authorization Server does not support the provided Response Type.
    */
   UnsupportedResponseType = 'unsupported_response_type',

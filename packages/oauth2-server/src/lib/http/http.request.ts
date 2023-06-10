@@ -1,7 +1,11 @@
+import { Buffer } from 'buffer';
 import { IncomingHttpHeaders } from 'http';
+import { URLSearchParams } from 'url';
 
 import { Dictionary } from '@guarani/types';
 
+import { InvalidRequestException } from '../exceptions/invalid-request.exception';
+import { UnsupportedMediaTypeException } from '../exceptions/unsupported-media-type.exception';
 import { HttpMethod } from './http-method.type';
 import { HttpRequestParameters } from './http-request.parameters';
 
@@ -25,7 +29,7 @@ export class HttpRequest {
   /**
    * Parsed Query Parameters of the Http Request.
    */
-  public readonly query: Dictionary<unknown>;
+  public readonly query: URLSearchParams;
 
   /**
    * Headers of the Http Request.
@@ -38,9 +42,19 @@ export class HttpRequest {
   public readonly cookies: Dictionary<unknown>;
 
   /**
-   * Parsed Body of the Http Request.
+   * Raw Body of the Http Request.
    */
-  public readonly body: Dictionary<unknown>;
+  #body: Buffer;
+
+  /**
+   * Body of the Http Request parsed as **application/x-www-form-urlencoded**.
+   */
+  #form?: URLSearchParams;
+
+  /**
+   * Body of the Http Request parsed as **application/json**.
+   */
+  #json?: unknown;
 
   /**
    * Instantiates a new Http Request.
@@ -51,11 +65,41 @@ export class HttpRequest {
     this.checkHttpMethod(parameters.method);
 
     this.method = parameters.method;
+    this.path = parameters.url.pathname;
+    this.query = parameters.url.searchParams;
     this.headers = parameters.headers;
     this.cookies = parameters.cookies;
-    this.body = parameters.body;
-    this.path = parameters.path;
-    this.query = parameters.query;
+    this.#body = parameters.body;
+  }
+
+  /**
+   * Returns the contents of the Http Request Body parsed as **application/x-www-form-urlencoded**.
+   */
+  public form(): URLSearchParams {
+    this.expectContentType('application/x-www-form-urlencoded');
+
+    if (!Buffer.isBuffer(this.#form)) {
+      this.#form = new URLSearchParams(this.#body.toString('utf8'));
+    }
+
+    return this.#form;
+  }
+
+  /**
+   * Returns the contents of the Http Request Body parsed as **application/json**.
+   */
+  public json(): unknown {
+    this.expectContentType('application/json');
+
+    try {
+      if (typeof this.#json === 'undefined') {
+        this.#json = JSON.parse(this.#body.toString('utf8'));
+      }
+
+      return this.#json;
+    } catch (exc: unknown) {
+      throw new InvalidRequestException('The Http Request Body is not a valid JSON object.', { cause: exc });
+    }
   }
 
   /**
@@ -70,6 +114,17 @@ export class HttpRequest {
 
     if (method !== 'DELETE' && method !== 'GET' && method !== 'POST' && method !== 'PUT') {
       throw new TypeError(`Unsupported Http Method "${method}".`);
+    }
+  }
+
+  /**
+   * Checks if the value of the Http Header **Content-Type** is the one expected by the application.
+   *
+   * @param contentType Expected Content Type.
+   */
+  private expectContentType(contentType: string): void {
+    if (this.headers['content-type'] !== contentType) {
+      throw new UnsupportedMediaTypeException(`Unexpected Content Type "${this.headers['content-type']}".`);
     }
   }
 }

@@ -1,5 +1,10 @@
 import { Buffer } from 'buffer';
+import { URL, URLSearchParams } from 'url';
 
+import { Dictionary } from '@guarani/types';
+
+import { InvalidRequestException } from '../exceptions/invalid-request.exception';
+import { UnsupportedMediaTypeException } from '../exceptions/unsupported-media-type.exception';
 import { HttpRequest } from './http.request';
 import { HttpRequestParameters } from './http-request.parameters';
 
@@ -31,7 +36,7 @@ describe('Http Request', () => {
       );
     });
 
-    it.each(unsupportedHttpMethods)('should throw when providing an unsupported method.', (method) => {
+    it.each(unsupportedHttpMethods)('should throw when providing an unsupported http method.', (method) => {
       expect(() => new HttpRequest(<HttpRequestParameters>{ method })).toThrowWithMessage(
         TypeError,
         `Unsupported Http Method "${method}".`
@@ -41,57 +46,178 @@ describe('Http Request', () => {
     it('should return a valid http delete request.', () => {
       const parameters: HttpRequestParameters = {
         method: 'DELETE',
-        path: '/p/a/t/h',
-        query: { entity_id: 'entity_id' },
+        url: new URL('https://server.example.com/p/a/t/h?entity_id=entity_id'),
         headers: { origin: 'server.example.com' },
         cookies: { guarani: 'guarani_cookie' },
-        body: {},
+        body: Buffer.alloc(0),
       };
 
-      const httpRequest = new HttpRequest(parameters);
-      expect(httpRequest).toMatchObject(parameters);
+      const request = new HttpRequest(parameters);
+
+      expect(request).toMatchObject<Partial<HttpRequest>>({
+        method: 'DELETE',
+        path: '/p/a/t/h',
+        query: new URLSearchParams({ entity_id: 'entity_id' }),
+        headers: { origin: 'server.example.com' },
+        cookies: { guarani: 'guarani_cookie' },
+      });
     });
 
     it('should return a valid http get request.', () => {
       const parameters: HttpRequestParameters = {
         method: 'GET',
-        path: '/p/a/t/h',
-        query: { foo: 'foo', bar: 'bar' },
+        url: new URL('https://server.example.com/p/a/t/h?foo=foo&bar=bar'),
         headers: { origin: 'server.example.com' },
         cookies: { guarani: 'guarani_cookie' },
-        body: {},
+        body: Buffer.alloc(0),
       };
 
-      const httpRequest = new HttpRequest(parameters);
-      expect(httpRequest).toMatchObject(parameters);
+      const request = new HttpRequest(parameters);
+
+      expect(request).toMatchObject<Partial<HttpRequest>>({
+        method: 'GET',
+        path: '/p/a/t/h',
+        query: new URLSearchParams({ foo: 'foo', bar: 'bar' }),
+        headers: { origin: 'server.example.com' },
+        cookies: { guarani: 'guarani_cookie' },
+      });
     });
 
     it('should return a valid http post request.', () => {
       const parameters: HttpRequestParameters = {
         method: 'POST',
-        path: '/p/a/t/h',
-        query: {},
-        headers: { origin: 'server.example.com' },
+        url: new URL('https://server.example.com/p/a/t/h'),
+        headers: { 'content-type': 'application/json', origin: 'server.example.com' },
         cookies: { guarani: 'guarani_cookie' },
-        body: { foo: 'foo', bar: 'bar' },
+        body: Buffer.from(JSON.stringify({ foo: 'foo', bar: 'bar' }), 'utf8'),
       };
 
-      const httpRequest = new HttpRequest(parameters);
-      expect(httpRequest).toMatchObject(parameters);
+      const request = new HttpRequest(parameters);
+
+      expect(request).toMatchObject<Partial<HttpRequest>>({
+        method: 'POST',
+        path: '/p/a/t/h',
+        query: new URLSearchParams(),
+        headers: { 'content-type': 'application/json', origin: 'server.example.com' },
+        cookies: { guarani: 'guarani_cookie' },
+      });
     });
 
     it('should return a valid http put request.', () => {
       const parameters: HttpRequestParameters = {
         method: 'PUT',
-        path: '/p/a/t/h',
-        query: { entity_id: 'entity_id' },
-        headers: { origin: 'server.example.com' },
+        url: new URL('https://server.example.com/p/a/t/h?entity_id=entity_id'),
+        headers: { 'content-type': 'application/json', origin: 'server.example.com' },
         cookies: { guarani: 'guarani_cookie' },
-        body: { foo: 'foo', bar: 'bar' },
+        body: Buffer.from(JSON.stringify({ foo: 'foo', bar: 'bar' }), 'utf8'),
       };
 
-      const httpRequest = new HttpRequest(parameters);
-      expect(httpRequest).toMatchObject(parameters);
+      const request = new HttpRequest(parameters);
+
+      expect(request).toMatchObject<Partial<HttpRequest>>({
+        method: 'PUT',
+        path: '/p/a/t/h',
+        query: new URLSearchParams({ entity_id: 'entity_id' }),
+        headers: { 'content-type': 'application/json', origin: 'server.example.com' },
+        cookies: { guarani: 'guarani_cookie' },
+      });
+    });
+  });
+
+  describe('form()', () => {
+    it('should throw when the http header "content-type" is not "application/x-www-form-urlencoded".', () => {
+      const data: Dictionary<any> = { foo: 'foo', bar: 'bar' };
+
+      const parameters: HttpRequestParameters = {
+        method: 'POST',
+        url: new URL('https://server.example.com/p/a/t/h'),
+        headers: { 'content-type': 'application/json', origin: 'server.example.com' },
+        cookies: { guarani: 'guarani_cookie' },
+        body: Buffer.from(JSON.stringify(data), 'utf8'),
+      };
+
+      const request = new HttpRequest(parameters);
+
+      expect(() => request.form()).toThrowWithMessage(
+        UnsupportedMediaTypeException,
+        'Unexpected Content Type "application/json".'
+      );
+    });
+
+    it('should return the parsed body of the http request.', () => {
+      const data: Dictionary<any> = { foo: 'foo', bar: 'bar' };
+
+      const parameters: HttpRequestParameters = {
+        method: 'POST',
+        url: new URL('https://server.example.com/p/a/t/h'),
+        headers: { 'content-type': 'application/x-www-form-urlencoded', origin: 'server.example.com' },
+        cookies: { guarani: 'guarani_cookie' },
+        body: Buffer.from(new URLSearchParams(data).toString(), 'utf8'),
+      };
+
+      const request = new HttpRequest(parameters);
+      const body = request.form();
+
+      expect(body).toBeInstanceOf(URLSearchParams);
+
+      expect(body.get('foo')).toEqual('foo');
+      expect(body.get('bar')).toEqual('bar');
+      expect(body.get('baz')).toBeNull();
+    });
+  });
+
+  describe('json()', () => {
+    it('should throw when the http header "content-type" is not "application/json".', () => {
+      const data: Dictionary<any> = { foo: 'foo', bar: 'bar' };
+
+      const parameters: HttpRequestParameters = {
+        method: 'POST',
+        url: new URL('https://server.example.com/p/a/t/h'),
+        headers: { 'content-type': 'application/x-www-form-urlencoded', origin: 'server.example.com' },
+        cookies: { guarani: 'guarani_cookie' },
+        body: Buffer.from(new URLSearchParams(data).toString(), 'utf8'),
+      };
+
+      const request = new HttpRequest(parameters);
+
+      expect(() => request.json()).toThrowWithMessage(
+        UnsupportedMediaTypeException,
+        'Unexpected Content Type "application/x-www-form-urlencoded".'
+      );
+    });
+
+    it('should throw when the body of the http request is an invalid json object.', () => {
+      const parameters: HttpRequestParameters = {
+        method: 'POST',
+        url: new URL('https://server.example.com/p/a/t/h'),
+        headers: { 'content-type': 'application/json', origin: 'server.example.com' },
+        cookies: { guarani: 'guarani_cookie' },
+        body: Buffer.from('undefined', 'utf8'),
+      };
+
+      const request = new HttpRequest(parameters);
+
+      expect(() => request.json()).toThrowWithMessage(
+        InvalidRequestException,
+        'The Http Request Body is not a valid JSON object.'
+      );
+    });
+
+    it('should return the parsed body of the http request.', () => {
+      const data: Dictionary<any> = { foo: 'foo', bar: 'bar' };
+
+      const parameters: HttpRequestParameters = {
+        method: 'POST',
+        url: new URL('https://server.example.com/p/a/t/h'),
+        headers: { 'content-type': 'application/json', origin: 'server.example.com' },
+        cookies: { guarani: 'guarani_cookie' },
+        body: Buffer.from(JSON.stringify(data), 'utf8'),
+      };
+
+      const request = new HttpRequest(parameters);
+      const body = request.json();
+
+      expect(body).toStrictEqual(data);
     });
   });
 });

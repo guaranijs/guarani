@@ -55,7 +55,7 @@ describe('URI Query Client Authorization', () => {
         query,
       });
 
-      expect(clientAuthorization.hasBeenRequested(request)).toBe(expected);
+      expect(clientAuthorization.hasBeenRequested(request)).toEqual(expected);
     });
   });
 

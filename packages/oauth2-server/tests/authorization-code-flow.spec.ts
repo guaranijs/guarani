@@ -54,7 +54,7 @@ describe('Authorization Code Flow', () => {
 
     const authorizationEndpointUrl = new URL(firstAuthorizationResponse.headers.location);
 
-    expect(firstAuthorizationResponse.status).toBe(303);
+    expect(firstAuthorizationResponse.status).toEqual(303);
     expect(authorizationEndpointUrl.href).toEqual(
       `http://localhost:3000/oauth/authorize?${authorizationRequestSearchParameters.toString()}`
     );
@@ -71,7 +71,7 @@ describe('Authorization Code Flow', () => {
     const loginUrl = new URL(loginAuthorizationResponse.headers.location);
     const loginChallenge = loginUrl.searchParams.get('login_challenge')!;
 
-    expect(loginAuthorizationResponse.status).toBe(303);
+    expect(loginAuthorizationResponse.status).toEqual(303);
 
     expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
     expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
@@ -89,7 +89,7 @@ describe('Authorization Code Flow', () => {
       `/oauth/interaction?${loginInteractionRequestBody.toString()}`
     );
 
-    expect(loginInteractionContextResponse.body.skip).toBe(false);
+    expect(loginInteractionContextResponse.body.skip).toBeFalse();
 
     expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
     expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
@@ -111,8 +111,8 @@ describe('Authorization Code Flow', () => {
       .post('/oauth/interaction')
       .send(loginInteractionAcceptDecisionBody.toString());
 
-    expect(loginInteractionAcceptResponse.status).toBe(200);
-    expect(loginInteractionAcceptResponse.body.redirect_to).toBe(loginInteractionContextResponse.body.request_url);
+    expect(loginInteractionAcceptResponse.status).toEqual(200);
+    expect(loginInteractionAcceptResponse.body.redirect_to).toEqual(loginInteractionContextResponse.body.request_url);
 
     expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
     expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
@@ -126,7 +126,7 @@ describe('Authorization Code Flow', () => {
     const consentUrl = new URL(consentAuthorizationResponse.headers.location);
     const consentChallenge = consentUrl.searchParams.get('consent_challenge')!;
 
-    expect(consentAuthorizationResponse.status).toBe(303);
+    expect(consentAuthorizationResponse.status).toEqual(303);
 
     expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
     expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
@@ -172,8 +172,8 @@ describe('Authorization Code Flow', () => {
       .post('/oauth/interaction')
       .send(consentInteractionAcceptDecisionBody.toString());
 
-    expect(consentInteractionAcceptResponse.status).toBe(200);
-    expect(consentInteractionAcceptResponse.body.redirect_to).toBe(loginInteractionContextResponse.body.request_url);
+    expect(consentInteractionAcceptResponse.status).toEqual(200);
+    expect(consentInteractionAcceptResponse.body.redirect_to).toEqual(loginInteractionContextResponse.body.request_url);
 
     expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
     expect(agent.jar.getCookie('guarani:session', CookieAccessInfo.All)?.value).toEqual(expect.any(String));
@@ -186,7 +186,7 @@ describe('Authorization Code Flow', () => {
 
     const callbackUrl = new URL(authorizationResponse.headers.location);
 
-    expect(authorizationResponse.status).toBe(303);
+    expect(authorizationResponse.status).toEqual(303);
 
     expect(Object.fromEntries(callbackUrl.searchParams.entries())).toStrictEqual<CodeAuthorizationResponse>({
       code: expect.any(String),
@@ -216,7 +216,7 @@ describe('Authorization Code Flow', () => {
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
       .send(requestBody.toString());
 
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
 
     expect(response.body).toStrictEqual<TokenResponse>({
       access_token: expect.any(String),

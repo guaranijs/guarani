@@ -44,7 +44,7 @@ describe('Refresh Token Flow', () => {
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
       .send(accessTokenRequestBody.toString());
 
-    expect(accessTokenResponse.status).toBe(200);
+    expect(accessTokenResponse.status).toEqual(200);
 
     expect(accessTokenResponse.body).toStrictEqual<TokenResponse>({
       access_token: expect.any(String),
@@ -70,7 +70,7 @@ describe('Refresh Token Flow', () => {
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
       .send(refreshTokenRequestBody.toString());
 
-    expect(refreshTokenResponse.status).toBe(200);
+    expect(refreshTokenResponse.status).toEqual(200);
 
     expect(refreshTokenResponse.body).toStrictEqual<TokenResponse>({
       access_token: expect.any(String),

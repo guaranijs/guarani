@@ -91,7 +91,7 @@ describe('Dynamic Client Registration', () => {
       .set('Accept', 'application/json')
       .send(requestBody);
 
-    expect(response.status).toBe(201);
+    expect(response.status).toEqual(201);
 
     expect(response.body).toStrictEqual<PostRegistrationResponse>({
       client_id: expect.any(String),
@@ -149,7 +149,7 @@ describe('Dynamic Client Registration', () => {
       .query({ client_id: clientId })
       .auth(registrationAccessToken, { type: 'bearer' });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
 
     expect(response.body).toStrictEqual<GetRegistrationResponse>({
       client_id: clientId,
@@ -242,7 +242,7 @@ describe('Dynamic Client Registration', () => {
       .set('Accept', 'application/json')
       .send(requestBody);
 
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
 
     expect(response.body).toStrictEqual<PutRegistrationResponse>({
       client_id: clientId,
@@ -293,7 +293,7 @@ describe('Dynamic Client Registration', () => {
       .query({ client_id: clientId })
       .auth(registrationAccessToken, { type: 'bearer' });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
 
     expect(response.body).toStrictEqual<GetRegistrationResponse>({
       client_id: clientId,
@@ -344,7 +344,7 @@ describe('Dynamic Client Registration', () => {
       .query({ client_id: clientId })
       .auth(registrationAccessToken, { type: 'bearer' });
 
-    expect(response.status).toBe(204);
+    expect(response.status).toEqual(204);
   });
 
   it('GET /oauth/register (Deleted Client)', async () => {
@@ -355,7 +355,7 @@ describe('Dynamic Client Registration', () => {
       .query({ client_id: clientId })
       .auth(registrationAccessToken, { type: 'bearer' });
 
-    expect(response.status).toBe(401);
+    expect(response.status).toEqual(401);
 
     expect(response.body).toStrictEqual(removeNullishValues(error.toJSON()));
   });

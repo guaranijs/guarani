@@ -48,7 +48,7 @@ describe('Refresh Token Revocation', () => {
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
       .send(requestBody.toString());
 
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
 
     expect(response.body).toStrictEqual<TokenResponse>({
       access_token: expect.any(String),
@@ -75,7 +75,7 @@ describe('Refresh Token Revocation', () => {
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
       .send(refreshTokenRequestBody.toString());
 
-    expect(refreshTokenResponse.status).toBe(200);
+    expect(refreshTokenResponse.status).toEqual(200);
 
     expect(refreshTokenResponse.body).toStrictEqual<TokenResponse>({
       access_token: expect.any(String),
@@ -99,7 +99,7 @@ describe('Refresh Token Revocation', () => {
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
       .send(revocationRequestBody.toString());
 
-    expect(revocationResponse.status).toBe(200);
+    expect(revocationResponse.status).toEqual(200);
     expect(revocationResponse.body).toEqual(Buffer.alloc(0));
   });
 
@@ -116,7 +116,7 @@ describe('Refresh Token Revocation', () => {
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
       .send(refreshTokenRequestBody.toString());
 
-    expect(refreshTokenResponse.status).toBe(400);
+    expect(refreshTokenResponse.status).toEqual(400);
 
     expect(refreshTokenResponse.body).toStrictEqual<OAuth2ExceptionResponse>({
       error: 'invalid_grant',

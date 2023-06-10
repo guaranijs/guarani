@@ -38,20 +38,18 @@ describe('Device Code Flow', () => {
       .post('/oauth/device-authorization')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
 
-    expect(response.body).toStrictEqual<DeviceAuthorizationResponse>(
-      expect.objectContaining({
-        device_code: expect.stringMatching(/^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/),
-        user_code: expect.stringMatching(/^[A-Z]{4}-[A-Z]{4}$/),
-        verification_uri: 'http://localhost:3000/device',
-        verification_uri_complete: expect.stringMatching(
-          /^http:\/\/localhost:3000\/device\?user_code=([A-Z]{4}-[A-Z]{4})$/
-        ),
-        expires_in: 1800,
-        interval: 5,
-      })
-    );
+    expect(response.body).toStrictEqual<DeviceAuthorizationResponse>({
+      device_code: expect.stringMatching(/^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/),
+      user_code: expect.stringMatching(/^[A-Z]{4}-[A-Z]{4}$/),
+      verification_uri: 'http://localhost:3000/device',
+      verification_uri_complete: expect.stringMatching(
+        /^http:\/\/localhost:3000\/device\?user_code=([A-Z]{4}-[A-Z]{4})$/
+      ),
+      expires_in: 1800,
+      interval: 5,
+    });
 
     deviceCode = response.body.device_code;
   });
@@ -79,7 +77,7 @@ describe('Device Code Flow', () => {
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
       .send(requestBody.toString());
 
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
 
     expect(response.body).toStrictEqual<TokenResponse>({
       access_token: expect.any(String),

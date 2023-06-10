@@ -27,7 +27,7 @@ describe('Discovery Document', () => {
   it('GET /.well-known/openid-configuration', async () => {
     const response = await request(app).get('/.well-known/openid-configuration');
 
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
 
     expect(response.body).toStrictEqual<DiscoveryResponse>({
       issuer: 'http://localhost:3000',

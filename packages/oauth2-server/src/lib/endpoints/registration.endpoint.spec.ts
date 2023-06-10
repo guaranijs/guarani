@@ -390,7 +390,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
         const response = await endpoint.handle(request);
 
-        expect(response.statusCode).toBe(201);
+        expect(response.statusCode).toEqual(201);
 
         expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
           'Content-Type': 'application/json',
@@ -517,7 +517,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toEqual(200);
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         'Content-Type': 'application/json',
@@ -555,7 +555,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(204);
+      expect(response.statusCode).toEqual(204);
       expect(response.headers).toStrictEqual(endpoint['headers']);
       expect(response.body).toEqual(Buffer.alloc(0));
 
@@ -756,7 +756,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toEqual(200);
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
         'Content-Type': 'application/json',

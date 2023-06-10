@@ -45,7 +45,7 @@ describe('Access Token Introspection', () => {
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
       .send(requestBody.toString());
 
-    expect(response.status).toBe(200);
+    expect(response.status).toEqual(200);
 
     expect(response.body).toStrictEqual<TokenResponse>({
       access_token: expect.any(String),
@@ -67,7 +67,7 @@ describe('Access Token Introspection', () => {
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
       .send(introspectionRequestBody.toString());
 
-    expect(introspectionResponse.status).toBe(200);
+    expect(introspectionResponse.status).toEqual(200);
 
     expect(introspectionResponse.body).toStrictEqual<IntrospectionResponse>({
       active: true,

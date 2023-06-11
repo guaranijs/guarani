@@ -18,6 +18,8 @@ export { expressAuthorizationServer } from './lib/backends/express/express.middl
 export { ClientAuthenticationInterface } from './lib/client-authentication/client-authentication.interface';
 export { CLIENT_AUTHENTICATION } from './lib/client-authentication/client-authentication.token';
 export { ClientAuthentication } from './lib/client-authentication/client-authentication.type';
+export { ClientSecretPostClientAuthenticationParameters } from './lib/client-authentication/client-secret-post.client-authentication.parameters';
+export { NoneClientAuthenticationParameters } from './lib/client-authentication/none.client-authentication.parameters';
 
 // Client Authorization
 export { ClientAuthorizationInterface } from './lib/client-authorization/client-authorization.interface';

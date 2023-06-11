@@ -2,7 +2,6 @@ import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 
 import { Inject, Injectable } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -11,21 +10,6 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { ClientAuthenticationInterface } from './client-authentication.interface';
 import { ClientAuthentication } from './client-authentication.type';
-
-/**
- * Parameters passed by the Client on the Http Request Body.
- */
-export interface ClientSecretPostCredentials extends Dictionary<unknown> {
-  /**
-   * Client Identifier.
-   */
-  readonly client_id: string;
-
-  /**
-   * Client Secret.
-   */
-  readonly client_secret: string;
-}
 
 /**
  * Implements the Client Authentication via the Request Body.
@@ -65,8 +49,8 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
-    const { client_id: clientId, client_secret: clientSecret } = request.body as ClientSecretPostCredentials;
-    return typeof clientId === 'string' && typeof clientSecret === 'string';
+    const parameters = request.form();
+    return parameters.get('client_id') !== null && parameters.get('client_secret') !== null;
   }
 
   /**
@@ -76,7 +60,10 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
    * @returns Authenticated Client.
    */
   public async authenticate(request: HttpRequest): Promise<Client> {
-    const { client_id: clientId, client_secret: clientSecret } = request.body as ClientSecretPostCredentials;
+    const parameters = request.form();
+
+    const clientId = parameters.get('client_id')!;
+    const clientSecret = parameters.get('client_secret')!;
 
     const client = await this.clientService.findOne(clientId);
 

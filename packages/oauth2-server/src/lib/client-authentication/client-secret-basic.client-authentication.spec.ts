@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 
@@ -53,12 +54,11 @@ describe('Client Secret Basic Authentication Method', () => {
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (headers, expected) => {
       const request = new HttpRequest({
-        body: {},
+        body: Buffer.alloc(0),
         cookies: {},
         headers,
         method: 'POST',
-        path: '/oauth/token',
-        query: {},
+        url: new URL('https://server.example.com/oauth/token'),
       });
 
       expect(clientAuthentication.hasBeenRequested(request)).toEqual(expected);
@@ -70,12 +70,11 @@ describe('Client Secret Basic Authentication Method', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: {},
+        body: Buffer.alloc(0),
         cookies: {},
         headers: { authorization: 'Basic ' + Buffer.from('client_id:client_secret', 'utf8').toString('base64') },
         method: 'POST',
-        path: '/oauth/token',
-        query: {},
+        url: new URL('https://server.example.com/oauth/token'),
       });
     });
 

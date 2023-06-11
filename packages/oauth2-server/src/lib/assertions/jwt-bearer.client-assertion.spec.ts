@@ -99,7 +99,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   describe('hasBeenRequested()', () => {
     let parameters: JwtBearerClientAssertionParameters;
 
-    const requestFactory = (data?: Partial<JwtBearerClientAssertionParameters>): HttpRequest => {
+    const requestFactory = (data: Partial<JwtBearerClientAssertionParameters> = {}): HttpRequest => {
       parameters = Object.assign(parameters, data);
 
       return new HttpRequest({
@@ -127,7 +127,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   describe('authenticate()', () => {
     let parameters: JwtBearerClientAssertionParameters;
 
-    const requestFactory = (data?: Partial<JwtBearerClientAssertionParameters>): HttpRequest => {
+    const requestFactory = (data: Partial<JwtBearerClientAssertionParameters> = {}): HttpRequest => {
       parameters = Object.assign(parameters, data);
 
       return new HttpRequest({

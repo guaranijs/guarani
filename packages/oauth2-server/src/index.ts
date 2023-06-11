@@ -2,6 +2,11 @@ if (Reflect == null || !('getMetadata' in Reflect)) {
   throw new Error('@guarani/oauth2-server requires a Reflect Metadata polyfill.');
 }
 
+// Assertions
+export { ClientAssertionParameters } from './lib/assertions/client-assertion.parameters';
+export { ClientAssertion } from './lib/assertions/client-assertion.type';
+export { JwtBearerClientAssertionParameters } from './lib/assertions/jwt-bearer.client-assertion.parameters';
+
 // Authorization Server
 export { AuthorizationServer } from './lib/authorization-server';
 

@@ -2,7 +2,7 @@ import { Buffer } from 'buffer';
 import { isDeepStrictEqual } from 'util';
 
 import { removeNullishValues } from '@guarani/primitives';
-import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
+import { Nullable, OneOrMany } from '@guarani/types';
 
 import { ExpiredJsonWebTokenException } from '../exceptions/expired-jsonwebtoken.exception';
 import { InvalidJsonWebTokenClaimException } from '../exceptions/invalid-jsonwebtoken-claim.exception';
@@ -181,7 +181,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
    */
   private static validateClaimsOptions(
     claims: JsonWebTokenClaimsParameters,
-    options: Dictionary<Nullable<JsonWebTokenClaimValidationOptions>>
+    options: Record<string, Nullable<JsonWebTokenClaimValidationOptions>>
   ): void {
     Object.entries(options).forEach(([claim, option]) => {
       if (option === null) {

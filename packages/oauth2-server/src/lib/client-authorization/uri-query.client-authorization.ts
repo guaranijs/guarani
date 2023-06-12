@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
@@ -8,16 +7,6 @@ import { AccessTokenServiceInterface } from '../services/access-token.service.in
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { ClientAuthorizationInterface } from './client-authorization.interface';
 import { ClientAuthorization } from './client-authorization.type';
-
-/**
- * Parameters passed by the Client on the Http Request Query.
- */
-export interface UriQueryCredentials extends Dictionary<unknown> {
-  /**
-   * Access Token Handle.
-   */
-  readonly access_token: string;
-}
 
 /**
  * Implements the Client Authorization via the Request Uri Query.
@@ -55,8 +44,12 @@ export class UriQueryClientAuthorization implements ClientAuthorizationInterface
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
-    const { access_token: accessTokenHandle } = request.query as UriQueryCredentials;
-    return request.method === 'GET' && typeof accessTokenHandle === 'string';
+    if (request.method !== 'GET') {
+      return false;
+    }
+
+    const parameters = request.query;
+    return parameters.get('access_token') !== null;
   }
 
   /**
@@ -66,7 +59,9 @@ export class UriQueryClientAuthorization implements ClientAuthorizationInterface
    * @returns Access Token based on the provided Access Token Handle.
    */
   public async authorize(request: HttpRequest): Promise<AccessToken> {
-    const { access_token: accessTokenHandle } = request.query as UriQueryCredentials;
+    const parameters = request.query;
+
+    const accessTokenHandle = parameters.get('access_token')!;
 
     const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
 

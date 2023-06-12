@@ -25,6 +25,8 @@ export { NoneClientAuthenticationParameters } from './lib/client-authentication/
 export { ClientAuthorizationInterface } from './lib/client-authorization/client-authorization.interface';
 export { CLIENT_AUTHORIZATION } from './lib/client-authorization/client-authorization.token';
 export { ClientAuthorization } from './lib/client-authorization/client-authorization.type';
+export { FormEncodedBodyClientAuthorizationParameters } from './lib/client-authorization/form-encoded-body.client-authorization.parameters';
+export { UriQueryClientAuthorizationParameters } from './lib/client-authorization/uri-query.client-authorization.parameters';
 
 // Context
 export { AuthorizationContext } from './lib/context/authorization/authorization-context';

@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
@@ -8,16 +7,6 @@ import { AccessTokenServiceInterface } from '../services/access-token.service.in
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { ClientAuthorizationInterface } from './client-authorization.interface';
 import { ClientAuthorization } from './client-authorization.type';
-
-/**
- * Parameters passed by the Client on the Http Request Body.
- */
-export interface FormEncodedBodyCredentials extends Dictionary<unknown> {
-  /**
-   * Access Token Handle.
-   */
-  readonly access_token: string;
-}
 
 /**
  * Implements the Client Authorization via the Request Body.
@@ -55,8 +44,12 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
-    const { access_token: accessTokenHandle } = request.body as FormEncodedBodyCredentials;
-    return request.method === 'POST' && typeof accessTokenHandle === 'string';
+    if (request.method !== 'POST') {
+      return false;
+    }
+
+    const parameters = request.form();
+    return parameters.get('access_token') !== null;
   }
 
   /**
@@ -66,7 +59,9 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
    * @returns Access Token based on the provided Access Token Handle.
    */
   public async authorize(request: HttpRequest): Promise<AccessToken> {
-    const { access_token: accessTokenHandle } = request.body as FormEncodedBodyCredentials;
+    const parameters = request.form();
+
+    const accessTokenHandle = parameters.get('access_token')!;
 
     const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
 

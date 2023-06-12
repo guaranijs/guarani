@@ -1,3 +1,5 @@
+import { URLSearchParams } from 'url';
+
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { ResourceOwnerPasswordCredentialsTokenContext } from '../../context/token/resource-owner-password-credentials.token-context';
@@ -11,7 +13,6 @@ import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
-import { ResourceOwnerPasswordCredentialsTokenRequest } from '../../requests/token/resource-owner-password-credentials.token-request';
 import { UserServiceInterface } from '../../services/user.service.interface';
 import { USER_SERVICE } from '../../services/user.service.token';
 import { TokenRequestValidator } from './token-request.validator';
@@ -20,10 +21,7 @@ import { TokenRequestValidator } from './token-request.validator';
  * Implementation of the **Resource Owner Password Credentials** Token Request Validator.
  */
 @Injectable()
-export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends TokenRequestValidator<
-  ResourceOwnerPasswordCredentialsTokenRequest,
-  ResourceOwnerPasswordCredentialsTokenContext
-> {
+export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends TokenRequestValidator<ResourceOwnerPasswordCredentialsTokenContext> {
   /**
    * Name of the Grant Type that uses this Validator.
    */
@@ -59,9 +57,9 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<ResourceOwnerPasswordCredentialsTokenContext> {
-    const parameters = request.body as ResourceOwnerPasswordCredentialsTokenRequest;
-
     const context = await super.validate(request);
+
+    const { parameters } = context;
 
     const user = await this.getUser(parameters);
     const scopes = this.getScopes(parameters, context.client);
@@ -75,16 +73,19 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * @param parameters Parameters of the Token Request.
    * @returns User that matches the provided Credentials.
    */
-  private async getUser(parameters: ResourceOwnerPasswordCredentialsTokenRequest): Promise<User> {
-    if (typeof parameters.username !== 'string') {
+  private async getUser(parameters: URLSearchParams): Promise<User> {
+    const username = parameters.get('username');
+    const password = parameters.get('password');
+
+    if (username === null) {
       throw new InvalidRequestException('Invalid parameter "username".');
     }
 
-    if (typeof parameters.password !== 'string') {
+    if (password === null) {
       throw new InvalidRequestException('Invalid parameter "password".');
     }
 
-    const user = await this.userService.findByResourceOwnerCredentials!(parameters.username, parameters.password);
+    const user = await this.userService.findByResourceOwnerCredentials!(username, password);
 
     if (user === null) {
       throw new InvalidGrantException('Invalid Credentials.');
@@ -101,12 +102,9 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * @param client Client of the Request.
    * @returns Scopes granted to the Client.
    */
-  protected getScopes(parameters: ResourceOwnerPasswordCredentialsTokenRequest, client: Client): string[] {
-    if (typeof parameters.scope !== 'undefined' && typeof parameters.scope !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "scope".');
-    }
-
-    this.scopeHandler.checkRequestedScope(parameters.scope ?? null);
-    return this.scopeHandler.getAllowedScopes(client, parameters.scope ?? null);
+  protected getScopes(parameters: URLSearchParams, client: Client): string[] {
+    const scope = parameters.get('scope');
+    this.scopeHandler.checkRequestedScope(scope);
+    return this.scopeHandler.getAllowedScopes(client, scope);
   }
 }

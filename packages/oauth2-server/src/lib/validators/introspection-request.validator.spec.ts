@@ -1,4 +1,9 @@
+import { Buffer } from 'buffer';
+import { URL, URLSearchParams } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { OneOrMany } from '@guarani/types';
 
 import { IntrospectionContext } from '../context/introspection-context';
 import { AccessToken } from '../entities/access-token.entity';
@@ -105,21 +110,28 @@ describe('Introspection Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: IntrospectionRequest;
+
+    const requestFactory = (data: Partial<IntrospectionRequest> = {}): HttpRequest => {
+      parameters = removeNullishValues<IntrospectionRequest>(Object.assign(parameters, data));
+
+      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+
+      return new HttpRequest({
+        body: Buffer.from(body.toString(), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/introspect'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: { token: 'access_token' },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/introspect',
-        query: {},
-      });
+      parameters = { token: 'access_token' };
     });
 
     it('should throw when not providing a "token" parameter.', async () => {
-      delete request.body.token;
+      const request = requestFactory({ token: undefined });
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
@@ -128,7 +140,7 @@ describe('Introspection Request Validator', () => {
     });
 
     it('should throw when providing an unsupported "token_type_hint".', async () => {
-      request.body.token_type_hint = 'unknown';
+      const request = requestFactory({ token_type_hint: 'unknown' as TokenTypeHint });
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         UnsupportedTokenTypeException,
@@ -137,13 +149,15 @@ describe('Introspection Request Validator', () => {
     });
 
     it('should throw when the client fails to authenticate.', async () => {
+      const request = requestFactory();
+
       const error = new InvalidClientException('Lorem ipsum dolor sit amet...');
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
       await expect(validator.validate(request)).rejects.toThrow(error);
     });
 
     it('should search for an access token and then a refresh token when providing an "access_token" token_type_hint.', async () => {
-      request.body.token_type_hint = 'access_token';
+      const request = requestFactory({ token_type_hint: 'access_token' });
 
       const client = <Client>{ id: 'client_id' };
 
@@ -152,7 +166,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.body as IntrospectionRequest,
+        parameters: request.form(),
         client,
         token: null,
         tokenType: null,
@@ -168,7 +182,7 @@ describe('Introspection Request Validator', () => {
     });
 
     it('should search for a refresh token and then an access token when providing a "refresh_token" token_type_hint.', async () => {
-      request.body.token_type_hint = 'refresh_token';
+      const request = requestFactory({ token_type_hint: 'refresh_token' });
 
       const client = <Client>{ id: 'client_id' };
 
@@ -177,7 +191,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.body as IntrospectionRequest,
+        parameters: request.form(),
         client,
         token: null,
         tokenType: null,
@@ -193,6 +207,8 @@ describe('Introspection Request Validator', () => {
     });
 
     it('should search for an access token and then a refresh token when not providing a token_type_hint.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
@@ -200,7 +216,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.body as IntrospectionRequest,
+        parameters: request.form(),
         client,
         token: null,
         tokenType: null,
@@ -216,6 +232,8 @@ describe('Introspection Request Validator', () => {
     });
 
     it('should return a null introspection context token when the access token does not have a client.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const accessToken = <AccessToken>{ handle: 'access_token', client: null };
 
@@ -224,7 +242,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.body as IntrospectionRequest,
+        parameters: request.form(),
         client,
         token: null,
         tokenType: null,
@@ -232,7 +250,7 @@ describe('Introspection Request Validator', () => {
     });
 
     it('should return a null introspection context token when trying to revoke a refresh token and the authorization server does not support it.', async () => {
-      request.body.token = 'refresh_token';
+      const request = requestFactory({ token: 'refresh_token' });
 
       const settings = <Settings>{ grantTypes: ['authorization_code'], enableRefreshTokenIntrospection: false };
 
@@ -250,7 +268,7 @@ describe('Introspection Request Validator', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.body as IntrospectionRequest,
+        parameters: request.form(),
         client,
         token: null,
         tokenType: null,
@@ -260,6 +278,8 @@ describe('Introspection Request Validator', () => {
     });
 
     it('should return an access token introspection context.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const accessToken = <AccessToken>{ handle: 'access_token', client };
 
@@ -268,7 +288,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.body as IntrospectionRequest,
+        parameters: request.form(),
         client,
         token: accessToken,
         tokenType: 'access_token',
@@ -276,6 +296,8 @@ describe('Introspection Request Validator', () => {
     });
 
     it('should return a refresh token introspection context.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const refreshToken = <RefreshToken>{ handle: 'refresh_token', client };
 
@@ -284,7 +306,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.body as IntrospectionRequest,
+        parameters: request.form(),
         client,
         token: refreshToken,
         tokenType: 'refresh_token',

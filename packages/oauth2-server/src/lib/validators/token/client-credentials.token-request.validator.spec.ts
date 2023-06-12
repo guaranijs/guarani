@@ -1,10 +1,12 @@
 import { Buffer } from 'buffer';
+import { URL, URLSearchParams } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { OneOrMany } from '@guarani/types';
 
 import { ClientCredentialsTokenContext } from '../../context/token/client-credentials.token-context';
 import { Client } from '../../entities/client.entity';
-import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
 import { GRANT_TYPE } from '../../grant-types/grant-type.token';
 import { GrantType } from '../../grant-types/grant-type.type';
@@ -16,8 +18,6 @@ import { ClientCredentialsTokenRequestValidator } from './client-credentials.tok
 
 jest.mock('../../handlers/client-authentication.handler');
 jest.mock('../../handlers/scope.handler');
-
-const invalidScopes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Client Credentials Token Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -61,34 +61,28 @@ describe('Client Credentials Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: ClientCredentialsTokenRequest;
+
+    const requestFactory = (data: Partial<ClientCredentialsTokenRequest> = {}): HttpRequest => {
+      parameters = removeNullishValues<ClientCredentialsTokenRequest>(Object.assign(parameters, data));
+
+      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+
+      return new HttpRequest({
+        body: Buffer.from(body.toString(), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <ClientCredentialsTokenRequest>{ grant_type: 'client_credentials' },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/token',
-        query: {},
-      });
-    });
-
-    it.each(invalidScopes)('should throw when providing an invalid "scope" parameter.', async (scope) => {
-      request.body.scope = scope;
-
-      const client = <Client>{ id: 'client_id', grantTypes: ['client_credentials'] };
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "scope".'
-      );
+      parameters = { grant_type: 'client_credentials' };
     });
 
     it('should return a client credentials token context with the requested scope.', async () => {
-      request.body.scope = 'foo bar';
+      const request = requestFactory({ scope: 'foo bar' });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['client_credentials'], scopes: ['foo', 'bar', 'baz'] };
       const scopes = ['foo', 'bar'];
@@ -99,7 +93,7 @@ describe('Client Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ClientCredentialsTokenContext>({
-        parameters: request.body as ClientCredentialsTokenRequest,
+        parameters: request.form(),
         client,
         grantType: grantTypesMocks[1]!,
         scopes,
@@ -107,6 +101,8 @@ describe('Client Credentials Token Request Validator', () => {
     });
 
     it("should return a client credentials token context with the client's default scope.", async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', grantTypes: ['client_credentials'], scopes: ['foo', 'bar', 'baz'] };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
@@ -115,7 +111,7 @@ describe('Client Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(client.scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ClientCredentialsTokenContext>({
-        parameters: request.body as ClientCredentialsTokenRequest,
+        parameters: request.form(),
         client,
         grantType: grantTypesMocks[1]!,
         scopes: client.scopes,

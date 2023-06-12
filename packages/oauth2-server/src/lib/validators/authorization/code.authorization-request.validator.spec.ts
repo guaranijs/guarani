@@ -1,7 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL } from 'url';
+import { URL, URLSearchParams } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { OneOrMany } from '@guarani/types';
 
 import { CodeAuthorizationContext } from '../../context/authorization/code.authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
@@ -12,6 +14,7 @@ import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { PkceInterface } from '../../pkces/pkce.interface';
 import { PKCE } from '../../pkces/pkce.token';
+import { Pkce } from '../../pkces/pkce.type';
 import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
@@ -25,9 +28,6 @@ import { SETTINGS } from '../../settings/settings.token';
 import { CodeAuthorizationRequestValidator } from './code.authorization-request.validator';
 
 jest.mock('../../handlers/scope.handler');
-
-const invalidCodeChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidCodeChallengeMethods: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Code Authorization Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -145,86 +145,66 @@ describe('Code Authorization Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: CodeAuthorizationRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<CodeAuthorizationRequest> = {}): HttpRequest => {
+      parameters = removeNullishValues<CodeAuthorizationRequest>(Object.assign(parameters, data));
+
+      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/authorize',
-        query: <CodeAuthorizationRequest>{
-          response_type: 'code',
-          client_id: 'client_id',
-          redirect_uri: 'https://client.example.com/oauth/callback',
-          code_challenge: 'qoJXAtQ-gjzfDmoMrHt1a2AFVe1Tn3-HX0VC2_UtezA',
-          code_challenge_method: 'S256',
-          scope: 'foo bar baz',
-          state: 'client_state',
-          response_mode: 'form_post',
-          nonce: 'client_nonce',
-          prompt: 'consent',
-          display: 'popup',
-          max_age: '300',
-          login_hint: 'login_hint',
-          id_token_hint: 'id_token_hint',
-          ui_locales: 'pt-BR en',
-          acr_values: 'urn:guarani:acr:2fa urn:guarani:acr:1fa',
-        },
+        url: new URL(`https://server.example.com/oauth/authorize?${query.toString()}`),
       });
+    };
+
+    beforeEach(() => {
+      parameters = {
+        response_type: 'code',
+        client_id: 'client_id',
+        redirect_uri: 'https://client.example.com/oauth/callback',
+        code_challenge: 'qoJXAtQ-gjzfDmoMrHt1a2AFVe1Tn3-HX0VC2_UtezA',
+        code_challenge_method: 'S256',
+        scope: 'foo bar baz',
+        state: 'client_state',
+        response_mode: 'form_post',
+        nonce: 'client_nonce',
+        prompt: 'consent',
+        display: 'popup',
+        max_age: '300',
+        login_hint: 'login_hint',
+        id_token_hint: 'id_token_hint',
+        ui_locales: 'pt-BR en',
+        acr_values: 'urn:guarani:acr:2fa urn:guarani:acr:1fa',
+      };
     });
 
-    it.each(invalidCodeChallenges)(
-      'should throw when providing an invalid "code_challenge" parameter.',
-      async (codeChallenge) => {
-        request.query.code_challenge = codeChallenge;
+    it('should throw when not providing the parameter "code_challenge".', async () => {
+      const request = requestFactory({ code_challenge: undefined });
 
-        const client = <Client>{
-          id: 'client_id',
-          redirectUris: ['https://client.example.com/oauth/callback'],
-          responseTypes: ['code'],
-          scopes: ['foo', 'bar', 'baz', 'qux'],
-        };
+      const client = <Client>{
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+      };
 
-        const scopes: string[] = ['foo', 'bar', 'baz'];
+      const scopes: string[] = ['foo', 'bar', 'baz'];
 
-        clientServiceMock.findOne.mockResolvedValueOnce(client);
-        scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "code_challenge".'
-        );
-      }
-    );
-
-    it.each(invalidCodeChallengeMethods)(
-      'should throw when providing an invalid "code_challenge_method" parameter.',
-      async (codeChallengeMethod) => {
-        request.query.code_challenge_method = codeChallengeMethod;
-
-        const client = <Client>{
-          id: 'client_id',
-          redirectUris: ['https://client.example.com/oauth/callback'],
-          responseTypes: ['code'],
-          scopes: ['foo', 'bar', 'baz', 'qux'],
-        };
-
-        const scopes: string[] = ['foo', 'bar', 'baz'];
-
-        clientServiceMock.findOne.mockResolvedValueOnce(client);
-        scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
-
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "code_challenge_method".'
-        );
-      }
-    );
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "code_challenge".'
+      );
+    });
 
     it('should throw when requesting an unsupported code challenge method.', async () => {
-      request.query.code_challenge_method = 'unknown';
+      const request = requestFactory({ code_challenge_method: 'unknown' as Pkce });
 
       const client = <Client>{
         id: 'client_id',
@@ -245,6 +225,8 @@ describe('Code Authorization Request Validator', () => {
     });
 
     it('should return a code authorization context.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
@@ -258,7 +240,7 @@ describe('Code Authorization Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<CodeAuthorizationContext>({
-        parameters: request.query as CodeAuthorizationRequest,
+        parameters: request.query,
         cookies: request.cookies,
         responseType: responseTypesMocks[0]!,
         client,

@@ -1,3 +1,5 @@
+import { URLSearchParams } from 'url';
+
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { CreateContextInteractionContext } from '../../context/interaction/create-context.interaction-context';
@@ -9,8 +11,6 @@ import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
-import { CreateContextInteractionRequest } from '../../requests/interaction/create-context.interaction-request';
-import { CreateDecisionInteractionRequest } from '../../requests/interaction/create-decision.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { InteractionRequestValidator } from './interaction-request.validator';
@@ -20,9 +20,7 @@ import { InteractionRequestValidator } from './interaction-request.validator';
  */
 @Injectable()
 export class CreateInteractionRequestValidator extends InteractionRequestValidator<
-  CreateContextInteractionRequest,
   CreateContextInteractionContext,
-  CreateDecisionInteractionRequest,
   CreateDecisionInteractionContext
 > {
   /**
@@ -50,9 +48,9 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<CreateContextInteractionContext> {
-    const parameters = request.query as CreateContextInteractionRequest;
-
     const context = await super.validateContext(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
 
@@ -66,9 +64,9 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(request: HttpRequest): Promise<CreateDecisionInteractionContext> {
-    const parameters = request.body as CreateDecisionInteractionRequest;
-
     const context = await super.validateDecision(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
 
@@ -81,14 +79,14 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    * @param parameters Parameters of the Interaction Request.
    * @returns Grant based on the provided Login Challenge.
    */
-  private async getGrant(
-    parameters: CreateContextInteractionRequest | CreateDecisionInteractionRequest
-  ): Promise<Grant> {
-    if (typeof parameters.login_challenge !== 'string') {
+  private async getGrant(parameters: URLSearchParams): Promise<Grant> {
+    const loginChallenge = parameters.get('login_challenge');
+
+    if (loginChallenge === null) {
       throw new InvalidRequestException('Invalid parameter "login_challenge".');
     }
 
-    const grant = await this.grantService.findOneByLoginChallenge(parameters.login_challenge);
+    const grant = await this.grantService.findOneByLoginChallenge(loginChallenge);
 
     if (grant === null) {
       throw new AccessDeniedException('Invalid Login Challenge.');

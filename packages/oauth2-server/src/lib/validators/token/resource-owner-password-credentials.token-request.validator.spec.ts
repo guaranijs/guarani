@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer';
+import { URL, URLSearchParams } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { OneOrMany } from '@guarani/types';
 
 import { ResourceOwnerPasswordCredentialsTokenContext } from '../../context/token/resource-owner-password-credentials.token-context';
 import { Client } from '../../entities/client.entity';
@@ -20,10 +23,6 @@ import { ResourceOwnerPasswordCredentialsTokenRequestValidator } from './resourc
 
 jest.mock('../../handlers/client-authentication.handler');
 jest.mock('../../handlers/scope.handler');
-
-const invalidUsernames: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidPasswords: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidScopes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Resource Owner Password Credentials Token Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -97,25 +96,28 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: ResourceOwnerPasswordCredentialsTokenRequest;
+
+    const requestFactory = (data: Partial<ResourceOwnerPasswordCredentialsTokenRequest> = {}): HttpRequest => {
+      parameters = removeNullishValues<ResourceOwnerPasswordCredentialsTokenRequest>(Object.assign(parameters, data));
+
+      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+
+      return new HttpRequest({
+        body: Buffer.from(body.toString(), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <ResourceOwnerPasswordCredentialsTokenRequest>{
-          grant_type: 'password',
-          username: 'username',
-          password: 'password',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/token',
-        query: {},
-      });
+      parameters = { grant_type: 'password', username: 'username', password: 'password' };
     });
 
-    it.each(invalidUsernames)('should throw when providing an invalid "username" parameter.', async (username) => {
-      request.body.username = username;
+    it('should throw when not providing the parameter "username".', async () => {
+      const request = requestFactory({ username: undefined });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['password'] };
 
@@ -127,8 +129,8 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       );
     });
 
-    it.each(invalidPasswords)('should throw when providing an invalid "password" parameter.', async (password) => {
-      request.body.password = password;
+    it('should throw when not providing the parameter "password".', async () => {
+      const request = requestFactory({ password: undefined });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['password'] };
 
@@ -141,6 +143,8 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
     });
 
     it('should throw when no user is found.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', grantTypes: ['password'] };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
@@ -152,23 +156,8 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       );
     });
 
-    it.each(invalidScopes)('should throw when providing an invalid "scope" parameter.', async (scope) => {
-      request.body.scope = scope;
-
-      const client = <Client>{ id: 'client_id', grantTypes: ['password'] };
-      const user = <User>{ id: 'user_id', username: 'username', password: 'password' };
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-      userServiceMock.findByResourceOwnerCredentials!.mockResolvedValueOnce(user);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "scope".'
-      );
-    });
-
     it('should return a resource owner password credentials token context with the requested scope.', async () => {
-      request.body.scope = 'foo bar';
+      const request = requestFactory({ scope: 'foo bar' });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['password'], scopes: ['foo', 'bar', 'baz'] };
       const user = <User>{ id: 'user_id', username: 'username', password: 'password' };
@@ -181,7 +170,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ResourceOwnerPasswordCredentialsTokenContext>({
-        parameters: request.body as ResourceOwnerPasswordCredentialsTokenRequest,
+        parameters: request.form(),
         client,
         grantType: grantTypesMocks[2]!,
         user,
@@ -190,6 +179,8 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
     });
 
     it("should return a resource owner password credentials token context with the client's default scope.", async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', grantTypes: ['password'], scopes: ['foo', 'bar', 'baz'] };
       const user = <User>{ id: 'user_id', username: 'username', password: 'password' };
 
@@ -200,7 +191,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(client.scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ResourceOwnerPasswordCredentialsTokenContext>({
-        parameters: request.body as ResourceOwnerPasswordCredentialsTokenRequest,
+        parameters: request.form(),
         client,
         grantType: grantTypesMocks[2]!,
         user,

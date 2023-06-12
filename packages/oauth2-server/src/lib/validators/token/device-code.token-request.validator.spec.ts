@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer';
+import { URL, URLSearchParams } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { OneOrMany } from '@guarani/types';
 
 import { DeviceCodeTokenContext } from '../../context/token/device-code.token-context';
 import { Client } from '../../entities/client.entity';
@@ -18,8 +21,6 @@ import { DEVICE_CODE_SERVICE } from '../../services/device-code.service.token';
 import { DeviceCodeTokenRequestValidator } from './device-code.token-request.validator';
 
 jest.mock('../../handlers/client-authentication.handler');
-
-const invalidDeviceCodes: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Device Code Token Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -69,39 +70,42 @@ describe('Device Code Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: DeviceCodeTokenRequest;
+
+    const requestFactory = (data: Partial<DeviceCodeTokenRequest> = {}): HttpRequest => {
+      parameters = removeNullishValues<DeviceCodeTokenRequest>(Object.assign(parameters, data));
+
+      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+
+      return new HttpRequest({
+        body: Buffer.from(body.toString(), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <DeviceCodeTokenRequest>{
-          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-          device_code: 'device_code',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/token',
-        query: {},
-      });
+      parameters = { grant_type: 'urn:ietf:params:oauth:grant-type:device_code', device_code: 'device_code' };
     });
 
-    it.each(invalidDeviceCodes)(
-      'should throw when providing an invalid "device_code" parameter.',
-      async (deviceCode) => {
-        request.body.device_code = deviceCode;
+    it('should throw when not providing the parameter "device_code".', async () => {
+      const request = requestFactory({ device_code: undefined });
 
-        const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'] };
+      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'] };
 
-        clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
+      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "device_code".'
-        );
-      }
-    );
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "device_code".'
+      );
+    });
 
     it('should throw when no device code is found.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'] };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
@@ -114,6 +118,8 @@ describe('Device Code Token Request Validator', () => {
     });
 
     it('should return a device code token context.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'] };
       const deviceCode = <DeviceCode>{ id: 'device_code' };
 
@@ -121,7 +127,7 @@ describe('Device Code Token Request Validator', () => {
       deviceCodeServiceMock.findOne.mockResolvedValueOnce(deviceCode);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<DeviceCodeTokenContext>({
-        parameters: request.body as DeviceCodeTokenRequest,
+        parameters: request.form(),
         client,
         grantType: grantTypesMocks[4]!,
         deviceCode,

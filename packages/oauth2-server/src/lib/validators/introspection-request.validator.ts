@@ -1,3 +1,5 @@
+import { URLSearchParams } from 'url';
+
 import { Inject, Injectable, Optional } from '@guarani/di';
 import { Nullable } from '@guarani/types';
 
@@ -8,7 +10,6 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { UnsupportedTokenTypeException } from '../exceptions/unsupported-token-type.exception';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { HttpRequest } from '../http/http.request';
-import { IntrospectionRequest } from '../requests/introspection-request';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
@@ -66,12 +67,10 @@ export class IntrospectionRequestValidator {
    * @returns Introspection Context.
    */
   public async validate(request: HttpRequest): Promise<IntrospectionContext> {
-    const parameters = request.body as IntrospectionRequest;
-
-    this.checkParameters(parameters);
+    const parameters = request.form();
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
-    const tokenResult = await this.findToken(parameters.token, parameters.token_type_hint ?? null);
+    const tokenResult = await this.findToken(parameters);
 
     if (tokenResult === null || tokenResult.token.client === null) {
       return { client, parameters, token: null, tokenType: null };
@@ -81,37 +80,30 @@ export class IntrospectionRequestValidator {
   }
 
   /**
-   * Checks if the Parameters of the Introspection Request are valid.
+   * Searches the application's storage for a Token that satisfies the Token Handle provided by the Client.
    *
    * @param parameters Parameters of the Introspection Request.
+   * @returns Resulting Token and its type.
    */
-  private checkParameters(parameters: IntrospectionRequest): void {
-    const { token, token_type_hint: tokenTypeHint } = parameters;
+  private async findToken(parameters: URLSearchParams): Promise<Nullable<FindTokenResult>> {
+    const token = parameters.get('token');
+    const tokenTypeHint = parameters.get('token_type_hint');
 
-    if (typeof token !== 'string') {
+    if (token === null) {
       throw new InvalidRequestException('Invalid parameter "token".');
     }
 
-    if (typeof tokenTypeHint !== 'undefined' && !this.supportedTokenTypeHints.includes(tokenTypeHint)) {
+    if (tokenTypeHint !== null && !this.supportedTokenTypeHints.includes(tokenTypeHint as TokenTypeHint)) {
       throw new UnsupportedTokenTypeException(`Unsupported token_type_hint "${tokenTypeHint}".`);
     }
-  }
 
-  /**
-   * Searches the application's storage for a Token that satisfies the Token Handle provided by the Client.
-   *
-   * @param handle Token Handle provided by the Client.
-   * @param tokenTypeHint Optional hint about the type of the Token.
-   * @returns Resulting Token and its type.
-   */
-  private async findToken(handle: string, tokenTypeHint: Nullable<TokenTypeHint>): Promise<Nullable<FindTokenResult>> {
     switch (tokenTypeHint) {
       case 'refresh_token':
-        return (await this.findRefreshToken(handle)) ?? (await this.findAccessToken(handle));
+        return (await this.findRefreshToken(token)) ?? (await this.findAccessToken(token));
 
       case 'access_token':
       default:
-        return (await this.findAccessToken(handle)) ?? (await this.findRefreshToken(handle));
+        return (await this.findAccessToken(token)) ?? (await this.findRefreshToken(token));
     }
   }
 

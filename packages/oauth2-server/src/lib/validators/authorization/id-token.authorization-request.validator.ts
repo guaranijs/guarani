@@ -1,10 +1,11 @@
+import { URLSearchParams } from 'url';
+
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
-import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
@@ -55,7 +56,7 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
    * @returns Response Mode.
    */
   protected override getResponseMode(
-    parameters: AuthorizationRequest,
+    parameters: URLSearchParams,
     responseType: ResponseTypeInterface
   ): ResponseModeInterface {
     const responseMode = super.getResponseMode(parameters, responseType);
@@ -73,11 +74,13 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
    * @param parameters Parameters of the Authorization Request.
    * @returns Nonce provided by the Client.
    */
-  protected override getNonce(parameters: AuthorizationRequest): string {
-    if (typeof parameters.nonce !== 'string') {
+  protected override getNonce(parameters: URLSearchParams): string {
+    const nonce = parameters.get('nonce');
+
+    if (nonce === null) {
       throw new InvalidRequestException('Invalid parameter "nonce".');
     }
 
-    return parameters.nonce;
+    return nonce;
   }
 }

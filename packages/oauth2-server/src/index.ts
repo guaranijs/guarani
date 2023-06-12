@@ -280,6 +280,6 @@ export { DeviceAuthorizationRequestValidator } from './lib/validators/device-aut
 export { EndSessionRequestValidator } from './lib/validators/end-session-request.validator';
 export { InteractionRequestValidator } from './lib/validators/interaction/interaction-request.validator';
 export { IntrospectionRequestValidator } from './lib/validators/introspection-request.validator';
-export { RegistrationRequestValidator } from './lib/validators/registration-request.validator';
+export { RegistrationRequestValidator } from './lib/validators/registration/registration-request.validator';
 export { RevocationRequestValidator } from './lib/validators/revocation-request.validator';
 export { TokenRequestValidator } from './lib/validators/token/token-request.validator';

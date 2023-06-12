@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 import https from 'https';
-import { URL } from 'url';
+import { URL, URLSearchParams } from 'url';
 
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 import {
@@ -27,7 +27,6 @@ import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
-import { JwtBearerTokenRequest } from '../../requests/token/jwt-bearer.token-request';
 import { UserServiceInterface } from '../../services/user.service.interface';
 import { USER_SERVICE } from '../../services/user.service.token';
 import { Settings } from '../../settings/settings';
@@ -38,10 +37,7 @@ import { TokenRequestValidator } from './token-request.validator';
  * Implementation of the **JWT Bearer** Token Request Validator.
  */
 @Injectable()
-export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
-  JwtBearerTokenRequest,
-  JwtBearerTokenContext
-> {
+export class JwtBearerTokenRequestValidator extends TokenRequestValidator<JwtBearerTokenContext> {
   /**
    * JSON Web Signature Algorithms.
    */
@@ -92,9 +88,9 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<JwtBearerTokenContext> {
-    const parameters = request.body as JwtBearerTokenRequest;
-
     const context = await super.validate(request);
+
+    const { parameters } = context;
 
     const user = await this.getSubjectFromAssertion(parameters, context.client);
     const scopes = this.getScopes(parameters, context.client);
@@ -109,13 +105,15 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * @param client Client requesting authorization.
    * @returns End User represented in the Assertion.
    */
-  private async getSubjectFromAssertion(parameters: JwtBearerTokenRequest, client: Client): Promise<User> {
-    if (typeof parameters.assertion !== 'string') {
+  private async getSubjectFromAssertion(parameters: URLSearchParams, client: Client): Promise<User> {
+    const assertion = parameters.get('assertion');
+
+    if (assertion === null) {
       throw new InvalidRequestException('Invalid parameter "assertion".');
     }
 
     try {
-      const { header, payload } = JsonWebSignature.decode(parameters.assertion);
+      const { header, payload } = JsonWebSignature.decode(assertion);
 
       if (header.alg === 'none') {
         throw new InvalidGrantException(
@@ -136,7 +134,7 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
 
       const key = await this.getClientKey(client, header);
 
-      await JsonWebSignature.verify(parameters.assertion, key, this.algorithms);
+      await JsonWebSignature.verify(assertion, key, this.algorithms);
 
       return await this.getUser(claims.sub!);
     } catch (exc: unknown) {
@@ -265,12 +263,9 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * @param client Client of the Request.
    * @returns Scopes granted to the Client.
    */
-  protected getScopes(parameters: JwtBearerTokenRequest, client: Client): string[] {
-    if (typeof parameters.scope !== 'undefined' && typeof parameters.scope !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "scope".');
-    }
-
-    this.scopeHandler.checkRequestedScope(parameters.scope ?? null);
-    return this.scopeHandler.getAllowedScopes(client, parameters.scope ?? null);
+  protected getScopes(parameters: URLSearchParams, client: Client): string[] {
+    const scope = parameters.get('scope');
+    this.scopeHandler.checkRequestedScope(scope);
+    return this.scopeHandler.getAllowedScopes(client, scope);
   }
 }

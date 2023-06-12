@@ -1,7 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL } from 'url';
+import { URL, URLSearchParams } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { OneOrMany } from '@guarani/types';
 
 import { AuthorizationCodeTokenContext } from '../../context/token/authorization-code.token-context';
 import { AuthorizationCode } from '../../entities/authorization-code.entity';
@@ -20,10 +22,6 @@ import { AUTHORIZATION_CODE_SERVICE } from '../../services/authorization-code.se
 import { AuthorizationCodeTokenRequestValidator } from './authorization-code.token-request.validator';
 
 jest.mock('../../handlers/client-authentication.handler');
-
-const invalidCodes: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidRedirectUris: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidCodeVerifiers: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Authorization Code Token Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -72,26 +70,33 @@ describe('Authorization Code Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: AuthorizationCodeTokenRequest;
+
+    const requestFactory = (data: Partial<AuthorizationCodeTokenRequest> = {}): HttpRequest => {
+      parameters = removeNullishValues<AuthorizationCodeTokenRequest>(Object.assign(parameters, data));
+
+      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+
+      return new HttpRequest({
+        body: Buffer.from(body.toString(), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <AuthorizationCodeTokenRequest>{
-          grant_type: 'authorization_code',
-          code: 'code',
-          redirect_uri: 'https://client.example.com/oauth/callback',
-          code_verifier: 'code_challenge',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/token',
-        query: {},
-      });
+      parameters = {
+        grant_type: 'authorization_code',
+        code: 'code',
+        redirect_uri: 'https://client.example.com/oauth/callback',
+        code_verifier: 'code_challenge',
+      };
     });
 
-    it.each(invalidCodes)('should throw when providing an invalid "code" parameter.', async (code) => {
-      request.body.code = code;
+    it('should throw when not providing the parameter "code".', async () => {
+      const request = requestFactory({ code: undefined });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
 
@@ -104,6 +109,8 @@ describe('Authorization Code Token Request Validator', () => {
     });
 
     it('should throw when no authorization code is found.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
@@ -115,26 +122,23 @@ describe('Authorization Code Token Request Validator', () => {
       );
     });
 
-    it.each(invalidRedirectUris)(
-      'should throw when providing an invalid "redirect_uri" parameter.',
-      async (redirectUri) => {
-        request.body.redirect_uri = redirectUri;
+    it('should throw when not providing the parameter "redirect_uri".', async () => {
+      const request = requestFactory({ redirect_uri: undefined });
 
-        const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
-        const authorizationCode = <AuthorizationCode>{ code: 'code' };
+      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
+      const authorizationCode = <AuthorizationCode>{ code: 'code' };
 
-        clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-        authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
+      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
+      authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
 
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "redirect_uri".'
-        );
-      }
-    );
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "redirect_uri".'
+      );
+    });
 
     it('should throw when providing an invalid redirect uri.', async () => {
-      request.body.redirect_uri = 'client.example.com/oauth/callback';
+      const request = requestFactory({ redirect_uri: 'client.example.com/oauth/callback' });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
       const authorizationCode = <AuthorizationCode>{ code: 'code' };
@@ -149,7 +153,7 @@ describe('Authorization Code Token Request Validator', () => {
     });
 
     it('should throw when the provided redirect uri has a fragment component.', async () => {
-      request.body.redirect_uri = 'https://client.example.com/oauth/callback#foo=bar';
+      const request = requestFactory({ redirect_uri: 'https://client.example.com/oauth/callback#foo=bar' });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
       const authorizationCode = <AuthorizationCode>{ code: 'code' };
@@ -164,6 +168,8 @@ describe('Authorization Code Token Request Validator', () => {
     });
 
     it('should throw when the client is not allowed to use the provided redirect uri.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{
         id: 'client_id',
         redirectUris: ['https://client.example.org/oauth/callback'],
@@ -180,29 +186,28 @@ describe('Authorization Code Token Request Validator', () => {
       );
     });
 
-    it.each(invalidCodeVerifiers)(
-      'should throw when providing an invalid "code_verifier" parameter.',
-      async (codeVerifier) => {
-        request.body.code_verifier = codeVerifier;
+    it('should throw when not providing the parameter "code_verifier".', async () => {
+      const request = requestFactory({ code_verifier: undefined });
 
-        const client = <Client>{
-          id: 'client_id',
-          redirectUris: ['https://client.example.com/oauth/callback'],
-          grantTypes: ['authorization_code'],
-        };
-        const authorizationCode = <AuthorizationCode>{ code: 'code' };
+      const client = <Client>{
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        grantTypes: ['authorization_code'],
+      };
+      const authorizationCode = <AuthorizationCode>{ code: 'code' };
 
-        clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-        authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
+      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
+      authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
 
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "code_verifier".'
-        );
-      }
-    );
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "code_verifier".'
+      );
+    });
 
     it('should return an authorization code token context.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
@@ -214,7 +219,7 @@ describe('Authorization Code Token Request Validator', () => {
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationCodeTokenContext>({
-        parameters: request.body as AuthorizationCodeTokenRequest,
+        parameters: request.form(),
         client,
         grantType: grantTypesMocks[0]!,
         authorizationCode,

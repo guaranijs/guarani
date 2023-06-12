@@ -1,4 +1,4 @@
-import { URL } from 'url';
+import { URL, URLSearchParams } from 'url';
 
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
@@ -13,7 +13,6 @@ import { GRANT_TYPE } from '../../grant-types/grant-type.token';
 import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { HttpRequest } from '../../http/http.request';
-import { AuthorizationCodeTokenRequest } from '../../requests/token/authorization-code.token-request';
 import { AuthorizationCodeServiceInterface } from '../../services/authorization-code.service.interface';
 import { AUTHORIZATION_CODE_SERVICE } from '../../services/authorization-code.service.token';
 import { TokenRequestValidator } from './token-request.validator';
@@ -22,10 +21,7 @@ import { TokenRequestValidator } from './token-request.validator';
  * Implementation of the **Authorization Code** Token Request Validator.
  */
 @Injectable()
-export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidator<
-  AuthorizationCodeTokenRequest,
-  AuthorizationCodeTokenContext
-> {
+export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidator<AuthorizationCodeTokenContext> {
   /**
    * Name of the Grant Type that uses this Validator.
    */
@@ -53,9 +49,9 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<AuthorizationCodeTokenContext> {
-    const parameters = request.body as AuthorizationCodeTokenRequest;
-
     const context = await super.validate(request);
+
+    const { parameters } = context;
 
     const authorizationCode = await this.getAuthorizationCode(parameters);
     const redirectUri = this.getRedirectUri(parameters, context.client);
@@ -70,12 +66,14 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @param parameters Parameters of the Token Request.
    * @returns Authorization Code based on the provided Code.
    */
-  private async getAuthorizationCode(parameters: AuthorizationCodeTokenRequest): Promise<AuthorizationCode> {
-    if (typeof parameters.code !== 'string') {
+  private async getAuthorizationCode(parameters: URLSearchParams): Promise<AuthorizationCode> {
+    const code = parameters.get('code');
+
+    if (code === null) {
       throw new InvalidRequestException('Invalid parameter "code".');
     }
 
-    const authorizationCode = await this.authorizationCodeService.findOne(parameters.code);
+    const authorizationCode = await this.authorizationCodeService.findOne(code);
 
     if (authorizationCode === null) {
       throw new InvalidGrantException('Invalid Authorization Code.');
@@ -91,28 +89,30 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @param client Client of the Request.
    * @returns Parsed and validated Redirect URI.
    */
-  protected getRedirectUri(parameters: AuthorizationCodeTokenRequest, client: Client): URL {
-    if (typeof parameters.redirect_uri !== 'string') {
+  protected getRedirectUri(parameters: URLSearchParams, client: Client): URL {
+    const redirectUri = parameters.get('redirect_uri');
+
+    if (redirectUri === null) {
       throw new InvalidRequestException('Invalid parameter "redirect_uri".');
     }
 
-    let redirectUri: URL;
+    let url: URL;
 
     try {
-      redirectUri = new URL(parameters.redirect_uri);
+      url = new URL(redirectUri);
     } catch (exc: unknown) {
       throw new InvalidRequestException('Invalid parameter "redirect_uri".');
     }
 
-    if (redirectUri.hash.length !== 0) {
+    if (url.hash.length !== 0) {
       throw new InvalidRequestException('The Redirect URI MUST NOT have a fragment component.');
     }
 
-    if (!client.redirectUris.includes(redirectUri.href)) {
+    if (!client.redirectUris.includes(url.href)) {
       throw new AccessDeniedException('Invalid Redirect URI.');
     }
 
-    return redirectUri;
+    return url;
   }
 
   /**
@@ -121,11 +121,13 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @param parameters Parameters of the Token Request.
    * @returns Code Verifier provided by the Client.
    */
-  private getCodeVerifier(parameters: AuthorizationCodeTokenRequest): string {
-    if (typeof parameters.code_verifier !== 'string') {
+  private getCodeVerifier(parameters: URLSearchParams): string {
+    const codeVerifier = parameters.get('code_verifier');
+
+    if (codeVerifier === null) {
       throw new InvalidRequestException('Invalid parameter "code_verifier".');
     }
 
-    return parameters.code_verifier;
+    return codeVerifier;
   }
 }

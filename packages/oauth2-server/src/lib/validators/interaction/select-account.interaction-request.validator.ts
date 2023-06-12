@@ -1,3 +1,5 @@
+import { URLSearchParams } from 'url';
+
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { SelectAccountContextInteractionContext } from '../../context/interaction/select-account-context.interaction-context';
@@ -11,8 +13,6 @@ import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
-import { SelectAccountContextInteractionRequest } from '../../requests/interaction/select-account-context.interaction-request';
-import { SelectAccountDecisionInteractionRequest } from '../../requests/interaction/select-account-decision.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { LoginServiceInterface } from '../../services/login.service.interface';
@@ -26,9 +26,7 @@ import { InteractionRequestValidator } from './interaction-request.validator';
  */
 @Injectable()
 export class SelectAccountInteractionRequestValidator extends InteractionRequestValidator<
-  SelectAccountContextInteractionRequest,
   SelectAccountContextInteractionContext,
-  SelectAccountDecisionInteractionRequest,
   SelectAccountDecisionInteractionContext
 > {
   /**
@@ -60,9 +58,9 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<SelectAccountContextInteractionContext> {
-    const parameters = request.query as SelectAccountContextInteractionRequest;
-
     const context = await super.validateContext(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
     const session = await this.getSession(parameters);
@@ -77,9 +75,9 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(request: HttpRequest): Promise<SelectAccountDecisionInteractionContext> {
-    const parameters = request.body as SelectAccountDecisionInteractionRequest;
-
     const context = await super.validateDecision(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
     const login = await this.getLogin(parameters);
@@ -93,12 +91,14 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    * @param parameters Parameters of the Interaction Request.
    * @returns Session based on the Identifier provided by the Client.
    */
-  private async getSession(parameters: SelectAccountContextInteractionRequest): Promise<Session> {
-    if (typeof parameters.session_id !== 'string') {
+  private async getSession(parameters: URLSearchParams): Promise<Session> {
+    const sessionId = parameters.get('session_id');
+
+    if (sessionId === null) {
       throw new InvalidRequestException('Invalid parameter "session_id".');
     }
 
-    const session = await this.sessionService.findOne(parameters.session_id);
+    const session = await this.sessionService.findOne(sessionId);
 
     if (session === null) {
       throw new AccessDeniedException('Invalid Session Identifier.');
@@ -113,14 +113,14 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    * @param parameters Parameters of the Interaction Request.
    * @returns Grant based on the provided Login Challenge.
    */
-  private async getGrant(
-    parameters: SelectAccountContextInteractionRequest | SelectAccountDecisionInteractionRequest
-  ): Promise<Grant> {
-    if (typeof parameters.login_challenge !== 'string') {
+  private async getGrant(parameters: URLSearchParams): Promise<Grant> {
+    const loginChallenge = parameters.get('login_challenge');
+
+    if (loginChallenge === null) {
       throw new InvalidRequestException('Invalid parameter "login_challenge".');
     }
 
-    const grant = await this.grantService.findOneByLoginChallenge(parameters.login_challenge);
+    const grant = await this.grantService.findOneByLoginChallenge(loginChallenge);
 
     if (grant === null) {
       throw new AccessDeniedException('Invalid Login Challenge.');
@@ -135,12 +135,14 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    * @param parameters Parameters of the Interaction Request.
    * @returns Login based on the provided Identifier.
    */
-  private async getLogin(parameters: SelectAccountDecisionInteractionRequest): Promise<Login> {
-    if (typeof parameters.login_id !== 'string') {
+  private async getLogin(parameters: URLSearchParams): Promise<Login> {
+    const loginId = parameters.get('login_id');
+
+    if (loginId === null) {
       throw new InvalidRequestException('Invalid parameter "login_id".');
     }
 
-    const login = await this.loginService.findOne(parameters.login_id);
+    const login = await this.loginService.findOne(loginId);
 
     if (login === null) {
       throw new AccessDeniedException('Invalid Login Identifier.');

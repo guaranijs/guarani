@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer';
+import { URL, URLSearchParams } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { OneOrMany } from '@guarani/types';
 
 import { LogoutContextInteractionContext } from '../../context/interaction/logout-context.interaction-context';
 import { LogoutDecisionAcceptInteractionContext } from '../../context/interaction/logout-decision-accept.interaction-context';
@@ -14,21 +17,14 @@ import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
+import { LogoutDecision } from '../../interaction-types/logout-decision.type';
 import { LogoutContextInteractionRequest } from '../../requests/interaction/logout-context.interaction-request';
 import { LogoutDecisionInteractionRequest } from '../../requests/interaction/logout-decision.interaction-request';
-import { LogoutDecisionAcceptInteractionRequest } from '../../requests/interaction/logout-decision-accept.interaction-request';
-import { LogoutDecisionDenyInteractionRequest } from '../../requests/interaction/logout-decision-deny.interaction-request';
 import { LogoutTicketServiceInterface } from '../../services/logout-ticket.service.interface';
 import { LOGOUT_TICKET_SERVICE } from '../../services/logout-ticket.service.token';
 import { SessionServiceInterface } from '../../services/session.service.interface';
 import { SESSION_SERVICE } from '../../services/session.service.token';
 import { LogoutInteractionRequestValidator } from './logout.interaction-request.validator';
-
-const invalidLogoutChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidDecisions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidSessionIdentifiers: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidErrors: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidErrorDescriptions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Logout Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -81,35 +77,38 @@ describe('Logout Interaction Request Validator', () => {
   });
 
   describe('validateContext()', () => {
-    let request: HttpRequest;
+    let parameters: LogoutContextInteractionRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<LogoutContextInteractionRequest> = {}): HttpRequest => {
+      parameters = removeNullishValues<LogoutContextInteractionRequest>(Object.assign(parameters, data));
+
+      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/interaction',
-        query: <LogoutContextInteractionRequest>{
-          interaction_type: 'logout',
-          logout_challenge: 'logout_challenge',
-        },
+        url: new URL(`https://server.example.com/oauth/interaction?${query.toString()}`),
       });
+    };
+
+    beforeEach(() => {
+      parameters = { interaction_type: 'logout', logout_challenge: 'logout_challenge' };
     });
 
-    it.each(invalidLogoutChallenges)(
-      'should throw when providing an invalid "logout_challenge" parameter.',
-      async (logoutChallenge) => {
-        request.query.logout_challenge = logoutChallenge;
+    it('should throw when not providing the parameter "logout_challenge".', async () => {
+      const request = requestFactory({ logout_challenge: undefined });
 
-        await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "logout_challenge".'
-        );
-      }
-    );
+      await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "logout_challenge".'
+      );
+    });
 
     it('should throw when no logout ticket is found.', async () => {
+      const request = requestFactory();
+
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(null);
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
@@ -119,12 +118,14 @@ describe('Logout Interaction Request Validator', () => {
     });
 
     it('should return a login context interaction context.', async () => {
+      const request = requestFactory();
+
       const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<LogoutContextInteractionContext>({
-        parameters: request.query as LogoutContextInteractionRequest,
+        parameters: request.query,
         interactionType: interactionTypesMocks[2]!,
         logoutTicket,
       });
@@ -132,35 +133,41 @@ describe('Logout Interaction Request Validator', () => {
   });
 
   describe('validateDecision()', () => {
-    let request: HttpRequest;
+    let parameters: LogoutDecisionInteractionRequest;
+
+    const requestFactory = (data: Partial<LogoutDecisionInteractionRequest> = {}): HttpRequest => {
+      parameters = removeNullishValues<LogoutDecisionInteractionRequest>(Object.assign(parameters, data));
+
+      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+
+      return new HttpRequest({
+        body: Buffer.from(body.toString(), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/interaction'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <LogoutDecisionInteractionRequest>{
-          interaction_type: 'logout',
-          logout_challenge: 'logout_challenge',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/interaction',
-        query: {},
-      });
+      parameters = <LogoutDecisionInteractionRequest>{
+        interaction_type: 'logout',
+        logout_challenge: 'logout_challenge',
+      };
     });
 
-    it.each(invalidLogoutChallenges)(
-      'should throw when providing an invalid "logout_challenge" parameter.',
-      async (logoutChallenge) => {
-        request.body.logout_challenge = logoutChallenge;
+    it('should throw when not providing the parameter "logout_challenge".', async () => {
+      const request = requestFactory({ logout_challenge: undefined });
 
-        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "logout_challenge".'
-        );
-      }
-    );
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "logout_challenge".'
+      );
+    });
 
     it('should throw when no logout ticket is found.', async () => {
+      const request = requestFactory();
+
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(null);
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
@@ -169,8 +176,8 @@ describe('Logout Interaction Request Validator', () => {
       );
     });
 
-    it.each(invalidDecisions)('should throw when providing an invalid "decision" parameter.', async (decision) => {
-      request.body.decision = decision;
+    it('should throw when not providing the parameter "decision".', async () => {
+      const request = requestFactory({ decision: undefined });
 
       const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
 
@@ -183,7 +190,7 @@ describe('Logout Interaction Request Validator', () => {
     });
 
     it('should throw when providing an unsupported decision.', async () => {
-      request.body.decision = 'unknown';
+      const request = requestFactory({ decision: 'unknown' as LogoutDecision });
 
       const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
 
@@ -196,24 +203,21 @@ describe('Logout Interaction Request Validator', () => {
     });
 
     // #region Accept Decision
-    it.each(invalidSessionIdentifiers)(
-      'should throw when providing an invalid "session_id" parameter.',
-      async (sessionId) => {
-        Object.assign(request.body, { decision: 'accept', session_id: sessionId });
+    it('should throw when not providing the parameter "session_id".', async () => {
+      const request = requestFactory({ decision: 'accept', session_id: undefined });
 
-        const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
 
-        logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
+      logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
-        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "session_id".'
-        );
-      }
-    );
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "session_id".'
+      );
+    });
 
     it('should throw when no session is found.', async () => {
-      Object.assign(request.body, { decision: 'accept', session_id: 'session_id' });
+      const request = requestFactory({ decision: 'accept', session_id: 'session_id' });
 
       const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
 
@@ -222,12 +226,12 @@ describe('Logout Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Session.'
+        'Invalid Session Identifier.'
       );
     });
 
     it('should return a logout decision accept interaction context.', async () => {
-      Object.assign(request.body, { decision: 'accept', session_id: 'session_id' });
+      const request = requestFactory({ decision: 'accept', session_id: 'session_id' });
 
       const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
       const session = <Session>{ id: 'session_id' };
@@ -236,7 +240,7 @@ describe('Logout Interaction Request Validator', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LogoutDecisionAcceptInteractionContext>({
-        parameters: request.body as LogoutDecisionAcceptInteractionRequest,
+        parameters: request.form(),
         interactionType: interactionTypesMocks[2]!,
         logoutTicket,
         decision: 'accept',
@@ -246,8 +250,8 @@ describe('Logout Interaction Request Validator', () => {
     // #endregion
 
     // #region Deny Decision
-    it.each(invalidErrors)('should throw when providing an invalid "error" parameter.', async (error) => {
-      Object.assign(request.body, { decision: 'deny', error });
+    it('should throw when not providing the parameter "error".', async () => {
+      const request = requestFactory({ decision: 'deny', error: undefined });
 
       const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
 
@@ -259,24 +263,21 @@ describe('Logout Interaction Request Validator', () => {
       );
     });
 
-    it.each(invalidErrorDescriptions)(
-      'should throw when providing an invalid "error_description" parameter.',
-      async (errorDescription) => {
-        Object.assign(request.body, { decision: 'deny', error: 'logout_denied', error_description: errorDescription });
+    it('should throw when not providing the parameter "error_description".', async () => {
+      const request = requestFactory({ decision: 'deny', error: 'logout_denied', error_description: undefined });
 
-        const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
 
-        logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
+      logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
-        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "error_description".'
-        );
-      }
-    );
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "error_description".'
+      );
+    });
 
     it('should return a login decision deny interaction context.', async () => {
-      Object.assign(request.body, {
+      const request = requestFactory({
         decision: 'deny',
         error: 'logout_denied',
         error_description: 'Lorem ipsum dolor sit amet...',
@@ -285,14 +286,14 @@ describe('Logout Interaction Request Validator', () => {
       const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
-        Reflect.construct(OAuth2Exception, [request.body.error_description as string]),
-        { error: request.body.error as string }
+        Reflect.construct(OAuth2Exception, [parameters.error_description as string]),
+        { error: parameters.error as string }
       );
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LogoutDecisionDenyInteractionContext>({
-        parameters: request.body as LogoutDecisionDenyInteractionRequest,
+        parameters: request.form(),
         interactionType: interactionTypesMocks[2]!,
         logoutTicket,
         decision: 'deny',

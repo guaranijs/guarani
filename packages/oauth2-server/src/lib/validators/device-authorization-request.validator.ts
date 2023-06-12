@@ -1,12 +1,12 @@
+import { URLSearchParams } from 'url';
+
 import { Injectable } from '@guarani/di';
 
 import { DeviceAuthorizationContext } from '../context/device-authorization-context';
 import { Client } from '../entities/client.entity';
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpRequest } from '../http/http.request';
-import { DeviceAuthorizationRequest } from '../requests/device-authorization-request';
 
 /**
  * Implementation of the Device Authorization Request Validator.
@@ -31,7 +31,7 @@ export class DeviceAuthorizationRequestValidator {
    * @returns Device Authorization Context.
    */
   public async validate(request: HttpRequest): Promise<DeviceAuthorizationContext> {
-    const parameters = request.body as DeviceAuthorizationRequest;
+    const parameters = request.form();
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
     const scopes = this.getScopes(client, parameters);
@@ -45,12 +45,9 @@ export class DeviceAuthorizationRequestValidator {
    * @param client Client of the Request.
    * @param scope Scope requested by the Client.
    */
-  private getScopes(client: Client, parameters: DeviceAuthorizationRequest): string[] {
-    if (typeof parameters.scope !== 'undefined' && typeof parameters.scope !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "scope".');
-    }
-
-    this.scopeHandler.checkRequestedScope(parameters.scope ?? null);
-    return this.scopeHandler.getAllowedScopes(client, parameters.scope ?? null);
+  private getScopes(client: Client, parameters: URLSearchParams): string[] {
+    const scope = parameters.get('scope');
+    this.scopeHandler.checkRequestedScope(scope);
+    return this.scopeHandler.getAllowedScopes(client, scope);
   }
 }

@@ -1,3 +1,5 @@
+import { URLSearchParams } from 'url';
+
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { LogoutContextInteractionContext } from '../../context/interaction/logout-context.interaction-context';
@@ -14,10 +16,6 @@ import { InteractionTypeInterface } from '../../interaction-types/interaction-ty
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { LogoutDecision } from '../../interaction-types/logout-decision.type';
-import { LogoutContextInteractionRequest } from '../../requests/interaction/logout-context.interaction-request';
-import { LogoutDecisionInteractionRequest } from '../../requests/interaction/logout-decision.interaction-request';
-import { LogoutDecisionAcceptInteractionRequest } from '../../requests/interaction/logout-decision-accept.interaction-request';
-import { LogoutDecisionDenyInteractionRequest } from '../../requests/interaction/logout-decision-deny.interaction-request';
 import { LogoutTicketServiceInterface } from '../../services/logout-ticket.service.interface';
 import { LOGOUT_TICKET_SERVICE } from '../../services/logout-ticket.service.token';
 import { SessionServiceInterface } from '../../services/session.service.interface';
@@ -29,10 +27,8 @@ import { InteractionRequestValidator } from './interaction-request.validator';
  */
 @Injectable()
 export class LogoutInteractionRequestValidator extends InteractionRequestValidator<
-  LogoutContextInteractionRequest,
   LogoutContextInteractionContext,
-  LogoutDecisionInteractionRequest,
-  LogoutDecisionInteractionContext
+  LogoutDecisionInteractionContext<LogoutDecision>
 > {
   /**
    * Name of the Interaction Type that uses this Validator.
@@ -61,9 +57,9 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<LogoutContextInteractionContext> {
-    const parameters = request.query as LogoutContextInteractionRequest;
-
     const context = await super.validateContext(request);
+
+    const { parameters } = context;
 
     const logoutTicket = await this.getLogoutTicket(parameters);
 
@@ -76,10 +72,12 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @param request Http Request.
    * @returns Decision Interaction Context.
    */
-  public override async validateDecision(request: HttpRequest): Promise<LogoutDecisionInteractionContext> {
-    const parameters = request.body as LogoutDecisionInteractionRequest;
-
+  public override async validateDecision(
+    request: HttpRequest
+  ): Promise<LogoutDecisionInteractionContext<LogoutDecision>> {
     const context = await super.validateDecision(request);
+
+    const { parameters } = context;
 
     const logoutTicket = await this.getLogoutTicket(parameters);
     const decision = this.getDecision(parameters);
@@ -88,12 +86,12 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
 
     switch (decision) {
       case 'accept': {
-        const session = await this.getSession(<LogoutDecisionAcceptInteractionRequest>parameters);
+        const session = await this.getSession(parameters);
         return <LogoutDecisionAcceptInteractionContext>{ ...context, session };
       }
 
       case 'deny': {
-        const error = this.getError(<LogoutDecisionDenyInteractionRequest>parameters);
+        const error = this.getError(parameters);
         return <LogoutDecisionDenyInteractionContext>{ ...context, error };
       }
     }
@@ -105,14 +103,14 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @param parameters Parameters of the Interaction Request.
    * @returns Logout Ticket based on the provided Logout Challenge.
    */
-  private async getLogoutTicket(
-    parameters: LogoutContextInteractionRequest | LogoutDecisionInteractionRequest
-  ): Promise<LogoutTicket> {
-    if (typeof parameters.logout_challenge !== 'string') {
+  private async getLogoutTicket(parameters: URLSearchParams): Promise<LogoutTicket> {
+    const logoutChallenge = parameters.get('logout_challenge');
+
+    if (logoutChallenge === null) {
       throw new InvalidRequestException('Invalid parameter "logout_challenge".');
     }
 
-    const logoutTicket = await this.logoutTicketService.findOneByLogoutChallenge(parameters.logout_challenge);
+    const logoutTicket = await this.logoutTicketService.findOneByLogoutChallenge(logoutChallenge);
 
     if (logoutTicket === null) {
       throw new AccessDeniedException('Invalid Logout Challenge.');
@@ -127,16 +125,18 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @param parameters Parameters of the Interaction Request.
    * @returns Logout Decision provided by the Client.
    */
-  private getDecision(parameters: LogoutDecisionInteractionRequest): LogoutDecision {
-    if (typeof parameters.decision !== 'string') {
+  private getDecision(parameters: URLSearchParams): LogoutDecision {
+    const decision = parameters.get('decision');
+
+    if (decision === null) {
       throw new InvalidRequestException('Invalid parameter "decision".');
     }
 
-    if (parameters.decision !== 'accept' && parameters.decision !== 'deny') {
-      throw new InvalidRequestException(`Unsupported decision "${parameters.decision}".`);
+    if (decision !== 'accept' && decision !== 'deny') {
+      throw new InvalidRequestException(`Unsupported decision "${decision}".`);
     }
 
-    return parameters.decision;
+    return decision as LogoutDecision;
   }
 
   /**
@@ -145,15 +145,17 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @param parameters Parameters of the Interaction Request.
    * @returns Session based on the provided Session Identifier.
    */
-  private async getSession(parameters: LogoutDecisionAcceptInteractionRequest): Promise<Session> {
-    if (typeof parameters.session_id !== 'string') {
+  private async getSession(parameters: URLSearchParams): Promise<Session> {
+    const sessionId = parameters.get('session_id');
+
+    if (sessionId === null) {
       throw new InvalidRequestException('Invalid parameter "session_id".');
     }
 
-    const session = await this.sessionService.findOne(parameters.session_id);
+    const session = await this.sessionService.findOne(sessionId);
 
     if (session === null) {
-      throw new AccessDeniedException('Invalid Session.');
+      throw new AccessDeniedException('Invalid Session Identifier.');
     }
 
     return session;
@@ -165,20 +167,23 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @param parameters Parameters of the Interaction Request.
    * @returns Error object based on the Error Parameters provided by the Client.
    */
-  private getError(parameters: LogoutDecisionDenyInteractionRequest): OAuth2Exception {
-    if (typeof parameters.error !== 'string') {
+  private getError(parameters: URLSearchParams): OAuth2Exception {
+    const error = parameters.get('error');
+    const errorDescription = parameters.get('error_description');
+
+    if (error === null) {
       throw new InvalidRequestException('Invalid parameter "error".');
     }
 
-    if (typeof parameters.error_description !== 'string') {
+    if (errorDescription === null) {
       throw new InvalidRequestException('Invalid parameter "error_description".');
     }
 
-    const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
-      Reflect.construct(OAuth2Exception, [parameters.error_description]),
-      { error: parameters.error }
+    const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+      Reflect.construct(OAuth2Exception, [errorDescription]),
+      { error }
     );
 
-    return error;
+    return exception;
   }
 }

@@ -1,3 +1,9 @@
+import { Buffer } from 'buffer';
+import { URL, URLSearchParams } from 'url';
+
+import { removeNullishValues } from '@guarani/primitives';
+import { OneOrMany } from '@guarani/types';
+
 import { TokenContext } from '../../context/token/token-context';
 import { Client } from '../../entities/client.entity';
 import { InvalidClientException } from '../../exceptions/invalid-client.exception';
@@ -11,7 +17,7 @@ import { TokenRequestValidator } from './token-request.validator';
 jest.mock('../../handlers/client-authentication.handler');
 
 describe('Token Request Validator', () => {
-  let validator: TokenRequestValidator<TokenRequest, TokenContext<TokenRequest>>;
+  let validator: TokenRequestValidator<TokenContext>;
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
 
@@ -33,26 +39,37 @@ describe('Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: TokenRequest;
+
+    const requestFactory = (data: Partial<TokenRequest> = {}): HttpRequest => {
+      parameters = removeNullishValues<TokenRequest>(Object.assign(parameters, data));
+
+      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+
+      return new HttpRequest({
+        body: Buffer.from(body.toString(), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <TokenRequest>{ grant_type: 'authorization_code' },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/token',
-        query: {},
-      });
+      parameters = { grant_type: 'authorization_code' };
     });
 
     it('should throw when the client fails to authenticate.', async () => {
+      const request = requestFactory();
+
       const error = new InvalidClientException('Lorem ipsum dolor sit amet...');
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
       await expect(validator.validate(request)).rejects.toThrow(error);
     });
 
     it('should throw when the client is not allowed to request the provided "grant_type".', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', grantTypes: ['client_credentials'] };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
@@ -64,12 +81,14 @@ describe('Token Request Validator', () => {
     });
 
     it('should return a token context.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<TokenContext>({
-        parameters: request.body as TokenRequest,
+        parameters: request.form(),
         client,
         grantType: grantTypesMocks[0]!,
       });

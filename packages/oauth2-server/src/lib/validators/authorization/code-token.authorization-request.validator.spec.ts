@@ -1,4 +1,9 @@
+import { Buffer } from 'buffer';
+import { URL, URLSearchParams } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
+import { OneOrMany } from '@guarani/types';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
@@ -138,38 +143,45 @@ describe('Code & Token Authorization Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: CodeAuthorizationRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<CodeAuthorizationRequest> = {}): HttpRequest => {
+      parameters = removeNullishValues<CodeAuthorizationRequest>(Object.assign(parameters, data));
+
+      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/authorize',
-        query: <CodeAuthorizationRequest>{
-          response_type: 'code token',
-          client_id: 'client_id',
-          redirect_uri: 'https://client.example.com/oauth/callback',
-          code_challenge: 'qoJXAtQ-gjzfDmoMrHt1a2AFVe1Tn3-HX0VC2_UtezA',
-          code_challenge_method: 'S256',
-          scope: 'foo bar baz',
-          state: 'client_state',
-          response_mode: 'form_post',
-          nonce: 'client_nonce',
-          prompt: 'consent',
-          display: 'popup',
-          max_age: '300',
-          login_hint: 'login_hint',
-          id_token_hint: 'id_token_hint',
-          ui_locales: 'pt-BR en',
-          acr_values: 'urn:guarani:acr:2fa urn:guarani:acr:1fa',
-        },
+        url: new URL(`https://server.example.com/oauth/authorize?${query.toString()}`),
       });
+    };
+
+    beforeEach(() => {
+      parameters = {
+        response_type: 'code token',
+        client_id: 'client_id',
+        redirect_uri: 'https://client.example.com/oauth/callback',
+        code_challenge: 'qoJXAtQ-gjzfDmoMrHt1a2AFVe1Tn3-HX0VC2_UtezA',
+        code_challenge_method: 'S256',
+        scope: 'foo bar baz',
+        state: 'client_state',
+        response_mode: 'form_post',
+        nonce: 'client_nonce',
+        prompt: 'consent',
+        display: 'popup',
+        max_age: '300',
+        login_hint: 'login_hint',
+        id_token_hint: 'id_token_hint',
+        ui_locales: 'pt-BR en',
+        acr_values: 'urn:guarani:acr:2fa urn:guarani:acr:1fa',
+      };
     });
 
     it('should throw when requesting the response mode "query".', async () => {
-      request.query.response_mode = 'query';
+      const request = requestFactory({ response_mode: 'query' });
 
       const client = <Client>{
         id: 'client_id',

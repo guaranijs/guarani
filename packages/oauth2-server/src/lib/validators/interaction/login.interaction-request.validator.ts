@@ -1,3 +1,5 @@
+import { URLSearchParams } from 'url';
+
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 import { Nullable } from '@guarani/types';
 
@@ -16,10 +18,6 @@ import { InteractionTypeInterface } from '../../interaction-types/interaction-ty
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { LoginDecision } from '../../interaction-types/login-decision.type';
-import { LoginContextInteractionRequest } from '../../requests/interaction/login-context.interaction-request';
-import { LoginDecisionInteractionRequest } from '../../requests/interaction/login-decision.interaction-request';
-import { LoginDecisionAcceptInteractionRequest } from '../../requests/interaction/login-decision-accept.interaction-request';
-import { LoginDecisionDenyInteractionRequest } from '../../requests/interaction/login-decision-deny.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { UserServiceInterface } from '../../services/user.service.interface';
@@ -34,10 +32,8 @@ import { InteractionRequestValidator } from './interaction-request.validator';
  */
 @Injectable()
 export class LoginInteractionRequestValidator extends InteractionRequestValidator<
-  LoginContextInteractionRequest,
   LoginContextInteractionContext,
-  LoginDecisionInteractionRequest,
-  LoginDecisionInteractionContext
+  LoginDecisionInteractionContext<LoginDecision>
 > {
   /**
    * Name of the Interaction Type that uses this Validator.
@@ -68,9 +64,9 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<LoginContextInteractionContext> {
-    const parameters = request.query as LoginContextInteractionRequest;
-
     const context = await super.validateContext(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
 
@@ -83,10 +79,12 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param request Http Request.
    * @returns Decision Interaction Context.
    */
-  public override async validateDecision(request: HttpRequest): Promise<LoginDecisionInteractionContext> {
-    const parameters = request.body as LoginDecisionInteractionRequest;
-
+  public override async validateDecision(
+    request: HttpRequest
+  ): Promise<LoginDecisionInteractionContext<LoginDecision>> {
     const context = await super.validateDecision(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
     const decision = this.getDecision(parameters);
@@ -95,15 +93,15 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
 
     switch (decision) {
       case 'accept': {
-        const user = await this.getUser(<LoginDecisionAcceptInteractionRequest>parameters, grant.client);
-        const amr = this.getAuthenticationMethods(<LoginDecisionAcceptInteractionRequest>parameters);
-        const acr = this.getAuthenticationContextClass(<LoginDecisionAcceptInteractionRequest>parameters);
+        const user = await this.getUser(parameters, grant.client);
+        const amr = this.getAuthenticationMethods(parameters);
+        const acr = this.getAuthenticationContextClass(parameters);
 
         return <LoginDecisionAcceptInteractionContext>{ ...context, user, amr, acr };
       }
 
       case 'deny': {
-        const error = this.getError(<LoginDecisionDenyInteractionRequest>parameters);
+        const error = this.getError(parameters);
         return <LoginDecisionDenyInteractionContext>{ ...context, error };
       }
     }
@@ -115,12 +113,14 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param parameters Parameters of the Interaction Request.
    * @returns Grant based on the provided Login Challenge.
    */
-  private async getGrant(parameters: LoginContextInteractionRequest | LoginDecisionInteractionRequest): Promise<Grant> {
-    if (typeof parameters.login_challenge !== 'string') {
+  private async getGrant(parameters: URLSearchParams): Promise<Grant> {
+    const loginChallenge = parameters.get('login_challenge');
+
+    if (loginChallenge === null) {
       throw new InvalidRequestException('Invalid parameter "login_challenge".');
     }
 
-    const grant = await this.grantService.findOneByLoginChallenge(parameters.login_challenge);
+    const grant = await this.grantService.findOneByLoginChallenge(loginChallenge);
 
     if (grant === null) {
       throw new AccessDeniedException('Invalid Login Challenge.');
@@ -135,16 +135,18 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param parameters Parameters of the Interaction Request.
    * @returns Login Decision provided by the Client.
    */
-  private getDecision(parameters: LoginDecisionInteractionRequest): LoginDecision {
-    if (typeof parameters.decision !== 'string') {
+  private getDecision(parameters: URLSearchParams): LoginDecision {
+    const decision = parameters.get('decision');
+
+    if (decision === null) {
       throw new InvalidRequestException('Invalid parameter "decision".');
     }
 
-    if (parameters.decision !== 'accept' && parameters.decision !== 'deny') {
-      throw new InvalidRequestException(`Unsupported decision "${parameters.decision}".`);
+    if (decision !== 'accept' && decision !== 'deny') {
+      throw new InvalidRequestException(`Unsupported decision "${decision}".`);
     }
 
-    return parameters.decision;
+    return decision as LoginDecision;
   }
 
   /**
@@ -153,12 +155,14 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param parameters Parameters of the Interaction Request.
    * @returns User based on the provided Subject Identifier.
    */
-  private async getUser(parameters: LoginDecisionAcceptInteractionRequest, client: Client): Promise<User> {
-    if (typeof parameters.subject !== 'string') {
+  private async getUser(parameters: URLSearchParams, client: Client): Promise<User> {
+    const subject = parameters.get('subject');
+
+    if (subject === null) {
       throw new InvalidRequestException('Invalid parameter "subject".');
     }
 
-    const user = await this.userService.findOne(retrieveSubjectIdentifier(parameters.subject, client, this.settings));
+    const user = await this.userService.findOne(retrieveSubjectIdentifier(subject, client, this.settings));
 
     if (user === null) {
       throw new AccessDeniedException('Invalid User.');
@@ -173,12 +177,8 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param parameters Parameters of the Interaction Request.
    * @returns Authentication Methods provided by the Client.
    */
-  private getAuthenticationMethods(parameters: LoginDecisionAcceptInteractionRequest): string[] {
-    if (typeof parameters.amr !== 'undefined' && typeof parameters.amr !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "amr".');
-    }
-
-    return parameters.amr?.split(' ') ?? [];
+  private getAuthenticationMethods(parameters: URLSearchParams): string[] {
+    return parameters.get('amr')?.split(' ') ?? [];
   }
 
   /**
@@ -187,12 +187,8 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param parameters Parameters of the Interaction Request.
    * @returns Authentication Context Class provided by the Client.
    */
-  private getAuthenticationContextClass(parameters: LoginDecisionAcceptInteractionRequest): Nullable<string> {
-    if (typeof parameters.acr !== 'undefined' && typeof parameters.acr !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "acr".');
-    }
-
-    return parameters.acr ?? null;
+  private getAuthenticationContextClass(parameters: URLSearchParams): Nullable<string> {
+    return parameters.get('acr');
   }
 
   /**
@@ -201,20 +197,23 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param parameters Parameters of the Interaction Request.
    * @returns Error object based on the Error Parameters provided by the Client.
    */
-  private getError(parameters: LoginDecisionDenyInteractionRequest): OAuth2Exception {
-    if (typeof parameters.error !== 'string') {
+  private getError(parameters: URLSearchParams): OAuth2Exception {
+    const error = parameters.get('error');
+    const errorDescription = parameters.get('error_description');
+
+    if (error === null) {
       throw new InvalidRequestException('Invalid parameter "error".');
     }
 
-    if (typeof parameters.error_description !== 'string') {
+    if (errorDescription === null) {
       throw new InvalidRequestException('Invalid parameter "error_description".');
     }
 
-    const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
-      Reflect.construct(OAuth2Exception, [parameters.error_description]),
-      { error: parameters.error }
+    const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+      Reflect.construct(OAuth2Exception, [errorDescription]),
+      { error }
     );
 
-    return error;
+    return exception;
   }
 }

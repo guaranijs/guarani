@@ -1,8 +1,12 @@
 import { Buffer } from 'buffer';
-import { URL } from 'url';
+import { URL, URLSearchParams } from 'url';
+
+import { removeNullishValues } from '@guarani/primitives';
+import { OneOrMany } from '@guarani/types';
 
 import { AuthorizationContext } from '../../context/authorization/authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
+import { Display } from '../../displays/display.type';
 import { Client } from '../../entities/client.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
 import { InvalidClientException } from '../../exceptions/invalid-client.exception';
@@ -12,6 +16,7 @@ import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
+import { ResponseMode } from '../../response-modes/response-mode.type';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
 import { ClientServiceInterface } from '../../services/client.service.interface';
 import { Settings } from '../../settings/settings';
@@ -19,39 +24,7 @@ import { AuthorizationRequestValidator } from './authorization-request.validator
 
 jest.mock('../../handlers/scope.handler');
 
-const invalidStates: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidClientIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidRedirectUris: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidScopes: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidResponseModes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidNonces: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidPrompts: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidDisplays: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-
-const invalidMaxAges: any[] = [
-  null,
-  true,
-  1,
-  1.2,
-  1n,
-  Symbol('a'),
-  Buffer,
-  () => 1,
-  {},
-  [],
-  '',
-  'a',
-  '0x12',
-  '07',
-  '-1',
-  '-0x12',
-  '-07',
-];
-
-const invalidLoginHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidIdTokenHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidUiLocales: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidAcrValues: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
+const invalidMaxAges: any[] = ['', 'a', '0x12', '07', '-1', '-0x12', '-07'];
 
 describe('Authorization Request Validator', () => {
   let validator: AuthorizationRequestValidator;
@@ -140,45 +113,43 @@ describe('Authorization Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: AuthorizationRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<AuthorizationRequest> = {}): HttpRequest => {
+      parameters = removeNullishValues<AuthorizationRequest>(Object.assign(parameters, data));
+
+      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/authorize',
-        query: <AuthorizationRequest>{
-          response_type: 'code',
-          client_id: 'client_id',
-          redirect_uri: 'https://client.example.com/oauth/callback',
-          scope: 'foo bar baz',
-          state: 'client_state',
-          response_mode: 'form_post',
-          nonce: 'client_nonce',
-          prompt: 'consent',
-          display: 'popup',
-          max_age: '300',
-          login_hint: 'login_hint',
-          id_token_hint: 'id_token_hint',
-          ui_locales: 'pt-BR en',
-          acr_values: 'urn:guarani:acr:2fa urn:guarani:acr:1fa',
-        },
+        url: new URL(`https://server.example.com/oauth/authorize?${query.toString()}`),
       });
+    };
+
+    beforeEach(() => {
+      parameters = {
+        response_type: 'code',
+        client_id: 'client_id',
+        redirect_uri: 'https://client.example.com/oauth/callback',
+        scope: 'foo bar baz',
+        state: 'client_state',
+        response_mode: 'form_post',
+        nonce: 'client_nonce',
+        prompt: 'consent',
+        display: 'popup',
+        max_age: '300',
+        login_hint: 'login_hint',
+        id_token_hint: 'id_token_hint',
+        ui_locales: 'pt-BR en',
+        acr_values: 'urn:guarani:acr:2fa urn:guarani:acr:1fa',
+      };
     });
 
-    it.each(invalidStates)('should throw when providing an invalid "state" parameter.', async (state) => {
-      request.query.state = state;
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "state".'
-      );
-    });
-
-    it.each(invalidClientIds)('should throw when providing an invalid "client_id" parameter.', async (clientId) => {
-      request.query.client_id = clientId;
+    it('should throw when not providing the parameter "client_id".', async () => {
+      const request = requestFactory({ client_id: undefined });
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
@@ -187,12 +158,16 @@ describe('Authorization Request Validator', () => {
     });
 
     it('should throw when the client is not registered.', async () => {
+      const request = requestFactory();
+
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(InvalidClientException, 'Invalid Client.');
     });
 
     it('should throw when the client is not allowed to request the provided "response_type".', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', responseTypes: ['id_token'] };
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
@@ -203,24 +178,21 @@ describe('Authorization Request Validator', () => {
       );
     });
 
-    it.each(invalidRedirectUris)(
-      'should throw when providing an invalid "redirect_uri" parameter.',
-      async (redirectUri) => {
-        request.query.redirect_uri = redirectUri;
+    it('should throw when not providing the parameter "redirect_uri".', async () => {
+      const request = requestFactory({ redirect_uri: undefined });
 
-        const client = <Client>{ id: 'client_id', responseTypes: ['code'] };
+      const client = <Client>{ id: 'client_id', responseTypes: ['code'] };
 
-        clientServiceMock.findOne.mockResolvedValueOnce(client);
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
 
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "redirect_uri".'
-        );
-      }
-    );
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "redirect_uri".'
+      );
+    });
 
     it('should throw when providing an invalid redirect uri.', async () => {
-      request.query.redirect_uri = 'client.example.com/oauth/callback';
+      const request = requestFactory({ redirect_uri: 'client.example.com/oauth/callback' });
 
       const client = <Client>{ id: 'client_id', responseTypes: ['code'] };
 
@@ -233,7 +205,7 @@ describe('Authorization Request Validator', () => {
     });
 
     it('should throw when the provided redirect uri has a fragment component.', async () => {
-      request.query.redirect_uri = 'https://client.example.com/oauth/callback#foo=bar';
+      const request = requestFactory({ redirect_uri: 'https://client.example.com/oauth/callback#foo=bar' });
 
       const client = <Client>{ id: 'client_id', responseTypes: ['code'] };
 
@@ -246,6 +218,8 @@ describe('Authorization Request Validator', () => {
     });
 
     it('should throw when the client is not allowed to use the provided redirect uri.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{
         id: 'client_id',
         redirectUris: ['https://client.example.org/oauth/callback'],
@@ -260,8 +234,8 @@ describe('Authorization Request Validator', () => {
       );
     });
 
-    it.each(invalidScopes)('should throw when providing an invalid "scope" parameter.', async (scope) => {
-      request.query.scope = scope;
+    it('should throw when not providing the parameter "scope".', async () => {
+      const request = requestFactory({ scope: undefined });
 
       const client = <Client>{
         id: 'client_id',
@@ -277,30 +251,8 @@ describe('Authorization Request Validator', () => {
       );
     });
 
-    it.each(invalidResponseModes)(
-      'should throw when providing an invalid "response_mode" parameter.',
-      async (responseMode) => {
-        request.query.response_mode = responseMode;
-
-        const client = <Client>{
-          id: 'client_id',
-          redirectUris: ['https://client.example.com/oauth/callback'],
-          responseTypes: ['code'],
-          scopes: ['foo', 'bar', 'baz', 'qux'],
-        };
-
-        clientServiceMock.findOne.mockResolvedValueOnce(client);
-        scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
-
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "response_mode".'
-        );
-      }
-    );
-
     it('should throw when requesting an unsupported response mode.', async () => {
-      request.query.response_mode = 'unknown';
+      const request = requestFactory({ response_mode: 'unknown' as ResponseMode });
 
       const client = <Client>{
         id: 'client_id',
@@ -318,46 +270,8 @@ describe('Authorization Request Validator', () => {
       );
     });
 
-    it.each(invalidNonces)('should throw when providing an invalid "nonce" parameter.', async (nonce) => {
-      request.query.nonce = nonce;
-
-      const client = <Client>{
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "nonce".'
-      );
-    });
-
-    it.each(invalidPrompts)('should throw when providing an invalid "prompt" parameter.', async (prompt) => {
-      request.query.prompt = prompt;
-
-      const client = <Client>{
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "prompt".'
-      );
-    });
-
     it('should throw when requesting an unsupported prompt.', async () => {
-      request.query.prompt = 'unknown';
+      const request = requestFactory({ prompt: 'unknown' });
 
       const client = <Client>{
         id: 'client_id',
@@ -376,7 +290,7 @@ describe('Authorization Request Validator', () => {
     });
 
     it('should throw when requesting the prompt "none" together with another prompt.', async () => {
-      request.query.prompt = 'none login consent';
+      const request = requestFactory({ prompt: 'none login consent' });
 
       const client = <Client>{
         id: 'client_id',
@@ -395,7 +309,7 @@ describe('Authorization Request Validator', () => {
     });
 
     it('should throw when requesting the prompts "create" and "login" together.', async () => {
-      request.query.prompt = 'create login';
+      const request = requestFactory({ prompt: 'create login' });
 
       const client = <Client>{
         id: 'client_id',
@@ -414,7 +328,7 @@ describe('Authorization Request Validator', () => {
     });
 
     it('should throw when requesting the prompts "create" and "select_account" together.', async () => {
-      request.query.prompt = 'create select_account';
+      const request = requestFactory({ prompt: 'create select_account' });
 
       const client = <Client>{
         id: 'client_id',
@@ -433,7 +347,7 @@ describe('Authorization Request Validator', () => {
     });
 
     it('should throw when requesting the prompts "login" and "select_account" together.', async () => {
-      request.query.prompt = 'login select_account';
+      const request = requestFactory({ prompt: 'login select_account' });
 
       const client = <Client>{
         id: 'client_id',
@@ -451,27 +365,8 @@ describe('Authorization Request Validator', () => {
       );
     });
 
-    it.each(invalidDisplays)('should throw when providing an invalid "display" parameter.', async (display) => {
-      request.query.display = display;
-
-      const client = <Client>{
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "display".'
-      );
-    });
-
     it('should throw when requesting an unsupported display.', async () => {
-      request.query.display = 'unknown';
+      const request = requestFactory({ display: 'unknown' as Display });
 
       const client = <Client>{
         id: 'client_id',
@@ -490,7 +385,7 @@ describe('Authorization Request Validator', () => {
     });
 
     it.each(invalidMaxAges)('should throw when providing an invalid "max_age" parameter.', async (maxAge) => {
-      request.query.max_age = maxAge;
+      const request = requestFactory({ max_age: maxAge });
 
       const client = <Client>{
         id: 'client_id',
@@ -508,68 +403,8 @@ describe('Authorization Request Validator', () => {
       );
     });
 
-    it.each(invalidLoginHints)('should throw when providing an invalid "login_hint" parameter.', async (loginHint) => {
-      request.query.login_hint = loginHint;
-
-      const client = <Client>{
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "login_hint".'
-      );
-    });
-
-    it.each(invalidIdTokenHints)(
-      'should throw when providing an invalid "id_token_hint" parameter.',
-      async (idTokenHint) => {
-        request.query.id_token_hint = idTokenHint;
-
-        const client = <Client>{
-          id: 'client_id',
-          redirectUris: ['https://client.example.com/oauth/callback'],
-          responseTypes: ['code'],
-          scopes: ['foo', 'bar', 'baz', 'qux'],
-        };
-
-        clientServiceMock.findOne.mockResolvedValueOnce(client);
-        scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
-
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "id_token_hint".'
-        );
-      }
-    );
-
-    it.each(invalidUiLocales)('should throw when providing an invalid "ui_locales" parameter.', async (uiLocales) => {
-      request.query.ui_locales = uiLocales;
-
-      const client = <Client>{
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "ui_locales".'
-      );
-    });
-
     it('should throw when requesting an unsupported ui locale.', async () => {
-      request.query.ui_locales = 'unknown';
+      const request = requestFactory({ ui_locales: 'unknown' });
 
       const client = <Client>{
         id: 'client_id',
@@ -599,7 +434,7 @@ describe('Authorization Request Validator', () => {
         displaysMocks,
       ]);
 
-      request.query.ui_locales = 'pt-BR';
+      const request = requestFactory({ ui_locales: 'pt-BR' });
 
       const client = <Client>{
         id: 'client_id',
@@ -617,27 +452,8 @@ describe('Authorization Request Validator', () => {
       );
     });
 
-    it.each(invalidAcrValues)('should throw when providing an invalid "acr_values" parameter.', async (acrValues) => {
-      request.query.acr_values = acrValues;
-
-      const client = <Client>{
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "acr_values".'
-      );
-    });
-
     it('should throw when requesting an unsupported authentication context class reference.', async () => {
-      request.query.acr_values = 'unknown';
+      const request = requestFactory({ acr_values: 'unknown' });
 
       const client = <Client>{
         id: 'client_id',
@@ -667,7 +483,7 @@ describe('Authorization Request Validator', () => {
         displaysMocks,
       ]);
 
-      request.query.acr_values = 'urn:guarani:acr:2fa';
+      const request = requestFactory({ acr_values: 'urn:guarani:acr:2fa' });
 
       const client = <Client>{
         id: 'client_id',
@@ -686,6 +502,8 @@ describe('Authorization Request Validator', () => {
     });
 
     it('should return an authorization context.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
@@ -698,8 +516,8 @@ describe('Authorization Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
-      await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationContext<AuthorizationRequest>>({
-        parameters: request.query as AuthorizationRequest,
+      await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationContext>({
+        parameters: request.query,
         cookies: request.cookies,
         responseType: responseTypesMocks[0]!,
         client,

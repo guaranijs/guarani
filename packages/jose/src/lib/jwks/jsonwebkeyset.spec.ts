@@ -139,7 +139,6 @@ describe('JSON Web Key Set', () => {
     );
 
     it('should throw when the "keys" json web key set parameter has an object missing the parameter "kty".', async () => {
-      // @ts-expect-error Missing required parameter "kty".
       await expect(JsonWebKeySet.load({ keys: [{}] })).rejects.toThrow(
         new InvalidJsonWebKeySetException('The provided data is not a valid JSON Web Key Set object.', {
           cause: new InvalidJsonWebKeyException('The provided data does not have a "kty" parameter.'),

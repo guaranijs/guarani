@@ -1,15 +1,16 @@
+import { URLSearchParams } from 'url';
+
 import { Client } from '../../entities/client.entity';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
-import { TokenRequest } from '../../requests/token/token-request';
 
 /**
  * Parameters of the Token Context.
  */
-export interface TokenContext<T extends TokenRequest = TokenRequest> {
+export interface TokenContext {
   /**
    * Parameters of the Token Request.
    */
-  readonly parameters: T;
+  readonly parameters: URLSearchParams;
 
   /**
    * Client of the Request.

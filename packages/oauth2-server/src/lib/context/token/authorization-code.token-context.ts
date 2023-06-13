@@ -1,13 +1,12 @@
 import { URL } from 'url';
 
 import { AuthorizationCode } from '../../entities/authorization-code.entity';
-import { AuthorizationCodeTokenRequest } from '../../requests/token/authorization-code.token-request';
 import { TokenContext } from './token-context';
 
 /**
  * Parameters of the **Authorization Code** Token Context.
  */
-export interface AuthorizationCodeTokenContext extends TokenContext<AuthorizationCodeTokenRequest> {
+export interface AuthorizationCodeTokenContext extends TokenContext {
   /**
    * Authorization Code provided by the Client.
    */

@@ -1,10 +1,9 @@
-import { URL } from 'url';
+import { URL, URLSearchParams } from 'url';
 
 import { Dictionary, Nullable } from '@guarani/types';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { Client } from '../../entities/client.entity';
-import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
 import { Prompt } from '../../types/prompt.type';
@@ -12,11 +11,11 @@ import { Prompt } from '../../types/prompt.type';
 /**
  * Parameters of the Authorization Context.
  */
-export interface AuthorizationContext<T extends AuthorizationRequest = AuthorizationRequest> {
+export interface AuthorizationContext {
   /**
    * Parameters of the Authorization Request.
    */
-  readonly parameters: T;
+  readonly parameters: URLSearchParams;
 
   /**
    * Cookies of the Http Request.

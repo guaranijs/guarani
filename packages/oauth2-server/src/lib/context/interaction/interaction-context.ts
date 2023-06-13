@@ -1,14 +1,15 @@
+import { URLSearchParams } from 'url';
+
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
-import { InteractionRequest } from '../../requests/interaction/interaction-request';
 
 /**
  * Parameters of the Interaction Context.
  */
-export interface InteractionContext<T extends InteractionRequest = InteractionRequest> {
+export interface InteractionContext {
   /**
    * Parameters of the Interaction Context.
    */
-  readonly parameters: T;
+  readonly parameters: URLSearchParams;
 
   /**
    * Interaction Type requested by the Client.

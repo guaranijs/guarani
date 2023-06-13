@@ -1,5 +1,6 @@
+import { URLSearchParams } from 'url';
+
 import { Client } from '../entities/client.entity';
-import { DeviceAuthorizationRequest } from '../requests/device-authorization-request';
 
 /**
  * Parameters of the Device Authorization Context.
@@ -8,7 +9,7 @@ export interface DeviceAuthorizationContext {
   /**
    * Parameters of the Device Authorization Request.
    */
-  readonly parameters: DeviceAuthorizationRequest;
+  readonly parameters: URLSearchParams;
 
   /**
    * Client of the Request.

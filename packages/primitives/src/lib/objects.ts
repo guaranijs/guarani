@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 
-import { Comparable } from '@guarani/types';
+import { Comparable, Dictionary } from '@guarani/types';
 
 /**
  * Removes null and undefined values from the properties of an object or an array of objects.
@@ -51,7 +51,7 @@ export function removeNullishValues<T extends object>(data: T): T {
  * @param data Object to be checked.
  * @returns The provided data is a Plain Javascript Object.
  */
-export function isPlainObject(data: unknown): data is object {
+export function isPlainObject(data: unknown): data is Dictionary<unknown> {
   if (typeof data !== 'object' || data === null) {
     return false;
   }

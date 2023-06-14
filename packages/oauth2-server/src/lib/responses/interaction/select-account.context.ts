@@ -6,7 +6,7 @@ import { Prompt } from '../../types/prompt.type';
 /**
  * Parameters of the Select Account Context.
  */
-export interface SelectAccountContext extends Dictionary<any> {
+export interface SelectAccountContext extends Dictionary<unknown> {
   /**
    * Prompts requested by the Client.
    */

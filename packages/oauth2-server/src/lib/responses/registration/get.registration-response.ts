@@ -15,7 +15,7 @@ import { SubjectType } from '../../types/subject-type.type';
 /**
  * Parameters of the OAuth 2.0 Get Registration Response.
  */
-export interface GetRegistrationResponse extends Dictionary<any> {
+export interface GetRegistrationResponse extends Dictionary<unknown> {
   /**
    * Unique Identifier of the Client.
    */

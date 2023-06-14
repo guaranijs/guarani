@@ -5,7 +5,7 @@ import { ConsentContext } from './consent.context';
 /**
  * Parameters of the custom OAuth 2.0 Consent Context Interaction Response.
  */
-export interface ConsentContextInteractionResponse extends Dictionary<any> {
+export interface ConsentContextInteractionResponse extends Dictionary<unknown> {
   /**
    * Indicates if the application can skip displaying the consent screen.
    */

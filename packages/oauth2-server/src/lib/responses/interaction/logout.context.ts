@@ -3,7 +3,7 @@ import { Dictionary } from '@guarani/types';
 /**
  * Parameters of the Login Context.
  */
-export interface LogoutContext extends Dictionary<any> {
+export interface LogoutContext extends Dictionary<unknown> {
   /**
    * Hint about the Identifier that the User might use for logout.
    */

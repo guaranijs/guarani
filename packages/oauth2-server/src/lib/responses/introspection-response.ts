@@ -5,7 +5,7 @@ import { AccessTokenType } from '../types/access-token-type.type';
 /**
  * Parameters of the OAuth 2.0 Introspection Response.
  */
-export interface IntrospectionResponse extends Dictionary<any> {
+export interface IntrospectionResponse extends Dictionary<unknown> {
   /**
    * Indicates if the Token is active.
    */

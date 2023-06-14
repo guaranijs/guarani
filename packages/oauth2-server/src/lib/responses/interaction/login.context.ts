@@ -6,7 +6,7 @@ import { Prompt } from '../../types/prompt.type';
 /**
  * Parameters of the Login Context.
  */
-export interface LoginContext extends Dictionary<any> {
+export interface LoginContext extends Dictionary<unknown> {
   /**
    * Prompts requested by the Client.
    */

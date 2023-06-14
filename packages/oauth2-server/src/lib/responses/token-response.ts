@@ -5,7 +5,7 @@ import { AccessTokenType } from '../types/access-token-type.type';
 /**
  * Parameters of the OAuth 2.0 Token Response.
  */
-export interface TokenResponse extends Dictionary<any> {
+export interface TokenResponse extends Dictionary<unknown> {
   /**
    * Access Token issued to the Client.
    */

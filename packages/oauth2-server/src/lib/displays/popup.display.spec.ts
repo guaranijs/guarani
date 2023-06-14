@@ -56,7 +56,7 @@ describe('Page Display', () => {
         foo: 'foo',
         bar: 'bar',
         baz: 'baz',
-        empty: null,
+        empty: undefined,
       });
 
       expect(response.statusCode).toEqual(200);

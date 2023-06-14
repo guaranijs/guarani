@@ -3,6 +3,11 @@ import { Dictionary } from '@guarani/types';
 import { HttpResponse } from '../http/http.response';
 import { Display } from './display.type';
 
+/**
+ * Interface of a Display.
+ *
+ * @see https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
+ */
 export interface DisplayInterface {
   /**
    * Name of the Display.
@@ -16,5 +21,5 @@ export interface DisplayInterface {
    * @param parameters Parameters used to build the Http Response.
    * @returns Http Response to the provided Redirect URI.
    */
-  createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse;
+  createHttpResponse(redirectUri: string, parameters: Dictionary<string>): HttpResponse;
 }

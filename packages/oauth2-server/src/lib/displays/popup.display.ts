@@ -35,6 +35,11 @@ const templateFn = (redirectUri: string) => `
 </html>
 `;
 
+/**
+ * Implementation of the **Popup** Display.
+ *
+ * @see https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
+ */
 @Injectable()
 export class PopupDisplay implements DisplayInterface {
   /**
@@ -49,9 +54,9 @@ export class PopupDisplay implements DisplayInterface {
    * @param parameters Parameters used to build the Http Response.
    * @returns Http Response to the provided Redirect URI.
    */
-  public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
+  public createHttpResponse(redirectUri: string, parameters: Dictionary<string>): HttpResponse {
     const url = new URL(redirectUri);
-    Object.entries(removeNullishValues(parameters)).forEach(([name, value]) => url.searchParams.set(name, value));
+    Object.entries(removeNullishValues(parameters)).forEach(([name, value]) => url.searchParams.set(name, value!));
 
     const html = templateFn(url.href).trim();
     return new HttpResponse().html(html);

@@ -8,6 +8,11 @@ import { HttpResponse } from '../http/http.response';
 import { DisplayInterface } from './display.interface';
 import { Display } from './display.type';
 
+/**
+ * Implementation of the **Page** Display.
+ *
+ * @see https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
+ */
 @Injectable()
 export class PageDisplay implements DisplayInterface {
   /**
@@ -22,9 +27,9 @@ export class PageDisplay implements DisplayInterface {
    * @param parameters Parameters used to build the Http Response.
    * @returns Http Response to the provided Redirect URI.
    */
-  public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
+  public createHttpResponse(redirectUri: string, parameters: Dictionary<string>): HttpResponse {
     const url = new URL(redirectUri);
-    Object.entries(removeNullishValues(parameters)).forEach(([name, value]) => url.searchParams.set(name, value));
+    Object.entries(removeNullishValues(parameters)).forEach(([name, value]) => url.searchParams.set(name, value!));
     return new HttpResponse().redirect(url);
   }
 }

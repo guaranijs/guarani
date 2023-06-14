@@ -21,5 +21,5 @@ export interface ResponseModeInterface {
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns Http Response containing the Authorization Response Parameters.
    */
-  createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse;
+  createHttpResponse(redirectUri: string, parameters: Dictionary<string>): HttpResponse;
 }

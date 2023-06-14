@@ -26,7 +26,12 @@ describe('Fragment Response Mode', () => {
 
   describe('createHttpResponse()', () => {
     it('should create a redirect http response with a populated uri fragment.', () => {
-      const response = responseMode.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' });
+      const response = responseMode.createHttpResponse('https://example.com', {
+        foo: 'foo',
+        bar: 'bar',
+        baz: 'baz',
+        empty: undefined,
+      });
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});

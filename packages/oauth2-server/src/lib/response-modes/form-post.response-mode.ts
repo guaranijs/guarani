@@ -32,7 +32,7 @@ function sanitizeHtml(html: string): string {
  * @param parameters Authorization Response Parameters that will be returned to the Client Application.
  * @returns Formatted html document to be used as the body of the Http Response.
  */
-const templateFn = (redirectUri: string, parameters: Dictionary<any>) => `
+const templateFn = (redirectUri: string, parameters: Dictionary<string>) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -41,7 +41,7 @@ const templateFn = (redirectUri: string, parameters: Dictionary<any>) => `
 <body onload="document.forms[0].submit();">
   <form method="POST" action="${sanitizeHtml(redirectUri)}">
     ${Object.entries(parameters)
-      .map(([key, value]) => `<input type="hidden" name="${key}" value="${sanitizeHtml(value)}" />`)
+      .map(([key, value]) => `<input type="hidden" name="${key}" value="${sanitizeHtml(value!)}" />`)
       .join('\n    ')}
     <noscript>
       <p>Your browser does not support javascript or it is disabled.</p>
@@ -75,7 +75,7 @@ export class FormPostResponseMode implements ResponseModeInterface {
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns Http Response containing the Authorization Response Parameters.
    */
-  public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
+  public createHttpResponse(redirectUri: string, parameters: Dictionary<string>): HttpResponse {
     const html = templateFn(redirectUri, removeNullishValues(parameters)).trim();
     return new HttpResponse().html(html);
   }

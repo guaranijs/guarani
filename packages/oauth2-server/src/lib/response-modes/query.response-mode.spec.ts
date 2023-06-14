@@ -26,7 +26,12 @@ describe('Query Response Mode', () => {
 
   describe('createHttpResponse()', () => {
     it('should create a redirect http response with a populated uri query.', () => {
-      const response = responseMode.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' });
+      const response = responseMode.createHttpResponse('https://example.com', {
+        foo: 'foo',
+        bar: 'bar',
+        baz: 'baz',
+        empty: undefined,
+      });
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
@@ -40,6 +45,7 @@ describe('Query Response Mode', () => {
         foo: 'foo',
         bar: 'bar',
         baz: 'baz',
+        empty: undefined,
       });
 
       expect(response.statusCode).toEqual(303);

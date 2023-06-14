@@ -27,9 +27,9 @@ export class QueryResponseMode implements ResponseModeInterface {
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns Http Response containing the Authorization Response Parameters.
    */
-  public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
+  public createHttpResponse(redirectUri: string, parameters: Dictionary<string>): HttpResponse {
     const url = new URL(redirectUri);
-    Object.entries(removeNullishValues(parameters)).forEach(([name, value]) => url.searchParams.set(name, value));
+    Object.entries(removeNullishValues(parameters)).forEach(([name, value]) => url.searchParams.set(name, value!));
     return new HttpResponse().redirect(url);
   }
 }

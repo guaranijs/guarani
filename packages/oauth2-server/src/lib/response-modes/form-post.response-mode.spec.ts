@@ -47,7 +47,12 @@ describe('Form Post Response Mode', () => {
 
   describe('createHttpResponse()', () => {
     it('should create a http response with a populated html body.', () => {
-      const response = responseMode.createHttpResponse('https://example.com', { foo: 'foo', bar: 'bar', baz: 'baz' });
+      const response = responseMode.createHttpResponse('https://example.com', {
+        foo: 'foo',
+        bar: 'bar',
+        baz: 'baz',
+        empty: undefined,
+      });
 
       expect(response.statusCode).toEqual(200);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});

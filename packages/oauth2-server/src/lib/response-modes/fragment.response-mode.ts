@@ -27,9 +27,9 @@ export class FragmentResponseMode implements ResponseModeInterface {
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns Http Response containing the Authorization Response Parameters.
    */
-  public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
+  public createHttpResponse(redirectUri: string, parameters: Dictionary<string>): HttpResponse {
     const url = new URL(redirectUri);
-    const fragmentParameters = new URLSearchParams(removeNullishValues(parameters));
+    const fragmentParameters = new URLSearchParams(removeNullishValues(parameters) as Record<string, string>);
 
     url.hash = fragmentParameters.toString();
 

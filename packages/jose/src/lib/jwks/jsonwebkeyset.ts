@@ -45,6 +45,10 @@ export class JsonWebKeySet implements JsonWebKeySetParameters {
    * @returns JSON Web Key Set based on the provided Parameters.
    */
   public static async load(parameters: unknown): Promise<JsonWebKeySet> {
+    if (parameters instanceof JsonWebKeySet) {
+      return parameters;
+    }
+
     if (!isPlainObject(parameters)) {
       throw new InvalidJsonWebKeySetException();
     }

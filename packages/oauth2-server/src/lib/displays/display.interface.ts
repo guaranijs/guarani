@@ -1,4 +1,4 @@
-import { Dictionary } from '@guarani/types';
+import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
 import { HttpResponse } from '../http/http.response';
 import { Display } from './display.type';
@@ -21,5 +21,8 @@ export interface DisplayInterface {
    * @param parameters Parameters used to build the Http Response.
    * @returns Http Response to the provided Redirect URI.
    */
-  createHttpResponse(redirectUri: string, parameters: Dictionary<string>): HttpResponse;
+  createHttpResponse(
+    redirectUri: string,
+    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>
+  ): HttpResponse;
 }

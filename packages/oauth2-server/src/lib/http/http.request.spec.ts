@@ -1,7 +1,8 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
-import { Dictionary } from '@guarani/types';
+import { Dictionary, Json, OneOrMany } from '@guarani/types';
 
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { UnsupportedMediaTypeException } from '../exceptions/unsupported-media-type.exception';
@@ -57,7 +58,7 @@ describe('Http Request', () => {
       expect(request).toMatchObject<Partial<HttpRequest>>({
         method: 'DELETE',
         path: '/p/a/t/h',
-        query: new URLSearchParams({ entity_id: 'entity_id' }),
+        query: { entity_id: 'entity_id' },
         headers: { origin: 'server.example.com' },
         cookies: { guarani: 'guarani_cookie' },
       });
@@ -77,7 +78,7 @@ describe('Http Request', () => {
       expect(request).toMatchObject<Partial<HttpRequest>>({
         method: 'GET',
         path: '/p/a/t/h',
-        query: new URLSearchParams({ foo: 'foo', bar: 'bar' }),
+        query: { foo: 'foo', bar: 'bar' },
         headers: { origin: 'server.example.com' },
         cookies: { guarani: 'guarani_cookie' },
       });
@@ -97,7 +98,7 @@ describe('Http Request', () => {
       expect(request).toMatchObject<Partial<HttpRequest>>({
         method: 'POST',
         path: '/p/a/t/h',
-        query: new URLSearchParams(),
+        query: {},
         headers: { 'content-type': 'application/json', origin: 'server.example.com' },
         cookies: { guarani: 'guarani_cookie' },
       });
@@ -117,7 +118,7 @@ describe('Http Request', () => {
       expect(request).toMatchObject<Partial<HttpRequest>>({
         method: 'PUT',
         path: '/p/a/t/h',
-        query: new URLSearchParams({ entity_id: 'entity_id' }),
+        query: { entity_id: 'entity_id' },
         headers: { 'content-type': 'application/json', origin: 'server.example.com' },
         cookies: { guarani: 'guarani_cookie' },
       });
@@ -126,7 +127,7 @@ describe('Http Request', () => {
 
   describe('form()', () => {
     it('should throw when the http header "content-type" is not "application/x-www-form-urlencoded".', () => {
-      const data: Dictionary<any> = { foo: 'foo', bar: 'bar' };
+      const data: Json = { foo: 'foo', bar: 'bar' };
 
       const parameters: HttpRequestParameters = {
         method: 'POST',
@@ -145,37 +146,36 @@ describe('Http Request', () => {
     });
 
     it('should return the parsed body of the http request.', () => {
-      const data: Dictionary<any> = { foo: 'foo', bar: 'bar' };
+      const data: Dictionary<OneOrMany<string>> = { foo: 'foo', bar: 'bar' };
 
       const parameters: HttpRequestParameters = {
         method: 'POST',
         url: new URL('https://server.example.com/p/a/t/h'),
         headers: { 'content-type': 'application/x-www-form-urlencoded', origin: 'server.example.com' },
         cookies: { guarani: 'guarani_cookie' },
-        body: Buffer.from(new URLSearchParams(data).toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(data), 'utf8'),
       };
 
       const request = new HttpRequest(parameters);
       const body = request.form();
 
-      expect(body).toBeInstanceOf(URLSearchParams);
-
-      expect(body.get('foo')).toEqual('foo');
-      expect(body.get('bar')).toEqual('bar');
-      expect(body.get('baz')).toBeNull();
+      expect(body).toStrictEqual<Dictionary<OneOrMany<string>>>({
+        foo: 'foo',
+        bar: 'bar',
+      });
     });
   });
 
   describe('json()', () => {
     it('should throw when the http header "content-type" is not "application/json".', () => {
-      const data: Dictionary<any> = { foo: 'foo', bar: 'bar' };
+      const data: Dictionary<OneOrMany<string>> = { foo: 'foo', bar: 'bar' };
 
       const parameters: HttpRequestParameters = {
         method: 'POST',
         url: new URL('https://server.example.com/p/a/t/h'),
         headers: { 'content-type': 'application/x-www-form-urlencoded', origin: 'server.example.com' },
         cookies: { guarani: 'guarani_cookie' },
-        body: Buffer.from(new URLSearchParams(data).toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(data), 'utf8'),
       };
 
       const request = new HttpRequest(parameters);
@@ -204,7 +204,7 @@ describe('Http Request', () => {
     });
 
     it('should return the parsed body of the http request.', () => {
-      const data: Dictionary<any> = { foo: 'foo', bar: 'bar' };
+      const data: Json = { foo: 'foo', bar: 'bar' };
 
       const parameters: HttpRequestParameters = {
         method: 'POST',

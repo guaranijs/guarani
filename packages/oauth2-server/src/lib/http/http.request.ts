@@ -1,8 +1,9 @@
 import { Buffer } from 'buffer';
 import { IncomingHttpHeaders } from 'http';
-import { URLSearchParams } from 'url';
+import { parse as parseQs } from 'querystring';
 
-import { Dictionary } from '@guarani/types';
+import { JSON } from '@guarani/primitives';
+import { Dictionary, Json, OneOrMany } from '@guarani/types';
 
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { UnsupportedMediaTypeException } from '../exceptions/unsupported-media-type.exception';
@@ -29,7 +30,7 @@ export class HttpRequest {
   /**
    * Parsed Query Parameters of the Http Request.
    */
-  public readonly query: URLSearchParams;
+  public readonly query: Dictionary<OneOrMany<string>>;
 
   /**
    * Headers of the Http Request.
@@ -49,12 +50,12 @@ export class HttpRequest {
   /**
    * Body of the Http Request parsed as **application/x-www-form-urlencoded**.
    */
-  #form?: URLSearchParams;
+  #form?: Dictionary<OneOrMany<string>>;
 
   /**
    * Body of the Http Request parsed as **application/json**.
    */
-  #json?: unknown;
+  #json?: Json;
 
   /**
    * Instantiates a new Http Request.
@@ -66,7 +67,7 @@ export class HttpRequest {
 
     this.method = parameters.method;
     this.path = parameters.url.pathname;
-    this.query = parameters.url.searchParams;
+    this.query = parseQs(parameters.url.search.substring(1));
     this.headers = parameters.headers;
     this.cookies = parameters.cookies;
     this.#body = parameters.body;
@@ -75,20 +76,21 @@ export class HttpRequest {
   /**
    * Returns the contents of the Http Request Body parsed as **application/x-www-form-urlencoded**.
    */
-  public form(): URLSearchParams {
+  public form<T extends Dictionary<OneOrMany<string>>>(): T {
     this.expectContentType('application/x-www-form-urlencoded');
 
     if (!Buffer.isBuffer(this.#form)) {
-      this.#form = new URLSearchParams(this.#body.toString('utf8'));
+      this.#form = parseQs(this.#body.toString('utf8'));
+      Reflect.setPrototypeOf(this.#form, Object.prototype);
     }
 
-    return this.#form;
+    return this.#form as T;
   }
 
   /**
    * Returns the contents of the Http Request Body parsed as **application/json**.
    */
-  public json(): unknown {
+  public json<T extends Json>(): T {
     this.expectContentType('application/json');
 
     try {
@@ -96,7 +98,7 @@ export class HttpRequest {
         this.#json = JSON.parse(this.#body.toString('utf8'));
       }
 
-      return this.#json;
+      return this.#json as T;
     } catch (exc: unknown) {
       throw new InvalidRequestException('The Http Request Body is not a valid JSON object.', { cause: exc });
     }

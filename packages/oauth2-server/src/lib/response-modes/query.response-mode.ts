@@ -1,10 +1,8 @@
-import { URL } from 'url';
-
 import { Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
-import { Dictionary } from '@guarani/types';
+import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
 import { HttpResponse } from '../http/http.response';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { ResponseModeInterface } from './response-mode.interface';
 import { ResponseMode } from './response-mode.type';
 
@@ -27,9 +25,11 @@ export class QueryResponseMode implements ResponseModeInterface {
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns Http Response containing the Authorization Response Parameters.
    */
-  public createHttpResponse(redirectUri: string, parameters: Dictionary<string>): HttpResponse {
-    const url = new URL(redirectUri);
-    Object.entries(removeNullishValues(parameters)).forEach(([name, value]) => url.searchParams.set(name, value!));
+  public createHttpResponse(
+    redirectUri: string,
+    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>
+  ): HttpResponse {
+    const url = addParametersToUrl(redirectUri, parameters);
     return new HttpResponse().redirect(url);
   }
 }

@@ -27,31 +27,33 @@ describe('Query Response Mode', () => {
   describe('createHttpResponse()', () => {
     it('should create a redirect http response with a populated uri query.', () => {
       const response = responseMode.createHttpResponse('https://example.com', {
-        foo: 'foo',
-        bar: 'bar',
-        baz: 'baz',
-        empty: undefined,
+        var1: 'string',
+        var2: 123,
+        var3: true,
+        var4: null,
+        var5: undefined,
       });
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: 'https://example.com/?foo=foo&bar=bar&baz=baz',
+        Location: 'https://example.com/?var1=string&var2=123&var3=true',
       });
     });
 
     it('should create a redirect http response with a populated uri query preserving the previous parameters.', () => {
       const response = responseMode.createHttpResponse('https://example.com/?tenant=tenant_id', {
-        foo: 'foo',
-        bar: 'bar',
-        baz: 'baz',
-        empty: undefined,
+        var1: 'string',
+        var2: 123,
+        var3: true,
+        var4: null,
+        var5: undefined,
       });
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: 'https://example.com/?tenant=tenant_id&foo=foo&bar=bar&baz=baz',
+        Location: 'https://example.com/?tenant=tenant_id&var1=string&var2=123&var3=true',
       });
     });
   });

@@ -15,9 +15,9 @@ const body = `
 </head>
 <body onload="document.forms[0].submit();">
   <form method="POST" action="https:&#x2F;&#x2F;example.com">
-    <input type="hidden" name="foo" value="foo" />
-    <input type="hidden" name="bar" value="bar" />
-    <input type="hidden" name="baz" value="baz" />
+    <input type="hidden" name="var1" value="string" />
+    <input type="hidden" name="var2" value="123" />
+    <input type="hidden" name="var3" value="true" />
     <noscript>
       <p>Your browser does not support javascript or it is disabled.</p>
       <button autofocus type="submit">Continue</button>
@@ -48,10 +48,11 @@ describe('Form Post Response Mode', () => {
   describe('createHttpResponse()', () => {
     it('should create a http response with a populated html body.', () => {
       const response = responseMode.createHttpResponse('https://example.com', {
-        foo: 'foo',
-        bar: 'bar',
-        baz: 'baz',
-        empty: undefined,
+        var1: 'string',
+        var2: 123,
+        var3: true,
+        var4: null,
+        var5: undefined,
       });
 
       expect(response.statusCode).toEqual(200);

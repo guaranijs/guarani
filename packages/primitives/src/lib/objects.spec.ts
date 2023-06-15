@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 
-import { Comparable } from '@guarani/types';
+import { Comparable, Dictionary } from '@guarani/types';
 
 import { compare, isPlainObject, removeNullishValues } from './objects';
 
@@ -21,21 +21,27 @@ const invalidPlainObjects: any[] = [
 
 describe('removeNullishValues()', () => {
   it('should remove all undefined values from an object.', () => {
-    expect(
-      removeNullishValues({
+    const data: Dictionary<unknown>[] = [
+      {
         name: 'John Doe',
         occupation: null,
         vehicle: undefined,
         age: 23,
         address: { streetAddress: '123 1st Avenue', referencePoint: null, owner: undefined, trees: ['Oak', null] },
         hobbies: ['Jogging', undefined, { name: 'Gambling', skills: ['Poker', 'Black Jack'] }],
-      })
-    ).toStrictEqual({
-      name: 'John Doe',
-      age: 23,
-      address: { streetAddress: '123 1st Avenue', trees: ['Oak'] },
-      hobbies: ['Jogging', { name: 'Gambling', skills: ['Poker', 'Black Jack'] }],
-    });
+      },
+    ];
+
+    expect(() => removeNullishValues(data)).not.toThrow();
+
+    expect(data).toStrictEqual([
+      {
+        name: 'John Doe',
+        age: 23,
+        address: { streetAddress: '123 1st Avenue', trees: ['Oak'] },
+        hobbies: ['Jogging', { name: 'Gambling', skills: ['Poker', 'Black Jack'] }],
+      },
+    ]);
   });
 });
 

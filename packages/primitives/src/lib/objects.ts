@@ -6,43 +6,35 @@ import { Comparable, Dictionary } from '@guarani/types';
  * Removes null and undefined values from the properties of an object or an array of objects.
  *
  * @param data Object or array of objects to be cleansed.
- * @returns Object or array of objects without null and undefined values.
  */
-export function removeNullishValues<T extends object>(data: T): T {
+export function removeNullishValues<T = unknown>(data: T): T {
   if (typeof data !== 'object' || data === null) {
     return data;
   }
 
-  return Object.entries(data).reduce((result, [key, value]) => {
-    if (value == null) {
-      return result;
-    }
+  Object.entries(data).forEach(([key, value]) => {
+    switch (true) {
+      case value == null:
+        Reflect.deleteProperty(data, key);
+        break;
 
-    if (Array.isArray(value)) {
-      Object.defineProperty(result, key, {
-        configurable: true,
-        enumerable: true,
-        value: value.filter((v) => v != null).map((v) => removeNullishValues<T>(v)),
-        writable: true,
-      });
-    } else if (typeof value === 'object') {
-      Object.defineProperty(result, key, {
-        configurable: true,
-        enumerable: true,
-        value: removeNullishValues<T>(value),
-        writable: true,
-      });
-    } else {
-      Object.defineProperty(result, key, {
-        configurable: true,
-        enumerable: true,
-        value,
-        writable: true,
-      });
-    }
+      case Array.isArray(value):
+        value = value.filter((v: any) => v != null);
+        value.forEach(removeNullishValues);
+        Reflect.set(data, key, value);
+        break;
 
-    return result;
-  }, <T>{});
+      case typeof value === 'object':
+        removeNullishValues(value);
+        Reflect.set(data, key, value);
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  return data;
 }
 
 /**

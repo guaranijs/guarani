@@ -7,6 +7,7 @@ import { AccessTokenServiceInterface } from '../services/access-token.service.in
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { ClientAuthorizationInterface } from './client-authorization.interface';
 import { ClientAuthorization } from './client-authorization.type';
+import { UriQueryClientAuthorizationParameters } from './uri-query.client-authorization.parameters';
 
 /**
  * Implements the Client Authorization via the Request Uri Query.
@@ -48,8 +49,8 @@ export class UriQueryClientAuthorization implements ClientAuthorizationInterface
       return false;
     }
 
-    const parameters = request.query;
-    return parameters.get('access_token') !== null;
+    const parameters = request.query as UriQueryClientAuthorizationParameters;
+    return typeof parameters.access_token === 'string';
   }
 
   /**
@@ -59,9 +60,7 @@ export class UriQueryClientAuthorization implements ClientAuthorizationInterface
    * @returns Access Token based on the provided Access Token Handle.
    */
   public async authorize(request: HttpRequest): Promise<AccessToken> {
-    const parameters = request.query;
-
-    const accessTokenHandle = parameters.get('access_token')!;
+    const { access_token: accessTokenHandle } = request.query as UriQueryClientAuthorizationParameters;
 
     const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
 

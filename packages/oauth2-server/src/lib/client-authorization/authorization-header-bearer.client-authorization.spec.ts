@@ -1,4 +1,6 @@
+import { Buffer } from 'buffer';
 import { IncomingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 

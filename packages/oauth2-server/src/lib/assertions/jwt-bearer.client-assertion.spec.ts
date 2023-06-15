@@ -1,4 +1,5 @@
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import {
@@ -103,7 +104,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       parameters = Object.assign(parameters, data);
 
       return new HttpRequest({
-        body: Buffer.from(new URLSearchParams(parameters as Record<string, OneOrMany<string>>).toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -131,7 +132,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       parameters = Object.assign(parameters, data);
 
       return new HttpRequest({
-        body: Buffer.from(new URLSearchParams(parameters as Record<string, OneOrMany<string>>).toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',

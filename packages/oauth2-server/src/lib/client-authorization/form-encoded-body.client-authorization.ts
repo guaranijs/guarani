@@ -7,6 +7,7 @@ import { AccessTokenServiceInterface } from '../services/access-token.service.in
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { ClientAuthorizationInterface } from './client-authorization.interface';
 import { ClientAuthorization } from './client-authorization.type';
+import { FormEncodedBodyClientAuthorizationParameters } from './form-encoded-body.client-authorization.parameters';
 
 /**
  * Implements the Client Authorization via the Request Body.
@@ -48,8 +49,8 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
       return false;
     }
 
-    const parameters = request.form();
-    return parameters.get('access_token') !== null;
+    const { access_token: accessTokenHandle } = request.form<FormEncodedBodyClientAuthorizationParameters>();
+    return typeof accessTokenHandle === 'string';
   }
 
   /**
@@ -59,9 +60,7 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
    * @returns Access Token based on the provided Access Token Handle.
    */
   public async authorize(request: HttpRequest): Promise<AccessToken> {
-    const parameters = request.form();
-
-    const accessTokenHandle = parameters.get('access_token')!;
+    const { access_token: accessTokenHandle } = request.form<FormEncodedBodyClientAuthorizationParameters>();
 
     const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
 

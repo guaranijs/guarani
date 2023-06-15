@@ -21,6 +21,7 @@ import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { ClientAssertion } from './client-assertion.type';
+import { JwtBearerClientAssertionParameters } from './jwt-bearer.client-assertion.parameters';
 
 /**
  * Implementation of the JWT Bearer Client Assertion as described in RFC 7523.
@@ -61,11 +62,11 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
-    const parameters = request.form();
+    const parameters = request.form<JwtBearerClientAssertionParameters>();
 
     return (
-      parameters.get('client_assertion_type') === this.clientAssertionType &&
-      JsonWebSignature.isJsonWebSignature(parameters.get('client_assertion'))
+      parameters.client_assertion_type === this.clientAssertionType &&
+      JsonWebSignature.isJsonWebSignature(parameters.client_assertion)
     );
   }
 
@@ -76,9 +77,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @returns Authenticated Client.
    */
   public async authenticate(request: HttpRequest): Promise<Client> {
-    const parameters = request.form();
-
-    const clientAssertion = parameters.get('client_assertion')!;
+    const { client_assertion: clientAssertion } = request.form<JwtBearerClientAssertionParameters>();
 
     try {
       const [header, claims] = await this.getClientAssertionComponents(clientAssertion, request);

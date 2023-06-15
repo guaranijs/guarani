@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary, OneOrMany } from '@guarani/types';
@@ -51,7 +52,7 @@ describe('Client Secret Post Authentication Method', () => {
   describe('hasBeenRequested()', () => {
     const requestFactory = (data: Partial<ClientSecretPostClientAuthenticationParameters> = {}): HttpRequest => {
       return new HttpRequest({
-        body: Buffer.from(new URLSearchParams(data as Record<string, OneOrMany<string>>).toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(data), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -72,7 +73,7 @@ describe('Client Secret Post Authentication Method', () => {
       parameters = Object.assign(parameters, data);
 
       return new HttpRequest({
-        body: Buffer.from(new URLSearchParams(parameters as Record<string, OneOrMany<string>>).toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',

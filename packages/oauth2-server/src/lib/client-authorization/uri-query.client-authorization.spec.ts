@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary, OneOrMany } from '@guarani/types';
@@ -50,14 +51,12 @@ describe('URI Query Client Authorization', () => {
 
   describe('hasBeenRequested()', () => {
     const requestFactory = (data: Partial<UriQueryClientAuthorizationParameters> = {}): HttpRequest => {
-      const query = new URLSearchParams(data as Record<string, OneOrMany<string>>);
-
       return new HttpRequest({
         body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        url: new URL(`https://server.example.com/oauth/userinfo?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/userinfo?${stringifyQs(data)}`),
       });
     };
 
@@ -73,14 +72,12 @@ describe('URI Query Client Authorization', () => {
     const requestFactory = (data: Partial<UriQueryClientAuthorizationParameters> = {}): HttpRequest => {
       parameters = Object.assign(parameters, data);
 
-      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
-
       return new HttpRequest({
         body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        url: new URL(`https://server.example.com/oauth/userinfo?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/userinfo?${stringifyQs(data)}`),
       });
     };
 

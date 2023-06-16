@@ -209,9 +209,7 @@ describe('Post and Put Registration Request Validator', () => {
     let parameters: PostRegistrationRequest | PutBodyRegistrationRequest;
 
     const requestFactory = (data: Partial<PostRegistrationRequest | PutBodyRegistrationRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<PostRegistrationRequest | PutBodyRegistrationRequest>(
-        Object.assign(parameters, data)
-      );
+      removeNullishValues<PostRegistrationRequest | PutBodyRegistrationRequest>(Object.assign(parameters, data));
 
       const body = JSON.stringify(parameters);
 

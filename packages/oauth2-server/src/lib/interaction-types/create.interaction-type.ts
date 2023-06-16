@@ -1,7 +1,6 @@
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { Inject, Injectable } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { CreateContextInteractionContext } from '../context/interaction/create-context.interaction-context';
 import { CreateDecisionInteractionContext } from '../context/interaction/create-decision.interaction-context';
@@ -22,6 +21,7 @@ import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { Prompt } from '../types/prompt.type';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 
@@ -71,10 +71,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
 
     await this.checkGrant(grant);
 
-    const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/authorize', this.settings.issuer), grant.parameters);
 
     return {
       skip: grant.interactions.includes('create'),
@@ -108,10 +105,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
       await this.grantService.save(grant);
     }
 
-    const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/authorize', this.settings.issuer), grant.parameters);
 
     return { redirect_to: url.href };
   }

@@ -1,11 +1,10 @@
-import { URLSearchParams } from 'url';
-
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
+import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
@@ -56,7 +55,7 @@ export class TokenAuthorizationRequestValidator extends AuthorizationRequestVali
    * @returns Response Mode.
    */
   protected override getResponseMode(
-    parameters: URLSearchParams,
+    parameters: AuthorizationRequest,
     responseType: ResponseTypeInterface
   ): ResponseModeInterface {
     const responseMode = super.getResponseMode(parameters, responseType);

@@ -75,7 +75,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
     try {
       this.checkAuthorizationCode(authorizationCode, client, codeVerifier, redirectUri);
 
-      const { consent, parameters, login } = authorizationCode;
+      const { consent, login } = authorizationCode;
       const { scopes, user } = consent;
 
       const accessToken = await this.accessTokenService.create(scopes, client, user);
@@ -88,7 +88,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
       const response = createTokenResponse(accessToken, refreshToken);
 
       if (scopes.includes('openid')) {
-        response.id_token = await this.idTokenHandler!.generateIdToken(parameters, login, consent, null, null);
+        response.id_token = await this.idTokenHandler!.generateIdToken(login, consent, null, null, null, null);
       }
 
       return response;

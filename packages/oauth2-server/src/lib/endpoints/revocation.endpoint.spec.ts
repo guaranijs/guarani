@@ -1,7 +1,9 @@
 import { Buffer } from 'buffer';
 import { OutgoingHttpHeaders } from 'http';
+import { stringify as stringifyQs } from 'querystring';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { AccessToken } from '../entities/access-token.entity';
@@ -81,25 +83,32 @@ describe('Revocation Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let parameters: RevocationRequest;
+
+    const requestFactory = (data: Partial<RevocationRequest> = {}): HttpRequest => {
+      removeNullishValues<RevocationRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/revoke'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <RevocationRequest>{ token: 'access_token' },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/revoke',
-        query: {},
-      });
+      parameters = { token: 'access_token' };
     });
 
     it('should not revoke when the client is not the owner of the token.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const token = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.body as RevocationRequest,
+        parameters,
         client,
         token,
         tokenType: 'access_token',
@@ -117,11 +126,13 @@ describe('Revocation Endpoint', () => {
     });
 
     it('should revoke an access token.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const token = <AccessToken>{ handle: 'access_token', client };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.body as RevocationRequest,
+        parameters,
         client,
         token,
         tokenType: 'access_token',
@@ -139,13 +150,13 @@ describe('Revocation Endpoint', () => {
     });
 
     it('should revoke a refresh token.', async () => {
-      request.body.token = 'refresh_token';
+      const request = requestFactory({ token: 'refresh_token' });
 
       const client = <Client>{ id: 'client_id' };
       const token = <RefreshToken>{ handle: 'refresh_token', client };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.body as RevocationRequest,
+        parameters,
         client,
         token,
         tokenType: 'refresh_token',

@@ -1,5 +1,5 @@
 import { OutgoingHttpHeaders } from 'http';
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
@@ -19,6 +19,7 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { EndSessionRequestValidator } from '../validators/end-session-request.validator';
 import { EndSessionEndpoint } from './end-session.endpoint';
 import { Endpoint } from './endpoint.type';
@@ -124,29 +125,45 @@ describe('End Session Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let parameters: EndSessionRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
-        cookies: { 'guarani:session': 'session_id', 'guarani:logout': 'logout_ticket_id' },
+    const requestFactory = (data: Partial<EndSessionRequest> = {}, cookies: Dictionary<unknown> = {}): HttpRequest => {
+      removeNullishValues<EndSessionRequest>(Object.assign(parameters, data));
+
+      cookies = removeNullishValues(
+        Object.assign<Dictionary<unknown>, Dictionary<unknown>>(
+          { 'guarani:session': 'session_id', 'guarani:logout': 'logout_ticket_id' },
+          cookies
+        )
+      );
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
+        cookies,
         headers: {},
         method: 'GET',
-        path: '/oauth/end_session',
-        query: <EndSessionRequest>{
-          id_token_hint: 'id_token_hint',
-          client_id: 'client_id',
-          post_logout_redirect_uri: 'https://client.example.com/oauth/logout_callback',
-          state: 'client_state',
-          logout_hint: 'johndoe@email.com',
-          ui_locales: 'pt-BR en',
-        },
+        url: addParametersToUrl('https://server.example.com/oauth/end_session', parameters),
       });
+    };
+
+    beforeEach(() => {
+      Reflect.deleteProperty(validatorMock, 'name');
+
+      parameters = {
+        id_token_hint: 'id_token_hint',
+        client_id: 'client_id',
+        post_logout_redirect_uri: 'https://client.example.com/oauth/logout_callback',
+        state: 'client_state',
+        logout_hint: 'johndoe@email.com',
+        ui_locales: 'pt-BR en',
+      };
     });
 
     it('should redirect to the error endpoint if the client presents a logout ticket not issued to itself.', async () => {
+      const request = requestFactory();
+
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -158,7 +175,7 @@ describe('End Session Endpoint', () => {
 
       const logoutTicket = <LogoutTicket>{
         id: 'logout_ticket_id',
-        parameters: request.query,
+        parameters,
         expiresAt: new Date(Date.now() + 300000),
         client: { id: 'another_client_id' },
       };
@@ -168,22 +185,20 @@ describe('End Session Endpoint', () => {
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
 
       const error = new InvalidRequestException('Mismatching Client Identifier.');
-
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
 
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
     });
 
     it('should redirect to the error endpoint if the client presents an expired logout ticket.', async () => {
+      const request = requestFactory();
+
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -195,7 +210,7 @@ describe('End Session Endpoint', () => {
 
       const logoutTicket = <LogoutTicket>{
         id: 'logout_ticket_id',
-        parameters: request.query,
+        parameters,
         expiresAt: new Date(Date.now() - 3600000),
         client: { id: 'client_id' },
       };
@@ -205,22 +220,20 @@ describe('End Session Endpoint', () => {
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
 
       const error = new InvalidRequestException('Expired Logout Ticket.');
-
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
 
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
     });
 
     it('should redirect to the error endpoint if the initial parameters changed.', async () => {
+      const request = requestFactory();
+
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -232,7 +245,7 @@ describe('End Session Endpoint', () => {
 
       const logoutTicket = <LogoutTicket>{
         id: 'logout_ticket_id',
-        parameters: { ...request.query, state: 'another_client_state' },
+        parameters: { ...parameters, state: 'another_client_state' },
         expiresAt: new Date(Date.now() + 300000),
         client: { id: 'client_id' },
       };
@@ -242,22 +255,20 @@ describe('End Session Endpoint', () => {
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
 
       const error = new InvalidRequestException('One or more parameters changed since the initial request.');
-
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
 
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
     });
 
     it('should redirect to the error endpoint when the authenticated user does not match the user of "id_token_hint".', async () => {
+      const request = requestFactory();
+
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -269,7 +280,7 @@ describe('End Session Endpoint', () => {
 
       const logoutTicket = <LogoutTicket>{
         id: 'logout_ticket_id',
-        parameters: request.query,
+        parameters,
         expiresAt: new Date(Date.now() + 300000),
         client: { id: 'client_id' },
       };
@@ -290,23 +301,20 @@ describe('End Session Endpoint', () => {
         'The currently authenticated User is not the one expected by the ID Token Hint.'
       );
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
 
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
     });
 
     it('should create a logout ticket and redirect to the logout endpoint when there is an active login.', async () => {
-      delete request.cookies['guarani:logout'];
+      const request = requestFactory({}, { 'guarani:logout': undefined });
 
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -325,7 +333,7 @@ describe('End Session Endpoint', () => {
       const logoutTicket = <LogoutTicket>{
         id: 'logout_ticket_id',
         logoutChallenge: 'logout_challenge',
-        parameters: request.query,
+        parameters,
         expiresAt: new Date(Date.now() + 300000),
         client: { id: 'client_id' },
       };
@@ -348,8 +356,10 @@ describe('End Session Endpoint', () => {
     });
 
     it('should redirect to the logout endpoint when there is an active login.', async () => {
+      const request = requestFactory();
+
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -362,7 +372,7 @@ describe('End Session Endpoint', () => {
       const logoutTicket = <LogoutTicket>{
         id: 'logout_ticket_id',
         logoutChallenge: 'logout_challenge',
-        parameters: request.query,
+        parameters,
         expiresAt: new Date(Date.now() + 300000),
         client: { id: 'client_id' },
       };
@@ -391,11 +401,10 @@ describe('End Session Endpoint', () => {
     });
 
     it('should redirect to the post logout redirect uri and remove the session cookie.', async () => {
-      delete request.cookies['guarani:session'];
-      delete request.cookies['guarani:logout'];
+      const request = requestFactory({}, { 'guarani:session': undefined, 'guarani:logout': undefined });
 
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -415,13 +424,15 @@ describe('End Session Endpoint', () => {
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:session': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: 'https://client.example.com/oauth/logout_callback',
+        Location: 'https://client.example.com/oauth/logout_callback?state=client_state',
       });
     });
 
     it('should redirect to the post logout redirect uri and remove the logout ticket.', async () => {
+      const request = requestFactory();
+
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -434,7 +445,7 @@ describe('End Session Endpoint', () => {
       const logoutTicket = <LogoutTicket>{
         id: 'logout_ticket_id',
         logoutChallenge: 'logout_challenge',
-        parameters: request.query,
+        parameters,
         expiresAt: new Date(Date.now() + 300000),
         client: { id: 'client_id' },
       };
@@ -456,7 +467,7 @@ describe('End Session Endpoint', () => {
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: 'https://client.example.com/oauth/logout_callback',
+        Location: 'https://client.example.com/oauth/logout_callback?state=client_state',
       });
 
       expect(logoutTicketServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -464,10 +475,10 @@ describe('End Session Endpoint', () => {
     });
 
     it('should redirect to the post logout redirect uri.', async () => {
-      delete request.cookies['guarani:logout'];
+      const request = requestFactory({}, { 'guarani:logout': undefined });
 
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -480,7 +491,7 @@ describe('End Session Endpoint', () => {
       const logoutTicket = <LogoutTicket>{
         id: 'logout_ticket_id',
         logoutChallenge: 'logout_challenge',
-        parameters: request.query,
+        parameters,
         expiresAt: new Date(Date.now() + 300000),
         client: { id: 'client_id' },
       };
@@ -502,20 +513,20 @@ describe('End Session Endpoint', () => {
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: 'https://client.example.com/oauth/logout_callback',
+        Location: 'https://client.example.com/oauth/logout_callback?state=client_state',
       });
 
       expect(logoutTicketServiceMock.remove).not.toHaveBeenCalled();
     });
 
     it('should redirect to the post logout url and remove the session cookie.', async () => {
-      delete request.cookies['guarani:session'];
-      delete request.cookies['guarani:logout'];
-
-      delete request.query.post_logout_redirect_uri;
+      const request = requestFactory(
+        { post_logout_redirect_uri: undefined },
+        { 'guarani:session': undefined, 'guarani:logout': undefined }
+      );
 
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -533,14 +544,16 @@ describe('End Session Endpoint', () => {
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:session': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: 'https://server.example.com' });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/?state=client_state',
+      });
     });
 
     it('should redirect to the post logout url and remove the logout ticket.', async () => {
-      delete request.query.post_logout_redirect_uri;
+      const request = requestFactory({ post_logout_redirect_uri: undefined });
 
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -552,7 +565,7 @@ describe('End Session Endpoint', () => {
       const logoutTicket = <LogoutTicket>{
         id: 'logout_ticket_id',
         logoutChallenge: 'logout_challenge',
-        parameters: request.query,
+        parameters,
         expiresAt: new Date(Date.now() + 300000),
         client: { id: 'client_id' },
       };
@@ -573,19 +586,19 @@ describe('End Session Endpoint', () => {
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:logout': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: 'https://server.example.com' });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/?state=client_state',
+      });
 
       expect(logoutTicketServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(logoutTicketServiceMock.remove).toHaveBeenCalledWith(logoutTicket);
     });
 
     it('should redirect to the post logout url.', async () => {
-      delete request.cookies['guarani:logout'];
-
-      delete request.query.post_logout_redirect_uri;
+      const request = requestFactory({ post_logout_redirect_uri: undefined }, { 'guarani:logout': undefined });
 
       const context = <EndSessionContext>{
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client: { id: 'client_id' },
@@ -597,7 +610,7 @@ describe('End Session Endpoint', () => {
       const logoutTicket = <LogoutTicket>{
         id: 'logout_ticket_id',
         logoutChallenge: 'logout_challenge',
-        parameters: request.query,
+        parameters,
         expiresAt: new Date(Date.now() + 300000),
         client: { id: 'client_id' },
       };
@@ -618,7 +631,9 @@ describe('End Session Endpoint', () => {
 
       expect(response.statusCode).toEqual(303);
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: 'https://server.example.com' });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        Location: 'https://server.example.com/?state=client_state',
+      });
 
       expect(logoutTicketServiceMock.remove).not.toHaveBeenCalled();
     });

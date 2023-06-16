@@ -1,9 +1,8 @@
-import { URLSearchParams } from 'url';
-
 import { InteractionContext } from '../../context/interaction/interaction-context';
 import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
+import { InteractionRequest } from '../../requests/interaction/interaction-request';
 
 /**
  * Implementation of the Interaction Request Validator.
@@ -31,7 +30,7 @@ export abstract class InteractionRequestValidator<
    * @returns Context Interaction Context.
    */
   public async validateContext(request: HttpRequest): Promise<TContextContext> {
-    const parameters = request.query;
+    const parameters = request.query as InteractionRequest;
 
     const interactionType = this.getInteractionType(parameters);
 
@@ -45,7 +44,7 @@ export abstract class InteractionRequestValidator<
    * @returns Decision Interaction Context.
    */
   public async validateDecision(request: HttpRequest): Promise<TDecisionContext> {
-    const parameters = request.form();
+    const parameters = request.form<InteractionRequest>();
 
     const interactionType = this.getInteractionType(parameters);
 
@@ -58,9 +57,7 @@ export abstract class InteractionRequestValidator<
    * @param parameters Parameters of the Interaction Request.
    * @returns Interaction Type.
    */
-  private getInteractionType(parameters: URLSearchParams): InteractionTypeInterface {
-    return this.interactionTypes.find((interactionType) => {
-      return interactionType.name === parameters.get('interaction_type');
-    })!;
+  private getInteractionType(parameters: InteractionRequest): InteractionTypeInterface {
+    return this.interactionTypes.find((interactionType) => interactionType.name === parameters.interaction_type)!;
   }
 }

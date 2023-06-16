@@ -1,4 +1,4 @@
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
@@ -13,6 +13,7 @@ import { GRANT_TYPE } from '../../grant-types/grant-type.token';
 import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { HttpRequest } from '../../http/http.request';
+import { AuthorizationCodeTokenRequest } from '../../requests/token/authorization-code.token-request';
 import { AuthorizationCodeServiceInterface } from '../../services/authorization-code.service.interface';
 import { AUTHORIZATION_CODE_SERVICE } from '../../services/authorization-code.service.token';
 import { TokenRequestValidator } from './token-request.validator';
@@ -57,7 +58,7 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
     const redirectUri = this.getRedirectUri(parameters, context.client);
     const codeVerifier = this.getCodeVerifier(parameters);
 
-    return { ...context, authorizationCode, redirectUri, codeVerifier };
+    return Object.assign(context, { authorizationCode, redirectUri, codeVerifier }) as AuthorizationCodeTokenContext;
   }
 
   /**
@@ -66,14 +67,12 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @param parameters Parameters of the Token Request.
    * @returns Authorization Code based on the provided Code.
    */
-  private async getAuthorizationCode(parameters: URLSearchParams): Promise<AuthorizationCode> {
-    const code = parameters.get('code');
-
-    if (code === null) {
+  private async getAuthorizationCode(parameters: AuthorizationCodeTokenRequest): Promise<AuthorizationCode> {
+    if (typeof parameters.code === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "code".');
     }
 
-    const authorizationCode = await this.authorizationCodeService.findOne(code);
+    const authorizationCode = await this.authorizationCodeService.findOne(parameters.code);
 
     if (authorizationCode === null) {
       throw new InvalidGrantException('Invalid Authorization Code.');
@@ -89,30 +88,28 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @param client Client of the Request.
    * @returns Parsed and validated Redirect URI.
    */
-  protected getRedirectUri(parameters: URLSearchParams, client: Client): URL {
-    const redirectUri = parameters.get('redirect_uri');
-
-    if (redirectUri === null) {
+  protected getRedirectUri(parameters: AuthorizationCodeTokenRequest, client: Client): URL {
+    if (typeof parameters.redirect_uri === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "redirect_uri".');
     }
 
-    let url: URL;
+    let redirectUri: URL;
 
     try {
-      url = new URL(redirectUri);
+      redirectUri = new URL(parameters.redirect_uri);
     } catch (exc: unknown) {
       throw new InvalidRequestException('Invalid parameter "redirect_uri".');
     }
 
-    if (url.hash.length !== 0) {
+    if (redirectUri.hash.length !== 0) {
       throw new InvalidRequestException('The Redirect URI MUST NOT have a fragment component.');
     }
 
-    if (!client.redirectUris.includes(url.href)) {
+    if (!client.redirectUris.includes(redirectUri.href)) {
       throw new AccessDeniedException('Invalid Redirect URI.');
     }
 
-    return url;
+    return redirectUri;
   }
 
   /**
@@ -121,13 +118,11 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @param parameters Parameters of the Token Request.
    * @returns Code Verifier provided by the Client.
    */
-  private getCodeVerifier(parameters: URLSearchParams): string {
-    const codeVerifier = parameters.get('code_verifier');
-
-    if (codeVerifier === null) {
+  private getCodeVerifier(parameters: AuthorizationCodeTokenRequest): string {
+    if (typeof parameters.code_verifier === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "code_verifier".');
     }
 
-    return codeVerifier;
+    return parameters.code_verifier;
   }
 }

@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { CodeAuthorizationContext } from '../../context/authorization/code.authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
@@ -148,16 +148,14 @@ describe('Code Authorization Request Validator', () => {
     let parameters: CodeAuthorizationRequest;
 
     const requestFactory = (data: Partial<CodeAuthorizationRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<CodeAuthorizationRequest>(Object.assign(parameters, data));
-
-      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<CodeAuthorizationRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
         body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        url: new URL(`https://server.example.com/oauth/authorize?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/authorize?${stringifyQs(parameters)}`),
       });
     };
 
@@ -240,7 +238,7 @@ describe('Code Authorization Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<CodeAuthorizationContext>({
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         responseType: responseTypesMocks[0]!,
         client,

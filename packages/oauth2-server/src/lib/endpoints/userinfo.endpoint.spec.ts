@@ -1,4 +1,5 @@
 import { OutgoingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
@@ -95,12 +96,11 @@ describe('Userinfo Endpoint', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: {},
+        body: Buffer.alloc(0),
         cookies: {},
         headers: { authorization: 'Bearer access_token' },
         method: 'GET',
-        path: '/oauth/userinfo',
-        query: {},
+        url: new URL('https://server.example.com/oauth/userinfo'),
       });
     });
 

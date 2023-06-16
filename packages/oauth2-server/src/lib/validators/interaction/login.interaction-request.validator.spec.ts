@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { LoginContextInteractionContext } from '../../context/interaction/login-context.interaction-context';
 import { LoginDecisionAcceptInteractionContext } from '../../context/interaction/login-decision-accept.interaction-context';
@@ -20,6 +20,8 @@ import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { LoginDecision } from '../../interaction-types/login-decision.type';
 import { LoginContextInteractionRequest } from '../../requests/interaction/login-context.interaction-request';
 import { LoginDecisionInteractionRequest } from '../../requests/interaction/login-decision.interaction-request';
+import { LoginDecisionAcceptInteractionRequest } from '../../requests/interaction/login-decision-accept.interaction-request';
+import { LoginDecisionDenyInteractionRequest } from '../../requests/interaction/login-decision-deny.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { UserServiceInterface } from '../../services/user.service.interface';
@@ -85,16 +87,14 @@ describe('Login Interaction Request Validator', () => {
     let parameters: LoginContextInteractionRequest;
 
     const requestFactory = (data: Partial<LoginContextInteractionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<LoginContextInteractionRequest>(Object.assign(parameters, data));
-
-      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<LoginContextInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
         body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        url: new URL(`https://server.example.com/oauth/interaction?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/interaction?${stringifyQs(parameters)}`),
       });
     };
 
@@ -130,7 +130,7 @@ describe('Login Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<LoginContextInteractionContext>({
-        parameters: request.query,
+        parameters,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });
@@ -141,12 +141,10 @@ describe('Login Interaction Request Validator', () => {
     let parameters: LoginDecisionInteractionRequest;
 
     const requestFactory = (data: Partial<LoginDecisionInteractionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<LoginDecisionInteractionRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<LoginDecisionInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -268,7 +266,7 @@ describe('Login Interaction Request Validator', () => {
       userServiceMock.findOne.mockResolvedValueOnce(user);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LoginDecisionAcceptInteractionContext>({
-        parameters: request.form(),
+        parameters: parameters as LoginDecisionAcceptInteractionRequest,
         interactionType: interactionTypesMocks[1]!,
         grant,
         decision: 'accept',
@@ -335,7 +333,7 @@ describe('Login Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<LoginDecisionDenyInteractionContext>({
-        parameters: request.form(),
+        parameters: parameters as LoginDecisionDenyInteractionRequest,
         interactionType: interactionTypesMocks[1]!,
         grant,
         decision: 'deny',

@@ -15,7 +15,7 @@ import { SubjectType } from '../../types/subject-type.type';
 /**
  * Parameters of the OAuth 2.0 Post Client Registration Request.
  */
-export interface PostRegistrationRequest extends Dictionary<unknown> {
+export interface PostRegistrationRequest extends Dictionary<any> {
   /**
    * Redirect URIs of the Client.
    */

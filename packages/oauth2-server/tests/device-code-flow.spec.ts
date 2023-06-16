@@ -1,9 +1,8 @@
-import express, { Application, urlencoded } from 'express';
+import express, { Application, raw } from 'express';
+import { stringify as stringifyQs } from 'querystring';
 import request from 'supertest';
-import { URLSearchParams } from 'url';
 
 import { getContainer } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
@@ -21,7 +20,7 @@ describe('Device Code Flow', () => {
   beforeAll(async () => {
     app = express();
 
-    app.use(urlencoded({ extended: false }));
+    app.use(raw({ type: '*/*' }));
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,
@@ -33,10 +32,12 @@ describe('Device Code Flow', () => {
     app.use(authorizationServer.router);
   });
 
-  it('POST /oauth/device-authorization', async () => {
+  it('POST /oauth/device_authorization', async () => {
     const response = await request(app)
-      .post('/oauth/device-authorization')
-      .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' });
+      .post('/oauth/device_authorization')
+      .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
+      .set('Content-Type', 'application/x-www-form-urlencoded')
+      .send();
 
     expect(response.status).toEqual(200);
 
@@ -70,12 +71,12 @@ describe('Device Code Flow', () => {
       device_code: deviceCode,
     };
 
-    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
+    const requestBody = stringifyQs(requestData);
 
     const response = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
-      .send(requestBody.toString());
+      .send(requestBody);
 
     expect(response.status).toEqual(200);
 

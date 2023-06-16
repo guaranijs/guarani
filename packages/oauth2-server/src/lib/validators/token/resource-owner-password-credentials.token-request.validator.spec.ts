@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { ResourceOwnerPasswordCredentialsTokenContext } from '../../context/token/resource-owner-password-credentials.token-context';
 import { Client } from '../../entities/client.entity';
@@ -99,12 +99,10 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
     let parameters: ResourceOwnerPasswordCredentialsTokenRequest;
 
     const requestFactory = (data: Partial<ResourceOwnerPasswordCredentialsTokenRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<ResourceOwnerPasswordCredentialsTokenRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<ResourceOwnerPasswordCredentialsTokenRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -170,7 +168,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ResourceOwnerPasswordCredentialsTokenContext>({
-        parameters: request.form(),
+        parameters,
         client,
         grantType: grantTypesMocks[2]!,
         user,
@@ -191,7 +189,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(client.scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<ResourceOwnerPasswordCredentialsTokenContext>({
-        parameters: request.form(),
+        parameters,
         client,
         grantType: grantTypesMocks[2]!,
         user,

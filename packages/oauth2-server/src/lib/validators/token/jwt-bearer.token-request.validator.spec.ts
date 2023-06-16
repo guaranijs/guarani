@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import {
@@ -12,7 +13,6 @@ import {
   OctetSequenceKey,
 } from '@guarani/jose';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { JwtBearerTokenContext } from '../../context/token/jwt-bearer.token-context';
 import { Client } from '../../entities/client.entity';
@@ -114,12 +114,10 @@ describe('JWT Bearer Token Request Validator', () => {
     let parameters: JwtBearerTokenRequest;
 
     const requestFactory = (data: Partial<JwtBearerTokenRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<JwtBearerTokenRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<JwtBearerTokenRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -767,7 +765,7 @@ describe('JWT Bearer Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<JwtBearerTokenContext>({
-        parameters: request.form(),
+        parameters,
         client,
         grantType: grantTypesMocks[5]!,
         user,
@@ -827,7 +825,7 @@ describe('JWT Bearer Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(client.scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<JwtBearerTokenContext>({
-        parameters: request.form(),
+        parameters,
         client,
         grantType: grantTypesMocks[5]!,
         user,

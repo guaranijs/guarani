@@ -1,5 +1,3 @@
-import { URLSearchParams } from 'url';
-
 import { Inject, Injectable, Optional } from '@guarani/di';
 import { Nullable } from '@guarani/types';
 
@@ -10,6 +8,7 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { UnsupportedTokenTypeException } from '../exceptions/unsupported-token-type.exception';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { HttpRequest } from '../http/http.request';
+import { RevocationRequest } from '../requests/revocation-request';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { RefreshTokenServiceInterface } from '../services/refresh-token.service.interface';
@@ -67,7 +66,7 @@ export class RevocationRequestValidator {
    * @returns Revocation Context.
    */
   public async validate(request: HttpRequest): Promise<RevocationContext> {
-    const parameters = request.form();
+    const parameters = request.form<RevocationRequest>();
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
     const tokenResult = await this.findToken(parameters);
@@ -85,25 +84,25 @@ export class RevocationRequestValidator {
    * @param parameters Parameters of the Revocation Request.
    * @returns Resulting Token and its type.
    */
-  private async findToken(parameters: URLSearchParams): Promise<Nullable<FindTokenResult>> {
-    const token = parameters.get('token');
-    const tokenTypeHint = parameters.get('token_type_hint');
-
-    if (token === null) {
+  private async findToken(parameters: RevocationRequest): Promise<Nullable<FindTokenResult>> {
+    if (typeof parameters.token === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "token".');
     }
 
-    if (tokenTypeHint !== null && !this.supportedTokenTypeHints.includes(tokenTypeHint as TokenTypeHint)) {
-      throw new UnsupportedTokenTypeException(`Unsupported token_type_hint "${tokenTypeHint}".`);
+    if (
+      typeof parameters.token_type_hint !== 'undefined' &&
+      !this.supportedTokenTypeHints.includes(parameters.token_type_hint)
+    ) {
+      throw new UnsupportedTokenTypeException(`Unsupported token_type_hint "${parameters.token_type_hint}".`);
     }
 
-    switch (tokenTypeHint) {
+    switch (parameters.token_type_hint) {
       case 'refresh_token':
-        return (await this.findRefreshToken(token)) ?? (await this.findAccessToken(token));
+        return (await this.findRefreshToken(parameters.token)) ?? (await this.findAccessToken(parameters.token));
 
       case 'access_token':
       default:
-        return (await this.findAccessToken(token)) ?? (await this.findRefreshToken(token));
+        return (await this.findAccessToken(parameters.token)) ?? (await this.findRefreshToken(parameters.token));
     }
   }
 

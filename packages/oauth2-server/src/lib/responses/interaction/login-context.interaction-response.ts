@@ -5,7 +5,7 @@ import { LoginContext } from './login.context';
 /**
  * Parameters of the custom OAuth 2.0 Login Context Interaction Response.
  */
-export interface LoginContextInteractionResponse extends Dictionary<unknown> {
+export interface LoginContextInteractionResponse extends Dictionary<any> {
   /**
    * Indicates if the application can skip displaying the login screen.
    */

@@ -6,7 +6,6 @@ import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
-import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
@@ -185,12 +184,9 @@ describe('ID Token Handler', () => {
         user: { id: 'user_id' },
       };
 
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
-
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrowWithMessage(
-        Error,
-        'Could not find a JSON Web Key suitable for Signing an ID Token.'
-      );
+      await expect(
+        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
+      ).rejects.toThrowWithMessage(Error, 'Could not find a JSON Web Key suitable for Signing an ID Token.');
     });
 
     it('should throw when no signing key has "sig" as its "use" parameter.', async () => {
@@ -217,17 +213,12 @@ describe('ID Token Handler', () => {
         user: { id: 'user_id' },
       };
 
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
-
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrowWithMessage(
-        Error,
-        'Could not find a JSON Web Key suitable for Signing an ID Token.'
-      );
+      await expect(
+        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
+      ).rejects.toThrowWithMessage(Error, 'Could not find a JSON Web Key suitable for Signing an ID Token.');
     });
 
     it('should generate a signed id token with the default claims.', async () => {
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
-
       const consent = <Consent>{
         client: {
           id: 'client_id',
@@ -241,7 +232,7 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, null, null);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null);
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -258,8 +249,6 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a signed id token with the default claims and the "at_hash" claim.', async () => {
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
-
       const consent = <Consent>{
         client: {
           id: 'client_id',
@@ -273,7 +262,7 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, accessToken, null);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, accessToken, null);
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -290,8 +279,6 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a signed id token with the default claims and the "c_hash" claim.', async () => {
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
-
       const consent = <Consent>{
         client: {
           id: 'client_id',
@@ -305,7 +292,7 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, null, authorizationCode);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, null, authorizationCode);
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -322,8 +309,6 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a signed id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
-
       const consent = <Consent>{
         client: {
           id: 'client_id',
@@ -337,7 +322,14 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, accessToken, authorizationCode);
+      const idToken = await idTokenHandler.generateIdToken(
+        login,
+        consent,
+        'nonce',
+        null,
+        accessToken,
+        authorizationCode
+      );
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -371,12 +363,9 @@ describe('ID Token Handler', () => {
         user: { id: 'user_id' },
       };
 
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
-
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrowWithMessage(
-        Error,
-        'The Client does not have a JSON Web Key Set registered.'
-      );
+      await expect(
+        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
+      ).rejects.toThrowWithMessage(Error, 'The Client does not have a JSON Web Key Set registered.');
     });
 
     it('should throw when no key wrap key has an "alg" parameter supported by the client.', async () => {
@@ -400,12 +389,9 @@ describe('ID Token Handler', () => {
         user: { id: 'user_id' },
       };
 
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
-
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrowWithMessage(
-        Error,
-        'Could not find a JSON Web Key suitable for Encrypting an ID Token.'
-      );
+      await expect(
+        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
+      ).rejects.toThrowWithMessage(Error, 'Could not find a JSON Web Key suitable for Encrypting an ID Token.');
     });
 
     it('should throw when no key wrap key has "enc" as its "use" parameter.', async () => {
@@ -414,8 +400,6 @@ describe('ID Token Handler', () => {
         RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RS256', use: 'sig' }),
         RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256' }),
       ]);
-
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
 
       const consent = <Consent>{
         client: {
@@ -431,15 +415,12 @@ describe('ID Token Handler', () => {
         user: { id: 'user_id' },
       };
 
-      await expect(idTokenHandler.generateIdToken(parameters, login, consent, null, null)).rejects.toThrowWithMessage(
-        Error,
-        'Could not find a JSON Web Key suitable for Encrypting an ID Token.'
-      );
+      await expect(
+        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
+      ).rejects.toThrowWithMessage(Error, 'Could not find a JSON Web Key suitable for Encrypting an ID Token.');
     });
 
     it('should generate a nested id token with the default claims.', async () => {
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce', max_age: '1296000' };
-
       const consent = <Consent>{
         client: {
           id: 'client_id',
@@ -456,7 +437,7 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, null, null);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null);
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -475,8 +456,6 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a nested id token with the default claims and the "at_hash" claim.', async () => {
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
-
       const consent = <Consent>{
         client: {
           id: 'client_id',
@@ -493,7 +472,7 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, accessToken, null);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, accessToken, null);
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -512,8 +491,6 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a nested id token with the default claims and the "c_hash" claim.', async () => {
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
-
       const consent = <Consent>{
         client: {
           id: 'client_id',
@@ -530,7 +507,7 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, null, authorizationCode);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, null, authorizationCode);
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -549,8 +526,6 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a nested id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
-      const parameters = <AuthorizationRequest>{ nonce: 'nonce' };
-
       const consent = <Consent>{
         client: {
           id: 'client_id',
@@ -567,7 +542,14 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(parameters, login, consent, accessToken, authorizationCode);
+      const idToken = await idTokenHandler.generateIdToken(
+        login,
+        consent,
+        'nonce',
+        null,
+        accessToken,
+        authorizationCode
+      );
 
       expect(idToken).toEqual(expect.any(String));
 

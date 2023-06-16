@@ -6,7 +6,7 @@ import { Prompt } from '../../types/prompt.type';
 /**
  * Parameters of the Create Context.
  */
-export interface CreateContext extends Dictionary<unknown> {
+export interface CreateContext extends Dictionary<any> {
   /**
    * Prompts requested by the Client.
    */

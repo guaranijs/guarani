@@ -1,4 +1,5 @@
 import { OutgoingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
@@ -39,7 +40,7 @@ describe('Discovery Endpoint', () => {
 
   const endpoints = <jest.MockedObject<EndpointInterface>[]>[
     jest.mocked<Partial<EndpointInterface>>({ name: 'authorization', path: '/oauth/authorize' }),
-    jest.mocked<Partial<EndpointInterface>>({ name: 'device_authorization', path: '/oauth/device-authorization' }),
+    jest.mocked<Partial<EndpointInterface>>({ name: 'device_authorization', path: '/oauth/device_authorization' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'end_session', path: '/oauth/end_session' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'interaction', path: '/oauth/interaction' }),
     jest.mocked<Partial<EndpointInterface>>({ name: 'introspection', path: '/oauth/introspect' }),
@@ -85,12 +86,11 @@ describe('Discovery Endpoint', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: {},
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/.well-known/openid-configuration',
-        query: {},
+        url: new URL('https://server.example.com/.well-known/openid-configuration'),
       });
     });
 
@@ -127,7 +127,7 @@ describe('Discovery Endpoint', () => {
         introspection_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256'],
         code_challenge_methods_supported: ['S256'],
         interaction_endpoint: 'https://server.example.com/oauth/interaction',
-        device_authorization_endpoint: 'https://server.example.com/oauth/device-authorization',
+        device_authorization_endpoint: 'https://server.example.com/oauth/device_authorization',
         end_session_endpoint: 'https://server.example.com/oauth/end_session',
         authorization_response_iss_parameter_supported: true,
       };

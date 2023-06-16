@@ -1,4 +1,4 @@
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { Inject, Injectable } from '@guarani/di';
 import { Nullable } from '@guarani/types';
@@ -10,6 +10,7 @@ import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
+import { EndSessionRequest } from '../requests/end-session-request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
@@ -66,13 +67,13 @@ export class EndSessionRequestValidator {
    * @param request Http Request.
    * @returns Parameters of the End Session Request.
    */
-  public getEndSessionParameters(request: HttpRequest): URLSearchParams {
+  public getEndSessionParameters(request: HttpRequest): EndSessionRequest {
     switch (request.method as Extract<HttpMethod, 'GET' | 'POST'>) {
       case 'GET':
-        return request.query;
+        return request.query as EndSessionRequest;
 
       case 'POST':
-        return request.form();
+        return request.form<EndSessionRequest>();
     }
   }
 
@@ -82,14 +83,12 @@ export class EndSessionRequestValidator {
    * @param parameters Parameters of the End Session Request.
    * @returns ID Token Hint provided by the Client.
    */
-  private getIdTokenHint(parameters: URLSearchParams): string {
-    const idTokenHint = parameters.get('id_token_hint');
-
-    if (idTokenHint === null) {
+  private getIdTokenHint(parameters: EndSessionRequest): string {
+    if (typeof parameters.id_token_hint === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "id_token_hint".');
     }
 
-    return idTokenHint;
+    return parameters.id_token_hint;
   }
 
   /**
@@ -98,14 +97,12 @@ export class EndSessionRequestValidator {
    * @param parameters Parameters of the End Session Request.
    * @returns Client based on the provided Client Identifier.
    */
-  private async getClient(parameters: URLSearchParams): Promise<Client> {
-    const clientId = parameters.get('client_id');
-
-    if (clientId === null) {
+  private async getClient(parameters: EndSessionRequest): Promise<Client> {
+    if (typeof parameters.client_id === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "client_id".');
     }
 
-    const client = await this.clientService.findOne(clientId);
+    const client = await this.clientService.findOne(parameters.client_id);
 
     if (client === null) {
       throw new InvalidClientException('Invalid Client.');
@@ -121,17 +118,15 @@ export class EndSessionRequestValidator {
    * @param client Client of the Request.
    * @returns Parsed and validated Post Logout Redirect URI.
    */
-  private getPostLogoutRedirectUri(parameters: URLSearchParams, client: Client): Nullable<URL> {
-    const postLogoutRedirectUri = parameters.get('post_logout_redirect_uri');
-
-    if (postLogoutRedirectUri === null) {
+  private getPostLogoutRedirectUri(parameters: EndSessionRequest, client: Client): Nullable<URL> {
+    if (typeof parameters.post_logout_redirect_uri === 'undefined') {
       return null;
     }
 
     let url: URL;
 
     try {
-      url = new URL(postLogoutRedirectUri);
+      url = new URL(parameters.post_logout_redirect_uri);
     } catch (exc: unknown) {
       throw new InvalidRequestException('Invalid parameter "post_logout_redirect_uri".', { cause: exc });
     }
@@ -153,8 +148,8 @@ export class EndSessionRequestValidator {
    * @param parameters Parameters of the End Session Request.
    * @returns State provided by the Client.
    */
-  private getState(parameters: URLSearchParams): Nullable<string> {
-    return parameters.get('state');
+  private getState(parameters: EndSessionRequest): Nullable<string> {
+    return parameters.state ?? null;
   }
 
   /**
@@ -163,8 +158,8 @@ export class EndSessionRequestValidator {
    * @param parameters Parameters of the End Session Request.
    * @returns Logout Hint provided by the Client.
    */
-  private getLogoutHint(parameters: URLSearchParams): Nullable<string> {
-    return parameters.get('logout_hint');
+  private getLogoutHint(parameters: EndSessionRequest): Nullable<string> {
+    return parameters.logout_hint ?? null;
   }
 
   /**
@@ -173,8 +168,8 @@ export class EndSessionRequestValidator {
    * @param parameters Parameters of the End Session Request.
    * @returns UI Locales requested by the Client.
    */
-  private getUiLocales(parameters: URLSearchParams): string[] {
-    const requestedUiLocales = parameters.get('ui_locales')?.split(' ') ?? [];
+  private getUiLocales(parameters: EndSessionRequest): string[] {
+    const requestedUiLocales = parameters.ui_locales?.split(' ') ?? [];
 
     requestedUiLocales.forEach((requestedUiLocale) => {
       if (!this.settings.uiLocales.includes(requestedUiLocale)) {

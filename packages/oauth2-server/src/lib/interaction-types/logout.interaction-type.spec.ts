@@ -1,7 +1,4 @@
-import { URLSearchParams } from 'url';
-
 import { DependencyInjectionContainer } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { LogoutContextInteractionContext } from '../context/interaction/logout-context.interaction-context';
 import { LogoutDecisionInteractionContext } from '../context/interaction/logout-decision.interaction-context';
@@ -21,6 +18,7 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 import { LogoutInteractionType } from './logout.interaction-type';
@@ -127,11 +125,14 @@ describe('Logout Interaction Type', () => {
     });
 
     it('should return a valid first time logout context response.', async () => {
-      const urlParameters = new URLSearchParams(context.logoutTicket.parameters as Dictionary<any>);
+      const requestUrl = addParametersToUrl(
+        'https://server.example.com/oauth/end_session',
+        context.logoutTicket.parameters
+      );
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LogoutContextInteractionResponse>({
         skip: false,
-        request_url: `https://server.example.com/oauth/end_session?${urlParameters.toString()}`,
+        request_url: requestUrl.href,
         client: 'client_id',
         context: {
           logout_hint: 'johndoe@email.com',
@@ -143,11 +144,14 @@ describe('Logout Interaction Type', () => {
     it('should return a valid skip logout context response.', async () => {
       context.logoutTicket.session.activeLogin = null;
 
-      const urlParameters = new URLSearchParams(context.logoutTicket.parameters as Dictionary<any>);
+      const requestUrl = addParametersToUrl(
+        'https://server.example.com/oauth/end_session',
+        context.logoutTicket.parameters
+      );
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LogoutContextInteractionResponse>({
         skip: true,
-        request_url: `https://server.example.com/oauth/end_session?${urlParameters.toString()}`,
+        request_url: requestUrl.href,
         client: 'client_id',
         context: {
           logout_hint: 'johndoe@email.com',
@@ -221,10 +225,13 @@ describe('Logout Interaction Type', () => {
         },
       });
 
-      const urlParameters = new URLSearchParams(context.logoutTicket.parameters as Dictionary<any>);
+      const redirectTo = addParametersToUrl(
+        'https://server.example.com/oauth/end_session',
+        context.logoutTicket.parameters
+      );
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LogoutDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/end_session?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(loginServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -266,10 +273,13 @@ describe('Logout Interaction Type', () => {
       context.logoutTicket.session.activeLogin = null;
       context.logoutTicket.session.logins = <Login[]>[{ id: 'login0_id' }, { id: 'login2_id' }];
 
-      const urlParameters = new URLSearchParams(context.logoutTicket.parameters as Dictionary<any>);
+      const redirectTo = addParametersToUrl(
+        'https://server.example.com/oauth/end_session',
+        context.logoutTicket.parameters
+      );
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LogoutDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/end_session?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(loginServiceMock.remove).not.toHaveBeenCalled();
@@ -295,10 +305,10 @@ describe('Logout Interaction Type', () => {
 
       const { error } = context as LogoutDecisionDenyInteractionContext;
 
-      const urlParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LogoutDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(logoutTicketServiceMock.remove).toHaveBeenCalledTimes(1);

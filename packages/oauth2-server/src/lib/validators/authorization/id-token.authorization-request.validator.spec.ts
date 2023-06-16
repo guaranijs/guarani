@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
@@ -135,16 +135,14 @@ describe('ID Token Authorization Request Validator', () => {
     let parameters: AuthorizationRequest;
 
     const requestFactory = (data: Partial<AuthorizationRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<AuthorizationRequest>(Object.assign(parameters, data));
-
-      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<AuthorizationRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
         body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        url: new URL(`https://server.example.com/oauth/authorize?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/authorize?${stringifyQs(parameters)}`),
       });
     };
 

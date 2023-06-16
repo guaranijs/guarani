@@ -1,10 +1,9 @@
-import { URLSearchParams } from 'url';
-
 import { Nullable } from '@guarani/types';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
+import { RevocationRequest } from '../requests/revocation-request';
 import { TokenTypeHint } from '../types/token-type-hint.type';
 
 /**
@@ -14,7 +13,7 @@ export interface RevocationContext {
   /**
    * Parameters of the Revocation Request.
    */
-  readonly parameters: URLSearchParams;
+  readonly parameters: RevocationRequest;
 
   /**
    * Client of the Request.

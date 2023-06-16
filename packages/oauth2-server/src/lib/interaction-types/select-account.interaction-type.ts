@@ -1,7 +1,6 @@
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { Inject, Injectable } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { SelectAccountContextInteractionContext } from '../context/interaction/select-account-context.interaction-context';
 import { SelectAccountDecisionInteractionContext } from '../context/interaction/select-account-decision.interaction-context';
@@ -16,6 +15,7 @@ import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { Prompt } from '../types/prompt.type';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 
@@ -94,10 +94,7 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
       await this.grantService.save(grant);
     }
 
-    const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/authorize', this.settings.issuer), grant.parameters);
 
     return { redirect_to: url.href };
   }

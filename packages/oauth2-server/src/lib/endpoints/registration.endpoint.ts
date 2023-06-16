@@ -1,7 +1,7 @@
 import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
 
-import { Inject, Injectable } from '@guarani/di';
+import { Inject, Injectable, InjectAll } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 
 import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';
@@ -22,7 +22,7 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
-import { RegistrationRequestValidator } from '../validators/registration-request.validator';
+import { RegistrationRequestValidator } from '../validators/registration/registration-request.validator';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 
@@ -59,16 +59,16 @@ export class RegistrationEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Registration Endpoint.
    *
-   * @param validator Instance of the Registration Request Validator.
    * @param settings Settings of the Authorization Server.
    * @param clientService Instance of the Client Service.
    * @param accessTokenService Instance of the Access Token Service.
+   * @param validators Registration Request Validators registered at the Authorization Server.
    */
   public constructor(
-    private readonly validator: RegistrationRequestValidator,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(CLIENT_SERVICE) private readonly clientService: ClientServiceInterface,
-    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface
+    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
+    @InjectAll(RegistrationRequestValidator) private readonly validators: RegistrationRequestValidator[]
   ) {
     if (typeof clientService.create !== 'function') {
       throw new TypeError('Missing implementation of required method "ClientServiceInterface.create".');
@@ -97,18 +97,21 @@ export class RegistrationEndpoint implements EndpointInterface {
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
     try {
+      const validator = this.getValidator(request);
+      const context = await validator.validate(request);
+
       switch (request.method) {
         case 'DELETE':
-          return await this.handleDelete(request);
+          return await this.handleDelete(context as DeleteRegistrationContext);
 
         case 'GET':
-          return await this.handleGet(request);
+          return await this.handleGet(context as GetRegistrationContext);
 
         case 'POST':
-          return await this.handlePost(request);
+          return await this.handlePost(context as PostRegistrationContext);
 
         case 'PUT':
-          return await this.handlePut(request);
+          return await this.handlePut(context as PutRegistrationContext);
       }
     } catch (exc: unknown) {
       const error =
@@ -125,34 +128,13 @@ export class RegistrationEndpoint implements EndpointInterface {
   }
 
   /**
-   * Creates a Http JSON Dynamic Client Registration Response.
-   *
-   * This method is responsible for receiving a set of OAuth 2.0 Client Metadata from a developer
-   * and registering it as a new OAuth 2.0 Client in the Authorization Server.
+   * Retrieves the Authorization Request Validator based on the Response Type requested by the Client.
    *
    * @param request Http Request.
-   * @returns Http Response.
+   * @returns Authorization Request Validator.
    */
-  private async handlePost(request: HttpRequest): Promise<HttpResponse> {
-    const context = await this.validator.validatePost(request);
-    const registrationResponse = await this.registerClient(context);
-
-    return new HttpResponse().setStatus(201).setHeaders(this.headers).json(registrationResponse);
-  }
-
-  /**
-   * Creates a Http JSON Dynamic Client Registration Response.
-   *
-   * This method is responsible for returning the Metadata of the Client.
-   *
-   * @param request Http Request.
-   * @returns Http Response.
-   */
-  private async handleGet(request: HttpRequest): Promise<HttpResponse> {
-    const context = await this.validator.validateGet(request);
-    const registrationResponse = await this.getClientMetadata(context);
-
-    return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
+  private getValidator(request: HttpRequest): RegistrationRequestValidator {
+    return this.validators.find((validator) => validator.httpMethod === request.method)!;
   }
 
   /**
@@ -160,14 +142,39 @@ export class RegistrationEndpoint implements EndpointInterface {
    *
    * This method is responsible for decomissioning the Client from the Authorization Server.
    *
-   * @param request Http Request.
+   * @param context Dynamic Client Registration Delete Context.
    * @returns Http Response.
    */
-  private async handleDelete(request: HttpRequest): Promise<HttpResponse> {
-    const context = await this.validator.validateDelete(request);
+  private async handleDelete(context: DeleteRegistrationContext): Promise<HttpResponse> {
     await this.decomissionClient(context);
-
     return new HttpResponse().setStatus(204).setHeaders(this.headers);
+  }
+
+  /**
+   * Creates a Http JSON Dynamic Client Registration Response.
+   *
+   * This method is responsible for returning the Metadata of the Client.
+   *
+   * @param context Dynamic Client Registration Get Context.
+   * @returns Http Response.
+   */
+  private async handleGet(context: GetRegistrationContext): Promise<HttpResponse> {
+    const registrationResponse = await this.getClientMetadata(context);
+    return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
+  }
+
+  /**
+   * Creates a Http JSON Dynamic Client Registration Response.
+   *
+   * This method is responsible for receiving a set of OAuth 2.0 Client Metadata from a developer
+   * and registering it as a new OAuth 2.0 Client in the Authorization Server.
+   *
+   * @param context Dynamic Client Registration Post Context.
+   * @returns Http Response.
+   */
+  private async handlePost(context: PostRegistrationContext): Promise<HttpResponse> {
+    const registrationResponse = await this.registerClient(context);
+    return new HttpResponse().setStatus(201).setHeaders(this.headers).json(registrationResponse);
   }
 
   /**
@@ -175,13 +182,11 @@ export class RegistrationEndpoint implements EndpointInterface {
    *
    * This method is responsible for updating the metadata of the Client.
    *
-   * @param request Http Request.
+   * @param context Dynamic Client Registration Put Context.
    * @returns Http Response.
    */
-  private async handlePut(request: HttpRequest): Promise<HttpResponse> {
-    const context = await this.validator.validatePut(request);
+  private async handlePut(context: PutRegistrationContext): Promise<HttpResponse> {
     const registrationResponse = await this.updateMetadata(context);
-
     return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
   }
 

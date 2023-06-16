@@ -105,8 +105,6 @@ describe('Private Key JWT Client Authentication Method', () => {
         .spyOn<PrivateKeyJwtClientAuthentication, any>(clientAuthentication, 'getClientJwksFromUri')
         .mockResolvedValueOnce(JsonWebKeySet.load(jwks));
 
-      console.log(await JsonWebKeySet.load(jwks));
-
       const client = <Client>{
         id: 'client_id',
         authenticationMethod: 'private_key_jwt',

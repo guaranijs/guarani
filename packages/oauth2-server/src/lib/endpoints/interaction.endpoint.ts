@@ -115,7 +115,7 @@ export class InteractionEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handleDecision(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = request.body as InteractionRequest;
+    const parameters = request.form<InteractionRequest>();
 
     const validator = this.getValidator(parameters);
 
@@ -132,7 +132,7 @@ export class InteractionEndpoint implements EndpointInterface {
    * @returns Interaction Request Validator.
    */
   private getValidator(parameters: InteractionRequest): InteractionRequestValidator {
-    if (typeof parameters.interaction_type !== 'string') {
+    if (typeof parameters.interaction_type === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "interaction_type".');
     }
 

@@ -1,10 +1,9 @@
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
-import { URLSearchParams } from 'url';
 
 import { Inject, Injectable } from '@guarani/di';
 import { isPlainObject } from '@guarani/primitives';
-import { Dictionary, Nullable } from '@guarani/types';
+import { Nullable } from '@guarani/types';
 
 import { PutRegistrationContext } from '../../context/registration/put.registration-context';
 import { AccessToken } from '../../entities/access-token.entity';
@@ -18,6 +17,7 @@ import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { HttpMethod } from '../../http/http-method.type';
 import { PutBodyRegistrationRequest } from '../../requests/registration/put-body.registration-request';
+import { PutQueryRegistrationRequest } from '../../requests/registration/put-query.registration-request';
 import { AccessTokenServiceInterface } from '../../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../../services/access-token.service.token';
 import { Settings } from '../../settings/settings';
@@ -63,8 +63,8 @@ export class PutRegistrationRequestValidator extends PostAndPutRegistrationReque
    * @returns Dynamic Client Registration Context.
    */
   public override async validate(request: HttpRequest): Promise<PutRegistrationContext> {
-    const queryParameters = request.query;
-    const bodyParameters = request.json();
+    const queryParameters = request.query as PutQueryRegistrationRequest;
+    const bodyParameters = request.json<PutBodyRegistrationRequest>();
 
     if (!isPlainObject(bodyParameters)) {
       throw new InvalidRequestException('Invalid Http Request Body.');
@@ -84,7 +84,7 @@ export class PutRegistrationRequestValidator extends PostAndPutRegistrationReque
 
     return Object.assign<PutRegistrationContext, Partial<PutRegistrationContext>>(context, {
       queryParameters,
-      bodyParameters: bodyParameters as PutBodyRegistrationRequest,
+      bodyParameters,
       accessToken,
       client: accessToken.client!,
       clientId,
@@ -98,14 +98,12 @@ export class PutRegistrationRequestValidator extends PostAndPutRegistrationReque
    * @param parameters Parameters of the Client Registration Request.
    * @returns Identifier of the Client of the Request.
    */
-  private getQueryClientId(parameters: URLSearchParams): string {
-    const clientId = parameters.get('client_id');
-
-    if (clientId === null) {
+  private getQueryClientId(parameters: PutQueryRegistrationRequest): string {
+    if (typeof parameters.client_id === 'undefined') {
       throw new InvalidClientMetadataException('Invalid parameter "client_id".');
     }
 
-    return clientId;
+    return parameters.client_id;
   }
 
   /**
@@ -114,7 +112,7 @@ export class PutRegistrationRequestValidator extends PostAndPutRegistrationReque
    * @param parameters Parameters of the Client Registration Request.
    * @returns Identifier of the Client of the Request.
    */
-  private getBodyClientId(parameters: Dictionary<unknown>): string {
+  private getBodyClientId(parameters: PutBodyRegistrationRequest): string {
     if (typeof parameters.client_id !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "client_id".');
     }
@@ -149,7 +147,7 @@ export class PutRegistrationRequestValidator extends PostAndPutRegistrationReque
    * @param parameters Parameters of the Client Registration Request.
    * @returns Secret of the Client of the Request.
    */
-  private getClientSecret(parameters: Dictionary<unknown>): Nullable<string> {
+  private getClientSecret(parameters: PutBodyRegistrationRequest): Nullable<string> {
     if (typeof parameters.client_secret !== 'undefined' && typeof parameters.client_secret !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "client_secret".');
     }

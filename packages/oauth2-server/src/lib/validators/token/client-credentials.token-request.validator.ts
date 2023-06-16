@@ -1,5 +1,3 @@
-import { URLSearchParams } from 'url';
-
 import { Injectable, InjectAll } from '@guarani/di';
 
 import { ClientCredentialsTokenContext } from '../../context/token/client-credentials.token-context';
@@ -10,6 +8,7 @@ import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { ClientCredentialsTokenRequest } from '../../requests/token/client-credentials.token-request';
 import { TokenRequestValidator } from './token-request.validator';
 
 /**
@@ -50,7 +49,7 @@ export class ClientCredentialsTokenRequestValidator extends TokenRequestValidato
 
     const scopes = this.getScopes(parameters, context.client);
 
-    return { ...context, scopes };
+    return Object.assign(context, { scopes }) as ClientCredentialsTokenContext;
   }
 
   /**
@@ -61,9 +60,8 @@ export class ClientCredentialsTokenRequestValidator extends TokenRequestValidato
    * @param client Client of the Request.
    * @returns Scopes granted to the Client.
    */
-  protected getScopes(parameters: URLSearchParams, client: Client): string[] {
-    const scope = parameters.get('scope');
-    this.scopeHandler.checkRequestedScope(scope);
-    return this.scopeHandler.getAllowedScopes(client, scope);
+  protected getScopes(parameters: ClientCredentialsTokenRequest, client: Client): string[] {
+    this.scopeHandler.checkRequestedScope(parameters.scope ?? null);
+    return this.scopeHandler.getAllowedScopes(client, parameters.scope ?? null);
   }
 }

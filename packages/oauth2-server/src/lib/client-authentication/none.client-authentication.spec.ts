@@ -50,32 +50,44 @@ describe('None Client Authentication Method', () => {
   });
 
   describe('hasBeenRequested()', () => {
-    const requestFactory = (data: Partial<NoneClientAuthenticationParameters> = {}): HttpRequest => {
-      return new HttpRequest({
-        body: Buffer.from(stringifyQs(data), 'utf8'),
+    it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
+      const request = new HttpRequest({
+        body: Buffer.from(stringifyQs(body), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
         url: new URL('https://server.example.com/oauth/token'),
       });
-    };
+
+      expect(clientAuthentication.hasBeenRequested(request)).toEqual(expected);
+    });
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
-      const request = requestFactory(body);
+      const request = new HttpRequest({
+        body: Buffer.from(JSON.stringify(body), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/json' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+
       expect(clientAuthentication.hasBeenRequested(request)).toEqual(expected);
     });
   });
 
-  describe('authenticate()', () => {
+  describe.each(['form', 'json'])('authenticate()', (method) => {
     let parameters: NoneClientAuthenticationParameters;
 
     const requestFactory = (data: Partial<NoneClientAuthenticationParameters> = {}): HttpRequest => {
       parameters = Object.assign(parameters, data);
 
+      const body = method === 'form' ? stringifyQs(parameters) : JSON.stringify(parameters);
+      const contentType = method === 'form' ? 'application/x-www-form-urlencoded' : 'application/json';
+
       return new HttpRequest({
-        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        body: Buffer.from(body, 'utf8'),
         cookies: {},
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        headers: { 'content-type': contentType },
         method: 'POST',
         url: new URL('https://server.example.com/oauth/token'),
       });

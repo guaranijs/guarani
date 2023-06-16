@@ -1,5 +1,3 @@
-import { URLSearchParams } from 'url';
-
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { DisplayInterface } from '../../displays/display.interface';
@@ -8,6 +6,7 @@ import { InvalidRequestException } from '../../exceptions/invalid-request.except
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { PkceInterface } from '../../pkces/pkce.interface';
 import { PKCE } from '../../pkces/pkce.token';
+import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
@@ -60,7 +59,7 @@ export class CodeTokenAuthorizationRequestValidator extends CodeAuthorizationReq
    * @returns Response Mode.
    */
   protected override getResponseMode(
-    parameters: URLSearchParams,
+    parameters: CodeAuthorizationRequest,
     responseType: ResponseTypeInterface
   ): ResponseModeInterface {
     const responseMode = super.getResponseMode(parameters, responseType);

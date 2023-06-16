@@ -1,4 +1,6 @@
 import { OutgoingHttpHeaders } from 'http';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
@@ -11,7 +13,9 @@ import { UnsupportedInteractionTypeException } from '../exceptions/unsupported-i
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
+import { InteractionType } from '../interaction-types/interaction-type.type';
 import { InteractionRequest } from '../requests/interaction/interaction-request';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
 import { Endpoint } from './endpoint.type';
 import { InteractionEndpoint } from './interaction.endpoint';
@@ -65,22 +69,45 @@ describe('Interaction Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let queryParameters: InteractionRequest;
+    let bodyParameters: InteractionRequest;
 
-    beforeEach(() => {
-      Reflect.deleteProperty(validatorMock, 'name');
+    const getRequestFactory = (data: Partial<InteractionRequest> = {}): HttpRequest => {
+      removeNullishValues<InteractionRequest>(Object.assign(queryParameters, data));
 
-      request = new HttpRequest({
-        body: {},
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/interaction',
-        query: {},
+        url: addParametersToUrl('https://server.example.com/oauth/interaction', queryParameters),
       });
+    };
+
+    const postRequestFactory = (data: Partial<InteractionRequest> = {}): HttpRequest => {
+      removeNullishValues<InteractionRequest>(Object.assign(bodyParameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(bodyParameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/interaction'),
+      });
+    };
+
+    const requestFactories: Record<string, (data?: Partial<InteractionRequest>) => HttpRequest> = {
+      GET: getRequestFactory,
+      POST: postRequestFactory,
+    };
+
+    beforeEach(() => {
+      queryParameters = { interaction_type: 'login' };
+      bodyParameters = { interaction_type: 'login' };
     });
 
     it('should return an error response when providing an unsupported http method.', async () => {
+      const request = getRequestFactory();
       Reflect.set(request, 'method', 'PUT');
 
       const error = new ServerErrorException('An unexpected error occurred.');
@@ -89,7 +116,6 @@ describe('Interaction Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(error.statusCode);
-
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
@@ -105,7 +131,7 @@ describe('Interaction Endpoint', () => {
     it.each(['GET', 'POST'])(
       'should return an error response when not providing an "interaction_type" parameter.',
       async (method) => {
-        Reflect.set(request, 'method', method);
+        const request = requestFactories[method]!({ interaction_type: undefined });
 
         const error = new InvalidRequestException('Invalid parameter "interaction_type".');
         const errorParameters = removeNullishValues(error.toJSON());
@@ -113,7 +139,6 @@ describe('Interaction Endpoint', () => {
         const response = await endpoint.handle(request);
 
         expect(response.statusCode).toEqual(error.statusCode);
-
         expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
         expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
@@ -127,42 +152,39 @@ describe('Interaction Endpoint', () => {
       }
     );
 
-    it.each([
-      ['GET', 'query'],
-      ['POST', 'body'],
-    ])('should return an error response when requesting an unsupported interaction type.', async (method, data) => {
-      Reflect.set(request, 'method', method);
-      Reflect.set(request, data, { interaction_type: 'unknown' });
+    it.each(['GET', 'POST'])(
+      'should return an error response when requesting an unsupported interaction type.',
+      async (method) => {
+        const request = requestFactories[method]!({ interaction_type: 'unknown' as InteractionType });
 
-      const error = new UnsupportedInteractionTypeException('Unsupported interaction_type "unknown".');
-      const errorParameters = removeNullishValues(error.toJSON());
+        const error = new UnsupportedInteractionTypeException('Unsupported interaction_type "unknown".');
+        const errorParameters = removeNullishValues(error.toJSON());
 
-      const response = await endpoint.handle(request);
+        const response = await endpoint.handle(request);
 
-      expect(response.statusCode).toEqual(error.statusCode);
+        expect(response.statusCode).toEqual(error.statusCode);
+        expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
-      expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
+        expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+          'Cache-Control': 'no-store',
+          Pragma: 'no-cache',
+          'Content-Type': 'application/json',
+          ...error.headers,
+        });
 
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        'Cache-Control': 'no-store',
-        Pragma: 'no-cache',
-        'Content-Type': 'application/json',
-        ...error.headers,
-      });
-
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
-    });
+        expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
+      }
+    );
 
     it('should return an interaction context response.', async () => {
       Reflect.set(validatorMock, 'name', 'login');
-      Reflect.set(request, 'method', 'GET');
 
-      request.query.interaction_type = 'login';
+      const request = getRequestFactory({ interaction_type: 'login' });
 
       const interactionResponse: Dictionary<unknown> = { skip: true, client: { id: 'client_id' } };
 
       const context = <InteractionContext>{
-        parameters: request.query as InteractionRequest,
+        parameters: queryParameters,
         cookies: request.cookies,
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'login',
@@ -176,7 +198,6 @@ describe('Interaction Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(200);
-
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
@@ -190,14 +211,13 @@ describe('Interaction Endpoint', () => {
 
     it('should return an interaction decision response.', async () => {
       Reflect.set(validatorMock, 'name', 'login');
-      Reflect.set(request, 'method', 'POST');
 
-      request.body.interaction_type = 'login';
+      const request = postRequestFactory({ interaction_type: 'login' });
 
       const interactionResponse: Dictionary<unknown> = { redirect_to: 'https://server.example.com/oauth/authorize' };
 
       const context = <InteractionContext>{
-        parameters: request.body as InteractionRequest,
+        parameters: bodyParameters,
         cookies: request.cookies,
         interactionType: jest.mocked<InteractionTypeInterface>({
           name: 'login',
@@ -211,7 +231,6 @@ describe('Interaction Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(200);
-
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({

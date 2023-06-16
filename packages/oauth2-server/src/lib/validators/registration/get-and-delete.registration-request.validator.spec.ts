@@ -1,8 +1,8 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { DeleteRegistrationContext } from '../../context/registration/delete.registration-context';
 import { GetRegistrationContext } from '../../context/registration/get.registration-context';
@@ -51,18 +51,14 @@ describe('Get and Delete Registration Request Validator', () => {
     let parameters: GetRegistrationRequest | DeleteRegistrationRequest;
 
     const requestFactory = (data: Partial<GetRegistrationRequest | DeleteRegistrationRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<GetRegistrationRequest | DeleteRegistrationRequest>(
-        Object.assign(parameters, data)
-      );
-
-      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<GetRegistrationRequest | DeleteRegistrationRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
         body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method,
-        url: new URL(`https://server.example.com/oauth/register?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/register?${stringifyQs(parameters)}`),
       });
     };
 
@@ -144,7 +140,7 @@ describe('Get and Delete Registration Request Validator', () => {
       await expect(validator.validate(request)).resolves.toStrictEqual<
         GetRegistrationContext | DeleteRegistrationContext
       >({
-        parameters: request.query,
+        parameters,
         accessToken,
         client: accessToken.client!,
       });

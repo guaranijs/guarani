@@ -153,7 +153,7 @@ describe('Post Registration Request Validator', () => {
     let parameters: PostRegistrationRequest;
 
     const requestFactory = (data: Partial<PostRegistrationRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<PostRegistrationRequest>(Object.assign(parameters, data));
+      removeNullishValues<PostRegistrationRequest>(Object.assign(parameters, data));
 
       const body = JSON.stringify(parameters);
 

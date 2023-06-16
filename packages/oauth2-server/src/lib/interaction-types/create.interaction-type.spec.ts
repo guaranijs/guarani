@@ -1,7 +1,4 @@
-import { URLSearchParams } from 'url';
-
 import { DependencyInjectionContainer } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { CreateContextInteractionContext } from '../context/interaction/create-context.interaction-context';
 import { CreateDecisionInteractionContext } from '../context/interaction/create-decision.interaction-context';
@@ -22,6 +19,7 @@ import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { CreateInteractionType } from './create.interaction-type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
@@ -137,11 +135,11 @@ describe('Create Interaction Type', () => {
     it('should return a valid skip create context response.', async () => {
       context.grant.interactions.push('create');
 
-      const parameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const requestUrl = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<CreateContextInteractionResponse>({
         skip: true,
-        request_url: `https://server.example.com/oauth/authorize?${parameters.toString()}`,
+        request_url: requestUrl.href,
         context: {
           display: undefined,
           prompts: ['create'],
@@ -151,11 +149,11 @@ describe('Create Interaction Type', () => {
     });
 
     it('should return a valid non-skip create context response.', async () => {
-      const parameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const requestUrl = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<CreateContextInteractionResponse>({
         skip: false,
-        request_url: `https://server.example.com/oauth/authorize?${parameters.toString()}`,
+        request_url: requestUrl.href,
         context: {
           display: undefined,
           prompts: ['create'],
@@ -219,7 +217,7 @@ describe('Create Interaction Type', () => {
     });
 
     it('should return a valid first time create decision interaction response.', async () => {
-      const parameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       const { grant } = context;
 
@@ -230,7 +228,7 @@ describe('Create Interaction Type', () => {
       loginServiceMock.create.mockResolvedValueOnce(login);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<CreateDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/authorize?${parameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(userServiceMock.create).toHaveBeenCalledTimes(1);
@@ -257,10 +255,10 @@ describe('Create Interaction Type', () => {
     it('should return a valid subsequent create decision interaction response.', async () => {
       context.grant.interactions.push('create');
 
-      const parameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<CreateDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/authorize?${parameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(userServiceMock.create).not.toHaveBeenCalled();

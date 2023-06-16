@@ -1,5 +1,3 @@
-import { URLSearchParams } from 'url';
-
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { CreateContextInteractionContext } from '../../context/interaction/create-context.interaction-context';
@@ -11,6 +9,8 @@ import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
+import { CreateContextInteractionRequest } from '../../requests/interaction/create-context.interaction-request';
+import { CreateDecisionInteractionRequest } from '../../requests/interaction/create-decision.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { InteractionRequestValidator } from './interaction-request.validator';
@@ -54,7 +54,7 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
 
     const grant = await this.getGrant(parameters);
 
-    return { ...context, grant };
+    return Object.assign(context, { grant }) as CreateContextInteractionContext;
   }
 
   /**
@@ -70,7 +70,7 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
 
     const grant = await this.getGrant(parameters);
 
-    return { ...context, grant };
+    return Object.assign(context, { grant }) as CreateDecisionInteractionContext;
   }
 
   /**
@@ -79,14 +79,14 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    * @param parameters Parameters of the Interaction Request.
    * @returns Grant based on the provided Login Challenge.
    */
-  private async getGrant(parameters: URLSearchParams): Promise<Grant> {
-    const loginChallenge = parameters.get('login_challenge');
-
-    if (loginChallenge === null) {
+  private async getGrant(
+    parameters: CreateContextInteractionRequest | CreateDecisionInteractionRequest
+  ): Promise<Grant> {
+    if (typeof parameters.login_challenge === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "login_challenge".');
     }
 
-    const grant = await this.grantService.findOneByLoginChallenge(loginChallenge);
+    const grant = await this.grantService.findOneByLoginChallenge(parameters.login_challenge);
 
     if (grant === null) {
       throw new AccessDeniedException('Invalid Login Challenge.');

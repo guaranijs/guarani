@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { AuthorizationCodeTokenContext } from '../../context/token/authorization-code.token-context';
 import { AuthorizationCode } from '../../entities/authorization-code.entity';
@@ -73,12 +73,10 @@ describe('Authorization Code Token Request Validator', () => {
     let parameters: AuthorizationCodeTokenRequest;
 
     const requestFactory = (data: Partial<AuthorizationCodeTokenRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<AuthorizationCodeTokenRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<AuthorizationCodeTokenRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -219,7 +217,7 @@ describe('Authorization Code Token Request Validator', () => {
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationCodeTokenContext>({
-        parameters: request.form(),
+        parameters,
         client,
         grantType: grantTypesMocks[0]!,
         authorizationCode,

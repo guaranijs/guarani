@@ -126,7 +126,6 @@ describe('Code Token Response Type', () => {
         scope: 'foo bar',
         refresh_token: undefined,
         code: 'authorization_code',
-        state: 'client_state',
       });
     });
   });

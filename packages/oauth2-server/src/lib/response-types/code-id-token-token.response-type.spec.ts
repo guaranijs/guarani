@@ -146,7 +146,6 @@ describe('Code ID Token Token Response Type', () => {
         refresh_token: undefined,
         code: 'authorization_code',
         id_token: 'id_token',
-        state: 'client_state',
       });
     });
   });

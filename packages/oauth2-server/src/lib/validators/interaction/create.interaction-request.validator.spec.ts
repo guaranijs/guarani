@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { CreateContextInteractionContext } from '../../context/interaction/create-context.interaction-context';
 import { CreateDecisionInteractionContext } from '../../context/interaction/create-decision.interaction-context';
@@ -73,16 +73,14 @@ describe('Create Interaction Request Validator', () => {
     let parameters: CreateContextInteractionRequest;
 
     const requestFactory = (data: Partial<CreateContextInteractionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<CreateContextInteractionRequest>(Object.assign(parameters, data));
-
-      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<CreateContextInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
         body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        url: new URL(`https://server.example.com/oauth/interaction?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/interaction?${stringifyQs(parameters)}`),
       });
     };
 
@@ -118,7 +116,7 @@ describe('Create Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<CreateContextInteractionContext>({
-        parameters: request.query,
+        parameters,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });
@@ -129,12 +127,10 @@ describe('Create Interaction Request Validator', () => {
     let parameters: CreateDecisionInteractionRequest;
 
     const requestFactory = (data: Partial<CreateDecisionInteractionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<CreateDecisionInteractionRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<CreateDecisionInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -174,7 +170,7 @@ describe('Create Interaction Request Validator', () => {
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<CreateDecisionInteractionContext>({
-        parameters: request.form(),
+        parameters,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });

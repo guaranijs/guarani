@@ -1,5 +1,3 @@
-import { URLSearchParams } from 'url';
-
 import { TokenContext } from '../../context/token/token-context';
 import { Client } from '../../entities/client.entity';
 import { UnauthorizedClientException } from '../../exceptions/unauthorized-client.exception';
@@ -7,6 +5,7 @@ import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
 import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { HttpRequest } from '../../http/http.request';
+import { TokenRequest } from '../../requests/token/token-request';
 
 /**
  * Implementation of the Token Request Validator.
@@ -35,7 +34,7 @@ export abstract class TokenRequestValidator<TContext extends TokenContext = Toke
    * @returns Token Context.
    */
   public async validate(request: HttpRequest): Promise<TContext> {
-    const parameters = request.form();
+    const parameters = request.form<TokenRequest>();
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
     const grantType = this.getGrantType(parameters, client);
@@ -50,8 +49,8 @@ export abstract class TokenRequestValidator<TContext extends TokenContext = Toke
    * @param client Client of the Request.
    * @returns Grant Type.
    */
-  private getGrantType(parameters: URLSearchParams, client: Client): GrantTypeInterface {
-    const grantType = this.grantTypes.find((grantType) => grantType.name === parameters.get('grant_type'))!;
+  private getGrantType(parameters: TokenRequest, client: Client): GrantTypeInterface {
+    const grantType = this.grantTypes.find((grantType) => grantType.name === parameters.grant_type)!;
 
     if (!client.grantTypes.includes(grantType.name)) {
       throw new UnauthorizedClientException(

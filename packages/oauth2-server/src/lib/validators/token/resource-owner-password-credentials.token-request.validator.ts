@@ -1,5 +1,3 @@
-import { URLSearchParams } from 'url';
-
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { ResourceOwnerPasswordCredentialsTokenContext } from '../../context/token/resource-owner-password-credentials.token-context';
@@ -13,6 +11,7 @@ import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { ResourceOwnerPasswordCredentialsTokenRequest } from '../../requests/token/resource-owner-password-credentials.token-request';
 import { UserServiceInterface } from '../../services/user.service.interface';
 import { USER_SERVICE } from '../../services/user.service.token';
 import { TokenRequestValidator } from './token-request.validator';
@@ -64,7 +63,7 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
     const user = await this.getUser(parameters);
     const scopes = this.getScopes(parameters, context.client);
 
-    return { ...context, user, scopes };
+    return Object.assign(context, { user, scopes }) as ResourceOwnerPasswordCredentialsTokenContext;
   }
 
   /**
@@ -73,19 +72,16 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * @param parameters Parameters of the Token Request.
    * @returns User that matches the provided Credentials.
    */
-  private async getUser(parameters: URLSearchParams): Promise<User> {
-    const username = parameters.get('username');
-    const password = parameters.get('password');
-
-    if (username === null) {
+  private async getUser(parameters: ResourceOwnerPasswordCredentialsTokenRequest): Promise<User> {
+    if (typeof parameters.username === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "username".');
     }
 
-    if (password === null) {
+    if (typeof parameters.password === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "password".');
     }
 
-    const user = await this.userService.findByResourceOwnerCredentials!(username, password);
+    const user = await this.userService.findByResourceOwnerCredentials!(parameters.username, parameters.password);
 
     if (user === null) {
       throw new InvalidGrantException('Invalid Credentials.');
@@ -102,9 +98,8 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * @param client Client of the Request.
    * @returns Scopes granted to the Client.
    */
-  protected getScopes(parameters: URLSearchParams, client: Client): string[] {
-    const scope = parameters.get('scope');
-    this.scopeHandler.checkRequestedScope(scope);
-    return this.scopeHandler.getAllowedScopes(client, scope);
+  protected getScopes(parameters: ResourceOwnerPasswordCredentialsTokenRequest, client: Client): string[] {
+    this.scopeHandler.checkRequestedScope(parameters.scope ?? null);
+    return this.scopeHandler.getAllowedScopes(client, parameters.scope ?? null);
   }
 }

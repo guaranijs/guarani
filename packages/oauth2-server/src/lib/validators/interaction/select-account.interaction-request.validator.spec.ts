@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { SelectAccountContextInteractionContext } from '../../context/interaction/select-account-context.interaction-context';
 import { SelectAccountDecisionInteractionContext } from '../../context/interaction/select-account-decision.interaction-context';
@@ -92,16 +92,14 @@ describe('Select Account Interaction Request Validator', () => {
     let parameters: SelectAccountContextInteractionRequest;
 
     const requestFactory = (data: Partial<SelectAccountContextInteractionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<SelectAccountContextInteractionRequest>(Object.assign(parameters, data));
-
-      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<SelectAccountContextInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
         body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        url: new URL(`https://server.example.com/oauth/interaction?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/interaction?${stringifyQs(parameters)}`),
       });
     };
 
@@ -170,7 +168,7 @@ describe('Select Account Interaction Request Validator', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<SelectAccountContextInteractionContext>({
-        parameters: request.query,
+        parameters,
         interactionType: interactionTypesMocks[2]!,
         grant,
         session,
@@ -182,12 +180,10 @@ describe('Select Account Interaction Request Validator', () => {
     let parameters: SelectAccountDecisionInteractionRequest;
 
     const requestFactory = (data: Partial<SelectAccountDecisionInteractionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<SelectAccountDecisionInteractionRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<SelectAccountDecisionInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -257,7 +253,7 @@ describe('Select Account Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<SelectAccountDecisionInteractionContext>(
         {
-          parameters: request.form(),
+          parameters,
           interactionType: interactionTypesMocks[2]!,
           grant,
           login,

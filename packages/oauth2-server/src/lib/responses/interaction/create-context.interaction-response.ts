@@ -5,7 +5,7 @@ import { CreateContext } from './create.context';
 /**
  * Parameters of the custom OAuth 2.0 Create Context Interaction Response.
  */
-export interface CreateContextInteractionResponse extends Dictionary<unknown> {
+export interface CreateContextInteractionResponse extends Dictionary<any> {
   /**
    * Indicates if the application can skip displaying the user registration screen.
    */

@@ -1,8 +1,8 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { TokenContext } from '../../context/token/token-context';
 import { Client } from '../../entities/client.entity';
@@ -42,12 +42,10 @@ describe('Token Request Validator', () => {
     let parameters: TokenRequest;
 
     const requestFactory = (data: Partial<TokenRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<TokenRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<TokenRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -88,7 +86,7 @@ describe('Token Request Validator', () => {
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<TokenContext>({
-        parameters: request.form(),
+        parameters,
         client,
         grantType: grantTypesMocks[0]!,
       });

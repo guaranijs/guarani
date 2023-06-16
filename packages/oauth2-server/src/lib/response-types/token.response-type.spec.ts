@@ -104,7 +104,6 @@ describe('Token Response Type', () => {
         token_type: 'Bearer',
         expires_in: 3600,
         scope: 'foo bar',
-        state: 'client_state',
         refresh_token: undefined,
       });
     });

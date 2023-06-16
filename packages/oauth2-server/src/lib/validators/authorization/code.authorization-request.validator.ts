@@ -1,5 +1,3 @@
-import { URLSearchParams } from 'url';
-
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { CodeAuthorizationContext } from '../../context/authorization/code.authorization-context';
@@ -10,6 +8,7 @@ import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { PkceInterface } from '../../pkces/pkce.interface';
 import { PKCE } from '../../pkces/pkce.token';
+import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
@@ -68,7 +67,7 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
     const codeChallenge = this.getCodeChallenge(parameters);
     const codeChallengeMethod = this.getCodeChallengeMethod(parameters);
 
-    return { ...context, codeChallenge, codeChallengeMethod };
+    return Object.assign(context, { codeChallenge, codeChallengeMethod }) as CodeAuthorizationContext;
   }
 
   /**
@@ -77,14 +76,12 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
    * @param parameters Parameters of the Authorization Request.
    * @returns Code Challenge provided by the Client.
    */
-  protected getCodeChallenge(parameters: URLSearchParams): string {
-    const codeChallenge = parameters.get('code_challenge');
-
-    if (codeChallenge === null) {
+  protected getCodeChallenge(parameters: CodeAuthorizationRequest): string {
+    if (typeof parameters.code_challenge === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "code_challenge".');
     }
 
-    return codeChallenge;
+    return parameters.code_challenge;
   }
 
   /**
@@ -93,8 +90,8 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
    * @param parameters Parameters of the Authorization Request.
    * @returns PKCE Method requested by the Client.
    */
-  protected getCodeChallengeMethod(parameters: URLSearchParams): PkceInterface {
-    const codeChallengeMethodName = parameters.get('code_challenge_method') ?? 'S256';
+  protected getCodeChallengeMethod(parameters: CodeAuthorizationRequest): PkceInterface {
+    const codeChallengeMethodName = parameters.code_challenge_method ?? 'S256';
     const codeChallengeMethod = this.pkces.find((pkceMethod) => pkceMethod.name === codeChallengeMethodName);
 
     if (typeof codeChallengeMethod === 'undefined') {

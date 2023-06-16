@@ -1,5 +1,3 @@
-import { URLSearchParams } from 'url';
-
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { RefreshTokenTokenContext } from '../../context/token/refresh-token.token-context';
@@ -13,6 +11,7 @@ import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { RefreshTokenTokenRequest } from '../../requests/token/refresh-token.token-request';
 import { RefreshTokenServiceInterface } from '../../services/refresh-token.service.interface';
 import { REFRESH_TOKEN_SERVICE } from '../../services/refresh-token.service.token';
 import { TokenRequestValidator } from './token-request.validator';
@@ -58,7 +57,7 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<Ref
     const refreshToken = await this.getRefreshToken(parameters);
     const scopes = this.getScopes(parameters, refreshToken, context.client);
 
-    return { ...context, refreshToken, scopes };
+    return Object.assign(context, { refreshToken, scopes }) as RefreshTokenTokenContext;
   }
 
   /**
@@ -67,14 +66,12 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<Ref
    * @param parameters Parameters of the Token Request.
    * @returns Refresh Token based on the provided token.
    */
-  private async getRefreshToken(parameters: URLSearchParams): Promise<RefreshToken> {
-    const refreshTokenId = parameters.get('refresh_token');
-
-    if (refreshTokenId === null) {
+  private async getRefreshToken(parameters: RefreshTokenTokenRequest): Promise<RefreshToken> {
+    if (typeof parameters.refresh_token === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "refresh_token".');
     }
 
-    const refreshToken = await this.refreshTokenService.findOne(refreshTokenId);
+    const refreshToken = await this.refreshTokenService.findOne(parameters.refresh_token);
 
     if (refreshToken === null) {
       throw new InvalidGrantException('Invalid Refresh Token.');
@@ -91,16 +88,14 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<Ref
    * @param client Client of the Request.
    * @returns Scopes of the new Access Token.
    */
-  private getScopes(parameters: URLSearchParams, refreshToken: RefreshToken, client: Client): string[] {
-    const scope = parameters.get('scope');
-
-    if (scope === null) {
+  private getScopes(parameters: RefreshTokenTokenRequest, refreshToken: RefreshToken, client: Client): string[] {
+    if (typeof parameters.scope === 'undefined') {
       return refreshToken.scopes;
     }
 
-    this.scopeHandler.checkRequestedScope(scope);
+    this.scopeHandler.checkRequestedScope(parameters.scope);
 
-    const requestedScopes = this.scopeHandler.getAllowedScopes(client, scope);
+    const requestedScopes = this.scopeHandler.getAllowedScopes(client, parameters.scope);
 
     requestedScopes.forEach((requestedScope) => {
       if (!refreshToken.scopes.includes(requestedScope)) {

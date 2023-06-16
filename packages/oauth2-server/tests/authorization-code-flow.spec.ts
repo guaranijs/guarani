@@ -1,10 +1,9 @@
 import cookieParser from 'cookie-parser';
 import { CookieAccessInfo } from 'cookiejar';
-import express, { Application, urlencoded } from 'express';
+import express, { Application, raw } from 'express';
+import { stringify as stringifyQs } from 'querystring';
 import request, { SuperAgentTest } from 'supertest';
-import { URL, URLSearchParams } from 'url';
-
-import { Dictionary } from '@guarani/types';
+import { URL } from 'url';
 
 import { expressAuthorizationServer } from '../src/lib/backends/express/express.middleware';
 import { CodeAuthorizationRequest } from '../src/lib/requests/authorization/code.authorization-request';
@@ -26,7 +25,7 @@ describe('Authorization Code Flow', () => {
     app = express();
 
     app.use(cookieParser('super_safe_and_secure_secret'));
-    app.use(urlencoded({ extended: false }));
+    app.use(raw({ type: '*/*' }));
 
     app.use(await expressAuthorizationServer(Reflect.get(global, 'endToEndAuthorizationServerOptions')));
 
@@ -46,17 +45,15 @@ describe('Authorization Code Flow', () => {
       response_mode: 'query',
     };
 
-    const authorizationRequestSearchParameters = new URLSearchParams(authorizationRequestData as Dictionary<any>);
+    const authorizationRequestSearchParameters = stringifyQs(authorizationRequestData);
 
-    const firstAuthorizationResponse = await agent.get(
-      `/oauth/authorize?${authorizationRequestSearchParameters.toString()}`
-    );
+    const firstAuthorizationResponse = await agent.get(`/oauth/authorize?${authorizationRequestSearchParameters}`);
 
     const authorizationEndpointUrl = new URL(firstAuthorizationResponse.headers.location);
 
     expect(firstAuthorizationResponse.status).toEqual(303);
     expect(authorizationEndpointUrl.href).toEqual(
-      `http://localhost:3000/oauth/authorize?${authorizationRequestSearchParameters.toString()}`
+      `http://localhost:3000/oauth/authorize?${authorizationRequestSearchParameters}`
     );
 
     expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toBeUndefined();
@@ -64,9 +61,7 @@ describe('Authorization Code Flow', () => {
     // #endregion
 
     // #region Retrieve the Login Challenge.
-    const loginAuthorizationResponse = await agent.get(
-      `/oauth/authorize?${authorizationRequestSearchParameters.toString()}`
-    );
+    const loginAuthorizationResponse = await agent.get(`/oauth/authorize?${authorizationRequestSearchParameters}`);
 
     const loginUrl = new URL(loginAuthorizationResponse.headers.location);
     const loginChallenge = loginUrl.searchParams.get('login_challenge')!;
@@ -83,11 +78,9 @@ describe('Authorization Code Flow', () => {
       login_challenge: loginChallenge,
     };
 
-    const loginInteractionRequestBody = new URLSearchParams(loginInteractionContextRequestData as Dictionary<any>);
+    const loginInteractionRequestBody = stringifyQs(loginInteractionContextRequestData);
 
-    const loginInteractionContextResponse = await agent.get(
-      `/oauth/interaction?${loginInteractionRequestBody.toString()}`
-    );
+    const loginInteractionContextResponse = await agent.get(`/oauth/interaction?${loginInteractionRequestBody}`);
 
     expect(loginInteractionContextResponse.body.skip).toBeFalse();
 
@@ -103,13 +96,13 @@ describe('Authorization Code Flow', () => {
       subject: '16907c32-687b-493c-85ba-f41f2c9d4daa',
     };
 
-    const loginInteractionAcceptDecisionBody = new URLSearchParams(
-      loginInteractionAcceptDecisionRequestData as Dictionary<any>
-    );
+    const loginInteractionAcceptDecisionBody = stringifyQs(loginInteractionAcceptDecisionRequestData);
 
     const loginInteractionAcceptResponse = await agent
       .post('/oauth/interaction')
-      .send(loginInteractionAcceptDecisionBody.toString());
+      .set('Content-Type', 'application/x-www-form-urlencoded')
+      .set('Accept', 'application/json')
+      .send(loginInteractionAcceptDecisionBody);
 
     expect(loginInteractionAcceptResponse.status).toEqual(200);
     expect(loginInteractionAcceptResponse.body.redirect_to).toEqual(loginInteractionContextResponse.body.request_url);
@@ -119,9 +112,7 @@ describe('Authorization Code Flow', () => {
     // #endregion
 
     // #region Retrieve the Consent Challenge.
-    const consentAuthorizationResponse = await agent.get(
-      `/oauth/authorize?${authorizationRequestSearchParameters.toString()}`
-    );
+    const consentAuthorizationResponse = await agent.get(`/oauth/authorize?${authorizationRequestSearchParameters}`);
 
     const consentUrl = new URL(consentAuthorizationResponse.headers.location);
     const consentChallenge = consentUrl.searchParams.get('consent_challenge')!;
@@ -138,11 +129,9 @@ describe('Authorization Code Flow', () => {
       consent_challenge: consentChallenge,
     };
 
-    const consentInteractionRequestBody = new URLSearchParams(consentInteractionContextRequestData as Dictionary<any>);
+    const consentInteractionRequestBody = stringifyQs(consentInteractionContextRequestData);
 
-    const consentInteractionContextResponse = await agent.get(
-      `/oauth/interaction?${consentInteractionRequestBody.toString()}`
-    );
+    const consentInteractionContextResponse = await agent.get(`/oauth/interaction?${consentInteractionRequestBody}`);
 
     expect(consentInteractionContextResponse.body).toMatchObject<Partial<ConsentContextInteractionResponse>>({
       skip: false,
@@ -164,13 +153,13 @@ describe('Authorization Code Flow', () => {
       grant_scope: 'foo bar baz qux',
     };
 
-    const consentInteractionAcceptDecisionBody = new URLSearchParams(
-      consentInteractionAcceptDecisionRequestData as Dictionary<any>
-    );
+    const consentInteractionAcceptDecisionBody = stringifyQs(consentInteractionAcceptDecisionRequestData);
 
     const consentInteractionAcceptResponse = await agent
       .post('/oauth/interaction')
-      .send(consentInteractionAcceptDecisionBody.toString());
+      .set('Content-Type', 'application/x-www-form-urlencoded')
+      .set('Accept', 'application/json')
+      .send(consentInteractionAcceptDecisionBody);
 
     expect(consentInteractionAcceptResponse.status).toEqual(200);
     expect(consentInteractionAcceptResponse.body.redirect_to).toEqual(loginInteractionContextResponse.body.request_url);
@@ -180,9 +169,7 @@ describe('Authorization Code Flow', () => {
     // #endregion
 
     // #region Retrieve the Authorization Code.
-    const authorizationResponse = await agent.get(
-      `/oauth/authorize?${authorizationRequestSearchParameters.toString()}`
-    );
+    const authorizationResponse = await agent.get(`/oauth/authorize?${authorizationRequestSearchParameters}`);
 
     const callbackUrl = new URL(authorizationResponse.headers.location);
 
@@ -209,12 +196,14 @@ describe('Authorization Code Flow', () => {
       code_verifier: 'code_challenge',
     };
 
-    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
+    const requestBody = stringifyQs(requestData);
 
     const response = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
-      .send(requestBody.toString());
+      .set('Content-Type', 'application/x-www-form-urlencoded')
+      .set('Accept', 'application/json')
+      .send(requestBody);
 
     expect(response.status).toEqual(200);
 

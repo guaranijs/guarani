@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { DeviceCodeTokenContext } from '../../context/token/device-code.token-context';
 import { Client } from '../../entities/client.entity';
@@ -73,12 +73,10 @@ describe('Device Code Token Request Validator', () => {
     let parameters: DeviceCodeTokenRequest;
 
     const requestFactory = (data: Partial<DeviceCodeTokenRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<DeviceCodeTokenRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<DeviceCodeTokenRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -127,7 +125,7 @@ describe('Device Code Token Request Validator', () => {
       deviceCodeServiceMock.findOne.mockResolvedValueOnce(deviceCode);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<DeviceCodeTokenContext>({
-        parameters: request.form(),
+        parameters,
         client,
         grantType: grantTypesMocks[4]!,
         deviceCode,

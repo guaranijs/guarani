@@ -1,8 +1,8 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { InteractionContext } from '../../context/interaction/interaction-context';
 import { HttpRequest } from '../../http/http.request';
@@ -26,16 +26,14 @@ describe('Interaction Request Validator', () => {
     let parameters: InteractionRequest;
 
     const requestFactory = (data: Partial<InteractionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<InteractionRequest>(Object.assign(parameters, data));
-
-      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<InteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
         body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        url: new URL(`https://server.example.com/oauth/interaction?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/interaction?${stringifyQs(parameters)}`),
       });
     };
 
@@ -47,7 +45,7 @@ describe('Interaction Request Validator', () => {
       const request = requestFactory();
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<InteractionContext>({
-        parameters: request.query,
+        parameters,
         interactionType: interactionTypesMocks[1]!,
       });
     });
@@ -57,12 +55,10 @@ describe('Interaction Request Validator', () => {
     let parameters: InteractionRequest;
 
     const requestFactory = (data: Partial<InteractionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<InteractionRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<InteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -78,7 +74,7 @@ describe('Interaction Request Validator', () => {
       const request = requestFactory();
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<InteractionContext>({
-        parameters: request.form(),
+        parameters,
         interactionType: interactionTypesMocks[0]!,
       });
     });

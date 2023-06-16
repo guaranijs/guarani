@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { RefreshTokenTokenContext } from '../../context/token/refresh-token.token-context';
 import { Client } from '../../entities/client.entity';
@@ -76,12 +76,10 @@ describe('Refresh Token Token Request Validator', () => {
     let parameters: RefreshTokenTokenRequest;
 
     const requestFactory = (data: Partial<RefreshTokenTokenRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<RefreshTokenTokenRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<RefreshTokenTokenRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -161,7 +159,7 @@ describe('Refresh Token Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar']);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RefreshTokenTokenContext>({
-        parameters: request.form(),
+        parameters,
         client,
         grantType: grantTypesMocks[3]!,
         refreshToken,
@@ -185,7 +183,7 @@ describe('Refresh Token Token Request Validator', () => {
       scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RefreshTokenTokenContext>({
-        parameters: request.form(),
+        parameters,
         client,
         grantType: grantTypesMocks[3]!,
         refreshToken,

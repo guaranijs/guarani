@@ -1,4 +1,4 @@
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import {
   JsonWebEncryptionContentEncryptionAlgorithm,
@@ -13,6 +13,7 @@ import { AccessToken } from '../../entities/access-token.entity';
 import { Client } from '../../entities/client.entity';
 import { GrantType } from '../../grant-types/grant-type.type';
 import { PutBodyRegistrationRequest } from '../../requests/registration/put-body.registration-request';
+import { PutQueryRegistrationRequest } from '../../requests/registration/put-query.registration-request';
 import { ResponseType } from '../../response-types/response-type.type';
 import { ApplicationType } from '../../types/application-type.type';
 import { SubjectType } from '../../types/subject-type.type';
@@ -24,7 +25,7 @@ export interface PutRegistrationContext {
   /**
    * Parameters of the Put Registration Request Query.
    */
-  readonly queryParameters: URLSearchParams;
+  readonly queryParameters: PutQueryRegistrationRequest;
 
   /**
    * Parameters of the Put Registration Request Body.

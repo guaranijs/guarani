@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { EndSessionContext } from '../context/end-session-context';
 import { Client } from '../entities/client.entity';
@@ -46,16 +46,14 @@ describe('End Session Request Validator', () => {
     let parameters: EndSessionRequest;
 
     const requestFactory = (data: Partial<EndSessionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<EndSessionRequest>(Object.assign(parameters, data));
-
-      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<EndSessionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
         body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        url: new URL(`https://server.example.com/oauth/end_session?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/end_session?${stringifyQs(parameters)}`),
       });
     };
 
@@ -191,7 +189,7 @@ describe('End Session Request Validator', () => {
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<EndSessionContext>({
-        parameters: request.query,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client,

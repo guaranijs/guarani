@@ -3,7 +3,7 @@ import { Dictionary } from '@guarani/types';
 /**
  * Parameters of the OAuth 2.0 Device Authorization Response.
  */
-export interface DeviceAuthorizationResponse extends Dictionary<unknown> {
+export interface DeviceAuthorizationResponse extends Dictionary<any> {
   /**
    * Device Verification Code.
    */

@@ -1,4 +1,4 @@
-import express, { Application, urlencoded } from 'express';
+import express, { Application, raw } from 'express';
 import request from 'supertest';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
@@ -12,7 +12,7 @@ describe('Discovery Document', () => {
   beforeAll(async () => {
     app = express();
 
-    app.use(urlencoded({ extended: false }));
+    app.use(raw({ type: '*/*' }));
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,
@@ -171,7 +171,7 @@ describe('Discovery Document', () => {
       ],
       code_challenge_methods_supported: ['S256', 'plain'],
       interaction_endpoint: 'http://localhost:3000/oauth/interaction',
-      device_authorization_endpoint: 'http://localhost:3000/oauth/device-authorization',
+      device_authorization_endpoint: 'http://localhost:3000/oauth/device_authorization',
       end_session_endpoint: 'http://localhost:3000/oauth/end_session',
       authorization_response_iss_parameter_supported: true,
     });

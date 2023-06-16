@@ -1,10 +1,9 @@
 import { Buffer } from 'buffer';
-import express, { Application, urlencoded } from 'express';
+import express, { Application, raw } from 'express';
+import { stringify as stringifyQs } from 'querystring';
 import request from 'supertest';
-import { URLSearchParams } from 'url';
 
 import { JsonWebSignature, JsonWebSignatureHeader, JsonWebTokenClaims, OctetSequenceKey } from '@guarani/jose';
-import { Dictionary } from '@guarani/types';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
@@ -18,7 +17,7 @@ describe('Client Credentials Flow', () => {
   beforeAll(async () => {
     app = express();
 
-    app.use(urlencoded({ extended: false }));
+    app.use(raw({ type: '*/*' }));
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,
@@ -48,12 +47,12 @@ describe('Client Credentials Flow', () => {
     const assertion = await jws.sign(key);
 
     const requestData: JwtBearerTokenRequest = { grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion };
-    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
+    const requestBody = stringifyQs(requestData);
 
     const response = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
-      .send(requestBody.toString());
+      .send(requestBody);
 
     expect(response.status).toEqual(200);
 

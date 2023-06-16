@@ -15,7 +15,7 @@ import { SubjectType } from '../../types/subject-type.type';
 /**
  * Parameters of the OAuth 2.0 Put Client Registration Request Body Parameters.
  */
-export interface PutBodyRegistrationRequest extends Dictionary<unknown> {
+export interface PutBodyRegistrationRequest extends Dictionary<any> {
   /**
    * Unique Identifier of the Client.
    */

@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { DeviceAuthorizationContext } from '../context/device-authorization-context';
 import { Client } from '../entities/client.entity';
@@ -42,12 +42,10 @@ describe('Device Authorization Request Validator', () => {
     let parameters: DeviceAuthorizationRequest;
 
     const requestFactory = (data: Partial<DeviceAuthorizationRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<DeviceAuthorizationRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<DeviceAuthorizationRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -80,7 +78,7 @@ describe('Device Authorization Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<DeviceAuthorizationContext>({
-        parameters: request.form(),
+        parameters,
         client,
         scopes: ['foo', 'bar'],
       });
@@ -97,7 +95,7 @@ describe('Device Authorization Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<DeviceAuthorizationContext>({
-        parameters: request.form(),
+        parameters,
         client,
         scopes,
       });

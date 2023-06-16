@@ -6,7 +6,7 @@ import { Prompt } from '../../types/prompt.type';
 /**
  * Parameters of the Consent Context.
  */
-export interface ConsentContext extends Dictionary<unknown> {
+export interface ConsentContext extends Dictionary<any> {
   /**
    * Prompts requested by the Client.
    */

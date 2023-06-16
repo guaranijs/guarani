@@ -17,7 +17,7 @@ import { SubjectType } from '../types/subject-type.type';
 /**
  * Parameters of the OAuth 2.0 Discovery Endpoint.
  */
-export interface DiscoveryResponse extends Dictionary<unknown> {
+export interface DiscoveryResponse extends Dictionary<any> {
   /**
    * Url of the Issuer of the Authorization Server.
    */

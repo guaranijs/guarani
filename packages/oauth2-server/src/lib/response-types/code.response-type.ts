@@ -71,6 +71,6 @@ export class CodeResponseType implements ResponseTypeInterface {
   ): Promise<CodeAuthorizationResponse> {
     const { parameters } = context;
     const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);
-    return { code: authorizationCode.code, state: parameters.state };
+    return { code: authorizationCode.code };
   }
 }

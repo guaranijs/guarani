@@ -1,7 +1,6 @@
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { Inject, Injectable } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { LogoutContextInteractionContext } from '../context/interaction/logout-context.interaction-context';
 import { LogoutDecisionInteractionContext } from '../context/interaction/logout-decision.interaction-context';
@@ -19,6 +18,7 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 
@@ -79,10 +79,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
 
     await this.checkLogoutTicket(logoutTicket);
 
-    const url = new URL('/oauth/end_session', this.settings.issuer);
-    const searchParameters = new URLSearchParams(logoutTicket.parameters as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/end_session', this.settings.issuer), logoutTicket.parameters);
 
     return {
       skip: logoutTicket.session.activeLogin === null,
@@ -143,10 +140,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
       await this.logoutTicketService.save(logoutTicket);
     }
 
-    const url = new URL('/oauth/end_session', this.settings.issuer);
-    const searchParameters = new URLSearchParams(logoutTicket.parameters as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/end_session', this.settings.issuer), logoutTicket.parameters);
 
     return { redirect_to: url.href };
   }
@@ -162,10 +156,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
 
     await this.logoutTicketService.remove(logoutTicket);
 
-    const url = new URL('/oauth/error', this.settings.issuer);
-    const searchParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/error', this.settings.issuer), error.toJSON());
 
     return { redirect_to: url.href };
   }

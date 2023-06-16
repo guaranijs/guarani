@@ -1,7 +1,10 @@
+import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
+
 /**
  * Interface of the Body of the OAuth 2.0 Error Response.
  */
-export interface OAuth2ExceptionResponse {
+export interface OAuth2ExceptionResponse
+  extends Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>> {
   /**
    * Error Code of the OAuth 2.0 Exception.
    */

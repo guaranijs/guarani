@@ -1,5 +1,3 @@
-import { URLSearchParams } from 'url';
-
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { SelectAccountContextInteractionContext } from '../../context/interaction/select-account-context.interaction-context';
@@ -13,6 +11,8 @@ import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
+import { SelectAccountContextInteractionRequest } from '../../requests/interaction/select-account-context.interaction-request';
+import { SelectAccountDecisionInteractionRequest } from '../../requests/interaction/select-account-decision.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { LoginServiceInterface } from '../../services/login.service.interface';
@@ -65,7 +65,7 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
     const grant = await this.getGrant(parameters);
     const session = await this.getSession(parameters);
 
-    return { ...context, grant, session };
+    return Object.assign(context, { grant, session }) as SelectAccountContextInteractionContext;
   }
 
   /**
@@ -82,29 +82,7 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
     const grant = await this.getGrant(parameters);
     const login = await this.getLogin(parameters);
 
-    return { ...context, grant, login };
-  }
-
-  /**
-   * Fetches a Session based on the Identifier provided by the Client..
-   *
-   * @param parameters Parameters of the Interaction Request.
-   * @returns Session based on the Identifier provided by the Client.
-   */
-  private async getSession(parameters: URLSearchParams): Promise<Session> {
-    const sessionId = parameters.get('session_id');
-
-    if (sessionId === null) {
-      throw new InvalidRequestException('Invalid parameter "session_id".');
-    }
-
-    const session = await this.sessionService.findOne(sessionId);
-
-    if (session === null) {
-      throw new AccessDeniedException('Invalid Session Identifier.');
-    }
-
-    return session;
+    return Object.assign(context, { grant, login }) as SelectAccountDecisionInteractionContext;
   }
 
   /**
@@ -113,14 +91,14 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    * @param parameters Parameters of the Interaction Request.
    * @returns Grant based on the provided Login Challenge.
    */
-  private async getGrant(parameters: URLSearchParams): Promise<Grant> {
-    const loginChallenge = parameters.get('login_challenge');
-
-    if (loginChallenge === null) {
+  private async getGrant(
+    parameters: SelectAccountContextInteractionRequest | SelectAccountDecisionInteractionRequest
+  ): Promise<Grant> {
+    if (typeof parameters.login_challenge === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "login_challenge".');
     }
 
-    const grant = await this.grantService.findOneByLoginChallenge(loginChallenge);
+    const grant = await this.grantService.findOneByLoginChallenge(parameters.login_challenge);
 
     if (grant === null) {
       throw new AccessDeniedException('Invalid Login Challenge.');
@@ -130,19 +108,37 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
   }
 
   /**
+   * Fetches a Session based on the Identifier provided by the Client..
+   *
+   * @param parameters Parameters of the Interaction Request.
+   * @returns Session based on the Identifier provided by the Client.
+   */
+  private async getSession(parameters: SelectAccountContextInteractionRequest): Promise<Session> {
+    if (typeof parameters.session_id === 'undefined') {
+      throw new InvalidRequestException('Invalid parameter "session_id".');
+    }
+
+    const session = await this.sessionService.findOne(parameters.session_id);
+
+    if (session === null) {
+      throw new AccessDeniedException('Invalid Session Identifier.');
+    }
+
+    return session;
+  }
+
+  /**
    * Fetches the requested Login from the application's storage.
    *
    * @param parameters Parameters of the Interaction Request.
    * @returns Login based on the provided Identifier.
    */
-  private async getLogin(parameters: URLSearchParams): Promise<Login> {
-    const loginId = parameters.get('login_id');
-
-    if (loginId === null) {
+  private async getLogin(parameters: SelectAccountDecisionInteractionRequest): Promise<Login> {
+    if (typeof parameters.login_id === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "login_id".');
     }
 
-    const login = await this.loginService.findOne(loginId);
+    const login = await this.loginService.findOne(parameters.login_id);
 
     if (login === null) {
       throw new AccessDeniedException('Invalid Login Identifier.');

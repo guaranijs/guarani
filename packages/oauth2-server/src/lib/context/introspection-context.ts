@@ -1,10 +1,9 @@
-import { URLSearchParams } from 'url';
-
 import { Nullable } from '@guarani/types';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
+import { IntrospectionRequest } from '../requests/introspection-request';
 import { TokenTypeHint } from '../types/token-type-hint.type';
 
 /**
@@ -14,7 +13,7 @@ export interface IntrospectionContext {
   /**
    * Parameters of the Introspection Request.
    */
-  readonly parameters: URLSearchParams;
+  readonly parameters: IntrospectionRequest;
 
   /**
    * Client of the Request.

@@ -123,7 +123,6 @@ describe('Code ID Token Response Type', () => {
       >({
         code: 'authorization_code',
         id_token: 'id_token',
-        state: 'client_state',
       });
     });
   });

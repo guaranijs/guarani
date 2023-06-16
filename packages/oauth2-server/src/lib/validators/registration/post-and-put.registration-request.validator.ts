@@ -7,7 +7,7 @@ import {
   JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
 import { isPlainObject } from '@guarani/primitives';
-import { Dictionary, Nullable } from '@guarani/types';
+import { Nullable } from '@guarani/types';
 
 import { ClientAuthentication } from '../../client-authentication/client-authentication.type';
 import { PostRegistrationContext } from '../../context/registration/post.registration-context';
@@ -20,6 +20,8 @@ import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthorizationHandler } from '../../handlers/client-authorization.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { PostRegistrationRequest } from '../../requests/registration/post.registration-request';
+import { PutBodyRegistrationRequest } from '../../requests/registration/put-body.registration-request';
 import { ResponseType } from '../../response-types/response-type.type';
 import { AccessTokenServiceInterface } from '../../services/access-token.service.interface';
 import { Settings } from '../../settings/settings';
@@ -57,7 +59,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns Dynamic Client Registration Context.
    */
   public async validate(request: HttpRequest): Promise<TContext> {
-    const parameters = request.json();
+    const parameters = request.json<PostRegistrationRequest | PutBodyRegistrationRequest>();
 
     if (!isPlainObject(parameters)) {
       throw new InvalidRequestException('Invalid Http Request Body.');
@@ -160,7 +162,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Redirect URIs of the Client.
    */
-  private getRedirectUris(parameters: Dictionary<unknown>): URL[] {
+  private getRedirectUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL[] {
     if (
       !Array.isArray(parameters.redirect_uris) ||
       parameters.redirect_uris.some((redirectUri) => typeof redirectUri !== 'string')
@@ -191,7 +193,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Response Types requested by the Client.
    */
-  private getResponseTypes(parameters: Dictionary<unknown>): ResponseType[] {
+  private getResponseTypes(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): ResponseType[] {
     if (
       typeof parameters.response_types !== 'undefined' &&
       (!Array.isArray(parameters.response_types) ||
@@ -219,7 +221,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Grant Types requested by the Client.
    */
-  private getGrantTypes(parameters: Dictionary<unknown>): (GrantType | 'implicit')[] {
+  private getGrantTypes(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): (GrantType | 'implicit')[] {
     if (
       typeof parameters.grant_types !== 'undefined' &&
       (!Array.isArray(parameters.grant_types) ||
@@ -232,7 +234,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
       return ['authorization_code'];
     }
 
-    return parameters.grant_types.map<GrantType>((grantType) => {
+    return parameters.grant_types.map((grantType) => {
       if (grantType !== 'implicit' && !this.settings.grantTypes.includes(grantType)) {
         throw new InvalidClientMetadataException(`Unsupported grant_type "${grantType}".`);
       }
@@ -286,9 +288,10 @@ export abstract class PostAndPutRegistrationRequestValidator<
     // "authorization_code" and "code", "code id_token", "code id_token token", "code token"
     if (
       grantTypes.includes('authorization_code') &&
-      ![...authorizationCodeResponseTypes, ...hybridResponseTypes].some(responseTypesIncludes)
+      !authorizationCodeResponseTypes.some(responseTypesIncludes) &&
+      !hybridResponseTypes.some(responseTypesIncludes)
     ) {
-      const codeResponseTypesString = [...authorizationCodeResponseTypes, ...hybridResponseTypes].join('", "');
+      const codeResponseTypesString = authorizationCodeResponseTypes.concat(hybridResponseTypes).join('", "');
 
       throw new InvalidClientMetadataException(
         `The Grant Type "authorization_code" requires at lease one of the Response Types ["${codeResponseTypesString}"].`
@@ -298,9 +301,10 @@ export abstract class PostAndPutRegistrationRequestValidator<
     // "implicit" and "code id_token", "code id_token token", "code token", "id_token", "id_token id_token", "token"
     if (
       grantTypes.includes('implicit') &&
-      ![...hybridResponseTypes, ...implicitResponseTypes].some(responseTypesIncludes)
+      !hybridResponseTypes.some(responseTypesIncludes) &&
+      !implicitResponseTypes.some(responseTypesIncludes)
     ) {
-      const implicitResponseTypesString = [...hybridResponseTypes, ...implicitResponseTypes].join('", "');
+      const implicitResponseTypesString = hybridResponseTypes.concat(implicitResponseTypes).join('", "');
 
       throw new InvalidClientMetadataException(
         `The Grant Type "implicit" requires at lease one of the Response Types ["${implicitResponseTypesString}"].`
@@ -314,7 +318,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Application Type requested by the Client.
    */
-  private getApplicationType(parameters: Dictionary<unknown>): ApplicationType {
+  private getApplicationType(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): ApplicationType {
     if (typeof parameters.application_type !== 'undefined' && typeof parameters.application_type !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "application_type".');
     }
@@ -374,7 +378,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Client Name provided by the Client.
    */
-  private getClientName(parameters: Dictionary<unknown>): Nullable<string> {
+  private getClientName(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string> {
     if (typeof parameters.client_name !== 'undefined' && typeof parameters.client_name !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "client_name".');
     }
@@ -388,7 +392,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Scopes requested by the Client.
    */
-  private getScopes(parameters: Dictionary<unknown>): string[] {
+  private getScopes(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string[] {
     if (typeof parameters.scope !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "scope".');
     }
@@ -408,7 +412,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Contacts requested by the Client.
    */
-  private getContacts(parameters: Dictionary<unknown>): Nullable<string[]> {
+  private getContacts(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string[]> {
     if (
       typeof parameters.contacts !== 'undefined' &&
       (!Array.isArray(parameters.contacts) || parameters.contacts.some((contact) => typeof contact !== 'string'))
@@ -425,7 +429,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Logo URI provided by the Client.
    */
-  private getLogoUri(parameters: Dictionary<unknown>): Nullable<URL> {
+  private getLogoUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.logo_uri !== 'undefined' && typeof parameters.logo_uri !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "logo_uri".');
     }
@@ -447,7 +451,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Client URI provided by the Client.
    */
-  private getClientUri(parameters: Dictionary<unknown>): Nullable<URL> {
+  private getClientUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.client_uri !== 'undefined' && typeof parameters.client_uri !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "client_uri".');
     }
@@ -469,7 +473,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Policy URI provided by the Client.
    */
-  private getPolicyUri(parameters: Dictionary<unknown>): Nullable<URL> {
+  private getPolicyUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.policy_uri !== 'undefined' && typeof parameters.policy_uri !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "policy_uri".');
     }
@@ -491,7 +495,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Terms of Service URI provided by the Client.
    */
-  private getTosUri(parameters: Dictionary<unknown>): Nullable<URL> {
+  private getTosUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.tos_uri !== 'undefined' && typeof parameters.tos_uri !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "tos_uri".');
     }
@@ -512,7 +516,9 @@ export abstract class PostAndPutRegistrationRequestValidator<
    *
    * @param parameters Parameters of the Dynamic Client Registration Request.
    */
-  private checkJwksUriAndJwksAreNotBothProvided(parameters: Dictionary<unknown>): void {
+  private checkJwksUriAndJwksAreNotBothProvided(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): void {
     if (typeof parameters.jwks_uri !== 'undefined' && typeof parameters.jwks !== 'undefined') {
       throw new InvalidClientMetadataException('Only one of the parameters "jwks_uri" and "jwks" must be provided.');
     }
@@ -524,7 +530,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns JSON Web Key Set URI provided by the Client.
    */
-  private getJwksUri(parameters: Dictionary<unknown>): Nullable<URL> {
+  private getJwksUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.jwks_uri !== 'undefined' && typeof parameters.jwks_uri !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "jwks_uri".');
     }
@@ -546,7 +552,9 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns JSON Web Key Set provided by the Client.
    */
-  private async getJwks(parameters: Dictionary<unknown>): Promise<Nullable<JsonWebKeySet>> {
+  private async getJwks(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): Promise<Nullable<JsonWebKeySet>> {
     if (typeof parameters.jwks !== 'undefined' && !isPlainObject(parameters.jwks)) {
       throw new InvalidClientMetadataException('Invalid parameter "jwks".');
     }
@@ -567,7 +575,9 @@ export abstract class PostAndPutRegistrationRequestValidator<
    *
    * @param parameters Parameters of the Client Registration Request.
    */
-  private checkSubjectTypeAndSectorIdentifierUri(parameters: Dictionary<unknown>): void {
+  private checkSubjectTypeAndSectorIdentifierUri(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): void {
     if (parameters.subject_type === 'pairwise' && typeof parameters.sector_identifier_uri === 'undefined') {
       throw new InvalidClientMetadataException('The Subject Type "pairwise" requires a Sector Identifier URI.');
     }
@@ -579,7 +589,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Subject Type provided by the Client.
    */
-  private getSubjectType(parameters: Dictionary<unknown>): SubjectType {
+  private getSubjectType(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): SubjectType {
     if (typeof parameters.subject_type !== 'undefined' && typeof parameters.subject_type !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "subject_type".');
     }
@@ -601,7 +611,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Sector Identifier URI provided by the Client.
    */
-  private getSectorIdentifierUri(parameters: Dictionary<unknown>): Nullable<URL> {
+  private getSectorIdentifierUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (
       typeof parameters.sector_identifier_uri !== 'undefined' &&
       typeof parameters.sector_identifier_uri !== 'string'
@@ -635,7 +645,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns ID Token JSON Web Signature Algorithm provided by the Client.
    */
   private getIdTokenSignedResponseAlgorithm(
-    parameters: Dictionary<unknown>
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
   ): Exclude<JsonWebSignatureAlgorithm, 'none'> {
     if (
       typeof parameters.id_token_signed_response_alg !== 'undefined' &&
@@ -668,7 +678,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns ID Token JSON Web Encryption Key Wrap Algorithm provided by the Client.
    */
   private getIdTokenEncryptedResponseKeyWrap(
-    parameters: Dictionary<unknown>
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
   ): Nullable<JsonWebEncryptionKeyWrapAlgorithm> {
     if (
       typeof parameters.id_token_encrypted_response_alg !== 'undefined' &&
@@ -701,7 +711,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns ID Token JSON Web Encryption Content Encryption Algorithm provided by the Client.
    */
   private getIdTokenEncryptedResponseContentEncryption(
-    parameters: Dictionary<unknown>
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
   ): Nullable<JsonWebEncryptionContentEncryptionAlgorithm> {
     if (
       typeof parameters.id_token_encrypted_response_enc !== 'undefined' &&
@@ -734,17 +744,17 @@ export abstract class PostAndPutRegistrationRequestValidator<
     return (parameters.id_token_encrypted_response_enc as JsonWebEncryptionContentEncryptionAlgorithm) ?? null;
   }
 
-  // private getUserinfoSignedResponseAlgorithm(parameters: Dictionary<unknown>): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
+  // private getUserinfoSignedResponseAlgorithm(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
 
-  // private getUserinfoEncryptedResponseKeyWrap(parameters: Dictionary<unknown>): JsonWebEncryptionKeyWrapAlgorithm {}
+  // private getUserinfoEncryptedResponseKeyWrap(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionKeyWrapAlgorithm {}
 
-  // private getUserinfoEncryptedResponseContentEncryption(parameters: Dictionary<unknown>): JsonWebEncryptionContentEncryptionAlgorithm {}
+  // private getUserinfoEncryptedResponseContentEncryption(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionContentEncryptionAlgorithm {}
 
-  // private getRequestObjectSigningAlgorithm(parameters: Dictionary<unknown>): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
+  // private getRequestObjectSigningAlgorithm(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
 
-  // private getRequestObjectEncryptionKeyWrap(parameters: Dictionary<unknown>): JsonWebEncryptionKeyWrapAlgorithm {}
+  // private getRequestObjectEncryptionKeyWrap(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionKeyWrapAlgorithm {}
 
-  // private getRequestObjectEncryptionContentEncryption(parameters: Dictionary<unknown>): JsonWebEncryptionContentEncryptionAlgorithm {}
+  // private getRequestObjectEncryptionContentEncryption(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionContentEncryptionAlgorithm {}
 
   /**
    * Returns the Client Authentication Method provided by the Client.
@@ -752,7 +762,9 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Client Authentication Method provided by the Client.
    */
-  private getAuthenticationMethod(parameters: Dictionary<unknown>): ClientAuthentication {
+  private getAuthenticationMethod(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): ClientAuthentication {
     if (
       typeof parameters.token_endpoint_auth_method !== 'undefined' &&
       typeof parameters.token_endpoint_auth_method !== 'string'
@@ -782,7 +794,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns Client Authentication Method JSON Web Signature Algorithm provided by the Client.
    */
   private getAuthenticationSigningAlgorithm(
-    parameters: Dictionary<unknown>
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
   ): Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>> {
     if (
       typeof parameters.token_endpoint_auth_signing_alg !== 'undefined' &&
@@ -811,7 +823,9 @@ export abstract class PostAndPutRegistrationRequestValidator<
    *
    * @param parameters Parameters of the Dynamic Client Registration Request.
    */
-  private checkAuthenticationMethodAndAuthenticationMethodSignature(parameters: Dictionary<unknown>): void {
+  private checkAuthenticationMethodAndAuthenticationMethodSignature(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): void {
     const {
       token_endpoint_auth_method: authenticationMethod,
       token_endpoint_auth_signing_alg: authenticationSigningAlgorithm,
@@ -875,7 +889,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Default Max Age provided by the Client.
    */
-  private getDefaultMaxAge(parameters: Dictionary<unknown>): Nullable<number> {
+  private getDefaultMaxAge(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<number> {
     if (typeof parameters.default_max_age === 'undefined') {
       return null;
     }
@@ -897,7 +911,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Value for Require Auth Time provided by the Client.
    */
-  private getRequireAuthTime(parameters: Dictionary<unknown>): boolean {
+  private getRequireAuthTime(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): boolean {
     if (typeof parameters.require_auth_time !== 'undefined' && typeof parameters.require_auth_time !== 'boolean') {
       throw new InvalidClientMetadataException('Invalid parameter "require_auth_time".');
     }
@@ -911,7 +925,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Default Authentication Context Class References requested by the Client.
    */
-  private getDefaultAcrValues(parameters: Dictionary<unknown>): Nullable<string[]> {
+  private getDefaultAcrValues(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string[]> {
     if (
       typeof parameters.default_acr_values !== 'undefined' &&
       (!Array.isArray(parameters.default_acr_values) ||
@@ -939,7 +953,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Initiate Login URI provided by the Client.
    */
-  private getInitiateLoginUri(parameters: Dictionary<unknown>): Nullable<URL> {
+  private getInitiateLoginUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
     if (typeof parameters.initiate_login_uri !== 'undefined' && typeof parameters.initiate_login_uri !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "initiate_login_uri".');
     }
@@ -955,7 +969,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
     }
   }
 
-  // private getRequestUris(parameters: Dictionary<unknown>): Nullable<URL[]> {}
+  // private getRequestUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL[]> {}
 
   /**
    * Checks and returns the Post Logout Redirect URIs of the Client.
@@ -963,7 +977,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Post Logout Redirect URIs of the Client.
    */
-  private getPostLogoutRedirectUris(parameters: Dictionary<unknown>): URL[] {
+  private getPostLogoutRedirectUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL[] {
     if (
       !Array.isArray(parameters.post_logout_redirect_uris) ||
       parameters.post_logout_redirect_uris.some((postLogoutRedirectUri) => typeof postLogoutRedirectUri !== 'string')
@@ -1037,7 +1051,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Software Identifier provided by the Client.
    */
-  private getSoftwareId(parameters: Dictionary<unknown>): Nullable<string> {
+  private getSoftwareId(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string> {
     if (typeof parameters.software_id !== 'undefined' && typeof parameters.software_id !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "software_id".');
     }
@@ -1051,7 +1065,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Software Version provided by the Client.
    */
-  private getSoftwareVersion(parameters: Dictionary<unknown>): Nullable<string> {
+  private getSoftwareVersion(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string> {
     if (typeof parameters.software_version !== 'undefined' && typeof parameters.software_version !== 'string') {
       throw new InvalidClientMetadataException('Invalid parameter "software_version".');
     }

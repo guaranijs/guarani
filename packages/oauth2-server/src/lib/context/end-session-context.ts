@@ -1,8 +1,9 @@
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { Dictionary, Nullable } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
+import { EndSessionRequest } from '../requests/end-session-request';
 
 /**
  * Parameters of the End Session Context.
@@ -11,7 +12,7 @@ export interface EndSessionContext {
   /**
    * Parameters of the End Session Request.
    */
-  readonly parameters: URLSearchParams;
+  readonly parameters: EndSessionRequest;
 
   /**
    * Cookies of the Http Request.

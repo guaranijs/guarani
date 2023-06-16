@@ -56,7 +56,7 @@ export class PostRegistrationRequestValidator extends PostAndPutRegistrationRequ
    * @returns Dynamic Client Registration Context.
    */
   public override async validate(request: HttpRequest): Promise<PostRegistrationContext> {
-    const parameters = request.json();
+    const parameters = request.json<PostRegistrationRequest>();
 
     if (!isPlainObject(parameters)) {
       throw new InvalidRequestException('Invalid Http Request Body.');
@@ -67,7 +67,7 @@ export class PostRegistrationRequestValidator extends PostAndPutRegistrationRequ
     const context = await super.validate(request);
 
     return Object.assign<PostRegistrationContext, Partial<PostRegistrationContext>>(context, {
-      parameters: parameters as PostRegistrationRequest,
+      parameters,
       accessToken,
     }) as PostRegistrationContext;
   }

@@ -1,5 +1,3 @@
-import { URLSearchParams } from 'url';
-
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { ConsentContextInteractionContext } from '../../context/interaction/consent-context.interaction-context';
@@ -16,6 +14,10 @@ import { ConsentDecision } from '../../interaction-types/consent-decision.type';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
+import { ConsentContextInteractionRequest } from '../../requests/interaction/consent-context.interaction-request';
+import { ConsentDecisionInteractionRequest } from '../../requests/interaction/consent-decision.interaction-request';
+import { ConsentDecisionAcceptInteractionRequest } from '../../requests/interaction/consent-decision-accept.interaction-request';
+import { ConsentDecisionDenyInteractionRequest } from '../../requests/interaction/consent-decision-deny.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { InteractionRequestValidator } from './interaction-request.validator';
@@ -61,7 +63,7 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
 
     const grant = await this.getGrant(parameters);
 
-    return { ...context, grant };
+    return Object.assign(context, { grant }) as ConsentContextInteractionContext;
   }
 
   /**
@@ -84,13 +86,13 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
 
     switch (decision) {
       case 'accept': {
-        const grantedScopes = this.getGrantedScopes(parameters, grant);
-        return <ConsentDecisionAcceptInteractionContext>{ ...context, grantedScopes };
+        const grantedScopes = this.getGrantedScopes(parameters as ConsentDecisionAcceptInteractionRequest, grant);
+        return Object.assign(context, { grantedScopes }) as ConsentDecisionAcceptInteractionContext;
       }
 
       case 'deny': {
-        const error = this.getError(parameters);
-        return <ConsentDecisionDenyInteractionContext>{ ...context, error };
+        const error = this.getError(parameters as ConsentDecisionDenyInteractionRequest);
+        return Object.assign(context, { error }) as ConsentDecisionDenyInteractionContext;
       }
     }
   }
@@ -101,14 +103,14 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @param parameters Parameters of the Interaction Request.
    * @returns Grant based on the provided Consent Challenge.
    */
-  private async getGrant(parameters: URLSearchParams): Promise<Grant> {
-    const consentChallenge = parameters.get('consent_challenge');
-
-    if (consentChallenge === null) {
+  private async getGrant(
+    parameters: ConsentContextInteractionRequest | ConsentDecisionInteractionRequest
+  ): Promise<Grant> {
+    if (typeof parameters.consent_challenge === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "consent_challenge".');
     }
 
-    const grant = await this.grantService.findOneByConsentChallenge(consentChallenge);
+    const grant = await this.grantService.findOneByConsentChallenge(parameters.consent_challenge);
 
     if (grant === null) {
       throw new AccessDeniedException('Invalid Consent Challenge.');
@@ -123,18 +125,16 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @param parameters Parameters of the Interaction Request.
    * @returns Consent Decision provided by the Client.
    */
-  private getDecision(parameters: URLSearchParams): ConsentDecision {
-    const decision = parameters.get('decision');
-
-    if (decision === null) {
+  private getDecision(parameters: ConsentDecisionInteractionRequest): ConsentDecision {
+    if (typeof parameters.decision === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "decision".');
     }
 
-    if (decision !== 'accept' && decision !== 'deny') {
-      throw new InvalidRequestException(`Unsupported decision "${decision}".`);
+    if (parameters.decision !== 'accept' && parameters.decision !== 'deny') {
+      throw new InvalidRequestException(`Unsupported decision "${parameters.decision}".`);
     }
 
-    return decision as ConsentDecision;
+    return parameters.decision;
   }
 
   /**
@@ -143,17 +143,15 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @param parameters Parameters of the Interaction Request.
    * @returns Scopes grated by the End User.
    */
-  private getGrantedScopes(parameters: URLSearchParams, grant: Grant): string[] {
-    const grantScope = parameters.get('grant_scope');
-
-    if (grantScope === null) {
+  private getGrantedScopes(parameters: ConsentDecisionAcceptInteractionRequest, grant: Grant): string[] {
+    if (typeof parameters.grant_scope === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "grant_scope".');
     }
 
-    this.scopeHandler.checkRequestedScope(grantScope);
+    this.scopeHandler.checkRequestedScope(parameters.grant_scope);
 
     const requestedScopes = grant.parameters.scope.split(' ');
-    const grantedScopes = grantScope.split(' ');
+    const grantedScopes = parameters.grant_scope.split(' ');
 
     grantedScopes.forEach((grantedScope) => {
       if (!requestedScopes.includes(grantedScope)) {
@@ -170,21 +168,18 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @param parameters Parameters of the Interaction Request.
    * @returns Error object based on the Error Parameters provided by the Client.
    */
-  private getError(parameters: URLSearchParams): OAuth2Exception {
-    const error = parameters.get('error');
-    const errorDescription = parameters.get('error_description');
-
-    if (error === null) {
+  private getError(parameters: ConsentDecisionDenyInteractionRequest): OAuth2Exception {
+    if (typeof parameters.error === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "error".');
     }
 
-    if (errorDescription === null) {
+    if (typeof parameters.error_description === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "error_description".');
     }
 
     const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
-      Reflect.construct(OAuth2Exception, [errorDescription]),
-      { error }
+      Reflect.construct(OAuth2Exception, [parameters.error_description]),
+      { error: parameters.error }
     );
 
     return exception;

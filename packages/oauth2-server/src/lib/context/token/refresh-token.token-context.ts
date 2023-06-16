@@ -1,10 +1,11 @@
 import { RefreshToken } from '../../entities/refresh-token.entity';
+import { RefreshTokenTokenRequest } from '../../requests/token/refresh-token.token-request';
 import { TokenContext } from './token-context';
 
 /**
  * Parameters of the **Refresh Token** Token Context.
  */
-export interface RefreshTokenTokenContext extends TokenContext {
+export interface RefreshTokenTokenContext extends TokenContext<RefreshTokenTokenRequest> {
   /**
    * Refresh Token provided by the Client.
    */

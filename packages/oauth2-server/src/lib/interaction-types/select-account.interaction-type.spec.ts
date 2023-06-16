@@ -1,7 +1,4 @@
-import { URLSearchParams } from 'url';
-
 import { DependencyInjectionContainer } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { SelectAccountContextInteractionContext } from '../context/interaction/select-account-context.interaction-context';
 import { SelectAccountDecisionInteractionContext } from '../context/interaction/select-account-decision.interaction-context';
@@ -17,6 +14,7 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 import { SelectAccountInteractionType } from './select-account.interaction-type';
@@ -177,12 +175,12 @@ describe('Select Account Interaction Type', () => {
     });
 
     it('should return a valid first time select account decision interaction response.', async () => {
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(
         interactionType.handleDecision(context)
       ).resolves.toStrictEqual<SelectAccountDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
@@ -199,12 +197,12 @@ describe('Select Account Interaction Type', () => {
     it('should return a valid subsequent select account decision interaction response.', async () => {
       Reflect.set(context.grant, 'interactions', ['select_account']);
 
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(
         interactionType.handleDecision(context)
       ).resolves.toStrictEqual<SelectAccountDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(sessionServiceMock.save).not.toHaveBeenCalled();

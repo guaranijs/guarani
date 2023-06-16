@@ -3,7 +3,6 @@ import { OutgoingHttpHeaders } from 'http';
 import { Injectable, InjectAll } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 
-import { TokenContext } from '../context/token/token-context';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
@@ -71,7 +70,7 @@ export class TokenEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
-    const parameters = request.body as TokenRequest;
+    const parameters = request.form<TokenRequest>();
 
     try {
       const validator = this.getValidator(parameters);
@@ -100,8 +99,8 @@ export class TokenEndpoint implements EndpointInterface {
    * @param parameters Parameters of the Token Request.
    * @returns Token Request Validator.
    */
-  private getValidator(parameters: TokenRequest): TokenRequestValidator<TokenRequest, TokenContext<TokenRequest>> {
-    if (typeof parameters.grant_type !== 'string') {
+  private getValidator(parameters: TokenRequest): TokenRequestValidator {
+    if (typeof parameters.grant_type === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "grant_type".');
     }
 

@@ -5,6 +5,7 @@ import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
+import { getBodyParameters } from '../utils/get-body-parameters';
 import { ClientAuthenticationInterface } from './client-authentication.interface';
 import { ClientAuthentication } from './client-authentication.type';
 import { NoneClientAuthenticationParameters } from './none.client-authentication.parameters';
@@ -48,7 +49,9 @@ export class NoneClientAuthentication implements ClientAuthenticationInterface {
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
-    const { client_id: clientId, client_secret: clientSecret } = request.form<NoneClientAuthenticationParameters>();
+    const { client_id: clientId, client_secret: clientSecret } =
+      getBodyParameters<NoneClientAuthenticationParameters>(request);
+
     return typeof clientId === 'string' && typeof clientSecret === 'undefined';
   }
 
@@ -59,7 +62,7 @@ export class NoneClientAuthentication implements ClientAuthenticationInterface {
    * @returns Authenticated Client.
    */
   public async authenticate(request: HttpRequest): Promise<Client> {
-    const { client_id: clientId } = request.form<NoneClientAuthenticationParameters>();
+    const { client_id: clientId } = getBodyParameters<NoneClientAuthenticationParameters>(request);
 
     const client = await this.clientService.findOne(clientId);
 

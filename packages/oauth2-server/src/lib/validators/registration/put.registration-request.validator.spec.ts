@@ -1,8 +1,7 @@
-import { URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { PutRegistrationContext } from '../../context/registration/put.registration-context';
 import { AccessToken } from '../../entities/access-token.entity';
@@ -164,10 +163,9 @@ describe('Put Registration Request Validator', () => {
       queryData: Partial<PutQueryRegistrationRequest> = {},
       bodyData: Partial<PutBodyRegistrationRequest> = {}
     ): HttpRequest => {
-      queryParameters = removeNullishValues<PutQueryRegistrationRequest>(Object.assign(queryParameters, queryData));
-      bodyParameters = removeNullishValues<PutBodyRegistrationRequest>(Object.assign(bodyParameters, bodyData));
+      removeNullishValues<PutQueryRegistrationRequest>(Object.assign(queryParameters, queryData));
+      removeNullishValues<PutBodyRegistrationRequest>(Object.assign(bodyParameters, bodyData));
 
-      const query = new URLSearchParams(queryParameters as Record<string, OneOrMany<string>>);
       const body = JSON.stringify(bodyParameters);
 
       return new HttpRequest({
@@ -175,7 +173,7 @@ describe('Put Registration Request Validator', () => {
         cookies: {},
         headers: { 'content-type': 'application/json' },
         method: 'PUT',
-        url: new URL(`https://server.example.com/oauth/register?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/register?${stringifyQs(queryParameters)}`),
       });
     };
 
@@ -364,7 +362,7 @@ describe('Put Registration Request Validator', () => {
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<PutRegistrationContext>({
-        queryParameters: request.query,
+        queryParameters,
         bodyParameters,
         accessToken,
         client: accessToken.client!,

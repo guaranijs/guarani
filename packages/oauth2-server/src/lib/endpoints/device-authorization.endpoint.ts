@@ -38,7 +38,7 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
   /**
    * Path of the Endpoint.
    */
-  readonly path: string = '/oauth/device-authorization';
+  readonly path: string = '/oauth/device_authorization';
 
   /**
    * Http Methods supported by the Endpoint.

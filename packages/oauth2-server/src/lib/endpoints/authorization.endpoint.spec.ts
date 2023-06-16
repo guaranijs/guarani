@@ -1,5 +1,6 @@
+import { Buffer } from 'buffer';
 import { OutgoingHttpHeaders } from 'http';
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
@@ -23,6 +24,7 @@ import { InteractionType } from '../interaction-types/interaction-type.type';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseTypeInterface } from '../response-types/response-type.interface';
+import { ResponseType } from '../response-types/response-type.type';
 import { AuthorizationResponse } from '../responses/authorization/authorization-response';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
@@ -35,6 +37,7 @@ import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { Prompt } from '../types/prompt.type';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { AuthorizationRequestValidator } from '../validators/authorization/authorization-request.validator';
 import { AuthorizationEndpoint } from './authorization.endpoint';
 import { Endpoint } from './endpoint.type';
@@ -147,60 +150,57 @@ describe('Authorization Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let parameters: AuthorizationRequest;
+
+    const requestFactory = (data: Partial<AuthorizationRequest> = {}): HttpRequest => {
+      removeNullishValues<AuthorizationRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
+        cookies: {},
+        headers: {},
+        method: 'GET',
+        url: addParametersToUrl('https://server.example.com/oauth/authorize', parameters),
+      });
+    };
 
     beforeEach(() => {
       Reflect.deleteProperty(validatorMock, 'name');
 
-      request = new HttpRequest({
-        body: {},
-        cookies: {},
-        headers: {},
-        method: 'GET',
-        path: '/oauth/authorize',
-        query: <AuthorizationRequest>{
-          response_type: 'code',
-          client_id: 'client_id',
-          redirect_uri: 'https://client.example.com/oauth/callback',
-          scope: 'foo bar',
-          state: 'client_state',
-        },
-      });
+      parameters = {
+        response_type: 'code',
+        client_id: 'client_id',
+        redirect_uri: 'https://client.example.com/oauth/callback',
+        scope: 'foo bar',
+        state: 'client_state',
+      };
     });
 
     // #region Validator
     it('should redirect to the error endpoint when not providing a "response_type" parameter.', async () => {
-      delete request.query.response_type;
+      const request = requestFactory({ response_type: undefined });
 
       const error = new InvalidRequestException('Invalid parameter "response_type".');
-
-      const errorParameters = removeNullishValues<Dictionary<any>>(error.toJSON());
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
     });
 
     it('should redirect to the error endpoint when requesting an unsupported response type.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
-      request.query.response_type = 'unknown';
+      const request = requestFactory({ response_type: 'unknown' as ResponseType });
 
       const error = new UnsupportedResponseTypeException('Unsupported response_type "unknown".');
-
-      const errorParameters = removeNullishValues<Dictionary<any>>(error.toJSON());
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
     });
     // #endregion
 
@@ -208,10 +208,12 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the error endpoint if the client presents a grant not issued to itself.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       request.cookies['guarani:grant'] = 'grant_id';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -227,15 +229,15 @@ describe('Authorization Endpoint', () => {
 
       const error = new InvalidRequestException('Mismatching Client Identifier.');
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
@@ -244,10 +246,12 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the error endpoint if the grant is expired.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       request.cookies['guarani:grant'] = 'grant_id';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -264,15 +268,15 @@ describe('Authorization Endpoint', () => {
 
       const error = new InvalidRequestException('Expired Grant.');
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
@@ -281,10 +285,12 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the error endpoint if the initial parameters changed.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       request.cookies['guarani:grant'] = 'grant_id';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -302,15 +308,15 @@ describe('Authorization Endpoint', () => {
 
       const error = new InvalidRequestException('One or more parameters changed since the initial request.');
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
@@ -319,8 +325,10 @@ describe('Authorization Endpoint', () => {
     it('should reload the authorization endpoint if no session is found at the cookies.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -335,14 +343,12 @@ describe('Authorization Endpoint', () => {
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.create.mockResolvedValueOnce(session);
 
-      const parameters = new URLSearchParams(context.parameters as Dictionary<any>);
+      const location = addParametersToUrl('https://server.example.com/oauth/authorize', context.parameters);
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:session': session.id });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/authorize?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(sessionServiceMock.create).toHaveBeenCalledTimes(1);
     });
@@ -350,10 +356,12 @@ describe('Authorization Endpoint', () => {
     it('should reload the authorization endpoint if no session is found.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       request.cookies['guarani:session'] = 'invalid_session_id';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -370,14 +378,12 @@ describe('Authorization Endpoint', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(null);
       sessionServiceMock.create.mockResolvedValueOnce(session);
 
-      const parameters = new URLSearchParams(context.parameters as Dictionary<any>);
+      const location = addParametersToUrl('https://server.example.com/oauth/authorize', context.parameters);
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:session': session.id });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/authorize?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(sessionServiceMock.create).toHaveBeenCalledTimes(1);
     });
@@ -385,15 +391,15 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the registration endpoint if the prompt is "create" and it is not yet processed.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'create' });
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
-
-      request.query.prompt = 'create';
 
       const redirectUrl = 'https://server.example.com/auth/register';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -436,11 +442,12 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the error endpoint if the prompt is "select_account" and no login is registered at the session.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'select_account' });
+
       request.cookies['guarani:session'] = 'session_id';
-      request.query.prompt = 'select_account';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -458,27 +465,28 @@ describe('Authorization Endpoint', () => {
 
       const error = new LoginRequiredException();
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
     });
 
     it('should create a grant and redirect to the select account endpoint if the prompt is "select_account" and no grant is found.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'select_account' });
+
       request.cookies['guarani:session'] = 'session_id';
-      request.query.prompt = 'select_account';
 
       const redirectUrl = 'https://server.example.com/auth/select-account';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -521,15 +529,15 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the select account endpoint if the prompt is "select_account" and it is not yet processed.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'select_account' });
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
-
-      request.query.prompt = 'select_account';
 
       const redirectUrl = 'https://server.example.com/auth/select-account';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -572,11 +580,12 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the error endpoint when the prompt is "none" and no login is found.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'none' });
+
       request.cookies['guarani:session'] = 'session_id';
-      request.query.prompt = 'none';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -594,26 +603,28 @@ describe('Authorization Endpoint', () => {
 
       const error = new LoginRequiredException();
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
     });
 
     it('should create a grant and redirect to the login endpoint when no login is found.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
+
+      const request = requestFactory();
 
       request.cookies['guarani:session'] = 'session_id';
 
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -655,13 +666,15 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the login endpoint when no login is found.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -703,13 +716,13 @@ describe('Authorization Endpoint', () => {
     it('should remove the grant and redirect to the error endpoint when the prompt is "none" and the login is expired.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'none' });
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
-      request.query.prompt = 'none';
-
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -744,15 +757,15 @@ describe('Authorization Endpoint', () => {
 
       const error = new LoginRequiredException();
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
@@ -764,12 +777,12 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the error endpoint when the prompt is "none" and the login is expired.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'none' });
+
       request.cookies['guarani:session'] = 'session_id';
 
-      request.query.prompt = 'none';
-
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -793,16 +806,16 @@ describe('Authorization Endpoint', () => {
 
       const error = new LoginRequiredException();
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.remove).not.toHaveBeenCalled();
 
@@ -813,12 +826,14 @@ describe('Authorization Endpoint', () => {
     it('should create a grant and redirect to the login endpoint when the login is expired.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       request.cookies['guarani:session'] = 'session_id';
 
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -869,13 +884,15 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the login endpoint when the login is expired.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -926,14 +943,13 @@ describe('Authorization Endpoint', () => {
     it('should remove the grant and redirect to the error endpoint when the prompt is "none" and the login is older than the "max_age".', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'none', max_age: '86400' });
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
-      request.query.prompt = 'none';
-      request.query.max_age = '86400';
-
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -970,15 +986,15 @@ describe('Authorization Endpoint', () => {
 
       const error = new LoginRequiredException();
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
@@ -990,13 +1006,12 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the error endpoint when the prompt is "none" and the login is older than the "max_age".', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'none', max_age: '86400' });
+
       request.cookies['guarani:session'] = 'session_id';
 
-      request.query.prompt = 'none';
-      request.query.max_age = '86400';
-
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -1022,15 +1037,15 @@ describe('Authorization Endpoint', () => {
 
       const error = new LoginRequiredException();
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
       expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
@@ -1041,13 +1056,14 @@ describe('Authorization Endpoint', () => {
     it('should create a grant and redirect to the login endpoint when the login is older than the "max_age".', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ max_age: '86400' });
+
       request.cookies['guarani:session'] = 'session_id';
-      request.query.max_age = '86400';
 
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -1100,15 +1116,15 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the login endpoint when the login is older than the "max_age".', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ max_age: '86400' });
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
-
-      request.query.max_age = '86400';
 
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -1161,19 +1177,19 @@ describe('Authorization Endpoint', () => {
     it('should remove the grant and redirect to the error endpoint when the authenticated user does not match the user of "id_token_hint".', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ id_token_hint: 'header.payload.signature' });
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
-      request.query.id_token_hint = 'id_token_hint';
-
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
         prompts: <Prompt[]>[],
         maxAge: null,
-        idTokenHint: 'id_token_hint',
+        idTokenHint: 'header.payload.signature',
       };
 
       const login = <Login>{
@@ -1208,15 +1224,15 @@ describe('Authorization Endpoint', () => {
         'The currently authenticated User is not the one expected by the ID Token Hint.'
       );
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
@@ -1228,18 +1244,18 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the error endpoint when the authenticated user does not match the user of "id_token_hint".', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ id_token_hint: 'header.payload.signature' });
+
       request.cookies['guarani:session'] = 'session_id';
 
-      request.query.id_token_hint = 'id_token_hint';
-
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
         prompts: <Prompt[]>[],
         maxAge: null,
-        idTokenHint: 'id_token_hint',
+        idTokenHint: 'header.payload.signature',
       };
 
       const login = <Login>{
@@ -1263,15 +1279,15 @@ describe('Authorization Endpoint', () => {
         'The currently authenticated User is not the one expected by the ID Token Hint.'
       );
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.create).not.toHaveBeenCalled();
 
@@ -1282,13 +1298,14 @@ describe('Authorization Endpoint', () => {
     it('should create a grant and redirect to the login endpoint when the prompt is "login" and there is a previously authenticated user.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'login' });
+
       request.cookies['guarani:session'] = 'session_id';
-      request.query.prompt = 'login';
 
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -1342,15 +1359,15 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the login endpoint when the prompt is "login" and there is a previously authenticated user with an unfinished grant.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'login' });
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
-
-      request.query.prompt = 'login';
 
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         state: 'client_state',
         client: { id: 'client_id' },
@@ -1406,11 +1423,12 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the error endpoint when the prompt is "none" and no consent is found.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'none' });
+
       request.cookies['guarani:session'] = 'session_id';
-      request.query.prompt = 'none';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         state: 'client_state',
         client: { id: 'client_id' },
@@ -1438,28 +1456,28 @@ describe('Authorization Endpoint', () => {
 
       const error = new ConsentRequiredException();
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
     });
 
     it('should create a grant and redirect to the consent endpoint when no consent is found.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
-      request.cookies['guarani:session'] = 'session_id';
+      const request = requestFactory({ prompt: 'login' });
 
-      request.query.prompt = 'login';
+      request.cookies['guarani:session'] = 'session_id';
 
       const redirectUrl = 'https://server.example.com/auth/consent?consent_challenge=consent_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -1511,13 +1529,15 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the consent endpoint when no consent is found.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
       const redirectUrl = 'https://server.example.com/auth/consent?consent_challenge=consent_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -1570,11 +1590,12 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the error endpoint when the prompt is "none" and the consent is expired.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory({ prompt: 'none' });
+
       request.cookies['guarani:session'] = 'session_id';
-      request.query.prompt = 'none';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         state: 'client_state',
         client: { id: 'client_id' },
@@ -1607,26 +1628,28 @@ describe('Authorization Endpoint', () => {
 
       const error = new ConsentRequiredException();
 
-      const errorParameters = removeNullishValues<Dictionary<any>>({ ...error.toJSON(), state: 'client_state' });
-      const parameters = new URLSearchParams(errorParameters);
+      const location = addParametersToUrl(
+        'https://server.example.com/oauth/error',
+        Object.assign(error.toJSON(), { state: 'client_state' })
+      );
 
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
-        Location: `https://server.example.com/oauth/error?${parameters.toString()}`,
-      });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
     });
 
     it('should create a grant and redirect to the consent endpoint when the consent is expired.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
+
+      const request = requestFactory();
 
       request.cookies['guarani:session'] = 'session_id';
 
       const redirectUrl = 'https://server.example.com/auth/consent?consent_challenge=consent_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -1683,13 +1706,15 @@ describe('Authorization Endpoint', () => {
     it('should redirect to the consent endpoint when the consent is expired.', async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
       const redirectUrl = 'https://server.example.com/auth/consent?consent_challenge=consent_challenge';
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         client: { id: 'client_id' },
         state: 'client_state',
@@ -1748,18 +1773,17 @@ describe('Authorization Endpoint', () => {
     it("should remove the grant and redirect to the client's redirect uri with the authorization response.", async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
       const authorizationResponse: AuthorizationResponse = { code: 'code', state: 'client_state' };
 
-      const redirectUri = new URL('https://client.example.com/oauth/callback');
-      const parameters = new URLSearchParams(authorizationResponse);
-
-      redirectUri.search = parameters.toString();
+      const location = addParametersToUrl('https://client.example.com/oauth/callback', authorizationResponse);
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         responseType: <ResponseTypeInterface>{
           name: 'code',
@@ -1771,7 +1795,7 @@ describe('Authorization Endpoint', () => {
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
           name: 'query',
-          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(redirectUri)),
+          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(location)),
         },
         prompts: <Prompt[]>[],
         maxAge: null,
@@ -1813,7 +1837,7 @@ describe('Authorization Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: redirectUri.href });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
@@ -1823,18 +1847,20 @@ describe('Authorization Endpoint', () => {
       Reflect.set(validatorMock, 'name', 'code');
       Reflect.set(settings, 'enableAuthorizationResponseIssuerIdentifier', true);
 
+      const request = requestFactory();
+
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
       const authorizationResponse: AuthorizationResponse = { code: 'code', state: 'client_state' };
 
-      const redirectUri = new URL('https://client.example.com/oauth/callback');
-      const parameters = new URLSearchParams({ ...authorizationResponse, iss: settings.issuer });
-
-      redirectUri.search = parameters.toString();
+      const location = addParametersToUrl('https://client.example.com/oauth/callback', {
+        ...authorizationResponse,
+        iss: settings.issuer,
+      });
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         responseType: <ResponseTypeInterface>{
           name: 'code',
@@ -1846,7 +1872,7 @@ describe('Authorization Endpoint', () => {
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
           name: 'query',
-          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(redirectUri)),
+          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(location)),
         },
         prompts: <Prompt[]>[],
         maxAge: null,
@@ -1888,7 +1914,7 @@ describe('Authorization Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': null });
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: redirectUri.href });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
@@ -1899,17 +1925,16 @@ describe('Authorization Endpoint', () => {
     it("should redirect to the client's redirect uri with the authorization response.", async () => {
       Reflect.set(validatorMock, 'name', 'code');
 
+      const request = requestFactory();
+
       request.cookies['guarani:session'] = 'session_id';
 
       const authorizationResponse: AuthorizationResponse = { code: 'code', state: 'client_state' };
 
-      const redirectUri = new URL('https://client.example.com/oauth/callback');
-      const parameters = new URLSearchParams(authorizationResponse);
-
-      redirectUri.search = parameters.toString();
+      const location = addParametersToUrl('https://client.example.com/oauth/callback', authorizationResponse);
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         responseType: <ResponseTypeInterface>{
           name: 'code',
@@ -1921,7 +1946,7 @@ describe('Authorization Endpoint', () => {
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
           name: 'query',
-          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(redirectUri)),
+          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(location)),
         },
         prompts: <Prompt[]>[],
         maxAge: null,
@@ -1953,7 +1978,7 @@ describe('Authorization Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: redirectUri.href });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.remove).not.toHaveBeenCalled();
     });
@@ -1962,17 +1987,19 @@ describe('Authorization Endpoint', () => {
       Reflect.set(validatorMock, 'name', 'code');
       Reflect.set(settings, 'enableAuthorizationResponseIssuerIdentifier', true);
 
+      const request = requestFactory();
+
       request.cookies['guarani:session'] = 'session_id';
 
       const authorizationResponse: AuthorizationResponse = { code: 'code', state: 'client_state' };
 
-      const redirectUri = new URL('https://client.example.com/oauth/callback');
-      const parameters = new URLSearchParams({ ...authorizationResponse, iss: settings.issuer });
-
-      redirectUri.search = parameters.toString();
+      const location = addParametersToUrl('https://client.example.com/oauth/callback', {
+        ...authorizationResponse,
+        iss: settings.issuer,
+      });
 
       const context = <AuthorizationContext>{
-        parameters: request.query as AuthorizationRequest,
+        parameters,
         cookies: request.cookies,
         responseType: <ResponseTypeInterface>{
           name: 'code',
@@ -1984,7 +2011,7 @@ describe('Authorization Endpoint', () => {
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
           name: 'query',
-          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(redirectUri)),
+          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(location)),
         },
         prompts: <Prompt[]>[],
         maxAge: null,
@@ -2016,7 +2043,7 @@ describe('Authorization Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
-      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: redirectUri.href });
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
       expect(grantServiceMock.remove).not.toHaveBeenCalled();
 

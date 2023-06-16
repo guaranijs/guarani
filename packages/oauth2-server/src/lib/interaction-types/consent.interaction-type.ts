@@ -1,7 +1,6 @@
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { Inject, Injectable } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { ConsentContextInteractionContext } from '../context/interaction/consent-context.interaction-context';
 import { ConsentDecisionInteractionContext } from '../context/interaction/consent-decision.interaction-context';
@@ -20,6 +19,7 @@ import { GRANT_SERVICE } from '../services/grant.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { Prompt } from '../types/prompt.type';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
@@ -78,10 +78,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
     await this.checkGrant(grant);
 
-    const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/authorize', this.settings.issuer), grant.parameters);
 
     return {
       skip: grant.consent !== null,
@@ -150,10 +147,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
       await this.grantService.save(grant);
     }
 
-    const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/authorize', this.settings.issuer), grant.parameters);
 
     return { redirect_to: url.href };
   }
@@ -171,10 +165,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
 
     await this.grantService.remove(grant);
 
-    const url = new URL('/oauth/error', this.settings.issuer);
-    const searchParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/error', this.settings.issuer), error.toJSON());
 
     return { redirect_to: url.href };
   }

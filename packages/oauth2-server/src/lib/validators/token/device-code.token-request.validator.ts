@@ -1,5 +1,3 @@
-import { URLSearchParams } from 'url';
-
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { DeviceCodeTokenContext } from '../../context/token/device-code.token-context';
@@ -11,6 +9,7 @@ import { GRANT_TYPE } from '../../grant-types/grant-type.token';
 import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { HttpRequest } from '../../http/http.request';
+import { DeviceCodeTokenRequest } from '../../requests/token/device-code.token-request';
 import { DeviceCodeServiceInterface } from '../../services/device-code.service.interface';
 import { DEVICE_CODE_SERVICE } from '../../services/device-code.service.token';
 import { TokenRequestValidator } from './token-request.validator';
@@ -53,7 +52,7 @@ export class DeviceCodeTokenRequestValidator extends TokenRequestValidator<Devic
 
     const deviceCode = await this.getDeviceCode(parameters);
 
-    return { ...context, deviceCode };
+    return Object.assign(context, { deviceCode }) as DeviceCodeTokenContext;
   }
 
   /**
@@ -62,14 +61,12 @@ export class DeviceCodeTokenRequestValidator extends TokenRequestValidator<Devic
    * @param parameters Parameters of the Token Request.
    * @returns Device Code based on the provided Identifier.
    */
-  private async getDeviceCode(parameters: URLSearchParams): Promise<DeviceCode> {
-    const deviceCodeId = parameters.get('device_code');
-
-    if (deviceCodeId === null) {
+  private async getDeviceCode(parameters: DeviceCodeTokenRequest): Promise<DeviceCode> {
+    if (typeof parameters.device_code === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "device_code".');
     }
 
-    const deviceCode = await this.deviceCodeService.findOne(deviceCodeId);
+    const deviceCode = await this.deviceCodeService.findOne(parameters.device_code);
 
     if (deviceCode === null) {
       throw new InvalidGrantException('Invalid Device Code.');

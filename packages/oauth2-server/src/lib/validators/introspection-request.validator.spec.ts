@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { IntrospectionContext } from '../context/introspection-context';
 import { AccessToken } from '../entities/access-token.entity';
@@ -113,12 +113,10 @@ describe('Introspection Request Validator', () => {
     let parameters: IntrospectionRequest;
 
     const requestFactory = (data: Partial<IntrospectionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<IntrospectionRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<IntrospectionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -166,7 +164,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.form(),
+        parameters,
         client,
         token: null,
         tokenType: null,
@@ -191,7 +189,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.form(),
+        parameters,
         client,
         token: null,
         tokenType: null,
@@ -216,7 +214,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.form(),
+        parameters,
         client,
         token: null,
         tokenType: null,
@@ -242,7 +240,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.form(),
+        parameters,
         client,
         token: null,
         tokenType: null,
@@ -268,7 +266,7 @@ describe('Introspection Request Validator', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.form(),
+        parameters,
         client,
         token: null,
         tokenType: null,
@@ -288,7 +286,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.form(),
+        parameters,
         client,
         token: accessToken,
         tokenType: 'access_token',
@@ -306,7 +304,7 @@ describe('Introspection Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<IntrospectionContext>({
-        parameters: request.form(),
+        parameters,
         client,
         token: refreshToken,
         tokenType: 'refresh_token',

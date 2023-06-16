@@ -1,4 +1,6 @@
 import { OutgoingHttpHeaders } from 'http';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
@@ -69,29 +71,32 @@ describe('Introspection Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let parameters: IntrospectionRequest;
+
+    const requestFactory = (data: Partial<IntrospectionRequest> = {}): HttpRequest => {
+      removeNullishValues<IntrospectionRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/introspect'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <IntrospectionRequest>{ token: 'access_token' },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/introspect',
-        query: {},
-      });
-    });
-
-    afterEach(() => {
-      jest.resetAllMocks();
+      parameters = { token: 'access_token' };
     });
 
     it('should return an inactive token response when the client is not the owner of the token.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const token = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.body as IntrospectionRequest,
+        parameters,
         client,
         token,
         tokenType: 'access_token',
@@ -100,7 +105,6 @@ describe('Introspection Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(200);
-
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
@@ -113,11 +117,13 @@ describe('Introspection Endpoint', () => {
     });
 
     it('should return an inactive token response when the token is revoked.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const token = <AccessToken>{ handle: 'access_token', isRevoked: true, client };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.body as IntrospectionRequest,
+        parameters,
         client,
         token,
         tokenType: 'access_token',
@@ -126,7 +132,6 @@ describe('Introspection Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(200);
-
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
@@ -139,6 +144,8 @@ describe('Introspection Endpoint', () => {
     });
 
     it('should return an inactive token response when the token is not yet valid.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const token = <AccessToken>{
         handle: 'access_token',
@@ -148,7 +155,7 @@ describe('Introspection Endpoint', () => {
       };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.body as IntrospectionRequest,
+        parameters,
         client,
         token,
         tokenType: 'access_token',
@@ -157,7 +164,6 @@ describe('Introspection Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(200);
-
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
@@ -170,6 +176,8 @@ describe('Introspection Endpoint', () => {
     });
 
     it('should return an inactive token response when the token is expired.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const token = <AccessToken>{
         handle: 'access_token',
@@ -180,7 +188,7 @@ describe('Introspection Endpoint', () => {
       };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.body as IntrospectionRequest,
+        parameters,
         client,
         token,
         tokenType: 'access_token',
@@ -189,7 +197,6 @@ describe('Introspection Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(200);
-
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
@@ -202,6 +209,8 @@ describe('Introspection Endpoint', () => {
     });
 
     it('should return the metadata of the requested token.', async () => {
+      const request = requestFactory();
+
       const now = Date.now();
 
       const client = <Client>{ id: 'client_id', subjectType: 'public' };
@@ -219,7 +228,7 @@ describe('Introspection Endpoint', () => {
       };
 
       validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.body as IntrospectionRequest,
+        parameters,
         client,
         token,
         tokenType: 'access_token',
@@ -243,7 +252,6 @@ describe('Introspection Endpoint', () => {
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(200);
-
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({

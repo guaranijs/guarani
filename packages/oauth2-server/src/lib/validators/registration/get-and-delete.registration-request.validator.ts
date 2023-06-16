@@ -1,5 +1,4 @@
 import { timingSafeEqual } from 'crypto';
-import { URLSearchParams } from 'url';
 
 import { DeleteRegistrationContext } from '../../context/registration/delete.registration-context';
 import { GetRegistrationContext } from '../../context/registration/get.registration-context';
@@ -9,6 +8,8 @@ import { InvalidRequestException } from '../../exceptions/invalid-request.except
 import { InvalidTokenException } from '../../exceptions/invalid-token.exception';
 import { ClientAuthorizationHandler } from '../../handlers/client-authorization.handler';
 import { HttpRequest } from '../../http/http.request';
+import { DeleteRegistrationRequest } from '../../requests/registration/delete.registration-request';
+import { GetRegistrationRequest } from '../../requests/registration/get.registration-request';
 import { AccessTokenServiceInterface } from '../../services/access-token.service.interface';
 import { RegistrationRequestValidator } from './registration-request.validator';
 
@@ -40,7 +41,7 @@ export abstract class GetAndDeleteRegistrationRequestValidator<
    * @returns Dynamic Client Registration Context.
    */
   public async validate(request: HttpRequest): Promise<TContext> {
-    const parameters = request.query;
+    const parameters = request.query as GetRegistrationRequest | DeleteRegistrationRequest;
 
     const clientId = this.getClientId(parameters);
     const accessToken = await this.authorize(request, clientId, this.expectedScopes);
@@ -54,14 +55,12 @@ export abstract class GetAndDeleteRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Identifier of the Client of the Request.
    */
-  private getClientId(parameters: URLSearchParams): string {
-    const clientId = parameters.get('client_id');
-
-    if (clientId === null) {
+  private getClientId(parameters: GetRegistrationRequest | DeleteRegistrationRequest): string {
+    if (typeof parameters.client_id === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "client_id".');
     }
 
-    return clientId;
+    return parameters.client_id;
   }
 
   /**

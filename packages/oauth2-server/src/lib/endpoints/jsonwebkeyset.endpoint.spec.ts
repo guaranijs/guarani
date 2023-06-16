@@ -1,4 +1,5 @@
 import { OutgoingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { EllipticCurveKey, JsonWebKeySet, RsaKey } from '@guarani/jose';
@@ -68,12 +69,11 @@ describe('JSON Web Key Set Endpoint', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: {},
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/jwks',
-        query: {},
+        url: new URL('https://server.example.com/oauth/jwks'),
       });
     });
 

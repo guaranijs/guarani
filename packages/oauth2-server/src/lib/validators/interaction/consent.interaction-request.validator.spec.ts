@@ -1,9 +1,9 @@
 import { Buffer } from 'buffer';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { OneOrMany } from '@guarani/types';
 
 import { ConsentContextInteractionContext } from '../../context/interaction/consent-context.interaction-context';
 import { ConsentDecisionAcceptInteractionContext } from '../../context/interaction/consent-decision-accept.interaction-context';
@@ -21,6 +21,8 @@ import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { ConsentContextInteractionRequest } from '../../requests/interaction/consent-context.interaction-request';
 import { ConsentDecisionInteractionRequest } from '../../requests/interaction/consent-decision.interaction-request';
+import { ConsentDecisionAcceptInteractionRequest } from '../../requests/interaction/consent-decision-accept.interaction-request';
+import { ConsentDecisionDenyInteractionRequest } from '../../requests/interaction/consent-decision-deny.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { ConsentInteractionRequestValidator } from './consent.interaction-request.validator';
@@ -76,16 +78,14 @@ describe('Consent Interaction Request Validator', () => {
     let parameters: ConsentContextInteractionRequest;
 
     const requestFactory = (data: Partial<ConsentContextInteractionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<ConsentContextInteractionRequest>(Object.assign(parameters, data));
-
-      const query = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<ConsentContextInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
         body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        url: new URL(`https://server.example.com/oauth/interaction?${query.toString()}`),
+        url: new URL(`https://server.example.com/oauth/interaction?${stringifyQs(parameters)}`),
       });
     };
 
@@ -121,7 +121,7 @@ describe('Consent Interaction Request Validator', () => {
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<ConsentContextInteractionContext>({
-        parameters: request.query,
+        parameters,
         interactionType: interactionTypesMocks[0]!,
         grant,
       });
@@ -132,12 +132,10 @@ describe('Consent Interaction Request Validator', () => {
     let parameters: ConsentDecisionInteractionRequest;
 
     const requestFactory = (data: Partial<ConsentDecisionInteractionRequest> = {}): HttpRequest => {
-      parameters = removeNullishValues<ConsentDecisionInteractionRequest>(Object.assign(parameters, data));
-
-      const body = new URLSearchParams(parameters as Record<string, OneOrMany<string>>);
+      removeNullishValues<ConsentDecisionInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(body.toString(), 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -252,7 +250,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<ConsentDecisionAcceptInteractionContext>(
         {
-          parameters: request.form(),
+          parameters: parameters as ConsentDecisionAcceptInteractionRequest,
           interactionType: interactionTypesMocks[0]!,
           grant,
           decision: 'accept',
@@ -306,7 +304,7 @@ describe('Consent Interaction Request Validator', () => {
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<ConsentDecisionDenyInteractionContext>({
-        parameters: request.form(),
+        parameters: parameters as ConsentDecisionDenyInteractionRequest,
         interactionType: interactionTypesMocks[0]!,
         grant,
         decision: 'deny',

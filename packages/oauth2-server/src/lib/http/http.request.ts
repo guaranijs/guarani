@@ -71,6 +71,8 @@ export class HttpRequest {
     this.headers = parameters.headers;
     this.cookies = parameters.cookies;
     this.#body = parameters.body;
+
+    Reflect.setPrototypeOf(this.query, Object.prototype);
   }
 
   /**

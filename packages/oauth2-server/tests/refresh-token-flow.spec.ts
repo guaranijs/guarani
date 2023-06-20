@@ -1,8 +1,6 @@
-import express, { Application, urlencoded } from 'express';
+import express, { Application, raw } from 'express';
+import { stringify as stringifyQs } from 'querystring';
 import request from 'supertest';
-import { URLSearchParams } from 'url';
-
-import { Dictionary } from '@guarani/types';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
@@ -17,7 +15,7 @@ describe('Refresh Token Flow', () => {
   beforeAll(async () => {
     app = express();
 
-    app.use(urlencoded({ extended: false }));
+    app.use(raw({ type: '*/*' }));
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,
@@ -37,12 +35,12 @@ describe('Refresh Token Flow', () => {
       password: 'secretpassword',
     };
 
-    const accessTokenRequestBody = new URLSearchParams(accessTokenRequestData as Dictionary<any>);
+    const accessTokenRequestBody = stringifyQs(accessTokenRequestData);
 
     const accessTokenResponse = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
-      .send(accessTokenRequestBody.toString());
+      .send(accessTokenRequestBody);
 
     expect(accessTokenResponse.status).toEqual(200);
 
@@ -63,12 +61,12 @@ describe('Refresh Token Flow', () => {
       refresh_token: refreshToken,
     };
 
-    const refreshTokenRequestBody = new URLSearchParams(refreshTokenRequestData as Dictionary<any>);
+    const refreshTokenRequestBody = stringifyQs(refreshTokenRequestData);
 
     const refreshTokenResponse = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
-      .send(refreshTokenRequestBody.toString());
+      .send(refreshTokenRequestBody);
 
     expect(refreshTokenResponse.status).toEqual(200);
 

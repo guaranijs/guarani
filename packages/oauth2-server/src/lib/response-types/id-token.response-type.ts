@@ -5,7 +5,6 @@ import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
-import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { IdTokenAuthorizationResponse } from '../responses/authorization/id-token.authorization-response';
 import { ResponseTypeInterface } from './response-type.interface';
@@ -47,25 +46,24 @@ export class IdTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns an ID Token Response to the Client.
    *
-   * @param context Authorization Request Context.
+   * @param _context Authorization Request Context.
    * @param login Login with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns ID Token Response.
    */
   public async handle(
-    context: AuthorizationContext<AuthorizationRequest>,
+    _context: AuthorizationContext,
     login: Login,
     consent: Consent
   ): Promise<IdTokenAuthorizationResponse> {
-    const { parameters } = context;
     const { scopes } = consent;
 
     if (!scopes.includes('openid')) {
       throw new InvalidRequestException('Missing required scope "openid".');
     }
 
-    const idToken = await this.idTokenHandler.generateIdToken(parameters, login, consent, null, null);
+    const idToken = await this.idTokenHandler.generateIdToken(login, consent, null, null, null, null);
 
-    return { id_token: idToken, state: parameters.state };
+    return { id_token: idToken };
   }
 }

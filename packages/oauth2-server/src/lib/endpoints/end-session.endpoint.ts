@@ -1,11 +1,10 @@
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 import { isDeepStrictEqual } from 'util';
 
 import { Inject, Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
-import { Dictionary, Nullable } from '@guarani/types';
+import { Nullable } from '@guarani/types';
 
 import { EndSessionContext } from '../context/end-session-context';
 import { Client } from '../entities/client.entity';
@@ -25,6 +24,7 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { EndSessionRequestValidator } from '../validators/end-session-request.validator';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
@@ -95,7 +95,7 @@ export class EndSessionEndpoint implements EndpointInterface {
       context = await this.validator.validate(request);
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc);
-      return this.handleFatalEndSessionError(error, null);
+      return this.handleFatalEndSessionError(error);
     }
 
     let logoutTicket: Nullable<LogoutTicket> = null;
@@ -122,7 +122,8 @@ export class EndSessionEndpoint implements EndpointInterface {
         return this.redirectToLogoutPage(logoutTicket);
       }
 
-      const response = new HttpResponse().redirect(postLogoutRedirectUri ?? this.settings.postLogoutUrl!);
+      const url = addParametersToUrl(postLogoutRedirectUri ?? new URL(this.settings.postLogoutUrl!), { state });
+      const response = new HttpResponse().redirect(url);
 
       if (session === null) {
         response.setCookie('guarani:session', null);
@@ -136,7 +137,7 @@ export class EndSessionEndpoint implements EndpointInterface {
       return response;
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc);
-      const response = this.handleFatalEndSessionError(error, state);
+      const response = this.handleFatalEndSessionError(error);
 
       if (logoutTicket !== null) {
         await this.logoutTicketService.remove(logoutTicket);
@@ -212,10 +213,9 @@ export class EndSessionEndpoint implements EndpointInterface {
    * @returns Http Redirect Response to the Logout Page.
    */
   private redirectToLogoutPage(logoutTicket: LogoutTicket): HttpResponse {
-    const url = new URL(this.settings.userInteraction!.logoutUrl, this.settings.issuer);
-    const parameters = new URLSearchParams({ logout_challenge: logoutTicket.logoutChallenge });
-
-    url.search = parameters.toString();
+    const url = addParametersToUrl(new URL(this.settings.userInteraction!.logoutUrl, this.settings.issuer), {
+      logout_challenge: logoutTicket.logoutChallenge,
+    });
 
     return new HttpResponse().setCookie('guarani:logout', logoutTicket.id).redirect(url);
   }
@@ -242,17 +242,11 @@ export class EndSessionEndpoint implements EndpointInterface {
    * @param state State of the Client prior to the End Session Request.
    * @returns Http Response.
    */
-  private handleFatalEndSessionError(error: OAuth2Exception, state: Nullable<string>): HttpResponse {
-    const responseParameters: Dictionary<any> = error.toJSON();
-
-    if (state !== null) {
-      responseParameters.state = state;
-    }
-
-    const url = new URL(this.settings.userInteraction!.errorUrl, this.settings.issuer);
-    const parameters = new URLSearchParams(removeNullishValues(responseParameters));
-
-    url.search = parameters.toString();
+  private handleFatalEndSessionError(error: OAuth2Exception): HttpResponse {
+    const url = addParametersToUrl(
+      new URL(this.settings.userInteraction!.errorUrl, this.settings.issuer),
+      error.toJSON()
+    );
 
     return new HttpResponse().redirect(url.href);
   }

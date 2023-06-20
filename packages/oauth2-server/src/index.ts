@@ -2,6 +2,11 @@ if (Reflect == null || !('getMetadata' in Reflect)) {
   throw new Error('@guarani/oauth2-server requires a Reflect Metadata polyfill.');
 }
 
+// Assertions
+export { ClientAssertionParameters } from './lib/assertions/client-assertion.parameters';
+export { ClientAssertion } from './lib/assertions/client-assertion.type';
+export { JwtBearerClientAssertionParameters } from './lib/assertions/jwt-bearer.client-assertion.parameters';
+
 // Authorization Server
 export { AuthorizationServer } from './lib/authorization-server';
 
@@ -13,11 +18,15 @@ export { expressAuthorizationServer } from './lib/backends/express/express.middl
 export { ClientAuthenticationInterface } from './lib/client-authentication/client-authentication.interface';
 export { CLIENT_AUTHENTICATION } from './lib/client-authentication/client-authentication.token';
 export { ClientAuthentication } from './lib/client-authentication/client-authentication.type';
+export { ClientSecretPostClientAuthenticationParameters } from './lib/client-authentication/client-secret-post.client-authentication.parameters';
+export { NoneClientAuthenticationParameters } from './lib/client-authentication/none.client-authentication.parameters';
 
 // Client Authorization
 export { ClientAuthorizationInterface } from './lib/client-authorization/client-authorization.interface';
 export { CLIENT_AUTHORIZATION } from './lib/client-authorization/client-authorization.token';
 export { ClientAuthorization } from './lib/client-authorization/client-authorization.type';
+export { FormEncodedBodyClientAuthorizationParameters } from './lib/client-authorization/form-encoded-body.client-authorization.parameters';
+export { UriQueryClientAuthorizationParameters } from './lib/client-authorization/uri-query.client-authorization.parameters';
 
 // Context
 export { AuthorizationContext } from './lib/context/authorization/authorization-context';
@@ -102,6 +111,7 @@ export { UnauthorizedClientException } from './lib/exceptions/unauthorized-clien
 export { UnmetAuthenticationRequirementsException } from './lib/exceptions/unmet-authentication-requirements.exception';
 export { UnsupportedGrantTypeException } from './lib/exceptions/unsupported-grant-type.exception';
 export { UnsupportedInteractionTypeException } from './lib/exceptions/unsupported-interaction-type.exception';
+export { UnsupportedMediaTypeException } from './lib/exceptions/unsupported-media-type.exception';
 export { UnsupportedResponseTypeException } from './lib/exceptions/unsupported-response-type.exception';
 export { UnsupportedTokenTypeException } from './lib/exceptions/unsupported-token-type.exception';
 
@@ -270,6 +280,6 @@ export { DeviceAuthorizationRequestValidator } from './lib/validators/device-aut
 export { EndSessionRequestValidator } from './lib/validators/end-session-request.validator';
 export { InteractionRequestValidator } from './lib/validators/interaction/interaction-request.validator';
 export { IntrospectionRequestValidator } from './lib/validators/introspection-request.validator';
-export { RegistrationRequestValidator } from './lib/validators/registration-request.validator';
+export { RegistrationRequestValidator } from './lib/validators/registration/registration-request.validator';
 export { RevocationRequestValidator } from './lib/validators/revocation-request.validator';
 export { TokenRequestValidator } from './lib/validators/token/token-request.validator';

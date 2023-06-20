@@ -92,7 +92,8 @@ import { EndSessionRequestValidator } from '../validators/end-session-request.va
 import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
 import { interactionRequestValidatorsRegistry } from '../validators/interaction/interaction-request.validator.registry';
 import { IntrospectionRequestValidator } from '../validators/introspection-request.validator';
-import { RegistrationRequestValidator } from '../validators/registration-request.validator';
+import { RegistrationRequestValidator } from '../validators/registration/registration-request.validator';
+import { registrationRequestValidatorsRegistry } from '../validators/registration/registration-request.validator.registry';
 import { RevocationRequestValidator } from '../validators/revocation-request.validator';
 import { TokenRequestValidator } from '../validators/token/token-request.validator';
 import { tokenRequestValidatorsRegistry } from '../validators/token/token-request.validator.registry';
@@ -190,7 +191,7 @@ export class AuthorizationServerFactory {
       idTokenKeyWrapAlgorithms: this.authorizationServerOptions.idTokenKeyWrapAlgorithms,
       idTokenContentEncryptionAlgorithms: this.authorizationServerOptions.idTokenContentEncryptionAlgorithms,
       jwks:
-        this.authorizationServerOptions.jwks !== undefined
+        typeof this.authorizationServerOptions.jwks !== 'undefined'
           ? await JsonWebKeySet.load(this.authorizationServerOptions.jwks)
           : undefined,
       userInteraction: this.authorizationServerOptions.userInteraction,
@@ -329,7 +330,7 @@ export class AuthorizationServerFactory {
   private static setJsonWebKeySet(): void {
     const { jwks } = this.settings;
 
-    if (jwks === undefined) {
+    if (typeof jwks === 'undefined') {
       return;
     }
 
@@ -410,7 +411,9 @@ export class AuthorizationServerFactory {
     }
 
     if (this.authorizationServerOptions.enableRegistrationEndpoint === true) {
-      this.container.bind(RegistrationRequestValidator).toSelf().asSingleton();
+      Object.values(registrationRequestValidatorsRegistry).forEach((validator) => {
+        this.container.bind(RegistrationRequestValidator).toClass(validator).asSingleton();
+      });
     }
 
     if (this.settings.grantTypes.includes('urn:ietf:params:oauth:grant-type:device_code')) {
@@ -484,7 +487,7 @@ export class AuthorizationServerFactory {
    * Defines the Consent Service used by the Authorization Server.
    */
   private static setConsentService(): void {
-    if (this.settings.userInteraction === undefined) {
+    if (typeof this.settings.userInteraction === 'undefined') {
       return;
     }
 
@@ -518,7 +521,7 @@ export class AuthorizationServerFactory {
    * Defines the Session Service used by the Authorization Server.
    */
   private static setSessionService(): void {
-    if (this.settings.userInteraction === undefined) {
+    if (typeof this.settings.userInteraction === 'undefined') {
       return;
     }
 
@@ -535,7 +538,7 @@ export class AuthorizationServerFactory {
    * Defines the Grant Service used by the Authorization Server.
    */
   private static setGrantService(): void {
-    if (this.settings.userInteraction === undefined) {
+    if (typeof this.settings.userInteraction === 'undefined') {
       return;
     }
 
@@ -567,7 +570,7 @@ export class AuthorizationServerFactory {
    * Defines the Login Service used by the Authorization Server.
    */
   private static setLoginService(): void {
-    if (this.settings.userInteraction === undefined) {
+    if (typeof this.settings.userInteraction === 'undefined') {
       return;
     }
 
@@ -584,7 +587,7 @@ export class AuthorizationServerFactory {
    * Defines the Logout Ticket Service used by the Authorization Server.
    */
   private static setLogoutTicketService(): void {
-    if (this.settings.userInteraction === undefined) {
+    if (typeof this.settings.userInteraction === 'undefined') {
       return;
     }
 

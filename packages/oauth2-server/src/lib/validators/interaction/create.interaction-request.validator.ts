@@ -20,9 +20,7 @@ import { InteractionRequestValidator } from './interaction-request.validator';
  */
 @Injectable()
 export class CreateInteractionRequestValidator extends InteractionRequestValidator<
-  CreateContextInteractionRequest,
   CreateContextInteractionContext,
-  CreateDecisionInteractionRequest,
   CreateDecisionInteractionContext
 > {
   /**
@@ -50,13 +48,13 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<CreateContextInteractionContext> {
-    const parameters = request.query as CreateContextInteractionRequest;
-
     const context = await super.validateContext(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
 
-    return { ...context, grant };
+    return Object.assign(context, { grant }) as CreateContextInteractionContext;
   }
 
   /**
@@ -66,13 +64,13 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(request: HttpRequest): Promise<CreateDecisionInteractionContext> {
-    const parameters = request.body as CreateDecisionInteractionRequest;
-
     const context = await super.validateDecision(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
 
-    return { ...context, grant };
+    return Object.assign(context, { grant }) as CreateDecisionInteractionContext;
   }
 
   /**
@@ -84,7 +82,7 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
   private async getGrant(
     parameters: CreateContextInteractionRequest | CreateDecisionInteractionRequest
   ): Promise<Grant> {
-    if (typeof parameters.login_challenge !== 'string') {
+    if (typeof parameters.login_challenge === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "login_challenge".');
     }
 

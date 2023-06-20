@@ -1,4 +1,4 @@
-import { Dictionary } from '@guarani/types';
+import { Json } from '@guarani/types';
 
 import { InteractionContext } from '../context/interaction/interaction-context';
 import { InteractionType } from './interaction-type.type';
@@ -18,7 +18,7 @@ export interface InteractionTypeInterface {
    * @param context Interaction Context Request Context.
    * @returns Interaction Context Response.
    */
-  handleContext(context: InteractionContext): Promise<Dictionary<unknown>>;
+  handleContext(context: InteractionContext): Promise<Json>;
 
   /**
    * Handles the Decision Flow of the Interaction.
@@ -26,5 +26,5 @@ export interface InteractionTypeInterface {
    * @param context Interaction Decision Request Context.
    * @returns Interaction Decision Response.
    */
-  handleDecision(context: InteractionContext): Promise<Dictionary<unknown>>;
+  handleDecision(context: InteractionContext): Promise<Json>;
 }

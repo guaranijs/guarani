@@ -1,4 +1,5 @@
 import { Request, RequestHandler, Response, Router } from 'express';
+import { URL } from 'url';
 
 import { Injectable } from '@guarani/di';
 
@@ -54,8 +55,7 @@ export class ExpressBackend extends AuthorizationServer {
   private _createOAuth2Request(request: Request): HttpRequest {
     return new HttpRequest({
       method: <HttpMethod>request.method.toUpperCase(),
-      path: request.path,
-      query: request.query,
+      url: new URL(`${request.protocol}://${request.get('host')}${request.originalUrl}`),
       headers: request.headers,
       cookies: request.signedCookies,
       body: request.body,

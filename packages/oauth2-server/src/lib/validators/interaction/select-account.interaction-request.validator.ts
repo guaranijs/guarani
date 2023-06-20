@@ -26,9 +26,7 @@ import { InteractionRequestValidator } from './interaction-request.validator';
  */
 @Injectable()
 export class SelectAccountInteractionRequestValidator extends InteractionRequestValidator<
-  SelectAccountContextInteractionRequest,
   SelectAccountContextInteractionContext,
-  SelectAccountDecisionInteractionRequest,
   SelectAccountDecisionInteractionContext
 > {
   /**
@@ -60,14 +58,14 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<SelectAccountContextInteractionContext> {
-    const parameters = request.query as SelectAccountContextInteractionRequest;
-
     const context = await super.validateContext(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
     const session = await this.getSession(parameters);
 
-    return { ...context, grant, session };
+    return Object.assign(context, { grant, session }) as SelectAccountContextInteractionContext;
   }
 
   /**
@@ -77,34 +75,14 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(request: HttpRequest): Promise<SelectAccountDecisionInteractionContext> {
-    const parameters = request.body as SelectAccountDecisionInteractionRequest;
-
     const context = await super.validateDecision(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
     const login = await this.getLogin(parameters);
 
-    return { ...context, grant, login };
-  }
-
-  /**
-   * Fetches a Session based on the Identifier provided by the Client..
-   *
-   * @param parameters Parameters of the Interaction Request.
-   * @returns Session based on the Identifier provided by the Client.
-   */
-  private async getSession(parameters: SelectAccountContextInteractionRequest): Promise<Session> {
-    if (typeof parameters.session_id !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "session_id".');
-    }
-
-    const session = await this.sessionService.findOne(parameters.session_id);
-
-    if (session === null) {
-      throw new AccessDeniedException('Invalid Session Identifier.');
-    }
-
-    return session;
+    return Object.assign(context, { grant, login }) as SelectAccountDecisionInteractionContext;
   }
 
   /**
@@ -116,7 +94,7 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
   private async getGrant(
     parameters: SelectAccountContextInteractionRequest | SelectAccountDecisionInteractionRequest
   ): Promise<Grant> {
-    if (typeof parameters.login_challenge !== 'string') {
+    if (typeof parameters.login_challenge === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "login_challenge".');
     }
 
@@ -130,13 +108,33 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
   }
 
   /**
+   * Fetches a Session based on the Identifier provided by the Client..
+   *
+   * @param parameters Parameters of the Interaction Request.
+   * @returns Session based on the Identifier provided by the Client.
+   */
+  private async getSession(parameters: SelectAccountContextInteractionRequest): Promise<Session> {
+    if (typeof parameters.session_id === 'undefined') {
+      throw new InvalidRequestException('Invalid parameter "session_id".');
+    }
+
+    const session = await this.sessionService.findOne(parameters.session_id);
+
+    if (session === null) {
+      throw new AccessDeniedException('Invalid Session Identifier.');
+    }
+
+    return session;
+  }
+
+  /**
    * Fetches the requested Login from the application's storage.
    *
    * @param parameters Parameters of the Interaction Request.
    * @returns Login based on the provided Identifier.
    */
   private async getLogin(parameters: SelectAccountDecisionInteractionRequest): Promise<Login> {
-    if (typeof parameters.login_id !== 'string') {
+    if (typeof parameters.login_id === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "login_id".');
     }
 

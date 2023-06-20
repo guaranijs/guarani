@@ -1,3 +1,9 @@
+import { Buffer } from 'buffer';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
+
+import { removeNullishValues } from '@guarani/primitives';
+
 import { InteractionContext } from '../../context/interaction/interaction-context';
 import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
@@ -17,44 +23,58 @@ describe('Interaction Request Validator', () => {
   });
 
   describe('validateContext()', () => {
-    let request: HttpRequest;
+    let parameters: InteractionRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<InteractionRequest> = {}): HttpRequest => {
+      removeNullishValues<InteractionRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/interaction',
-        query: <InteractionRequest>{ interaction_type: 'login' },
+        url: new URL(`https://server.example.com/oauth/interaction?${stringifyQs(parameters)}`),
       });
+    };
+
+    beforeEach(() => {
+      parameters = { interaction_type: 'login' };
     });
 
     it('should return a context interaction context.', async () => {
+      const request = requestFactory();
+
       await expect(validator.validateContext(request)).resolves.toStrictEqual<InteractionContext>({
-        parameters: request.query as InteractionRequest,
+        parameters,
         interactionType: interactionTypesMocks[1]!,
       });
     });
   });
 
   describe('validateDecision()', () => {
-    let request: HttpRequest;
+    let parameters: InteractionRequest;
+
+    const requestFactory = (data: Partial<InteractionRequest> = {}): HttpRequest => {
+      removeNullishValues<InteractionRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/interaction'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <InteractionRequest>{ interaction_type: 'consent' },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/interaction',
-        query: {},
-      });
+      parameters = { interaction_type: 'consent' };
     });
 
     it('should return a decision interaction context.', async () => {
+      const request = requestFactory();
+
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<InteractionContext>({
-        parameters: request.body as InteractionRequest,
+        parameters,
         interactionType: interactionTypesMocks[0]!,
       });
     });

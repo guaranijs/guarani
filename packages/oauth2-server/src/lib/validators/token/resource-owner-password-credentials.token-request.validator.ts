@@ -20,10 +20,7 @@ import { TokenRequestValidator } from './token-request.validator';
  * Implementation of the **Resource Owner Password Credentials** Token Request Validator.
  */
 @Injectable()
-export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends TokenRequestValidator<
-  ResourceOwnerPasswordCredentialsTokenRequest,
-  ResourceOwnerPasswordCredentialsTokenContext
-> {
+export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends TokenRequestValidator<ResourceOwnerPasswordCredentialsTokenContext> {
   /**
    * Name of the Grant Type that uses this Validator.
    */
@@ -59,14 +56,14 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<ResourceOwnerPasswordCredentialsTokenContext> {
-    const parameters = request.body as ResourceOwnerPasswordCredentialsTokenRequest;
-
     const context = await super.validate(request);
+
+    const { parameters } = context;
 
     const user = await this.getUser(parameters);
     const scopes = this.getScopes(parameters, context.client);
 
-    return { ...context, user, scopes };
+    return Object.assign(context, { user, scopes }) as ResourceOwnerPasswordCredentialsTokenContext;
   }
 
   /**
@@ -76,11 +73,11 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * @returns User that matches the provided Credentials.
    */
   private async getUser(parameters: ResourceOwnerPasswordCredentialsTokenRequest): Promise<User> {
-    if (typeof parameters.username !== 'string') {
+    if (typeof parameters.username === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "username".');
     }
 
-    if (typeof parameters.password !== 'string') {
+    if (typeof parameters.password === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "password".');
     }
 
@@ -102,10 +99,6 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
    * @returns Scopes granted to the Client.
    */
   protected getScopes(parameters: ResourceOwnerPasswordCredentialsTokenRequest, client: Client): string[] {
-    if (typeof parameters.scope !== 'undefined' && typeof parameters.scope !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "scope".');
-    }
-
     this.scopeHandler.checkRequestedScope(parameters.scope ?? null);
     return this.scopeHandler.getAllowedScopes(client, parameters.scope ?? null);
   }

@@ -1,11 +1,11 @@
-import { Dictionary } from '@guarani/types';
+import { Dictionary, OneOrMany } from '@guarani/types';
 
 import { TokenTypeHint } from '../types/token-type-hint.type';
 
 /**
  * Parameters of the OAuth 2.0 Introspection Request.
  */
-export interface IntrospectionRequest extends Dictionary<any> {
+export interface IntrospectionRequest extends Dictionary<OneOrMany<string>> {
   /**
    * Token to be revoked.
    */

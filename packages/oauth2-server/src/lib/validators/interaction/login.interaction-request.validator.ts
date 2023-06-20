@@ -34,10 +34,8 @@ import { InteractionRequestValidator } from './interaction-request.validator';
  */
 @Injectable()
 export class LoginInteractionRequestValidator extends InteractionRequestValidator<
-  LoginContextInteractionRequest,
   LoginContextInteractionContext,
-  LoginDecisionInteractionRequest,
-  LoginDecisionInteractionContext
+  LoginDecisionInteractionContext<LoginDecision>
 > {
   /**
    * Name of the Interaction Type that uses this Validator.
@@ -68,13 +66,13 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<LoginContextInteractionContext> {
-    const parameters = request.query as LoginContextInteractionRequest;
-
     const context = await super.validateContext(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
 
-    return { ...context, grant };
+    return Object.assign(context, { grant }) as LoginContextInteractionContext;
   }
 
   /**
@@ -83,10 +81,12 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param request Http Request.
    * @returns Decision Interaction Context.
    */
-  public override async validateDecision(request: HttpRequest): Promise<LoginDecisionInteractionContext> {
-    const parameters = request.body as LoginDecisionInteractionRequest;
-
+  public override async validateDecision(
+    request: HttpRequest
+  ): Promise<LoginDecisionInteractionContext<LoginDecision>> {
     const context = await super.validateDecision(request);
+
+    const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
     const decision = this.getDecision(parameters);
@@ -95,16 +95,16 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
 
     switch (decision) {
       case 'accept': {
-        const user = await this.getUser(<LoginDecisionAcceptInteractionRequest>parameters, grant.client);
-        const amr = this.getAuthenticationMethods(<LoginDecisionAcceptInteractionRequest>parameters);
-        const acr = this.getAuthenticationContextClass(<LoginDecisionAcceptInteractionRequest>parameters);
+        const user = await this.getUser(parameters as LoginDecisionAcceptInteractionRequest, grant.client);
+        const amr = this.getAuthenticationMethods(parameters as LoginDecisionAcceptInteractionRequest);
+        const acr = this.getAuthenticationContextClass(parameters as LoginDecisionAcceptInteractionRequest);
 
-        return <LoginDecisionAcceptInteractionContext>{ ...context, user, amr, acr };
+        return Object.assign(context, { user, amr, acr }) as LoginDecisionAcceptInteractionContext;
       }
 
       case 'deny': {
-        const error = this.getError(<LoginDecisionDenyInteractionRequest>parameters);
-        return <LoginDecisionDenyInteractionContext>{ ...context, error };
+        const error = this.getError(parameters as LoginDecisionDenyInteractionRequest);
+        return Object.assign(context, { error }) as LoginDecisionDenyInteractionContext;
       }
     }
   }
@@ -116,7 +116,7 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns Grant based on the provided Login Challenge.
    */
   private async getGrant(parameters: LoginContextInteractionRequest | LoginDecisionInteractionRequest): Promise<Grant> {
-    if (typeof parameters.login_challenge !== 'string') {
+    if (typeof parameters.login_challenge === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "login_challenge".');
     }
 
@@ -136,7 +136,7 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns Login Decision provided by the Client.
    */
   private getDecision(parameters: LoginDecisionInteractionRequest): LoginDecision {
-    if (typeof parameters.decision !== 'string') {
+    if (typeof parameters.decision === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "decision".');
     }
 
@@ -154,7 +154,7 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns User based on the provided Subject Identifier.
    */
   private async getUser(parameters: LoginDecisionAcceptInteractionRequest, client: Client): Promise<User> {
-    if (typeof parameters.subject !== 'string') {
+    if (typeof parameters.subject === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "subject".');
     }
 
@@ -174,10 +174,6 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns Authentication Methods provided by the Client.
    */
   private getAuthenticationMethods(parameters: LoginDecisionAcceptInteractionRequest): string[] {
-    if (typeof parameters.amr !== 'undefined' && typeof parameters.amr !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "amr".');
-    }
-
     return parameters.amr?.split(' ') ?? [];
   }
 
@@ -188,10 +184,6 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns Authentication Context Class provided by the Client.
    */
   private getAuthenticationContextClass(parameters: LoginDecisionAcceptInteractionRequest): Nullable<string> {
-    if (typeof parameters.acr !== 'undefined' && typeof parameters.acr !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "acr".');
-    }
-
     return parameters.acr ?? null;
   }
 
@@ -202,19 +194,19 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns Error object based on the Error Parameters provided by the Client.
    */
   private getError(parameters: LoginDecisionDenyInteractionRequest): OAuth2Exception {
-    if (typeof parameters.error !== 'string') {
+    if (typeof parameters.error === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "error".');
     }
 
-    if (typeof parameters.error_description !== 'string') {
+    if (typeof parameters.error_description === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "error_description".');
     }
 
-    const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
+    const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
       Reflect.construct(OAuth2Exception, [parameters.error_description]),
       { error: parameters.error }
     );
 
-    return error;
+    return exception;
   }
 }

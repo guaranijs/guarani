@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { ConsentContextInteractionContext } from '../../context/interaction/consent-context.interaction-context';
 import { ConsentDecisionAcceptInteractionContext } from '../../context/interaction/consent-decision-accept.interaction-context';
@@ -12,6 +15,7 @@ import { InvalidScopeException } from '../../exceptions/invalid-scope.exception'
 import { OAuth2Exception } from '../../exceptions/oauth2.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { ConsentDecision } from '../../interaction-types/consent-decision.type';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
@@ -24,12 +28,6 @@ import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { ConsentInteractionRequestValidator } from './consent.interaction-request.validator';
 
 jest.mock('../../handlers/scope.handler');
-
-const invalidConsentChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidDecisions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidGrantedScopes: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidErrors: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidErrorDescriptions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Consent Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -77,35 +75,36 @@ describe('Consent Interaction Request Validator', () => {
   });
 
   describe('validateContext()', () => {
-    let request: HttpRequest;
+    let parameters: ConsentContextInteractionRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<ConsentContextInteractionRequest> = {}): HttpRequest => {
+      removeNullishValues<ConsentContextInteractionRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/interaction',
-        query: <ConsentContextInteractionRequest>{
-          interaction_type: 'consent',
-          consent_challenge: 'consent_challenge',
-        },
+        url: new URL(`https://server.example.com/oauth/interaction?${stringifyQs(parameters)}`),
       });
+    };
+
+    beforeEach(() => {
+      parameters = { interaction_type: 'consent', consent_challenge: 'consent_challenge' };
     });
 
-    it.each(invalidConsentChallenges)(
-      'should throw when providing an invalid "consent_challenge" parameter.',
-      async (consentChallenge) => {
-        request.query.consent_challenge = consentChallenge;
+    it('should throw when not providing the parameter "consent_challenge".', async () => {
+      const request = requestFactory({ consent_challenge: undefined });
 
-        await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "consent_challenge".'
-        );
-      }
-    );
+      await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "consent_challenge".'
+      );
+    });
 
     it('should throw when no grant is found.', async () => {
+      const request = requestFactory();
+
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(null);
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
@@ -115,12 +114,14 @@ describe('Consent Interaction Request Validator', () => {
     });
 
     it('should return a consent context interaction context.', async () => {
+      const request = requestFactory();
+
       const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<ConsentContextInteractionContext>({
-        parameters: request.query as ConsentContextInteractionRequest,
+        parameters,
         interactionType: interactionTypesMocks[0]!,
         grant,
       });
@@ -128,35 +129,39 @@ describe('Consent Interaction Request Validator', () => {
   });
 
   describe('validateDecision()', () => {
-    let request: HttpRequest;
+    let parameters: ConsentDecisionInteractionRequest;
+
+    const requestFactory = (data: Partial<ConsentDecisionInteractionRequest> = {}): HttpRequest => {
+      removeNullishValues<ConsentDecisionInteractionRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/interaction'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <ConsentDecisionInteractionRequest>{
-          interaction_type: 'consent',
-          consent_challenge: 'consent_challenge',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/interaction',
-        query: {},
-      });
+      parameters = <ConsentDecisionInteractionRequest>{
+        interaction_type: 'consent',
+        consent_challenge: 'consent_challenge',
+      };
     });
 
-    it.each(invalidConsentChallenges)(
-      'should throw when providing an invalid "consent_challenge" parameter.',
-      async (consentChallenge) => {
-        request.body.consent_challenge = consentChallenge;
+    it('should throw when not providing the parameter "consent_challenge".', async () => {
+      const request = requestFactory({ consent_challenge: undefined });
 
-        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "consent_challenge".'
-        );
-      }
-    );
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "consent_challenge".'
+      );
+    });
 
     it('should throw when no grant is found.', async () => {
+      const request = requestFactory();
+
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(null);
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
@@ -165,8 +170,8 @@ describe('Consent Interaction Request Validator', () => {
       );
     });
 
-    it.each(invalidDecisions)('should throw when providing an invalid "decision" parameter.', async (decision) => {
-      request.body.decision = decision;
+    it('should throw when not providing the parameter "decision".', async () => {
+      const request = requestFactory({ decision: undefined });
 
       const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
 
@@ -179,7 +184,7 @@ describe('Consent Interaction Request Validator', () => {
     });
 
     it('should throw when providing an unsupported decision.', async () => {
-      request.body.decision = 'unknown';
+      const request = requestFactory({ decision: 'unknown' as ConsentDecision });
 
       const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
 
@@ -192,24 +197,21 @@ describe('Consent Interaction Request Validator', () => {
     });
 
     // #region Accept Decision
-    it.each(invalidGrantedScopes)(
-      'should throw when providing an invalid "grant_scope" parameter.',
-      async (grantedScope) => {
-        Object.assign(request.body, { decision: 'accept', grant_scope: grantedScope });
+    it('should throw when not providing the parameter "grant_scope".', async () => {
+      const request = requestFactory({ decision: 'accept', grant_scope: undefined });
 
-        const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
+      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
 
-        grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
+      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
-        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "grant_scope".'
-        );
-      }
-    );
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "grant_scope".'
+      );
+    });
 
     it('should throw when requesting an unsupported scope.', async () => {
-      Object.assign(request.body, { decision: 'accept', grant_scope: 'foo bar unknown' });
+      const request = requestFactory({ decision: 'accept', grant_scope: 'foo bar unknown' });
 
       const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
 
@@ -225,7 +227,7 @@ describe('Consent Interaction Request Validator', () => {
     });
 
     it('should throw when granting a scope that was not previously requested.', async () => {
-      Object.assign(request.body, { decision: 'accept', grant_scope: 'foo bar baz' });
+      const request = requestFactory({ decision: 'accept', grant_scope: 'foo bar baz' });
 
       const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge', parameters: { scope: 'foo bar' } };
 
@@ -239,7 +241,7 @@ describe('Consent Interaction Request Validator', () => {
     });
 
     it('should return a consent decision accept interaction context.', async () => {
-      Object.assign(request.body, { decision: 'accept', grant_scope: 'foo bar' });
+      const request = requestFactory({ decision: 'accept', grant_scope: 'foo bar' });
 
       const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge', parameters: { scope: 'foo bar' } };
 
@@ -248,7 +250,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<ConsentDecisionAcceptInteractionContext>(
         {
-          parameters: request.body as ConsentDecisionAcceptInteractionRequest,
+          parameters: parameters as ConsentDecisionAcceptInteractionRequest,
           interactionType: interactionTypesMocks[0]!,
           grant,
           decision: 'accept',
@@ -259,8 +261,8 @@ describe('Consent Interaction Request Validator', () => {
     // #endregion
 
     // #region Deny Decision
-    it.each(invalidErrors)('should throw when providing an invalid "error" parameter.', async (error) => {
-      Object.assign(request.body, { decision: 'deny', error });
+    it('should throw when not providing the parameter "error".', async () => {
+      const request = requestFactory({ decision: 'deny', error: undefined });
 
       const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
 
@@ -272,24 +274,21 @@ describe('Consent Interaction Request Validator', () => {
       );
     });
 
-    it.each(invalidErrorDescriptions)(
-      'should throw when providing an invalid "error_description" parameter.',
-      async (errorDescription) => {
-        Object.assign(request.body, { decision: 'deny', error: 'consent_denied', error_description: errorDescription });
+    it('should throw when not providing the parameter "error_description".', async () => {
+      const request = requestFactory({ decision: 'deny', error: 'consent_denied', error_description: undefined });
 
-        const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
+      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
 
-        grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
+      grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
-        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "error_description".'
-        );
-      }
-    );
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "error_description".'
+      );
+    });
 
     it('should return a consent decision deny interaction context.', async () => {
-      Object.assign(request.body, {
+      const request = requestFactory({
         decision: 'deny',
         error: 'consent_denied',
         error_description: 'Lorem ipsum dolor sit amet...',
@@ -298,14 +297,14 @@ describe('Consent Interaction Request Validator', () => {
       const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
-        Reflect.construct(OAuth2Exception, [request.body.error_description as string]),
-        { error: request.body.error as string }
+        Reflect.construct(OAuth2Exception, [parameters.error_description as string]),
+        { error: parameters.error as string }
       );
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<ConsentDecisionDenyInteractionContext>({
-        parameters: request.body as ConsentDecisionDenyInteractionRequest,
+        parameters: parameters as ConsentDecisionDenyInteractionRequest,
         interactionType: interactionTypesMocks[0]!,
         grant,
         decision: 'deny',

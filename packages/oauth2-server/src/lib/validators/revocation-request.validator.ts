@@ -66,12 +66,10 @@ export class RevocationRequestValidator {
    * @returns Revocation Context.
    */
   public async validate(request: HttpRequest): Promise<RevocationContext> {
-    const parameters = request.body as RevocationRequest;
-
-    this.checkParameters(parameters);
+    const parameters = request.form<RevocationRequest>();
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
-    const tokenResult = await this.findToken(parameters.token, parameters.token_type_hint ?? null);
+    const tokenResult = await this.findToken(parameters);
 
     if (tokenResult === null || tokenResult.token.client === null) {
       return { client, parameters, token: null, tokenType: null };
@@ -81,37 +79,30 @@ export class RevocationRequestValidator {
   }
 
   /**
-   * Checks if the Parameters of the Revocation Request are valid.
+   * Searches the application's storage for a Token that satisfies the Token Handle provided by the Client.
    *
    * @param parameters Parameters of the Revocation Request.
+   * @returns Resulting Token and its type.
    */
-  private checkParameters(parameters: RevocationRequest): void {
-    const { token, token_type_hint: tokenTypeHint } = parameters;
-
-    if (typeof token !== 'string') {
+  private async findToken(parameters: RevocationRequest): Promise<Nullable<FindTokenResult>> {
+    if (typeof parameters.token === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "token".');
     }
 
-    if (typeof tokenTypeHint !== 'undefined' && !this.supportedTokenTypeHints.includes(tokenTypeHint)) {
-      throw new UnsupportedTokenTypeException(`Unsupported token_type_hint "${tokenTypeHint}".`);
+    if (
+      typeof parameters.token_type_hint !== 'undefined' &&
+      !this.supportedTokenTypeHints.includes(parameters.token_type_hint)
+    ) {
+      throw new UnsupportedTokenTypeException(`Unsupported token_type_hint "${parameters.token_type_hint}".`);
     }
-  }
 
-  /**
-   * Searches the application's storage for a Token that satisfies the Token Handle provided by the Client.
-   *
-   * @param handle Token Handle provided by the Client.
-   * @param tokenTypeHint Optional hint about the type of the Token.
-   * @returns Resulting Token and its type.
-   */
-  private async findToken(handle: string, tokenTypeHint: Nullable<TokenTypeHint>): Promise<Nullable<FindTokenResult>> {
-    switch (tokenTypeHint) {
+    switch (parameters.token_type_hint) {
       case 'refresh_token':
-        return (await this.findRefreshToken(handle)) ?? (await this.findAccessToken(handle));
+        return (await this.findRefreshToken(parameters.token)) ?? (await this.findAccessToken(parameters.token));
 
       case 'access_token':
       default:
-        return (await this.findAccessToken(handle)) ?? (await this.findRefreshToken(handle));
+        return (await this.findAccessToken(parameters.token)) ?? (await this.findRefreshToken(parameters.token));
     }
   }
 

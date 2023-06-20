@@ -42,10 +42,10 @@ export class EndSessionRequestValidator {
     const parameters = this.getEndSessionParameters(request);
     const cookies = request.cookies;
 
-    const state = this.getState(parameters);
     const idTokenHint = this.getIdTokenHint(parameters);
     const client = await this.getClient(parameters);
     const postLogoutRedirectUri = this.getPostLogoutRedirectUri(parameters, client);
+    const state = this.getState(parameters);
     const logoutHint = this.getLogoutHint(parameters);
     const uiLocales = this.getUiLocales(parameters);
 
@@ -73,22 +73,8 @@ export class EndSessionRequestValidator {
         return request.query as EndSessionRequest;
 
       case 'POST':
-        return request.body as EndSessionRequest;
+        return request.form<EndSessionRequest>();
     }
-  }
-
-  /**
-   * Checks and returns the State provided by the Client.
-   *
-   * @param parameters Parameters of the End Session Request.
-   * @returns State provided by the Client.
-   */
-  private getState(parameters: EndSessionRequest): Nullable<string> {
-    if (typeof parameters.state !== 'undefined' && typeof parameters.state !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "state".');
-    }
-
-    return parameters.state ?? null;
   }
 
   /**
@@ -98,7 +84,7 @@ export class EndSessionRequestValidator {
    * @returns ID Token Hint provided by the Client.
    */
   private getIdTokenHint(parameters: EndSessionRequest): string {
-    if (typeof parameters.id_token_hint !== 'string') {
+    if (typeof parameters.id_token_hint === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "id_token_hint".');
     }
 
@@ -112,7 +98,7 @@ export class EndSessionRequestValidator {
    * @returns Client based on the provided Client Identifier.
    */
   private async getClient(parameters: EndSessionRequest): Promise<Client> {
-    if (typeof parameters.client_id !== 'string') {
+    if (typeof parameters.client_id === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "client_id".');
     }
 
@@ -133,34 +119,37 @@ export class EndSessionRequestValidator {
    * @returns Parsed and validated Post Logout Redirect URI.
    */
   private getPostLogoutRedirectUri(parameters: EndSessionRequest, client: Client): Nullable<URL> {
-    if (
-      typeof parameters.post_logout_redirect_uri !== 'undefined' &&
-      typeof parameters.post_logout_redirect_uri !== 'string'
-    ) {
-      throw new InvalidRequestException('Invalid parameter "post_logout_redirect_uri".');
-    }
-
     if (typeof parameters.post_logout_redirect_uri === 'undefined') {
       return null;
     }
 
-    let postLogoutRedirectUri: URL;
+    let url: URL;
 
     try {
-      postLogoutRedirectUri = new URL(parameters.post_logout_redirect_uri);
+      url = new URL(parameters.post_logout_redirect_uri);
     } catch (exc: unknown) {
       throw new InvalidRequestException('Invalid parameter "post_logout_redirect_uri".', { cause: exc });
     }
 
-    if (postLogoutRedirectUri.hash.length !== 0) {
+    if (url.hash.length !== 0) {
       throw new InvalidRequestException('The Post Logout Redirect URI MUST NOT have a fragment component.');
     }
 
-    if (!client.postLogoutRedirectUris.includes(postLogoutRedirectUri.href)) {
+    if (!client.postLogoutRedirectUris.includes(url.href)) {
       throw new AccessDeniedException('Invalid Post Logout Redirect URI.');
     }
 
-    return postLogoutRedirectUri;
+    return url;
+  }
+
+  /**
+   * Checks and returns the State provided by the Client.
+   *
+   * @param parameters Parameters of the End Session Request.
+   * @returns State provided by the Client.
+   */
+  private getState(parameters: EndSessionRequest): Nullable<string> {
+    return parameters.state ?? null;
   }
 
   /**
@@ -170,10 +159,6 @@ export class EndSessionRequestValidator {
    * @returns Logout Hint provided by the Client.
    */
   private getLogoutHint(parameters: EndSessionRequest): Nullable<string> {
-    if (typeof parameters.logout_hint !== 'undefined' && typeof parameters.logout_hint !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "logout_hint".');
-    }
-
     return parameters.logout_hint ?? null;
   }
 
@@ -184,10 +169,6 @@ export class EndSessionRequestValidator {
    * @returns UI Locales requested by the Client.
    */
   private getUiLocales(parameters: EndSessionRequest): string[] {
-    if (typeof parameters.ui_locales !== 'undefined' && typeof parameters.ui_locales !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "ui_locales".');
-    }
-
     const requestedUiLocales = parameters.ui_locales?.split(' ') ?? [];
 
     requestedUiLocales.forEach((requestedUiLocale) => {

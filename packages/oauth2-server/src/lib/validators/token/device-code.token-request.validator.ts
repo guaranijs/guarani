@@ -18,10 +18,7 @@ import { TokenRequestValidator } from './token-request.validator';
  * Implementation of the **Device Code** Token Request Validator.
  */
 @Injectable()
-export class DeviceCodeTokenRequestValidator extends TokenRequestValidator<
-  DeviceCodeTokenRequest,
-  DeviceCodeTokenContext
-> {
+export class DeviceCodeTokenRequestValidator extends TokenRequestValidator<DeviceCodeTokenContext> {
   /**
    * Name of the Grant Type that uses this Validator.
    */
@@ -49,13 +46,13 @@ export class DeviceCodeTokenRequestValidator extends TokenRequestValidator<
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<DeviceCodeTokenContext> {
-    const parameters = request.body as DeviceCodeTokenRequest;
-
     const context = await super.validate(request);
+
+    const { parameters } = context;
 
     const deviceCode = await this.getDeviceCode(parameters);
 
-    return { ...context, deviceCode };
+    return Object.assign(context, { deviceCode }) as DeviceCodeTokenContext;
   }
 
   /**
@@ -65,7 +62,7 @@ export class DeviceCodeTokenRequestValidator extends TokenRequestValidator<
    * @returns Device Code based on the provided Identifier.
    */
   private async getDeviceCode(parameters: DeviceCodeTokenRequest): Promise<DeviceCode> {
-    if (typeof parameters.device_code !== 'string') {
+    if (typeof parameters.device_code === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "device_code".');
     }
 

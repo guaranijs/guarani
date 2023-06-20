@@ -21,7 +21,8 @@ import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
-import { AuthorizationRequest } from '../requests/authorization/authorization-request';
+import { IdTokenClaimsParameters } from '../id-token/id-token.claims.parameters';
+import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
@@ -61,9 +62,10 @@ export class IdTokenHandler {
    * @returns Generated ID Token.
    */
   public async generateIdToken(
-    parameters: AuthorizationRequest,
     login: Login,
     consent: Consent,
+    nonce: Nullable<string>,
+    maxAge: Nullable<number>,
     accessToken: Nullable<AccessToken>,
     authorizationCode: Nullable<AuthorizationCode>
   ): Promise<string> {
@@ -81,24 +83,26 @@ export class IdTokenHandler {
       typ: 'JWT',
     });
 
-    const claims = new IdTokenClaims({
-      iss: this.settings.issuer,
-      sub: calculateSubjectIdentifier(user, client, this.settings),
-      aud: [client.id],
-      exp: now + 86400,
-      iat: now,
-      sid: login.id,
-      nonce: parameters.nonce,
-      auth_time: typeof parameters.max_age !== 'undefined' ? Math.floor(login.createdAt.getTime() / 1000) : undefined,
-      amr: login.amr ?? undefined,
-      acr: login.acr ?? undefined,
-      azp: client.id,
-      at_hash: accessToken !== null ? this.getLeftHash(accessToken.handle, jwsHeader.alg) : undefined,
-      c_hash: authorizationCode !== null ? this.getLeftHash(authorizationCode.code, jwsHeader.alg) : undefined,
-      ...userinfo,
-    });
+    const claims: IdTokenClaimsParameters = Object.assign<IdTokenClaimsParameters, UserinfoClaimsParameters>(
+      {
+        iss: this.settings.issuer,
+        sub: calculateSubjectIdentifier(user, client, this.settings),
+        aud: [client.id],
+        exp: now + 86400,
+        iat: now,
+        sid: login.id,
+        nonce: nonce ?? undefined,
+        auth_time: maxAge !== null ? Math.floor(login.createdAt.getTime() / 1000) : undefined,
+        amr: login.amr ?? undefined,
+        acr: login.acr ?? undefined,
+        azp: client.id,
+        at_hash: accessToken !== null ? this.getLeftHash(accessToken.handle, jwsHeader.alg) : undefined,
+        c_hash: authorizationCode !== null ? this.getLeftHash(authorizationCode.code, jwsHeader.alg) : undefined,
+      },
+      userinfo
+    );
 
-    const jws = new JsonWebSignature(jwsHeader, claims.toBuffer());
+    const jws = new JsonWebSignature(jwsHeader, new IdTokenClaims(claims).toBuffer());
 
     const signedJwt = await jws.sign(signKey);
 

@@ -72,8 +72,8 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
     }
 
     const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);
-    const idToken = await this.idTokenHandler.generateIdToken(parameters, login, consent, null, authorizationCode);
+    const idToken = await this.idTokenHandler.generateIdToken(login, consent, null, null, null, authorizationCode);
 
-    return { code: authorizationCode.code, id_token: idToken, state: parameters.state };
+    return { code: authorizationCode.code, id_token: idToken };
   }
 }

@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer';
 import { OutgoingHttpHeaders } from 'http';
+import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
@@ -27,11 +28,12 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
-import { RegistrationRequestValidator } from '../validators/registration-request.validator';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
+import { RegistrationRequestValidator } from '../validators/registration/registration-request.validator';
 import { Endpoint } from './endpoint.type';
 import { RegistrationEndpoint } from './registration.endpoint';
 
-jest.mock('../validators/registration-request.validator');
+jest.mock('../validators/registration/registration-request.validator');
 
 const now = 1700000000000;
 
@@ -72,8 +74,6 @@ describe('Dynamic Client Registration Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: RegistrationEndpoint;
 
-  const validatorMock = jest.mocked(RegistrationRequestValidator.prototype);
-
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
@@ -90,13 +90,15 @@ describe('Dynamic Client Registration Endpoint', () => {
     revoke: jest.fn(),
   });
 
+  const validatorMock = jest.mocked(Object.assign(RegistrationRequestValidator.prototype, { validate: jest.fn() }));
+
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
-    container.bind(RegistrationRequestValidator).toValue(validatorMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
+    container.bind(RegistrationRequestValidator).toValue(validatorMock);
     container.bind(RegistrationEndpoint).toSelf().asSingleton();
 
     endpoint = container.resolve(RegistrationEndpoint);
@@ -204,59 +206,68 @@ describe('Dynamic Client Registration Endpoint', () => {
   });
 
   describe('handle() (POST)', () => {
-    let request: HttpRequest;
+    let parameters: PostRegistrationRequest;
+
+    const requestFactory = (data: Partial<PostRegistrationRequest> = {}): HttpRequest => {
+      removeNullishValues<PostRegistrationRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(JSON.stringify(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/json' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/register'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <PostRegistrationRequest>{
-          redirect_uris: ['https://client.example.com/oauth/callback/'],
-          response_types: ['code'],
-          grant_types: ['authorization_code', 'refresh_token'],
-          application_type: 'web',
-          client_name: 'Test Client #1',
-          scope: 'openid profile email phone address foo bar baz qux',
-          contacts: ['johndoe@email.com'],
-          logo_uri: 'https://some.cdn.com/client-logo.jpg',
-          client_uri: 'https://client.example.com/',
-          policy_uri: 'https://client.example.com/policy/',
-          tos_uri: 'https://client.example.com/terms-of-service/',
-          jwks_uri: 'https://client.example.com/oauth/jwks/',
-          jwks: undefined,
-          subject_type: 'pairwise',
-          sector_identifier_uri: 'https://client.example.com/redirect_uris.json',
-          id_token_signed_response_alg: 'RS256',
-          id_token_encrypted_response_alg: 'RSA-OAEP',
-          id_token_encrypted_response_enc: 'A128GCM',
-          // userinfo_signed_response_alg: ,
-          // userinfo_encrypted_response_alg: ,
-          // userinfo_encrypted_response_enc: ,
-          // request_object_signing_alg: ,
-          // request_object_encryption_alg: ,
-          // request_object_encryption_enc: ,
-          token_endpoint_auth_method: 'private_key_jwt',
-          token_endpoint_auth_signing_alg: 'RS256',
-          default_max_age: 60 * 60 * 24 * 15,
-          require_auth_time: true,
-          default_acr_values: ['guarani:acr:2fa', 'guarani:acr:1fa'],
-          initiate_login_uri: 'https://client.example.com/oauth/initiate/',
-          // request_uris: ,
-          post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
-          software_id: 'TJ9C-X43C-95V1LK03',
-          software_version: 'v1.4.37',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/register',
-        query: {},
-      });
+      Reflect.set(validatorMock, 'httpMethod', 'POST');
+
+      parameters = {
+        redirect_uris: ['https://client.example.com/oauth/callback/'],
+        response_types: ['code'],
+        grant_types: ['authorization_code', 'refresh_token'],
+        application_type: 'web',
+        client_name: 'Test Client #1',
+        scope: 'openid profile email phone address foo bar baz qux',
+        contacts: ['johndoe@email.com'],
+        logo_uri: 'https://some.cdn.com/client-logo.jpg',
+        client_uri: 'https://client.example.com/',
+        policy_uri: 'https://client.example.com/policy/',
+        tos_uri: 'https://client.example.com/terms-of-service/',
+        jwks_uri: 'https://client.example.com/oauth/jwks/',
+        jwks: undefined,
+        subject_type: 'pairwise',
+        sector_identifier_uri: 'https://client.example.com/redirect_uris.json',
+        id_token_signed_response_alg: 'RS256',
+        id_token_encrypted_response_alg: 'RSA-OAEP',
+        id_token_encrypted_response_enc: 'A128GCM',
+        // userinfo_signed_response_alg: ,
+        // userinfo_encrypted_response_alg: ,
+        // userinfo_encrypted_response_enc: ,
+        // request_object_signing_alg: ,
+        // request_object_encryption_alg: ,
+        // request_object_encryption_enc: ,
+        token_endpoint_auth_method: 'private_key_jwt',
+        token_endpoint_auth_signing_alg: 'RS256',
+        default_max_age: 60 * 60 * 24 * 15,
+        require_auth_time: true,
+        default_acr_values: ['guarani:acr:2fa', 'guarani:acr:1fa'],
+        initiate_login_uri: 'https://client.example.com/oauth/initiate/',
+        // request_uris: ,
+        post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+        software_id: 'TJ9C-X43C-95V1LK03',
+        software_version: 'v1.4.37',
+      };
     });
 
     it.each(clientSecrets)(
       'should return the metadata of the registered client.',
       async (clientParams, responseParams) => {
+        const request = requestFactory();
+
         const context = <PostRegistrationContext>{
-          parameters: request.body as PostRegistrationRequest,
+          parameters,
           accessToken: <AccessToken>{
             handle: 'initial_access_token',
             scopes: ['client:create'],
@@ -384,7 +395,7 @@ describe('Dynamic Client Registration Endpoint', () => {
           software_version: 'v1.4.37',
         });
 
-        validatorMock.validatePost.mockResolvedValueOnce(context);
+        validatorMock.validate.mockResolvedValueOnce(context);
         clientServiceMock.create!.mockResolvedValueOnce(client);
         accessTokenServiceMock.createRegistrationAccessToken!.mockResolvedValueOnce(accessToken);
 
@@ -409,20 +420,31 @@ describe('Dynamic Client Registration Endpoint', () => {
   });
 
   describe('handle() (GET)', () => {
-    let request: HttpRequest;
+    let parameters: GetRegistrationRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<GetRegistrationRequest> = {}): HttpRequest => {
+      removeNullishValues<GetRegistrationRequest>(Object.assign(parameters, data));
+
+      const url = addParametersToUrl('https://server.example.com/oauth/register', parameters);
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/register',
-        query: { client_id: 'client_id' },
+        url,
       });
+    };
+
+    beforeEach(() => {
+      Reflect.set(validatorMock, 'httpMethod', 'GET');
+
+      parameters = { client_id: 'client_id' };
     });
 
     it('should return the metadata of the client.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{
         id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
         secret: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
@@ -465,7 +487,7 @@ describe('Dynamic Client Registration Endpoint', () => {
       };
 
       const context = <GetRegistrationContext>{
-        parameters: request.query as GetRegistrationRequest,
+        parameters,
         accessToken: { handle: 'access_token', client },
         client,
       };
@@ -513,7 +535,7 @@ describe('Dynamic Client Registration Endpoint', () => {
         software_version: 'v1.4.37',
       });
 
-      validatorMock.validateGet.mockResolvedValueOnce(context);
+      validatorMock.validate.mockResolvedValueOnce(context);
 
       const response = await endpoint.handle(request);
 
@@ -529,20 +551,31 @@ describe('Dynamic Client Registration Endpoint', () => {
   });
 
   describe('handle() (DELETE)', () => {
-    let request: HttpRequest;
+    let parameters: DeleteRegistrationRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<DeleteRegistrationRequest> = {}): HttpRequest => {
+      removeNullishValues<DeleteRegistrationRequest>(Object.assign(parameters, data));
+
+      const url = addParametersToUrl('https://server.example.com/oauth/register', parameters);
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'DELETE',
-        path: '/oauth/register',
-        query: { client_id: 'client_id' },
+        url,
       });
+    };
+
+    beforeEach(() => {
+      Reflect.set(validatorMock, 'httpMethod', 'DELETE');
+
+      parameters = { client_id: 'client_id' };
     });
 
     it('should decomission the client from the authorization server.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
 
       const context = <DeleteRegistrationContext>{
@@ -551,7 +584,7 @@ describe('Dynamic Client Registration Endpoint', () => {
         client,
       };
 
-      validatorMock.validateDelete.mockResolvedValueOnce(context);
+      validatorMock.validate.mockResolvedValueOnce(context);
 
       const response = await endpoint.handle(request);
 
@@ -568,57 +601,74 @@ describe('Dynamic Client Registration Endpoint', () => {
   });
 
   describe('handle() (PUT)', () => {
-    let request: HttpRequest;
+    let queryParameters: PutQueryRegistrationRequest;
+    let bodyParameters: PutBodyRegistrationRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: <PutBodyRegistrationRequest>{
-          client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
-          client_secret: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
-          redirect_uris: ['https://client.example.com/oauth/callback/'],
-          response_types: ['code'],
-          grant_types: ['authorization_code', 'refresh_token'],
-          application_type: 'web',
-          client_name: 'Updated Test Client #1',
-          scope: 'openid profile email phone address',
-          contacts: ['johndoe@email.com'],
-          logo_uri: 'https://some.cdn.com/client-logo.jpg',
-          client_uri: 'https://client.example.com/',
-          policy_uri: 'https://client.example.com/policy/',
-          tos_uri: 'https://client.example.com/terms-of-service/',
-          jwks_uri: 'https://client.example.com/oauth/jwks/',
-          jwks: undefined,
-          subject_type: 'pairwise',
-          sector_identifier_uri: 'https://client.example.com/redirect_uris.json',
-          id_token_signed_response_alg: 'RS256',
-          id_token_encrypted_response_alg: 'RSA-OAEP',
-          id_token_encrypted_response_enc: 'A128GCM',
-          // userinfo_signed_response_alg: ,
-          // userinfo_encrypted_response_alg: ,
-          // userinfo_encrypted_response_enc: ,
-          // request_object_signing_alg: ,
-          // request_object_encryption_alg: ,
-          // request_object_encryption_enc: ,
-          token_endpoint_auth_method: 'private_key_jwt',
-          token_endpoint_auth_signing_alg: 'RS256',
-          default_max_age: 60 * 60 * 24 * 15,
-          require_auth_time: true,
-          default_acr_values: ['guarani:acr:2fa', 'guarani:acr:1fa'],
-          initiate_login_uri: 'https://client.example.com/oauth/initiate/',
-          // request_uris: ,
-          post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
-          software_id: 'TJ9C-X43C-95V1LK03',
-          software_version: 'v1.4.37',
-        },
+    const requestFactory = (
+      queryData: Partial<PutQueryRegistrationRequest> = {},
+      bodyData: Partial<PutBodyRegistrationRequest> = {}
+    ): HttpRequest => {
+      removeNullishValues<DeleteRegistrationRequest>(Object.assign(queryParameters, queryData));
+      removeNullishValues<DeleteRegistrationRequest>(Object.assign(bodyParameters, bodyData));
+
+      const url = addParametersToUrl('https://server.example.com/oauth/register', queryParameters);
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(bodyParameters), 'utf8'),
         cookies: {},
         headers: {},
         method: 'PUT',
-        path: '/oauth/register',
-        query: <PutQueryRegistrationRequest>{ client_id: 'client_id' },
+        url,
       });
+    };
+
+    beforeEach(() => {
+      Reflect.set(validatorMock, 'httpMethod', 'PUT');
+
+      queryParameters = { client_id: 'client_id' };
+      bodyParameters = {
+        client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
+        client_secret: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
+        redirect_uris: ['https://client.example.com/oauth/callback/'],
+        response_types: ['code'],
+        grant_types: ['authorization_code', 'refresh_token'],
+        application_type: 'web',
+        client_name: 'Updated Test Client #1',
+        scope: 'openid profile email phone address',
+        contacts: ['johndoe@email.com'],
+        logo_uri: 'https://some.cdn.com/client-logo.jpg',
+        client_uri: 'https://client.example.com/',
+        policy_uri: 'https://client.example.com/policy/',
+        tos_uri: 'https://client.example.com/terms-of-service/',
+        jwks_uri: 'https://client.example.com/oauth/jwks/',
+        jwks: undefined,
+        subject_type: 'pairwise',
+        sector_identifier_uri: 'https://client.example.com/redirect_uris.json',
+        id_token_signed_response_alg: 'RS256',
+        id_token_encrypted_response_alg: 'RSA-OAEP',
+        id_token_encrypted_response_enc: 'A128GCM',
+        // userinfo_signed_response_alg: ,
+        // userinfo_encrypted_response_alg: ,
+        // userinfo_encrypted_response_enc: ,
+        // request_object_signing_alg: ,
+        // request_object_encryption_alg: ,
+        // request_object_encryption_enc: ,
+        token_endpoint_auth_method: 'private_key_jwt',
+        token_endpoint_auth_signing_alg: 'RS256',
+        default_max_age: 60 * 60 * 24 * 15,
+        require_auth_time: true,
+        default_acr_values: ['guarani:acr:2fa', 'guarani:acr:1fa'],
+        initiate_login_uri: 'https://client.example.com/oauth/initiate/',
+        // request_uris: ,
+        post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+        software_id: 'TJ9C-X43C-95V1LK03',
+        software_version: 'v1.4.37',
+      };
     });
 
     it('should return the updated metadata of the registered client.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{
         id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
         secret: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
@@ -663,8 +713,8 @@ describe('Dynamic Client Registration Endpoint', () => {
       const accessToken = <AccessToken>{ handle: 'access_token', client };
 
       const context = <PutRegistrationContext>{
-        queryParameters: request.query as PutQueryRegistrationRequest,
-        bodyParameters: request.body as PutBodyRegistrationRequest,
+        queryParameters,
+        bodyParameters,
         accessToken,
         client,
         clientId: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
@@ -748,7 +798,7 @@ describe('Dynamic Client Registration Endpoint', () => {
         software_version: 'v1.4.37',
       });
 
-      validatorMock.validatePut.mockResolvedValueOnce(context);
+      validatorMock.validate.mockResolvedValueOnce(context);
 
       clientServiceMock.update!.mockImplementationOnce(async (client, context) => {
         Object.assign<Client, Partial<Client>>(client, { name: context.clientName!, scopes: context.scopes });

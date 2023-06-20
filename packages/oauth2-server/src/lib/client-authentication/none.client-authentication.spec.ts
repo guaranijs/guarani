@@ -1,5 +1,9 @@
+import { Buffer } from 'buffer';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
+import { Dictionary, OneOrMany } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -7,7 +11,20 @@ import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { ClientAuthentication } from './client-authentication.type';
-import { NoneClientAuthentication, NoneCredentials } from './none.client-authentication';
+import { NoneClientAuthentication } from './none.client-authentication';
+import { NoneClientAuthenticationParameters } from './none.client-authentication.parameters';
+
+const methodRequests: [Dictionary<OneOrMany<string>>, boolean][] = [
+  [{}, false],
+  [{ client_id: '' }, true],
+  [{ client_id: 'foo' }, true],
+  [{ client_secret: '' }, false],
+  [{ client_secret: 'bar' }, false],
+  [{ client_id: '', client_secret: '' }, false],
+  [{ client_id: 'foo', client_secret: '' }, false],
+  [{ client_id: '', client_secret: 'bar' }, false],
+  [{ client_id: 'foo', client_secret: 'bar' }, false],
+];
 
 describe('None Client Authentication Method', () => {
   let container: DependencyInjectionContainer;
@@ -33,47 +50,56 @@ describe('None Client Authentication Method', () => {
   });
 
   describe('hasBeenRequested()', () => {
-    const methodRequests: [Dictionary<unknown>, boolean][] = [
-      [{}, false],
-      [{ client_id: '' }, true],
-      [{ client_id: 'foo' }, true],
-      [{ client_secret: '' }, false],
-      [{ client_secret: 'bar' }, false],
-      [{ client_id: '', client_secret: '' }, false],
-      [{ client_id: 'foo', client_secret: '' }, false],
-      [{ client_id: '', client_secret: 'bar' }, false],
-      [{ client_id: 'foo', client_secret: 'bar' }, false],
-    ];
+    it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
+      const request = new HttpRequest({
+        body: Buffer.from(stringifyQs(body), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+
+      expect(clientAuthentication.hasBeenRequested(request)).toEqual(expected);
+    });
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
       const request = new HttpRequest({
-        body,
+        body: Buffer.from(JSON.stringify(body), 'utf8'),
         cookies: {},
-        headers: {},
+        headers: { 'content-type': 'application/json' },
         method: 'POST',
-        path: '/oauth/token',
-        query: {},
+        url: new URL('https://server.example.com/oauth/token'),
       });
 
       expect(clientAuthentication.hasBeenRequested(request)).toEqual(expected);
     });
   });
 
-  describe('authenticate()', () => {
-    let request: HttpRequest;
+  describe.each(['form', 'json'])('authenticate()', (method) => {
+    let parameters: NoneClientAuthenticationParameters;
+
+    const requestFactory = (data: Partial<NoneClientAuthenticationParameters> = {}): HttpRequest => {
+      parameters = Object.assign(parameters, data);
+
+      const body = method === 'form' ? stringifyQs(parameters) : JSON.stringify(parameters);
+      const contentType = method === 'form' ? 'application/x-www-form-urlencoded' : 'application/json';
+
+      return new HttpRequest({
+        body: Buffer.from(body, 'utf8'),
+        cookies: {},
+        headers: { 'content-type': contentType },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <NoneCredentials>{ client_id: 'client_id' },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/token',
-        query: {},
-      });
+      parameters = { client_id: 'client_id' };
     });
 
     it('should throw when a client is not found.', async () => {
+      const request = requestFactory();
+
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
@@ -83,6 +109,8 @@ describe('None Client Authentication Method', () => {
     });
 
     it('should throw when requesting with a client with a secret.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', secret: 'client_secret' };
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
@@ -94,6 +122,8 @@ describe('None Client Authentication Method', () => {
     });
 
     it('should throw when requesting with a client not authorized to use this authentication method.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{
         id: 'client_id',
         secret: null,
@@ -109,8 +139,12 @@ describe('None Client Authentication Method', () => {
     });
 
     it('should return an instance of a client.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', secret: null, authenticationMethod: 'none' };
+
       clientServiceMock.findOne.mockResolvedValueOnce(client);
+
       await expect(clientAuthentication.authenticate(request)).resolves.toBe(client);
     });
   });

@@ -2,7 +2,6 @@ import { Injectable, InjectAll } from '@guarani/di';
 
 import { ClientCredentialsTokenContext } from '../../context/token/client-credentials.token-context';
 import { Client } from '../../entities/client.entity';
-import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
 import { GRANT_TYPE } from '../../grant-types/grant-type.token';
 import { GrantType } from '../../grant-types/grant-type.type';
@@ -16,10 +15,7 @@ import { TokenRequestValidator } from './token-request.validator';
  * Implementation of the **Client Credentials** Token Request Validator.
  */
 @Injectable()
-export class ClientCredentialsTokenRequestValidator extends TokenRequestValidator<
-  ClientCredentialsTokenRequest,
-  ClientCredentialsTokenContext
-> {
+export class ClientCredentialsTokenRequestValidator extends TokenRequestValidator<ClientCredentialsTokenContext> {
   /**
    * Name of the Grant Type that uses this Validator.
    */
@@ -47,13 +43,13 @@ export class ClientCredentialsTokenRequestValidator extends TokenRequestValidato
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<ClientCredentialsTokenContext> {
-    const parameters = request.body as ClientCredentialsTokenRequest;
-
     const context = await super.validate(request);
+
+    const { parameters } = context;
 
     const scopes = this.getScopes(parameters, context.client);
 
-    return { ...context, scopes };
+    return Object.assign(context, { scopes }) as ClientCredentialsTokenContext;
   }
 
   /**
@@ -65,10 +61,6 @@ export class ClientCredentialsTokenRequestValidator extends TokenRequestValidato
    * @returns Scopes granted to the Client.
    */
   protected getScopes(parameters: ClientCredentialsTokenRequest, client: Client): string[] {
-    if (typeof parameters.scope !== 'undefined' && typeof parameters.scope !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "scope".');
-    }
-
     this.scopeHandler.checkRequestedScope(parameters.scope ?? null);
     return this.scopeHandler.getAllowedScopes(client, parameters.scope ?? null);
   }

@@ -1,4 +1,6 @@
+import { Buffer } from 'buffer';
 import { IncomingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { Dictionary } from '@guarani/types';
 
@@ -14,14 +16,9 @@ export interface HttpRequestParameters {
   readonly method: HttpMethod;
 
   /**
-   * Path of the Http Request.
+   * Url of the Http Request.
    */
-  readonly path: string;
-
-  /**
-   * Parsed Query Parameters of the Http Request.
-   */
-  readonly query: Dictionary<unknown>;
+  readonly url: URL;
 
   /**
    * Headers of the Http Request.
@@ -36,5 +33,5 @@ export interface HttpRequestParameters {
   /**
    * Parsed Body of the Http Request.
    */
-  readonly body: Dictionary<unknown>;
+  readonly body: Buffer;
 }

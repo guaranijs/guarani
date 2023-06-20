@@ -10,10 +10,7 @@ import { TokenRequest } from '../../requests/token/token-request';
 /**
  * Implementation of the Token Request Validator.
  */
-export abstract class TokenRequestValidator<
-  TRequest extends TokenRequest = TokenRequest,
-  TContext extends TokenContext<TRequest> = TokenContext<TRequest>
-> {
+export abstract class TokenRequestValidator<TContext extends TokenContext = TokenContext> {
   /**
    * Name of the Grant Type that uses this Validator.
    */
@@ -37,7 +34,7 @@ export abstract class TokenRequestValidator<
    * @returns Token Context.
    */
   public async validate(request: HttpRequest): Promise<TContext> {
-    const parameters = request.body as TRequest;
+    const parameters = request.form<TokenRequest>();
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
     const grantType = this.getGrantType(parameters, client);
@@ -52,7 +49,7 @@ export abstract class TokenRequestValidator<
    * @param client Client of the Request.
    * @returns Grant Type.
    */
-  private getGrantType(parameters: TRequest, client: Client): GrantTypeInterface {
+  private getGrantType(parameters: TokenRequest, client: Client): GrantTypeInterface {
     const grantType = this.grantTypes.find((grantType) => grantType.name === parameters.grant_type)!;
 
     if (!client.grantTypes.includes(grantType.name)) {

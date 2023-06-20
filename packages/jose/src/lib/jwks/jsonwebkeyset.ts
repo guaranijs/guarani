@@ -1,4 +1,4 @@
-import { removeNullishValues } from '@guarani/primitives';
+import { isPlainObject, removeNullishValues } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
 
 import { InvalidJsonWebKeySetException } from '../exceptions/invalid-jsonwebkeyset.exception';
@@ -44,8 +44,12 @@ export class JsonWebKeySet implements JsonWebKeySetParameters {
    * @param parameters Parameters of the JSON Web Key Set.
    * @returns JSON Web Key Set based on the provided Parameters.
    */
-  public static async load(parameters: JsonWebKeySetParameters): Promise<JsonWebKeySet> {
-    if (typeof parameters !== 'object' || parameters === null) {
+  public static async load(parameters: unknown): Promise<JsonWebKeySet> {
+    if (parameters instanceof JsonWebKeySet) {
+      return parameters;
+    }
+
+    if (!isPlainObject(parameters)) {
       throw new InvalidJsonWebKeySetException();
     }
 

@@ -109,7 +109,7 @@ describe('Private Key JWT Client Authentication Method', () => {
         id: 'client_id',
         authenticationMethod: 'private_key_jwt',
         jwks: null,
-        jwksUri: 'https://client.example.com/jwks',
+        jwksUri: 'https://client.example.com/oauth/jwks',
       };
 
       await expect(clientAuthentication['getClientKey'](client, header)).resolves.toMatchObject(ecKey);

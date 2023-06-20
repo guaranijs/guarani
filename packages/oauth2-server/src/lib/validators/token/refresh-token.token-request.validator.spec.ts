@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { RefreshTokenTokenContext } from '../../context/token/refresh-token.token-context';
 import { Client } from '../../entities/client.entity';
@@ -20,9 +23,6 @@ import { RefreshTokenTokenRequestValidator } from './refresh-token.token-request
 
 jest.mock('../../handlers/client-authentication.handler');
 jest.mock('../../handlers/scope.handler');
-
-const invalidRefreshTokens: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidScopes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Refresh Token Token Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -73,39 +73,40 @@ describe('Refresh Token Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: RefreshTokenTokenRequest;
+
+    const requestFactory = (data: Partial<RefreshTokenTokenRequest> = {}): HttpRequest => {
+      removeNullishValues<RefreshTokenTokenRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <RefreshTokenTokenRequest>{
-          grant_type: 'refresh_token',
-          refresh_token: 'refresh_token',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/token',
-        query: {},
-      });
+      parameters = { grant_type: 'refresh_token', refresh_token: 'refresh_token' };
     });
 
-    it.each(invalidRefreshTokens)(
-      'should throw when providing an invalid "refresh_token" parameter.',
-      async (refreshToken) => {
-        request.body.refresh_token = refreshToken;
+    it('should throw when not providing the parameter "refresh_token".', async () => {
+      const request = requestFactory({ refresh_token: undefined });
 
-        const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code', 'refresh_token'] };
+      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code', 'refresh_token'] };
 
-        clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
+      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "refresh_token".'
-        );
-      }
-    );
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "refresh_token".'
+      );
+    });
 
     it('should throw when no refresh_token is found.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code', 'refresh_token'] };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
@@ -117,23 +118,8 @@ describe('Refresh Token Token Request Validator', () => {
       );
     });
 
-    it.each(invalidScopes)('should throw when providing an invalid "scope" parameter.', async (scope) => {
-      request.body.scope = scope;
-
-      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code', 'refresh_token'] };
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token' };
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-      refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "scope".'
-      );
-    });
-
     it('should throw when the client requests a scope that was not previously granted.', async () => {
-      request.body.scope = 'foo bar baz';
+      const request = requestFactory({ scope: 'foo bar baz' });
 
       const client = <Client>{
         id: 'client_id',
@@ -156,7 +142,7 @@ describe('Refresh Token Token Request Validator', () => {
     });
 
     it('should return a refresh token token context with the requested scopes.', async () => {
-      request.body.scope = 'foo bar';
+      const request = requestFactory({ scope: 'foo bar' });
 
       const client = <Client>{
         id: 'client_id',
@@ -173,7 +159,7 @@ describe('Refresh Token Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar']);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RefreshTokenTokenContext>({
-        parameters: request.body as RefreshTokenTokenRequest,
+        parameters,
         client,
         grantType: grantTypesMocks[3]!,
         refreshToken,
@@ -182,6 +168,8 @@ describe('Refresh Token Token Request Validator', () => {
     });
 
     it('should return a refresh token token context with the original scopes.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{
         id: 'client_id',
         grantTypes: ['authorization_code', 'refresh_token'],
@@ -195,7 +183,7 @@ describe('Refresh Token Token Request Validator', () => {
       scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RefreshTokenTokenContext>({
-        parameters: request.body as RefreshTokenTokenRequest,
+        parameters,
         client,
         grantType: grantTypesMocks[3]!,
         refreshToken,

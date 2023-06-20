@@ -1,4 +1,5 @@
 import { OutgoingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
@@ -52,8 +53,8 @@ describe('Device Authorization Endpoint', () => {
   });
 
   describe('path', () => {
-    it('should have "/oauth/device-authorization" as its default path.', () => {
-      expect(endpoint.path).toEqual('/oauth/device-authorization');
+    it('should have "/oauth/device_authorization" as its default path.', () => {
+      expect(endpoint.path).toEqual('/oauth/device_authorization');
     });
   });
 
@@ -73,20 +74,21 @@ describe('Device Authorization Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    const parameters: DeviceAuthorizationRequest = {};
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (): HttpRequest => {
+      return new HttpRequest({
+        body: Buffer.from(JSON.stringify(parameters), 'utf8'),
         cookies: {},
-        headers: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
-        path: '/oauth/device-authorization',
-        query: {},
+        url: new URL('https://server.example.com/oauth/device_authorization'),
       });
-    });
+    };
 
     it('should return a device authorization response.', async () => {
+      const request = requestFactory();
+
       const scopes: string[] = ['foo', 'bar'];
       const client = <Client>{ id: 'client_id', scopes };
 
@@ -107,18 +109,13 @@ describe('Device Authorization Endpoint', () => {
         interval: 5,
       };
 
-      validatorMock.validate.mockResolvedValueOnce({
-        parameters: request.body as DeviceAuthorizationRequest,
-        client,
-        scopes,
-      });
+      validatorMock.validate.mockResolvedValueOnce({ parameters, client, scopes });
 
       deviceCodeServiceMock.create.mockResolvedValueOnce(deviceCode);
 
       const response = await endpoint.handle(request);
 
       expect(response.statusCode).toEqual(200);
-
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({

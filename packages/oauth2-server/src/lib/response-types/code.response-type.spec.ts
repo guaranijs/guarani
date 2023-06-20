@@ -98,7 +98,6 @@ describe('Code Response Type', () => {
 
       await expect(responseType.handle(context, login, consent)).resolves.toStrictEqual<CodeAuthorizationResponse>({
         code: 'authorization_code',
-        state: 'client_state',
       });
     });
   });

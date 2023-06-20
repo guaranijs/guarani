@@ -1,4 +1,6 @@
+import { Buffer } from 'buffer';
 import { IncomingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 
@@ -53,12 +55,11 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
     it.each(methodRequests)('should check if the authorization method has beed requested.', (headers, expected) => {
       const request = new HttpRequest({
-        body: {},
+        body: Buffer.alloc(0),
         cookies: {},
         headers,
         method: 'GET',
-        path: '/oauth/userinfo',
-        query: {},
+        url: new URL('https://server.example.com/oauth/userinfo'),
       });
 
       expect(clientAuthorization.hasBeenRequested(request)).toEqual(expected);
@@ -70,12 +71,11 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: {},
+        body: Buffer.alloc(0),
         cookies: {},
         headers: { authorization: 'Bearer access_token' },
         method: 'GET',
-        path: '/oauth/userinfo',
-        query: {},
+        url: new URL('https://server.example.com/oauth/userinfo'),
       });
     });
 

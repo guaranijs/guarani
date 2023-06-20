@@ -5,7 +5,6 @@ import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
-import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { IdTokenAuthorizationResponse } from '../responses/authorization/id-token.authorization-response';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
@@ -55,17 +54,16 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns an Access Token and ID Token Response to the Client.
    *
-   * @param context Authorization Request Context.
+   * @param _context Authorization Request Context.
    * @param login Login with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Access Token and ID Token Response.
    */
   public async handle(
-    context: AuthorizationContext<AuthorizationRequest>,
+    _context: AuthorizationContext,
     login: Login,
     consent: Consent
   ): Promise<TokenAuthorizationResponse & IdTokenAuthorizationResponse> {
-    const { parameters } = context;
     const { client, scopes, user } = consent;
 
     if (!scopes.includes('openid')) {
@@ -73,13 +71,13 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
-    const idToken = await this.idTokenHandler.generateIdToken(parameters, login, consent, accessToken, null);
+    const idToken = await this.idTokenHandler.generateIdToken(login, consent, null, null, accessToken, null);
 
-    const token: TokenAuthorizationResponse = createTokenResponse(accessToken, null);
+    const response = createTokenResponse(accessToken, null) as TokenAuthorizationResponse &
+      IdTokenAuthorizationResponse;
 
-    token.id_token = idToken;
-    token.state = parameters.state;
+    response.id_token = idToken;
 
-    return token as TokenAuthorizationResponse & IdTokenAuthorizationResponse;
+    return response;
   }
 }

@@ -1,4 +1,4 @@
-import { Dictionary, Nullable } from '@guarani/types';
+import { Nullable } from '@guarani/types';
 
 import { JsonWebTokenClaimValidationOptions } from './jsonwebtoken-claim-validation.options';
 
@@ -9,7 +9,7 @@ export interface JsonWebTokenClaimsParseOptions {
   /**
    * Options used to validate the claims in a fine-grained manner.
    */
-  readonly validationOptions?: Dictionary<Nullable<JsonWebTokenClaimValidationOptions>>;
+  readonly validationOptions?: Record<string, Nullable<JsonWebTokenClaimValidationOptions>>;
 
   /**
    * Informs if the **exp** claim should be ignored.

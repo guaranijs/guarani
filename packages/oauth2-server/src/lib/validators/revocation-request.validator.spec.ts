@@ -1,4 +1,9 @@
+import { Buffer } from 'buffer';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { RevocationContext } from '../context/revocation-context';
 import { AccessToken } from '../entities/access-token.entity';
@@ -105,21 +110,26 @@ describe('Revocation Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: RevocationRequest;
+
+    const requestFactory = (data: Partial<RevocationRequest> = {}): HttpRequest => {
+      removeNullishValues<RevocationRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/revoke'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: { token: 'access_token' },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/revoke',
-        query: {},
-      });
+      parameters = { token: 'access_token' };
     });
 
-    it('should throw when not providing a "token" parameter.', async () => {
-      delete request.body.token;
+    it('should throw when not providing the parameter "token".', async () => {
+      const request = requestFactory({ token: undefined });
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
@@ -128,7 +138,7 @@ describe('Revocation Request Validator', () => {
     });
 
     it('should throw when providing an unsupported "token_type_hint".', async () => {
-      request.body.token_type_hint = 'unknown';
+      const request = requestFactory({ token_type_hint: 'unknown' as TokenTypeHint });
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         UnsupportedTokenTypeException,
@@ -137,13 +147,15 @@ describe('Revocation Request Validator', () => {
     });
 
     it('should throw when the client fails to authenticate.', async () => {
+      const request = requestFactory();
+
       const error = new InvalidClientException('Lorem ipsum dolor sit amet...');
       clientAuthenticationHandlerMock.authenticate.mockRejectedValueOnce(error);
       await expect(validator.validate(request)).rejects.toThrow(error);
     });
 
     it('should search for an access token and then a refresh token when providing an "access_token" token_type_hint.', async () => {
-      request.body.token_type_hint = 'access_token';
+      const request = requestFactory({ token_type_hint: 'access_token' });
 
       const client = <Client>{ id: 'client_id' };
 
@@ -152,7 +164,7 @@ describe('Revocation Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RevocationContext>({
-        parameters: request.body as RevocationRequest,
+        parameters,
         client,
         token: null,
         tokenType: null,
@@ -168,7 +180,7 @@ describe('Revocation Request Validator', () => {
     });
 
     it('should search for a refresh token and then an access token when providing a "refresh_token" token_type_hint.', async () => {
-      request.body.token_type_hint = 'refresh_token';
+      const request = requestFactory({ token_type_hint: 'refresh_token' });
 
       const client = <Client>{ id: 'client_id' };
 
@@ -177,7 +189,7 @@ describe('Revocation Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RevocationContext>({
-        parameters: request.body as RevocationRequest,
+        parameters,
         client,
         token: null,
         tokenType: null,
@@ -193,6 +205,8 @@ describe('Revocation Request Validator', () => {
     });
 
     it('should search for an access token and then a refresh token when not providing a token_type_hint.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
@@ -200,7 +214,7 @@ describe('Revocation Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RevocationContext>({
-        parameters: request.body as RevocationRequest,
+        parameters,
         client,
         token: null,
         tokenType: null,
@@ -216,6 +230,8 @@ describe('Revocation Request Validator', () => {
     });
 
     it('should return a null revocation context token when the access token does not have a client.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const accessToken = <AccessToken>{ handle: 'access_token', client: null };
 
@@ -224,7 +240,7 @@ describe('Revocation Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RevocationContext>({
-        parameters: request.body as RevocationRequest,
+        parameters,
         client,
         token: null,
         tokenType: null,
@@ -232,7 +248,7 @@ describe('Revocation Request Validator', () => {
     });
 
     it('should return a null revocation context token when trying to revoke a refresh token and the authorization server does not support it.', async () => {
-      request.body.token = 'refresh_token';
+      const request = requestFactory({ token: 'refresh_token' });
 
       const settings = <Settings>{ grantTypes: ['authorization_code'], enableRefreshTokenRevocation: false };
 
@@ -250,7 +266,7 @@ describe('Revocation Request Validator', () => {
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RevocationContext>({
-        parameters: request.body as RevocationRequest,
+        parameters,
         client,
         token: null,
         tokenType: null,
@@ -260,6 +276,8 @@ describe('Revocation Request Validator', () => {
     });
 
     it('should return an access token revocation context.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const accessToken = <AccessToken>{ handle: 'access_token', client };
 
@@ -268,7 +286,7 @@ describe('Revocation Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RevocationContext>({
-        parameters: request.body as RevocationRequest,
+        parameters,
         client,
         token: accessToken,
         tokenType: 'access_token',
@@ -276,6 +294,8 @@ describe('Revocation Request Validator', () => {
     });
 
     it('should return a refresh token revocation context.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{ id: 'client_id' };
       const refreshToken = <RefreshToken>{ handle: 'refresh_token', client };
 
@@ -284,7 +304,7 @@ describe('Revocation Request Validator', () => {
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<RevocationContext>({
-        parameters: request.body as RevocationRequest,
+        parameters,
         client,
         token: refreshToken,
         tokenType: 'refresh_token',

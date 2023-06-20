@@ -4,11 +4,11 @@ import { InteractionRequest } from '../../requests/interaction/interaction-reque
 /**
  * Parameters of the Interaction Context.
  */
-export interface InteractionContext<T extends InteractionRequest = InteractionRequest> {
+export interface InteractionContext<TRequest extends InteractionRequest = InteractionRequest> {
   /**
    * Parameters of the Interaction Context.
    */
-  readonly parameters: T;
+  readonly parameters: TRequest;
 
   /**
    * Interaction Type requested by the Client.

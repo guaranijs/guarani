@@ -20,10 +20,7 @@ import { TokenRequestValidator } from './token-request.validator';
  * Implementation of the **Refresh Token** Token Request Validator.
  */
 @Injectable()
-export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<
-  RefreshTokenTokenRequest,
-  RefreshTokenTokenContext
-> {
+export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<RefreshTokenTokenContext> {
   /**
    * Name of the Grant Type that uses this Validator.
    */
@@ -53,14 +50,14 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<RefreshTokenTokenContext> {
-    const parameters = request.body as RefreshTokenTokenRequest;
-
     const context = await super.validate(request);
+
+    const { parameters } = context;
 
     const refreshToken = await this.getRefreshToken(parameters);
     const scopes = this.getScopes(parameters, refreshToken, context.client);
 
-    return { ...context, refreshToken, scopes };
+    return Object.assign(context, { refreshToken, scopes }) as RefreshTokenTokenContext;
   }
 
   /**
@@ -70,7 +67,7 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<
    * @returns Refresh Token based on the provided token.
    */
   private async getRefreshToken(parameters: RefreshTokenTokenRequest): Promise<RefreshToken> {
-    if (typeof parameters.refresh_token !== 'string') {
+    if (typeof parameters.refresh_token === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "refresh_token".');
     }
 
@@ -92,10 +89,6 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<
    * @returns Scopes of the new Access Token.
    */
   private getScopes(parameters: RefreshTokenTokenRequest, refreshToken: RefreshToken, client: Client): string[] {
-    if (typeof parameters.scope !== 'undefined' && typeof parameters.scope !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "scope".');
-    }
-
     if (typeof parameters.scope === 'undefined') {
       return refreshToken.scopes;
     }

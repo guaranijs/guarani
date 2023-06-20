@@ -1,8 +1,6 @@
-import express, { Application, urlencoded } from 'express';
+import express, { Application, raw } from 'express';
+import { stringify as stringifyQs } from 'querystring';
 import request from 'supertest';
-import { URLSearchParams } from 'url';
-
-import { Dictionary } from '@guarani/types';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
 import { AuthorizationServerFactory } from '../src/lib/metadata/authorization-server.factory';
@@ -19,7 +17,7 @@ describe('Access Token Introspection', () => {
   beforeAll(async () => {
     app = express();
 
-    app.use(urlencoded({ extended: false }));
+    app.use(raw({ type: '*/*' }));
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,
@@ -38,12 +36,12 @@ describe('Access Token Introspection', () => {
       password: 'secretpassword',
     };
 
-    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
+    const requestBody = stringifyQs(requestData);
 
     const response = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
-      .send(requestBody.toString());
+      .send(requestBody);
 
     expect(response.status).toEqual(200);
 
@@ -60,12 +58,12 @@ describe('Access Token Introspection', () => {
 
   it('POST /oauth/introspect', async () => {
     const introspectionRequestData: IntrospectionRequest = { token: accessToken, token_type_hint: 'access_token' };
-    const introspectionRequestBody = new URLSearchParams(introspectionRequestData as Dictionary<any>);
+    const introspectionRequestBody = stringifyQs(introspectionRequestData);
 
     const introspectionResponse = await request(app)
       .post('/oauth/introspect')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
-      .send(introspectionRequestBody.toString());
+      .send(introspectionRequestBody);
 
     expect(introspectionResponse.status).toEqual(200);
 

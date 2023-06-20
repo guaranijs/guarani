@@ -1,9 +1,7 @@
 import { Buffer } from 'buffer';
-import express, { Application, urlencoded } from 'express';
+import express, { Application, raw } from 'express';
+import { stringify as stringifyQs } from 'querystring';
 import request from 'supertest';
-import { URLSearchParams } from 'url';
-
-import { Dictionary } from '@guarani/types';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
 import { OAuth2ExceptionResponse } from '../src/lib/exceptions/oauth2.exception.response';
@@ -22,7 +20,7 @@ describe('Refresh Token Revocation', () => {
   beforeAll(async () => {
     app = express();
 
-    app.use(urlencoded({ extended: false }));
+    app.use(raw({ type: '*/*' }));
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,
@@ -41,12 +39,12 @@ describe('Refresh Token Revocation', () => {
       password: 'secretpassword',
     };
 
-    const requestBody = new URLSearchParams(requestData as Dictionary<any>);
+    const requestBody = stringifyQs(requestData);
 
     const response = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
-      .send(requestBody.toString());
+      .send(requestBody);
 
     expect(response.status).toEqual(200);
 
@@ -68,12 +66,12 @@ describe('Refresh Token Revocation', () => {
       refresh_token: refreshToken,
     };
 
-    const refreshTokenRequestBody = new URLSearchParams(refreshTokenRequestData as Dictionary<any>);
+    const refreshTokenRequestBody = stringifyQs(refreshTokenRequestData);
 
     const refreshTokenResponse = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
-      .send(refreshTokenRequestBody.toString());
+      .send(refreshTokenRequestBody);
 
     expect(refreshTokenResponse.status).toEqual(200);
 
@@ -92,12 +90,12 @@ describe('Refresh Token Revocation', () => {
 
   it('POST /oauth/revoke', async () => {
     const revocationRequestData: RevocationRequest = { token: refreshToken, token_type_hint: 'refresh_token' };
-    const revocationRequestBody = new URLSearchParams(revocationRequestData as Dictionary<any>);
+    const revocationRequestBody = stringifyQs(revocationRequestData);
 
     const revocationResponse = await request(app)
       .post('/oauth/revoke')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
-      .send(revocationRequestBody.toString());
+      .send(revocationRequestBody);
 
     expect(revocationResponse.status).toEqual(200);
     expect(revocationResponse.body).toEqual(Buffer.alloc(0));
@@ -109,12 +107,12 @@ describe('Refresh Token Revocation', () => {
       refresh_token: refreshToken,
     };
 
-    const refreshTokenRequestBody = new URLSearchParams(refreshTokenRequestData as Dictionary<any>);
+    const refreshTokenRequestBody = stringifyQs(refreshTokenRequestData);
 
     const refreshTokenResponse = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
-      .send(refreshTokenRequestBody.toString());
+      .send(refreshTokenRequestBody);
 
     expect(refreshTokenResponse.status).toEqual(400);
 

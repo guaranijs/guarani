@@ -1,4 +1,5 @@
 import { OutgoingHttpHeaders } from 'http';
+import { stringify as stringifyQs } from 'querystring';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
@@ -8,6 +9,7 @@ import { Client } from '../entities/client.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { UnsupportedGrantTypeException } from '../exceptions/unsupported-grant-type.exception';
 import { GrantTypeInterface } from '../grant-types/grant-type.interface';
+import { GrantType } from '../grant-types/grant-type.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
 import { TokenRequest } from '../requests/token/token-request';
@@ -65,23 +67,28 @@ describe('Token Endpoint', () => {
   });
 
   describe('handle()', () => {
-    let request: HttpRequest;
+    let parameters: TokenRequest;
+
+    const requestFactory = (data: Partial<TokenRequest> = {}): HttpRequest => {
+      removeNullishValues<TokenRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+    };
 
     beforeEach(() => {
       Reflect.deleteProperty(validatorMock, 'name');
 
-      request = new HttpRequest({
-        body: <TokenRequest>{ grant_type: 'authorization_code' },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/token',
-        query: {},
-      });
+      parameters = { grant_type: 'authorization_code' };
     });
 
-    it('should return an error response when not providing a "grant_type" parameter.', async () => {
-      delete request.body.grant_type;
+    it('should return an error response when not providing the parameter "grant_type".', async () => {
+      const request = requestFactory({ grant_type: undefined });
 
       const error = new InvalidRequestException('Invalid parameter "grant_type".');
       const errorParameters = removeNullishValues(error.toJSON());
@@ -102,7 +109,7 @@ describe('Token Endpoint', () => {
     it('should return an error response when requesting an unsupported grant type.', async () => {
       Reflect.set(validatorMock, 'name', 'authorization_code');
 
-      request.body.grant_type = 'unknown';
+      const request = requestFactory({ grant_type: 'unknown' as GrantType });
 
       const error = new UnsupportedGrantTypeException('Unsupported grant_type "unknown".');
       const errorParameters = removeNullishValues(error.toJSON());
@@ -123,6 +130,8 @@ describe('Token Endpoint', () => {
     it('should return a token response.', async () => {
       Reflect.set(validatorMock, 'name', 'authorization_code');
 
+      const request = requestFactory({});
+
       const accessTokenResponse: TokenResponse = {
         access_token: 'access_token',
         token_type: 'Bearer',
@@ -132,7 +141,7 @@ describe('Token Endpoint', () => {
       };
 
       const context = <TokenContext>{
-        parameters: request.body as TokenRequest,
+        parameters,
         client: <Client>{ id: 'client_id' },
         grantType: <GrantTypeInterface>{
           name: 'authorization_code',

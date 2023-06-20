@@ -22,10 +22,7 @@ import { Prompt } from '../../types/prompt.type';
 /**
  * Implementation of the Authorization Request Validator.
  */
-export abstract class AuthorizationRequestValidator<
-  TRequest extends AuthorizationRequest = AuthorizationRequest,
-  TContext extends AuthorizationContext<TRequest> = AuthorizationContext<TRequest>
-> {
+export abstract class AuthorizationRequestValidator<TContext extends AuthorizationContext = AuthorizationContext> {
   /**
    * Name of the Response Type that uses this Validator.
    */
@@ -57,14 +54,14 @@ export abstract class AuthorizationRequestValidator<
    * @returns Authorization Context.
    */
   public async validate(request: HttpRequest): Promise<TContext> {
-    const parameters = request.query as TRequest;
+    const parameters = request.query as AuthorizationRequest;
     const cookies = request.cookies;
 
-    const state = this.getState(parameters);
     const client = await this.getClient(parameters);
     const responseType = this.getResponseType(parameters, client);
     const redirectUri = this.getRedirectUri(parameters, client);
     const scopes = this.getScopes(parameters, client);
+    const state = this.getState(parameters);
     const responseMode = this.getResponseMode(parameters, responseType);
     const nonce = this.getNonce(parameters);
     const prompts = this.getPrompts(parameters);
@@ -96,27 +93,13 @@ export abstract class AuthorizationRequestValidator<
   }
 
   /**
-   * Checks and returns the State provided by the Client.
-   *
-   * @param parameters Parameters of the Authorization Request.
-   * @returns State provided by the Client.
-   */
-  protected getState(parameters: AuthorizationRequest): Nullable<string> {
-    if (typeof parameters.state !== 'undefined' && typeof parameters.state !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "state".');
-    }
-
-    return parameters.state ?? null;
-  }
-
-  /**
    * Fetches a Client from the application's storage based on the provided Client Identifier.
    *
    * @param parameters Parameters of the Authorization Request.
    * @returns Client based on the provided Client Identifier.
    */
   protected async getClient(parameters: AuthorizationRequest): Promise<Client> {
-    if (typeof parameters.client_id !== 'string') {
+    if (typeof parameters.client_id === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "client_id".');
     }
 
@@ -137,7 +120,7 @@ export abstract class AuthorizationRequestValidator<
    * @returns Response Type.
    */
   protected getResponseType(parameters: AuthorizationRequest, client: Client): ResponseTypeInterface {
-    const name = parameters.response_type.split(' ').sort().join(' ') as ResponseType;
+    const name = parameters.response_type!.split(' ').sort().join(' ') as ResponseType;
     const responseType = this.responseTypes.find((responseType) => responseType.name === name)!;
 
     if (!client.responseTypes.includes(responseType.name)) {
@@ -157,7 +140,7 @@ export abstract class AuthorizationRequestValidator<
    * @returns Parsed and validated Redirect URI.
    */
   protected getRedirectUri(parameters: AuthorizationRequest, client: Client): URL {
-    if (typeof parameters.redirect_uri !== 'string') {
+    if (typeof parameters.redirect_uri === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "redirect_uri".');
     }
 
@@ -189,12 +172,22 @@ export abstract class AuthorizationRequestValidator<
    * @returns Scopes granted to the Client.
    */
   protected getScopes(parameters: AuthorizationRequest, client: Client): string[] {
-    if (typeof parameters.scope !== 'string') {
+    if (typeof parameters.scope === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "scope".');
     }
 
     this.scopeHandler.checkRequestedScope(parameters.scope);
     return this.scopeHandler.getAllowedScopes(client, parameters.scope);
+  }
+
+  /**
+   * Checks and returns the State provided by the Client.
+   *
+   * @param parameters Parameters of the Authorization Request.
+   * @returns State provided by the Client.
+   */
+  protected getState(parameters: AuthorizationRequest): Nullable<string> {
+    return parameters.state ?? null;
   }
 
   /**
@@ -208,10 +201,6 @@ export abstract class AuthorizationRequestValidator<
     parameters: AuthorizationRequest,
     responseType: ResponseTypeInterface
   ): ResponseModeInterface {
-    if (typeof parameters.response_mode !== 'undefined' && typeof parameters.response_mode !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "response_mode".');
-    }
-
     const responseModeName = parameters.response_mode ?? responseType.defaultResponseMode;
     const responseMode = this.responseModes.find((responseMode) => responseMode.name === responseModeName);
 
@@ -229,10 +218,6 @@ export abstract class AuthorizationRequestValidator<
    * @returns Nonce provided by the Client.
    */
   protected getNonce(parameters: AuthorizationRequest): Nullable<string> {
-    if (typeof parameters.nonce !== 'undefined' && typeof parameters.nonce !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "nonce".');
-    }
-
     return parameters.nonce ?? null;
   }
 
@@ -243,11 +228,7 @@ export abstract class AuthorizationRequestValidator<
    * @returns Prompts requested by the Client.
    */
   protected getPrompts(parameters: AuthorizationRequest): Prompt[] {
-    if (typeof parameters.prompt !== 'undefined' && typeof parameters.prompt !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "prompt".');
-    }
-
-    const requestedPrompts = <Prompt[]>(parameters.prompt?.split(' ') ?? []);
+    const requestedPrompts = (parameters.prompt?.split(' ') ?? []) as Prompt[];
     const supportedPromptsNames: Prompt[] = ['consent', 'create', 'login', 'none', 'select_account'];
 
     requestedPrompts.forEach((prompt) => {
@@ -282,10 +263,6 @@ export abstract class AuthorizationRequestValidator<
    * @returns Display.
    */
   protected getDisplay(parameters: AuthorizationRequest): DisplayInterface {
-    if (typeof parameters.display !== 'undefined' && typeof parameters.display !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "display".');
-    }
-
     const displayName = parameters.display ?? 'page';
     const display = this.displays.find((display) => display.name === displayName);
 
@@ -307,10 +284,6 @@ export abstract class AuthorizationRequestValidator<
       return null;
     }
 
-    if (typeof parameters.max_age !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "max_age".');
-    }
-
     if (!/^(0|[1-9]\d*)$/g.test(parameters.max_age)) {
       throw new InvalidRequestException('Invalid parameter "max_age".');
     }
@@ -325,10 +298,6 @@ export abstract class AuthorizationRequestValidator<
    * @returns Login Hint provided by the Client.
    */
   protected getLoginHint(parameters: AuthorizationRequest): Nullable<string> {
-    if (typeof parameters.login_hint !== 'undefined' && typeof parameters.login_hint !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "login_hint".');
-    }
-
     return parameters.login_hint ?? null;
   }
 
@@ -339,10 +308,6 @@ export abstract class AuthorizationRequestValidator<
    * @returns ID Token Hint provided by the Client.
    */
   protected getIdTokenHint(parameters: AuthorizationRequest): Nullable<string> {
-    if (typeof parameters.id_token_hint !== 'undefined' && typeof parameters.id_token_hint !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "id_token_hint".');
-    }
-
     return parameters.id_token_hint ?? null;
   }
 
@@ -353,10 +318,6 @@ export abstract class AuthorizationRequestValidator<
    * @returns UI Locales requested by the Client.
    */
   protected getUiLocales(parameters: AuthorizationRequest): string[] {
-    if (typeof parameters.ui_locales !== 'undefined' && typeof parameters.ui_locales !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "ui_locales".');
-    }
-
     const requestedUiLocales = parameters.ui_locales?.split(' ') ?? [];
 
     requestedUiLocales.forEach((requestedUiLocale) => {
@@ -375,10 +336,6 @@ export abstract class AuthorizationRequestValidator<
    * @returns Authentication Context Class References requested by the Client.
    */
   protected getAcrValues(parameters: AuthorizationRequest): string[] {
-    if (typeof parameters.acr_values !== 'undefined' && typeof parameters.acr_values !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "acr_values".');
-    }
-
     const requestedAcrValues = parameters.acr_values?.split(' ') ?? [];
 
     requestedAcrValues.forEach((requestedAcrValue) => {

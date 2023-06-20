@@ -74,7 +74,7 @@ export class IdTokenTokenAuthorizationRequestValidator extends AuthorizationRequ
    * @returns Nonce provided by the Client.
    */
   protected override getNonce(parameters: AuthorizationRequest): string {
-    if (typeof parameters.nonce !== 'string') {
+    if (typeof parameters.nonce === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "nonce".');
     }
 

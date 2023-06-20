@@ -12,11 +12,11 @@ import { Prompt } from '../../types/prompt.type';
 /**
  * Parameters of the Authorization Context.
  */
-export interface AuthorizationContext<T extends AuthorizationRequest = AuthorizationRequest> {
+export interface AuthorizationContext<TRequest extends AuthorizationRequest = AuthorizationRequest> {
   /**
    * Parameters of the Authorization Request.
    */
-  readonly parameters: T;
+  readonly parameters: TRequest;
 
   /**
    * Cookies of the Http Request.

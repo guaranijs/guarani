@@ -1,7 +1,9 @@
 import { Buffer } from 'buffer';
+import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { EndSessionContext } from '../context/end-session-context';
 import { Client } from '../entities/client.entity';
@@ -15,13 +17,6 @@ import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { EndSessionRequestValidator } from './end-session-request.validator';
-
-const invalidStates: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidIdTokenHints: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidClientIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidPostLogoutRedirectUris: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidLogoutHints: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidUiLocales: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('End Session Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -48,49 +43,42 @@ describe('End Session Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: EndSessionRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<EndSessionRequest> = {}): HttpRequest => {
+      removeNullishValues<EndSessionRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/end_session',
-        query: <EndSessionRequest>{
-          id_token_hint: 'id_token_hint',
-          client_id: 'client_id',
-          post_logout_redirect_uri: 'https://client.example.com/oauth/logout-callback',
-          state: 'client_state',
-          logout_hint: 'logout_hint',
-          ui_locales: 'pt-BR en',
-        },
+        url: new URL(`https://server.example.com/oauth/end_session?${stringifyQs(parameters)}`),
       });
+    };
+
+    beforeEach(() => {
+      parameters = {
+        id_token_hint: 'id_token_hint',
+        client_id: 'client_id',
+        post_logout_redirect_uri: 'https://client.example.com/oauth/logout_callback',
+        state: 'client_state',
+        logout_hint: 'logout_hint',
+        ui_locales: 'pt-BR en',
+      };
     });
 
-    it.each(invalidStates)('should throw when providing an invalid "state" parameter.', async (state) => {
-      request.query.state = state;
+    it('should throw when not providing the parameter "id_token_hint".', async () => {
+      const request = requestFactory({ id_token_hint: undefined });
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "state".'
+        'Invalid parameter "id_token_hint".'
       );
     });
 
-    it.each(invalidIdTokenHints)(
-      'should throw when providing an invalid "id_token_hint" parameter.',
-      async (idTokenHint) => {
-        request.query.id_token_hint = idTokenHint;
-
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "id_token_hint".'
-        );
-      }
-    );
-
-    it.each(invalidClientIds)('should throw when providing an invalid "client_id" parameter.', async (clientId) => {
-      request.query.client_id = clientId;
+    it('should throw when not providing the parameter "client_id".', async () => {
+      const request = requestFactory({ client_id: undefined });
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
@@ -99,28 +87,13 @@ describe('End Session Request Validator', () => {
     });
 
     it('should throw when the client is not registered.', async () => {
+      const request = requestFactory();
       clientServiceMock.findOne.mockResolvedValueOnce(null);
       await expect(validator.validate(request)).rejects.toThrowWithMessage(InvalidClientException, 'Invalid Client.');
     });
 
-    it.each(invalidPostLogoutRedirectUris)(
-      'should throw when providing an invalid "post_logout_redirect_uri" parameter.',
-      async (redirectUri) => {
-        request.query.post_logout_redirect_uri = redirectUri;
-
-        const client = <Client>{ id: 'client_id' };
-
-        clientServiceMock.findOne.mockResolvedValueOnce(client);
-
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "post_logout_redirect_uri".'
-        );
-      }
-    );
-
     it('should throw when providing an invalid redirect uri.', async () => {
-      request.query.post_logout_redirect_uri = 'client.example.com/oauth/logout-callback';
+      const request = requestFactory({ post_logout_redirect_uri: 'client.example.com/oauth/logout_callback' });
 
       const client = <Client>{ id: 'client_id' };
 
@@ -133,7 +106,9 @@ describe('End Session Request Validator', () => {
     });
 
     it('should throw when the provided redirect uri has a fragment component.', async () => {
-      request.query.post_logout_redirect_uri = 'https://client.example.com/oauth/logout-callback#foo=bar';
+      const request = requestFactory({
+        post_logout_redirect_uri: 'https://client.example.com/oauth/logout_callback#foo=bar',
+      });
 
       const client = <Client>{ id: 'client_id' };
 
@@ -146,9 +121,11 @@ describe('End Session Request Validator', () => {
     });
 
     it('should throw when the client is not allowed to use the provided redirect uri.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{
         id: 'client_id',
-        postLogoutRedirectUris: ['https://client.example.org/oauth/logout-callback'],
+        postLogoutRedirectUris: ['https://client.example.org/oauth/logout_callback'],
       };
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
@@ -159,47 +136,12 @@ describe('End Session Request Validator', () => {
       );
     });
 
-    it.each(invalidLogoutHints)(
-      'should throw when providing an invalid "logout_hint" parameter.',
-      async (logoutHint) => {
-        request.query.logout_hint = logoutHint;
-
-        const client = <Client>{
-          id: 'client_id',
-          postLogoutRedirectUris: ['https://client.example.com/oauth/logout-callback'],
-        };
-
-        clientServiceMock.findOne.mockResolvedValueOnce(client);
-
-        await expect(validator.validate(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "logout_hint".'
-        );
-      }
-    );
-
-    it.each(invalidUiLocales)('should throw when providing an invalid "ui_locales" parameter.', async (uiLocales) => {
-      request.query.ui_locales = uiLocales;
-
-      const client = <Client>{
-        id: 'client_id',
-        postLogoutRedirectUris: ['https://client.example.com/oauth/logout-callback'],
-      };
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "ui_locales".'
-      );
-    });
-
     it('should throw when requesting an unsupported ui locale.', async () => {
-      request.query.ui_locales = 'unknown';
+      const request = requestFactory({ ui_locales: 'unknown' });
 
       const client = <Client>{
         id: 'client_id',
-        postLogoutRedirectUris: ['https://client.example.com/oauth/logout-callback'],
+        postLogoutRedirectUris: ['https://client.example.com/oauth/logout_callback'],
       };
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
@@ -221,11 +163,11 @@ describe('End Session Request Validator', () => {
 
       validator = container.resolve(EndSessionRequestValidator);
 
-      request.query.ui_locales = 'pt-BR';
+      const request = requestFactory({ ui_locales: 'pt-BR' });
 
       const client = <Client>{
         id: 'client_id',
-        postLogoutRedirectUris: ['https://client.example.com/oauth/logout-callback'],
+        postLogoutRedirectUris: ['https://client.example.com/oauth/logout_callback'],
       };
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
@@ -237,19 +179,21 @@ describe('End Session Request Validator', () => {
     });
 
     it('should return an end session context.', async () => {
+      const request = requestFactory();
+
       const client = <Client>{
         id: 'client_id',
-        postLogoutRedirectUris: ['https://client.example.com/oauth/logout-callback'],
+        postLogoutRedirectUris: ['https://client.example.com/oauth/logout_callback'],
       };
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<EndSessionContext>({
-        parameters: request.query as EndSessionRequest,
+        parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
         client,
-        postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout-callback'),
+        postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout_callback'),
         state: 'client_state',
         logoutHint: 'logout_hint',
         uiLocales: ['pt-BR', 'en'],

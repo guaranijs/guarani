@@ -1,11 +1,11 @@
 import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 import { isDeepStrictEqual } from 'util';
 
 import { Inject, Injectable, InjectAll } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
-import { Dictionary, Nullable } from '@guarani/types';
+import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
@@ -26,6 +26,7 @@ import { HttpResponse } from '../http/http.response';
 import { HttpMethod } from '../http/http-method.type';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseType } from '../response-types/response-type.type';
+import { AuthorizationResponse } from '../responses/authorization/authorization-response';
 import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -34,6 +35,7 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { AuthorizationRequestValidator } from '../validators/authorization/authorization-request.validator';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
@@ -266,7 +268,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
     try {
       const authorizationResponse = await context.responseType.handle(context, session.activeLogin!, consent);
 
-      this.includeAdditionalResponseParameters(authorizationResponse);
+      this.includeAdditionalResponseParameters(authorizationResponse, { state });
 
       const response = context.responseMode.createHttpResponse(redirectUri.href, authorizationResponse);
 
@@ -278,11 +280,9 @@ export class AuthorizationEndpoint implements EndpointInterface {
       return response;
     } catch (exc: unknown) {
       const error = this.asOAuth2Exception(exc);
-      const responseParameters: Dictionary<any> = error.toJSON();
+      const response = this.includeAdditionalResponseParameters(error.toJSON(), { state });
 
-      this.includeAdditionalResponseParameters(responseParameters, { state });
-
-      return context.responseMode.createHttpResponse(redirectUri.href, responseParameters);
+      return context.responseMode.createHttpResponse(redirectUri.href, response);
     }
   }
 
@@ -293,7 +293,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @returns Authorization Request Validator.
    */
   private getValidator(parameters: AuthorizationRequest): AuthorizationRequestValidator {
-    if (typeof parameters.response_type !== 'string') {
+    if (typeof parameters.response_type === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "response_type".');
     }
 
@@ -373,11 +373,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @returns Redirect Response to the Authorization Endpoint with the Session Cookie set.
    */
   private reloadAuthorizationEndpoint(session: Session, parameters: AuthorizationRequest): HttpResponse {
-    const url = new URL(this.path, this.settings.issuer);
-    const urlParameters = new URLSearchParams(parameters as Dictionary<any>);
-
-    url.search = urlParameters.toString();
-
+    const url = addParametersToUrl(new URL(this.path, this.settings.issuer), parameters);
     return new HttpResponse().redirect(url).setCookie('guarani:session', session.id);
   }
 
@@ -391,7 +387,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private redirectToRegistrationPage(grant: Grant, display: DisplayInterface): HttpResponse {
     const url = new URL(this.settings.userInteraction!.registrationUrl, this.settings.issuer);
-    const parameters: Dictionary<unknown> = { login_challenge: grant.loginChallenge };
+    const parameters: Dictionary<string> = { login_challenge: grant.loginChallenge };
 
     return display.createHttpResponse(url.href, parameters).setCookie('guarani:grant', grant.id);
   }
@@ -406,7 +402,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private redirectToSelectAccountPage(grant: Grant, display: DisplayInterface): HttpResponse {
     const url = new URL(this.settings.userInteraction!.selectAccountUrl, this.settings.issuer);
-    const parameters: Dictionary<unknown> = { login_challenge: grant.loginChallenge };
+    const parameters: Dictionary<string> = { login_challenge: grant.loginChallenge };
 
     return display.createHttpResponse(url.href, parameters).setCookie('guarani:grant', grant.id);
   }
@@ -420,7 +416,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private redirectToLoginPage(grant: Grant, display: DisplayInterface): HttpResponse {
     const url = new URL(this.settings.userInteraction!.loginUrl, this.settings.issuer);
-    const parameters: Dictionary<unknown> = { login_challenge: grant.loginChallenge };
+    const parameters: Dictionary<string> = { login_challenge: grant.loginChallenge };
 
     return display.createHttpResponse(url.href, parameters).setCookie('guarani:grant', grant.id);
   }
@@ -434,7 +430,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private redirectToConsentPage(grant: Grant, display: DisplayInterface): HttpResponse {
     const url = new URL(this.settings.userInteraction!.consentUrl, this.settings.issuer);
-    const parameters: Dictionary<unknown> = { consent_challenge: grant.consentChallenge };
+    const parameters: Dictionary<string> = { consent_challenge: grant.consentChallenge };
 
     return display.createHttpResponse(url.href, parameters).setCookie('guarani:grant', grant.id);
   }
@@ -448,14 +444,8 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private handleFatalAuthorizationError(error: OAuth2Exception, state: Nullable<string>): HttpResponse {
-    const responseParameters: Dictionary<any> = error.toJSON();
-
-    this.includeAdditionalResponseParameters(responseParameters, { state });
-
-    const url = new URL(this.settings.userInteraction!.errorUrl, this.settings.issuer);
-    const parameters = new URLSearchParams(removeNullishValues(responseParameters));
-
-    url.search = parameters.toString();
+    const response = this.includeAdditionalResponseParameters(error.toJSON(), { state });
+    const url = addParametersToUrl(new URL(this.settings.userInteraction!.errorUrl, this.settings.issuer), response);
 
     return new HttpResponse().redirect(url.href);
   }
@@ -481,14 +471,16 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param parameters Parameters to be added to the Authorization Response.
    */
   private includeAdditionalResponseParameters(
-    response: Dictionary<unknown>,
-    parameters: Dictionary<unknown> = {}
-  ): void {
+    response: AuthorizationResponse,
+    parameters: Partial<Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>> = {}
+  ): AuthorizationResponse {
     Object.entries(parameters).forEach(([name, value]) => (response[name] = value));
 
     if (this.settings.enableAuthorizationResponseIssuerIdentifier) {
       response.iss = this.settings.issuer;
     }
+
+    return removeNullishValues(response);
   }
 
   /**

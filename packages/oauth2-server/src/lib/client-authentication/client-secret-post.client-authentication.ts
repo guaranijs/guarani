@@ -2,30 +2,16 @@ import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 
 import { Inject, Injectable } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
+import { getBodyParameters } from '../utils/get-body-parameters';
 import { ClientAuthenticationInterface } from './client-authentication.interface';
 import { ClientAuthentication } from './client-authentication.type';
-
-/**
- * Parameters passed by the Client on the Http Request Body.
- */
-export interface ClientSecretPostCredentials extends Dictionary<unknown> {
-  /**
-   * Client Identifier.
-   */
-  readonly client_id: string;
-
-  /**
-   * Client Secret.
-   */
-  readonly client_secret: string;
-}
+import { ClientSecretPostClientAuthenticationParameters } from './client-secret-post.client-authentication.parameters';
 
 /**
  * Implements the Client Authentication via the Request Body.
@@ -65,7 +51,9 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
-    const { client_id: clientId, client_secret: clientSecret } = request.body as ClientSecretPostCredentials;
+    const { client_id: clientId, client_secret: clientSecret } =
+      getBodyParameters<ClientSecretPostClientAuthenticationParameters>(request);
+
     return typeof clientId === 'string' && typeof clientSecret === 'string';
   }
 
@@ -76,7 +64,8 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
    * @returns Authenticated Client.
    */
   public async authenticate(request: HttpRequest): Promise<Client> {
-    const { client_id: clientId, client_secret: clientSecret } = request.body as ClientSecretPostCredentials;
+    const { client_id: clientId, client_secret: clientSecret } =
+      getBodyParameters<ClientSecretPostClientAuthenticationParameters>(request);
 
     const client = await this.clientService.findOne(clientId);
 

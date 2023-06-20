@@ -6,7 +6,7 @@ import { InvalidRequestException } from '../../exceptions/invalid-request.except
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { PkceInterface } from '../../pkces/pkce.interface';
 import { PKCE } from '../../pkces/pkce.token';
-import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
+import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
@@ -59,7 +59,7 @@ export class CodeTokenAuthorizationRequestValidator extends CodeAuthorizationReq
    * @returns Response Mode.
    */
   protected override getResponseMode(
-    parameters: AuthorizationRequest,
+    parameters: CodeAuthorizationRequest,
     responseType: ResponseTypeInterface
   ): ResponseModeInterface {
     const responseMode = super.getResponseMode(parameters, responseType);

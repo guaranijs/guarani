@@ -7,5 +7,5 @@ export interface CodeAuthorizationResponse extends AuthorizationResponse {
   /**
    * Authorization Code handle issued to the Client.
    */
-  readonly code: string;
+  code: string;
 }

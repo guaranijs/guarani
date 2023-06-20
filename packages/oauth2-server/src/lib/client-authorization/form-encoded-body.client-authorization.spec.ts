@@ -1,5 +1,9 @@
+import { Buffer } from 'buffer';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
+import { Dictionary, OneOrMany } from '@guarani/types';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
@@ -7,10 +11,14 @@ import { HttpRequest } from '../http/http.request';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { ClientAuthorization } from './client-authorization.type';
-import {
-  FormEncodedBodyClientAuthorization,
-  FormEncodedBodyCredentials,
-} from './form-encoded-body.client-authorization';
+import { FormEncodedBodyClientAuthorization } from './form-encoded-body.client-authorization';
+import { FormEncodedBodyClientAuthorizationParameters } from './form-encoded-body.client-authorization.parameters';
+
+const methodRequests: [Dictionary<OneOrMany<string>>, boolean][] = [
+  [{}, false],
+  [{ access_token: '' }, true],
+  [{ access_token: 'foo' }, true],
+];
 
 describe('Form Encoded Body Client Authorization', () => {
   let container: DependencyInjectionContainer;
@@ -42,41 +50,56 @@ describe('Form Encoded Body Client Authorization', () => {
   });
 
   describe('hasBeenRequested()', () => {
-    const methodRequests: [Dictionary<unknown>, boolean][] = [
-      [{}, false],
-      [{ access_token: '' }, true],
-      [{ access_token: 'foo' }, true],
-    ];
+    it.each(methodRequests)('should check if the authorization method has beed requested.', (body, expected) => {
+      const request = new HttpRequest({
+        body: Buffer.from(stringifyQs(body), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/userinfo'),
+      });
+
+      expect(clientAuthorization.hasBeenRequested(request)).toEqual(expected);
+    });
 
     it.each(methodRequests)('should check if the authorization method has beed requested.', (body, expected) => {
       const request = new HttpRequest({
-        body,
+        body: Buffer.from(JSON.stringify(body), 'utf8'),
         cookies: {},
-        headers: {},
+        headers: { 'content-type': 'application/json' },
         method: 'POST',
-        path: '/oauth/userinfo',
-        query: {},
+        url: new URL('https://server.example.com/oauth/userinfo'),
       });
 
       expect(clientAuthorization.hasBeenRequested(request)).toEqual(expected);
     });
   });
 
-  describe('authorize()', () => {
-    let request: HttpRequest;
+  describe.each(['form', 'json'])('authorize()', (method) => {
+    let parameters: FormEncodedBodyClientAuthorizationParameters;
+
+    const requestFactory = (data: Partial<FormEncodedBodyClientAuthorizationParameters> = {}): HttpRequest => {
+      parameters = Object.assign(parameters, data);
+
+      const body = method === 'form' ? stringifyQs(parameters) : JSON.stringify(parameters);
+      const contentType = method === 'form' ? 'application/x-www-form-urlencoded' : 'application/json';
+
+      return new HttpRequest({
+        body: Buffer.from(body, 'utf8'),
+        cookies: {},
+        headers: { 'content-type': contentType },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/userinfo'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <FormEncodedBodyCredentials>{ access_token: 'access_token' },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/userinfo',
-        query: {},
-      });
+      parameters = { access_token: 'access_token' };
     });
 
     it('should throw when no access token is found.', async () => {
+      const request = requestFactory();
+
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
 
       await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
@@ -86,6 +109,8 @@ describe('Form Encoded Body Client Authorization', () => {
     });
 
     it('should throw when the access token is expired.', async () => {
+      const request = requestFactory();
+
       const accessToken = <AccessToken>{
         handle: 'access_token',
         expiresAt: new Date(Date.now() - 3600000),
@@ -100,6 +125,8 @@ describe('Form Encoded Body Client Authorization', () => {
     });
 
     it('should throw when the access token is not yet valid.', async () => {
+      const request = requestFactory();
+
       const accessToken = <AccessToken>{
         handle: 'access_token',
         expiresAt: new Date(Date.now() + 7200000),
@@ -115,6 +142,8 @@ describe('Form Encoded Body Client Authorization', () => {
     });
 
     it('should throw when the access token is revoked.', async () => {
+      const request = requestFactory();
+
       const accessToken = <AccessToken>{
         handle: 'access_token',
         isRevoked: true,
@@ -131,6 +160,8 @@ describe('Form Encoded Body Client Authorization', () => {
     });
 
     it('should return an authorized access token.', async () => {
+      const request = requestFactory();
+
       const accessToken = <AccessToken>{
         handle: 'access_token',
         isRevoked: false,

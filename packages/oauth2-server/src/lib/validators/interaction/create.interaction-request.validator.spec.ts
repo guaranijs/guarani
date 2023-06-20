@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { CreateContextInteractionContext } from '../../context/interaction/create-context.interaction-context';
 import { CreateDecisionInteractionContext } from '../../context/interaction/create-decision.interaction-context';
@@ -16,8 +19,6 @@ import { CreateDecisionInteractionRequest } from '../../requests/interaction/cre
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { CreateInteractionRequestValidator } from './create.interaction-request.validator';
-
-const invalidLoginChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Create Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -69,35 +70,36 @@ describe('Create Interaction Request Validator', () => {
   });
 
   describe('validateContext()', () => {
-    let request: HttpRequest;
+    let parameters: CreateContextInteractionRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<CreateContextInteractionRequest> = {}): HttpRequest => {
+      removeNullishValues<CreateContextInteractionRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/interaction',
-        query: <CreateContextInteractionRequest>{
-          interaction_type: 'create',
-          login_challenge: 'login_challenge',
-        },
+        url: new URL(`https://server.example.com/oauth/interaction?${stringifyQs(parameters)}`),
       });
+    };
+
+    beforeEach(() => {
+      parameters = { interaction_type: 'create', login_challenge: 'login_challenge' };
     });
 
-    it.each(invalidLoginChallenges)(
-      'should throw when providing an invalid "login_challenge" parameter.',
-      async (loginChallenge) => {
-        request.query.login_challenge = loginChallenge;
+    it('should throw when not providing the parameter "login_challenge".', async () => {
+      const request = requestFactory({ login_challenge: undefined });
 
-        await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "login_challenge".'
-        );
-      }
-    );
+      await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "login_challenge".'
+      );
+    });
 
     it('should throw when no grant is found.', async () => {
+      const request = requestFactory();
+
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
@@ -107,12 +109,14 @@ describe('Create Interaction Request Validator', () => {
     });
 
     it('should return a create context interaction context.', async () => {
+      const request = requestFactory();
+
       const grant = <Grant>{ id: 'grant_id' };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<CreateContextInteractionContext>({
-        parameters: request.query as CreateContextInteractionRequest,
+        parameters,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });
@@ -120,35 +124,36 @@ describe('Create Interaction Request Validator', () => {
   });
 
   describe('validateDecision()', () => {
-    let request: HttpRequest;
+    let parameters: CreateDecisionInteractionRequest;
+
+    const requestFactory = (data: Partial<CreateDecisionInteractionRequest> = {}): HttpRequest => {
+      removeNullishValues<CreateDecisionInteractionRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/interaction'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <CreateDecisionInteractionRequest>{
-          interaction_type: 'create',
-          login_challenge: 'login_challenge',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/interaction',
-        query: {},
-      });
+      parameters = <CreateDecisionInteractionRequest>{ interaction_type: 'create', login_challenge: 'login_challenge' };
     });
 
-    it.each(invalidLoginChallenges)(
-      'should throw when providing an invalid "login_challenge" parameter.',
-      async (loginChallenge) => {
-        request.body.login_challenge = loginChallenge;
+    it('should throw when not providing the parameter "login_challenge".', async () => {
+      const request = requestFactory({ login_challenge: undefined });
 
-        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "login_challenge".'
-        );
-      }
-    );
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "login_challenge".'
+      );
+    });
 
     it('should throw when no grant is found.', async () => {
+      const request = requestFactory();
+
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
@@ -158,12 +163,14 @@ describe('Create Interaction Request Validator', () => {
     });
 
     it('should return a create decision interaction context.', async () => {
+      const request = requestFactory();
+
       const grant = <Grant>{ id: 'grant_id' };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<CreateDecisionInteractionContext>({
-        parameters: request.body as CreateDecisionInteractionRequest,
+        parameters,
         interactionType: interactionTypesMocks[1]!,
         grant,
       });

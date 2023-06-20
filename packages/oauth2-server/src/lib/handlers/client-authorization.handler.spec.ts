@@ -1,3 +1,6 @@
+import { Buffer } from 'buffer';
+import { URL } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 
 import { ClientAuthorizationInterface } from '../client-authorization/client-authorization.interface';
@@ -50,12 +53,11 @@ describe('Client Authorization Handler', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: {},
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/userinfo',
-        query: {},
+        url: new URL('https://server.example.com/oauth/userinfo'),
       });
     });
 

@@ -1,7 +1,4 @@
-import { URLSearchParams } from 'url';
-
 import { DependencyInjectionContainer } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { ConsentContextInteractionContext } from '../context/interaction/consent-context.interaction-context';
 import { ConsentDecisionInteractionContext } from '../context/interaction/consent-decision.interaction-context';
@@ -22,6 +19,7 @@ import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { ConsentInteractionType } from './consent.interaction-type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
@@ -152,13 +150,13 @@ describe('Consent Interaction Type', () => {
     it('should return a valid first time consent context response.', async () => {
       context.grant.consent = null;
 
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const requestUrl = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<ConsentContextInteractionResponse>({
         skip: false,
         requested_scope: 'foo bar baz',
         subject: 'user_id',
-        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        request_url: requestUrl.href,
         login_challenge: 'login_challenge',
         client: 'client_id',
         context: {
@@ -170,13 +168,13 @@ describe('Consent Interaction Type', () => {
     });
 
     it('should return a valid skip consent context response.', async () => {
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const requestUrl = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<ConsentContextInteractionResponse>({
         skip: true,
         requested_scope: 'foo bar baz',
         subject: 'user_id',
-        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        request_url: requestUrl.href,
         login_challenge: 'login_challenge',
         client: 'client_id',
         context: {
@@ -280,10 +278,10 @@ describe('Consent Interaction Type', () => {
 
       consentServiceMock.create.mockResolvedValueOnce(consent);
 
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(consentServiceMock.create).toHaveBeenCalledTimes(1);
@@ -313,10 +311,10 @@ describe('Consent Interaction Type', () => {
 
       consentServiceMock.create.mockResolvedValueOnce(consent);
 
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(consentServiceMock.create).toHaveBeenCalledTimes(1);
@@ -350,12 +348,12 @@ describe('Consent Interaction Type', () => {
 
         consentServiceMock.create.mockResolvedValueOnce(consent);
 
-        const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+        const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
         await expect(
           interactionType.handleDecision(context)
         ).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
-          redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+          redirect_to: redirectTo.href,
         });
 
         expect(consentServiceMock.create).toHaveBeenCalledTimes(1);
@@ -378,10 +376,10 @@ describe('Consent Interaction Type', () => {
       Object.assign(context.parameters, { decision: 'accept', grant_scope: 'foo bar' });
       Object.assign(context, { decision: 'accept', grantedScopes: ['foo', 'bar'] });
 
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(grantServiceMock.save).not.toHaveBeenCalled();
@@ -405,10 +403,10 @@ describe('Consent Interaction Type', () => {
 
       const { error } = context as ConsentDecisionDenyInteractionContext;
 
-      const urlParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);

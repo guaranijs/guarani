@@ -11,7 +11,7 @@ const body = `
 <!DOCTYPE html>
 <html>
   <head></head>
-  <body onload="openWindow('https://example.com/?foo=foo&bar=bar&baz=baz');">
+  <body onload="openWindow('https://example.com/?var1=string&var2=123&var3=true');">
     <script type="text/javascript">
       function callback(redirectTo) {
         window.location.replace(redirectTo);
@@ -53,10 +53,11 @@ describe('Page Display', () => {
   describe('createHttpResponse()', () => {
     it('should create a http response with a populated html body.', () => {
       const response = display.createHttpResponse('https://example.com', {
-        foo: 'foo',
-        bar: 'bar',
-        baz: 'baz',
-        empty: null,
+        var1: 'string',
+        var2: 123,
+        var3: true,
+        var4: null,
+        var5: undefined,
       });
 
       expect(response.statusCode).toEqual(200);

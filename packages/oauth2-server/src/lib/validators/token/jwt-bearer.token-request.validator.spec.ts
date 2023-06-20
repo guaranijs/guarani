@@ -1,4 +1,6 @@
 import { Buffer } from 'buffer';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import {
@@ -10,6 +12,7 @@ import {
   JsonWebTokenClaimsParameters,
   OctetSequenceKey,
 } from '@guarani/jose';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { JwtBearerTokenContext } from '../../context/token/jwt-bearer.token-context';
 import { Client } from '../../entities/client.entity';
@@ -32,9 +35,7 @@ import { JwtBearerTokenRequestValidator } from './jwt-bearer.token-request.valid
 jest.mock('../../handlers/client-authentication.handler');
 jest.mock('../../handlers/scope.handler');
 
-const invalidAssertions: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 const invalidTokenFormats: string[] = ['', 'a', '.a', '.a.b', 'a.b', 'a.b.c.d'];
-const invalidScopes: any[] = [null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('JWT Bearer Token Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -110,24 +111,26 @@ describe('JWT Bearer Token Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: JwtBearerTokenRequest;
+
+    const requestFactory = (data: Partial<JwtBearerTokenRequest> = {}): HttpRequest => {
+      removeNullishValues<JwtBearerTokenRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <JwtBearerTokenRequest>{
-          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-          assertion: '',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/token',
-        query: {},
-      });
+      parameters = <JwtBearerTokenRequest>{ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer' };
     });
 
-    it.each(invalidAssertions)('should throw when providing an invalid "assertion" parameter.', async (assertion) => {
-      request.body.assertion = assertion;
+    it('should throw when not providing the parameter "assertion".', async () => {
+      const request = requestFactory({ assertion: undefined });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
 
@@ -140,7 +143,7 @@ describe('JWT Bearer Token Request Validator', () => {
     });
 
     it.each(invalidTokenFormats)('should throw when the provided assertion is invalid.', async (assertion) => {
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
 
@@ -168,7 +171,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const jws = new JsonWebSignature({ alg: 'none' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(key);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
 
@@ -195,7 +198,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const jws = new JsonWebSignature({ alg: 'HS256', typ: 'JWT' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(key);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
 
@@ -223,7 +226,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const jws = new JsonWebSignature({ alg: 'HS256', typ: 'JWT' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(key);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
 
@@ -250,7 +253,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const jws = new JsonWebSignature({ alg: 'HS256', typ: 'JWT' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(key);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
 
@@ -277,7 +280,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const jws = new JsonWebSignature({ alg: 'HS256', typ: 'JWT' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(key);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
 
@@ -305,7 +308,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const jws = new JsonWebSignature({ alg: 'HS256', typ: 'JWT' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(key);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
 
@@ -332,7 +335,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const jws = new JsonWebSignature({ alg: 'HS256', typ: 'JWT' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(key);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
 
@@ -360,7 +363,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const jws = new JsonWebSignature({ alg: 'HS256', typ: 'JWT' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(key);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{
         id: 'client_id',
@@ -392,7 +395,7 @@ describe('JWT Bearer Token Request Validator', () => {
       const jws = new JsonWebSignature({ alg: 'HS256', typ: 'JWT' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(key);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{
         id: 'client_id',
@@ -439,7 +442,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const assertion = await jws.sign(key);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{
         id: 'client_id',
@@ -489,7 +492,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const jwks = new JsonWebKeySet([key]);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{
         id: 'client_id',
@@ -539,7 +542,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const jwks = new JsonWebKeySet([new EllipticCurveKey(key.toJSON(), { alg: 'ECDH-ES' })]);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{
         id: 'client_id',
@@ -589,7 +592,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const jwks = new JsonWebKeySet([new EllipticCurveKey(key.toJSON(), { key_ops: ['sign'] })]);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{
         id: 'client_id',
@@ -639,7 +642,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const jwks = new JsonWebKeySet([new EllipticCurveKey(key.toJSON(), { use: 'enc' })]);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{
         id: 'client_id',
@@ -689,7 +692,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const jwks = new JsonWebKeySet([key]);
 
-      request.body.assertion = assertion;
+      const request = requestFactory({ assertion });
 
       const client = <Client>{
         id: 'client_id',
@@ -705,59 +708,6 @@ describe('JWT Bearer Token Request Validator', () => {
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
         'The provided Assertion is invalid.'
-      );
-    });
-
-    it.each(invalidScopes)('should throw when providing an invalid "scope" parameter.', async (scope) => {
-      const now = Math.floor(Date.now() / 1000);
-
-      const claims: JsonWebTokenClaimsParameters = {
-        iss: 'client_id',
-        sub: 'user_id',
-        aud: ['https://server.example.com/oauth/token'],
-        iat: now,
-        exp: now + 86400,
-      };
-
-      const key = new EllipticCurveKey({
-        kty: 'EC',
-        crv: 'P-256',
-        x: '4c_cS6IT6jaVQeobt_6BDCTmzBaBOTmmiSCpjd5a6Og',
-        y: 'mnrPnCFTDkGdEwilabaqM7DzwlAFgetZTmP9ycHPxF8',
-        d: 'bwVX6Vx-TOfGKYOPAcu2xhaj3JUzs-McsC-suaHnFBo',
-      });
-
-      const jws = new JsonWebSignature(
-        {
-          alg: 'ES256',
-          kid: 'LHM5p37TAesdI-tFqs7LOmDufKjrU0nq1jFRwI_7mvI',
-          typ: 'JWT',
-        },
-        new JsonWebTokenClaims(claims).toBuffer()
-      );
-
-      const assertion = await jws.sign(key);
-
-      const jwks = new JsonWebKeySet([key]);
-
-      Object.assign(request.body, { assertion, scope });
-
-      const client = <Client>{
-        id: 'client_id',
-        secret: null,
-        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
-        jwks: jwks.toJSON(),
-        jwksUri: null,
-      };
-
-      const user = <User>{ id: 'user_id' };
-
-      clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
-      userServiceMock.findOne.mockResolvedValueOnce(user);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "scope".'
       );
     });
 
@@ -793,7 +743,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const jwks = new JsonWebKeySet([key]);
 
-      Object.assign(request.body, { assertion, scope: 'foo bar' });
+      const request = requestFactory({ assertion, scope: 'foo bar' });
 
       const client = <Client>{
         id: 'client_id',
@@ -815,7 +765,7 @@ describe('JWT Bearer Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<JwtBearerTokenContext>({
-        parameters: request.body as JwtBearerTokenRequest,
+        parameters,
         client,
         grantType: grantTypesMocks[5]!,
         user,
@@ -855,7 +805,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const jwks = new JsonWebKeySet([key]);
 
-      Object.assign(request.body, { assertion, scope: 'foo bar' });
+      const request = requestFactory({ assertion, scope: 'foo bar' });
 
       const client = <Client>{
         id: 'client_id',
@@ -875,7 +825,7 @@ describe('JWT Bearer Token Request Validator', () => {
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(client.scopes);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<JwtBearerTokenContext>({
-        parameters: request.body as JwtBearerTokenRequest,
+        parameters,
         client,
         grantType: grantTypesMocks[5]!,
         user,

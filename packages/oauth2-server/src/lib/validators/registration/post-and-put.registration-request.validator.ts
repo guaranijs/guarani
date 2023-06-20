@@ -1,8 +1,5 @@
-import { Buffer } from 'buffer';
-import { timingSafeEqual } from 'crypto';
 import { URL } from 'url';
 
-import { Inject, Injectable } from '@guarani/di';
 import {
   JsonWebEncryptionContentEncryptionAlgorithm,
   JsonWebEncryptionKeyWrapAlgorithm,
@@ -10,87 +7,63 @@ import {
   JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
 import { isPlainObject } from '@guarani/primitives';
-import { Dictionary, Nullable } from '@guarani/types';
+import { Nullable } from '@guarani/types';
 
-import { ClientAuthentication } from '../client-authentication/client-authentication.type';
-import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';
-import { GetRegistrationContext } from '../context/registration/get.registration-context';
-import { PostRegistrationContext } from '../context/registration/post.registration-context';
-import { PutRegistrationContext } from '../context/registration/put.registration-context';
-import { AccessToken } from '../entities/access-token.entity';
-import { Client } from '../entities/client.entity';
-import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
-import { InvalidClientMetadataException } from '../exceptions/invalid-client-metadata.exception';
-import { InvalidRedirectUriException } from '../exceptions/invalid-redirect-uri.exception';
-import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
-import { InvalidTokenException } from '../exceptions/invalid-token.exception';
-import { GrantType } from '../grant-types/grant-type.type';
-import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
-import { ScopeHandler } from '../handlers/scope.handler';
-import { HttpRequest } from '../http/http.request';
-import { DeleteRegistrationRequest } from '../requests/registration/delete.registration-request';
-import { GetRegistrationRequest } from '../requests/registration/get.registration-request';
-import { PostRegistrationRequest } from '../requests/registration/post.registration-request';
-import { PutBodyRegistrationRequest } from '../requests/registration/put-body.registration-request';
-import { PutQueryRegistrationRequest } from '../requests/registration/put-query.registration-request';
-import { ResponseType } from '../response-types/response-type.type';
-import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
-import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
-import { Settings } from '../settings/settings';
-import { SETTINGS } from '../settings/settings.token';
-import { ApplicationType } from '../types/application-type.type';
-import { SubjectType } from '../types/subject-type.type';
+import { ClientAuthentication } from '../../client-authentication/client-authentication.type';
+import { PostRegistrationContext } from '../../context/registration/post.registration-context';
+import { PutRegistrationContext } from '../../context/registration/put.registration-context';
+import { InvalidClientMetadataException } from '../../exceptions/invalid-client-metadata.exception';
+import { InvalidRedirectUriException } from '../../exceptions/invalid-redirect-uri.exception';
+import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
+import { InvalidScopeException } from '../../exceptions/invalid-scope.exception';
+import { GrantType } from '../../grant-types/grant-type.type';
+import { ClientAuthorizationHandler } from '../../handlers/client-authorization.handler';
+import { ScopeHandler } from '../../handlers/scope.handler';
+import { HttpRequest } from '../../http/http.request';
+import { PostRegistrationRequest } from '../../requests/registration/post.registration-request';
+import { PutBodyRegistrationRequest } from '../../requests/registration/put-body.registration-request';
+import { ResponseType } from '../../response-types/response-type.type';
+import { AccessTokenServiceInterface } from '../../services/access-token.service.interface';
+import { Settings } from '../../settings/settings';
+import { ApplicationType } from '../../types/application-type.type';
+import { SubjectType } from '../../types/subject-type.type';
+import { RegistrationRequestValidator } from './registration-request.validator';
 
 /**
- * Implementation of the Registration Request Validator.
+ * Abstract Base Class of the Post and Put Registration Request Validators.
  */
-@Injectable()
-export class RegistrationRequestValidator {
+export abstract class PostAndPutRegistrationRequestValidator<
+  TContext extends PostRegistrationContext | PutRegistrationContext = PostRegistrationContext | PutRegistrationContext
+> extends RegistrationRequestValidator<TContext> {
   /**
-   * Scopes that grant access to the Dynamic Client Registration Post Request.
-   */
-  public readonly postRequestScopes: string[] = ['client:manage', 'client:create'];
-
-  /**
-   * Scopes that grant access to the Dynamic Client Registration Get Request.
-   */
-  public readonly getRequestScopes: string[] = ['client:manage', 'client:read'];
-
-  /**
-   * Scopes that grant access to the Dynamic Client Registration Delete Request.
-   */
-  public readonly deleteRequestScopes: string[] = ['client:manage', 'client:delete'];
-
-  /**
-   * Scopes that grant access to the Dynamic Client Registration Put Request.
-   */
-  public readonly putRequestScopes: string[] = ['client:manage', 'client:update'];
-
-  /**
-   * Instantiates a new Registration Request Validator.
+   * Instantiates a new Dynamic Registration Request Validator.
    *
    * @param scopeHandler Instance of the Scope Handler.
    * @param clientAuthorizationHandler Instance of the Client Authorization Handler.
-   * @param settings Settings of the Authorization Server.
    * @param accessTokenService Instance of the Access Token Service.
+   * @param settings Settings of the Authorization Server.
    */
   public constructor(
-    private readonly scopeHandler: ScopeHandler,
-    private readonly clientAuthorizationHandler: ClientAuthorizationHandler,
-    @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface
-  ) {}
+    protected readonly scopeHandler: ScopeHandler,
+    protected readonly clientAuthorizationHandler: ClientAuthorizationHandler,
+    protected readonly accessTokenService: AccessTokenServiceInterface,
+    protected readonly settings: Settings
+  ) {
+    super();
+  }
 
   /**
-   * Validates the Http Post Registration Request and returns the actors of the Post Registration Context.
+   * Validates the Registration Request and returns the actors of the Registration Context.
    *
    * @param request Http Request.
-   * @returns Post Registration Context.
+   * @returns Dynamic Client Registration Context.
    */
-  public async validatePost(request: HttpRequest): Promise<PostRegistrationContext> {
-    const accessToken = await this.checkInitialAccessToken(request, this.postRequestScopes);
+  public async validate(request: HttpRequest): Promise<TContext> {
+    const parameters = request.json<PostRegistrationRequest | PutBodyRegistrationRequest>();
 
-    const parameters = request.body as PostRegistrationRequest;
+    if (!isPlainObject(parameters)) {
+      throw new InvalidRequestException('Invalid Http Request Body.');
+    }
 
     const redirectUris = this.getRedirectUris(parameters);
     const responseTypes = this.getResponseTypes(parameters);
@@ -145,9 +118,7 @@ export class RegistrationRequestValidator {
     const softwareId = this.getSoftwareId(parameters);
     const softwareVersion = this.getSoftwareVersion(parameters);
 
-    return {
-      parameters,
-      accessToken,
+    return <TContext>{
       redirectUris,
       responseTypes,
       grantTypes,
@@ -183,227 +154,12 @@ export class RegistrationRequestValidator {
       softwareId,
       softwareVersion,
     };
-  }
-
-  /**
-   * Validates the Http Get Registration Request and returns the actors of the Get Registration Context.
-   *
-   * @param request Http Request.
-   * @returns Get Registration Context.
-   */
-  public async validateGet(request: HttpRequest): Promise<GetRegistrationContext> {
-    const parameters = request.query as GetRegistrationRequest;
-
-    const clientId = this.getClientId(parameters);
-    const accessToken = await this.authorize(request, clientId, this.getRequestScopes);
-
-    return { parameters, accessToken, client: accessToken.client! };
-  }
-
-  /**
-   * Validates the Http Delete Registration Request and returns the actors of the Delete Registration Context.
-   *
-   * @param request Http Request.
-   * @returns Delete Registration Context.
-   */
-  public async validateDelete(request: HttpRequest): Promise<DeleteRegistrationContext> {
-    const parameters = request.query as DeleteRegistrationRequest;
-
-    const clientId = this.getClientId(parameters);
-    const accessToken = await this.authorize(request, clientId, this.deleteRequestScopes);
-
-    return { parameters, accessToken, client: accessToken.client! };
-  }
-
-  /**
-   * Validates the Http Put Registration Request and returns the actors of the Put Registration Context.
-   *
-   * @param request Http Request.
-   * @returns Put Registration Context.
-   */
-  public async validatePut(request: HttpRequest): Promise<PutRegistrationContext> {
-    const queryParameters = request.query as PutQueryRegistrationRequest;
-    const bodyParameters = request.body as PutBodyRegistrationRequest;
-
-    const queryClientId = this.getClientId(queryParameters);
-    const bodyClientId = this.getClientId(bodyParameters);
-
-    const clientId = this.checkPutClientId(queryClientId, bodyClientId);
-    const clientSecret = this.getClientSecret(bodyParameters);
-
-    const accessToken = await this.authorize(request, clientId, this.putRequestScopes);
-
-    this.checkClientCredentials(accessToken.client!, clientSecret);
-
-    const redirectUris = this.getRedirectUris(bodyParameters);
-    const responseTypes = this.getResponseTypes(bodyParameters);
-    const grantTypes = this.getGrantTypes(bodyParameters);
-
-    this.checkResponseTypesAndGrantTypes(responseTypes, grantTypes);
-
-    const applicationType = this.getApplicationType(bodyParameters);
-
-    this.checkApplicationTypeAndRedirectUris(applicationType, redirectUris);
-
-    const clientName = this.getClientName(bodyParameters);
-    const scopes = this.getScopes(bodyParameters);
-    const contacts = this.getContacts(bodyParameters);
-    const logoUri = this.getLogoUri(bodyParameters);
-    const clientUri = this.getClientUri(bodyParameters);
-    const policyUri = this.getPolicyUri(bodyParameters);
-    const tosUri = this.getTosUri(bodyParameters);
-
-    this.checkJwksUriAndJwksAreNotBothProvided(bodyParameters);
-
-    const jwksUri = this.getJwksUri(bodyParameters);
-    const jwks = await this.getJwks(bodyParameters);
-
-    this.checkSubjectTypeAndSectorIdentifierUri(bodyParameters);
-
-    const subjectType = this.getSubjectType(bodyParameters);
-    const sectorIdentifierUri = this.getSectorIdentifierUri(bodyParameters);
-    const idTokenSignedResponseAlgorithm = this.getIdTokenSignedResponseAlgorithm(bodyParameters);
-    const idTokenEncryptedResponseKeyWrap = this.getIdTokenEncryptedResponseKeyWrap(bodyParameters);
-    const idTokenEncryptedResponseContentEncryption = this.getIdTokenEncryptedResponseContentEncryption(bodyParameters);
-    // const userinfoSignedResponseAlgorithm = this.getUserinfoSignedResponseAlgorithm(bodyParameters);
-    // const userinfoEncryptedResponseKeyWrap = this.getUserinfoEncryptedResponseKeyWrap(bodyParameters);
-    // const userinfoEncryptedResponseContentEncryption = this.getUserinfoEncryptedResponseContentEncryption(bodyParameters);
-    // const requestObjectSigningAlgorithm = this.getRequestObjectSigningAlgorithm(bodyParameters);
-    // const requestObjectEncryptionKeyWrap = this.getRequestObjectEncryptionKeyWrap(bodyParameters);
-    // const requestObjectEncryptionContentEncryption = this.getRequestObjectEncryptionContentEncryption(bodyParameters);
-    const authenticationMethod = this.getAuthenticationMethod(bodyParameters);
-    const authenticationSigningAlgorithm = this.getAuthenticationSigningAlgorithm(bodyParameters);
-
-    this.checkAuthenticationMethodAndAuthenticationMethodSignature(bodyParameters);
-
-    const defaultMaxAge = this.getDefaultMaxAge(bodyParameters);
-    const requireAuthTime = this.getRequireAuthTime(bodyParameters);
-    const defaultAcrValues = this.getDefaultAcrValues(bodyParameters);
-    const initiateLoginUri = this.getInitiateLoginUri(bodyParameters);
-    // const requestUris = this.getRequestUris(bodyParameters);
-    const postLogoutRedirectUris = this.getPostLogoutRedirectUris(bodyParameters);
-
-    this.checkApplicationTypeAndPostLogoutRedirectUris(applicationType, postLogoutRedirectUris);
-
-    const softwareId = this.getSoftwareId(bodyParameters);
-    const softwareVersion = this.getSoftwareVersion(bodyParameters);
-
-    return {
-      queryParameters,
-      bodyParameters,
-      accessToken,
-      client: accessToken.client!,
-      clientId,
-      clientSecret,
-      redirectUris,
-      responseTypes,
-      grantTypes,
-      applicationType,
-      clientName,
-      scopes,
-      contacts,
-      logoUri,
-      clientUri,
-      policyUri,
-      tosUri,
-      jwksUri,
-      jwks,
-      subjectType,
-      sectorIdentifierUri,
-      idTokenSignedResponseAlgorithm,
-      idTokenEncryptedResponseKeyWrap,
-      idTokenEncryptedResponseContentEncryption,
-      // userinfoSignedResponseAlgorithm,
-      // userinfoEncryptedResponseKeyWrap,
-      // userinfoEncryptedResponseContentEncryption,
-      // requestObjectSigningAlgorithm,
-      // requestObjectEncryptionKeyWrap,
-      // requestObjectEncryptionContentEncryption,
-      authenticationMethod,
-      authenticationSigningAlgorithm,
-      defaultMaxAge,
-      requireAuthTime,
-      defaultAcrValues,
-      initiateLoginUri,
-      // requestUris,
-      postLogoutRedirectUris,
-      softwareId,
-      softwareVersion,
-    };
-  }
-
-  /**
-   * Checks and returns the Identifier of the Client of the Request.
-   *
-   * @param parameters Parameters of the Client Registration Request.
-   * @returns Identifier of the Client of the Request.
-   */
-  private getClientId<T extends Dictionary<unknown>>(parameters: T): string {
-    if (typeof parameters.client_id !== 'string') {
-      throw new InvalidClientMetadataException('Invalid parameter "client_id".');
-    }
-
-    return parameters.client_id;
-  }
-
-  /**
-   * Checks if the Client Identifiers match and returns the Query Identifier of the Client of the Request.
-   *
-   * @param queryClientId Identifier of the Client of the Request at the Query Parameters.
-   * @param bodyClientId Identifier of the Client of the Request at the Body Parameters.
-   * @returns Query Identifier of the Client of the Request.
-   */
-  private checkPutClientId(queryClientId: string, bodyClientId: string): string {
-    const queryClientIdentifier = Buffer.from(queryClientId, 'utf8');
-    const bodyClientIdentifier = Buffer.from(bodyClientId, 'utf8');
-
-    if (
-      queryClientIdentifier.length !== bodyClientIdentifier.length ||
-      !timingSafeEqual(queryClientIdentifier, bodyClientIdentifier)
-    ) {
-      throw new InvalidClientMetadataException('Mismatching Client Identifiers.');
-    }
-
-    return queryClientId;
-  }
-
-  /**
-   * Checks and returns the Secret of the Client of the Request.
-   *
-   * @param parameters Parameters of the Put Client Registration Request.
-   * @returns Secret of the Client of the Request.
-   */
-  private getClientSecret(parameters: PutBodyRegistrationRequest): Nullable<string> {
-    if (typeof parameters.client_secret !== 'undefined' && typeof parameters.client_secret !== 'string') {
-      throw new InvalidClientMetadataException('Invalid parameter "client_secret".');
-    }
-
-    return parameters.client_secret ?? null;
-  }
-
-  /**
-   * Checks if the Credentials provided by the Client match it's own data.
-   *
-   * @param client Client of the Put Registration Request.
-   * @param clientSecret Secret of the Client of the Request.
-   */
-  private checkClientCredentials(client: Client, clientSecret: Nullable<string>): void {
-    if (client.secret === null || clientSecret === null) {
-      return;
-    }
-
-    const secret = Buffer.from(client.secret, 'utf8');
-    const providedSecret = Buffer.from(clientSecret, 'utf8');
-
-    if (secret.length !== providedSecret.length || !timingSafeEqual(secret, providedSecret)) {
-      throw new InvalidClientMetadataException('Mismatching Client Secret.');
-    }
   }
 
   /**
    * Checks and returns the Redirect URIs of the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Redirect URIs of the Client.
    */
   private getRedirectUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL[] {
@@ -434,7 +190,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Response Types requested by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Response Types requested by the Client.
    */
   private getResponseTypes(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): ResponseType[] {
@@ -450,7 +206,7 @@ export class RegistrationRequestValidator {
       return ['code'];
     }
 
-    return parameters.response_types.map((responseType) => {
+    return parameters.response_types.map<ResponseType>((responseType) => {
       if (!this.settings.responseTypes.includes(responseType)) {
         throw new InvalidClientMetadataException(`Unsupported response_type "${responseType}".`);
       }
@@ -462,7 +218,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Grant Types requested by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Grant Types requested by the Client.
    */
   private getGrantTypes(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): (GrantType | 'implicit')[] {
@@ -532,9 +288,10 @@ export class RegistrationRequestValidator {
     // "authorization_code" and "code", "code id_token", "code id_token token", "code token"
     if (
       grantTypes.includes('authorization_code') &&
-      ![...authorizationCodeResponseTypes, ...hybridResponseTypes].some(responseTypesIncludes)
+      !authorizationCodeResponseTypes.some(responseTypesIncludes) &&
+      !hybridResponseTypes.some(responseTypesIncludes)
     ) {
-      const codeResponseTypesString = [...authorizationCodeResponseTypes, ...hybridResponseTypes].join('", "');
+      const codeResponseTypesString = authorizationCodeResponseTypes.concat(hybridResponseTypes).join('", "');
 
       throw new InvalidClientMetadataException(
         `The Grant Type "authorization_code" requires at lease one of the Response Types ["${codeResponseTypesString}"].`
@@ -544,9 +301,10 @@ export class RegistrationRequestValidator {
     // "implicit" and "code id_token", "code id_token token", "code token", "id_token", "id_token id_token", "token"
     if (
       grantTypes.includes('implicit') &&
-      ![...hybridResponseTypes, ...implicitResponseTypes].some(responseTypesIncludes)
+      !hybridResponseTypes.some(responseTypesIncludes) &&
+      !implicitResponseTypes.some(responseTypesIncludes)
     ) {
-      const implicitResponseTypesString = [...hybridResponseTypes, ...implicitResponseTypes].join('", "');
+      const implicitResponseTypesString = hybridResponseTypes.concat(implicitResponseTypes).join('", "');
 
       throw new InvalidClientMetadataException(
         `The Grant Type "implicit" requires at lease one of the Response Types ["${implicitResponseTypesString}"].`
@@ -557,7 +315,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Application Type requested by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Application Type requested by the Client.
    */
   private getApplicationType(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): ApplicationType {
@@ -573,7 +331,7 @@ export class RegistrationRequestValidator {
       throw new InvalidClientMetadataException(`Unsupported application_type "${parameters.application_type}".`);
     }
 
-    return parameters.application_type;
+    return parameters.application_type as ApplicationType;
   }
 
   /**
@@ -617,7 +375,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Client Name provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Client Name provided by the Client.
    */
   private getClientName(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string> {
@@ -631,7 +389,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Scopes requested by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Scopes requested by the Client.
    */
   private getScopes(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): string[] {
@@ -651,7 +409,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Contacts requested by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Contacts requested by the Client.
    */
   private getContacts(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string[]> {
@@ -668,7 +426,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Logo URI provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Logo URI provided by the Client.
    */
   private getLogoUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
@@ -690,7 +448,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Client URI provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Client URI provided by the Client.
    */
   private getClientUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
@@ -712,7 +470,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Policy URI provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Policy URI provided by the Client.
    */
   private getPolicyUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
@@ -734,7 +492,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Terms of Service URI provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Terms of Service URI provided by the Client.
    */
   private getTosUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
@@ -756,7 +514,7 @@ export class RegistrationRequestValidator {
   /**
    * Checks if only one of **jwks_uri** and **jwks** is provided.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    */
   private checkJwksUriAndJwksAreNotBothProvided(
     parameters: PostRegistrationRequest | PutBodyRegistrationRequest
@@ -769,7 +527,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the JSON Web Key Set URI provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns JSON Web Key Set URI provided by the Client.
    */
   private getJwksUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
@@ -791,7 +549,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the JSON Web Key Set provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns JSON Web Key Set provided by the Client.
    */
   private async getJwks(
@@ -828,7 +586,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Subject Type provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Subject Type provided by the Client.
    */
   private getSubjectType(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): SubjectType {
@@ -840,17 +598,17 @@ export class RegistrationRequestValidator {
       return 'public';
     }
 
-    if (!this.settings.subjectTypes.includes(parameters.subject_type)) {
+    if (!this.settings.subjectTypes.includes(parameters.subject_type as SubjectType)) {
       throw new InvalidClientMetadataException(`Unsupported subject_type "${parameters.subject_type}".`);
     }
 
-    return parameters.subject_type;
+    return parameters.subject_type as SubjectType;
   }
 
   /**
    * Returns the Sector Identifier URI provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Sector Identifier URI provided by the Client.
    */
   private getSectorIdentifierUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
@@ -883,7 +641,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the ID Token JSON Web Signature Algorithm provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns ID Token JSON Web Signature Algorithm provided by the Client.
    */
   private getIdTokenSignedResponseAlgorithm(
@@ -900,19 +658,23 @@ export class RegistrationRequestValidator {
       return 'RS256';
     }
 
-    if (!this.settings.idTokenSignatureAlgorithms.includes(parameters.id_token_signed_response_alg)) {
+    if (
+      !this.settings.idTokenSignatureAlgorithms.includes(
+        parameters.id_token_signed_response_alg as Exclude<JsonWebSignatureAlgorithm, 'none'>
+      )
+    ) {
       throw new InvalidClientMetadataException(
         `Unsupported id_token_signed_response_alg "${parameters.id_token_signed_response_alg}".`
       );
     }
 
-    return parameters.id_token_signed_response_alg;
+    return parameters.id_token_signed_response_alg as Exclude<JsonWebSignatureAlgorithm, 'none'>;
   }
 
   /**
    * Returns the ID Token JSON Web Encryption Key Wrap Algorithm provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns ID Token JSON Web Encryption Key Wrap Algorithm provided by the Client.
    */
   private getIdTokenEncryptedResponseKeyWrap(
@@ -929,19 +691,23 @@ export class RegistrationRequestValidator {
       return null;
     }
 
-    if (this.settings.idTokenKeyWrapAlgorithms?.includes(parameters.id_token_encrypted_response_alg) !== true) {
+    if (
+      this.settings.idTokenKeyWrapAlgorithms?.includes(
+        parameters.id_token_encrypted_response_alg as JsonWebEncryptionKeyWrapAlgorithm
+      ) !== true
+    ) {
       throw new InvalidClientMetadataException(
         `Unsupported id_token_encrypted_response_alg "${parameters.id_token_encrypted_response_alg}".`
       );
     }
 
-    return parameters.id_token_encrypted_response_alg;
+    return parameters.id_token_encrypted_response_alg as JsonWebEncryptionKeyWrapAlgorithm;
   }
 
   /**
    * Returns the ID Token JSON Web Encryption Content Encryption Algorithm provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns ID Token JSON Web Encryption Content Encryption Algorithm provided by the Client.
    */
   private getIdTokenEncryptedResponseContentEncryption(
@@ -966,14 +732,16 @@ export class RegistrationRequestValidator {
 
     if (
       typeof parameters.id_token_encrypted_response_enc !== 'undefined' &&
-      this.settings.idTokenContentEncryptionAlgorithms?.includes(parameters.id_token_encrypted_response_enc) !== true
+      this.settings.idTokenContentEncryptionAlgorithms?.includes(
+        parameters.id_token_encrypted_response_enc as JsonWebEncryptionContentEncryptionAlgorithm
+      ) !== true
     ) {
       throw new InvalidClientMetadataException(
         `Unsupported id_token_encrypted_response_enc "${parameters.id_token_encrypted_response_enc}".`
       );
     }
 
-    return parameters.id_token_encrypted_response_enc ?? null;
+    return (parameters.id_token_encrypted_response_enc as JsonWebEncryptionContentEncryptionAlgorithm) ?? null;
   }
 
   // private getUserinfoSignedResponseAlgorithm(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
@@ -991,7 +759,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Client Authentication Method provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Client Authentication Method provided by the Client.
    */
   private getAuthenticationMethod(
@@ -1008,19 +776,21 @@ export class RegistrationRequestValidator {
       return 'client_secret_basic';
     }
 
-    if (!this.settings.clientAuthenticationMethods.includes(parameters.token_endpoint_auth_method)) {
+    if (
+      !this.settings.clientAuthenticationMethods.includes(parameters.token_endpoint_auth_method as ClientAuthentication)
+    ) {
       throw new InvalidClientMetadataException(
         `Unsupported token_endpoint_auth_method "${parameters.token_endpoint_auth_method}".`
       );
     }
 
-    return parameters.token_endpoint_auth_method;
+    return parameters.token_endpoint_auth_method as ClientAuthentication;
   }
 
   /**
    * Returns the Client Authentication Method JSON Web Signature Algorithm provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Client Authentication Method JSON Web Signature Algorithm provided by the Client.
    */
   private getAuthenticationSigningAlgorithm(
@@ -1035,21 +805,23 @@ export class RegistrationRequestValidator {
 
     if (
       typeof parameters.token_endpoint_auth_signing_alg !== 'undefined' &&
-      !this.settings.clientAuthenticationSignatureAlgorithms.includes(parameters.token_endpoint_auth_signing_alg)
+      !this.settings.clientAuthenticationSignatureAlgorithms.includes(
+        parameters.token_endpoint_auth_signing_alg as Exclude<JsonWebSignatureAlgorithm, 'none'>
+      )
     ) {
       throw new InvalidClientMetadataException(
         `Unsupported token_endpoint_auth_signing_alg "${parameters.token_endpoint_auth_signing_alg}".`
       );
     }
 
-    return parameters.token_endpoint_auth_signing_alg ?? null;
+    return (parameters.token_endpoint_auth_signing_alg as Exclude<JsonWebSignatureAlgorithm, 'none'>) ?? null;
   }
 
   /**
    * Checks if the JSON Web Signature Algorithm provided by the Client for JWT Client Assertion
    * is valid for the Client Authentication Method provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    */
   private checkAuthenticationMethodAndAuthenticationMethodSignature(
     parameters: PostRegistrationRequest | PutBodyRegistrationRequest
@@ -1089,11 +861,17 @@ export class RegistrationRequestValidator {
 
     switch (authenticationMethod) {
       case 'client_secret_jwt':
-        isValidAlgorithmForAuthenticationMethod = clientSecretJwtAlgorithms.includes(authenticationSigningAlgorithm);
+        isValidAlgorithmForAuthenticationMethod = clientSecretJwtAlgorithms.includes(
+          authenticationSigningAlgorithm as Exclude<JsonWebSignatureAlgorithm, 'none'>
+        );
+
         break;
 
       case 'private_key_jwt':
-        isValidAlgorithmForAuthenticationMethod = !clientSecretJwtAlgorithms.includes(authenticationSigningAlgorithm);
+        isValidAlgorithmForAuthenticationMethod = !clientSecretJwtAlgorithms.includes(
+          authenticationSigningAlgorithm as Exclude<JsonWebSignatureAlgorithm, 'none'>
+        );
+
         break;
     }
 
@@ -1108,7 +886,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Default Max Age provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Default Max Age provided by the Client.
    */
   private getDefaultMaxAge(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<number> {
@@ -1130,7 +908,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the value for Require Auth Time provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Value for Require Auth Time provided by the Client.
    */
   private getRequireAuthTime(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): boolean {
@@ -1144,7 +922,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Default Authentication Context Class References requested by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Default Authentication Context Class References requested by the Client.
    */
   private getDefaultAcrValues(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string[]> {
@@ -1160,7 +938,7 @@ export class RegistrationRequestValidator {
       return null;
     }
 
-    return parameters.default_acr_values.map((acrValue) => {
+    return parameters.default_acr_values.map<string>((acrValue) => {
       if (!this.settings.acrValues.includes(acrValue)) {
         throw new InvalidClientMetadataException(`Unsupported acr_value "${acrValue}".`);
       }
@@ -1172,7 +950,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Initiate Login URI provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Initiate Login URI provided by the Client.
    */
   private getInitiateLoginUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
@@ -1196,7 +974,7 @@ export class RegistrationRequestValidator {
   /**
    * Checks and returns the Post Logout Redirect URIs of the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Post Logout Redirect URIs of the Client.
    */
   private getPostLogoutRedirectUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL[] {
@@ -1270,7 +1048,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Software Identifier provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Software Identifier provided by the Client.
    */
   private getSoftwareId(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string> {
@@ -1284,7 +1062,7 @@ export class RegistrationRequestValidator {
   /**
    * Returns the Software Version provided by the Client.
    *
-   * @param parameters Parameters of the Post Client Registration Request.
+   * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Software Version provided by the Client.
    */
   private getSoftwareVersion(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<string> {
@@ -1293,59 +1071,5 @@ export class RegistrationRequestValidator {
     }
 
     return parameters.software_version ?? null;
-  }
-
-  /**
-   * Retrieves the Initial Access Token from the Request and validates it.
-   *
-   * @param request Http Request.
-   * @param scopes Expected Scopes for the Request.
-   * @returns Initial Access Token.
-   */
-  private async checkInitialAccessToken(request: HttpRequest, scopes: string[]): Promise<AccessToken> {
-    const accessToken = await this.clientAuthorizationHandler.authorize(request);
-
-    if (accessToken.client !== null) {
-      throw new InvalidTokenException('Invalid Credentials.');
-    }
-
-    if (accessToken.scopes.every((scope) => !scopes.includes(scope))) {
-      throw new InsufficientScopeException('Invalid Credentials.');
-    }
-
-    return accessToken;
-  }
-
-  /**
-   * Retrieves the Access Token from the Request and validates it.
-   *
-   * @param request Http Request.
-   * @param clientId Identifier of the Client of the Request.
-   * @param scopes Expected Scopes for the Request.
-   * @returns Access Token based on the handle provided by the Client.
-   */
-  private async authorize(request: HttpRequest, clientId: string, scopes: string[]): Promise<AccessToken> {
-    const accessToken = await this.clientAuthorizationHandler.authorize(request);
-
-    if (accessToken.client === null) {
-      throw new InvalidTokenException('Invalid Credentials.');
-    }
-
-    const clientIdentifier = Buffer.from(clientId, 'utf8');
-    const accessTokenClientIdentifier = Buffer.from(accessToken.client!.id, 'utf8');
-
-    if (
-      clientIdentifier.length !== accessTokenClientIdentifier.length ||
-      !timingSafeEqual(clientIdentifier, accessTokenClientIdentifier)
-    ) {
-      await this.accessTokenService.revoke(accessToken);
-      throw new InsufficientScopeException('Invalid Credentials.');
-    }
-
-    if (accessToken.scopes.every((scope) => !scopes.includes(scope))) {
-      throw new InsufficientScopeException('Invalid Credentials.');
-    }
-
-    return accessToken;
   }
 }

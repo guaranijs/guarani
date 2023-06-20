@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { SelectAccountContextInteractionContext } from '../../context/interaction/select-account-context.interaction-context';
 import { SelectAccountDecisionInteractionContext } from '../../context/interaction/select-account-decision.interaction-context';
@@ -22,10 +25,6 @@ import { LOGIN_SERVICE } from '../../services/login.service.token';
 import { SessionServiceInterface } from '../../services/session.service.interface';
 import { SESSION_SERVICE } from '../../services/session.service.token';
 import { SelectAccountInteractionRequestValidator } from './select-account.interaction-request.validator';
-
-const invalidSessionIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidLoginChallenges: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
-const invalidLoginIds: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, () => 1, {}, []];
 
 describe('Select Account Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -90,36 +89,36 @@ describe('Select Account Interaction Request Validator', () => {
   });
 
   describe('validateContext()', () => {
-    let request: HttpRequest;
+    let parameters: SelectAccountContextInteractionRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<SelectAccountContextInteractionRequest> = {}): HttpRequest => {
+      removeNullishValues<SelectAccountContextInteractionRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/interaction',
-        query: <SelectAccountContextInteractionRequest>{
-          interaction_type: 'select_account',
-          login_challenge: 'login_challenge',
-          session_id: 'session_id',
-        },
+        url: new URL(`https://server.example.com/oauth/interaction?${stringifyQs(parameters)}`),
       });
+    };
+
+    beforeEach(() => {
+      parameters = { interaction_type: 'select_account', login_challenge: 'login_challenge', session_id: 'session_id' };
     });
 
-    it.each(invalidLoginChallenges)(
-      'should throw when providing an invalid "login_challenge" parameter.',
-      async (loginChallenge) => {
-        request.query.login_challenge = loginChallenge;
+    it('should throw when not providing the parameter "login_challenge".', async () => {
+      const request = requestFactory({ login_challenge: undefined });
 
-        await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "login_challenge".'
-        );
-      }
-    );
+      await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "login_challenge".'
+      );
+    });
 
     it('should throw when no grant is found.', async () => {
+      const request = requestFactory();
+
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
@@ -128,8 +127,8 @@ describe('Select Account Interaction Request Validator', () => {
       );
     });
 
-    it.each(invalidSessionIds)('should throw when providing an invalid "session_id" parameter.', async (sessionId) => {
-      request.query.session_id = sessionId;
+    it('should throw when not providing the parameter "session_id".', async () => {
+      const request = requestFactory({ session_id: undefined });
 
       const grant = <Grant>{ id: 'grant_id' };
 
@@ -142,6 +141,8 @@ describe('Select Account Interaction Request Validator', () => {
     });
 
     it('should throw when no session is found.', async () => {
+      const request = requestFactory();
+
       const grant = <Grant>{ id: 'grant_id' };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
@@ -154,6 +155,8 @@ describe('Select Account Interaction Request Validator', () => {
     });
 
     it('should return a select account context interaction context with the login identifiers of the session.', async () => {
+      const request = requestFactory();
+
       const grant = <Grant>{ id: 'grant_id' };
 
       const session = <Session>{
@@ -165,7 +168,7 @@ describe('Select Account Interaction Request Validator', () => {
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
 
       await expect(validator.validateContext(request)).resolves.toStrictEqual<SelectAccountContextInteractionContext>({
-        parameters: request.query as SelectAccountContextInteractionRequest,
+        parameters,
         interactionType: interactionTypesMocks[2]!,
         grant,
         session,
@@ -174,36 +177,36 @@ describe('Select Account Interaction Request Validator', () => {
   });
 
   describe('validateDecision()', () => {
-    let request: HttpRequest;
+    let parameters: SelectAccountDecisionInteractionRequest;
+
+    const requestFactory = (data: Partial<SelectAccountDecisionInteractionRequest> = {}): HttpRequest => {
+      removeNullishValues<SelectAccountDecisionInteractionRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/interaction'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <SelectAccountDecisionInteractionRequest>{
-          interaction_type: 'select_account',
-          login_challenge: 'login_challenge',
-          login_id: 'login1_id',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/interaction',
-        query: {},
-      });
+      parameters = { interaction_type: 'select_account', login_challenge: 'login_challenge', login_id: 'login1_id' };
     });
 
-    it.each(invalidLoginChallenges)(
-      'should throw when providing an invalid "login_challenge" parameter.',
-      async (loginChallenge) => {
-        request.body.login_challenge = loginChallenge;
+    it('should throw when not providing the parameter "login_challenge".', async () => {
+      const request = requestFactory({ login_challenge: undefined });
 
-        await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
-          InvalidRequestException,
-          'Invalid parameter "login_challenge".'
-        );
-      }
-    );
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "login_challenge".'
+      );
+    });
 
     it('should throw when no grant is found.', async () => {
+      const request = requestFactory();
+
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(null);
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
@@ -212,8 +215,8 @@ describe('Select Account Interaction Request Validator', () => {
       );
     });
 
-    it.each(invalidLoginIds)('should throw when providing an invalid "login_id" parameter.', async (loginId) => {
-      request.body.login_id = loginId;
+    it('should throw when not providing the parameter "login_id".', async () => {
+      const request = requestFactory({ login_id: undefined });
 
       const grant = <Grant>{ id: 'grant_id' };
 
@@ -226,6 +229,8 @@ describe('Select Account Interaction Request Validator', () => {
     });
 
     it('should throw when no login is found.', async () => {
+      const request = requestFactory();
+
       const grant = <Grant>{ id: 'grant_id' };
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
@@ -238,6 +243,8 @@ describe('Select Account Interaction Request Validator', () => {
     });
 
     it('should return a select account decision interaction context.', async () => {
+      const request = requestFactory();
+
       const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
       const login = <Login>{ id: 'login1_id' };
 
@@ -246,7 +253,7 @@ describe('Select Account Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).resolves.toStrictEqual<SelectAccountDecisionInteractionContext>(
         {
-          parameters: request.body as SelectAccountDecisionInteractionRequest,
+          parameters,
           interactionType: interactionTypesMocks[2]!,
           grant,
           login,

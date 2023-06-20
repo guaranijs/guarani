@@ -1,7 +1,4 @@
-import { URLSearchParams } from 'url';
-
 import { DependencyInjectionContainer } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { LoginContextInteractionContext } from '../context/interaction/login-context.interaction-context';
 import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction-context';
@@ -23,6 +20,7 @@ import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 import { LoginInteractionType } from './login.interaction-type';
@@ -132,11 +130,11 @@ describe('Login Interaction Type', () => {
       context.grant.session.activeLogin = null;
       context.grant.session.logins = [];
 
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const requestUrl = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
-        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        request_url: requestUrl.href,
         client: 'client_id',
         context: {
           acr_values: undefined,
@@ -150,11 +148,11 @@ describe('Login Interaction Type', () => {
     });
 
     it('should return a valid skip login context response when not providing a "max_age" authorization parameter.', async () => {
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const requestUrl = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: true,
-        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        request_url: requestUrl.href,
         client: 'client_id',
         context: {
           acr_values: undefined,
@@ -170,11 +168,11 @@ describe('Login Interaction Type', () => {
     it('should return a valid skip login context response when the login is within the elapsed "max_age" time.', async () => {
       Reflect.set(context.grant.parameters, 'max_age', '86400');
 
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const requestUrl = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: true,
-        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        request_url: requestUrl.href,
         client: 'client_id',
         context: {
           acr_values: undefined,
@@ -190,13 +188,13 @@ describe('Login Interaction Type', () => {
     it('should return a valid login context response when the login is not within the elapsed "max_age" time.', async () => {
       Reflect.set(context.grant.parameters, 'max_age', '300');
 
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const requestUrl = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       const removedLogin = context.grant.session.activeLogin!;
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
-        request_url: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        request_url: requestUrl.href,
         client: 'client_id',
         context: {
           acr_values: undefined,
@@ -296,10 +294,10 @@ describe('Login Interaction Type', () => {
         'Could not authenticate using the Authentication Context Class Reference "urn:guarani:acr:2fa".'
       );
 
-      const parameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/error?${parameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -330,10 +328,10 @@ describe('Login Interaction Type', () => {
 
       loginServiceMock.create.mockResolvedValueOnce(login);
 
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
@@ -374,10 +372,10 @@ describe('Login Interaction Type', () => {
         acr: 'guarani:acr:2fa',
       });
 
-      const urlParameters = new URLSearchParams(context.grant.parameters as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/authorize?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(loginServiceMock.create).not.toHaveBeenCalled();
@@ -403,10 +401,10 @@ describe('Login Interaction Type', () => {
 
       const { error } = context as LoginDecisionDenyInteractionContext;
 
-      const urlParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
-        redirect_to: `https://server.example.com/oauth/error?${urlParameters.toString()}`,
+        redirect_to: redirectTo.href,
       });
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);

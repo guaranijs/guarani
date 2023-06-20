@@ -9,7 +9,6 @@ import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
-import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { IdTokenAuthorizationResponse } from '../responses/authorization/id-token.authorization-response';
@@ -47,10 +46,10 @@ describe('ID Token Response Type', () => {
   });
 
   describe('handle()', () => {
-    let context: AuthorizationContext<AuthorizationRequest>;
+    let context: AuthorizationContext;
 
     beforeEach(() => {
-      context = <AuthorizationContext<AuthorizationRequest>>{
+      context = <AuthorizationContext>{
         parameters: {
           response_type: 'id_token',
           client_id: 'client_id',
@@ -110,7 +109,6 @@ describe('ID Token Response Type', () => {
 
       await expect(responseType.handle(context, login, consent)).resolves.toStrictEqual<IdTokenAuthorizationResponse>({
         id_token: 'id_token',
-        state: 'client_state',
       });
     });
   });

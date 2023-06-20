@@ -38,10 +38,7 @@ import { TokenRequestValidator } from './token-request.validator';
  * Implementation of the **JWT Bearer** Token Request Validator.
  */
 @Injectable()
-export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
-  JwtBearerTokenRequest,
-  JwtBearerTokenContext
-> {
+export class JwtBearerTokenRequestValidator extends TokenRequestValidator<JwtBearerTokenContext> {
   /**
    * JSON Web Signature Algorithms.
    */
@@ -92,14 +89,14 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<JwtBearerTokenContext> {
-    const parameters = request.body as JwtBearerTokenRequest;
-
     const context = await super.validate(request);
+
+    const { parameters } = context;
 
     const user = await this.getSubjectFromAssertion(parameters, context.client);
     const scopes = this.getScopes(parameters, context.client);
 
-    return { ...context, user, scopes };
+    return Object.assign(context, { user, scopes }) as JwtBearerTokenContext;
   }
 
   /**
@@ -110,7 +107,7 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * @returns End User represented in the Assertion.
    */
   private async getSubjectFromAssertion(parameters: JwtBearerTokenRequest, client: Client): Promise<User> {
-    if (typeof parameters.assertion !== 'string') {
+    if (typeof parameters.assertion === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "assertion".');
     }
 
@@ -266,10 +263,6 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<
    * @returns Scopes granted to the Client.
    */
   protected getScopes(parameters: JwtBearerTokenRequest, client: Client): string[] {
-    if (typeof parameters.scope !== 'undefined' && typeof parameters.scope !== 'string') {
-      throw new InvalidRequestException('Invalid parameter "scope".');
-    }
-
     this.scopeHandler.checkRequestedScope(parameters.scope ?? null);
     return this.scopeHandler.getAllowedScopes(client, parameters.scope ?? null);
   }

@@ -5,11 +5,11 @@ import { TokenRequest } from '../../requests/token/token-request';
 /**
  * Parameters of the Token Context.
  */
-export interface TokenContext<T extends TokenRequest = TokenRequest> {
+export interface TokenContext<TRequest extends TokenRequest = TokenRequest> {
   /**
    * Parameters of the Token Request.
    */
-  readonly parameters: T;
+  readonly parameters: TRequest;
 
   /**
    * Client of the Request.

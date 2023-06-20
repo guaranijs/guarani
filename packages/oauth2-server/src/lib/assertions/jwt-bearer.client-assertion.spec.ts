@@ -1,3 +1,6 @@
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 import {
   JsonWebKey,
@@ -7,7 +10,7 @@ import {
   JsonWebTokenClaimsParameters,
   OctetSequenceKey,
 } from '@guarani/jose';
-import { Dictionary } from '@guarani/types';
+import { Dictionary, OneOrMany } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
@@ -16,9 +19,9 @@ import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
-import { ClientAssertionParameters } from './client-assertion.parameters';
 import { ClientAssertion } from './client-assertion.type';
 import { JwtBearerClientAssertion } from './jwt-bearer.client-assertion';
+import { JwtBearerClientAssertionParameters } from './jwt-bearer.client-assertion.parameters';
 
 const now = Math.floor(Date.now() / 1000);
 
@@ -34,17 +37,30 @@ const claims: JsonWebTokenClaimsParameters = {
   jti: 'unique_assertion_id',
 };
 
-const methodRequests: [Dictionary<unknown>, boolean][] = [
+const methodRequests: [Dictionary<OneOrMany<string>>, boolean][] = [
   [{}, false],
   [{ client_assertion_type: '' }, false],
   [{ client_assertion_type: 'foo' }, false],
   [{ client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' }, false],
   [{ client_assertion: 'foo', client_assertion_type: '' }, false],
   [{ client_assertion: 'foo', client_assertion_type: 'foo' }, false],
-  [{ client_assertion: 'foo', client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' }, true],
+  [{ client_assertion: '', client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' }, false],
+  [{ client_assertion: 'a', client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' }, false],
+  [{ client_assertion: '.a', client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' }, false],
+  [
+    { client_assertion: '.a.b', client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' },
+    false,
+  ],
+  [{ client_assertion: 'a.b', client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' }, false],
+  [
+    { client_assertion: 'a.b.c.d', client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' },
+    false,
+  ],
+  [
+    { client_assertion: 'a.b.c', client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer' },
+    true,
+  ],
 ];
-
-const invalidTokenFormats: string[] = ['', 'a', '.a', '.a.b', 'a.b', 'a.b.c.d'];
 
 describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   let container: DependencyInjectionContainer;
@@ -82,59 +98,60 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   });
 
   describe('hasBeenRequested()', () => {
-    let request: HttpRequest;
+    let parameters: JwtBearerClientAssertionParameters;
+
+    const requestFactory = (data: Partial<JwtBearerClientAssertionParameters> = {}): HttpRequest => {
+      parameters = Object.assign(parameters, data);
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <ClientAssertionParameters<'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'>>{
-          client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-          client_assertion: '',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/token',
-        query: {},
-      });
+      parameters = {
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: '',
+      };
     });
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
-      Reflect.set(request, 'body', body);
+      const request = requestFactory(body);
       expect(clientAssertion.hasBeenRequested(request)).toEqual(expected);
     });
   });
 
   describe('authenticate()', () => {
-    let request: HttpRequest;
+    let parameters: JwtBearerClientAssertionParameters;
+
+    const requestFactory = (data: Partial<JwtBearerClientAssertionParameters> = {}): HttpRequest => {
+      parameters = Object.assign(parameters, data);
+
+      return new HttpRequest({
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        cookies: {},
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        url: new URL('https://server.example.com/oauth/token'),
+      });
+    };
 
     beforeEach(() => {
-      request = new HttpRequest({
-        body: <ClientAssertionParameters<'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'>>{
-          client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-          client_assertion: '',
-        },
-        cookies: {},
-        headers: {},
-        method: 'POST',
-        path: '/oauth/token',
-        query: {},
-      });
-    });
-
-    it.each(invalidTokenFormats)('should throw when the provided token is invalid.', async (assertion) => {
-      request.body.client_assertion = assertion;
-
-      await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
-        InvalidClientException,
-        'Invalid JSON Web Token Client Assertion.'
-      );
+      parameters = {
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: '',
+      };
     });
 
     it('should throw when the header algorithm is "none".', async () => {
       const jws = new JsonWebSignature({ ...header, alg: 'none' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(jwk);
 
-      request.body.client_assertion = assertion;
+      const request = requestFactory({ client_assertion: assertion });
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
@@ -147,7 +164,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       const jws = new JsonWebSignature({ ...header, alg: 'ES256' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(ecKey);
 
-      request.body.client_assertion = assertion;
+      const request = requestFactory({ client_assertion: assertion });
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
@@ -163,7 +180,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       const jws = new JsonWebSignature({ ...header, alg: 'RS256' }, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(rsaKey);
 
-      request.body.client_assertion = assertion;
+      const request = requestFactory({ client_assertion: assertion });
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
@@ -183,7 +200,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
         const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
         const assertion = await jws.sign(jwk);
 
-        request.body.client_assertion = assertion;
+        const request = requestFactory({ client_assertion: assertion });
 
         await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
           InvalidClientException,
@@ -202,7 +219,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       const assertion = await jws.sign(jwk);
 
-      request.body.client_assertion = assertion;
+      const request = requestFactory({ client_assertion: assertion });
 
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
@@ -220,7 +237,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       const assertion = await jws.sign(jwk);
 
-      request.body.client_assertion = assertion;
+      const request = requestFactory({ client_assertion: assertion });
 
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
@@ -238,7 +255,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       const assertion = await jws.sign(jwk);
 
-      request.body.client_assertion = assertion;
+      const request = requestFactory({ client_assertion: assertion });
 
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
@@ -254,7 +271,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(null);
 
-      request.body.client_assertion = assertion;
+      const request = requestFactory({ client_assertion: assertion });
 
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
 
@@ -268,7 +285,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(jwk);
 
-      request.body.client_assertion = assertion;
+      const request = requestFactory({ client_assertion: assertion });
 
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
@@ -288,7 +305,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(jwk);
 
-      request.body.client_assertion = assertion;
+      const request = requestFactory({ client_assertion: assertion });
 
       clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
         id: 'client_id',
@@ -309,7 +326,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
       const jws = new JsonWebSignature(header, new JsonWebTokenClaims(claims).toBuffer());
       const assertion = await jws.sign(jwk);
 
-      request.body.client_assertion = assertion;
+      const request = requestFactory({ client_assertion: assertion });
 
       const client = <Client>{
         id: 'client_id',

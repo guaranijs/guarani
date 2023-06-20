@@ -8,10 +8,8 @@ import { InteractionRequest } from '../../requests/interaction/interaction-reque
  * Implementation of the Interaction Request Validator.
  */
 export abstract class InteractionRequestValidator<
-  TContextRequest extends InteractionRequest = InteractionRequest,
-  TContextContext extends InteractionContext<TContextRequest> = InteractionContext<TContextRequest>,
-  TDecisionRequest extends InteractionRequest = InteractionRequest,
-  TDecisionContext extends InteractionContext<TDecisionRequest> = InteractionContext<TDecisionRequest>
+  TContextContext extends InteractionContext = InteractionContext,
+  TDecisionContext extends InteractionContext = InteractionContext
 > {
   /**
    * Name of the Interaction Type that uses this Validator.
@@ -32,7 +30,7 @@ export abstract class InteractionRequestValidator<
    * @returns Context Interaction Context.
    */
   public async validateContext(request: HttpRequest): Promise<TContextContext> {
-    const parameters = request.query as TContextRequest;
+    const parameters = request.query as InteractionRequest;
 
     const interactionType = this.getInteractionType(parameters);
 
@@ -46,7 +44,7 @@ export abstract class InteractionRequestValidator<
    * @returns Decision Interaction Context.
    */
   public async validateDecision(request: HttpRequest): Promise<TDecisionContext> {
-    const parameters = request.body as TDecisionRequest;
+    const parameters = request.form<InteractionRequest>();
 
     const interactionType = this.getInteractionType(parameters);
 

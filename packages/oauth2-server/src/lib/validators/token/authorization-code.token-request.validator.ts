@@ -22,10 +22,7 @@ import { TokenRequestValidator } from './token-request.validator';
  * Implementation of the **Authorization Code** Token Request Validator.
  */
 @Injectable()
-export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidator<
-  AuthorizationCodeTokenRequest,
-  AuthorizationCodeTokenContext
-> {
+export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidator<AuthorizationCodeTokenContext> {
   /**
    * Name of the Grant Type that uses this Validator.
    */
@@ -53,15 +50,15 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<AuthorizationCodeTokenContext> {
-    const parameters = request.body as AuthorizationCodeTokenRequest;
-
     const context = await super.validate(request);
+
+    const { parameters } = context;
 
     const authorizationCode = await this.getAuthorizationCode(parameters);
     const redirectUri = this.getRedirectUri(parameters, context.client);
     const codeVerifier = this.getCodeVerifier(parameters);
 
-    return { ...context, authorizationCode, redirectUri, codeVerifier };
+    return Object.assign(context, { authorizationCode, redirectUri, codeVerifier }) as AuthorizationCodeTokenContext;
   }
 
   /**
@@ -71,7 +68,7 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @returns Authorization Code based on the provided Code.
    */
   private async getAuthorizationCode(parameters: AuthorizationCodeTokenRequest): Promise<AuthorizationCode> {
-    if (typeof parameters.code !== 'string') {
+    if (typeof parameters.code === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "code".');
     }
 
@@ -92,7 +89,7 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @returns Parsed and validated Redirect URI.
    */
   protected getRedirectUri(parameters: AuthorizationCodeTokenRequest, client: Client): URL {
-    if (typeof parameters.redirect_uri !== 'string') {
+    if (typeof parameters.redirect_uri === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "redirect_uri".');
     }
 
@@ -122,7 +119,7 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
    * @returns Code Verifier provided by the Client.
    */
   private getCodeVerifier(parameters: AuthorizationCodeTokenRequest): string {
-    if (typeof parameters.code_verifier !== 'string') {
+    if (typeof parameters.code_verifier === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "code_verifier".');
     }
 

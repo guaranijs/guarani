@@ -1,7 +1,6 @@
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import { Inject, Injectable } from '@guarani/di';
-import { Dictionary } from '@guarani/types';
 
 import { LoginContextInteractionContext } from '../context/interaction/login-context.interaction-context';
 import { LoginDecisionInteractionContext } from '../context/interaction/login-decision.interaction-context';
@@ -23,6 +22,7 @@ import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { Prompt } from '../types/prompt.type';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 
@@ -84,10 +84,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
 
     await this.checkGrant(grant);
 
-    const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/authorize', this.settings.issuer), grant.parameters);
 
     let skip = grant.session.activeLogin !== null;
     let authExp: number | undefined;
@@ -158,10 +155,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
         `Could not authenticate using the Authentication Context Class Reference "${grant.parameters.acr_values}".`
       );
 
-      const url = new URL('/oauth/error', this.settings.issuer);
-      const searchParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
-
-      url.search = searchParameters.toString();
+      const url = addParametersToUrl(new URL('/oauth/error', this.settings.issuer), error.toJSON());
 
       return { redirect_to: url.href };
     }
@@ -174,10 +168,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
       await this.grantService.save(grant);
     }
 
-    const url = new URL('/oauth/authorize', this.settings.issuer);
-    const searchParameters = new URLSearchParams(grant.parameters as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/authorize', this.settings.issuer), grant.parameters);
 
     return { redirect_to: url.href };
   }
@@ -193,10 +184,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
 
     await this.grantService.remove(grant);
 
-    const url = new URL('/oauth/error', this.settings.issuer);
-    const searchParameters = new URLSearchParams(error.toJSON() as Dictionary<any>);
-
-    url.search = searchParameters.toString();
+    const url = addParametersToUrl(new URL('/oauth/error', this.settings.issuer), error.toJSON());
 
     return { redirect_to: url.href };
   }

@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
@@ -21,8 +24,6 @@ import { SETTINGS } from '../../settings/settings.token';
 import { IdTokenAuthorizationRequestValidator } from './id-token.authorization-request.validator';
 
 jest.mock('../../handlers/scope.handler');
-
-const invalidNonces: any[] = [undefined, null, true, 1, 1.2, 1n, Symbol('a'), Buffer, Buffer.alloc(1), () => 1, {}, []];
 
 describe('ID Token Authorization Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -131,36 +132,41 @@ describe('ID Token Authorization Request Validator', () => {
   });
 
   describe('validate()', () => {
-    let request: HttpRequest;
+    let parameters: AuthorizationRequest;
 
-    beforeEach(() => {
-      request = new HttpRequest({
-        body: {},
+    const requestFactory = (data: Partial<AuthorizationRequest> = {}): HttpRequest => {
+      removeNullishValues<AuthorizationRequest>(Object.assign(parameters, data));
+
+      return new HttpRequest({
+        body: Buffer.alloc(0),
         cookies: {},
         headers: {},
         method: 'GET',
-        path: '/oauth/authorize',
-        query: <AuthorizationRequest>{
-          response_type: 'id_token',
-          client_id: 'client_id',
-          redirect_uri: 'https://client.example.com/oauth/callback',
-          scope: 'foo bar baz',
-          state: 'client_state',
-          response_mode: 'form_post',
-          nonce: 'client_nonce',
-          prompt: 'consent',
-          display: 'popup',
-          max_age: '300',
-          login_hint: 'login_hint',
-          id_token_hint: 'id_token_hint',
-          ui_locales: 'pt-BR en',
-          acr_values: 'urn:guarani:acr:2fa urn:guarani:acr:1fa',
-        },
+        url: new URL(`https://server.example.com/oauth/authorize?${stringifyQs(parameters)}`),
       });
+    };
+
+    beforeEach(() => {
+      parameters = {
+        response_type: 'id_token',
+        client_id: 'client_id',
+        redirect_uri: 'https://client.example.com/oauth/callback',
+        scope: 'foo bar baz',
+        state: 'client_state',
+        response_mode: 'form_post',
+        nonce: 'client_nonce',
+        prompt: 'consent',
+        display: 'popup',
+        max_age: '300',
+        login_hint: 'login_hint',
+        id_token_hint: 'id_token_hint',
+        ui_locales: 'pt-BR en',
+        acr_values: 'urn:guarani:acr:2fa urn:guarani:acr:1fa',
+      };
     });
 
     it('should throw when requesting the response mode "query".', async () => {
-      request.query.response_mode = 'query';
+      const request = requestFactory({ response_mode: 'query' });
 
       const client = <Client>{
         id: 'client_id',
@@ -180,8 +186,8 @@ describe('ID Token Authorization Request Validator', () => {
       );
     });
 
-    it.each(invalidNonces)('should throw when providing an invalid "nonce" parameter.', async (nonce) => {
-      request.query.nonce = nonce;
+    it('should throw when not providing the parameter "nonce".', async () => {
+      const request = requestFactory({ nonce: undefined });
 
       const client = <Client>{
         id: 'client_id',

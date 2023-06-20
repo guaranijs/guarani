@@ -1,10 +1,8 @@
-import { URL } from 'url';
-
 import { Injectable } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
-import { Dictionary } from '@guarani/types';
+import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
 import { HttpResponse } from '../http/http.response';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { DisplayInterface } from './display.interface';
 import { Display } from './display.type';
 
@@ -35,6 +33,11 @@ const templateFn = (redirectUri: string) => `
 </html>
 `;
 
+/**
+ * Implementation of the **Popup** Display.
+ *
+ * @see https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
+ */
 @Injectable()
 export class PopupDisplay implements DisplayInterface {
   /**
@@ -49,11 +52,13 @@ export class PopupDisplay implements DisplayInterface {
    * @param parameters Parameters used to build the Http Response.
    * @returns Http Response to the provided Redirect URI.
    */
-  public createHttpResponse(redirectUri: string, parameters: Dictionary<any>): HttpResponse {
-    const url = new URL(redirectUri);
-    Object.entries(removeNullishValues(parameters)).forEach(([name, value]) => url.searchParams.set(name, value));
-
+  public createHttpResponse(
+    redirectUri: string,
+    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>
+  ): HttpResponse {
+    const url = addParametersToUrl(redirectUri, parameters);
     const html = templateFn(url.href).trim();
+
     return new HttpResponse().html(html);
   }
 }

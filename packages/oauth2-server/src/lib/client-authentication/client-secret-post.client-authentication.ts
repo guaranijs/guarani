@@ -8,7 +8,6 @@ import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { HttpRequest } from '../http/http.request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
-import { getBodyParameters } from '../utils/get-body-parameters';
 import { ClientAuthenticationInterface } from './client-authentication.interface';
 import { ClientAuthentication } from './client-authentication.type';
 import { ClientSecretPostClientAuthenticationParameters } from './client-secret-post.client-authentication.parameters';
@@ -52,7 +51,7 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
    */
   public hasBeenRequested(request: HttpRequest): boolean {
     const { client_id: clientId, client_secret: clientSecret } =
-      getBodyParameters<ClientSecretPostClientAuthenticationParameters>(request);
+      request.form<ClientSecretPostClientAuthenticationParameters>();
 
     return typeof clientId === 'string' && typeof clientSecret === 'string';
   }
@@ -65,7 +64,7 @@ export class ClientSecretPostClientAuthentication implements ClientAuthenticatio
    */
   public async authenticate(request: HttpRequest): Promise<Client> {
     const { client_id: clientId, client_secret: clientSecret } =
-      getBodyParameters<ClientSecretPostClientAuthenticationParameters>(request);
+      request.form<ClientSecretPostClientAuthenticationParameters>();
 
     const client = await this.clientService.findOne(clientId);
 

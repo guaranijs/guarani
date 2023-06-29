@@ -61,33 +61,18 @@ describe('Client Secret Post Authentication Method', () => {
 
       expect(clientAuthentication.hasBeenRequested(request)).toEqual(expected);
     });
-
-    it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
-      const request = new HttpRequest({
-        body: Buffer.from(JSON.stringify(body), 'utf8'),
-        cookies: {},
-        headers: { 'content-type': 'application/json' },
-        method: 'POST',
-        url: new URL('https://server.example.com/oauth/token'),
-      });
-
-      expect(clientAuthentication.hasBeenRequested(request)).toEqual(expected);
-    });
   });
 
-  describe.each(['form', 'json'])('authenticate()', (method) => {
+  describe('authenticate()', () => {
     let parameters: ClientSecretPostClientAuthenticationParameters;
 
     const requestFactory = (data: Partial<ClientSecretPostClientAuthenticationParameters> = {}): HttpRequest => {
       parameters = Object.assign(parameters, data);
 
-      const body = method === 'form' ? stringifyQs(parameters) : JSON.stringify(parameters);
-      const contentType = method === 'form' ? 'application/x-www-form-urlencoded' : 'application/json';
-
       return new HttpRequest({
-        body: Buffer.from(body, 'utf8'),
+        body: Buffer.from(stringifyQs(parameters), 'utf8'),
         cookies: {},
-        headers: { 'content-type': contentType },
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
         url: new URL('https://server.example.com/oauth/token'),
       });

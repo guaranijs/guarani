@@ -10,7 +10,7 @@ import { HttpResponse } from './http/http.response';
  * Abstract Base Class for the OAuth 2.0 Authorization Server.
  */
 @Injectable()
-export class AuthorizationServer {
+export abstract class AuthorizationServer {
   /**
    * Endpoints of the Authorization Server.
    */

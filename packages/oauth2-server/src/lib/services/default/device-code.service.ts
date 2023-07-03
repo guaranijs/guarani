@@ -36,8 +36,6 @@ export class DeviceCodeService implements DeviceCodeServiceInterface {
     const deviceCode: SampleDeviceCode = {
       id: randomUUID(),
       userCode,
-      verificationUri: verificationUri.href,
-      verificationUriComplete: verificationUriComplete.href,
       scopes,
       isAuthorized: null,
       waitTime: 5,

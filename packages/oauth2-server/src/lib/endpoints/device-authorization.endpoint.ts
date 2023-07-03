@@ -13,6 +13,7 @@ import { DeviceCodeServiceInterface } from '../services/device-code.service.inte
 import { DEVICE_CODE_SERVICE } from '../services/device-code.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { DeviceAuthorizationRequestValidator } from '../validators/device-authorization-request.validator';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
@@ -61,7 +62,11 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
     private readonly validator: DeviceAuthorizationRequestValidator,
     @Inject(DEVICE_CODE_SERVICE) private readonly deviceCodeService: DeviceCodeServiceInterface,
     @Inject(SETTINGS) private readonly settings: Settings
-  ) {}
+  ) {
+    if (typeof this.settings.userInteraction === 'undefined') {
+      throw new TypeError('Missing User Interaction options.');
+    }
+  }
 
   /**
    * Creates a Http Device Authorization Response.
@@ -82,11 +87,14 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
       const { client, scopes } = await this.validator.validate(request);
       const deviceCode = await this.deviceCodeService.create(scopes, client);
 
+      const verificationUri = new URL(this.settings.userInteraction!.deviceCodeUrl, this.settings.issuer);
+      const verificationUriComplete = addParametersToUrl(verificationUri.href, { user_code: deviceCode.userCode });
+
       const deviceAuthorizationResponse = removeNullishValues<DeviceAuthorizationResponse>({
         device_code: deviceCode.id,
         user_code: deviceCode.userCode,
-        verification_uri: deviceCode.verificationUri,
-        verification_uri_complete: deviceCode.verificationUriComplete ?? undefined,
+        verification_uri: verificationUri.href,
+        verification_uri_complete: verificationUriComplete.href,
         expires_in: Math.ceil((deviceCode.expiresAt.getTime() - Date.now()) / 1000),
         interval: this.settings.devicePollingInterval,
       });

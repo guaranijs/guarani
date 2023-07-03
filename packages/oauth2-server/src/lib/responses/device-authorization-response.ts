@@ -22,7 +22,7 @@ export interface DeviceAuthorizationResponse extends Dictionary<any> {
   /**
    * User Verification URI on the Authorization Server for non-textual transmission.
    */
-  readonly verification_uri_complete?: string;
+  readonly verification_uri_complete: string;
 
   /**
    * Lifespan in seconds of the `device_code` and `user_code`.

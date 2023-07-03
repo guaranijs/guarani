@@ -33,7 +33,12 @@ describe('Device Authorization Endpoint', () => {
     save: jest.fn(),
   });
 
-  const settings = <Settings>{ scopes: ['foo', 'bar', 'baz', 'qux'], devicePollingInterval: 5 };
+  const settings = <Settings>{
+    issuer: 'https://server.example.com',
+    scopes: ['foo', 'bar', 'baz', 'qux'],
+    userInteraction: { deviceCodeUrl: '/device' },
+    devicePollingInterval: 5,
+  };
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
@@ -73,6 +78,23 @@ describe('Device Authorization Endpoint', () => {
     });
   });
 
+  describe('constructor', () => {
+    it('should throw when not providing a user interaction object.', () => {
+      const settings = <Settings>{ issuer: 'https://server.example.com', scopes: ['foo', 'bar', 'baz', 'qux'] };
+
+      container.delete<Settings>(SETTINGS);
+      container.delete(DeviceAuthorizationEndpoint);
+
+      container.bind<Settings>(SETTINGS).toValue(settings);
+      container.bind(DeviceAuthorizationEndpoint).toSelf().asSingleton();
+
+      expect(() => container.resolve(DeviceAuthorizationEndpoint)).toThrowWithMessage(
+        TypeError,
+        'Missing User Interaction options.'
+      );
+    });
+  });
+
   describe('handle()', () => {
     const parameters: DeviceAuthorizationRequest = {};
 
@@ -95,8 +117,6 @@ describe('Device Authorization Endpoint', () => {
       const deviceCode = <DeviceCode>{
         id: 'device_code',
         userCode: 'user_code',
-        verificationUri: 'https://server.example.com/device',
-        verificationUriComplete: 'https://server.example.com/device?user_code=user_code',
         expiresAt: new Date(Date.now() + 300000),
       };
 

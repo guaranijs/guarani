@@ -20,18 +20,6 @@ export interface DeviceCode {
   readonly userCode: string;
 
   /**
-   * Verification URI that the End User must access to continue the authorization process.
-   */
-  readonly verificationUri: string;
-
-  /**
-   * Verification URI designed for non-textual transmission.
-   *
-   * This URI does not have interactions, and **MUST** contain the `user_code` needed to proceed.
-   */
-  readonly verificationUriComplete: Nullable<string>;
-
-  /**
    * Scopes requested by the Client.
    */
   readonly scopes: string[];

@@ -8,6 +8,11 @@ export interface UserInteractionSettings {
   readonly consentUrl: string;
 
   /**
+   * Url of the Device Code Interaction Page.
+   */
+  readonly deviceCodeUrl: string;
+
+  /**
    * Url of the Error Page.
    */
   readonly errorUrl: string;

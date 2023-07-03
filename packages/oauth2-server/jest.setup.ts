@@ -93,6 +93,7 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   },
   userInteraction: {
     consentUrl: '/oauth/consent',
+    deviceCodeUrl: '/device',
     errorUrl: '/oauth/error',
     loginUrl: '/auth/login',
   },

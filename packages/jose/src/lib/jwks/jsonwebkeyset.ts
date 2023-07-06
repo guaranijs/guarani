@@ -2,6 +2,7 @@ import { isPlainObject, removeNullishValues } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
 
 import { InvalidJsonWebKeySetException } from '../exceptions/invalid-jsonwebkeyset.exception';
+import { JsonWebKeyNotFoundException } from '../exceptions/jsonwebkey-not-found.exception';
 import { JsonWebKey } from '../jwk/jsonwebkey';
 import { JsonWebKeyParameters } from '../jwk/jsonwebkey.parameters';
 import { JsonWebKeySetParameters } from './jsonwebkeyset.parameters';
@@ -103,6 +104,23 @@ export class JsonWebKeySet implements JsonWebKeySetParameters {
    */
   public find<T extends JsonWebKey>(predicate: (key: JsonWebKeyParameters) => boolean): Nullable<T> {
     return <T>this.keys.find(predicate) ?? null;
+  }
+
+  /**
+   * Finds and returns a JSON Web Key that satisfies the provided predicate or throws an exception if none is found.
+   *
+   * @param predicate Predicate used to locate the requested JSON Web Key.
+   * @throws {JsonWebKeyNotFoundException} No JSON Web Key matches the criteria at the JSON Web Key Set.
+   * @returns JSON Web Key that satisfies the provided predicate.
+   */
+  public get<T extends JsonWebKey>(predicate: (key: JsonWebKeyParameters) => boolean): T {
+    const key = this.find(predicate);
+
+    if (key === null) {
+      throw new JsonWebKeyNotFoundException();
+    }
+
+    return key as T;
   }
 
   /**

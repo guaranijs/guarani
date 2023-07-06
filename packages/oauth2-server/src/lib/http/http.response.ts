@@ -143,4 +143,15 @@ export class HttpResponse {
     this.#body = Buffer.from(html, 'utf8');
     return this;
   }
+
+  /**
+   * Defines the provided JSON Web Token as the Body of the Response.
+   *
+   * @param jwt JSON Web Token to be used as the Body of the Response.
+   */
+  public jwt(jwt: string): HttpResponse {
+    this.setHeader('Content-Type', 'application/jwt');
+    this.#body = Buffer.from(jwt, 'utf8');
+    return this;
+  }
 }

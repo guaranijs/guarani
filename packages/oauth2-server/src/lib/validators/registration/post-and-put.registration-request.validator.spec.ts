@@ -51,6 +51,9 @@ const invalidSectorIdentifierUris: any[] = [true, 1, 1.2, {}, []];
 const invalidIdTokenJWSAlgorithms: any[] = [true, 1, 1.2, {}, []];
 const invalidIdTokenJWEAlgs: any[] = [true, 1, 1.2, {}, []];
 const invalidIdTokenJWEEncs: any[] = [true, 1, 1.2, {}, []];
+const invalidUserinfoJWSAlgorithms: any[] = [true, 1, 1.2, {}, []];
+const invalidUserinfoJWEAlgs: any[] = [true, 1, 1.2, {}, []];
+const invalidUserinfoJWEEncs: any[] = [true, 1, 1.2, {}, []];
 const invalidAuthenticationMethods: any[] = [true, 1, 1.2, {}, []];
 const invalidJWTClientAssertionJWSAlgorithms: any[] = [true, 1, 1.2, {}, []];
 const invalidDefaultMaxAges: any[] = [true, 'a', {}, []];
@@ -120,47 +123,12 @@ describe('Post and Put Registration Request Validator', () => {
       'urn:ietf:params:oauth:grant-type:device_code',
       'urn:ietf:params:oauth:grant-type:jwt-bearer',
     ],
-    idTokenSignatureAlgorithms: [
-      'ES256',
-      'ES384',
-      'ES512',
-      'EdDSA',
-      'HS256',
-      'HS384',
-      'HS512',
-      'PS256',
-      'PS384',
-      'PS512',
-      'RS256',
-      'RS384',
-      'RS512',
-    ],
-    idTokenKeyWrapAlgorithms: [
-      'A128GCMKW',
-      'A128KW',
-      'A192GCMKW',
-      'A192KW',
-      'A256GCMKW',
-      'A256KW',
-      'ECDH-ES',
-      'ECDH-ES+A128KW',
-      'ECDH-ES+A192KW',
-      'ECDH-ES+A256KW',
-      'RSA-OAEP',
-      'RSA-OAEP-256',
-      'RSA-OAEP-384',
-      'RSA-OAEP-512',
-      'RSA1_5',
-      'dir',
-    ],
-    idTokenContentEncryptionAlgorithms: [
-      'A128CBC-HS256',
-      'A128GCM',
-      'A192CBC-HS384',
-      'A192GCM',
-      'A256CBC-HS512',
-      'A256GCM',
-    ],
+    idTokenSignatureAlgorithms: ['ES256', 'HS256', 'RS256'],
+    idTokenKeyWrapAlgorithms: ['A128KW', 'ECDH-ES', 'RSA-OAEP'],
+    idTokenContentEncryptionAlgorithms: ['A128CBC-HS256', 'A128GCM'],
+    userinfoSignatureAlgorithms: ['ES256', 'HS256', 'RS256'],
+    userinfoKeyWrapAlgorithms: ['A128KW', 'ECDH-ES', 'RSA-OAEP'],
+    userinfoContentEncryptionAlgorithms: ['A128CBC-HS256', 'A128GCM'],
     clientAuthenticationMethods: [
       'client_secret_basic',
       'client_secret_jwt',
@@ -168,21 +136,7 @@ describe('Post and Put Registration Request Validator', () => {
       'none',
       'private_key_jwt',
     ],
-    clientAuthenticationSignatureAlgorithms: [
-      'ES256',
-      'ES384',
-      'ES512',
-      'EdDSA',
-      'HS256',
-      'HS384',
-      'HS512',
-      'PS256',
-      'PS384',
-      'PS512',
-      'RS256',
-      'RS384',
-      'RS512',
-    ],
+    clientAuthenticationSignatureAlgorithms: ['ES256', 'HS256', 'RS256'],
     acrValues: ['guarani:acr:1fa', 'guarani:acr:2fa'],
     subjectTypes: ['pairwise', 'public'],
   };
@@ -244,9 +198,9 @@ describe('Post and Put Registration Request Validator', () => {
         id_token_signed_response_alg: 'RS256',
         id_token_encrypted_response_alg: 'RSA-OAEP',
         id_token_encrypted_response_enc: 'A128GCM',
-        // userinfo_signed_response_alg: '',
-        // userinfo_encrypted_response_alg: '',
-        // userinfo_encrypted_response_enc: '',
+        userinfo_signed_response_alg: 'RS256',
+        userinfo_encrypted_response_alg: 'RSA-OAEP',
+        userinfo_encrypted_response_enc: 'A128GCM',
         // request_object_signing_alg: '',
         // request_object_encryption_alg: '',
         // request_object_encryption_enc: '',
@@ -761,6 +715,95 @@ describe('Post and Put Registration Request Validator', () => {
       );
     });
 
+    it.each(invalidUserinfoJWSAlgorithms)(
+      'should throw when providing an invalid "userinfo_signed_response_alg" parameter.',
+      async (algorithm) => {
+        const request = requestFactory({ userinfo_signed_response_alg: algorithm });
+
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "userinfo_signed_response_alg".'
+        );
+      }
+    );
+
+    it('should throw when providing an unsupported id token signed response algorithm.', async () => {
+      const request = requestFactory({
+        userinfo_signed_response_alg: 'unknown' as Exclude<JsonWebSignatureAlgorithm, 'none'>,
+      });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported userinfo_signed_response_alg "unknown".'
+      );
+    });
+
+    it.each(invalidUserinfoJWEAlgs)(
+      'should throw when providing an invalid "userinfo_encrypted_response_alg" parameter.',
+      async (algorithm) => {
+        const request = requestFactory({ userinfo_encrypted_response_alg: algorithm });
+
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "userinfo_encrypted_response_alg".'
+        );
+      }
+    );
+
+    it('should throw when providing an unsupported id token encrypted response key wrap algorithm.', async () => {
+      const request = requestFactory({
+        userinfo_encrypted_response_alg: 'unknown' as JsonWebEncryptionKeyWrapAlgorithm,
+      });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported userinfo_encrypted_response_alg "unknown".'
+      );
+    });
+
+    it.each(invalidUserinfoJWEEncs)(
+      'should throw when providing an invalid "userinfo_encrypted_response_enc" parameter.',
+      async (algorithm) => {
+        const request = requestFactory({ userinfo_encrypted_response_enc: algorithm });
+
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "userinfo_encrypted_response_enc".'
+        );
+      }
+    );
+
+    it('should throw when not providing the parameter "userinfo_signed_response_alg" together with the parameter "userinfo_encrypted_response_alg".', async () => {
+      const request = requestFactory({ userinfo_signed_response_alg: undefined });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The parameter "userinfo_encrypted_response_alg" must be presented together ' +
+          'with the parameter "userinfo_signed_response_alg".'
+      );
+    });
+
+    it('should throw when not providing the parameter "userinfo_encrypted_response_alg" together with the parameter "userinfo_encrypted_response_enc".', async () => {
+      const request = requestFactory({ userinfo_encrypted_response_alg: undefined });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The parameter "userinfo_encrypted_response_enc" must be presented together ' +
+          'with the parameter "userinfo_encrypted_response_alg".'
+      );
+    });
+
+    it('should throw when providing an unsupported id token encrypted response content encryption algorithm.', async () => {
+      const request = requestFactory({
+        userinfo_encrypted_response_enc: 'unknown' as JsonWebEncryptionContentEncryptionAlgorithm,
+      });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported userinfo_encrypted_response_enc "unknown".'
+      );
+    });
+
     it.each(invalidAuthenticationMethods)(
       'should throw when providing an invalid "token_endpoint_auth_method" parameter.',
       async (authenticationMethod) => {
@@ -1041,9 +1084,9 @@ describe('Post and Put Registration Request Validator', () => {
         idTokenSignedResponseAlgorithm: 'RS256',
         idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
         idTokenEncryptedResponseContentEncryption: 'A128GCM',
-        // userinfoSignedResponseAlgorithm: ,
-        // userinfoEncryptedResponseKeyWrap: ,
-        // userinfoEncryptedResponseContentEncryption: ,
+        userinfoSignedResponseAlgorithm: 'RS256',
+        userinfoEncryptedResponseKeyWrap: 'RSA-OAEP',
+        userinfoEncryptedResponseContentEncryption: 'A128GCM',
         // requestObjectSigningAlgorithm: ,
         // requestObjectEncryptionKeyWrap: ,
         // requestObjectEncryptionContentEncryption: ,

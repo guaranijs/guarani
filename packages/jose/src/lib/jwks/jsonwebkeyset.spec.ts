@@ -2,6 +2,7 @@ import { Buffer } from 'buffer';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { InvalidJsonWebKeySetException } from '../exceptions/invalid-jsonwebkeyset.exception';
+import { JsonWebKeyNotFoundException } from '../exceptions/jsonwebkey-not-found.exception';
 import { EllipticCurveKey } from '../jwk/backends/elliptic-curve/elliptic-curve.key';
 import { EllipticCurveKeyParameters } from '../jwk/backends/elliptic-curve/elliptic-curve.key.parameters';
 import { RsaKey } from '../jwk/backends/rsa/rsa.key';
@@ -179,6 +180,25 @@ describe('JSON Web Key Set', () => {
     it('should return the key that matches the provided predicate.', () => {
       expect(jwks.find((key) => key.kid === 'ec-key')).toStrictEqual(jwks.keys[0]!);
       expect(jwks.find((key) => key.key_ops?.includes('encrypt') ?? false)).toStrictEqual(jwks.keys[1]!);
+    });
+  });
+
+  describe('get()', () => {
+    const jwks = new JsonWebKeySet([
+      new EllipticCurveKey(publicEllipticCurveParameters, { kid: 'ec-key', use: 'sig' }),
+      new RsaKey(publicRsaParameters, { kid: 'rsa-key', key_ops: ['encrypt'] }),
+    ]);
+
+    it('should throw when no key matches the provided predicate.', () => {
+      expect(() => jwks.get((key) => key.kid === 'unknown')).toThrowWithMessage(
+        JsonWebKeyNotFoundException,
+        'No JSON Web Key matches the criteria at the JSON Web Key Set.'
+      );
+    });
+
+    it('should return the key that matches the provided predicate.', () => {
+      expect(jwks.get((key) => key.kid === 'ec-key')).toStrictEqual(jwks.keys[0]!);
+      expect(jwks.get((key) => key.key_ops?.includes('encrypt') ?? false)).toStrictEqual(jwks.keys[1]!);
     });
   });
 

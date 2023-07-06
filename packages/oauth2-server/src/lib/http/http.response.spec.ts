@@ -108,7 +108,18 @@ describe('Http Response', () => {
       expect(new HttpResponse().html('<html></html>')).toMatchObject<Partial<HttpResponse>>({
         body: Buffer.from('<html></html>', 'utf8'),
         cookies: {},
-        headers: {},
+        headers: { 'Content-Type': 'text/html; charset=UTF-8' },
+        statusCode: 200,
+      });
+    });
+  });
+
+  describe('jwt()', () => {
+    it('should create a json web token response.', () => {
+      expect(new HttpResponse().jwt('header.payload.signature')).toMatchObject<Partial<HttpResponse>>({
+        body: Buffer.from('header.payload.signature', 'utf8'),
+        cookies: {},
+        headers: { 'Content-Type': 'application/jwt' },
         statusCode: 200,
       });
     });

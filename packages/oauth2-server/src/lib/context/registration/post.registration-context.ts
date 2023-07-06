@@ -123,17 +123,17 @@ export interface PostRegistrationContext {
   /**
    * JSON Web Signature Algorithm used to sign the Userinfo JWT Response.
    */
-  // readonly userinfoSignedResponseAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
+  readonly userinfoSignedResponseAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the Userinfo JWT Response.
    */
-  // readonly userinfoEncryptedResponseKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
+  readonly userinfoEncryptedResponseKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the Userinfo JWT Response.
    */
-  // readonly userinfoEncryptedResponseContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
+  readonly userinfoEncryptedResponseContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   /**
    * JSON Web Signature Algorithm used to sign the Request Object sent to the Authorization Server.

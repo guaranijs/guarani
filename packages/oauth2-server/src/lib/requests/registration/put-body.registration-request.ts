@@ -119,17 +119,17 @@ export interface PutBodyRegistrationRequest extends Dictionary<any> {
   /**
    * JSON Web Signature Algorithm used to sign the Userinfo JWT Response.
    */
-  // readonly userinfo_signed_response_alg?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
+  readonly userinfo_signed_response_alg?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the Userinfo JWT Response.
    */
-  // readonly userinfo_encrypted_response_alg?: JsonWebEncryptionKeyWrapAlgorithm;
+  readonly userinfo_encrypted_response_alg?: JsonWebEncryptionKeyWrapAlgorithm;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the Userinfo JWT Response.
    */
-  // readonly userinfo_encrypted_response_enc?: JsonWebEncryptionContentEncryptionAlgorithm;
+  readonly userinfo_encrypted_response_enc?: JsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
    * JSON Web Signature Algorithm used to sign the Request Object sent to the Authorization Server.

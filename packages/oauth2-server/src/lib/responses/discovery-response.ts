@@ -84,14 +84,29 @@ export interface DiscoveryResponse extends Dictionary<any> {
   readonly id_token_signing_alg_values_supported: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
 
   /**
-   * JSON Web Signature Algorithms for ID Token Signature supported by the Authorization Server.
+   * JSON Web Encryption Key Wrap Algorithms for ID Token Encryption supported by the Authorization Server.
    */
   readonly id_token_encryption_alg_values_supported?: JsonWebEncryptionKeyWrapAlgorithm[];
 
   /**
-   * JSON Web Signature Algorithms for ID Token Signature supported by the Authorization Server.
+   * JSON Web Encryption Content Encryption Algorithms for ID Token Encryption supported by the Authorization Server.
    */
   readonly id_token_encryption_enc_values_supported?: JsonWebEncryptionContentEncryptionAlgorithm[];
+
+  /**
+   * JSON Web Signature Algorithms for Userinfo JWT Response supported by the Authorization Server.
+   */
+  readonly userinfo_signing_alg_values_supported?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithms for Userinfo JWT Response supported by the Authorization Server.
+   */
+  readonly userinfo_encryption_alg_values_supported?: JsonWebEncryptionKeyWrapAlgorithm[];
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithms for Userinfo JWT Response supported by the Authorization Server.
+   */
+  readonly userinfo_encryption_enc_values_supported?: JsonWebEncryptionContentEncryptionAlgorithm[];
 
   /**
    * Prompts supported by the Authorization Server.

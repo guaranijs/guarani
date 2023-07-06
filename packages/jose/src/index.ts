@@ -8,6 +8,7 @@ export { InvalidJsonWebSignatureException } from './lib/exceptions/invalid-jsonw
 export { InvalidJsonWebTokenClaimException } from './lib/exceptions/invalid-jsonwebtoken-claim.exception';
 export { InvalidJsonWebTokenClaimsException } from './lib/exceptions/invalid-jsonwebtoken-claims.exception';
 export { JoseException } from './lib/exceptions/jose.exception';
+export { JsonWebKeyNotFoundException } from './lib/exceptions/jsonwebkey-not-found.exception';
 export { JsonWebTokenNotValidYetException } from './lib/exceptions/jsonwebtoken-not-valid-yet.exception';
 export { UnsupportedAlgorithmException } from './lib/exceptions/unsupported-algorithm.exception';
 export { UnsupportedEllipticCurveException } from './lib/exceptions/unsupported-elliptic-curve.exception';

@@ -177,6 +177,7 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<JwtBea
    * @param header JSON Web Signature Header of the Assertion.
    * @returns JSON Web Key of the Client based on the JSON Web Signature Header.
    */
+  // TODO: Use getClientJsonWebKey() util function.
   private async getClientPublicKey(client: Client, header: JsonWebSignatureHeaderParameters): Promise<JsonWebKey> {
     let clientJwks: Nullable<JsonWebKeySet> = null;
 

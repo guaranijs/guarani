@@ -54,6 +54,21 @@ export interface Settings {
   readonly idTokenContentEncryptionAlgorithms?: JsonWebEncryptionContentEncryptionAlgorithm[];
 
   /**
+   * JSON Web Signature Algorithms for Userinfo JWT Response registered at the Authorization Server.
+   */
+  readonly userinfoSignatureAlgorithms?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithms for Userinfo JWT Response registered at the Authorization Server.
+   */
+  readonly userinfoKeyWrapAlgorithms?: JsonWebEncryptionKeyWrapAlgorithm[];
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithms for Userinfo JWT Response registered at the Authorization Server.
+   */
+  readonly userinfoContentEncryptionAlgorithms?: JsonWebEncryptionContentEncryptionAlgorithm[];
+
+  /**
    * Grant Types registered at the Authorization Server.
    */
   readonly grantTypes: GrantType[];

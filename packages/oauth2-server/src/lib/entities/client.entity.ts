@@ -29,7 +29,7 @@ export interface Client {
   /**
    * Expiration Date of the Client Secret.
    *
-   * A **nullish** value indicates that the Client Secret will not expire.
+   * A **null** value indicates that the Client Secret will not expire.
    */
   secretExpiresAt: Nullable<Date>;
 
@@ -141,17 +141,17 @@ export interface Client {
   /**
    * JSON Web Signature Algorithm used to sign the Userinfo JWT Response.
    */
-  // userinfoSignedResponseAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
+  userinfoSignedResponseAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the Userinfo JWT Response.
    */
-  // userinfoEncryptedResponseKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
+  userinfoEncryptedResponseKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the Userinfo JWT Response.
    */
-  // userinfoEncryptedResponseContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
+  userinfoEncryptedResponseContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   /**
    * JSON Web Signature Algorithm used to sign the Request Object sent to the Authorization Server.

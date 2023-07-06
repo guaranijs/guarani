@@ -1,5 +1,12 @@
 import { DependencyInjectionContainer } from '@guarani/di';
-import { EllipticCurveKey, JsonWebEncryption, JsonWebKeySet, JsonWebSignature, RsaKey } from '@guarani/jose';
+import {
+  EllipticCurveKey,
+  JsonWebEncryption,
+  JsonWebKeyNotFoundException,
+  JsonWebKeySet,
+  JsonWebSignature,
+  RsaKey,
+} from '@guarani/jose';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
@@ -186,7 +193,10 @@ describe('ID Token Handler', () => {
 
       await expect(
         idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
-      ).rejects.toThrowWithMessage(Error, 'Could not find a JSON Web Key suitable for Signing an ID Token.');
+      ).rejects.toThrowWithMessage(
+        JsonWebKeyNotFoundException,
+        'No JSON Web Key matches the criteria at the JSON Web Key Set.'
+      );
     });
 
     it('should throw when no signing key has "sig" as its "use" parameter.', async () => {
@@ -215,7 +225,10 @@ describe('ID Token Handler', () => {
 
       await expect(
         idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
-      ).rejects.toThrowWithMessage(Error, 'Could not find a JSON Web Key suitable for Signing an ID Token.');
+      ).rejects.toThrowWithMessage(
+        JsonWebKeyNotFoundException,
+        'No JSON Web Key matches the criteria at the JSON Web Key Set.'
+      );
     });
 
     it('should generate a signed id token with the default claims.', async () => {
@@ -391,7 +404,10 @@ describe('ID Token Handler', () => {
 
       await expect(
         idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
-      ).rejects.toThrowWithMessage(Error, 'Could not find a JSON Web Key suitable for Encrypting an ID Token.');
+      ).rejects.toThrowWithMessage(
+        JsonWebKeyNotFoundException,
+        'No JSON Web Key matches the criteria at the JSON Web Key Set.'
+      );
     });
 
     it('should throw when no key wrap key has "enc" as its "use" parameter.', async () => {
@@ -417,7 +433,10 @@ describe('ID Token Handler', () => {
 
       await expect(
         idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
-      ).rejects.toThrowWithMessage(Error, 'Could not find a JSON Web Key suitable for Encrypting an ID Token.');
+      ).rejects.toThrowWithMessage(
+        JsonWebKeyNotFoundException,
+        'No JSON Web Key matches the criteria at the JSON Web Key Set.'
+      );
     });
 
     it('should generate a nested id token with the default claims.', async () => {

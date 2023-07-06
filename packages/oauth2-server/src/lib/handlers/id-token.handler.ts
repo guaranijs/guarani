@@ -1,12 +1,10 @@
 import { Buffer } from 'buffer';
 import { createHash } from 'crypto';
-import https from 'https';
 
 import { Inject, Injectable } from '@guarani/di';
 import {
   JsonWebEncryption,
   JsonWebEncryptionHeader,
-  JsonWebKey,
   JsonWebKeySet,
   JsonWebSignature,
   JsonWebSignatureAlgorithm,
@@ -28,6 +26,7 @@ import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
+import { getClientJsonWebKey } from '../utils/get-client-jsonwebkey';
 
 /**
  * Handler used to aggregate the operations of the OpenID Connect ID Token.
@@ -75,7 +74,7 @@ export class IdTokenHandler {
 
     const userinfo = await this.userService.getUserinfo!(user, scopes);
 
-    const signKey = this.getSigningJsonWebKey(client);
+    const signKey = this.jwks.get((jwk) => jwk.alg === client.idTokenSignedResponseAlgorithm && jwk.use === 'sig');
 
     const jwsHeader = new JsonWebSignatureHeader({
       alg: client.idTokenSignedResponseAlgorithm,
@@ -110,7 +109,11 @@ export class IdTokenHandler {
       return signedJwt;
     }
 
-    const keyWrapKey = await this.getKeyWrapJsonWebKey(client);
+    const keyWrapKey = await getClientJsonWebKey(client, (key) => {
+      return (
+        key.alg === client.idTokenEncryptedResponseKeyWrap! && (typeof key.use === 'undefined' || key.use === 'enc')
+      );
+    });
 
     const jweHeader = new JsonWebEncryptionHeader({
       alg: client.idTokenEncryptedResponseKeyWrap,
@@ -174,84 +177,5 @@ export class IdTokenHandler {
     const halfHash = hash.subarray(0, hash.length / 2);
 
     return halfHash.toString('base64url');
-  }
-
-  /**
-   * Gets a JSON Web Key suitable for signing an ID Token from the Authorization Server's JSON Web Key Set.
-   *
-   * @param client Client requesting authorization.
-   * @returns JSON Web Key used to sign the ID Token.
-   */
-  private getSigningJsonWebKey(client: Client): JsonWebKey {
-    const jwk = this.jwks.find((jwk) => jwk.alg === client.idTokenSignedResponseAlgorithm && jwk.use === 'sig');
-
-    if (jwk === null) {
-      throw new Error('Could not find a JSON Web Key suitable for Signing an ID Token.');
-    }
-
-    return jwk;
-  }
-
-  /**
-   * Gets a JSON Web Key suitable for signing an ID Token from the Authorization Server's JSON Web Key Set.
-   *
-   * @param client Client requesting authorization.
-   * @returns JSON Web Key used to sign the ID Token.
-   */
-  private async getKeyWrapJsonWebKey(client: Client): Promise<JsonWebKey> {
-    let clientJwks: Nullable<JsonWebKeySet> = null;
-
-    if (client.jwksUri !== null) {
-      clientJwks = await this.getClientJwksFromUri(client.jwksUri);
-    } else if (client.jwks !== null) {
-      clientJwks = await JsonWebKeySet.load(client.jwks);
-    }
-
-    if (clientJwks === null) {
-      throw new Error('The Client does not have a JSON Web Key Set registered.');
-    }
-
-    const jwk = clientJwks.find((key) => {
-      return (
-        key.alg === client.idTokenEncryptedResponseKeyWrap! && (typeof key.use === 'undefined' || key.use === 'enc')
-      );
-    });
-
-    if (jwk === null) {
-      throw new Error('Could not find a JSON Web Key suitable for Encrypting an ID Token.');
-    }
-
-    return jwk;
-  }
-
-  /**
-   * Fetches the JSON Web Key Set of the Client hosted at the provided URI.
-   *
-   * @param jwksUri URI of the JSON Web Key Set of the Client.
-   * @returns JSON Web Key Set of the Client.
-   */
-  private getClientJwksFromUri(jwksUri: string): Promise<JsonWebKeySet> {
-    return new Promise((resolve, reject) => {
-      const request = https.request(jwksUri, (res) => {
-        let responseBody = '';
-
-        res.setEncoding('utf8');
-
-        res.on('data', (chunk) => (responseBody += chunk));
-        res.on('end', async () => {
-          try {
-            resolve(await JsonWebKeySet.parse(responseBody));
-          } catch (exc: unknown) {
-            reject(new Error('Could not load the JSON Web Key Set of the Client.', { cause: exc }));
-          }
-        });
-      });
-
-      request.on('error', (error) => {
-        reject(new Error('Could not load the JSON Web Key Set of the Client.', { cause: error }));
-      });
-
-      request.end();
-    });
   }
 }

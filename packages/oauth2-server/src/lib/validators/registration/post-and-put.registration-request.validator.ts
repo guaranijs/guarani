@@ -95,9 +95,9 @@ export abstract class PostAndPutRegistrationRequestValidator<
     const idTokenSignedResponseAlgorithm = this.getIdTokenSignedResponseAlgorithm(parameters);
     const idTokenEncryptedResponseKeyWrap = this.getIdTokenEncryptedResponseKeyWrap(parameters);
     const idTokenEncryptedResponseContentEncryption = this.getIdTokenEncryptedResponseContentEncryption(parameters);
-    // const userinfoSignedResponseAlgorithm = this.getUserinfoSignedResponseAlgorithm(parameters);
-    // const userinfoEncryptedResponseKeyWrap = this.getUserinfoEncryptedResponseKeyWrap(parameters);
-    // const userinfoEncryptedResponseContentEncryption = this.getUserinfoEncryptedResponseContentEncryption(parameters);
+    const userinfoSignedResponseAlgorithm = this.getUserinfoSignedResponseAlgorithm(parameters);
+    const userinfoEncryptedResponseKeyWrap = this.getUserinfoEncryptedResponseKeyWrap(parameters);
+    const userinfoEncryptedResponseContentEncryption = this.getUserinfoEncryptedResponseContentEncryption(parameters);
     // const requestObjectSigningAlgorithm = this.getRequestObjectSigningAlgorithm(parameters);
     // const requestObjectEncryptionKeyWrap = this.getRequestObjectEncryptionKeyWrap(parameters);
     // const requestObjectEncryptionContentEncryption = this.getRequestObjectEncryptionContentEncryption(parameters);
@@ -137,9 +137,9 @@ export abstract class PostAndPutRegistrationRequestValidator<
       idTokenSignedResponseAlgorithm,
       idTokenEncryptedResponseKeyWrap,
       idTokenEncryptedResponseContentEncryption,
-      // userinfoSignedResponseAlgorithm,
-      // userinfoEncryptedResponseKeyWrap,
-      // userinfoEncryptedResponseContentEncryption,
+      userinfoSignedResponseAlgorithm,
+      userinfoEncryptedResponseKeyWrap,
+      userinfoEncryptedResponseContentEncryption,
       // requestObjectSigningAlgorithm,
       // requestObjectEncryptionKeyWrap,
       // requestObjectEncryptionContentEncryption,
@@ -331,7 +331,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
       throw new InvalidClientMetadataException(`Unsupported application_type "${parameters.application_type}".`);
     }
 
-    return parameters.application_type as ApplicationType;
+    return parameters.application_type;
   }
 
   /**
@@ -598,11 +598,11 @@ export abstract class PostAndPutRegistrationRequestValidator<
       return 'public';
     }
 
-    if (!this.settings.subjectTypes.includes(parameters.subject_type as SubjectType)) {
+    if (!this.settings.subjectTypes.includes(parameters.subject_type)) {
       throw new InvalidClientMetadataException(`Unsupported subject_type "${parameters.subject_type}".`);
     }
 
-    return parameters.subject_type as SubjectType;
+    return parameters.subject_type;
   }
 
   /**
@@ -658,17 +658,13 @@ export abstract class PostAndPutRegistrationRequestValidator<
       return 'RS256';
     }
 
-    if (
-      !this.settings.idTokenSignatureAlgorithms.includes(
-        parameters.id_token_signed_response_alg as Exclude<JsonWebSignatureAlgorithm, 'none'>
-      )
-    ) {
+    if (!this.settings.idTokenSignatureAlgorithms.includes(parameters.id_token_signed_response_alg)) {
       throw new InvalidClientMetadataException(
         `Unsupported id_token_signed_response_alg "${parameters.id_token_signed_response_alg}".`
       );
     }
 
-    return parameters.id_token_signed_response_alg as Exclude<JsonWebSignatureAlgorithm, 'none'>;
+    return parameters.id_token_signed_response_alg;
   }
 
   /**
@@ -691,17 +687,13 @@ export abstract class PostAndPutRegistrationRequestValidator<
       return null;
     }
 
-    if (
-      this.settings.idTokenKeyWrapAlgorithms?.includes(
-        parameters.id_token_encrypted_response_alg as JsonWebEncryptionKeyWrapAlgorithm
-      ) !== true
-    ) {
+    if (this.settings.idTokenKeyWrapAlgorithms?.includes(parameters.id_token_encrypted_response_alg) !== true) {
       throw new InvalidClientMetadataException(
         `Unsupported id_token_encrypted_response_alg "${parameters.id_token_encrypted_response_alg}".`
       );
     }
 
-    return parameters.id_token_encrypted_response_alg as JsonWebEncryptionKeyWrapAlgorithm;
+    return parameters.id_token_encrypted_response_alg;
   }
 
   /**
@@ -732,29 +724,132 @@ export abstract class PostAndPutRegistrationRequestValidator<
 
     if (
       typeof parameters.id_token_encrypted_response_enc !== 'undefined' &&
-      this.settings.idTokenContentEncryptionAlgorithms?.includes(
-        parameters.id_token_encrypted_response_enc as JsonWebEncryptionContentEncryptionAlgorithm
-      ) !== true
+      this.settings.idTokenContentEncryptionAlgorithms?.includes(parameters.id_token_encrypted_response_enc) !== true
     ) {
       throw new InvalidClientMetadataException(
         `Unsupported id_token_encrypted_response_enc "${parameters.id_token_encrypted_response_enc}".`
       );
     }
 
-    return (parameters.id_token_encrypted_response_enc as JsonWebEncryptionContentEncryptionAlgorithm) ?? null;
+    if (typeof parameters.id_token_encrypted_response_enc === 'string') {
+      return parameters.id_token_encrypted_response_enc;
+    }
+
+    return typeof parameters.id_token_encrypted_response_alg === 'string' ? 'A128CBC-HS256' : null;
   }
 
-  // private getUserinfoSignedResponseAlgorithm(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
+  /**
+   * Returns the Userinfo JSON Web Signature Algorithm provided by the Client.
+   *
+   * @param parameters Parameters of the Dynamic Client Registration Request.
+   * @returns Userinfo JSON Web Signature Algorithm provided by the Client.
+   */
+  private getUserinfoSignedResponseAlgorithm(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>> {
+    if (
+      typeof parameters.userinfo_signed_response_alg !== 'undefined' &&
+      typeof parameters.userinfo_signed_response_alg !== 'string'
+    ) {
+      throw new InvalidClientMetadataException('Invalid parameter "userinfo_signed_response_alg".');
+    }
 
-  // private getUserinfoEncryptedResponseKeyWrap(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionKeyWrapAlgorithm {}
+    if (typeof parameters.userinfo_signed_response_alg === 'undefined') {
+      return null;
+    }
 
-  // private getUserinfoEncryptedResponseContentEncryption(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionContentEncryptionAlgorithm {}
+    if (this.settings.userinfoSignatureAlgorithms?.includes(parameters.userinfo_signed_response_alg) !== true) {
+      throw new InvalidClientMetadataException(
+        `Unsupported userinfo_signed_response_alg "${parameters.userinfo_signed_response_alg}".`
+      );
+    }
 
-  // private getRequestObjectSigningAlgorithm(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Exclude<JsonWebSignatureAlgorithm, 'none'> {}
+    return parameters.userinfo_signed_response_alg;
+  }
 
-  // private getRequestObjectEncryptionKeyWrap(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionKeyWrapAlgorithm {}
+  /**
+   * Returns the Userinfo JSON Web Encryption Key Wrap Algorithm provided by the Client.
+   *
+   * @param parameters Parameters of the Dynamic Client Registration Request.
+   * @returns Userinfo JSON Web Encryption Key Wrap Algorithm provided by the Client.
+   */
+  private getUserinfoEncryptedResponseKeyWrap(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): Nullable<JsonWebEncryptionKeyWrapAlgorithm> {
+    if (
+      typeof parameters.userinfo_encrypted_response_alg !== 'undefined' &&
+      typeof parameters.userinfo_encrypted_response_alg !== 'string'
+    ) {
+      throw new InvalidClientMetadataException('Invalid parameter "userinfo_encrypted_response_alg".');
+    }
 
-  // private getRequestObjectEncryptionContentEncryption(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): JsonWebEncryptionContentEncryptionAlgorithm {}
+    if (typeof parameters.userinfo_encrypted_response_alg === 'undefined') {
+      return null;
+    }
+
+    if (typeof parameters.userinfo_signed_response_alg === 'undefined') {
+      throw new InvalidClientMetadataException(
+        'The parameter "userinfo_encrypted_response_alg" must be presented together ' +
+          'with the parameter "userinfo_signed_response_alg".'
+      );
+    }
+
+    if (this.settings.userinfoKeyWrapAlgorithms?.includes(parameters.userinfo_encrypted_response_alg) !== true) {
+      throw new InvalidClientMetadataException(
+        `Unsupported userinfo_encrypted_response_alg "${parameters.userinfo_encrypted_response_alg}".`
+      );
+    }
+
+    return parameters.userinfo_encrypted_response_alg;
+  }
+
+  /**
+   * Returns the Userinfo JSON Web Encryption Content Encryption Algorithm provided by the Client.
+   *
+   * @param parameters Parameters of the Dynamic Client Registration Request.
+   * @returns Userinfo JSON Web Encryption Content Encryption Algorithm provided by the Client.
+   */
+  private getUserinfoEncryptedResponseContentEncryption(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+  ): Nullable<JsonWebEncryptionContentEncryptionAlgorithm> {
+    if (
+      typeof parameters.userinfo_encrypted_response_enc !== 'undefined' &&
+      typeof parameters.userinfo_encrypted_response_enc !== 'string'
+    ) {
+      throw new InvalidClientMetadataException('Invalid parameter "userinfo_encrypted_response_enc".');
+    }
+
+    if (
+      typeof parameters.userinfo_encrypted_response_enc !== 'undefined' &&
+      typeof parameters.userinfo_encrypted_response_alg === 'undefined'
+    ) {
+      throw new InvalidClientMetadataException(
+        'The parameter "userinfo_encrypted_response_enc" must be presented together ' +
+          'with the parameter "userinfo_encrypted_response_alg".'
+      );
+    }
+
+    if (
+      typeof parameters.userinfo_encrypted_response_enc !== 'undefined' &&
+      this.settings.userinfoContentEncryptionAlgorithms?.includes(parameters.userinfo_encrypted_response_enc) !== true
+    ) {
+      throw new InvalidClientMetadataException(
+        `Unsupported userinfo_encrypted_response_enc "${parameters.userinfo_encrypted_response_enc}".`
+      );
+    }
+
+    if (typeof parameters.userinfo_encrypted_response_enc === 'string') {
+      return parameters.userinfo_encrypted_response_enc;
+    }
+
+    return typeof parameters.userinfo_encrypted_response_alg === 'string' ? 'A128CBC-HS256' : null;
+  }
+
+  // private getRequestObjectSigningAlgorithm(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>> {}
+
+  // private getRequestObjectEncryptionKeyWrap(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<JsonWebEncryptionKeyWrapAlgorithm> {}
+
+  // private getRequestObjectEncryptionContentEncryption(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<JsonWebEncryptionContentEncryptionAlgorithm> {}
 
   /**
    * Returns the Client Authentication Method provided by the Client.
@@ -776,15 +871,13 @@ export abstract class PostAndPutRegistrationRequestValidator<
       return 'client_secret_basic';
     }
 
-    if (
-      !this.settings.clientAuthenticationMethods.includes(parameters.token_endpoint_auth_method as ClientAuthentication)
-    ) {
+    if (!this.settings.clientAuthenticationMethods.includes(parameters.token_endpoint_auth_method)) {
       throw new InvalidClientMetadataException(
         `Unsupported token_endpoint_auth_method "${parameters.token_endpoint_auth_method}".`
       );
     }
 
-    return parameters.token_endpoint_auth_method as ClientAuthentication;
+    return parameters.token_endpoint_auth_method;
   }
 
   /**
@@ -805,16 +898,14 @@ export abstract class PostAndPutRegistrationRequestValidator<
 
     if (
       typeof parameters.token_endpoint_auth_signing_alg !== 'undefined' &&
-      !this.settings.clientAuthenticationSignatureAlgorithms.includes(
-        parameters.token_endpoint_auth_signing_alg as Exclude<JsonWebSignatureAlgorithm, 'none'>
-      )
+      !this.settings.clientAuthenticationSignatureAlgorithms.includes(parameters.token_endpoint_auth_signing_alg)
     ) {
       throw new InvalidClientMetadataException(
         `Unsupported token_endpoint_auth_signing_alg "${parameters.token_endpoint_auth_signing_alg}".`
       );
     }
 
-    return (parameters.token_endpoint_auth_signing_alg as Exclude<JsonWebSignatureAlgorithm, 'none'>) ?? null;
+    return parameters.token_endpoint_auth_signing_alg ?? null;
   }
 
   /**
@@ -861,16 +952,12 @@ export abstract class PostAndPutRegistrationRequestValidator<
 
     switch (authenticationMethod) {
       case 'client_secret_jwt':
-        isValidAlgorithmForAuthenticationMethod = clientSecretJwtAlgorithms.includes(
-          authenticationSigningAlgorithm as Exclude<JsonWebSignatureAlgorithm, 'none'>
-        );
+        isValidAlgorithmForAuthenticationMethod = clientSecretJwtAlgorithms.includes(authenticationSigningAlgorithm);
 
         break;
 
       case 'private_key_jwt':
-        isValidAlgorithmForAuthenticationMethod = !clientSecretJwtAlgorithms.includes(
-          authenticationSigningAlgorithm as Exclude<JsonWebSignatureAlgorithm, 'none'>
-        );
+        isValidAlgorithmForAuthenticationMethod = !clientSecretJwtAlgorithms.includes(authenticationSigningAlgorithm);
 
         break;
     }

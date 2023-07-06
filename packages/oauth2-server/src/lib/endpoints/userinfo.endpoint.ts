@@ -1,6 +1,14 @@
 import { OutgoingHttpHeaders } from 'http';
 
 import { Inject, Injectable } from '@guarani/di';
+import {
+  JsonWebEncryption,
+  JsonWebEncryptionHeader,
+  JsonWebKeySet,
+  JsonWebSignature,
+  JsonWebSignatureHeader,
+  JsonWebTokenClaims,
+} from '@guarani/jose';
 import { removeNullishValues } from '@guarani/primitives';
 
 import { AccessToken } from '../entities/access-token.entity';
@@ -20,6 +28,7 @@ import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
+import { getClientJsonWebKey } from '../utils/get-client-jsonwebkey';
 import { EndpointInterface } from './endpoint.interface';
 import { Endpoint } from './endpoint.type';
 
@@ -56,11 +65,13 @@ export class UserinfoEndpoint implements EndpointInterface {
    * Instantiates a new Userinfo Endpoint.
    *
    * @param clientAuthorizationHandler Instance of the Client Authorization Handler.
+   * @param jwks JSON Web Key Set of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param userService Instance of the User Service.
    */
   public constructor(
     private readonly clientAuthorizationHandler: ClientAuthorizationHandler,
+    private readonly jwks: JsonWebKeySet,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(USER_SERVICE) private readonly userService: UserServiceInterface
   ) {
@@ -88,7 +99,14 @@ export class UserinfoEndpoint implements EndpointInterface {
       const { client, scopes, user } = await this.authorize(request);
       const claims = await this.getUserinfo(client!, user!, scopes);
 
-      return new HttpResponse().setHeaders(this.headers).json(removeNullishValues(claims));
+      const response = new HttpResponse().setHeaders(this.headers);
+
+      if (client!.userinfoSignedResponseAlgorithm === null) {
+        return response.json(removeNullishValues(claims));
+      }
+
+      const jwt = await this.generateJsonWebTokenResponse(client!, claims);
+      return response.jwt(jwt);
     } catch (exc: unknown) {
       const error =
         exc instanceof OAuth2Exception
@@ -139,5 +157,47 @@ export class UserinfoEndpoint implements EndpointInterface {
     // UserService.getUserinfo() does not return the "sub" claim.
     const claims: UserinfoClaimsParameters = { sub: calculateSubjectIdentifier(user, client, this.settings) };
     return Object.assign(claims, await this.userService.getUserinfo!(user, scopes));
+  }
+
+  /**
+   * Generates a JSON Web Token containing the Userinfo Claims to be returned to the Client.
+   *
+   * @param client Client of the Request.
+   * @param claims Claims containing the Userinfo retrieved by the Authorization Server.
+   * @returns JSON Web Token containing the Userinfo Claims.
+   */
+  private async generateJsonWebTokenResponse(client: Client, claims: UserinfoClaimsParameters): Promise<string> {
+    const signKey = this.jwks.get((jwk) => jwk.alg === client.userinfoSignedResponseAlgorithm! && jwk.use === 'sig');
+
+    const jwsHeader = new JsonWebSignatureHeader({
+      alg: client.userinfoSignedResponseAlgorithm!,
+      kid: signKey.kid,
+      typ: 'JWT',
+    });
+
+    const jws = new JsonWebSignature(jwsHeader, new JsonWebTokenClaims(claims).toBuffer());
+
+    const signedJwt = await jws.sign(signKey);
+
+    if (client.userinfoEncryptedResponseKeyWrap === null) {
+      return signedJwt;
+    }
+
+    const keyWrapKey = await getClientJsonWebKey(client, (key) => {
+      return (
+        key.alg === client.userinfoEncryptedResponseKeyWrap! && (typeof key.use === 'undefined' || key.use === 'enc')
+      );
+    });
+
+    const jweHeader = new JsonWebEncryptionHeader({
+      alg: client.userinfoEncryptedResponseKeyWrap,
+      enc: client.userinfoEncryptedResponseContentEncryption!,
+      cty: 'JWT',
+      kid: keyWrapKey.kid,
+    });
+
+    const jwe = new JsonWebEncryption(jweHeader, Buffer.from(signedJwt, 'ascii'));
+
+    return await jwe.encrypt(keyWrapKey);
   }
 }

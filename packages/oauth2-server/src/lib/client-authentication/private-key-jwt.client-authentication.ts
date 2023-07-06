@@ -50,6 +50,7 @@ export class PrivateKeyJwtClientAuthentication extends JwtBearerClientAssertion 
    * @param header JSON Web Signature Header of the Client Assertion.
    * @returns JSON Web Key of the Client based on the JSON Web Signature Header.
    */
+  // TODO: Use getClientJsonWebKey() util function.
   protected async getClientKey(client: Client, header: JsonWebSignatureHeaderParameters): Promise<JsonWebKey> {
     let clientJwks: Nullable<JsonWebKeySet> = null;
 

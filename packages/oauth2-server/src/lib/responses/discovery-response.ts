@@ -109,14 +109,19 @@ export interface DiscoveryResponse extends Dictionary<any> {
   readonly userinfo_encryption_enc_values_supported?: JsonWebEncryptionContentEncryptionAlgorithm[];
 
   /**
-   * Prompts supported by the Authorization Server.
+   * JSON Web Signature Algorithms for Request Object Authorization Request Parameter supported by the Authorization Server.
    */
-  readonly prompt_values_supported: Prompt[];
+  // readonly request_object_signing_alg_values_supported?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
 
   /**
-   * Display Methods supported by the Authorization Server.
+   * JSON Web Encryption Key Wrap Algorithms for Request Object Authorization Request Parameter supported by the Authorization Server.
    */
-  readonly display_values_supported: Display[];
+  // readonly request_object_encryption_alg_values_supported?: JsonWebEncryptionKeyWrapAlgorithm[];
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithms for Request Object Authorization Request Parameter supported by the Authorization Server.
+   */
+  // readonly request_object_encryption_enc_values_supported?: JsonWebEncryptionContentEncryptionAlgorithm[];
 
   /**
    * Client Authentication Methods supported by the Token Endpoint.
@@ -129,14 +134,59 @@ export interface DiscoveryResponse extends Dictionary<any> {
   readonly token_endpoint_auth_signing_alg_values_supported?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
 
   /**
+   * Prompts supported by the Authorization Server.
+   */
+  readonly prompt_values_supported: Prompt[];
+
+  /**
+   * Display Methods supported by the Authorization Server.
+   */
+  readonly display_values_supported: Display[];
+
+  /**
+   * Claim Types supported by the Authorization Server.
+   */
+  // readonly claim_types_supported: ClaimType[];
+
+  /**
+   * Claims supported by the Authorization Server.
+   */
+  // readonly claims_supported: ClaimType[];
+
+  /**
    * Url of the Human-Readable documentation of the Authorization Server.
    */
   readonly service_documentation?: string;
 
   /**
+   * Claims Locales supported by the Authorization Server.
+   */
+  // readonly claims_locales_supported?: string[];
+
+  /**
    * User Interface Locales supported by the Authorization Server.
    */
   readonly ui_locales_supported?: string[];
+
+  /**
+   * Informs whether or not the Authorization Server supports the usage of the Authorization Request Parameter **Claims**.
+   */
+  // readonly claims_parameter_supported?: boolean;
+
+  /**
+   * Informs whether or not the Authorization Server supports the usage of the Authorization Request Parameter **Request**.
+   */
+  // readonly request_parameter_supported?: boolean;
+
+  /**
+   * Informs whether or not the Authorization Server supports the usage of the Authorization Request Parameter **Request URI**.
+   */
+  // readonly request_uri_parameter_supported?: boolean;
+
+  /**
+   * Informs whether or not the Authorization Server requires the Client to pre-register **request_uri** values.
+   */
+  // readonly require_request_uri_registration?: boolean;
 
   /**
    * Url of the Privacy Policy of the Authorization Server.

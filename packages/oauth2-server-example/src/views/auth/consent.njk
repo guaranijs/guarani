@@ -12,7 +12,6 @@
       </div>
 
       <form action="/auth/consent" method="post">
-        <input type="hidden" name="_csrf" value="{{ request.csrfToken() }}" />
         <input type="hidden" name="consent_challenge" value="{{ consent_challenge }}"/>
 
         {% for scope in scopes %}

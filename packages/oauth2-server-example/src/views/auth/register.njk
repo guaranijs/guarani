@@ -12,7 +12,6 @@
       </div>
 
       <form action="{{ request.originalUrl }}" method="post">
-        <input type="hidden" name="_csrf" value="{{ request.csrfToken() }}"/>
         <input type="hidden" name="login_challenge" value="{{ login_challenge }}"/>
 
         <div class="row">

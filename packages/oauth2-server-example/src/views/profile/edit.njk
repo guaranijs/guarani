@@ -53,7 +53,6 @@
             <div class="card">
               <div class="card-body">
                 <form action="{{ request.originalUrl }}" method="post" onsubmit="removeEmptyEntries(this)">
-                  <input type="hidden" name="_csrf" value="{{ request.csrfToken() }}"/>
 
                   <div class="row">
                     <div class="col-12 col-lg-4 mt-3">

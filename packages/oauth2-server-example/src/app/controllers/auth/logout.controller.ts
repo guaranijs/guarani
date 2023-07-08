@@ -1,11 +1,14 @@
 import axios, { AxiosError } from 'axios';
 import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
-import { URL, URLSearchParams } from 'url';
+import { parse as parseQs, stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import {
   EndSessionRequest,
   LogoutContextInteractionResponse,
+  LogoutDecision,
+  LogoutDecisionInteractionRequest,
   LogoutDecisionInteractionResponse,
 } from '@guarani/oauth2-server';
 
@@ -20,22 +23,18 @@ class Controller {
         const parameters: EndSessionRequest = {
           id_token_hint: idToken,
           client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
-          post_logout_redirect_uri: 'http://localhost:4000/oauth/logout-callback',
+          post_logout_redirect_uri: 'http://localhost:4000/oauth/logout_callback',
           state: randomUUID(),
         };
 
         const url = new URL('http://localhost:4000/oauth/end_session');
-        const searchParameters = new URLSearchParams(parameters);
-
-        url.search = searchParameters.toString();
+        url.search = stringifyQs(parameters);
 
         return response.redirect(303, url.href);
       }
 
       const url = new URL('http://localhost:4000/oauth/interaction');
-      const searchParams = new URLSearchParams({ interaction_type: 'logout', logout_challenge: logoutChallenge });
-
-      url.search = searchParams.toString();
+      url.search = stringifyQs({ interaction_type: 'logout', logout_challenge: logoutChallenge });
 
       const { data } = await axios.get<LogoutContextInteractionResponse>(url.href);
 
@@ -61,41 +60,54 @@ class Controller {
   }
 
   public async post(request: Request, response: Response): Promise<void> {
-    const { logout_challenge: logoutChallenge, decision } = request.body;
+    const parsedBody = parseQs(request.body.toString('utf8'));
+
+    const { logout_challenge: logoutChallenge, decision } = parsedBody;
 
     if (typeof logoutChallenge !== 'string') {
       return response.redirect(303, '/');
     }
 
-    const reqBody = new URLSearchParams({ interaction_type: 'logout', logout_challenge: logoutChallenge, decision });
+    const reqData: LogoutDecisionInteractionRequest = {
+      interaction_type: 'logout',
+      logout_challenge: logoutChallenge,
+      decision: decision as LogoutDecision,
+    };
 
     switch (decision) {
       case 'accept': {
         const sessionId: string = request.signedCookies['guarani:session'];
-        reqBody.set('session_id', sessionId);
+        reqData.session_id = sessionId;
         break;
       }
 
       case 'deny':
-        reqBody.set('error', 'logout_denied');
-        reqBody.set('error_description', 'The user denied the logout.');
+        reqData.error = 'logout_denied';
+        reqData.error_description = 'The user denied the logout.';
         break;
 
       default:
         throw new Error('Invalid parameter "decision".');
     }
 
+    const reqBody = stringifyQs(reqData);
+
     try {
       const {
         data: { redirect_to: redirectTo },
-      } = await axios.post<LogoutDecisionInteractionResponse>(
-        'http://localhost:4000/oauth/interaction',
-        reqBody.toString(),
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      );
+      } = await axios.post<LogoutDecisionInteractionResponse>('http://localhost:4000/oauth/interaction', reqBody, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      });
 
-      if (decision === 'accept') {
-        request.logout(() => null);
+      switch (decision) {
+        case 'accept':
+          response.clearCookie('id_token', { signed: true });
+          request.logout(() => null);
+          break;
+
+        case 'deny':
+          response.clearCookie('guarani:logout', { signed: true });
+          break;
       }
 
       return response.redirect(303, redirectTo);

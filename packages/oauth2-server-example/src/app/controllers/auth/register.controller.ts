@@ -3,7 +3,8 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
-import { URL, URLSearchParams } from 'url';
+import { parse as parseQs, stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import {
   CodeAuthorizationRequest,
@@ -43,17 +44,13 @@ class Controller {
         };
 
         const url = new URL('http://localhost:4000/oauth/authorize');
-        const searchParameters = new URLSearchParams(parameters);
-
-        url.search = searchParameters.toString();
+        url.search = stringifyQs(parameters);
 
         return response.redirect(303, url.href);
       }
 
       const url = new URL('http://localhost:4000/oauth/interaction');
-      const searchParams = new URLSearchParams({ interaction_type: 'create', login_challenge: loginChallenge });
-
-      url.search = searchParams.toString();
+      url.search = stringifyQs({ interaction_type: 'create', login_challenge: loginChallenge });
 
       const { data } = await axios.get<CreateContextInteractionResponse>(url.href);
 
@@ -82,9 +79,11 @@ class Controller {
   }
 
   public async post(request: Request, response: Response): Promise<void> {
-    const { login_challenge: loginChallenge } = request.body;
+    const parsedBody = parseQs(request.body.toString('utf8'));
 
-    const userRegistrationDto = plainToInstance(UserRegistrationDto, request.body);
+    const { login_challenge: loginChallenge } = parsedBody;
+
+    const userRegistrationDto = plainToInstance(UserRegistrationDto, parsedBody);
 
     const errors = await validate(userRegistrationDto);
 
@@ -95,20 +94,18 @@ class Controller {
 
     const requestParameters: CreateDecisionInteractionRequest = {
       interaction_type: 'create',
-      login_challenge: loginChallenge,
+      login_challenge: loginChallenge as string,
       ...userRegistrationDto,
     };
 
-    const requestBody = new URLSearchParams(requestParameters);
+    const requestBody = stringifyQs(requestParameters);
 
     try {
       const {
         data: { redirect_to: redirectTo },
-      } = await axios.post<CreateDecisionInteractionResponse>(
-        'http://localhost:4000/oauth/interaction',
-        requestBody.toString(),
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      );
+      } = await axios.post<CreateDecisionInteractionResponse>('http://localhost:4000/oauth/interaction', requestBody, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      });
 
       const sessionId = request.signedCookies['guarani:session'];
       const session = await Session.findOneByOrFail({ id: sessionId });

@@ -67,7 +67,7 @@ export class UserService implements UserServiceInterface {
     }
 
     if (scopes.includes('address')) {
-      claims.address = user.address;
+      claims.address = { formatted: user.address.formatted };
     }
 
     return claims;

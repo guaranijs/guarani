@@ -12,7 +12,6 @@
       </div>
 
       <form action="/auth/select-account" method="post">
-        <input type="hidden" name="_csrf" value="{{ request.csrfToken() }}"/>
         <input type="hidden" name="login_challenge" value="{{ login_challenge }}"/>
 
         <ul class="list-group">

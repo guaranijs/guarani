@@ -100,7 +100,7 @@ export class Client extends BaseEntity implements OAuth2Client {
   @Column({ name: 'jwks', type: 'json', nullable: true })
   public jwks!: Nullable<JsonWebKeySetParameters>;
 
-  @Column({ name: 'subject_type', type: 'varchar', default: 'public', nullable: false })
+  @Column({ name: 'subject_type', type: 'varchar', default: "'public'", nullable: false })
   public subjectType!: SubjectType;
 
   @Column({ name: 'sector_identifier_uri', type: 'varchar', nullable: true })
@@ -110,7 +110,7 @@ export class Client extends BaseEntity implements OAuth2Client {
   @Check('check_pairwise_salt_length', 'length("pairwise_salt") = 32')
   public pairwiseSalt!: Nullable<string>;
 
-  @Column({ name: 'id_token_signed_response_algorithm', type: 'varchar', nullable: false })
+  @Column({ name: 'id_token_signed_response_algorithm', default: "'RS256'", type: 'varchar', nullable: false })
   @Check('check_id_token_signed_response_algorithm', '"id_token_signed_response_algorithm" <> \'none\'')
   public idTokenSignedResponseAlgorithm!: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
@@ -120,15 +120,15 @@ export class Client extends BaseEntity implements OAuth2Client {
   @Column({ name: 'id_token_encrypted_response_content_encryption', type: 'varchar', nullable: true })
   public idTokenEncryptedResponseContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
-  // @Column({ name: 'userinfo_signed_response_algorithm', type: 'varchar', nullable: true })
-  // @Check('check_userinfo_signed_response_algorithm', '"userinfo_signed_response_algorithm" <> \'none\'')
-  // public userinfoSignedResponseAlgorithm!: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
+  @Column({ name: 'userinfo_signed_response_algorithm', type: 'varchar', nullable: true })
+  @Check('check_userinfo_signed_response_algorithm', '"userinfo_signed_response_algorithm" <> \'none\'')
+  public userinfoSignedResponseAlgorithm!: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
-  // @Column({ name: 'userinfo_encrypted_response_key_wrap', type: 'varchar', nullable: true })
-  // public userinfoEncryptedResponseKeyWrap!: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
+  @Column({ name: 'userinfo_encrypted_response_key_wrap', type: 'varchar', nullable: true })
+  public userinfoEncryptedResponseKeyWrap!: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
-  // @Column({ name: 'userinfo_encrypted_response_content_encryption', type: 'varchar', nullable: true })
-  // public userinfoEncryptedResponseContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
+  @Column({ name: 'userinfo_encrypted_response_content_encryption', type: 'varchar', nullable: true })
+  public userinfoEncryptedResponseContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   // @Column({ name: 'request_object_signing_algorithm', type: 'varchar', nullable: true })
   // @Check('check_request_object_signing_algorithm', '"request_object_signing_algorithm" <> \'none\'')

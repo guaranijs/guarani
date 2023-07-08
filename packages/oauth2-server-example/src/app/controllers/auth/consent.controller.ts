@@ -1,8 +1,15 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
-import { URL, URLSearchParams } from 'url';
+import { parse as parseQs, stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
-import { ConsentContextInteractionResponse, ConsentDecisionInteractionResponse, Display } from '@guarani/oauth2-server';
+import {
+  ConsentContextInteractionResponse,
+  ConsentDecision,
+  ConsentDecisionInteractionRequest,
+  ConsentDecisionInteractionResponse,
+  Display,
+} from '@guarani/oauth2-server';
 import { Nullable } from '@guarani/types';
 
 const popupTemplateFn = (redirectUri: string): string => `
@@ -26,9 +33,7 @@ class Controller {
     }
 
     const url = new URL('http://localhost:4000/oauth/interaction');
-    const searchParams = new URLSearchParams({ interaction_type: 'consent', consent_challenge: consentChallenge });
-
-    url.search = searchParams.toString();
+    url.search = stringifyQs({ interaction_type: 'consent', consent_challenge: consentChallenge });
 
     const { data } = await axios.get<ConsentContextInteractionResponse>(url.href);
 
@@ -54,39 +59,54 @@ class Controller {
   }
 
   public async post(request: Request, response: Response): Promise<void> {
-    const { consent_challenge: consentChallenge, grant_scope: grantScope, decision } = request.body;
+    const parsedBody = parseQs(request.body.toString('utf8'));
+
+    const { consent_challenge: consentChallenge, grant_scope: grantScope, decision } = parsedBody;
 
     if (typeof consentChallenge !== 'string') {
       return response.redirect(303, '/');
     }
 
-    const reqBody = new URLSearchParams({ interaction_type: 'consent', consent_challenge: consentChallenge, decision });
+    const reqData: ConsentDecisionInteractionRequest = {
+      interaction_type: 'consent',
+      consent_challenge: consentChallenge,
+      decision: decision as ConsentDecision,
+    };
 
     switch (decision) {
       case 'accept':
-        reqBody.set('grant_scope', grantScope.join(' '));
+        reqData.grant_scope = (grantScope as string[]).join(' ');
         break;
 
       case 'deny':
-        reqBody.set('error', 'consent_denied');
-        reqBody.set('error_description', 'The user denied the requested scope.');
+        reqData.error = 'consent_denied';
+        reqData.error_description = 'The user denied the requested scope.';
         break;
 
       default:
         throw new Error('Invalid parameter "decision".');
     }
 
-    const {
-      data: { redirect_to: redirectTo },
-    } = await axios.post<ConsentDecisionInteractionResponse>(
-      'http://localhost:4000/oauth/interaction',
-      reqBody.toString(),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
+    const reqBody = stringifyQs(reqData);
 
-    const display = request.cookies.display as Display;
+    try {
+      const {
+        data: { redirect_to: redirectTo },
+      } = await axios.post<ConsentDecisionInteractionResponse>('http://localhost:4000/oauth/interaction', reqBody, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      });
 
-    return this.redirectOrClosePopup(response, redirectTo, display);
+      const display = request.cookies.display as Display;
+
+      return this.redirectOrClosePopup(response, redirectTo, display);
+    } catch (exc: unknown) {
+      if (exc instanceof AxiosError) {
+        response.json(exc.response?.data);
+        return;
+      }
+
+      throw exc;
+    }
   }
 
   private redirectOrClosePopup(response: Response, url: string, display: Nullable<Display>): void {

@@ -12,7 +12,6 @@
       </div>
 
       <form action="/auth/login" method="post">
-        <input type="hidden" name="_csrf" value="{{ request.csrfToken() }}"/>
         <input type="hidden" name="login_challenge" value="{{ login_challenge }}"/>
 
         <div class="form-group d-flex align-items-center ps-2 mt-3 input-group-widget">

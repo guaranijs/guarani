@@ -114,7 +114,7 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
         {
           name: 'subject_type',
           type: 'varchar',
-          default: 'public',
+          default: "'public'",
           isNullable: false,
         },
         {
@@ -144,31 +144,21 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
           type: 'varchar',
           isNullable: true,
         },
-        // {
-        //   name: 'id_token_encrypted_response_key_wrap',
-        //   type: 'varchar',
-        //   isNullable: true,
-        // },
-        // {
-        //   name: 'id_token_encrypted_response_content_encryption',
-        //   type: 'varchar',
-        //   isNullable: true,
-        // },
-        // {
-        //   name: 'userinfo_signed_response_algorithm',
-        //   type: 'varchar',
-        //   isNullable: true,
-        // },
-        // {
-        //   name: 'userinfo_encrypted_response_key_wrap',
-        //   type: 'varchar',
-        //   isNullable: true,
-        // },
-        // {
-        //   name: 'userinfo_encrypted_response_content_encryption',
-        //   type: 'varchar',
-        //   isNullable: true,
-        // },
+        {
+          name: 'userinfo_signed_response_algorithm',
+          type: 'varchar',
+          isNullable: true,
+        },
+        {
+          name: 'userinfo_encrypted_response_key_wrap',
+          type: 'varchar',
+          isNullable: true,
+        },
+        {
+          name: 'userinfo_encrypted_response_content_encryption',
+          type: 'varchar',
+          isNullable: true,
+        },
         // {
         //   name: 'request_object_signing_algorithm',
         //   type: 'varchar',
@@ -304,11 +294,11 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
             '"id_token_encrypted_response_key_wrap" IS NOT NULL OR ' +
             '"id_token_encrypted_response_content_encryption" IS NULL',
         },
-        // {
-        //   name: 'check_userinfo_signed_response_algorithm',
-        //   columnNames: ['userinfo_signed_response_algorithm'],
-        //   expression: '"userinfo_signed_response_algorithm" <> \'none\'',
-        // },
+        {
+          name: 'check_userinfo_signed_response_algorithm',
+          columnNames: ['userinfo_signed_response_algorithm'],
+          expression: '"userinfo_signed_response_algorithm" <> \'none\'',
+        },
         // {
         //   name: 'check_request_object_signing_algorithm',
         //   columnNames: ['request_object_signing_algorithm'],

@@ -34,6 +34,7 @@ export const authorizationServerOptions: AuthorizationServerOptions = {
   ]),
   userInteraction: {
     consentUrl: '/auth/consent',
+    deviceCodeUrl: '/device',
     errorUrl: '/oauth/error',
     loginUrl: '/auth/login',
     logoutUrl: '/auth/logout',

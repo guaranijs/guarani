@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
-import { URL, URLSearchParams } from 'url';
+import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { TokenResponse } from '@guarani/oauth2-server';
 import { Dictionary } from '@guarani/types';
@@ -13,7 +14,7 @@ class Controller {
       return this.redirectToErrorPage(response, parameters);
     }
 
-    const body = new URLSearchParams({
+    const body = stringifyQs({
       grant_type: 'authorization_code',
       code: parameters.code as string,
       redirect_uri: 'http://localhost:4000/oauth/callback',
@@ -21,7 +22,7 @@ class Controller {
     });
 
     try {
-      const { data } = await axios.post<TokenResponse>('/oauth/token', body.toString(), {
+      const { data } = await axios.post<TokenResponse>('/oauth/token', body, {
         auth: {
           username: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
           password: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
@@ -60,9 +61,7 @@ class Controller {
 
   private redirectToErrorPage(response: Response, parameters: Dictionary<any>): void {
     const url = new URL('http://localhost:4000/oauth/error');
-    const searchParameters = new URLSearchParams(parameters);
-
-    url.search = searchParameters.toString();
+    url.search = stringifyQs(parameters);
 
     return response.redirect(303, url.href);
   }

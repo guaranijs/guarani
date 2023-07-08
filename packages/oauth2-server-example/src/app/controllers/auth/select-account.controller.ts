@@ -1,7 +1,8 @@
 import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
+import { parse as parseQs, stringify as stringifyQs } from 'querystring';
 import { In } from 'typeorm';
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 
 import {
   Display,
@@ -34,13 +35,11 @@ class Controller {
     const sessionId = request.signedCookies['guarani:session'];
 
     const url = new URL('http://localhost:4000/oauth/interaction');
-    const searchParams = new URLSearchParams({
+    url.search = stringifyQs({
       interaction_type: 'select_account',
       login_challenge: loginChallenge,
       session_id: sessionId,
     });
-
-    url.search = searchParams.toString();
 
     try {
       const { data } = await axios.get<SelectAccountContextInteractionResponse>(url.href);
@@ -69,22 +68,24 @@ class Controller {
   }
 
   public async post(request: Request, response: Response): Promise<void> {
-    const { login_challenge: loginChallenge, login_id: loginId } = request.body;
+    const parsedBody = parseQs(request.body.toString('utf8'));
+
+    const { login_challenge: loginChallenge, login_id: loginId } = parsedBody;
 
     const requestParameters: SelectAccountDecisionInteractionRequest = {
       interaction_type: 'select_account',
-      login_challenge: loginChallenge,
-      login_id: loginId,
+      login_challenge: loginChallenge as string,
+      login_id: loginId as string,
     };
 
-    const requestBody = new URLSearchParams(requestParameters);
+    const requestBody = stringifyQs(requestParameters);
 
     try {
       const {
         data: { redirect_to: redirectTo },
       } = await axios.post<SelectAccountDecisionInteractionResponse>(
         'http://localhost:4000/oauth/interaction',
-        requestBody.toString(),
+        requestBody,
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
 

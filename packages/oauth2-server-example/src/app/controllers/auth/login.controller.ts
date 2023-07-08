@@ -1,7 +1,8 @@
 import axios, { AxiosError } from 'axios';
 import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
-import { URL, URLSearchParams } from 'url';
+import { parse as parseQs, stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import {
   CodeAuthorizationRequest,
@@ -40,17 +41,13 @@ class Controller {
         };
 
         const url = new URL('http://localhost:4000/oauth/authorize');
-        const searchParameters = new URLSearchParams(parameters);
-
-        url.search = searchParameters.toString();
+        url.search = stringifyQs(parameters);
 
         return response.redirect(303, url.href);
       }
 
       const url = new URL('http://localhost:4000/oauth/interaction');
-      const searchParams = new URLSearchParams({ interaction_type: 'login', login_challenge: loginChallenge });
-
-      url.search = searchParams.toString();
+      url.search = stringifyQs({ interaction_type: 'login', login_challenge: loginChallenge });
 
       const { data } = await axios.get<LoginContextInteractionResponse>(url.href);
 
@@ -91,7 +88,9 @@ class Controller {
   }
 
   public async post(request: Request, response: Response): Promise<void> {
-    const { login_challenge: loginChallenge } = request.body;
+    const parsedBody = parseQs(request.body.toString('utf8'));
+
+    const { login_challenge: loginChallenge } = parsedBody;
 
     if (typeof loginChallenge !== 'string') {
       return response.redirect(303, '/');
@@ -116,16 +115,14 @@ class Controller {
       acr: 'urn:guarani:acr:1fa',
     };
 
-    const reqBody = new URLSearchParams(reqParameters);
+    const reqBody = stringifyQs(reqParameters);
 
     try {
       const {
         data: { redirect_to: redirectTo },
-      } = await axios.post<LoginDecisionInteractionResponse>(
-        'http://localhost:4000/oauth/interaction',
-        reqBody.toString(),
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      );
+      } = await axios.post<LoginDecisionInteractionResponse>('http://localhost:4000/oauth/interaction', reqBody, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      });
 
       display ??= request.cookies.display as Display;
 

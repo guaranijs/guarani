@@ -1,11 +1,8 @@
-import { Buffer } from 'buffer';
 import { IncomingHttpHeaders } from 'http';
 import { parse as parseQs } from 'querystring';
 
-import { JSON } from '@guarani/primitives';
 import { Dictionary, Json, OneOrMany } from '@guarani/types';
 
-import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { UnsupportedMediaTypeException } from '../exceptions/unsupported-media-type.exception';
 import { HttpMethod } from './http-method.type';
 import { HttpRequestParameters } from './http-request.parameters';
@@ -43,19 +40,9 @@ export class HttpRequest {
   public readonly cookies: Dictionary<unknown>;
 
   /**
-   * Raw Body of the Http Request.
+   * Body of the Http Request.
    */
-  #body: Buffer;
-
-  /**
-   * Body of the Http Request parsed as **application/x-www-form-urlencoded**.
-   */
-  #form?: Dictionary<OneOrMany<string>>;
-
-  /**
-   * Body of the Http Request parsed as **application/json**.
-   */
-  #json?: Json;
+  #body: Dictionary<unknown>;
 
   /**
    * Instantiates a new Http Request.
@@ -80,13 +67,7 @@ export class HttpRequest {
    */
   public form<T extends Dictionary<OneOrMany<string>>>(): T {
     this.expectContentType('application/x-www-form-urlencoded');
-
-    if (!Buffer.isBuffer(this.#form)) {
-      this.#form = parseQs(this.#body.toString('utf8'));
-      Reflect.setPrototypeOf(this.#form, Object.prototype);
-    }
-
-    return this.#form as T;
+    return this.#body as T;
   }
 
   /**
@@ -94,16 +75,7 @@ export class HttpRequest {
    */
   public json<T extends Json>(): T {
     this.expectContentType('application/json');
-
-    try {
-      if (typeof this.#json === 'undefined') {
-        this.#json = JSON.parse(this.#body.toString('utf8'));
-      }
-
-      return this.#json as T;
-    } catch (exc: unknown) {
-      throw new InvalidRequestException('The Http Request Body is not a valid JSON object.', { cause: exc });
-    }
+    return this.#body as T;
   }
 
   /**

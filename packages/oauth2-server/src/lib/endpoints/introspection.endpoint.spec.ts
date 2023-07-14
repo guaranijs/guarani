@@ -1,5 +1,4 @@
 import { OutgoingHttpHeaders } from 'http';
-import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
@@ -77,7 +76,7 @@ describe('Introspection Endpoint', () => {
       removeNullishValues<IntrospectionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',

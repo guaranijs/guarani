@@ -1,13 +1,22 @@
 import { Router } from 'express';
 import passport from 'passport';
 
+import { CallbackController } from '../controllers/auth/callback.controller';
 import { ConsentController } from '../controllers/auth/consent.controller';
+import { ErrorController } from '../controllers/auth/error.controller';
 import { LoginController } from '../controllers/auth/login.controller';
 import { LogoutController } from '../controllers/auth/logout.controller';
+import { LogoutCallbackController } from '../controllers/auth/logout-callback.controller';
 import { RegisterController } from '../controllers/auth/register.controller';
 import { SelectAccountController } from '../controllers/auth/select-account.controller';
 
 const router = Router();
+
+router.route('/callback').get(async (req, res) => await CallbackController.callback(req, res));
+
+router.route('/logout_callback').get(async (req, res) => await LogoutCallbackController.logoutCallback(req, res));
+
+router.route('/error').get(async (req, res) => await ErrorController.error(req, res));
 
 router
   .route('/register')

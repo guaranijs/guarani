@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { IncomingHttpHeaders } from 'http';
 import { URL } from 'url';
 
@@ -55,7 +54,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
     it.each(methodRequests)('should check if the authorization method has beed requested.', (headers, expected) => {
       const request = new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers,
         method: 'GET',
@@ -71,7 +70,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: { authorization: 'Bearer access_token' },
         method: 'GET',

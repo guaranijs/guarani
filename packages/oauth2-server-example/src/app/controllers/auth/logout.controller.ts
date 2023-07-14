@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
-import { parse as parseQs, stringify as stringifyQs } from 'querystring';
+import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import {
@@ -23,7 +23,7 @@ class Controller {
         const parameters: EndSessionRequest = {
           id_token_hint: idToken,
           client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
-          post_logout_redirect_uri: 'http://localhost:4000/oauth/logout_callback',
+          post_logout_redirect_uri: 'http://localhost:4000/auth/logout_callback',
           state: randomUUID(),
         };
 
@@ -60,9 +60,7 @@ class Controller {
   }
 
   public async post(request: Request, response: Response): Promise<void> {
-    const parsedBody = parseQs(request.body.toString('utf8'));
-
-    const { logout_challenge: logoutChallenge, decision } = parsedBody;
+    const { logout_challenge: logoutChallenge, decision } = request.body;
 
     if (typeof logoutChallenge !== 'string') {
       return response.redirect(303, '/');

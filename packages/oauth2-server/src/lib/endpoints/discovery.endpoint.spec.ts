@@ -89,7 +89,7 @@ describe('Discovery Endpoint', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: {},
         method: 'GET',

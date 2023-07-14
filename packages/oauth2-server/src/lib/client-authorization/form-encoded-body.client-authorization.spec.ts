@@ -1,8 +1,7 @@
-import { Buffer } from 'buffer';
-import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary, OneOrMany } from '@guarani/types';
 
 import { AccessToken } from '../entities/access-token.entity';
@@ -52,7 +51,7 @@ describe('Form Encoded Body Client Authorization', () => {
   describe('hasBeenRequested()', () => {
     it.each(methodRequests)('should check if the authorization method has beed requested.', (body, expected) => {
       const request = new HttpRequest({
-        body: Buffer.from(stringifyQs(body), 'utf8'),
+        body,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -64,7 +63,7 @@ describe('Form Encoded Body Client Authorization', () => {
 
     it.each(methodRequests)('should check if the authorization method has beed requested.', (body, expected) => {
       const request = new HttpRequest({
-        body: Buffer.from(JSON.stringify(body), 'utf8'),
+        body,
         cookies: {},
         headers: { 'content-type': 'application/json' },
         method: 'POST',
@@ -79,13 +78,12 @@ describe('Form Encoded Body Client Authorization', () => {
     let parameters: FormEncodedBodyClientAuthorizationParameters;
 
     const requestFactory = (data: Partial<FormEncodedBodyClientAuthorizationParameters> = {}): HttpRequest => {
-      parameters = Object.assign(parameters, data);
+      removeNullishValues<FormEncodedBodyClientAuthorizationParameters>(Object.assign(parameters, data));
 
-      const body = method === 'form' ? stringifyQs(parameters) : JSON.stringify(parameters);
       const contentType = method === 'form' ? 'application/x-www-form-urlencoded' : 'application/json';
 
       return new HttpRequest({
-        body: Buffer.from(body, 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': contentType },
         method: 'POST',

@@ -1,5 +1,4 @@
 import { OutgoingHttpHeaders } from 'http';
-import { stringify as stringifyQs } from 'querystring';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
@@ -73,7 +72,7 @@ describe('Token Endpoint', () => {
       removeNullishValues<TokenRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',

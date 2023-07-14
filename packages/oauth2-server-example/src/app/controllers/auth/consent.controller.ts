@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
-import { parse as parseQs, stringify as stringifyQs } from 'querystring';
+import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import {
@@ -59,9 +59,7 @@ class Controller {
   }
 
   public async post(request: Request, response: Response): Promise<void> {
-    const parsedBody = parseQs(request.body.toString('utf8'));
-
-    const { consent_challenge: consentChallenge, grant_scope: grantScope, decision } = parsedBody;
+    const { consent_challenge: consentChallenge, grant_scope: grantScope, decision } = request.body;
 
     if (typeof consentChallenge !== 'string') {
       return response.redirect(303, '/');

@@ -106,10 +106,8 @@ describe('Post Registration Request Validator', () => {
     const requestFactory = (data: Partial<PostRegistrationRequest> = {}): HttpRequest => {
       removeNullishValues<PostRegistrationRequest>(Object.assign(parameters, data));
 
-      const body = JSON.stringify(parameters);
-
       return new HttpRequest({
-        body: Buffer.from(body, 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': 'application/json' },
         method: 'POST',
@@ -158,7 +156,7 @@ describe('Post Registration Request Validator', () => {
 
     it.each(invalidBodies)('should throw when not providing a plain object to the http request body.', async (body) => {
       const request = new HttpRequest({
-        body: Buffer.from(JSON.stringify(body), 'utf8'),
+        body,
         cookies: {},
         headers: { 'content-type': 'application/json' },
         method: 'POST',

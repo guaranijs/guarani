@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
-import { parse as parseQs, stringify as stringifyQs } from 'querystring';
+import { stringify as stringifyQs } from 'querystring';
 import { In } from 'typeorm';
 import { URL } from 'url';
 
@@ -68,9 +68,7 @@ class Controller {
   }
 
   public async post(request: Request, response: Response): Promise<void> {
-    const parsedBody = parseQs(request.body.toString('utf8'));
-
-    const { login_challenge: loginChallenge, login_id: loginId } = parsedBody;
+    const { login_challenge: loginChallenge, login_id: loginId } = request.body;
 
     const requestParameters: SelectAccountDecisionInteractionRequest = {
       interaction_type: 'select_account',

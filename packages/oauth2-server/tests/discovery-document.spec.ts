@@ -1,4 +1,4 @@
-import express, { Application, raw } from 'express';
+import express, { Application, urlencoded } from 'express';
 import request from 'supertest';
 
 import { ExpressBackend } from '../src/lib/backends/express/express.backend';
@@ -12,7 +12,7 @@ describe('Discovery Document', () => {
   beforeAll(async () => {
     app = express();
 
-    app.use(raw({ type: '*/*' }));
+    app.use(urlencoded({ extended: false }));
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,

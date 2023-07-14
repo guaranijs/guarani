@@ -27,7 +27,7 @@ export class ExpressBackend extends AuthorizationServer {
   public async bootstrap(): Promise<void> {
     this.endpoints.forEach((endpoint) => {
       endpoint.httpMethods.forEach((method) => {
-        this.router[<ExpressHttpMethod>method.toLowerCase()](endpoint.path, this._mountEndpoint(endpoint.name));
+        this.router[method.toLowerCase() as ExpressHttpMethod](endpoint.path, this._mountEndpoint(endpoint.name));
       });
     });
   }

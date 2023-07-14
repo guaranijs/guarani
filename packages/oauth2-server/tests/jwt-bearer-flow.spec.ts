@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import express, { Application, raw } from 'express';
+import express, { Application, urlencoded } from 'express';
 import { stringify as stringifyQs } from 'querystring';
 import request from 'supertest';
 
@@ -17,7 +17,7 @@ describe('Client Credentials Flow', () => {
   beforeAll(async () => {
     app = express();
 
-    app.use(raw({ type: '*/*' }));
+    app.use(urlencoded({ extended: false }));
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,
@@ -52,6 +52,7 @@ describe('Client Credentials Flow', () => {
     const response = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
+      .set('Content-Type', 'application/x-www-form-urlencoded')
       .send(requestBody);
 
     expect(response.status).toEqual(200);

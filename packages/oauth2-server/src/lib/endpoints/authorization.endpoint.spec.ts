@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
 
@@ -156,7 +155,7 @@ describe('Authorization Endpoint', () => {
       removeNullishValues<AuthorizationRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: {},
         method: 'GET',

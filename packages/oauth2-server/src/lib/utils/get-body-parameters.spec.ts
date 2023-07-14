@@ -1,4 +1,3 @@
-import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { Dictionary, Json, OneOrMany } from '@guarani/types';
@@ -10,7 +9,7 @@ import { getBodyParameters } from './get-body-parameters';
 describe('getBodyParameters()', () => {
   it('should throw when the http header "content-type" contains an unsupported media type.', () => {
     const request = new HttpRequest({
-      body: Buffer.alloc(0),
+      body: {},
       cookies: {},
       headers: { 'content-type': 'application/octet-stream' },
       method: 'POST',
@@ -27,7 +26,7 @@ describe('getBodyParameters()', () => {
     const data: Dictionary<OneOrMany<string>> = { foo: 'foo', bar: 'bar' };
 
     const request = new HttpRequest({
-      body: Buffer.from(stringifyQs(data), 'utf8'),
+      body: data,
       cookies: {},
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       method: 'POST',
@@ -41,7 +40,7 @@ describe('getBodyParameters()', () => {
     const data: Json = { foo: 'foo', bar: 'bar' };
 
     const request = new HttpRequest({
-      body: Buffer.from(JSON.stringify(data), 'utf8'),
+      body: data,
       cookies: {},
       headers: { 'content-type': 'application/json' },
       method: 'POST',

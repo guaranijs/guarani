@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
@@ -53,7 +52,7 @@ describe('Client Authorization Handler', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: {},
         method: 'GET',

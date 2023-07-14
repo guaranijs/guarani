@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
@@ -85,7 +84,7 @@ describe('Logout Interaction Request Validator', () => {
       removeNullishValues<LogoutContextInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: {},
         method: 'GET',
@@ -139,7 +138,7 @@ describe('Logout Interaction Request Validator', () => {
       removeNullishValues<LogoutDecisionInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',

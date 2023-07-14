@@ -11,7 +11,7 @@ import { User } from '../entities/user.entity';
 export class UserService implements UserServiceInterface {
   public async create(parameters: UserRegistrationDto): Promise<User> {
     const user = User.create({
-      password: await argon2.hash(parameters.password),
+      password: await argon2.hash(parameters.password, { type: argon2.argon2id }),
       givenName: parameters.given_name,
       familyName: parameters.family_name,
       email: parameters.email,

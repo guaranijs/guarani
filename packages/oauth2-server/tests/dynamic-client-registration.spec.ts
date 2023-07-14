@@ -1,4 +1,4 @@
-import express, { Application, raw } from 'express';
+import express, { Application, json } from 'express';
 import request, { SuperAgentTest } from 'supertest';
 
 import { getContainer } from '@guarani/di';
@@ -28,7 +28,7 @@ describe('Dynamic Client Registration', () => {
   beforeAll(async () => {
     app = express();
 
-    app.use(raw({ type: '*/*' }));
+    app.use(json());
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,

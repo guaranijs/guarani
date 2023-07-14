@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import express, { Application, raw } from 'express';
+import express, { Application, urlencoded } from 'express';
 import { stringify as stringifyQs } from 'querystring';
 import request from 'supertest';
 
@@ -20,7 +20,7 @@ describe('Refresh Token Revocation', () => {
   beforeAll(async () => {
     app = express();
 
-    app.use(raw({ type: '*/*' }));
+    app.use(urlencoded({ extended: false }));
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,
@@ -44,6 +44,7 @@ describe('Refresh Token Revocation', () => {
     const response = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
+      .set('Content-Type', 'application/x-www-form-urlencoded')
       .send(requestBody);
 
     expect(response.status).toEqual(200);
@@ -71,6 +72,7 @@ describe('Refresh Token Revocation', () => {
     const refreshTokenResponse = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
+      .set('Content-Type', 'application/x-www-form-urlencoded')
       .send(refreshTokenRequestBody);
 
     expect(refreshTokenResponse.status).toEqual(200);
@@ -95,6 +97,7 @@ describe('Refresh Token Revocation', () => {
     const revocationResponse = await request(app)
       .post('/oauth/revoke')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
+      .set('Content-Type', 'application/x-www-form-urlencoded')
       .send(revocationRequestBody);
 
     expect(revocationResponse.status).toEqual(200);
@@ -112,6 +115,7 @@ describe('Refresh Token Revocation', () => {
     const refreshTokenResponse = await request(app)
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
+      .set('Content-Type', 'application/x-www-form-urlencoded')
       .send(refreshTokenRequestBody);
 
     expect(refreshTokenResponse.status).toEqual(400);

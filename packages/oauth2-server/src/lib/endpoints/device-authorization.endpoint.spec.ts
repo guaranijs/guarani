@@ -100,7 +100,7 @@ describe('Device Authorization Endpoint', () => {
 
     const requestFactory = (): HttpRequest => {
       return new HttpRequest({
-        body: Buffer.from(JSON.stringify(parameters), 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',

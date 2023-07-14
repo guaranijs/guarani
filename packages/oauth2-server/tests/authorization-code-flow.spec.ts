@@ -1,6 +1,6 @@
 import cookieParser from 'cookie-parser';
 import { CookieAccessInfo } from 'cookiejar';
-import express, { Application, raw } from 'express';
+import express, { Application, urlencoded } from 'express';
 import { stringify as stringifyQs } from 'querystring';
 import request, { SuperAgentTest } from 'supertest';
 import { URL } from 'url';
@@ -25,7 +25,7 @@ describe('Authorization Code Flow', () => {
     app = express();
 
     app.use(cookieParser('super_safe_and_secure_secret'));
-    app.use(raw({ type: '*/*' }));
+    app.use(urlencoded({ extended: false }));
 
     app.use(await expressAuthorizationServer(Reflect.get(global, 'endToEndAuthorizationServerOptions')));
 

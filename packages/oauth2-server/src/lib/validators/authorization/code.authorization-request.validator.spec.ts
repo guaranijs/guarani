@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
@@ -151,7 +150,7 @@ describe('Code Authorization Request Validator', () => {
       removeNullishValues<CodeAuthorizationRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: {},
         method: 'GET',

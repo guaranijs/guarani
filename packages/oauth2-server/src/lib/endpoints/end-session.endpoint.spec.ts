@@ -138,7 +138,7 @@ describe('End Session Endpoint', () => {
       );
 
       return new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies,
         headers: {},
         method: 'GET',

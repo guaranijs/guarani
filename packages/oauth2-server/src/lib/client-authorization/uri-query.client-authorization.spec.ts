@@ -1,8 +1,8 @@
-import { Buffer } from 'buffer';
 import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary, OneOrMany } from '@guarani/types';
 
 import { AccessToken } from '../entities/access-token.entity';
@@ -52,7 +52,7 @@ describe('URI Query Client Authorization', () => {
   describe('hasBeenRequested()', () => {
     const requestFactory = (data: Partial<UriQueryClientAuthorizationParameters> = {}): HttpRequest => {
       return new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: {},
         method: 'GET',
@@ -70,14 +70,14 @@ describe('URI Query Client Authorization', () => {
     let parameters: UriQueryClientAuthorizationParameters;
 
     const requestFactory = (data: Partial<UriQueryClientAuthorizationParameters> = {}): HttpRequest => {
-      parameters = Object.assign(parameters, data);
+      removeNullishValues<UriQueryClientAuthorizationParameters>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: {},
         method: 'GET',
-        url: new URL(`https://server.example.com/oauth/userinfo?${stringifyQs(data)}`),
+        url: new URL(`https://server.example.com/oauth/userinfo?${stringifyQs(parameters)}`),
       });
     };
 

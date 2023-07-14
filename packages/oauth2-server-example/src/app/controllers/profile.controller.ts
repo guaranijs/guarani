@@ -1,7 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { Request, Response } from 'express';
-import { parse as parseQs } from 'querystring';
 
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { User } from '../entities/user.entity';
@@ -21,12 +20,10 @@ class Controller {
   }
 
   public async editProfile(request: Request, response: Response): Promise<void> {
-    const parsedBody = parseQs(request.body.toString('utf8'));
-
     const user = request.user as User;
 
     try {
-      const updateUserDto = plainToInstance(UpdateUserDto, parsedBody);
+      const updateUserDto = plainToInstance(UpdateUserDto, request.body);
       const errors = await validate(updateUserDto, { skipMissingProperties: true });
 
       if (errors.length > 0) {

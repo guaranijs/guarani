@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { IncomingHttpHeaders } from 'http';
 import { URL } from 'url';
 
@@ -31,7 +30,7 @@ export interface HttpRequestParameters {
   readonly cookies: Dictionary<unknown>;
 
   /**
-   * Parsed Body of the Http Request.
+   * Body of the Http Request.
    */
-  readonly body: Buffer;
+  readonly body: Dictionary<unknown>;
 }

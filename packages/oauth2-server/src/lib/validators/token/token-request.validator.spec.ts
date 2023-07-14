@@ -1,5 +1,3 @@
-import { Buffer } from 'buffer';
-import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { removeNullishValues } from '@guarani/primitives';
@@ -45,7 +43,7 @@ describe('Token Request Validator', () => {
       removeNullishValues<TokenRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',

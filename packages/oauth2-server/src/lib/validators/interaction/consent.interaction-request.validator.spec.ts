@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
@@ -81,7 +80,7 @@ describe('Consent Interaction Request Validator', () => {
       removeNullishValues<ConsentContextInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: {},
         method: 'GET',
@@ -135,7 +134,7 @@ describe('Consent Interaction Request Validator', () => {
       removeNullishValues<ConsentDecisionInteractionRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',

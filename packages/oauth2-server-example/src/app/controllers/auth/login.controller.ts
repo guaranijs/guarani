@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
-import { parse as parseQs, stringify as stringifyQs } from 'querystring';
+import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import {
@@ -32,7 +32,7 @@ class Controller {
         const parameters: CodeAuthorizationRequest = {
           response_type: 'code',
           client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
-          redirect_uri: 'http://localhost:4000/oauth/callback',
+          redirect_uri: 'http://localhost:4000/auth/callback',
           scope: 'openid profile email phone address',
           state: randomUUID(),
           code_challenge: 'kRaf6IMJlerQjcqlFczEUYUcVsdwMpYonctl1yXYiiI',
@@ -88,9 +88,7 @@ class Controller {
   }
 
   public async post(request: Request, response: Response): Promise<void> {
-    const parsedBody = parseQs(request.body.toString('utf8'));
-
-    const { login_challenge: loginChallenge } = parsedBody;
+    const { login_challenge: loginChallenge } = request.body;
 
     if (typeof loginChallenge !== 'string') {
       return response.redirect(303, '/');

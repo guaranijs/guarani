@@ -54,7 +54,7 @@ describe('Client Secret Basic Authentication Method', () => {
 
     it.each(methodRequests)('should check if the authentication method has beed requested.', (headers, expected) => {
       const request = new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers,
         method: 'POST',
@@ -70,7 +70,7 @@ describe('Client Secret Basic Authentication Method', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: { authorization: 'Basic ' + Buffer.from('client_id:client_secret', 'utf8').toString('base64') },
         method: 'POST',

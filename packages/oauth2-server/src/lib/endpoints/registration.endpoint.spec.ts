@@ -1,6 +1,5 @@
 import { Buffer } from 'buffer';
 import { OutgoingHttpHeaders } from 'http';
-import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
@@ -212,7 +211,7 @@ describe('Dynamic Client Registration Endpoint', () => {
       removeNullishValues<PostRegistrationRequest>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(JSON.stringify(parameters), 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': 'application/json' },
         method: 'POST',
@@ -425,14 +424,12 @@ describe('Dynamic Client Registration Endpoint', () => {
     const requestFactory = (data: Partial<GetRegistrationRequest> = {}): HttpRequest => {
       removeNullishValues<GetRegistrationRequest>(Object.assign(parameters, data));
 
-      const url = addParametersToUrl('https://server.example.com/oauth/register', parameters);
-
       return new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: {},
         method: 'GET',
-        url,
+        url: addParametersToUrl('https://server.example.com/oauth/register', parameters),
       });
     };
 
@@ -556,14 +553,12 @@ describe('Dynamic Client Registration Endpoint', () => {
     const requestFactory = (data: Partial<DeleteRegistrationRequest> = {}): HttpRequest => {
       removeNullishValues<DeleteRegistrationRequest>(Object.assign(parameters, data));
 
-      const url = addParametersToUrl('https://server.example.com/oauth/register', parameters);
-
       return new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: {},
         method: 'DELETE',
-        url,
+        url: addParametersToUrl('https://server.example.com/oauth/register', parameters),
       });
     };
 
@@ -611,14 +606,12 @@ describe('Dynamic Client Registration Endpoint', () => {
       removeNullishValues<DeleteRegistrationRequest>(Object.assign(queryParameters, queryData));
       removeNullishValues<DeleteRegistrationRequest>(Object.assign(bodyParameters, bodyData));
 
-      const url = addParametersToUrl('https://server.example.com/oauth/register', queryParameters);
-
       return new HttpRequest({
-        body: Buffer.from(stringifyQs(bodyParameters), 'utf8'),
+        body: bodyParameters,
         cookies: {},
         headers: {},
         method: 'PUT',
-        url,
+        url: addParametersToUrl('https://server.example.com/oauth/register', queryParameters),
       });
     };
 

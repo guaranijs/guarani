@@ -184,7 +184,7 @@ describe('Userinfo Endpoint', () => {
 
     beforeEach(() => {
       request = new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: { authorization: 'Bearer access_token' },
         method: 'GET',

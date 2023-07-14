@@ -1,5 +1,4 @@
 import { OutgoingHttpHeaders } from 'http';
-import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
@@ -76,7 +75,7 @@ describe('Interaction Endpoint', () => {
       removeNullishValues<InteractionRequest>(Object.assign(queryParameters, data));
 
       return new HttpRequest({
-        body: Buffer.alloc(0),
+        body: {},
         cookies: {},
         headers: {},
         method: 'GET',
@@ -88,7 +87,7 @@ describe('Interaction Endpoint', () => {
       removeNullishValues<InteractionRequest>(Object.assign(bodyParameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(stringifyQs(bodyParameters), 'utf8'),
+        body: bodyParameters,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',

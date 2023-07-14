@@ -1,4 +1,3 @@
-import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
@@ -10,6 +9,7 @@ import {
   JsonWebTokenClaimsParameters,
   OctetSequenceKey,
 } from '@guarani/jose';
+import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary, OneOrMany } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
@@ -101,10 +101,10 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
     let parameters: JwtBearerClientAssertionParameters;
 
     const requestFactory = (data: Partial<JwtBearerClientAssertionParameters> = {}): HttpRequest => {
-      parameters = Object.assign(parameters, data);
+      removeNullishValues<JwtBearerClientAssertionParameters>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -129,10 +129,10 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
     let parameters: JwtBearerClientAssertionParameters;
 
     const requestFactory = (data: Partial<JwtBearerClientAssertionParameters> = {}): HttpRequest => {
-      parameters = Object.assign(parameters, data);
+      removeNullishValues<JwtBearerClientAssertionParameters>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',

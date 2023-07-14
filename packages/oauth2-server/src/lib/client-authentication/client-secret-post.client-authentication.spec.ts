@@ -1,8 +1,7 @@
-import { Buffer } from 'buffer';
-import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary, OneOrMany } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';
@@ -52,7 +51,7 @@ describe('Client Secret Post Authentication Method', () => {
   describe('hasBeenRequested()', () => {
     it.each(methodRequests)('should check if the authentication method has beed requested.', (body, expected) => {
       const request = new HttpRequest({
-        body: Buffer.from(stringifyQs(body), 'utf8'),
+        body,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',
@@ -67,10 +66,10 @@ describe('Client Secret Post Authentication Method', () => {
     let parameters: ClientSecretPostClientAuthenticationParameters;
 
     const requestFactory = (data: Partial<ClientSecretPostClientAuthenticationParameters> = {}): HttpRequest => {
-      parameters = Object.assign(parameters, data);
+      removeNullishValues<ClientSecretPostClientAuthenticationParameters>(Object.assign(parameters, data));
 
       return new HttpRequest({
-        body: Buffer.from(stringifyQs(parameters), 'utf8'),
+        body: parameters,
         cookies: {},
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         method: 'POST',

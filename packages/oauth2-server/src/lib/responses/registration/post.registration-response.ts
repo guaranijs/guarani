@@ -206,7 +206,7 @@ export interface PostRegistrationResponse extends Dictionary<any> {
   /**
    * Post Logout Redirect URIs of the Client.
    */
-  readonly post_logout_redirect_uris: string[];
+  readonly post_logout_redirect_uris?: string[];
 
   /**
    * Unique Identifier of the Software of the Client.

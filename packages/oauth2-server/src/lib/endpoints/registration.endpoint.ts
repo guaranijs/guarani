@@ -249,7 +249,7 @@ export class RegistrationEndpoint implements EndpointInterface {
       default_acr_values: client.defaultAcrValues ?? undefined,
       initiate_login_uri: client.initiateLoginUri ?? undefined,
       // request_uris: ,
-      post_logout_redirect_uris: client.postLogoutRedirectUris,
+      post_logout_redirect_uris: client.postLogoutRedirectUris ?? undefined,
       software_id: client.softwareId ?? undefined,
       software_version: client.softwareVersion ?? undefined,
     });
@@ -310,7 +310,7 @@ export class RegistrationEndpoint implements EndpointInterface {
       default_acr_values: client.defaultAcrValues ?? undefined,
       initiate_login_uri: client.initiateLoginUri ?? undefined,
       // request_uris: ,
-      post_logout_redirect_uris: client.postLogoutRedirectUris,
+      post_logout_redirect_uris: client.postLogoutRedirectUris ?? undefined,
       software_id: client.softwareId ?? undefined,
       software_version: client.softwareVersion ?? undefined,
     });
@@ -383,7 +383,7 @@ export class RegistrationEndpoint implements EndpointInterface {
       default_acr_values: client.defaultAcrValues ?? undefined,
       initiate_login_uri: client.initiateLoginUri ?? undefined,
       // request_uris: ,
-      post_logout_redirect_uris: client.postLogoutRedirectUris,
+      post_logout_redirect_uris: client.postLogoutRedirectUris ?? undefined,
       software_id: client.softwareId ?? undefined,
       software_version: client.softwareVersion ?? undefined,
     });

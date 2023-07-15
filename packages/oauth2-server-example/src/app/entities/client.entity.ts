@@ -159,7 +159,7 @@ export class Client extends BaseEntity implements OAuth2Client {
   @Column({ name: 'software_id', type: 'varchar', nullable: true })
   public softwareId!: Nullable<string>;
 
-  @Column({ name: 'post_logout_redirect_uris', type: 'varchar', array: true, default: "'{}'", nullable: false })
+  @Column({ name: 'post_logout_redirect_uris', type: 'varchar', array: true, nullable: true })
   public postLogoutRedirectUris!: string[];
 
   @Column({ name: 'software_version', type: 'varchar', nullable: true })

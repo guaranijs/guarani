@@ -1064,7 +1064,11 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    * @returns Post Logout Redirect URIs of the Client.
    */
-  private getPostLogoutRedirectUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): URL[] {
+  private getPostLogoutRedirectUris(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL[]> {
+    if (typeof parameters.post_logout_redirect_uris === 'undefined') {
+      return null;
+    }
+
     if (
       !Array.isArray(parameters.post_logout_redirect_uris) ||
       parameters.post_logout_redirect_uris.some((postLogoutRedirectUri) => typeof postLogoutRedirectUri !== 'string')
@@ -1099,8 +1103,12 @@ export abstract class PostAndPutRegistrationRequestValidator<
    */
   private checkApplicationTypeAndPostLogoutRedirectUris(
     applicationType: ApplicationType,
-    postLogoutRedirectUris: URL[]
+    postLogoutRedirectUris: Nullable<URL[]>
   ): void {
+    if (postLogoutRedirectUris === null) {
+      return;
+    }
+
     postLogoutRedirectUris.forEach((postLogoutRedirectUri) => {
       switch (applicationType) {
         case 'native': {

@@ -60,7 +60,7 @@ const notPositiveIntegerDefaultMaxAges: any[] = [1.2, -1, -1.2];
 const invalidRequireAuthTimes: any[] = [1, 1.2, 'a', {}, []];
 const invalidAcrValues: any[] = [true, 1, 1.2, {}];
 const invalidInitiateLoginUris: any[] = [true, 1, 1.2, {}, []];
-const invalidPostLogoutRedirectUris: any[] = [undefined, null, true, 1, 1.2, 'a', {}];
+const invalidPostLogoutRedirectUris: any[] = [true, 1, 1.2, 'a', {}];
 const invalidSoftwareIds: any[] = [true, 1, 1.2, {}, []];
 const invalidSoftwareVersions: any[] = [true, 1, 1.2, {}, []];
 

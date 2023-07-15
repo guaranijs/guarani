@@ -119,6 +119,22 @@ describe('End Session Request Validator', () => {
       );
     });
 
+    it('should throw when the client has no registered post logout redirect uris.', async () => {
+      const request = requestFactory();
+
+      const client = <Client>{
+        id: 'client_id',
+        postLogoutRedirectUris: null,
+      };
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        AccessDeniedException,
+        'Invalid Post Logout Redirect URI.'
+      );
+    });
+
     it('should throw when the client is not allowed to use the provided redirect uri.', async () => {
       const request = requestFactory();
 

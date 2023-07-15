@@ -135,7 +135,7 @@ export class EndSessionRequestValidator {
       throw new InvalidRequestException('The Post Logout Redirect URI MUST NOT have a fragment component.');
     }
 
-    if (!client.postLogoutRedirectUris.includes(url.href)) {
+    if (client.postLogoutRedirectUris?.includes(url.href) !== true) {
       throw new AccessDeniedException('Invalid Post Logout Redirect URI.');
     }
 

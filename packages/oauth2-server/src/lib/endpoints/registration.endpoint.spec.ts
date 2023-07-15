@@ -341,9 +341,8 @@ describe('Dynamic Client Registration Endpoint', () => {
           defaultAcrValues: context.defaultAcrValues,
           initiateLoginUri: context.initiateLoginUri?.href ?? null,
           // requestUris: ,
-          postLogoutRedirectUris: context.postLogoutRedirectUris.map((postLogoutRedirectUri) => {
-            return postLogoutRedirectUri.href;
-          }),
+          postLogoutRedirectUris:
+            context.postLogoutRedirectUris?.map((postLogoutRedirectUri) => postLogoutRedirectUri.href) ?? null,
           softwareId: context.softwareId,
           softwareVersion: context.softwareVersion,
           createdAt: new Date(now),

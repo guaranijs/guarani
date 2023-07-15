@@ -210,7 +210,7 @@ export interface PutRegistrationContext {
   /**
    * Post Logout Redirect URIs of the Client.
    */
-  readonly postLogoutRedirectUris: URL[];
+  readonly postLogoutRedirectUris: Nullable<URL[]>;
 
   /**
    * Unique Identifier of the Software of the Client.

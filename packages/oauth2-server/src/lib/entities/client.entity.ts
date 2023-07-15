@@ -196,7 +196,7 @@ export interface Client {
   /**
    * Post Logout Redirect URIs of the Client.
    */
-  postLogoutRedirectUris: string[];
+  postLogoutRedirectUris: Nullable<string[]>;
 
   /**
    * Unique Identifier of the Software of the Client.

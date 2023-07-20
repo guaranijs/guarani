@@ -31,6 +31,7 @@ import { GrantTypeInterface } from '../grant-types/grant-type.interface';
 import { grantTypeRegistry } from '../grant-types/grant-type.registry';
 import { GRANT_TYPE } from '../grant-types/grant-type.token';
 import { GrantType } from '../grant-types/grant-type.type';
+import { AuthHandler } from '../handlers/auth.handler';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { IdTokenHandler } from '../handlers/id-token.handler';
@@ -394,6 +395,7 @@ export class AuthorizationServerFactory {
   private static setHandlers(): void {
     this.container.bind(ClientAuthenticationHandler).toSelf().asSingleton();
     this.container.bind(ScopeHandler).toSelf().asSingleton();
+    this.container.bind(AuthHandler).toSelf().asSingleton();
 
     if (this.settings.scopes.includes('openid')) {
       this.container.bind(IdTokenHandler).toSelf().asSingleton();

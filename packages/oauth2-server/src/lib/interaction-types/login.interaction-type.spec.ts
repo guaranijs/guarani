@@ -6,18 +6,16 @@ import { LoginDecisionAcceptInteractionContext } from '../context/interaction/lo
 import { LoginDecisionDenyInteractionContext } from '../context/interaction/login-decision-deny.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
-import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { UnmetAuthenticationRequirementsException } from '../exceptions/unmet-authentication-requirements.exception';
+import { AuthHandler } from '../handlers/auth.handler';
 import { LoginContextInteractionResponse } from '../responses/interaction/login-context.interaction-response';
 import { LoginDecisionInteractionResponse } from '../responses/interaction/login-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
 import { LoginServiceInterface } from '../services/login.service.interface';
 import { LOGIN_SERVICE } from '../services/login.service.token';
-import { SessionServiceInterface } from '../services/session.service.interface';
-import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { addParametersToUrl } from '../utils/add-parameters-to-url';
@@ -26,9 +24,13 @@ import { InteractionType } from './interaction-type.type';
 import { LoginInteractionType } from './login.interaction-type';
 import { LoginDecision } from './login-decision.type';
 
+jest.mock('../handlers/auth.handler');
+
 describe('Login Interaction Type', () => {
   let container: DependencyInjectionContainer;
   let interactionType: LoginInteractionType;
+
+  const authHandlerMock = jest.mocked(AuthHandler.prototype);
 
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
@@ -47,20 +49,13 @@ describe('Login Interaction Type', () => {
     save: jest.fn(),
   });
 
-  const sessionServiceMock = jest.mocked<SessionServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    remove: jest.fn(),
-    save: jest.fn(),
-  });
-
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<LoginServiceInterface>(LOGIN_SERVICE).toValue(loginServiceMock);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
-    container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
     container.bind(LoginInteractionType).toSelf().asSingleton();
 
     interactionType = container.resolve(LoginInteractionType);
@@ -190,8 +185,6 @@ describe('Login Interaction Type', () => {
 
       const requestUrl = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
-      const removedLogin = context.grant.session.activeLogin!;
-
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LoginContextInteractionResponse>({
         skip: false,
         request_url: requestUrl.href,
@@ -206,15 +199,8 @@ describe('Login Interaction Type', () => {
         },
       });
 
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{
-        id: 'session_id',
-        activeLogin: null,
-        logins: [],
-      });
-
-      expect(loginServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(loginServiceMock.remove).toHaveBeenCalledWith(removedLogin);
+      expect(authHandlerMock.inactivateSessionActiveLogin).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.inactivateSessionActiveLogin).toHaveBeenCalledWith(context.grant.session);
     });
   });
 
@@ -337,19 +323,55 @@ describe('Login Interaction Type', () => {
       expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
       expect(loginServiceMock.create).toHaveBeenCalledWith(user, context.grant.session, amr, acr);
 
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{
-        id: 'session_id',
-        activeLogin: login,
-        logins: [login],
-      });
+      expect(authHandlerMock.updateActiveLogin).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.updateActiveLogin).toHaveBeenCalledWith(context.grant.session, login);
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{
-        ...context.grant,
-        interactions: ['login'],
-        session: { id: 'session_id', activeLogin: login, logins: [login] },
+      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...context.grant, interactions: ['login'] });
+    });
+
+    it('should replace an old login and return a valid login accept decision interaction response.', async () => {
+      const now = Date.now();
+
+      const oldLogin = <Login>{ id: 'login_id', user: { id: 'user_id' }, createdAt: new Date(now - 86400) };
+
+      context.grant.session.activeLogin = null;
+      context.grant.session.logins = [oldLogin];
+
+      Object.assign(context.parameters, {
+        decision: 'accept',
+        subject: 'user_id',
+        amr: 'pwd sms',
+        acr: 'guarani:acr:2fa',
       });
+
+      Object.assign(context, {
+        decision: 'accept',
+        user: { id: 'user_id' },
+        amr: ['pwd', 'sms'],
+        acr: 'guarani:acr:2fa',
+      });
+
+      const { acr, amr, user } = context as LoginDecisionAcceptInteractionContext;
+
+      const login = <Login>{ id: 'login_id', acr, amr, user, createdAt: new Date(now) };
+
+      loginServiceMock.create.mockResolvedValueOnce(login);
+
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
+
+      await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
+        redirect_to: redirectTo.href,
+      });
+
+      expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
+      expect(loginServiceMock.create).toHaveBeenCalledWith(user, context.grant.session, amr, acr);
+
+      expect(authHandlerMock.updateActiveLogin).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.updateActiveLogin).toHaveBeenCalledWith(context.grant.session, login);
+
+      expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...context.grant, interactions: ['login'] });
     });
 
     it('should return a valid subsequent login accept decision interaction response.', async () => {
@@ -379,7 +401,7 @@ describe('Login Interaction Type', () => {
       });
 
       expect(loginServiceMock.create).not.toHaveBeenCalled();
-      expect(sessionServiceMock.save).not.toHaveBeenCalled();
+      expect(authHandlerMock.updateActiveLogin).not.toHaveBeenCalled();
       expect(grantServiceMock.save).not.toHaveBeenCalled();
     });
     // #endregion

@@ -8,14 +8,11 @@ import { LogoutDecisionAcceptInteractionContext } from '../context/interaction/l
 import { LogoutDecisionDenyInteractionContext } from '../context/interaction/logout-decision-deny.interaction-context';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
+import { AuthHandler } from '../handlers/auth.handler';
 import { LogoutContextInteractionResponse } from '../responses/interaction/logout-context.interaction-response';
 import { LogoutDecisionInteractionResponse } from '../responses/interaction/logout-decision.interaction-response';
-import { LoginServiceInterface } from '../services/login.service.interface';
-import { LOGIN_SERVICE } from '../services/login.service.token';
 import { LogoutTicketServiceInterface } from '../services/logout-ticket.service.interface';
 import { LOGOUT_TICKET_SERVICE } from '../services/logout-ticket.service.token';
-import { SessionServiceInterface } from '../services/session.service.interface';
-import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { addParametersToUrl } from '../utils/add-parameters-to-url';
@@ -51,16 +48,14 @@ export class LogoutInteractionType implements InteractionTypeInterface {
   /**
    * Instantiates a new Logout Interaction Type.
    *
+   * @param authHandler Instance of the Auth Handler.
    * @param settings Settings of the Authorization Server.
    * @param logoutTicketService Instance of the Logout Ticket Service.
-   * @param loginService Instance of the Login Service.
-   * @param sessionService Instance of the Session Service.
    */
   public constructor(
+    private readonly authHandler: AuthHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(LOGOUT_TICKET_SERVICE) private readonly logoutTicketService: LogoutTicketServiceInterface,
-    @Inject(LOGIN_SERVICE) private readonly loginService: LoginServiceInterface,
-    @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface
+    @Inject(LOGOUT_TICKET_SERVICE) private readonly logoutTicketService: LogoutTicketServiceInterface
   ) {}
 
   /**
@@ -126,15 +121,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
     const { logoutTicket, session } = context;
 
     if (session.activeLogin !== null) {
-      // Some implementations remove the ID after removing the entity.
-      const loginId = session.activeLogin.id;
-
-      await this.loginService.remove(session.activeLogin);
-
-      session.logins = session.logins.filter((login) => login.id !== loginId);
-      session.activeLogin = null;
-
-      await this.sessionService.save(session);
+      await this.authHandler.logout(session.activeLogin, session);
 
       logoutTicket.session = session;
       await this.logoutTicketService.save(logoutTicket);

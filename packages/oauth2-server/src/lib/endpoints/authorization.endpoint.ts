@@ -20,6 +20,7 @@ import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
 import { UnsupportedResponseTypeException } from '../exceptions/unsupported-response-type.exception';
+import { AuthHandler } from '../handlers/auth.handler';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
@@ -69,6 +70,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Authorization Endpoint.
    *
+   * @param authHandler Instance of the Auth Handler.
    * @param idTokenHandler Instance of the ID Token Handler.
    * @param settings Settings of the Authorization Server.
    * @param grantService Instance of the Grant Service.
@@ -77,6 +79,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    * @param validators Authorization Request Validators registered at the Authorization Server.
    */
   public constructor(
+    private readonly authHandler: AuthHandler,
     private readonly idTokenHandler: IdTokenHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
@@ -162,7 +165,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
       // Prompt "login" removes previous authentication result.
       if (prompts.includes('login') && login !== null && grant?.interactions.includes('login') !== true) {
-        await this.removeActiveLoginFromSession(session);
+        await this.authHandler.inactivateSessionActiveLogin(session);
         login = null;
       }
 
@@ -176,7 +179,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
       }
 
       if (login.expiresAt !== null && new Date() > login.expiresAt) {
-        await this.removeActiveLoginFromSession(session);
+        await this.authHandler.logout(login, session);
 
         if (prompts.includes('none')) {
           throw new LoginRequiredException();
@@ -187,8 +190,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
       }
 
       if (maxAge !== null && new Date() >= new Date(login.createdAt.getTime() + maxAge * 1000)) {
-        await this.removeActiveLoginFromSession(session);
-
+        // The activeLogin gets inactivated at the Login Interaction Context.
         if (prompts.includes('none')) {
           throw new LoginRequiredException();
         }
@@ -198,7 +200,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
       }
 
       if (idTokenHint !== null && !(await this.idTokenHandler.checkIdTokenHint(idTokenHint, client, login))) {
-        await this.removeActiveLoginFromSession(session);
+        await this.authHandler.inactivateSessionActiveLogin(session);
 
         throw new LoginRequiredException(
           'The currently authenticated User is not the one expected by the ID Token Hint.'
@@ -481,15 +483,5 @@ export class AuthorizationEndpoint implements EndpointInterface {
     }
 
     return removeNullishValues(response);
-  }
-
-  /**
-   * Removes the currently Active Login from the Session.
-   *
-   * @param session Session of the Request.
-   */
-  private async removeActiveLoginFromSession(session: Session): Promise<void> {
-    session.activeLogin = null;
-    await this.sessionService.save(session);
   }
 }

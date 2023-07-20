@@ -2,20 +2,18 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { LogoutContextInteractionContext } from '../context/interaction/logout-context.interaction-context';
 import { LogoutDecisionInteractionContext } from '../context/interaction/logout-decision.interaction-context';
+import { LogoutDecisionAcceptInteractionContext } from '../context/interaction/logout-decision-accept.interaction-context';
 import { LogoutDecisionDenyInteractionContext } from '../context/interaction/logout-decision-deny.interaction-context';
 import { Login } from '../entities/login.entity';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
+import { AuthHandler } from '../handlers/auth.handler';
 import { LogoutContextInteractionResponse } from '../responses/interaction/logout-context.interaction-response';
 import { LogoutDecisionInteractionResponse } from '../responses/interaction/logout-decision.interaction-response';
-import { LoginServiceInterface } from '../services/login.service.interface';
-import { LOGIN_SERVICE } from '../services/login.service.token';
 import { LogoutTicketServiceInterface } from '../services/logout-ticket.service.interface';
 import { LOGOUT_TICKET_SERVICE } from '../services/logout-ticket.service.token';
-import { SessionServiceInterface } from '../services/session.service.interface';
-import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { addParametersToUrl } from '../utils/add-parameters-to-url';
@@ -24,9 +22,13 @@ import { InteractionType } from './interaction-type.type';
 import { LogoutInteractionType } from './logout.interaction-type';
 import { LogoutDecision } from './logout-decision.type';
 
+jest.mock('../handlers/auth.handler');
+
 describe('Logout Interaction Type', () => {
   let container: DependencyInjectionContainer;
   let interactionType: LogoutInteractionType;
+
+  const authHandlerMock = jest.mocked(AuthHandler.prototype);
 
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
@@ -38,26 +40,12 @@ describe('Logout Interaction Type', () => {
     save: jest.fn(),
   });
 
-  const loginServiceMock = jest.mocked<LoginServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    remove: jest.fn(),
-  });
-
-  const sessionServiceMock = jest.mocked<SessionServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    remove: jest.fn(),
-    save: jest.fn(),
-  });
-
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<LogoutTicketServiceInterface>(LOGOUT_TICKET_SERVICE).toValue(logoutTicketServiceMock);
-    container.bind<LoginServiceInterface>(LOGIN_SERVICE).toValue(loginServiceMock);
-    container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
     container.bind(LogoutInteractionType).toSelf().asSingleton();
 
     interactionType = container.resolve(LogoutInteractionType);
@@ -234,28 +222,18 @@ describe('Logout Interaction Type', () => {
         redirect_to: redirectTo.href,
       });
 
-      expect(loginServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(loginServiceMock.remove).toHaveBeenCalledWith(<Login>{ id: 'login1_id' });
+      const { session } = context as LogoutDecisionAcceptInteractionContext;
 
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{
-        id: 'session_id',
-        activeLogin: null,
-        logins: [{ id: 'login0_id' }, { id: 'login2_id' }],
-      });
+      expect(authHandlerMock.logout).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.logout).toHaveBeenCalledWith(session.activeLogin!, session);
 
       expect(logoutTicketServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(logoutTicketServiceMock.save).toHaveBeenCalledWith(<LogoutTicket>{
-        ...context.logoutTicket,
-        session: { id: 'session_id', activeLogin: null, logins: [{ id: 'login0_id' }, { id: 'login2_id' }] },
-      });
+      expect(logoutTicketServiceMock.save).toHaveBeenCalledWith(<LogoutTicket>{ ...context.logoutTicket, session });
 
-      const removeLoginOrder = loginServiceMock.remove.mock.invocationCallOrder[0]!;
-      const saveSessionOrder = sessionServiceMock.save.mock.invocationCallOrder[0]!;
+      const logoutOrder = authHandlerMock.logout.mock.invocationCallOrder[0]!;
       const saveLogoutTicketOrder = logoutTicketServiceMock.save.mock.invocationCallOrder[0]!;
 
-      expect(removeLoginOrder).toBeLessThan(saveSessionOrder);
-      expect(saveSessionOrder).toBeLessThan(saveLogoutTicketOrder);
+      expect(logoutOrder).toBeLessThan(saveLogoutTicketOrder);
     });
 
     it('should return a valid subsequent logout accept decision interaction response.', async () => {
@@ -282,8 +260,7 @@ describe('Logout Interaction Type', () => {
         redirect_to: redirectTo.href,
       });
 
-      expect(loginServiceMock.remove).not.toHaveBeenCalled();
-      expect(sessionServiceMock.save).not.toHaveBeenCalled();
+      expect(authHandlerMock.logout).not.toHaveBeenCalled();
       expect(logoutTicketServiceMock.save).not.toHaveBeenCalled();
     });
     // #endregion

@@ -7,18 +7,15 @@ import { LoginDecisionInteractionContext } from '../context/interaction/login-de
 import { LoginDecisionAcceptInteractionContext } from '../context/interaction/login-decision-accept.interaction-context';
 import { LoginDecisionDenyInteractionContext } from '../context/interaction/login-decision-deny.interaction-context';
 import { Grant } from '../entities/grant.entity';
-import { Login } from '../entities/login.entity';
-import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { UnmetAuthenticationRequirementsException } from '../exceptions/unmet-authentication-requirements.exception';
+import { AuthHandler } from '../handlers/auth.handler';
 import { LoginContextInteractionResponse } from '../responses/interaction/login-context.interaction-response';
 import { LoginDecisionInteractionResponse } from '../responses/interaction/login-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
 import { LoginServiceInterface } from '../services/login.service.interface';
 import { LOGIN_SERVICE } from '../services/login.service.token';
-import { SessionServiceInterface } from '../services/session.service.interface';
-import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { Prompt } from '../types/prompt.type';
@@ -56,16 +53,16 @@ export class LoginInteractionType implements InteractionTypeInterface {
   /**
    * Instantiates a new Login Interaction Type.
    *
+   * @param authHandler Instance of the Auth Handler.
    * @param settings Settings of the Authorization Server.
    * @param loginService Instance of the Login Service.
    * @param grantService Instance of the Grant Service.
-   * @param sessionService Instance of the Session Service.
    */
   public constructor(
+    private readonly authHandler: AuthHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(LOGIN_SERVICE) private readonly loginService: LoginServiceInterface,
-    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
-    @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface
+    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface
   ) {}
 
   /**
@@ -97,7 +94,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
       authExp = Math.floor((authTime + maxAge) / 1000);
 
       if (!skip) {
-        await this.removeLoginFromSession(grant.session);
+        await this.authHandler.inactivateSessionActiveLogin(grant.session);
       }
     }
 
@@ -147,12 +144,13 @@ export class LoginInteractionType implements InteractionTypeInterface {
    */
   private async acceptLogin(context: LoginDecisionAcceptInteractionContext): Promise<LoginDecisionInteractionResponse> {
     const { acr, amr, grant, user } = context;
+    const { parameters, session } = grant;
 
-    if (acr !== null && grant.parameters.acr_values?.includes(acr) === false) {
+    if (acr !== null && parameters.acr_values?.includes(acr) === false) {
       await this.grantService.remove(grant);
 
       const error = new UnmetAuthenticationRequirementsException(
-        `Could not authenticate using the Authentication Context Class Reference "${grant.parameters.acr_values}".`
+        `Could not authenticate using the Authentication Context Class Reference "${parameters.acr_values}".`
       );
 
       const url = addParametersToUrl(new URL('/oauth/error', this.settings.issuer), error.toJSON());
@@ -160,15 +158,15 @@ export class LoginInteractionType implements InteractionTypeInterface {
       return { redirect_to: url.href };
     }
 
-    if (grant.session.activeLogin === null) {
-      const login = await this.loginService.create(user, grant.session, amr, acr);
-      await this.updateActiveLogin(grant.session, login);
+    if (session.activeLogin === null) {
+      const login = await this.loginService.create(user, session, amr, acr);
+      await this.authHandler.updateActiveLogin(session, login);
 
       grant.interactions.push('login');
       await this.grantService.save(grant);
     }
 
-    const url = addParametersToUrl(new URL('/oauth/authorize', this.settings.issuer), grant.parameters);
+    const url = addParametersToUrl(new URL('/oauth/authorize', this.settings.issuer), parameters);
 
     return { redirect_to: url.href };
   }
@@ -199,33 +197,5 @@ export class LoginInteractionType implements InteractionTypeInterface {
       await this.grantService.remove(grant);
       throw new AccessDeniedException('Expired Grant.');
     }
-  }
-
-  /**
-   * Removes the current Login from the application's storage and from the current Session.
-   *
-   * @param session Session of the Request.
-   */
-  private async removeLoginFromSession(session: Session): Promise<void> {
-    const login = session.activeLogin!;
-
-    session.activeLogin = null;
-    session.logins = session.logins.filter((savedLogin) => savedLogin.id !== login.id);
-
-    await this.sessionService.save(session);
-    await this.loginService.remove(login);
-  }
-
-  /**
-   * Updates the Active Login of the Session and adds the Login to the list of Logins of the Session.
-   *
-   * @param session Session of the Request.
-   * @param login Login to be added to the Session.
-   */
-  private async updateActiveLogin(session: Session, login: Login): Promise<void> {
-    session.activeLogin = login;
-    session.logins.push(login);
-
-    await this.sessionService.save(session);
   }
 }

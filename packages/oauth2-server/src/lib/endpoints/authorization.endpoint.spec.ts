@@ -15,6 +15,7 @@ import { ConsentRequiredException } from '../exceptions/consent-required.excepti
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { UnsupportedResponseTypeException } from '../exceptions/unsupported-response-type.exception';
+import { AuthHandler } from '../handlers/auth.handler';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
@@ -41,12 +42,15 @@ import { AuthorizationRequestValidator } from '../validators/authorization/autho
 import { AuthorizationEndpoint } from './authorization.endpoint';
 import { Endpoint } from './endpoint.type';
 
+jest.mock('../handlers/auth.handler');
 jest.mock('../handlers/id-token.handler');
 jest.mock('../validators/authorization/authorization-request.validator');
 
 describe('Authorization Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: AuthorizationEndpoint;
+
+  const authHandlerMock = jest.mocked(AuthHandler.prototype);
 
   const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype);
 
@@ -98,6 +102,7 @@ describe('Authorization Endpoint', () => {
     container = new DependencyInjectionContainer();
 
     container.bind(IdTokenHandler).toValue(idTokenHandlerMock);
+    container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind<LoginServiceInterface>(LOGIN_SERVICE).toValue(loginServiceMock);
@@ -766,11 +771,11 @@ describe('Authorization Endpoint', () => {
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
+      expect(authHandlerMock.logout).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.logout).toHaveBeenCalledWith(login, session);
+
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
-
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
     });
 
     it('should redirect to the error endpoint when the prompt is "none" and the login is expired.', async () => {
@@ -816,10 +821,10 @@ describe('Authorization Endpoint', () => {
 
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
-      expect(grantServiceMock.remove).not.toHaveBeenCalled();
+      expect(authHandlerMock.logout).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.logout).toHaveBeenCalledWith(login, session);
 
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
+      expect(grantServiceMock.remove).not.toHaveBeenCalled();
     });
 
     it('should create a grant and redirect to the login endpoint when the login is expired.', async () => {
@@ -874,10 +879,10 @@ describe('Authorization Endpoint', () => {
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': grant.id });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: redirectUrl });
 
-      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.logout).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.logout).toHaveBeenCalledWith(login, session);
 
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
+      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
     });
 
     it('should redirect to the login endpoint when the login is expired.', async () => {
@@ -933,10 +938,10 @@ describe('Authorization Endpoint', () => {
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': grant.id });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: redirectUrl });
 
-      expect(grantServiceMock.create).not.toHaveBeenCalled();
+      expect(authHandlerMock.logout).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.logout).toHaveBeenCalledWith(login, session);
 
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
     });
 
     it('should remove the grant and redirect to the error endpoint when the prompt is "none" and the login is older than the "max_age".', async () => {
@@ -995,11 +1000,10 @@ describe('Authorization Endpoint', () => {
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
+      expect(authHandlerMock.inactivateSessionActiveLogin).not.toHaveBeenCalled();
+
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
-
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
     });
 
     it('should redirect to the error endpoint when the prompt is "none" and the login is older than the "max_age".', async () => {
@@ -1046,9 +1050,7 @@ describe('Authorization Endpoint', () => {
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
-
+      expect(authHandlerMock.inactivateSessionActiveLogin).not.toHaveBeenCalled();
       expect(grantServiceMock.remove).not.toHaveBeenCalled();
     });
 
@@ -1106,10 +1108,9 @@ describe('Authorization Endpoint', () => {
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': grant.id });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: redirectUrl });
 
-      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.inactivateSessionActiveLogin).not.toHaveBeenCalled();
 
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
+      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
     });
 
     it('should redirect to the login endpoint when the login is older than the "max_age".', async () => {
@@ -1167,10 +1168,8 @@ describe('Authorization Endpoint', () => {
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': grant.id });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: redirectUrl });
 
+      expect(authHandlerMock.inactivateSessionActiveLogin).not.toHaveBeenCalled();
       expect(grantServiceMock.create).not.toHaveBeenCalled();
-
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
     });
 
     it('should remove the grant and redirect to the error endpoint when the authenticated user does not match the user of "id_token_hint".', async () => {
@@ -1233,11 +1232,11 @@ describe('Authorization Endpoint', () => {
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': null });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
+      expect(authHandlerMock.inactivateSessionActiveLogin).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.inactivateSessionActiveLogin).toHaveBeenCalledWith(session);
+
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
-
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
     });
 
     it('should redirect to the error endpoint when the authenticated user does not match the user of "id_token_hint".', async () => {
@@ -1288,10 +1287,10 @@ describe('Authorization Endpoint', () => {
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({});
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: location.href });
 
-      expect(grantServiceMock.create).not.toHaveBeenCalled();
+      expect(authHandlerMock.inactivateSessionActiveLogin).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.inactivateSessionActiveLogin).toHaveBeenCalledWith(session);
 
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
     });
 
     it('should create a grant and redirect to the login endpoint when the prompt is "login" and there is a previously authenticated user.', async () => {
@@ -1349,10 +1348,10 @@ describe('Authorization Endpoint', () => {
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': grant.id });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: redirectUrl });
 
-      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.inactivateSessionActiveLogin).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.inactivateSessionActiveLogin).toHaveBeenCalledWith(session);
 
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
+      expect(grantServiceMock.create).toHaveBeenCalledTimes(1);
     });
 
     it('should redirect to the login endpoint when the prompt is "login" and there is a previously authenticated user with an unfinished grant.', async () => {
@@ -1411,10 +1410,10 @@ describe('Authorization Endpoint', () => {
       expect(response.cookies).toStrictEqual<Dictionary<unknown>>({ 'guarani:grant': grant.id });
       expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({ Location: redirectUrl });
 
-      expect(grantServiceMock.create).not.toHaveBeenCalled();
+      expect(authHandlerMock.inactivateSessionActiveLogin).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.inactivateSessionActiveLogin).toHaveBeenCalledWith(session);
 
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
+      expect(grantServiceMock.create).not.toHaveBeenCalled();
     });
     // #endregion
 

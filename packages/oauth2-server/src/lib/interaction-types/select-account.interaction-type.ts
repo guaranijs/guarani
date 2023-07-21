@@ -88,9 +88,9 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
 
     if (!grant.interactions.includes('select_account')) {
       grant.session.activeLogin = login;
-      grant.interactions.push('select_account');
-
       await this.sessionService.save(grant.session);
+
+      grant.interactions.push('select_account');
       await this.grantService.save(grant);
     }
 

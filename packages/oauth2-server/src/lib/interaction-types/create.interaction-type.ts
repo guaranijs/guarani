@@ -5,17 +5,12 @@ import { Inject, Injectable } from '@guarani/di';
 import { CreateContextInteractionContext } from '../context/interaction/create-context.interaction-context';
 import { CreateDecisionInteractionContext } from '../context/interaction/create-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
-import { Login } from '../entities/login.entity';
-import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
+import { AuthHandler } from '../handlers/auth.handler';
 import { CreateContextInteractionResponse } from '../responses/interaction/create-context.interaction-response';
 import { CreateDecisionInteractionResponse } from '../responses/interaction/create-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
-import { LoginServiceInterface } from '../services/login.service.interface';
-import { LOGIN_SERVICE } from '../services/login.service.token';
-import { SessionServiceInterface } from '../services/session.service.interface';
-import { SESSION_SERVICE } from '../services/session.service.token';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
@@ -46,18 +41,16 @@ export class CreateInteractionType implements InteractionTypeInterface {
   /**
    * Instantiates a new Create Interaction Type.
    *
+   * @param authHandler Instance of the Auth Handler.
    * @param settings Settings of the Authorization Server.
    * @param grantService Instance of the Grant Service.
    * @param userService Instance of the User Service.
-   * @param loginService Instance of the Login Service.
-   * @param sessionService Instance of the Session Service.
    */
   public constructor(
+    private readonly authHandler: AuthHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
-    @Inject(USER_SERVICE) private readonly userService: UserServiceInterface,
-    @Inject(LOGIN_SERVICE) private readonly loginService: LoginServiceInterface,
-    @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface
+    @Inject(USER_SERVICE) private readonly userService: UserServiceInterface
   ) {}
 
   /**
@@ -97,9 +90,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
 
     if (!grant.interactions.includes('create')) {
       const user = await this.userService.create(parameters);
-
-      const login = await this.loginService.create(user, grant.session, null, null);
-      await this.updateActiveLogin(grant.session, login);
+      await this.authHandler.login(user, grant.session, null, null);
 
       grant.interactions.push('create');
       await this.grantService.save(grant);
@@ -120,18 +111,5 @@ export class CreateInteractionType implements InteractionTypeInterface {
       await this.grantService.remove(grant);
       throw new AccessDeniedException('Expired Grant.');
     }
-  }
-
-  /**
-   * Updates the Active Login of the Session and adds the Login to the list of Logins of the Session.
-   *
-   * @param session Session of the Request.
-   * @param login Login to be added to the Session.
-   */
-  private async updateActiveLogin(session: Session, login: Login): Promise<void> {
-    session.activeLogin = login;
-    session.logins.push(login);
-
-    await this.sessionService.save(session);
   }
 }

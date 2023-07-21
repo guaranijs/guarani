@@ -14,8 +14,6 @@ import { LoginContextInteractionResponse } from '../responses/interaction/login-
 import { LoginDecisionInteractionResponse } from '../responses/interaction/login-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
-import { LoginServiceInterface } from '../services/login.service.interface';
-import { LOGIN_SERVICE } from '../services/login.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { Prompt } from '../types/prompt.type';
@@ -61,7 +59,6 @@ export class LoginInteractionType implements InteractionTypeInterface {
   public constructor(
     private readonly authHandler: AuthHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(LOGIN_SERVICE) private readonly loginService: LoginServiceInterface,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface
   ) {}
 
@@ -159,8 +156,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
     }
 
     if (session.activeLogin === null) {
-      const login = await this.loginService.create(user, session, amr, acr);
-      await this.authHandler.updateActiveLogin(session, login);
+      await this.authHandler.login(user, session, amr, acr);
 
       grant.interactions.push('login');
       await this.grantService.save(grant);

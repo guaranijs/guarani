@@ -1,7 +1,9 @@
 import { Inject, Injectable } from '@guarani/di';
+import { Nullable } from '@guarani/types';
 
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
+import { User } from '../entities/user.entity';
 import { LoginServiceInterface } from '../services/login.service.interface';
 import { LOGIN_SERVICE } from '../services/login.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
@@ -22,6 +24,33 @@ export class AuthHandler {
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
     @Inject(LOGIN_SERVICE) private readonly loginService: LoginServiceInterface
   ) {}
+
+  /**
+   * Authenticates the End User with the Authorization Server and returns the resulting Login.
+   *
+   * @param user End User to be authenticated.
+   * @param session Session where the Login will be recorded.
+   * @param amr Authentication Methods used in the Authentication.
+   * @param acr Authentication Context Class Reference satisfied by the Authentication process.
+   * @returns Login representing the Authentication of the End User.
+   */
+  public async login(user: User, session: Session, amr: Nullable<string[]>, acr: Nullable<string>): Promise<Login> {
+    const login = await this.loginService.create(user, session, amr, acr);
+
+    const oldLogin = session.logins.find((oldLogin) => oldLogin.user.id === login.user.id);
+
+    if (typeof oldLogin !== 'undefined') {
+      session.logins = session.logins.filter((sessionLogin) => sessionLogin.id !== oldLogin.id);
+      await this.loginService.remove(oldLogin);
+    }
+
+    session.activeLogin = login;
+    session.logins.push(login);
+
+    await this.sessionService.save(session);
+
+    return login;
+  }
 
   /**
    * Logs out the Authenticated End User represented by the provided Login.
@@ -48,28 +77,6 @@ export class AuthHandler {
    */
   public async inactivateSessionActiveLogin(session: Session): Promise<void> {
     session.activeLogin = null;
-    await this.sessionService.save(session);
-  }
-
-  /**
-   * Updates the Active Login of the Session and adds the Login to the list of Logins of the Session,
-   * while removing an older version of the Login if it is present.
-   *
-   * @param session Session of the Request.
-   * @param login Login to be added to the Session.
-   */
-  // TODO: Check for acr_values and max_age.
-  public async updateActiveLogin(session: Session, login: Login): Promise<void> {
-    const oldLogin = session.logins.find((oldLogin) => oldLogin.user.id === login.user.id);
-
-    if (typeof oldLogin !== 'undefined') {
-      session.logins = session.logins.filter((sessionLogin) => sessionLogin.id !== oldLogin.id);
-      await this.loginService.remove(oldLogin);
-    }
-
-    session.activeLogin = login;
-    session.logins.push(login);
-
     await this.sessionService.save(session);
   }
 }

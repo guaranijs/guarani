@@ -4,17 +4,13 @@ import { CreateContextInteractionContext } from '../context/interaction/create-c
 import { CreateDecisionInteractionContext } from '../context/interaction/create-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
-import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
+import { AuthHandler } from '../handlers/auth.handler';
 import { CreateContextInteractionResponse } from '../responses/interaction/create-context.interaction-response';
 import { CreateDecisionInteractionResponse } from '../responses/interaction/create-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
-import { LoginServiceInterface } from '../services/login.service.interface';
-import { LOGIN_SERVICE } from '../services/login.service.token';
-import { SessionServiceInterface } from '../services/session.service.interface';
-import { SESSION_SERVICE } from '../services/session.service.token';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
@@ -24,9 +20,13 @@ import { CreateInteractionType } from './create.interaction-type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 
+jest.mock('../handlers/auth.handler');
+
 describe('Create Interaction Type', () => {
   let container: DependencyInjectionContainer;
   let interactionType: CreateInteractionType;
+
+  const authHandlerMock = jest.mocked(AuthHandler.prototype);
 
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
@@ -44,27 +44,13 @@ describe('Create Interaction Type', () => {
     findOne: jest.fn(),
   });
 
-  const loginServiceMock = jest.mocked<LoginServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    remove: jest.fn(),
-  });
-
-  const sessionServiceMock = jest.mocked<SessionServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    remove: jest.fn(),
-    save: jest.fn(),
-  });
-
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind<UserServiceInterface>(USER_SERVICE).toValue(userServiceMock);
-    container.bind<LoginServiceInterface>(LOGIN_SERVICE).toValue(loginServiceMock);
-    container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
     container.bind(CreateInteractionType).toSelf().asSingleton();
 
     interactionType = container.resolve(CreateInteractionType);
@@ -222,10 +208,8 @@ describe('Create Interaction Type', () => {
       const { grant } = context;
 
       const user = <User>{ id: 'user_id' };
-      const login = <Login>{ id: 'login_id', user };
 
       userServiceMock.create.mockResolvedValueOnce(user);
-      loginServiceMock.create.mockResolvedValueOnce(login);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<CreateDecisionInteractionResponse>({
         redirect_to: redirectTo.href,
@@ -234,22 +218,11 @@ describe('Create Interaction Type', () => {
       expect(userServiceMock.create).toHaveBeenCalledTimes(1);
       expect(userServiceMock.create).toHaveBeenCalledWith(context.parameters);
 
-      expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
-      expect(loginServiceMock.create).toHaveBeenCalledWith(user, grant.session, null, null);
-
-      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{
-        id: 'session_id',
-        activeLogin: login,
-        logins: [login],
-      });
+      expect(authHandlerMock.login).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.login).toHaveBeenCalledWith(user, grant.session, null, null);
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{
-        ...grant,
-        interactions: ['create'],
-        session: { id: 'session_id', activeLogin: login, logins: [login] },
-      });
+      expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...grant, interactions: ['create'] });
     });
 
     it('should return a valid subsequent create decision interaction response.', async () => {
@@ -262,8 +235,7 @@ describe('Create Interaction Type', () => {
       });
 
       expect(userServiceMock.create).not.toHaveBeenCalled();
-      expect(loginServiceMock.create).not.toHaveBeenCalled();
-      expect(sessionServiceMock.save).not.toHaveBeenCalled();
+      expect(authHandlerMock.login).not.toHaveBeenCalled();
       expect(grantServiceMock.save).not.toHaveBeenCalled();
     });
   });

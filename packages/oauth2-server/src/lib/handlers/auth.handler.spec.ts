@@ -2,6 +2,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
+import { User } from '../entities/user.entity';
 import { LoginServiceInterface } from '../services/login.service.interface';
 import { LOGIN_SERVICE } from '../services/login.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
@@ -39,7 +40,56 @@ describe('Auth Handler', () => {
     jest.resetAllMocks();
   });
 
-  describe('logout', () => {
+  describe('login()', () => {
+    it('should create and return a new login.', async () => {
+      const user: User = { id: 'user_id' };
+      const session: Session = { id: 'session_id', activeLogin: null, logins: [] };
+      const amr: string[] = ['pwd', 'sms'];
+      const acr = 'urn:guarani:acr:2fa';
+
+      loginServiceMock.create.mockResolvedValueOnce(<Login>{ id: 'login_id', amr, acr, user, session });
+
+      const login = await authHandler.login(user, session, amr, acr);
+
+      expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
+      expect(loginServiceMock.create).toHaveBeenCalledWith(user, session, amr, acr);
+
+      expect(loginServiceMock.remove).not.toHaveBeenCalled();
+
+      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.save).toHaveBeenCalledWith({
+        id: 'session_id',
+        activeLogin: login,
+        logins: [login],
+      });
+    });
+
+    it('should remove an old login and create and return a new login.', async () => {
+      const user: User = { id: 'user_id' };
+      const session: Session = { id: 'session_id', activeLogin: null, logins: [<Login>{ id: 'old_login_id', user }] };
+      const amr: string[] = ['pwd', 'sms'];
+      const acr = 'urn:guarani:acr:2fa';
+
+      loginServiceMock.create.mockResolvedValueOnce(<Login>{ id: 'login_id', amr, acr, user, session });
+
+      const login = await authHandler.login(user, session, amr, acr);
+
+      expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
+      expect(loginServiceMock.create).toHaveBeenCalledWith(user, session, amr, acr);
+
+      expect(loginServiceMock.remove).toHaveBeenCalledTimes(1);
+      expect(loginServiceMock.remove).toHaveBeenCalledWith(<Login>{ id: 'old_login_id', user });
+
+      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.save).toHaveBeenCalledWith({
+        id: 'session_id',
+        activeLogin: login,
+        logins: [login],
+      });
+    });
+  });
+
+  describe('logout()', () => {
     it('should remove the active login from the session.', async () => {
       const session = <Session>{
         id: 'session_id',
@@ -55,7 +105,7 @@ describe('Auth Handler', () => {
       expect(loginServiceMock.remove).toHaveBeenCalledWith(login);
 
       expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{
+      expect(sessionServiceMock.save).toHaveBeenCalledWith({
         id: 'session_id',
         activeLogin: null,
         logins: [{ id: 'login2_id' }],
@@ -95,7 +145,7 @@ describe('Auth Handler', () => {
     });
   });
 
-  describe('inactivateSessionActiveLogin', () => {
+  describe('inactivateSessionActiveLogin()', () => {
     it('should remove the active login from the session.', async () => {
       const session = <Session>{
         id: 'session_id',

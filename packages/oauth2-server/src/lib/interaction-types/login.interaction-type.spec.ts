@@ -14,8 +14,6 @@ import { LoginContextInteractionResponse } from '../responses/interaction/login-
 import { LoginDecisionInteractionResponse } from '../responses/interaction/login-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
-import { LoginServiceInterface } from '../services/login.service.interface';
-import { LOGIN_SERVICE } from '../services/login.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { addParametersToUrl } from '../utils/add-parameters-to-url';
@@ -34,12 +32,6 @@ describe('Login Interaction Type', () => {
 
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
-  const loginServiceMock = jest.mocked<LoginServiceInterface>({
-    create: jest.fn(),
-    findOne: jest.fn(),
-    remove: jest.fn(),
-  });
-
   const grantServiceMock = jest.mocked<GrantServiceInterface>({
     create: jest.fn(),
     findOne: jest.fn(),
@@ -54,7 +46,6 @@ describe('Login Interaction Type', () => {
 
     container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
-    container.bind<LoginServiceInterface>(LOGIN_SERVICE).toValue(loginServiceMock);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind(LoginInteractionType).toSelf().asSingleton();
 
@@ -310,21 +301,14 @@ describe('Login Interaction Type', () => {
 
       const { acr, amr, user } = context as LoginDecisionAcceptInteractionContext;
 
-      const login = <Login>{ id: 'login_id', acr, amr, user };
-
-      loginServiceMock.create.mockResolvedValueOnce(login);
-
       const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: redirectTo.href,
       });
 
-      expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
-      expect(loginServiceMock.create).toHaveBeenCalledWith(user, context.grant.session, amr, acr);
-
-      expect(authHandlerMock.updateActiveLogin).toHaveBeenCalledTimes(1);
-      expect(authHandlerMock.updateActiveLogin).toHaveBeenCalledWith(context.grant.session, login);
+      expect(authHandlerMock.login).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.login).toHaveBeenCalledWith(user, context.grant.session, amr, acr);
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...context.grant, interactions: ['login'] });
@@ -354,21 +338,14 @@ describe('Login Interaction Type', () => {
 
       const { acr, amr, user } = context as LoginDecisionAcceptInteractionContext;
 
-      const login = <Login>{ id: 'login_id', acr, amr, user, createdAt: new Date(now) };
-
-      loginServiceMock.create.mockResolvedValueOnce(login);
-
       const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LoginDecisionInteractionResponse>({
         redirect_to: redirectTo.href,
       });
 
-      expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
-      expect(loginServiceMock.create).toHaveBeenCalledWith(user, context.grant.session, amr, acr);
-
-      expect(authHandlerMock.updateActiveLogin).toHaveBeenCalledTimes(1);
-      expect(authHandlerMock.updateActiveLogin).toHaveBeenCalledWith(context.grant.session, login);
+      expect(authHandlerMock.login).toHaveBeenCalledTimes(1);
+      expect(authHandlerMock.login).toHaveBeenCalledWith(user, context.grant.session, amr, acr);
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...context.grant, interactions: ['login'] });
@@ -400,8 +377,7 @@ describe('Login Interaction Type', () => {
         redirect_to: redirectTo.href,
       });
 
-      expect(loginServiceMock.create).not.toHaveBeenCalled();
-      expect(authHandlerMock.updateActiveLogin).not.toHaveBeenCalled();
+      expect(authHandlerMock.login).not.toHaveBeenCalled();
       expect(grantServiceMock.save).not.toHaveBeenCalled();
     });
     // #endregion

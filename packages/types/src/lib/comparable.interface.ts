@@ -13,13 +13,14 @@ export interface Comparable<T> {
    *
    * This method must follow the following restrictions:
    *
-   * * If `compare(a, b) < 0`, then `compare(b, a) >= 0`.
-   * * If `compare(a, b) > 0`, then `compare(b, a) <= 0`.
-   * * If `compare(a, b) === 0`, then `compare(b, a) === 0`.
-   * * If `compare(a, b) $ 0` and `compare(b, c) $ 0`, then `compare(a, c) $ 0`,
+   * * If `this.compare(other) < 0`, then `other.compare(this) >= 0`.
+   * * If `this.compare(other) > 0`, then `other.compare(this) <= 0`.
+   * * If `this.compare(other) === 0`, then `other.compare(this) === 0`.
+   * * If `this.compare(other) $ 0` and `other.compare(another) $ 0`, then `this.compare(another) $ 0`,
    *   where **$** is any of the operators **{<, <=, ===, >=, >}**.
    *
    * @param other Object to be compared.
+   * @returns Resulting of the comparison.
    */
   compare(other: T): number;
 }

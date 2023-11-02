@@ -17,6 +17,6 @@ export function isInjectableToken<T>(obj: unknown): obj is InjectableToken<T> {
     typeof obj === 'string' ||
     typeof obj === 'symbol' ||
     (typeof obj === 'function' && typeof obj.prototype !== 'undefined') ||
-    obj instanceof LazyToken<T>
+    obj instanceof LazyToken
   );
 }

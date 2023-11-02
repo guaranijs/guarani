@@ -1,3 +1,6 @@
+/**
+ * Interface of the options of UUID v1.
+ */
 export interface UUIDv1Options {
   /**
    * 14-bit unsigned integer used to avoid duplicates when the clock is set backwards in time or if the node ID changes.

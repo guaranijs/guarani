@@ -254,6 +254,7 @@ export class UUID implements Comparable<UUID> {
    * Three-way comparison between two UUIDs.
    *
    * @param other UUID being compared.
+   * @returns Result of the comparison.
    */
   public compare(other: UUID): number {
     return this.#bytes.compare(other.#bytes);

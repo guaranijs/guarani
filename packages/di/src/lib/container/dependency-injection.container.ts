@@ -102,7 +102,7 @@ export class DependencyInjectionContainer {
    * @returns Resolved instance or valued based on the Token.
    */
   private _resolve<T>(token: InjectableToken<T>, requestResolutions = new Map<InjectableToken<T>, T>()): T {
-    if (token instanceof LazyToken<T>) {
+    if (token instanceof LazyToken) {
       return token.resolve((lazyToken) => this._resolve<T>(lazyToken, requestResolutions));
     }
 
@@ -262,7 +262,7 @@ export class DependencyInjectionContainer {
       classOrInstance
     );
 
-    if (propTokens instanceof Map<string | symbol, TokenDescriptor<unknown>>) {
+    if (propTokens instanceof Map) {
       propTokens.forEach((descriptor, property) => {
         const { multiple, optional, token } = descriptor;
 

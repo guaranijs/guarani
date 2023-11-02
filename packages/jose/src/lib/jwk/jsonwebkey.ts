@@ -230,7 +230,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
     data: unknown,
     additionalParameters: Partial<T> = {}
   ): Promise<JsonWebKey<T>> {
-    if (data instanceof JsonWebKey<T>) {
+    if (data instanceof JsonWebKey) {
       return data;
     }
 

@@ -211,7 +211,7 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
       kdf.set(createHash('sha256').update(data).digest(), iteration << 5);
     }
 
-    return kdf.slice(0, bits >> 3);
+    return kdf.subarray(0, bits >> 3);
   }
 }
 

@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 
-import { integerToBuffer } from '../lib/integer';
+import { integerToBuffer } from './integer';
 
 describe('integerToBuffer()', () => {
   it.each([

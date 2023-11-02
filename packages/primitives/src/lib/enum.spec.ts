@@ -1,4 +1,4 @@
-import * as Enum from '../lib/enum';
+import * as Enum from './enum';
 
 enum IntEnum {
   One = 1,

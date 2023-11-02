@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 
-import { bitstringToBuffer, bufferToBitstring, bufferToInteger } from '../lib/buffer';
+import { bitstringToBuffer, bufferToBitstring, bufferToInteger } from './buffer';
 
 describe('bufferToBitstring()', () => {
   it.each([

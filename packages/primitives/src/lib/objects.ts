@@ -6,6 +6,7 @@ import { Comparable, Dictionary } from '@guarani/types';
  * Removes null and undefined values from the properties of an object or an array of objects.
  *
  * @param data Object or array of objects to be cleansed.
+ * @returns Provided object without null and undefined properties.
  */
 export function removeNullishValues<T = unknown>(data: T): T {
   if (typeof data !== 'object' || data === null) {

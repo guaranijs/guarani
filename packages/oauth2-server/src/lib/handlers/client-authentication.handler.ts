@@ -17,7 +17,7 @@ export class ClientAuthenticationHandler {
    * @param clientAuthenticationMethods Client Authentication Methods supported by the Authorization Server.
    */
   public constructor(
-    @InjectAll(CLIENT_AUTHENTICATION) private readonly clientAuthenticationMethods: ClientAuthenticationInterface[]
+    @InjectAll(CLIENT_AUTHENTICATION) private readonly clientAuthenticationMethods: ClientAuthenticationInterface[],
   ) {}
 
   /**

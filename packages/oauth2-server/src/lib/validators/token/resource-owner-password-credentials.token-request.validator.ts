@@ -38,13 +38,13 @@ export class ResourceOwnerPasswordCredentialsTokenRequestValidator extends Token
     protected override readonly clientAuthenticationHandler: ClientAuthenticationHandler,
     protected readonly scopeHandler: ScopeHandler,
     @Inject(USER_SERVICE) protected readonly userService: UserServiceInterface,
-    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[]
+    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
   ) {
     super(clientAuthenticationHandler, grantTypes);
 
     if (typeof this.userService.findByResourceOwnerCredentials !== 'function') {
       throw new TypeError(
-        'Missing implementation of required method "UserServiceInterface.findByResourceOwnerCredentials".'
+        'Missing implementation of required method "UserServiceInterface.findByResourceOwnerCredentials".',
       );
     }
   }

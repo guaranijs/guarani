@@ -38,7 +38,7 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<Ref
     protected override readonly clientAuthenticationHandler: ClientAuthenticationHandler,
     protected readonly scopeHandler: ScopeHandler,
     @Inject(REFRESH_TOKEN_SERVICE) protected readonly refreshTokenService: RefreshTokenServiceInterface,
-    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[]
+    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
   ) {
     super(clientAuthenticationHandler, grantTypes);
   }

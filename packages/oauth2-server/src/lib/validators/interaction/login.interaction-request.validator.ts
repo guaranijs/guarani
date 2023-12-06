@@ -54,7 +54,7 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
     @Inject(SETTINGS) protected readonly settings: Settings,
     @Inject(GRANT_SERVICE) protected readonly grantService: GrantServiceInterface,
     @Inject(USER_SERVICE) protected readonly userService: UserServiceInterface,
-    @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[]
+    @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[],
   ) {
     super(interactionTypes);
   }
@@ -82,7 +82,7 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(
-    request: HttpRequest
+    request: HttpRequest,
   ): Promise<LoginDecisionInteractionContext<LoginDecision>> {
     const context = await super.validateDecision(request);
 
@@ -204,7 +204,7 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
 
     const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
       Reflect.construct(OAuth2Exception, [parameters.error_description]),
-      { error: parameters.error }
+      { error: parameters.error },
     );
 
     return exception;

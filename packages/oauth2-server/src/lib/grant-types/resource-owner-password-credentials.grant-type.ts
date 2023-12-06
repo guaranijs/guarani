@@ -33,7 +33,7 @@ export class ResourceOwnerPasswordCredentialsGrantType implements GrantTypeInter
    */
   public constructor(
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
-    @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface
+    @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface,
   ) {}
 
   /**

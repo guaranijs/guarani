@@ -24,7 +24,7 @@ export abstract class TokenRequestValidator<TContext extends TokenContext = Toke
    */
   public constructor(
     protected readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    protected readonly grantTypes: GrantTypeInterface[]
+    protected readonly grantTypes: GrantTypeInterface[],
   ) {}
 
   /**
@@ -54,7 +54,7 @@ export abstract class TokenRequestValidator<TContext extends TokenContext = Toke
 
     if (!client.grantTypes.includes(grantType.name)) {
       throw new UnauthorizedClientException(
-        `This Client is not allowed to request the grant_type "${grantType.name}".`
+        `This Client is not allowed to request the grant_type "${grantType.name}".`,
       );
     }
 

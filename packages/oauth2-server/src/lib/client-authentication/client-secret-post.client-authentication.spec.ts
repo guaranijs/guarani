@@ -88,7 +88,7 @@ describe('Client Secret Post Authentication Method', () => {
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
     });
 
@@ -101,7 +101,7 @@ describe('Client Secret Post Authentication Method', () => {
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'This Client is not allowed to use the Authentication Method "client_secret_post".'
+        'This Client is not allowed to use the Authentication Method "client_secret_post".',
       );
     });
 
@@ -114,7 +114,7 @@ describe('Client Secret Post Authentication Method', () => {
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
     });
 
@@ -131,7 +131,7 @@ describe('Client Secret Post Authentication Method', () => {
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
     });
 
@@ -148,7 +148,7 @@ describe('Client Secret Post Authentication Method', () => {
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'This Client is not allowed to use the Authentication Method "client_secret_post".'
+        'This Client is not allowed to use the Authentication Method "client_secret_post".',
       );
     });
 

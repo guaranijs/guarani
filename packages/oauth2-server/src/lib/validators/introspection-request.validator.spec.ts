@@ -91,7 +91,7 @@ describe('Introspection Request Validator', () => {
       container.bind(IntrospectionRequestValidator).toSelf().asSingleton();
 
       expect(() => container.resolve(IntrospectionRequestValidator)).toThrow(
-        new Error('The Authorization Server disabled using Refresh Tokens.')
+        new Error('The Authorization Server disabled using Refresh Tokens.'),
       );
     });
 
@@ -102,7 +102,7 @@ describe('Introspection Request Validator', () => {
       container.bind(IntrospectionRequestValidator).toSelf().asSingleton();
 
       expect(() => container.resolve(IntrospectionRequestValidator)).toThrow(
-        new Error('Cannot enable Refresh Token Introspection without a Refresh Token Service.')
+        new Error('Cannot enable Refresh Token Introspection without a Refresh Token Service.'),
       );
     });
   });
@@ -131,7 +131,7 @@ describe('Introspection Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "token".'
+        'Invalid parameter "token".',
       );
     });
 
@@ -140,7 +140,7 @@ describe('Introspection Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         UnsupportedTokenTypeException,
-        'Unsupported token_type_hint "unknown".'
+        'Unsupported token_type_hint "unknown".',
       );
     });
 

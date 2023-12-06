@@ -102,7 +102,7 @@ describe('Form Encoded Body Client Authorization', () => {
 
       await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'Invalid Access Token.'
+        'Invalid Access Token.',
       );
     });
 
@@ -118,7 +118,7 @@ describe('Form Encoded Body Client Authorization', () => {
 
       await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'Expired Access Token.'
+        'Expired Access Token.',
       );
     });
 
@@ -135,7 +135,7 @@ describe('Form Encoded Body Client Authorization', () => {
 
       await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'The provided Access Token is not yet valid.'
+        'The provided Access Token is not yet valid.',
       );
     });
 
@@ -153,7 +153,7 @@ describe('Form Encoded Body Client Authorization', () => {
 
       await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'Revoked Access Token.'
+        'Revoked Access Token.',
       );
     });
 

@@ -15,7 +15,7 @@ describe('getClientJsonWebKey()', () => {
 
     await expect(getClientJsonWebKey(client, () => true)).rejects.toThrowWithMessage(
       Error,
-      'The Client does not have a JSON Web Key Set registered.'
+      'The Client does not have a JSON Web Key Set registered.',
     );
   });
 

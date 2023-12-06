@@ -95,7 +95,7 @@ export class ClientSecretBasicClientAuthentication implements ClientAuthenticati
 
     if (client.secret === null) {
       throw new InvalidClientException(
-        `This Client is not allowed to use the Authentication Method "${this.name}".`
+        `This Client is not allowed to use the Authentication Method "${this.name}".`,
       ).setHeaders(this.headers);
     }
 
@@ -116,7 +116,7 @@ export class ClientSecretBasicClientAuthentication implements ClientAuthenticati
 
     if (client.authenticationMethod !== this.name) {
       throw new InvalidClientException(
-        `This Client is not allowed to use the Authentication Method "${this.name}".`
+        `This Client is not allowed to use the Authentication Method "${this.name}".`,
       ).setHeaders(this.headers);
     }
 

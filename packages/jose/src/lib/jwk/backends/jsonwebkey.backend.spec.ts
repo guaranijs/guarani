@@ -21,7 +21,7 @@ describe('JSON Web Key Backend', () => {
       Reflect.set(backend, 'getThumbprintParameters', () => parameters);
 
       expect(backend.getThumbprint(parameters).toString('base64url')).toEqual(
-        'NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs'
+        'NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs',
       );
 
       Reflect.deleteProperty(backend, 'getThumbprintParameters');

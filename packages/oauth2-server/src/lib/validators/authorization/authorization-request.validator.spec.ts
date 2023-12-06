@@ -150,7 +150,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "client_id".'
+        'Invalid parameter "client_id".',
       );
     });
 
@@ -171,7 +171,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         UnauthorizedClientException,
-        'This Client is not allowed to request the response_type "code".'
+        'This Client is not allowed to request the response_type "code".',
       );
     });
 
@@ -184,7 +184,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "redirect_uri".'
+        'Invalid parameter "redirect_uri".',
       );
     });
 
@@ -197,7 +197,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "redirect_uri".'
+        'Invalid parameter "redirect_uri".',
       );
     });
 
@@ -210,7 +210,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'The Redirect URI MUST NOT have a fragment component.'
+        'The Redirect URI MUST NOT have a fragment component.',
       );
     });
 
@@ -227,7 +227,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Redirect URI.'
+        'Invalid Redirect URI.',
       );
     });
 
@@ -244,7 +244,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "scope".'
+        'Invalid parameter "scope".',
       );
     });
 
@@ -263,7 +263,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported response_mode "unknown".'
+        'Unsupported response_mode "unknown".',
       );
     });
 
@@ -282,7 +282,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported prompt "unknown".'
+        'Unsupported prompt "unknown".',
       );
     });
 
@@ -301,7 +301,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'The prompt "none" must be used by itself.'
+        'The prompt "none" must be used by itself.',
       );
     });
 
@@ -320,7 +320,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'The prompts "create" and "login" cannot be used together.'
+        'The prompts "create" and "login" cannot be used together.',
       );
     });
 
@@ -339,7 +339,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'The prompts "create" and "select_account" cannot be used together.'
+        'The prompts "create" and "select_account" cannot be used together.',
       );
     });
 
@@ -358,7 +358,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'The prompts "login" and "select_account" cannot be used together.'
+        'The prompts "login" and "select_account" cannot be used together.',
       );
     });
 
@@ -377,7 +377,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported display "unknown".'
+        'Unsupported display "unknown".',
       );
     });
 
@@ -396,7 +396,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "max_age".'
+        'Invalid parameter "max_age".',
       );
     });
 
@@ -415,7 +415,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported UI Locale "unknown".'
+        'Unsupported UI Locale "unknown".',
       );
     });
 
@@ -445,7 +445,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported UI Locale "pt-BR".'
+        'Unsupported UI Locale "pt-BR".',
       );
     });
 
@@ -464,7 +464,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported Authentication Context Class Reference "unknown".'
+        'Unsupported Authentication Context Class Reference "unknown".',
       );
     });
 
@@ -494,7 +494,7 @@ describe('Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported Authentication Context Class Reference "urn:guarani:acr:2fa".'
+        'Unsupported Authentication Context Class Reference "urn:guarani:acr:2fa".',
       );
     });
 

@@ -37,7 +37,7 @@ export class EllipticCurveBackend extends JsonWebKeyBackend {
    */
   public async load(
     data: EllipticCurveKeyParameters,
-    additionalParameters?: Partial<EllipticCurveKeyParameters>
+    additionalParameters?: Partial<EllipticCurveKeyParameters>,
   ): Promise<EllipticCurveKey> {
     return new (await import('./elliptic-curve.key')).EllipticCurveKey(data, additionalParameters);
   }
@@ -50,7 +50,7 @@ export class EllipticCurveBackend extends JsonWebKeyBackend {
    */
   public async generate(
     options: GenerateEllipticCurveKeyOptions,
-    additionalParameters?: Partial<EllipticCurveKeyParameters>
+    additionalParameters?: Partial<EllipticCurveKeyParameters>,
   ): Promise<EllipticCurveKey> {
     if (!Object.hasOwn(this.curves, options.curve)) {
       throw new TypeError(`Unsupported Elliptic Curve "${options.curve}" for JSON Web Key Type "EC".`);

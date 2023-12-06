@@ -111,7 +111,7 @@ describe('Create Interaction Type', () => {
 
       await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Expired Grant.'
+        'Expired Grant.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -195,7 +195,7 @@ describe('Create Interaction Type', () => {
 
       await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Expired Grant.'
+        'Expired Grant.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);

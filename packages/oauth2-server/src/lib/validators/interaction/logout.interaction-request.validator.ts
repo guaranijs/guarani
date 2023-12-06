@@ -47,7 +47,7 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
   public constructor(
     @Inject(LOGOUT_TICKET_SERVICE) private readonly logoutTicketService: LogoutTicketServiceInterface,
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
-    @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[]
+    @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[],
   ) {
     super(interactionTypes);
   }
@@ -75,7 +75,7 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(
-    request: HttpRequest
+    request: HttpRequest,
   ): Promise<LogoutDecisionInteractionContext<LogoutDecision>> {
     const context = await super.validateDecision(request);
 
@@ -106,7 +106,7 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    * @returns Logout Ticket based on the provided Logout Challenge.
    */
   private async getLogoutTicket(
-    parameters: LogoutContextInteractionRequest | LogoutDecisionInteractionRequest
+    parameters: LogoutContextInteractionRequest | LogoutDecisionInteractionRequest,
   ): Promise<LogoutTicket> {
     if (typeof parameters.logout_challenge === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "logout_challenge".');
@@ -176,7 +176,7 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
 
     const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
       Reflect.construct(OAuth2Exception, [parameters.error_description]),
-      { error: parameters.error }
+      { error: parameters.error },
     );
 
     return exception;

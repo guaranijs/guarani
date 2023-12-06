@@ -100,7 +100,7 @@ describe('Authorization Code Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "code".'
+        'Invalid parameter "code".',
       );
     });
 
@@ -114,7 +114,7 @@ describe('Authorization Code Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Invalid Authorization Code.'
+        'Invalid Authorization Code.',
       );
     });
 
@@ -129,7 +129,7 @@ describe('Authorization Code Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "redirect_uri".'
+        'Invalid parameter "redirect_uri".',
       );
     });
 
@@ -144,7 +144,7 @@ describe('Authorization Code Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "redirect_uri".'
+        'Invalid parameter "redirect_uri".',
       );
     });
 
@@ -159,7 +159,7 @@ describe('Authorization Code Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'The Redirect URI MUST NOT have a fragment component.'
+        'The Redirect URI MUST NOT have a fragment component.',
       );
     });
 
@@ -178,7 +178,7 @@ describe('Authorization Code Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Redirect URI.'
+        'Invalid Redirect URI.',
       );
     });
 
@@ -197,7 +197,7 @@ describe('Authorization Code Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "code_verifier".'
+        'Invalid parameter "code_verifier".',
       );
     });
 

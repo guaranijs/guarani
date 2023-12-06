@@ -46,7 +46,7 @@ export class CodeTokenAuthorizationRequestValidator extends CodeAuthorizationReq
     @InjectAll(RESPONSE_MODE) protected override readonly responseModes: ResponseModeInterface[],
     @InjectAll(RESPONSE_TYPE) protected override readonly responseTypes: ResponseTypeInterface[],
     @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[],
-    @InjectAll(PKCE) protected override readonly pkces: PkceInterface[]
+    @InjectAll(PKCE) protected override readonly pkces: PkceInterface[],
   ) {
     super(scopeHandler, settings, clientService, responseModes, responseTypes, displays, pkces);
   }
@@ -60,7 +60,7 @@ export class CodeTokenAuthorizationRequestValidator extends CodeAuthorizationReq
    */
   protected override getResponseMode(
     parameters: CodeAuthorizationRequest,
-    responseType: ResponseTypeInterface
+    responseType: ResponseTypeInterface,
   ): ResponseModeInterface {
     const responseMode = super.getResponseMode(parameters, responseType);
 

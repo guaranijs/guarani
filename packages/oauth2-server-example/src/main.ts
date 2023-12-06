@@ -32,7 +32,7 @@ function setupPassport(app: Application): void {
       }
 
       return done(null, user);
-    })
+    }),
   );
 
   passport.serializeUser<string>((user, done) => {
@@ -67,7 +67,7 @@ async function main(): Promise<void> {
       resave: false,
       saveUninitialized: false,
       store: new RedisStore({ client: redis, prefix: 'guarani:' }),
-    })
+    }),
   );
   app.use(flash());
 

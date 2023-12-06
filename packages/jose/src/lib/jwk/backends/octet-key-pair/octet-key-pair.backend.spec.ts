@@ -42,7 +42,7 @@ describe('Octet Key Pair JSON Web Key Backend', () => {
     it('should throw when passing an unsupported elliptic curve.', async () => {
       // @ts-expect-error Unsupported Elliptic Curve.
       await expect(backend.generate({ curve: 'P-256' })).rejects.toThrow(
-        new TypeError('Unsupported Elliptic Curve "P-256" for JSON Web Key Type "OKP".')
+        new TypeError('Unsupported Elliptic Curve "P-256" for JSON Web Key Type "OKP".'),
       );
     });
 

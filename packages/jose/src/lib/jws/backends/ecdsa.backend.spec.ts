@@ -43,7 +43,7 @@ describe('JSON Web Signature ECDSA using P-256 and SHA-256 Backend', () => {
     Object.setPrototypeOf(key, EllipticCurveKey.prototype);
 
     expect(() => ES256['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "ES256" only accepts "EC" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "ES256" only accepts "EC" JSON Web Keys.'),
     );
   });
 
@@ -52,20 +52,20 @@ describe('JSON Web Signature ECDSA using P-256 and SHA-256 Backend', () => {
 
     expect(() => ES256['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Signature Algorithm "ES256" only accepts the Elliptic Curve "P-256".'
-      )
+        'The JSON Web Signature Algorithm "ES256" only accepts the Elliptic Curve "P-256".',
+      ),
     );
   });
 
   it('should throw when signing with a public key.', async () => {
     await expect(ES256.sign(message, publicKey)).rejects.toThrow(
-      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.')
+      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'),
     );
   });
 
   it('should throw when verifying a wrong signature.', async () => {
     await expect(ES256.verify(Buffer.alloc(0), message, publicKey)).rejects.toThrow(
-      new InvalidJsonWebSignatureException()
+      new InvalidJsonWebSignatureException(),
     );
   });
 
@@ -113,7 +113,7 @@ describe('JSON Web Signature ECDSA using P-384 and SHA-384 Backend', () => {
     Object.setPrototypeOf(key, EllipticCurveKey.prototype);
 
     expect(() => ES384['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "ES384" only accepts "EC" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "ES384" only accepts "EC" JSON Web Keys.'),
     );
   });
 
@@ -122,20 +122,20 @@ describe('JSON Web Signature ECDSA using P-384 and SHA-384 Backend', () => {
 
     expect(() => ES384['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Signature Algorithm "ES384" only accepts the Elliptic Curve "P-384".'
-      )
+        'The JSON Web Signature Algorithm "ES384" only accepts the Elliptic Curve "P-384".',
+      ),
     );
   });
 
   it('should throw when signing with a public key.', async () => {
     await expect(ES384.sign(message, publicKey)).rejects.toThrow(
-      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.')
+      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'),
     );
   });
 
   it('should throw when verifying a wrong signature.', async () => {
     await expect(ES384.verify(Buffer.alloc(0), message, publicKey)).rejects.toThrow(
-      new InvalidJsonWebSignatureException()
+      new InvalidJsonWebSignatureException(),
     );
   });
 
@@ -183,7 +183,7 @@ describe('JSON Web Signature ECDSA using P-521 and SHA-512 Backend', () => {
     Object.setPrototypeOf(key, EllipticCurveKey.prototype);
 
     expect(() => ES512['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "ES512" only accepts "EC" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "ES512" only accepts "EC" JSON Web Keys.'),
     );
   });
 
@@ -192,20 +192,20 @@ describe('JSON Web Signature ECDSA using P-521 and SHA-512 Backend', () => {
 
     expect(() => ES512['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Signature Algorithm "ES512" only accepts the Elliptic Curve "P-521".'
-      )
+        'The JSON Web Signature Algorithm "ES512" only accepts the Elliptic Curve "P-521".',
+      ),
     );
   });
 
   it('should throw when signing with a public key.', async () => {
     await expect(ES512.sign(message, publicKey)).rejects.toThrow(
-      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.')
+      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'),
     );
   });
 
   it('should throw when verifying a wrong signature.', async () => {
     await expect(ES512.verify(Buffer.alloc(0), message, publicKey)).rejects.toThrow(
-      new InvalidJsonWebSignatureException()
+      new InvalidJsonWebSignatureException(),
     );
   });
 

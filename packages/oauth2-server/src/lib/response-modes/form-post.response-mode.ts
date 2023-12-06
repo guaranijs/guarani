@@ -34,7 +34,7 @@ function sanitizeHtml(html: string): string {
  */
 const templateFn = (
   redirectUri: string,
-  parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>
+  parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
 ) => `
 <!DOCTYPE html>
 <html>
@@ -80,7 +80,7 @@ export class FormPostResponseMode implements ResponseModeInterface {
    */
   public createHttpResponse(
     redirectUri: string,
-    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>
+    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
   ): HttpResponse {
     const html = templateFn(redirectUri, removeNullishValues(parameters)).trim();
     return new HttpResponse().html(html);

@@ -37,7 +37,7 @@ export class RsaBackend extends JsonWebKeyBackend {
    */
   public async generate(
     options: GenerateRsaKeyOptions,
-    additionalParameters?: Partial<RsaKeyParameters>
+    additionalParameters?: Partial<RsaKeyParameters>,
   ): Promise<RsaKey> {
     if (!Number.isInteger(options.modulus)) {
       throw new TypeError('The value of the RSA Modulus must be an integer.');

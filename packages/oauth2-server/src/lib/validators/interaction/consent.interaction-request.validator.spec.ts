@@ -97,7 +97,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "consent_challenge".'
+        'Invalid parameter "consent_challenge".',
       );
     });
 
@@ -108,7 +108,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Consent Challenge.'
+        'Invalid Consent Challenge.',
       );
     });
 
@@ -154,7 +154,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "consent_challenge".'
+        'Invalid parameter "consent_challenge".',
       );
     });
 
@@ -165,7 +165,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Consent Challenge.'
+        'Invalid Consent Challenge.',
       );
     });
 
@@ -178,7 +178,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "decision".'
+        'Invalid parameter "decision".',
       );
     });
 
@@ -191,7 +191,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported decision "unknown".'
+        'Unsupported decision "unknown".',
       );
     });
 
@@ -205,7 +205,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "grant_scope".'
+        'Invalid parameter "grant_scope".',
       );
     });
 
@@ -235,7 +235,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'The scope "baz" was not requested by the Client.'
+        'The scope "baz" was not requested by the Client.',
       );
     });
 
@@ -254,7 +254,7 @@ describe('Consent Interaction Request Validator', () => {
           grant,
           decision: 'accept',
           grantedScopes: ['foo', 'bar'],
-        }
+        },
       );
     });
     // #endregion
@@ -269,7 +269,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "error".'
+        'Invalid parameter "error".',
       );
     });
 
@@ -282,7 +282,7 @@ describe('Consent Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "error_description".'
+        'Invalid parameter "error_description".',
       );
     });
 
@@ -297,7 +297,7 @@ describe('Consent Interaction Request Validator', () => {
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
         Reflect.construct(OAuth2Exception, [parameters.error_description as string]),
-        { error: parameters.error as string }
+        { error: parameters.error as string },
       );
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);

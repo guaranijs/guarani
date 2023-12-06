@@ -21,7 +21,7 @@ export class OctetSequenceBackend extends JsonWebKeyBackend {
    */
   public async load(
     data: OctetSequenceKeyParameters,
-    additionalParameters?: Partial<OctetSequenceKeyParameters>
+    additionalParameters?: Partial<OctetSequenceKeyParameters>,
   ): Promise<OctetSequenceKey> {
     return new (await import('./octet-sequence.key')).OctetSequenceKey(data, additionalParameters);
   }
@@ -34,7 +34,7 @@ export class OctetSequenceBackend extends JsonWebKeyBackend {
    */
   public async generate(
     options: GenerateOctetSequenceKeyOptions,
-    additionalParameters?: Partial<OctetSequenceKeyParameters>
+    additionalParameters?: Partial<OctetSequenceKeyParameters>,
   ): Promise<OctetSequenceKey> {
     if (!Number.isInteger(options.length)) {
       throw new TypeError('The length of the Octet Sequence Secret must be an integer.');

@@ -48,7 +48,7 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
     @InjectAll(RESPONSE_MODE) protected override readonly responseModes: ResponseModeInterface[],
     @InjectAll(RESPONSE_TYPE) protected override readonly responseTypes: ResponseTypeInterface[],
     @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[],
-    @InjectAll(PKCE) protected readonly pkces: PkceInterface[]
+    @InjectAll(PKCE) protected readonly pkces: PkceInterface[],
   ) {
     super(scopeHandler, settings, clientService, responseModes, responseTypes, displays);
   }

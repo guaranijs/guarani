@@ -59,7 +59,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
   public constructor(
     private readonly authHandler: AuthHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface
+    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
   ) {}
 
   /**
@@ -147,7 +147,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
       await this.grantService.remove(grant);
 
       const error = new UnmetAuthenticationRequirementsException(
-        `Could not authenticate using the Authentication Context Class Reference "${parameters.acr_values}".`
+        `Could not authenticate using the Authentication Context Class Reference "${parameters.acr_values}".`,
       );
 
       const url = addParametersToUrl(new URL('/oauth/error', this.settings.issuer), error.toJSON());

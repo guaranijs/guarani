@@ -43,7 +43,7 @@ class EddsaBackend extends JsonWebSignatureBackend {
 
     if (cryptoKey.type !== 'private') {
       throw new InvalidJsonWebKeyException(
-        'The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'
+        'The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.',
       );
     }
 
@@ -80,13 +80,13 @@ class EddsaBackend extends JsonWebSignatureBackend {
 
     if (key.kty !== 'OKP') {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "OKP" JSON Web Keys.`
+        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "OKP" JSON Web Keys.`,
       );
     }
 
     if (!this.curves.includes(<Extract<EllipticCurve, 'Ed25519' | 'Ed448'>>key.crv)) {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Signature Algorithm "EdDSA" only accepts the Elliptic Curves ["${this.curves.join('", "')}"].`
+        `The JSON Web Signature Algorithm "EdDSA" only accepts the Elliptic Curves ["${this.curves.join('", "')}"].`,
       );
     }
   }

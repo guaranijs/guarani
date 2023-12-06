@@ -25,14 +25,14 @@ describe('JSON Web Signature Header', () => {
   describe('constructor', () => {
     it.each(invalidAlgs)('should throw when the provided header parameter "alg" is invalid.', (alg) => {
       expect(() => new JsonWebSignatureHeader({ alg })).toThrow(
-        new InvalidJoseHeaderException('Invalid header parameter "alg".')
+        new InvalidJoseHeaderException('Invalid header parameter "alg".'),
       );
     });
 
     it('should throw when the provided header parameter "alg" is unsupported.', () => {
       // @ts-expect-error Unsupported JSON Web Signature Algorithm.
       expect(() => new JsonWebSignatureHeader({ alg: 'unknown' })).toThrow(
-        new UnsupportedAlgorithmException('Unsupported JSON Web Signature Algorithm "unknown".')
+        new UnsupportedAlgorithmException('Unsupported JSON Web Signature Algorithm "unknown".'),
       );
     });
 

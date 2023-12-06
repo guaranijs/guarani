@@ -148,7 +148,7 @@ describe('Interaction Endpoint', () => {
         });
 
         expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
-      }
+      },
     );
 
     it.each(['GET', 'POST'])(
@@ -172,7 +172,7 @@ describe('Interaction Endpoint', () => {
         });
 
         expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
-      }
+      },
     );
 
     it('should return an interaction context response.', async () => {

@@ -55,7 +55,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
   public constructor(
     private readonly authHandler: AuthHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(LOGOUT_TICKET_SERVICE) private readonly logoutTicketService: LogoutTicketServiceInterface
+    @Inject(LOGOUT_TICKET_SERVICE) private readonly logoutTicketService: LogoutTicketServiceInterface,
   ) {}
 
   /**
@@ -116,7 +116,7 @@ export class LogoutInteractionType implements InteractionTypeInterface {
    * @returns Logout Decision Interaction Response.
    */
   private async acceptLogout(
-    context: LogoutDecisionAcceptInteractionContext
+    context: LogoutDecisionAcceptInteractionContext,
   ): Promise<LogoutDecisionInteractionResponse> {
     const { logoutTicket, session } = context;
 

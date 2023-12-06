@@ -148,7 +148,7 @@ describe('Authorization Endpoint', () => {
 
       expect(() => container.resolve(AuthorizationEndpoint)).toThrowWithMessage(
         TypeError,
-        'Missing User Interaction options.'
+        'Missing User Interaction options.',
       );
     });
   });
@@ -235,7 +235,7 @@ describe('Authorization Endpoint', () => {
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -274,7 +274,7 @@ describe('Authorization Endpoint', () => {
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -314,7 +314,7 @@ describe('Authorization Endpoint', () => {
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -471,7 +471,7 @@ describe('Authorization Endpoint', () => {
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -609,7 +609,7 @@ describe('Authorization Endpoint', () => {
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -763,7 +763,7 @@ describe('Authorization Endpoint', () => {
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -812,7 +812,7 @@ describe('Authorization Endpoint', () => {
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -992,7 +992,7 @@ describe('Authorization Endpoint', () => {
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -1042,7 +1042,7 @@ describe('Authorization Endpoint', () => {
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -1219,12 +1219,12 @@ describe('Authorization Endpoint', () => {
       idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
 
       const error = new LoginRequiredException(
-        'The currently authenticated User is not the one expected by the ID Token Hint.'
+        'The currently authenticated User is not the one expected by the ID Token Hint.',
       );
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -1274,12 +1274,12 @@ describe('Authorization Endpoint', () => {
       idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
 
       const error = new LoginRequiredException(
-        'The currently authenticated User is not the one expected by the ID Token Hint.'
+        'The currently authenticated User is not the one expected by the ID Token Hint.',
       );
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -1456,7 +1456,7 @@ describe('Authorization Endpoint', () => {
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);
@@ -1628,7 +1628,7 @@ describe('Authorization Endpoint', () => {
 
       const location = addParametersToUrl(
         'https://server.example.com/oauth/error',
-        Object.assign(error.toJSON(), { state: 'client_state' })
+        Object.assign(error.toJSON(), { state: 'client_state' }),
       );
 
       const response = await endpoint.handle(request);

@@ -72,7 +72,7 @@ describe('Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         UnauthorizedClientException,
-        'This Client is not allowed to request the grant_type "authorization_code".'
+        'This Client is not allowed to request the grant_type "authorization_code".',
       );
     });
 

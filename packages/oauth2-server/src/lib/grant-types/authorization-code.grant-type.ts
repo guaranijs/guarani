@@ -53,7 +53,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
     @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
     @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface,
-    @Optional() private readonly idTokenHandler?: IdTokenHandler
+    @Optional() private readonly idTokenHandler?: IdTokenHandler,
   ) {}
 
   /**
@@ -109,7 +109,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
     authorizationCode: AuthorizationCode,
     client: Client,
     codeVerifier: string,
-    redirectUri: URL
+    redirectUri: URL,
   ): void {
     const { consent, parameters: authorizationCodeParameters } = authorizationCode;
 

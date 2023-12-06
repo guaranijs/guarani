@@ -8,8 +8,8 @@ describe('parse()', () => {
   it('should remove the forbidden keys "__proto__" and "constructor" from the parsed object.', () => {
     expect(
       JSON.parse(
-        '{"foo":"bar","__proto__":{"admin":true},"constructor":{"prototype":{"admin":true}},"x":{"p":"key","__proto__":{"admin":true},"constructor":{"prototype":{"admin":true}}}}'
-      )
+        '{"foo":"bar","__proto__":{"admin":true},"constructor":{"prototype":{"admin":true}},"x":{"p":"key","__proto__":{"admin":true},"constructor":{"prototype":{"admin":true}}}}',
+      ),
     ).toStrictEqual({
       foo: 'bar',
       x: { p: 'key' },

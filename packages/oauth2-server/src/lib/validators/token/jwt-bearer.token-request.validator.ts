@@ -77,7 +77,7 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<JwtBea
     protected readonly scopeHandler: ScopeHandler,
     @Inject(SETTINGS) protected readonly settings: Settings,
     @Inject(USER_SERVICE) protected readonly userService: UserServiceInterface,
-    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[]
+    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
   ) {
     super(clientAuthenticationHandler, grantTypes);
   }
@@ -116,7 +116,7 @@ export class JwtBearerTokenRequestValidator extends TokenRequestValidator<JwtBea
 
       if (header.alg === 'none') {
         throw new InvalidGrantException(
-          'The Authorization Server disallows using the JSON Web Signature Algorithm "none".'
+          'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
         );
       }
 

@@ -49,7 +49,7 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
    */
   public constructor(
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
-    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface
+    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
   ) {}
 
   /**
@@ -63,7 +63,7 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
   public async handle(
     context: CodeAuthorizationContext,
     login: Login,
-    consent: Consent
+    consent: Consent,
   ): Promise<CodeAuthorizationResponse & TokenAuthorizationResponse> {
     const { parameters } = context;
     const { client, scopes, user } = consent;

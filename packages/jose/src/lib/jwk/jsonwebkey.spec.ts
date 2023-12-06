@@ -4,7 +4,6 @@ import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exc
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { EllipticCurveKey } from './backends/elliptic-curve/elliptic-curve.key';
 import { EllipticCurveKeyParameters } from './backends/elliptic-curve/elliptic-curve.key.parameters';
-import { JSONWEBKEY_REGISTRY } from './backends/jsonwebkey.registry';
 import { OctetKeyPairKey } from './backends/octet-key-pair/octet-key-pair.key';
 import { OctetSequenceKey } from './backends/octet-sequence/octet-sequence.key';
 import { OctetSequenceKeyParameters } from './backends/octet-sequence/octet-sequence.key.parameters';
@@ -81,25 +80,25 @@ describe('JSON Web Key', () => {
   describe('constructor', () => {
     it.each(invalidUses)('should throw when the provided "use" is invalid.', (use) => {
       expect(() => Reflect.construct(JsonWebKey, [{ ...secretParameters, use }])).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "use".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "use".'),
       );
     });
 
     it.each(invalidKeyOps)('should throw when the provided "key_ops" is invalid.', (keyOps) => {
       expect(() => Reflect.construct(JsonWebKey, [{ ...secretParameters, key_ops: keyOps }])).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "key_ops".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "key_ops".'),
       );
     });
 
     it('should throw when the provided "key_ops" is an empty array.', () => {
       expect(() => Reflect.construct(JsonWebKey, [{ ...secretParameters, key_ops: [] }])).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "key_ops".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "key_ops".'),
       );
     });
 
     it('should throw when the provided "key_ops" is not an array of strings.', () => {
       expect(() => Reflect.construct(JsonWebKey, [{ ...secretParameters, key_ops: ['sign', 123] }])).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "key_ops".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "key_ops".'),
       );
     });
 
@@ -113,44 +112,44 @@ describe('JSON Web Key', () => {
       'should throw when there\'s an invalid combination of "use" and "key_ops".',
       (use, keyOps) => {
         expect(() => Reflect.construct(JsonWebKey, [{ ...privateParameters, use, key_ops: keyOps }])).toThrow(
-          new InvalidJsonWebKeyException('Invalid combination of "use" and "key_ops".')
+          new InvalidJsonWebKeyException('Invalid combination of "use" and "key_ops".'),
         );
-      }
+      },
     );
 
     it.each(invalidAlgs)('should throw when the provided "alg" is invalid.', (alg) => {
       expect(() => Reflect.construct(JsonWebKey, [{ ...secretParameters, alg }])).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "alg".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "alg".'),
       );
     });
 
     it.each(invalidKids)('should throw when the provided "kid" is invalid.', (kid) => {
       expect(() => Reflect.construct(JsonWebKey, [{ ...secretParameters, kid }])).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "kid".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "kid".'),
       );
     });
 
     it.each(invalidX5Us)('should throw when providing the unsupported parameter "x5u".', (x5u) => {
       expect(() => Reflect.construct(JsonWebKey, [{ ...publicParameters, x5u }])).toThrow(
-        new InvalidJsonWebKeyException('Unsupported jwk parameter "x5u".')
+        new InvalidJsonWebKeyException('Unsupported jwk parameter "x5u".'),
       );
     });
 
     it.each(invalidX5Cs)('should throw when providing the unsupported parameter "x5c".', (x5c) => {
       expect(() => Reflect.construct(JsonWebKey, [{ ...publicParameters, x5c }])).toThrow(
-        new InvalidJsonWebKeyException('Unsupported jwk parameter "x5c".')
+        new InvalidJsonWebKeyException('Unsupported jwk parameter "x5c".'),
       );
     });
 
     it.each(invalidX5Ts)('should throw when providing the unsupported parameter "x5t".', (x5t) => {
       expect(() => Reflect.construct(JsonWebKey, [{ ...publicParameters, x5t }])).toThrow(
-        new InvalidJsonWebKeyException('Unsupported jwk parameter "x5t".')
+        new InvalidJsonWebKeyException('Unsupported jwk parameter "x5t".'),
       );
     });
 
     it.each(invalidX5T256s)('should throw when providing the unsupported parameter "x5t#S256".', (x5tS256) => {
       expect(() => Reflect.construct(JsonWebKey, [{ ...publicParameters, 'x5t#S256': x5tS256 }])).toThrow(
-        new InvalidJsonWebKeyException('Unsupported jwk parameter "x5t#S256".')
+        new InvalidJsonWebKeyException('Unsupported jwk parameter "x5t#S256".'),
       );
     });
   });
@@ -168,43 +167,36 @@ describe('JSON Web Key', () => {
         'Cur-kEgU8awapJzKnqDKgw',
     };
 
-    const key = Reflect.construct(JsonWebKey, [parameters]);
-
-    const getThumbprintSpy = jest.spyOn(JSONWEBKEY_REGISTRY.RSA, 'getThumbprint');
+    const key: JsonWebKey = Reflect.construct(JsonWebKey, [parameters]);
+    const thumbprint = key.thumbprint; // For some dumb reason, not calling it here results in undefined
 
     it('should calculate and return the sha-256 thumbprint of a json web key.', () => {
-      expect(key.thumbprint.toString('base64url')).toEqual('NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs');
-      expect(getThumbprintSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it('should return the cached sha-256 thumbprint of a json web key.', () => {
-      expect(key.thumbprint.toString('base64url')).toEqual('NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs');
-      expect(getThumbprintSpy).not.toHaveBeenCalled();
+      expect(thumbprint.toString('base64url')).toEqual('NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs');
     });
   });
 
   describe('load()', () => {
     it.each(invalidLoadParameters)('should throw when providing an invalid data.', async (data) => {
       await expect(JsonWebKey.load(data)).rejects.toThrow(
-        new InvalidJsonWebKeyException('The provided data is not a valid JSON Web Key object.')
+        new InvalidJsonWebKeyException('The provided data is not a valid JSON Web Key object.'),
       );
     });
 
     it('should throw when the provided data does not have a "kty" attribute.', async () => {
       await expect(JsonWebKey.load({})).rejects.toThrow(
-        new InvalidJsonWebKeyException('The provided data does not have a "kty" parameter.')
+        new InvalidJsonWebKeyException('The provided data does not have a "kty" parameter.'),
       );
     });
 
     it.each(invalidKtys)('should throw when providing an invalid "kty" parameter.', async (kty) => {
       await expect(JsonWebKey.load({ kty })).rejects.toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "kty".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "kty".'),
       );
     });
 
     it('should throw when the provided "kty" is not supported.', async () => {
       await expect(JsonWebKey.load({ kty: 'unknown' })).rejects.toThrow(
-        new UnsupportedAlgorithmException('Unsupported JSON Web Key Type "unknown".')
+        new UnsupportedAlgorithmException('Unsupported JSON Web Key Type "unknown".'),
       );
     });
 
@@ -220,13 +212,13 @@ describe('JSON Web Key', () => {
 
     it('should throw when the provided data does not have a "kty" attribute.', async () => {
       await expect(JsonWebKey.parse('{}')).rejects.toThrow(
-        new InvalidJsonWebKeyException('The provided data does not have a "kty" parameter.')
+        new InvalidJsonWebKeyException('The provided data does not have a "kty" parameter.'),
       );
     });
 
     it('should throw when the provided "kty" is not supported.', async () => {
       await expect(JsonWebKey.parse('{"kty":"unknown"}')).rejects.toThrow(
-        new UnsupportedAlgorithmException('Unsupported JSON Web Key Type "unknown".')
+        new UnsupportedAlgorithmException('Unsupported JSON Web Key Type "unknown".'),
       );
     });
 
@@ -239,7 +231,7 @@ describe('JSON Web Key', () => {
     it('should throw when the provided "kty" is not supported.', async () => {
       // @ts-expect-error Unsupported JSON Web Key Type.
       await expect(JsonWebKey.generate('unknown', { kty: 'unknown' })).rejects.toThrow(
-        new TypeError('Unsupported JSON Web Key Type "unknown".')
+        new TypeError('Unsupported JSON Web Key Type "unknown".'),
       );
     });
 

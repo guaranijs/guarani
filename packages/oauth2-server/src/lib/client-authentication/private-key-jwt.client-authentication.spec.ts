@@ -80,7 +80,7 @@ describe('Private Key JWT Client Authentication Method', () => {
 
       await expect(clientAuthentication['getClientKey'](client, header)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'This Client is not allowed to use the Authentication Method "private_key_jwt".'
+        'This Client is not allowed to use the Authentication Method "private_key_jwt".',
       );
     });
 
@@ -93,10 +93,10 @@ describe('Private Key JWT Client Authentication Method', () => {
       };
 
       await expect(
-        clientAuthentication['getClientKey'](client, { ...header, kid: 'rsa-key' })
+        clientAuthentication['getClientKey'](client, { ...header, kid: 'rsa-key' }),
       ).rejects.toThrowWithMessage(
         InvalidClientException,
-        'This Client is not allowed to use the Authentication Method "private_key_jwt".'
+        'This Client is not allowed to use the Authentication Method "private_key_jwt".',
       );
     });
 

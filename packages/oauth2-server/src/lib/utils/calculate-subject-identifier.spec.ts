@@ -25,7 +25,7 @@ describe('calculateSubjectIdentifier()', () => {
     const settings = <Settings>{ secretKey: '0123456789abcdef', maxLocalSubjectLength: 16 };
 
     expect(calculateSubjectIdentifier(user, client, settings)).toEqual(
-      'RJnbyZmX5RN85M5QV9glUpYUmzyA1OAzWyNDruZDRliW0YjrJhYrHIsAeCjSCOkHQvnJkcS3ZNQ_uvYgQ0QzXhvdxbmhKhbEDoYYB8kBknM'
+      'RJnbyZmX5RN85M5QV9glUpYUmzyA1OAzWyNDruZDRliW0YjrJhYrHIsAeCjSCOkHQvnJkcS3ZNQ_uvYgQ0QzXhvdxbmhKhbEDoYYB8kBknM',
     );
   });
 });

@@ -38,7 +38,7 @@ export class OctetKeyPairBackend extends JsonWebKeyBackend {
    */
   public async load(
     data: OctetKeyPairKeyParameters,
-    additionalParameters?: Partial<OctetKeyPairKeyParameters>
+    additionalParameters?: Partial<OctetKeyPairKeyParameters>,
   ): Promise<OctetKeyPairKey> {
     return new (await import('./octet-key-pair.key')).OctetKeyPairKey(data, additionalParameters);
   }
@@ -51,7 +51,7 @@ export class OctetKeyPairBackend extends JsonWebKeyBackend {
    */
   public async generate(
     options: GenerateOctetKeyPairKeyOptions,
-    additionalParameters?: Partial<OctetKeyPairKeyParameters>
+    additionalParameters?: Partial<OctetKeyPairKeyParameters>,
   ): Promise<OctetKeyPairKey> {
     if (!Object.hasOwn(this.curves, options.curve)) {
       throw new TypeError(`Unsupported Elliptic Curve "${options.curve}" for JSON Web Key Type "OKP".`);

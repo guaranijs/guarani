@@ -136,7 +136,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "assertion".'
+        'Invalid parameter "assertion".',
       );
     });
 
@@ -149,7 +149,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -177,7 +177,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The Authorization Server disallows using the JSON Web Signature Algorithm "none".'
+        'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
       );
     });
 
@@ -204,7 +204,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -232,7 +232,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -259,7 +259,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -286,7 +286,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -314,7 +314,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -341,7 +341,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -373,7 +373,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -406,7 +406,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -435,7 +435,7 @@ describe('JWT Bearer Token Request Validator', () => {
           kid: 'LHM5p37TAesdI-tFqs7LOmDufKjrU0nq1jFRwI_7mvI',
           typ: 'JWT',
         },
-        new JsonWebTokenClaims(claims).toBuffer()
+        new JsonWebTokenClaims(claims).toBuffer(),
       );
 
       const assertion = await jws.sign(key);
@@ -454,7 +454,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -483,7 +483,7 @@ describe('JWT Bearer Token Request Validator', () => {
           kid: 'ec-key',
           typ: 'JWT',
         },
-        new JsonWebTokenClaims(claims).toBuffer()
+        new JsonWebTokenClaims(claims).toBuffer(),
       );
 
       const assertion = await jws.sign(key);
@@ -504,7 +504,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -533,7 +533,7 @@ describe('JWT Bearer Token Request Validator', () => {
           kid: 'LHM5p37TAesdI-tFqs7LOmDufKjrU0nq1jFRwI_7mvI',
           typ: 'JWT',
         },
-        new JsonWebTokenClaims(claims).toBuffer()
+        new JsonWebTokenClaims(claims).toBuffer(),
       );
 
       const assertion = await jws.sign(key);
@@ -554,7 +554,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -583,7 +583,7 @@ describe('JWT Bearer Token Request Validator', () => {
           kid: 'LHM5p37TAesdI-tFqs7LOmDufKjrU0nq1jFRwI_7mvI',
           typ: 'JWT',
         },
-        new JsonWebTokenClaims(claims).toBuffer()
+        new JsonWebTokenClaims(claims).toBuffer(),
       );
 
       const assertion = await jws.sign(key);
@@ -604,7 +604,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -633,7 +633,7 @@ describe('JWT Bearer Token Request Validator', () => {
           kid: 'LHM5p37TAesdI-tFqs7LOmDufKjrU0nq1jFRwI_7mvI',
           typ: 'JWT',
         },
-        new JsonWebTokenClaims(claims).toBuffer()
+        new JsonWebTokenClaims(claims).toBuffer(),
       );
 
       const assertion = await jws.sign(key);
@@ -654,7 +654,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -683,7 +683,7 @@ describe('JWT Bearer Token Request Validator', () => {
           kid: 'LHM5p37TAesdI-tFqs7LOmDufKjrU0nq1jFRwI_7mvI',
           typ: 'JWT',
         },
-        new JsonWebTokenClaims(claims).toBuffer()
+        new JsonWebTokenClaims(claims).toBuffer(),
       );
 
       const assertion = await jws.sign(key);
@@ -705,7 +705,7 @@ describe('JWT Bearer Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The provided Assertion is invalid.'
+        'The provided Assertion is invalid.',
       );
     });
 
@@ -734,7 +734,7 @@ describe('JWT Bearer Token Request Validator', () => {
           kid: 'LHM5p37TAesdI-tFqs7LOmDufKjrU0nq1jFRwI_7mvI',
           typ: 'JWT',
         },
-        new JsonWebTokenClaims(claims).toBuffer()
+        new JsonWebTokenClaims(claims).toBuffer(),
       );
 
       const assertion = await jws.sign(key);
@@ -796,7 +796,7 @@ describe('JWT Bearer Token Request Validator', () => {
           kid: 'LHM5p37TAesdI-tFqs7LOmDufKjrU0nq1jFRwI_7mvI',
           typ: 'JWT',
         },
-        new JsonWebTokenClaims(claims).toBuffer()
+        new JsonWebTokenClaims(claims).toBuffer(),
       );
 
       const assertion = await jws.sign(key);

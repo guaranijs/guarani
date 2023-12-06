@@ -228,7 +228,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
    */
   public static async load<T extends JsonWebKeyParameters>(
     data: unknown,
-    additionalParameters: Partial<T> = {}
+    additionalParameters: Partial<T> = {},
   ): Promise<JsonWebKey<T>> {
     if (data instanceof JsonWebKey) {
       return data;
@@ -266,7 +266,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
    */
   public static async parse<T extends JsonWebKeyParameters>(
     data: string,
-    additionalParameters: Partial<T> = {}
+    additionalParameters: Partial<T> = {},
   ): Promise<JsonWebKey<T>> {
     try {
       return await this.load<T>(JSON.parse(data), additionalParameters);
@@ -292,7 +292,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
   public static async generate(
     keyType: 'EC',
     options: GenerateEllipticCurveKeyOptions,
-    additionalParameters?: Partial<EllipticCurveKeyParameters>
+    additionalParameters?: Partial<EllipticCurveKeyParameters>,
   ): Promise<EllipticCurveKey>;
 
   /**
@@ -305,7 +305,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
   public static async generate(
     keyType: 'OKP',
     options: GenerateOctetKeyPairKeyOptions,
-    additionalParameters?: Partial<OctetKeyPairKeyParameters>
+    additionalParameters?: Partial<OctetKeyPairKeyParameters>,
   ): Promise<OctetKeyPairKey>;
 
   /**
@@ -318,7 +318,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
   public static async generate(
     keyType: 'RSA',
     options: GenerateRsaKeyOptions,
-    additionalParameters?: Partial<RsaKeyParameters>
+    additionalParameters?: Partial<RsaKeyParameters>,
   ): Promise<RsaKey>;
 
   /**
@@ -331,7 +331,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
   public static async generate(
     keyType: 'oct',
     options: GenerateOctetSequenceKeyOptions,
-    additionalParameters?: Partial<OctetSequenceKeyParameters>
+    additionalParameters?: Partial<OctetSequenceKeyParameters>,
   ): Promise<OctetSequenceKey>;
 
   /**
@@ -344,7 +344,7 @@ export abstract class JsonWebKey<T extends JsonWebKeyParameters = JsonWebKeyPara
   public static async generate<T extends JsonWebKeyParameters>(
     keyType: JsonWebKeyType,
     options: Dictionary<any>,
-    additionalParameters: Partial<T> = {}
+    additionalParameters: Partial<T> = {},
   ): Promise<JsonWebKey<T>> {
     if (!Object.hasOwn(JSONWEBKEY_REGISTRY, keyType)) {
       throw new TypeError(`Unsupported JSON Web Key Type "${keyType}".`);

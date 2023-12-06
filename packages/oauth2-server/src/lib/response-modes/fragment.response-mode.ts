@@ -27,7 +27,7 @@ export class FragmentResponseMode implements ResponseModeInterface {
    */
   public createHttpResponse(
     redirectUri: string,
-    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>
+    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
   ): HttpResponse {
     const url = addParametersToUrl(redirectUri, parameters, 'hash');
     return new HttpResponse().redirect(url);

@@ -59,7 +59,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
   public constructor(
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(CONSENT_SERVICE) private readonly consentService: ConsentServiceInterface,
-    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface
+    @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
   ) {}
 
   /**
@@ -125,7 +125,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * @returns Consent Decision Interaction Response.
    */
   private async acceptConsent(
-    context: ConsentDecisionAcceptInteractionContext
+    context: ConsentDecisionAcceptInteractionContext,
   ): Promise<ConsentDecisionInteractionResponse> {
     const { grant, grantedScopes } = context;
 
@@ -159,7 +159,7 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * @returns Consent Decision Interaction Response.
    */
   private async denyConsent(
-    context: ConsentDecisionDenyInteractionContext
+    context: ConsentDecisionDenyInteractionContext,
   ): Promise<ConsentDecisionInteractionResponse> {
     const { grant, error } = context;
 

@@ -19,7 +19,7 @@ describe('Refresh Token Flow', () => {
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,
-      Reflect.get(global, 'endToEndAuthorizationServerOptions')
+      Reflect.get(global, 'endToEndAuthorizationServerOptions'),
     );
 
     await authorizationServer.bootstrap();

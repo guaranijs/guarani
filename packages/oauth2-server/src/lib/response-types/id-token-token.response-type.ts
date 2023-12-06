@@ -48,7 +48,7 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
    */
   public constructor(
     private readonly idTokenHandler: IdTokenHandler,
-    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface
+    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
   ) {}
 
   /**
@@ -62,7 +62,7 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
   public async handle(
     _context: AuthorizationContext,
     login: Login,
-    consent: Consent
+    consent: Consent,
   ): Promise<TokenAuthorizationResponse & IdTokenAuthorizationResponse> {
     const { client, scopes, user } = consent;
 

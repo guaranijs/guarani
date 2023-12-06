@@ -52,7 +52,7 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
   public async wrap(
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     wrapKey: EllipticCurveKey | OctetKeyPairKey,
-    header: EcdhHeaderParameters
+    header: EcdhHeaderParameters,
   ): Promise<[Buffer, Buffer, Partial<EcdhHeaderParameters>]> {
     this.validateJsonWebKey(wrapKey);
 
@@ -79,7 +79,7 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
 
     const [contentEncryptionKey, wrappedKey] = await aesKeyWrapBackend.wrap(
       contentEncryptionBackend,
-      new OctetSequenceKey({ kty: 'oct', k: sharedSecret.toString('base64url') })
+      new OctetSequenceKey({ kty: 'oct', k: sharedSecret.toString('base64url') }),
     );
 
     return [contentEncryptionKey, wrappedKey, headerParameters];
@@ -98,7 +98,7 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     unwrapKey: EllipticCurveKey | OctetKeyPairKey,
     wrappedKey: Buffer,
-    header: EcdhHeaderParameters
+    header: EcdhHeaderParameters,
   ): Promise<Buffer> {
     this.validateJsonWebKey(unwrapKey);
 
@@ -137,14 +137,14 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
 
     if (key.kty !== 'EC' && key.kty !== 'OKP') {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts ["EC", "OKP"] JSON Web Keys.`
+        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts ["EC", "OKP"] JSON Web Keys.`,
       );
     }
 
     if (!this.curves.includes(<Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521' | 'X25519' | 'X448'>>key.crv)) {
       throw new InvalidJsonWebKeyException(
         `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" ` +
-          `only accepts the Elliptic Curves ["${this.curves.join('", "')}"].`
+          `only accepts the Elliptic Curves ["${this.curves.join('", "')}"].`,
       );
     }
   }
@@ -161,7 +161,7 @@ class EcdhBackend extends JsonWebEncryptionKeyWrapBackend {
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     key: EllipticCurveKey | OctetKeyPairKey,
     ephemeralPublicKey: EllipticCurveKey | OctetKeyPairKey,
-    header: EcdhHeaderParameters
+    header: EcdhHeaderParameters,
   ): Promise<Buffer> {
     const { alg, apu, apv, enc } = header;
 

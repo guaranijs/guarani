@@ -101,7 +101,7 @@ describe('Logout Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "logout_challenge".'
+        'Invalid parameter "logout_challenge".',
       );
     });
 
@@ -112,7 +112,7 @@ describe('Logout Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Logout Challenge.'
+        'Invalid Logout Challenge.',
       );
     });
 
@@ -158,7 +158,7 @@ describe('Logout Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "logout_challenge".'
+        'Invalid parameter "logout_challenge".',
       );
     });
 
@@ -169,7 +169,7 @@ describe('Logout Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Logout Challenge.'
+        'Invalid Logout Challenge.',
       );
     });
 
@@ -182,7 +182,7 @@ describe('Logout Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "decision".'
+        'Invalid parameter "decision".',
       );
     });
 
@@ -195,7 +195,7 @@ describe('Logout Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported decision "unknown".'
+        'Unsupported decision "unknown".',
       );
     });
 
@@ -209,7 +209,7 @@ describe('Logout Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "session_id".'
+        'Invalid parameter "session_id".',
       );
     });
 
@@ -223,7 +223,7 @@ describe('Logout Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Session Identifier.'
+        'Invalid Session Identifier.',
       );
     });
 
@@ -256,7 +256,7 @@ describe('Logout Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "error".'
+        'Invalid parameter "error".',
       );
     });
 
@@ -269,7 +269,7 @@ describe('Logout Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "error_description".'
+        'Invalid parameter "error_description".',
       );
     });
 
@@ -284,7 +284,7 @@ describe('Logout Interaction Request Validator', () => {
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
         Reflect.construct(OAuth2Exception, [parameters.error_description as string]),
-        { error: parameters.error as string }
+        { error: parameters.error as string },
       );
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);

@@ -11,7 +11,7 @@ export class JsonWebKeyNotFoundException extends JoseException {
    */
   public constructor(
     message = 'No JSON Web Key matches the criteria at the JSON Web Key Set.',
-    options?: ErrorOptions
+    options?: ErrorOptions,
   ) {
     super(message, options);
   }

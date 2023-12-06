@@ -54,7 +54,7 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
   public constructor(
     private readonly idTokenHandler: IdTokenHandler,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
-    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface
+    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
   ) {}
 
   /**
@@ -68,7 +68,7 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
   public async handle(
     context: CodeAuthorizationContext,
     login: Login,
-    consent: Consent
+    consent: Consent,
   ): Promise<CodeAuthorizationResponse & IdTokenAuthorizationResponse & TokenAuthorizationResponse> {
     const { parameters } = context;
     const { client, scopes, user } = consent;
@@ -85,7 +85,7 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
       null,
       null,
       accessToken,
-      authorizationCode
+      authorizationCode,
     );
 
     const response = createTokenResponse(accessToken, null) as CodeAuthorizationResponse &

@@ -24,19 +24,19 @@ describe('Octet Sequence JSON Web Key Backend', () => {
   describe('generate()', () => {
     it.each(invalidLength)('should throw when passing an invalid length.', async (length) => {
       await expect(backend.generate({ length })).rejects.toThrow(
-        new TypeError('The length of the Octet Sequence Secret must be an integer.')
+        new TypeError('The length of the Octet Sequence Secret must be an integer.'),
       );
     });
 
     it('should throw when providing a length zero.', async () => {
       await expect(backend.generate({ length: 0 })).rejects.toThrow(
-        new TypeError('The length of the Octet Sequence Secret must be greater than zero.')
+        new TypeError('The length of the Octet Sequence Secret must be greater than zero.'),
       );
     });
 
     it('should throw when providing a negative length.', async () => {
       await expect(backend.generate({ length: -1 })).rejects.toThrow(
-        new TypeError('The length of the Octet Sequence Secret must be greater than zero.')
+        new TypeError('The length of the Octet Sequence Secret must be greater than zero.'),
       );
     });
 

@@ -29,14 +29,14 @@ describe('Http Request', () => {
     it.each(invalidHttpMethods)('should throw when providing an invalid http method.', (method) => {
       expect(() => new HttpRequest(<HttpRequestParameters>{ method })).toThrowWithMessage(
         TypeError,
-        'Invalid Http Method.'
+        'Invalid Http Method.',
       );
     });
 
     it.each(unsupportedHttpMethods)('should throw when providing an unsupported http method.', (method) => {
       expect(() => new HttpRequest(<HttpRequestParameters>{ method })).toThrowWithMessage(
         TypeError,
-        `Unsupported Http Method "${method}".`
+        `Unsupported Http Method "${method}".`,
       );
     });
 
@@ -135,7 +135,7 @@ describe('Http Request', () => {
 
       expect(() => request.form()).toThrowWithMessage(
         UnsupportedMediaTypeException,
-        'Unexpected Content Type "application/json".'
+        'Unexpected Content Type "application/json".',
       );
     });
   });
@@ -154,7 +154,7 @@ describe('Http Request', () => {
 
       expect(() => request.json()).toThrowWithMessage(
         UnsupportedMediaTypeException,
-        'Unexpected Content Type "application/x-www-form-urlencoded".'
+        'Unexpected Content Type "application/x-www-form-urlencoded".',
       );
     });
   });

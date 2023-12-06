@@ -31,7 +31,7 @@ export class ClientCredentialsTokenRequestValidator extends TokenRequestValidato
   public constructor(
     protected override readonly clientAuthenticationHandler: ClientAuthenticationHandler,
     protected readonly scopeHandler: ScopeHandler,
-    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[]
+    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
   ) {
     super(clientAuthenticationHandler, grantTypes);
   }

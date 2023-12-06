@@ -34,7 +34,7 @@ export class DeviceCodeTokenRequestValidator extends TokenRequestValidator<Devic
   public constructor(
     protected override readonly clientAuthenticationHandler: ClientAuthenticationHandler,
     @Inject(DEVICE_CODE_SERVICE) protected readonly deviceCodeService: DeviceCodeServiceInterface,
-    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[]
+    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
   ) {
     super(clientAuthenticationHandler, grantTypes);
   }

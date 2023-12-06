@@ -54,7 +54,7 @@ export class IdTokenResponseType implements ResponseTypeInterface {
   public async handle(
     _context: AuthorizationContext,
     login: Login,
-    consent: Consent
+    consent: Consent,
   ): Promise<IdTokenAuthorizationResponse> {
     const { scopes } = consent;
 

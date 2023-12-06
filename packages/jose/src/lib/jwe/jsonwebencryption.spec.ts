@@ -35,7 +35,7 @@ describe('JSON Web Encryption', () => {
   describe('constructor', () => {
     it.each(invalidPlaintexts)('should throw when the provided plaintext is invalid.', (invalidPlaintext) => {
       expect(() => new JsonWebEncryption(header, invalidPlaintext)).toThrow(
-        new TypeError('Invalid JSON Web Encryption Plaintext.')
+        new TypeError('Invalid JSON Web Encryption Plaintext.'),
       );
     });
 
@@ -54,7 +54,7 @@ describe('JSON Web Encryption', () => {
       'should return false when the format of the provided token is invalid.',
       (invalidToken) => {
         expect(JsonWebEncryption.isJsonWebEncryption(invalidToken)).toBeFalse();
-      }
+      },
     );
 
     it('should return true when the provided data has a valid json web encryption token format.', () => {
@@ -83,29 +83,29 @@ describe('JSON Web Encryption', () => {
   describe('decrypt()', () => {
     it.each(invalidKeys)('should throw when the provided json web key is invalid.', async (invalidKey) => {
       await expect(JsonWebEncryption.decrypt(token, invalidKey, [], [])).rejects.toThrow(
-        new InvalidJsonWebKeyException()
+        new InvalidJsonWebKeyException(),
       );
     });
 
     it('should throw when the key wrap algorithm of the token does not match the expected algorithms.', async () => {
       await expect(JsonWebEncryption.decrypt(token, wrapKey, ['ECDH-ES'], [])).rejects.toThrow(
         new InvalidJsonWebEncryptionException(
-          'The JSON Web Encryption Key Wrap Algorithm "A128KW" does not match the expected algorithms.'
-        )
+          'The JSON Web Encryption Key Wrap Algorithm "A128KW" does not match the expected algorithms.',
+        ),
       );
     });
 
     it('should throw when the key wrap algorithm of the token does not match the expected algorithms.', async () => {
       await expect(JsonWebEncryption.decrypt(token, wrapKey, ['A128KW'], ['A256GCM'])).rejects.toThrow(
         new InvalidJsonWebEncryptionException(
-          'The JSON Web Encryption Content Encryption Algorithm "A128CBC-HS256" does not match the expected algorithms.'
-        )
+          'The JSON Web Encryption Content Encryption Algorithm "A128CBC-HS256" does not match the expected algorithms.',
+        ),
       );
     });
 
     it('should throw when the wrap key is not found.', async () => {
       await expect(JsonWebEncryption.decrypt(token, async () => null, ['A128KW'], ['A128CBC-HS256'])).rejects.toThrow(
-        new InvalidJsonWebEncryptionException('The provided unwrap key is invalid.')
+        new InvalidJsonWebEncryptionException('The provided unwrap key is invalid.'),
       );
     });
 
@@ -122,7 +122,7 @@ describe('JSON Web Encryption', () => {
       const jwe = new JsonWebEncryption(header, plaintext);
 
       await expect(jwe.encrypt(async () => null)).rejects.toThrow(
-        new InvalidJsonWebEncryptionException('The provided wrap key is invalid.')
+        new InvalidJsonWebEncryptionException('The provided wrap key is invalid.'),
       );
     });
 
@@ -130,7 +130,7 @@ describe('JSON Web Encryption', () => {
       const jwe = new JsonWebEncryption(header, plaintext);
 
       await expect(jwe.encrypt(wrapKey)).resolves.toMatch(
-        /^[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+$/
+        /^[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+$/,
       );
     });
   });

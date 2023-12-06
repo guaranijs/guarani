@@ -21,7 +21,7 @@ describe('JSON Web Token Claims', () => {
       const data = Buffer.from(JSON.stringify({ iss }), 'utf8');
 
       await expect(JsonWebTokenClaims.parse(data)).rejects.toThrow(
-        new InvalidJsonWebTokenClaimException('Invalid claim "iss".')
+        new InvalidJsonWebTokenClaimException('Invalid claim "iss".'),
       );
     });
 
@@ -29,7 +29,7 @@ describe('JSON Web Token Claims', () => {
       const data = Buffer.from(JSON.stringify({ sub }), 'utf8');
 
       await expect(JsonWebTokenClaims.parse(data)).rejects.toThrow(
-        new InvalidJsonWebTokenClaimException('Invalid claim "sub".')
+        new InvalidJsonWebTokenClaimException('Invalid claim "sub".'),
       );
     });
 
@@ -39,16 +39,16 @@ describe('JSON Web Token Claims', () => {
         const data = Buffer.from(JSON.stringify({ aud }), 'utf8');
 
         await expect(JsonWebTokenClaims.parse(data)).rejects.toThrow(
-          new InvalidJsonWebTokenClaimException('Invalid claim "aud".')
+          new InvalidJsonWebTokenClaimException('Invalid claim "aud".'),
         );
-      }
+      },
     );
 
     it.each(invalidExps)('should throw when the provided claim "exp" is invalid.', async (exp) => {
       const data = Buffer.from(JSON.stringify({ exp }), 'utf8');
 
       await expect(JsonWebTokenClaims.parse(data)).rejects.toThrow(
-        new InvalidJsonWebTokenClaimException('Invalid claim "exp".')
+        new InvalidJsonWebTokenClaimException('Invalid claim "exp".'),
       );
     });
 
@@ -56,7 +56,7 @@ describe('JSON Web Token Claims', () => {
       const data = Buffer.from(JSON.stringify({ nbf }), 'utf8');
 
       await expect(JsonWebTokenClaims.parse(data)).rejects.toThrow(
-        new InvalidJsonWebTokenClaimException('Invalid claim "nbf".')
+        new InvalidJsonWebTokenClaimException('Invalid claim "nbf".'),
       );
     });
 
@@ -64,7 +64,7 @@ describe('JSON Web Token Claims', () => {
       const data = Buffer.from(JSON.stringify({ iat }), 'utf8');
 
       await expect(JsonWebTokenClaims.parse(data)).rejects.toThrow(
-        new InvalidJsonWebTokenClaimException('Invalid claim "iat".')
+        new InvalidJsonWebTokenClaimException('Invalid claim "iat".'),
       );
     });
 
@@ -72,7 +72,7 @@ describe('JSON Web Token Claims', () => {
       const data = Buffer.from(JSON.stringify({ jti }), 'utf8');
 
       await expect(JsonWebTokenClaims.parse(data)).rejects.toThrow(
-        new InvalidJsonWebTokenClaimException('Invalid claim "jti".')
+        new InvalidJsonWebTokenClaimException('Invalid claim "jti".'),
       );
     });
 
@@ -99,7 +99,7 @@ describe('JSON Web Token Claims', () => {
       };
 
       await expect(JsonWebTokenClaims.parse(data, options)).rejects.toThrow(
-        new InvalidJsonWebTokenClaimException('Cannot have both "value" and "values" options for a claim.')
+        new InvalidJsonWebTokenClaimException('Cannot have both "value" and "values" options for a claim.'),
       );
     });
 
@@ -111,7 +111,7 @@ describe('JSON Web Token Claims', () => {
       };
 
       await expect(JsonWebTokenClaims.parse(data, options)).rejects.toThrow(
-        new InvalidJsonWebTokenClaimException('Missing required claim "sub".')
+        new InvalidJsonWebTokenClaimException('Missing required claim "sub".'),
       );
     });
 
@@ -133,7 +133,7 @@ describe('JSON Web Token Claims', () => {
       };
 
       await expect(JsonWebTokenClaims.parse(data, options)).rejects.toThrow(
-        new InvalidJsonWebTokenClaimException('Mismatching expected value for claim "iss".')
+        new InvalidJsonWebTokenClaimException('Mismatching expected value for claim "iss".'),
       );
     });
 
@@ -157,9 +157,9 @@ describe('JSON Web Token Claims', () => {
         };
 
         await expect(JsonWebTokenClaims.parse(data, options)).rejects.toThrow(
-          new InvalidJsonWebTokenClaimException('Expected an array for the option "values".')
+          new InvalidJsonWebTokenClaimException('Expected an array for the option "values".'),
         );
-      }
+      },
     );
 
     it.each(valuesOptions)(
@@ -172,9 +172,9 @@ describe('JSON Web Token Claims', () => {
         };
 
         await expect(JsonWebTokenClaims.parse(data, options)).rejects.toThrow(
-          new InvalidJsonWebTokenClaimException('Mismatching expected value for claim "iss".')
+          new InvalidJsonWebTokenClaimException('Mismatching expected value for claim "iss".'),
         );
-      }
+      },
     );
 
     it('should create an instance of json web token claims.', async () => {

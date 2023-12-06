@@ -33,7 +33,7 @@ import { RegistrationRequestValidator } from './registration-request.validator';
  * Abstract Base Class of the Post and Put Registration Request Validators.
  */
 export abstract class PostAndPutRegistrationRequestValidator<
-  TContext extends PostRegistrationContext | PutRegistrationContext = PostRegistrationContext | PutRegistrationContext
+  TContext extends PostRegistrationContext | PutRegistrationContext = PostRegistrationContext | PutRegistrationContext,
 > extends RegistrationRequestValidator<TContext> {
   /**
    * Instantiates a new Dynamic Registration Request Validator.
@@ -47,7 +47,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
     protected readonly scopeHandler: ScopeHandler,
     protected readonly clientAuthorizationHandler: ClientAuthorizationHandler,
     protected readonly accessTokenService: AccessTokenServiceInterface,
-    protected readonly settings: Settings
+    protected readonly settings: Settings,
   ) {
     super();
   }
@@ -262,7 +262,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
     // "code" and "authorization_code"
     if (authorizationCodeResponseTypes.some(responseTypesIncludes) && !grantTypes.includes('authorization_code')) {
       throw new InvalidClientMetadataException(
-        'The Response Type "code" requires the Grant Type "authorization_code".'
+        'The Response Type "code" requires the Grant Type "authorization_code".',
       );
     }
 
@@ -271,7 +271,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
       const implicitResponseTypesString = implicitResponseTypes.join('", "');
 
       throw new InvalidClientMetadataException(
-        `The Response Types ["${implicitResponseTypesString}"] require the Grant Type "implicit".`
+        `The Response Types ["${implicitResponseTypesString}"] require the Grant Type "implicit".`,
       );
     }
 
@@ -281,7 +281,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
       const hybridGrantTypesString = hybridGrantTypes.join('", "');
 
       throw new InvalidClientMetadataException(
-        `The Response Types ["${hybridResponseTypesString}"] require the Grant Types ["${hybridGrantTypesString}"].`
+        `The Response Types ["${hybridResponseTypesString}"] require the Grant Types ["${hybridGrantTypesString}"].`,
       );
     }
 
@@ -294,7 +294,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
       const codeResponseTypesString = authorizationCodeResponseTypes.concat(hybridResponseTypes).join('", "');
 
       throw new InvalidClientMetadataException(
-        `The Grant Type "authorization_code" requires at lease one of the Response Types ["${codeResponseTypesString}"].`
+        `The Grant Type "authorization_code" requires at lease one of the Response Types ["${codeResponseTypesString}"].`,
       );
     }
 
@@ -307,7 +307,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
       const implicitResponseTypesString = hybridResponseTypes.concat(implicitResponseTypes).join('", "');
 
       throw new InvalidClientMetadataException(
-        `The Grant Type "implicit" requires at lease one of the Response Types ["${implicitResponseTypesString}"].`
+        `The Grant Type "implicit" requires at lease one of the Response Types ["${implicitResponseTypesString}"].`,
       );
     }
   }
@@ -346,7 +346,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
         case 'native': {
           if (redirectUri.protocol.includes('http') && redirectUri.hostname !== 'localhost') {
             throw new InvalidRedirectUriException(
-              'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.'
+              'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
             );
           }
 
@@ -356,13 +356,13 @@ export abstract class PostAndPutRegistrationRequestValidator<
         case 'web': {
           if (!redirectUri.protocol.includes('https')) {
             throw new InvalidRedirectUriException(
-              `The Redirect URI "${redirectUri.href}" does not use the https protocol.`
+              `The Redirect URI "${redirectUri.href}" does not use the https protocol.`,
             );
           }
 
           if (redirectUri.hostname === 'localhost' || redirectUri.hostname === '127.0.0.1') {
             throw new InvalidRedirectUriException(
-              'The Authorization Server disallows using localhost as a Redirect URI for a "web" application.'
+              'The Authorization Server disallows using localhost as a Redirect URI for a "web" application.',
             );
           }
 
@@ -517,7 +517,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    */
   private checkJwksUriAndJwksAreNotBothProvided(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): void {
     if (typeof parameters.jwks_uri !== 'undefined' && typeof parameters.jwks !== 'undefined') {
       throw new InvalidClientMetadataException('Only one of the parameters "jwks_uri" and "jwks" must be provided.');
@@ -553,7 +553,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns JSON Web Key Set provided by the Client.
    */
   private async getJwks(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): Promise<Nullable<JsonWebKeySet>> {
     if (typeof parameters.jwks !== 'undefined' && !isPlainObject(parameters.jwks)) {
       throw new InvalidClientMetadataException('Invalid parameter "jwks".');
@@ -576,7 +576,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Client Registration Request.
    */
   private checkSubjectTypeAndSectorIdentifierUri(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): void {
     if (parameters.subject_type === 'pairwise' && typeof parameters.sector_identifier_uri === 'undefined') {
       throw new InvalidClientMetadataException('The Subject Type "pairwise" requires a Sector Identifier URI.');
@@ -645,7 +645,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns ID Token JSON Web Signature Algorithm provided by the Client.
    */
   private getIdTokenSignedResponseAlgorithm(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): Exclude<JsonWebSignatureAlgorithm, 'none'> {
     if (
       typeof parameters.id_token_signed_response_alg !== 'undefined' &&
@@ -660,7 +660,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
 
     if (!this.settings.idTokenSignatureAlgorithms.includes(parameters.id_token_signed_response_alg)) {
       throw new InvalidClientMetadataException(
-        `Unsupported id_token_signed_response_alg "${parameters.id_token_signed_response_alg}".`
+        `Unsupported id_token_signed_response_alg "${parameters.id_token_signed_response_alg}".`,
       );
     }
 
@@ -674,7 +674,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns ID Token JSON Web Encryption Key Wrap Algorithm provided by the Client.
    */
   private getIdTokenEncryptedResponseKeyWrap(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): Nullable<JsonWebEncryptionKeyWrapAlgorithm> {
     if (
       typeof parameters.id_token_encrypted_response_alg !== 'undefined' &&
@@ -689,7 +689,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
 
     if (this.settings.idTokenKeyWrapAlgorithms?.includes(parameters.id_token_encrypted_response_alg) !== true) {
       throw new InvalidClientMetadataException(
-        `Unsupported id_token_encrypted_response_alg "${parameters.id_token_encrypted_response_alg}".`
+        `Unsupported id_token_encrypted_response_alg "${parameters.id_token_encrypted_response_alg}".`,
       );
     }
 
@@ -703,7 +703,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns ID Token JSON Web Encryption Content Encryption Algorithm provided by the Client.
    */
   private getIdTokenEncryptedResponseContentEncryption(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): Nullable<JsonWebEncryptionContentEncryptionAlgorithm> {
     if (
       typeof parameters.id_token_encrypted_response_enc !== 'undefined' &&
@@ -718,7 +718,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
     ) {
       throw new InvalidClientMetadataException(
         'The parameter "id_token_encrypted_response_enc" must be presented together ' +
-          'with the parameter "id_token_encrypted_response_alg".'
+          'with the parameter "id_token_encrypted_response_alg".',
       );
     }
 
@@ -727,7 +727,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
       this.settings.idTokenContentEncryptionAlgorithms?.includes(parameters.id_token_encrypted_response_enc) !== true
     ) {
       throw new InvalidClientMetadataException(
-        `Unsupported id_token_encrypted_response_enc "${parameters.id_token_encrypted_response_enc}".`
+        `Unsupported id_token_encrypted_response_enc "${parameters.id_token_encrypted_response_enc}".`,
       );
     }
 
@@ -745,7 +745,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns Userinfo JSON Web Signature Algorithm provided by the Client.
    */
   private getUserinfoSignedResponseAlgorithm(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>> {
     if (
       typeof parameters.userinfo_signed_response_alg !== 'undefined' &&
@@ -760,7 +760,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
 
     if (this.settings.userinfoSignatureAlgorithms?.includes(parameters.userinfo_signed_response_alg) !== true) {
       throw new InvalidClientMetadataException(
-        `Unsupported userinfo_signed_response_alg "${parameters.userinfo_signed_response_alg}".`
+        `Unsupported userinfo_signed_response_alg "${parameters.userinfo_signed_response_alg}".`,
       );
     }
 
@@ -774,7 +774,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns Userinfo JSON Web Encryption Key Wrap Algorithm provided by the Client.
    */
   private getUserinfoEncryptedResponseKeyWrap(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): Nullable<JsonWebEncryptionKeyWrapAlgorithm> {
     if (
       typeof parameters.userinfo_encrypted_response_alg !== 'undefined' &&
@@ -790,13 +790,13 @@ export abstract class PostAndPutRegistrationRequestValidator<
     if (typeof parameters.userinfo_signed_response_alg === 'undefined') {
       throw new InvalidClientMetadataException(
         'The parameter "userinfo_encrypted_response_alg" must be presented together ' +
-          'with the parameter "userinfo_signed_response_alg".'
+          'with the parameter "userinfo_signed_response_alg".',
       );
     }
 
     if (this.settings.userinfoKeyWrapAlgorithms?.includes(parameters.userinfo_encrypted_response_alg) !== true) {
       throw new InvalidClientMetadataException(
-        `Unsupported userinfo_encrypted_response_alg "${parameters.userinfo_encrypted_response_alg}".`
+        `Unsupported userinfo_encrypted_response_alg "${parameters.userinfo_encrypted_response_alg}".`,
       );
     }
 
@@ -810,7 +810,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns Userinfo JSON Web Encryption Content Encryption Algorithm provided by the Client.
    */
   private getUserinfoEncryptedResponseContentEncryption(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): Nullable<JsonWebEncryptionContentEncryptionAlgorithm> {
     if (
       typeof parameters.userinfo_encrypted_response_enc !== 'undefined' &&
@@ -825,7 +825,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
     ) {
       throw new InvalidClientMetadataException(
         'The parameter "userinfo_encrypted_response_enc" must be presented together ' +
-          'with the parameter "userinfo_encrypted_response_alg".'
+          'with the parameter "userinfo_encrypted_response_alg".',
       );
     }
 
@@ -834,7 +834,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
       this.settings.userinfoContentEncryptionAlgorithms?.includes(parameters.userinfo_encrypted_response_enc) !== true
     ) {
       throw new InvalidClientMetadataException(
-        `Unsupported userinfo_encrypted_response_enc "${parameters.userinfo_encrypted_response_enc}".`
+        `Unsupported userinfo_encrypted_response_enc "${parameters.userinfo_encrypted_response_enc}".`,
       );
     }
 
@@ -858,7 +858,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns Client Authentication Method provided by the Client.
    */
   private getAuthenticationMethod(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): ClientAuthentication {
     if (
       typeof parameters.token_endpoint_auth_method !== 'undefined' &&
@@ -873,7 +873,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
 
     if (!this.settings.clientAuthenticationMethods.includes(parameters.token_endpoint_auth_method)) {
       throw new InvalidClientMetadataException(
-        `Unsupported token_endpoint_auth_method "${parameters.token_endpoint_auth_method}".`
+        `Unsupported token_endpoint_auth_method "${parameters.token_endpoint_auth_method}".`,
       );
     }
 
@@ -887,7 +887,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @returns Client Authentication Method JSON Web Signature Algorithm provided by the Client.
    */
   private getAuthenticationSigningAlgorithm(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>> {
     if (
       typeof parameters.token_endpoint_auth_signing_alg !== 'undefined' &&
@@ -901,7 +901,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
       !this.settings.clientAuthenticationSignatureAlgorithms.includes(parameters.token_endpoint_auth_signing_alg)
     ) {
       throw new InvalidClientMetadataException(
-        `Unsupported token_endpoint_auth_signing_alg "${parameters.token_endpoint_auth_signing_alg}".`
+        `Unsupported token_endpoint_auth_signing_alg "${parameters.token_endpoint_auth_signing_alg}".`,
       );
     }
 
@@ -915,7 +915,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    * @param parameters Parameters of the Dynamic Client Registration Request.
    */
   private checkAuthenticationMethodAndAuthenticationMethodSignature(
-    parameters: PostRegistrationRequest | PutBodyRegistrationRequest
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
   ): void {
     const {
       token_endpoint_auth_method: authenticationMethod,
@@ -929,21 +929,21 @@ export abstract class PostAndPutRegistrationRequestValidator<
 
       throw new InvalidClientMetadataException(
         `The Client Authentication Method "${authenticationMethod}" ` +
-          'does not require a Client Authentication Signing Algorithm.'
+          'does not require a Client Authentication Signing Algorithm.',
       );
     }
 
     if (typeof authenticationSigningAlgorithm === 'undefined') {
       throw new InvalidClientMetadataException(
         'Missing required parameter "token_endpoint_auth_signing_alg" ' +
-          `for Client Authentication Method "${authenticationMethod}".`
+          `for Client Authentication Method "${authenticationMethod}".`,
       );
     }
 
     if (typeof parameters.jwks === 'undefined' && typeof parameters.jwks_uri === 'undefined') {
       throw new InvalidClientMetadataException(
         'One of the parameters "jwks_uri" or "jwks" must be provided ' +
-          `for Client Authentication Method "${authenticationMethod}".`
+          `for Client Authentication Method "${authenticationMethod}".`,
       );
     }
 
@@ -965,7 +965,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
     if (!isValidAlgorithmForAuthenticationMethod) {
       throw new InvalidClientMetadataException(
         `Invalid JSON Web Signature Algorithm "${authenticationSigningAlgorithm}" ` +
-          `for Client Authentication Method "${authenticationMethod}".`
+          `for Client Authentication Method "${authenticationMethod}".`,
       );
     }
   }
@@ -1087,7 +1087,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
 
       if (url.hash.length !== 0) {
         throw new InvalidClientMetadataException(
-          `The Post Logout Redirect URI "${postLogoutRedirectUri}" MUST NOT have a fragment component.`
+          `The Post Logout Redirect URI "${postLogoutRedirectUri}" MUST NOT have a fragment component.`,
         );
       }
 
@@ -1103,7 +1103,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
    */
   private checkApplicationTypeAndPostLogoutRedirectUris(
     applicationType: ApplicationType,
-    postLogoutRedirectUris: Nullable<URL[]>
+    postLogoutRedirectUris: Nullable<URL[]>,
   ): void {
     if (postLogoutRedirectUris === null) {
       return;
@@ -1114,7 +1114,7 @@ export abstract class PostAndPutRegistrationRequestValidator<
         case 'native': {
           if (postLogoutRedirectUri.protocol.includes('http') && postLogoutRedirectUri.hostname !== 'localhost') {
             throw new InvalidClientMetadataException(
-              'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.'
+              'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
             );
           }
 
@@ -1124,13 +1124,13 @@ export abstract class PostAndPutRegistrationRequestValidator<
         case 'web': {
           if (!postLogoutRedirectUri.protocol.includes('https')) {
             throw new InvalidClientMetadataException(
-              `The Post Logout Redirect URI "${postLogoutRedirectUri.href}" does not use the https protocol.`
+              `The Post Logout Redirect URI "${postLogoutRedirectUri.href}" does not use the https protocol.`,
             );
           }
 
           if (postLogoutRedirectUri.hostname === 'localhost' || postLogoutRedirectUri.hostname === '127.0.0.1') {
             throw new InvalidClientMetadataException(
-              'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.'
+              'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.',
             );
           }
 

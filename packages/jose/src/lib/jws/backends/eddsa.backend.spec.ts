@@ -52,7 +52,7 @@ describe('JSON Web Signature EdDSA Backend', () => {
     Object.setPrototypeOf(key, OctetKeyPairKey.prototype);
 
     expect(() => EdDSA['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "EdDSA" only accepts "OKP" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "EdDSA" only accepts "OKP" JSON Web Keys.'),
     );
   });
 
@@ -61,32 +61,32 @@ describe('JSON Web Signature EdDSA Backend', () => {
 
     expect(() => EdDSA['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Signature Algorithm "EdDSA" only accepts the Elliptic Curves ["Ed25519", "Ed448"].'
-      )
+        'The JSON Web Signature Algorithm "EdDSA" only accepts the Elliptic Curves ["Ed25519", "Ed448"].',
+      ),
     );
   });
 
   it('should throw when signing with an ed25519 public key.', async () => {
     await expect(EdDSA.sign(message, ed25519PublicKey)).rejects.toThrow(
-      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.')
+      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'),
     );
   });
 
   it('should throw when signing with an ed448 public key.', async () => {
     await expect(EdDSA.sign(message, ed448PublicKey)).rejects.toThrow(
-      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.')
+      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'),
     );
   });
 
   it('should throw when verifying a wrong signature with an ed25519 key.', async () => {
     await expect(EdDSA.verify(Buffer.alloc(0), message, ed25519PublicKey)).rejects.toThrow(
-      new InvalidJsonWebSignatureException()
+      new InvalidJsonWebSignatureException(),
     );
   });
 
   it('should throw when verifying a wrong signature with an ed448 key.', async () => {
     await expect(EdDSA.verify(Buffer.alloc(0), message, ed448PublicKey)).rejects.toThrow(
-      new InvalidJsonWebSignatureException()
+      new InvalidJsonWebSignatureException(),
     );
   });
 

@@ -44,7 +44,7 @@ export class IntrospectionRequestValidator {
     private readonly clientAuthenticationHandler: ClientAuthenticationHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
-    @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface
+    @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface,
   ) {
     if (this.settings.enableRefreshTokenIntrospection) {
       if (!this.settings.grantTypes.includes('refresh_token')) {

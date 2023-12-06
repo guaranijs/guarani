@@ -85,7 +85,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
     @Inject(CONSENT_SERVICE) private readonly consentService: ConsentServiceInterface,
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
-    @InjectAll(AuthorizationRequestValidator) private readonly validators: AuthorizationRequestValidator[]
+    @InjectAll(AuthorizationRequestValidator) private readonly validators: AuthorizationRequestValidator[],
   ) {
     if (typeof this.settings.userInteraction === 'undefined') {
       throw new TypeError('Missing User Interaction options.');
@@ -203,7 +203,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
         await this.authHandler.inactivateSessionActiveLogin(session);
 
         throw new LoginRequiredException(
-          'The currently authenticated User is not the one expected by the ID Token Hint.'
+          'The currently authenticated User is not the one expected by the ID Token Hint.',
         );
       }
     } catch (exc: unknown) {
@@ -474,7 +474,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
    */
   private includeAdditionalResponseParameters(
     response: AuthorizationResponse,
-    parameters: Partial<Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>> = {}
+    parameters: Partial<Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>> = {},
   ): AuthorizationResponse {
     Object.entries(parameters).forEach(([name, value]) => (response[name] = value));
 

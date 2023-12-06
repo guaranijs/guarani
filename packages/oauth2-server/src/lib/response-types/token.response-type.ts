@@ -54,7 +54,7 @@ export class TokenResponseType implements ResponseTypeInterface {
   public async handle(
     _context: AuthorizationContext,
     _login: Login,
-    consent: Consent
+    consent: Consent,
   ): Promise<TokenAuthorizationResponse> {
     const { client, scopes, user } = consent;
 

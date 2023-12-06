@@ -61,7 +61,7 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
   public constructor(
     private readonly validator: DeviceAuthorizationRequestValidator,
     @Inject(DEVICE_CODE_SERVICE) private readonly deviceCodeService: DeviceCodeServiceInterface,
-    @Inject(SETTINGS) private readonly settings: Settings
+    @Inject(SETTINGS) private readonly settings: Settings,
   ) {
     if (typeof this.settings.userInteraction === 'undefined') {
       throw new TypeError('Missing User Interaction options.');

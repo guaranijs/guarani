@@ -30,7 +30,7 @@ export class DeleteRegistrationRequestValidator extends GetAndDeleteRegistration
    */
   public constructor(
     protected override readonly clientAuthorizationHandler: ClientAuthorizationHandler,
-    @Inject(ACCESS_TOKEN_SERVICE) protected override readonly accessTokenService: AccessTokenServiceInterface
+    @Inject(ACCESS_TOKEN_SERVICE) protected override readonly accessTokenService: AccessTokenServiceInterface,
   ) {
     super(clientAuthorizationHandler, accessTokenService);
   }

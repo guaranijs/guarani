@@ -33,7 +33,7 @@ router
   .get(async (req, res) => await LoginController.get(req, res))
   .post(
     passport.authenticate('local', { failureRedirect: '/auth/login', failureFlash: true }),
-    async (req, res) => await LoginController.post(req, res)
+    async (req, res) => await LoginController.post(req, res),
   );
 
 router

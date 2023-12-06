@@ -24,7 +24,7 @@ describe('Device Code Flow', () => {
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,
-      Reflect.get(global, 'endToEndAuthorizationServerOptions')
+      Reflect.get(global, 'endToEndAuthorizationServerOptions'),
     );
 
     await authorizationServer.bootstrap();
@@ -46,7 +46,7 @@ describe('Device Code Flow', () => {
       user_code: expect.stringMatching(/^[A-Z]{4}-[A-Z]{4}$/),
       verification_uri: 'http://localhost:3000/device',
       verification_uri_complete: expect.stringMatching(
-        /^http:\/\/localhost:3000\/device\?user_code=([A-Z]{4}-[A-Z]{4})$/
+        /^http:\/\/localhost:3000\/device\?user_code=([A-Z]{4}-[A-Z]{4})$/,
       ),
       expires_in: 1800,
       interval: 5,

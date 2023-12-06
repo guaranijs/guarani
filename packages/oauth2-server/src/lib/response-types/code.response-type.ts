@@ -38,7 +38,7 @@ export class CodeResponseType implements ResponseTypeInterface {
    * @param authorizationCodeService Instance of the Authorization Code Service.
    */
   public constructor(
-    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface
+    @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
   ) {}
 
   /**
@@ -67,7 +67,7 @@ export class CodeResponseType implements ResponseTypeInterface {
   public async handle(
     context: CodeAuthorizationContext,
     login: Login,
-    consent: Consent
+    consent: Consent,
   ): Promise<CodeAuthorizationResponse> {
     const { parameters } = context;
     const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);

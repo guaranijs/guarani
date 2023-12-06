@@ -197,7 +197,7 @@ describe('Dependency Injection Container', () => {
       class Foo {
         public constructor(
           @Inject('Issuer') public readonly issuer: string,
-          @Optional() @Inject('Value') public readonly value?: number
+          @Optional() @Inject('Value') public readonly value?: number,
         ) {}
       }
 
@@ -290,7 +290,10 @@ describe('Dependency Injection Container', () => {
 
       @Injectable()
       class Baz {
-        public constructor(public readonly foo: Foo, public readonly bar: Bar) {}
+        public constructor(
+          public readonly foo: Foo,
+          public readonly bar: Bar,
+        ) {}
       }
 
       container.bind(Foo).toSelf().asRequest();
@@ -318,7 +321,10 @@ describe('Dependency Injection Container', () => {
 
       @Injectable()
       class Baz {
-        public constructor(public readonly foo: Foo, public readonly bar: Bar) {}
+        public constructor(
+          public readonly foo: Foo,
+          public readonly bar: Bar,
+        ) {}
       }
 
       container.bind(Foo).toSelf().asTransient();
@@ -385,7 +391,10 @@ describe('Dependency Injection Container', () => {
 
       @Injectable()
       class Baz {
-        public constructor(public readonly foo: Foo, public readonly bar: Bar) {}
+        public constructor(
+          public readonly foo: Foo,
+          public readonly bar: Bar,
+        ) {}
       }
 
       container.bind(Foo).toSelf().asRequest();
@@ -432,7 +441,7 @@ describe('Dependency Injection Container', () => {
   describe('resolveAll()', () => {
     it('should reject when the token is a lazy token.', () => {
       expect(() => container.resolveAll(new LazyToken(() => class {}))).toThrow(
-        new ResolutionException('The resolution of multiple Lazy Tokens is unsupported.')
+        new ResolutionException('The resolution of multiple Lazy Tokens is unsupported.'),
       );
     });
 

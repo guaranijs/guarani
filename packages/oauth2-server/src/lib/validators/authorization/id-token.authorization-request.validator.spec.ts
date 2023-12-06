@@ -181,7 +181,7 @@ describe('ID Token Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid response_mode "query" for response_type "id_token".'
+        'Invalid response_mode "query" for response_type "id_token".',
       );
     });
 
@@ -202,7 +202,7 @@ describe('ID Token Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "nonce".'
+        'Invalid parameter "nonce".',
       );
     });
   });

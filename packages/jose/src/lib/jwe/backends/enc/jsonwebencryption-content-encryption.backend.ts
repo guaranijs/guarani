@@ -26,7 +26,7 @@ export abstract class JsonWebEncryptionContentEncryptionBackend {
   public constructor(
     protected readonly algorithm: JsonWebEncryptionContentEncryptionAlgorithm,
     public readonly cekSize: number,
-    public readonly ivSize: number
+    public readonly ivSize: number,
   ) {}
 
   /**

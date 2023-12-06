@@ -88,7 +88,7 @@ describe('None Client Authentication Method', () => {
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
     });
 
@@ -101,7 +101,7 @@ describe('None Client Authentication Method', () => {
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'This Client is not allowed to use the Authentication Method "none".'
+        'This Client is not allowed to use the Authentication Method "none".',
       );
     });
 
@@ -118,7 +118,7 @@ describe('None Client Authentication Method', () => {
 
       await expect(clientAuthentication.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'This Client is not allowed to use the Authentication Method "none".'
+        'This Client is not allowed to use the Authentication Method "none".',
       );
     });
 

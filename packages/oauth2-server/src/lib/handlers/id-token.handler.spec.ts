@@ -161,7 +161,7 @@ describe('ID Token Handler', () => {
 
       expect(() => container.resolve(IdTokenHandler)).toThrowWithMessage(
         TypeError,
-        'Missing implementation of required method "UserServiceInterface.getUserinfo".'
+        'Missing implementation of required method "UserServiceInterface.getUserinfo".',
       );
     });
   });
@@ -192,10 +192,10 @@ describe('ID Token Handler', () => {
       };
 
       await expect(
-        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
+        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
       ).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
-        'No JSON Web Key matches the criteria at the JSON Web Key Set.'
+        'No JSON Web Key matches the criteria at the JSON Web Key Set.',
       );
     });
 
@@ -224,10 +224,10 @@ describe('ID Token Handler', () => {
       };
 
       await expect(
-        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
+        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
       ).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
-        'No JSON Web Key matches the criteria at the JSON Web Key Set.'
+        'No JSON Web Key matches the criteria at the JSON Web Key Set.',
       );
     });
 
@@ -252,7 +252,7 @@ describe('ID Token Handler', () => {
       const { payload } = await JsonWebSignature.verify(
         idToken,
         async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-        ['ES256', 'RS256']
+        ['ES256', 'RS256'],
       );
 
       const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
@@ -282,7 +282,7 @@ describe('ID Token Handler', () => {
       const { payload } = await JsonWebSignature.verify(
         idToken,
         async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-        ['ES256', 'RS256']
+        ['ES256', 'RS256'],
       );
 
       const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
@@ -312,7 +312,7 @@ describe('ID Token Handler', () => {
       const { payload } = await JsonWebSignature.verify(
         idToken,
         async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-        ['ES256', 'RS256']
+        ['ES256', 'RS256'],
       );
 
       const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
@@ -341,7 +341,7 @@ describe('ID Token Handler', () => {
         'nonce',
         null,
         accessToken,
-        authorizationCode
+        authorizationCode,
       );
 
       expect(idToken).toEqual(expect.any(String));
@@ -349,7 +349,7 @@ describe('ID Token Handler', () => {
       const { payload } = await JsonWebSignature.verify(
         idToken,
         async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-        ['ES256', 'RS256']
+        ['ES256', 'RS256'],
       );
 
       const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
@@ -377,7 +377,7 @@ describe('ID Token Handler', () => {
       };
 
       await expect(
-        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
+        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
       ).rejects.toThrowWithMessage(Error, 'The Client does not have a JSON Web Key Set registered.');
     });
 
@@ -403,10 +403,10 @@ describe('ID Token Handler', () => {
       };
 
       await expect(
-        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
+        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
       ).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
-        'No JSON Web Key matches the criteria at the JSON Web Key Set.'
+        'No JSON Web Key matches the criteria at the JSON Web Key Set.',
       );
     });
 
@@ -432,10 +432,10 @@ describe('ID Token Handler', () => {
       };
 
       await expect(
-        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null)
+        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
       ).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
-        'No JSON Web Key matches the criteria at the JSON Web Key Set.'
+        'No JSON Web Key matches the criteria at the JSON Web Key Set.',
       );
     });
 
@@ -465,7 +465,7 @@ describe('ID Token Handler', () => {
       const { payload } = await JsonWebSignature.verify(
         plaintext.toString('ascii'),
         async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-        ['ES256', 'RS256']
+        ['ES256', 'RS256'],
       );
 
       const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
@@ -500,7 +500,7 @@ describe('ID Token Handler', () => {
       const { payload } = await JsonWebSignature.verify(
         plaintext.toString('ascii'),
         async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-        ['ES256', 'RS256']
+        ['ES256', 'RS256'],
       );
 
       const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
@@ -535,7 +535,7 @@ describe('ID Token Handler', () => {
       const { payload } = await JsonWebSignature.verify(
         plaintext.toString('ascii'),
         async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-        ['ES256', 'RS256']
+        ['ES256', 'RS256'],
       );
 
       const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));
@@ -567,7 +567,7 @@ describe('ID Token Handler', () => {
         'nonce',
         null,
         accessToken,
-        authorizationCode
+        authorizationCode,
       );
 
       expect(idToken).toEqual(expect.any(String));
@@ -577,7 +577,7 @@ describe('ID Token Handler', () => {
       const { payload } = await JsonWebSignature.verify(
         plaintext.toString('ascii'),
         async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-        ['ES256', 'RS256']
+        ['ES256', 'RS256'],
       );
 
       const claims = new IdTokenClaims(JSON.parse(payload.toString('utf8')));

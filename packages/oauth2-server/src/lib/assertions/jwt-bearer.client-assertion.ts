@@ -53,7 +53,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    */
   public constructor(
     @Inject(SETTINGS) protected readonly settings: Settings,
-    @Inject(CLIENT_SERVICE) protected readonly clientService: ClientServiceInterface
+    @Inject(CLIENT_SERVICE) protected readonly clientService: ClientServiceInterface,
   ) {}
 
   /**
@@ -119,13 +119,13 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    */
   private async getClientAssertionComponents(
     clientAssertion: string,
-    request: HttpRequest
+    request: HttpRequest,
   ): Promise<[JsonWebSignatureHeader, JsonWebTokenClaims]> {
     const { header, payload } = JsonWebSignature.decode(clientAssertion);
 
     if (header.alg === 'none') {
       throw new InvalidClientException(
-        'The Authorization Server disallows using the JSON Web Signature Algorithm "none".'
+        'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
       );
     }
 
@@ -135,7 +135,7 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
 
     if (!this.algorithms.includes(header.alg)) {
       throw new InvalidClientException(
-        `Unsupported JSON Web Signature Algorithm "${header.alg}" for Authentication Method "${this.name}".`
+        `Unsupported JSON Web Signature Algorithm "${header.alg}" for Authentication Method "${this.name}".`,
       );
     }
 

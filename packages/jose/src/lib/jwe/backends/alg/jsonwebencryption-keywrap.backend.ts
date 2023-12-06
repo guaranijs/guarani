@@ -32,7 +32,7 @@ export abstract class JsonWebEncryptionKeyWrapBackend {
   public abstract wrap(
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     wrapKey: JsonWebKey,
-    header?: JsonWebEncryptionHeaderParameters
+    header?: JsonWebEncryptionHeaderParameters,
   ): Promise<[Buffer, Buffer, Partial<JsonWebEncryptionHeaderParameters>?]>;
 
   /**
@@ -48,7 +48,7 @@ export abstract class JsonWebEncryptionKeyWrapBackend {
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     unwrapKey: JsonWebKey,
     wrappedKey: Buffer,
-    header?: JsonWebEncryptionHeaderParameters
+    header?: JsonWebEncryptionHeaderParameters,
   ): Promise<Buffer>;
 
   /**

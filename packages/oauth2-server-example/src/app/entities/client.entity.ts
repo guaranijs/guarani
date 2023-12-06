@@ -31,16 +31,16 @@ import { Nullable } from '@guarani/types';
 @Check(
   'check_subject_type_and_sector_identifier_uri',
   '("subject_type" = \'pairwise\' AND "sector_identifier_uri" IS NOT NULL) OR ' +
-    '("subject_type" = \'public\' AND "sector_identifier_uri" IS NULL)'
+    '("subject_type" = \'public\' AND "sector_identifier_uri" IS NULL)',
 )
 @Check(
   'check_subject_type_and_pairwise_salt',
   '("subject_type" = \'pairwise\' AND "pairwise_salt" IS NOT NULL) OR ' +
-    '("subject_type" = \'public\' AND "pairwise_salt" IS NULL)'
+    '("subject_type" = \'public\' AND "pairwise_salt" IS NULL)',
 )
 @Check(
   'check_id_token_encrypted_response_key_wrap_and_id_token_encrypted_response_content_encryption',
-  '"id_token_encrypted_response_key_wrap" IS NOT NULL OR "id_token_encrypted_response_content_encryption" IS NULL'
+  '"id_token_encrypted_response_key_wrap" IS NOT NULL OR "id_token_encrypted_response_content_encryption" IS NULL',
 )
 export class Client extends BaseEntity implements OAuth2Client {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'clients_pk' })

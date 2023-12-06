@@ -105,7 +105,7 @@ describe('Logout Interaction Type', () => {
 
       await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Expired Logout Ticket.'
+        'Expired Logout Ticket.',
       );
 
       expect(logoutTicketServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -115,7 +115,7 @@ describe('Logout Interaction Type', () => {
     it('should return a valid first time logout context response.', async () => {
       const requestUrl = addParametersToUrl(
         'https://server.example.com/oauth/end_session',
-        context.logoutTicket.parameters
+        context.logoutTicket.parameters,
       );
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LogoutContextInteractionResponse>({
@@ -134,7 +134,7 @@ describe('Logout Interaction Type', () => {
 
       const requestUrl = addParametersToUrl(
         'https://server.example.com/oauth/end_session',
-        context.logoutTicket.parameters
+        context.logoutTicket.parameters,
       );
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<LogoutContextInteractionResponse>({
@@ -193,7 +193,7 @@ describe('Logout Interaction Type', () => {
 
       await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Expired Logout Ticket.'
+        'Expired Logout Ticket.',
       );
 
       expect(logoutTicketServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -215,7 +215,7 @@ describe('Logout Interaction Type', () => {
 
       const redirectTo = addParametersToUrl(
         'https://server.example.com/oauth/end_session',
-        context.logoutTicket.parameters
+        context.logoutTicket.parameters,
       );
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LogoutDecisionInteractionResponse>({
@@ -253,7 +253,7 @@ describe('Logout Interaction Type', () => {
 
       const redirectTo = addParametersToUrl(
         'https://server.example.com/oauth/end_session',
-        context.logoutTicket.parameters
+        context.logoutTicket.parameters,
       );
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<LogoutDecisionInteractionResponse>({
@@ -276,7 +276,7 @@ describe('Logout Interaction Type', () => {
         decision: 'deny',
         error: Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
           Reflect.construct(OAuth2Exception, [context.parameters.error_description as string]),
-          { error: context.parameters.error as string }
+          { error: context.parameters.error as string },
         ),
       });
 

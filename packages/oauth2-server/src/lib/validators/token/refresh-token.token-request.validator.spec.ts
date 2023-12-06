@@ -98,7 +98,7 @@ describe('Refresh Token Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "refresh_token".'
+        'Invalid parameter "refresh_token".',
       );
     });
 
@@ -112,7 +112,7 @@ describe('Refresh Token Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Invalid Refresh Token.'
+        'Invalid Refresh Token.',
       );
     });
 
@@ -135,7 +135,7 @@ describe('Refresh Token Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'The scope "baz" was not previously granted.'
+        'The scope "baz" was not previously granted.',
       );
     });
 

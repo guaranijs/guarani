@@ -146,7 +146,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       expect(() => container.resolve(RegistrationEndpoint)).toThrowWithMessage(
         TypeError,
-        'Missing implementation of required method "ClientServiceInterface.create".'
+        'Missing implementation of required method "ClientServiceInterface.create".',
       );
     });
 
@@ -161,7 +161,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       expect(() => container.resolve(RegistrationEndpoint)).toThrowWithMessage(
         TypeError,
-        'Missing implementation of required method "ClientServiceInterface.remove".'
+        'Missing implementation of required method "ClientServiceInterface.remove".',
       );
     });
 
@@ -180,7 +180,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       expect(() => container.resolve(RegistrationEndpoint)).toThrowWithMessage(
         TypeError,
-        'Missing implementation of required method "ClientServiceInterface.update".'
+        'Missing implementation of required method "ClientServiceInterface.update".',
       );
     });
 
@@ -199,7 +199,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       expect(() => container.resolve(RegistrationEndpoint)).toThrowWithMessage(
         TypeError,
-        'Missing implementation of required method "AccessTokenServiceInterface.createRegistrationAccessToken".'
+        'Missing implementation of required method "AccessTokenServiceInterface.createRegistrationAccessToken".',
       );
     });
   });
@@ -413,7 +413,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
         expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
         expect(accessTokenServiceMock.revoke).toHaveBeenCalledWith(context.accessToken);
-      }
+      },
     );
   });
 
@@ -600,7 +600,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
     const requestFactory = (
       queryData: Partial<PutQueryRegistrationRequest> = {},
-      bodyData: Partial<PutBodyRegistrationRequest> = {}
+      bodyData: Partial<PutBodyRegistrationRequest> = {},
     ): HttpRequest => {
       removeNullishValues<DeleteRegistrationRequest>(Object.assign(queryParameters, queryData));
       removeNullishValues<DeleteRegistrationRequest>(Object.assign(bodyParameters, bodyData));

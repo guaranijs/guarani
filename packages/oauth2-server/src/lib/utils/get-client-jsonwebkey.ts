@@ -45,7 +45,7 @@ function getClientJwksFromUri(jwksUri: string): Promise<JsonWebKeySet> {
  */
 export async function getClientJsonWebKey(
   client: Client,
-  predicate: (key: JsonWebKeyParameters) => boolean
+  predicate: (key: JsonWebKeyParameters) => boolean,
 ): Promise<JsonWebKey> {
   let clientJwks: Nullable<JsonWebKeySet> = null;
 

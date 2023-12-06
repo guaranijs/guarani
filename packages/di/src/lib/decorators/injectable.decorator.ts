@@ -12,8 +12,8 @@ export function Injectable(): ClassDecorator {
     const designParamTypes: any[] = Reflect.getMetadata('design:paramtypes', target) ?? [];
     const paramTokenDescriptors: Map<string | symbol | number, TokenDescriptor<any>> = Reflect.getMetadata(
       PARAM_TOKENS,
-      target
-    ) ?? new Map();
+      target,
+    ) ?? new Map<string | symbol | number, TokenDescriptor<any>>();
 
     const paramTypesDescriptors: TokenDescriptor<any>[] = designParamTypes.map((designParamType, index) => {
       const tokenDescriptor = paramTokenDescriptors.get(index) ?? <TokenDescriptor<any>>{};

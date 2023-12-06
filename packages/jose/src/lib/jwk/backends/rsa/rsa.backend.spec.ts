@@ -63,19 +63,19 @@ describe('RSA JSON Web Key Backend', () => {
   describe('generate()', () => {
     it.each(invalidModuli)('should throw when passing an invalid modulus.', async (modulus) => {
       await expect(backend.generate({ modulus })).rejects.toThrow(
-        new TypeError('The value of the RSA Modulus must be an integer.')
+        new TypeError('The value of the RSA Modulus must be an integer.'),
       );
     });
 
     it('should throw when providing a modulus less than 2048.', async () => {
       await expect(backend.generate({ modulus: 2047 })).rejects.toThrow(
-        new TypeError('The value of the RSA Modulus must be at least 2048.')
+        new TypeError('The value of the RSA Modulus must be at least 2048.'),
       );
     });
 
     it.each(invalidPublicExponents)('should throw when passing an invalid public exponent.', async (publicExponent) => {
       await expect(backend.generate({ modulus: 2048, publicExponent })).rejects.toThrow(
-        new TypeError('The value of the RSA Public Exponent must be an integer.')
+        new TypeError('The value of the RSA Public Exponent must be an integer.'),
       );
     });
 

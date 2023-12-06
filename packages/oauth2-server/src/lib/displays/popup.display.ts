@@ -54,7 +54,7 @@ export class PopupDisplay implements DisplayInterface {
    */
   public createHttpResponse(
     redirectUri: string,
-    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>
+    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
   ): HttpResponse {
     const url = addParametersToUrl(redirectUri, parameters);
     const html = templateFn(url.href).trim();

@@ -52,7 +52,7 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 128-bits 
     const key = await A128CBC_HS256.generateContentEncryptionKey();
 
     await expect(A128CBC_HS256.encrypt(plaintext, aad, Buffer.alloc(0), key)).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 
@@ -60,7 +60,7 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 128-bits 
     const iv = await A128CBC_HS256.generateInitializationVector();
 
     await expect(A128CBC_HS256.encrypt(plaintext, aad, iv, Buffer.alloc(0))).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 
@@ -130,7 +130,7 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 192-bits 
     const key = await A192CBC_HS384.generateContentEncryptionKey();
 
     await expect(A192CBC_HS384.encrypt(plaintext, aad, Buffer.alloc(0), key)).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 
@@ -138,7 +138,7 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 192-bits 
     const iv = await A192CBC_HS384.generateInitializationVector();
 
     await expect(A192CBC_HS384.encrypt(plaintext, aad, iv, Buffer.alloc(0))).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 
@@ -208,7 +208,7 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 256-bits 
     const key = await A256CBC_HS512.generateContentEncryptionKey();
 
     await expect(A256CBC_HS512.encrypt(plaintext, aad, Buffer.alloc(0), key)).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 
@@ -216,7 +216,7 @@ describe('JSON Web Encryption Content Encryption AES Block Cipher Mode 256-bits 
     const iv = await A256CBC_HS512.generateInitializationVector();
 
     await expect(A256CBC_HS512.encrypt(plaintext, aad, iv, Buffer.alloc(0))).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 

@@ -44,7 +44,7 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
     protected readonly clientService: ClientServiceInterface,
     protected readonly responseModes: ResponseModeInterface[],
     protected readonly responseTypes: ResponseTypeInterface[],
-    protected readonly displays: DisplayInterface[]
+    protected readonly displays: DisplayInterface[],
   ) {}
 
   /**
@@ -125,7 +125,7 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
 
     if (!client.responseTypes.includes(responseType.name)) {
       throw new UnauthorizedClientException(
-        `This Client is not allowed to request the response_type "${responseType.name}".`
+        `This Client is not allowed to request the response_type "${responseType.name}".`,
       );
     }
 
@@ -199,7 +199,7 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
    */
   protected getResponseMode(
     parameters: AuthorizationRequest,
-    responseType: ResponseTypeInterface
+    responseType: ResponseTypeInterface,
   ): ResponseModeInterface {
     const responseModeName = parameters.response_mode ?? responseType.defaultResponseMode;
     const responseMode = this.responseModes.find((responseMode) => responseMode.name === responseModeName);

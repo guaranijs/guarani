@@ -68,61 +68,61 @@ describe('RSA JSON Web Key', () => {
     it('should throw when providing a "kty" different than "RSA".', () => {
       // @ts-expect-error Invalid JSON Web Key Type.
       expect(() => new RsaKey({ kty: 'unknown' })).toThrow(
-        new TypeError('Invalid jwk parameter "kty". Expected "RSA", got "unknown".')
+        new TypeError('Invalid jwk parameter "kty". Expected "RSA", got "unknown".'),
       );
     });
 
     it.each(invalidParameters)('should throw when passing an invalid modulus.', (n) => {
       expect(() => new RsaKey({ ...publicParameters, n })).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "n".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "n".'),
       );
     });
 
     it('should throw when passing a modulus smaller than 2048 bits.', () => {
       expect(() => new RsaKey({ ...publicParameters, n: Buffer.alloc(255, 'a').toString('base64url') })).toThrow(
-        new InvalidJsonWebKeyException('The RSA Modulus must be at least 2048.')
+        new InvalidJsonWebKeyException('The RSA Modulus must be at least 2048.'),
       );
     });
 
     it.each(invalidParameters)('should throw when passing an invalid public exponent.', (e) => {
       expect(() => new RsaKey({ ...publicParameters, e })).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "e".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "e".'),
       );
     });
 
     it.each(invalidParameters)('should throw when passing an invalid private exponent.', (d) => {
       expect(() => new RsaKey({ ...privateParameters, d })).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "d".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "d".'),
       );
     });
 
     it.each(invalidParameters)('should throw when passing an invalid first prime factor.', (p) => {
       expect(() => new RsaKey({ ...privateParameters, p })).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "p".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "p".'),
       );
     });
 
     it.each(invalidParameters)('should throw when passing an invalid second prime factor.', (q) => {
       expect(() => new RsaKey({ ...privateParameters, q })).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "q".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "q".'),
       );
     });
 
     it.each(invalidParameters)('should throw when passing an invalid first factor crt exponent.', (dp) => {
       expect(() => new RsaKey({ ...privateParameters, dp })).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "dp".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "dp".'),
       );
     });
 
     it.each(invalidParameters)('should throw when passing an invalid second factor crt exponent.', (dq) => {
       expect(() => new RsaKey({ ...privateParameters, dq })).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "dq".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "dq".'),
       );
     });
 
     it.each(invalidParameters)('should throw when passing an invalid first factor crt coefficient.', (qi) => {
       expect(() => new RsaKey({ ...privateParameters, qi })).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "qi".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "qi".'),
       );
     });
 

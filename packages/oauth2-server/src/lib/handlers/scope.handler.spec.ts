@@ -26,7 +26,7 @@ describe('Scope Handler', () => {
     it('should throw when requesting an unsupported scope.', () => {
       expect(() => handler.checkRequestedScope('foo unknown qux')).toThrowWithMessage(
         InvalidScopeException,
-        'Unsupported scope "unknown".'
+        'Unsupported scope "unknown".',
       );
     });
 
@@ -38,7 +38,7 @@ describe('Scope Handler', () => {
       'should not throw when requesting supported scopes.',
       (scope) => {
         expect(() => handler.checkRequestedScope(scope)).not.toThrow();
-      }
+      },
     );
   });
 
@@ -53,7 +53,7 @@ describe('Scope Handler', () => {
 
       expect(() => handler.getAllowedScopes(client, 'foo qux')).toThrowWithMessage(
         AccessDeniedException,
-        'The Client is not allowed to request the scope "qux".'
+        'The Client is not allowed to request the scope "qux".',
       );
     });
 

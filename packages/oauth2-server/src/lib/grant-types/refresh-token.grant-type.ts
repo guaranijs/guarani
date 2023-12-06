@@ -40,7 +40,7 @@ export class RefreshTokenGrantType implements GrantTypeInterface {
   public constructor(
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
-    @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: RefreshTokenServiceInterface
+    @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: RefreshTokenServiceInterface,
   ) {
     if (this.settings.enableRefreshTokenRotation && typeof this.refreshTokenService.rotate !== 'function') {
       throw new TypeError('Missing implementation of required method "RefreshTokenServiceInterface.rotate".');

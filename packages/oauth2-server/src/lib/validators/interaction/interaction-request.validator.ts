@@ -9,7 +9,7 @@ import { InteractionRequest } from '../../requests/interaction/interaction-reque
  */
 export abstract class InteractionRequestValidator<
   TContextContext extends InteractionContext = InteractionContext,
-  TDecisionContext extends InteractionContext = InteractionContext
+  TDecisionContext extends InteractionContext = InteractionContext,
 > {
   /**
    * Name of the Interaction Type that uses this Validator.

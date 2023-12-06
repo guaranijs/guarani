@@ -32,7 +32,7 @@ describe('Dynamic Client Registration', () => {
 
     authorizationServer = await AuthorizationServerFactory.create(
       ExpressBackend,
-      Reflect.get(global, 'endToEndAuthorizationServerOptions')
+      Reflect.get(global, 'endToEndAuthorizationServerOptions'),
     );
 
     await authorizationServer.bootstrap();
@@ -100,7 +100,7 @@ describe('Dynamic Client Registration', () => {
       client_secret_expires_at: expect.any(Number),
       registration_access_token: expect.any(String),
       registration_client_uri: expect.stringMatching(
-        /http:\/\/localhost:3000\/oauth\/register\?client_id=[a-z0-9-]{36}/
+        /http:\/\/localhost:3000\/oauth\/register\?client_id=[a-z0-9-]{36}/,
       ),
       redirect_uris: ['https://client.example.com/oauth/callback/'],
       response_types: ['code'],

@@ -26,7 +26,7 @@ describe('JSON Web Signature HMAC using SHA-256 Backend', () => {
     Object.setPrototypeOf(key, OctetSequenceKey.prototype);
 
     expect(() => HS256['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "HS256" only accepts "oct" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "HS256" only accepts "oct" JSON Web Keys.'),
     );
   });
 
@@ -34,7 +34,7 @@ describe('JSON Web Signature HMAC using SHA-256 Backend', () => {
     const key = await OctetSequenceKey.generate('oct', { length: randomInt(1, 32) });
 
     expect(() => HS256['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The jwk parameter "k" must be at least 32 bytes.')
+      new InvalidJsonWebKeyException('The jwk parameter "k" must be at least 32 bytes.'),
     );
   });
 
@@ -70,7 +70,7 @@ describe('JSON Web Signature HMAC using SHA-384 Backend', () => {
     Object.setPrototypeOf(key, OctetSequenceKey.prototype);
 
     expect(() => HS384['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "HS384" only accepts "oct" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "HS384" only accepts "oct" JSON Web Keys.'),
     );
   });
 
@@ -78,7 +78,7 @@ describe('JSON Web Signature HMAC using SHA-384 Backend', () => {
     const key = await OctetSequenceKey.generate('oct', { length: randomInt(1, 48) });
 
     expect(() => HS384['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The jwk parameter "k" must be at least 48 bytes.')
+      new InvalidJsonWebKeyException('The jwk parameter "k" must be at least 48 bytes.'),
     );
   });
 
@@ -114,7 +114,7 @@ describe('JSON Web Signature HMAC using SHA-512 Backend', () => {
     Object.setPrototypeOf(key, OctetSequenceKey.prototype);
 
     expect(() => HS512['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "HS512" only accepts "oct" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "HS512" only accepts "oct" JSON Web Keys.'),
     );
   });
 
@@ -122,7 +122,7 @@ describe('JSON Web Signature HMAC using SHA-512 Backend', () => {
     const key = await OctetSequenceKey.generate('oct', { length: randomInt(1, 64) });
 
     expect(() => HS512['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The jwk parameter "k" must be at least 64 bytes.')
+      new InvalidJsonWebKeyException('The jwk parameter "k" must be at least 64 bytes.'),
     );
   });
 

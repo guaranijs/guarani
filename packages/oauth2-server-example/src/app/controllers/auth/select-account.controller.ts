@@ -84,7 +84,7 @@ class Controller {
       } = await axios.post<SelectAccountDecisionInteractionResponse>(
         'http://localhost:4000/oauth/interaction',
         requestBody,
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
       );
 
       const display = request.cookies.display as Display;

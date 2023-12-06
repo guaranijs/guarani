@@ -46,7 +46,7 @@ export class DiscoveryEndpoint implements EndpointInterface {
    */
   public constructor(
     @LazyInject(() => AuthorizationServer) private readonly authorizationServer: AuthorizationServer,
-    @Inject(SETTINGS) private readonly settings: Settings
+    @Inject(SETTINGS) private readonly settings: Settings,
   ) {}
 
   /**

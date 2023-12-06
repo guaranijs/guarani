@@ -33,8 +33,8 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
 
     expect(() => A128KW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "A128KW" only accepts "oct" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "A128KW" only accepts "oct" JSON Web Keys.',
+      ),
     );
   });
 
@@ -42,7 +42,7 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
     const key = await OctetSequenceKey.generate('oct', { length: 24 });
 
     expect(() => A128KW['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.')
+      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.'),
     );
   });
 
@@ -55,7 +55,7 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
     let wrappedKey!: Buffer;
 
     await expect(
-      (async () => ([contentEncryptionKey, wrappedKey] = await A128KW.wrap(contentEncryptionBackend, wrapKey)))()
+      (async () => ([contentEncryptionKey, wrappedKey] = await A128KW.wrap(contentEncryptionBackend, wrapKey)))(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -72,9 +72,9 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
         return (contentEncryptionKey = await A128KW.unwrap(
           contentEncryptionBackend,
           unwrapKey,
-          Buffer.from('k1o-sQHDSt0CXhcLRv8Nsj5cL66Mj4Nw', 'base64url')
+          Buffer.from('k1o-sQHDSt0CXhcLRv8Nsj5cL66Mj4Nw', 'base64url'),
         ));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -100,8 +100,8 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
 
     expect(() => A192KW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "A192KW" only accepts "oct" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "A192KW" only accepts "oct" JSON Web Keys.',
+      ),
     );
   });
 
@@ -109,7 +109,7 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
     const key = await OctetSequenceKey.generate('oct', { length: 32 });
 
     expect(() => A192KW['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.')
+      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.'),
     );
   });
 
@@ -122,7 +122,7 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
     let wrappedKey!: Buffer;
 
     await expect(
-      (async () => ([contentEncryptionKey, wrappedKey] = await A192KW.wrap(contentEncryptionBackend, wrapKey)))()
+      (async () => ([contentEncryptionKey, wrappedKey] = await A192KW.wrap(contentEncryptionBackend, wrapKey)))(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -139,9 +139,9 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
         return (contentEncryptionKey = await A192KW.unwrap(
           contentEncryptionBackend,
           unwrapKey,
-          Buffer.from('VJBm6T4_p5MNZCsW4lu050IbEWJpedBF', 'base64url')
+          Buffer.from('VJBm6T4_p5MNZCsW4lu050IbEWJpedBF', 'base64url'),
         ));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -167,8 +167,8 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
 
     expect(() => A256KW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "A256KW" only accepts "oct" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "A256KW" only accepts "oct" JSON Web Keys.',
+      ),
     );
   });
 
@@ -176,7 +176,7 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
     const key = await OctetSequenceKey.generate('oct', { length: 16 });
 
     expect(() => A256KW['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.')
+      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.'),
     );
   });
 
@@ -189,7 +189,7 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
     let wrappedKey!: Buffer;
 
     await expect(
-      (async () => ([contentEncryptionKey, wrappedKey] = await A256KW.wrap(contentEncryptionBackend, wrapKey)))()
+      (async () => ([contentEncryptionKey, wrappedKey] = await A256KW.wrap(contentEncryptionBackend, wrapKey)))(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -206,9 +206,9 @@ describe('JSON Web Encryption Key Wrap AES Key Wrap with default initial value u
         return (contentEncryptionKey = await A256KW.unwrap(
           contentEncryptionBackend,
           unwrapKey,
-          Buffer.from('jMS_7Kip8vOMiyg5Lx6PSz5aX9LyC9aI', 'base64url')
+          Buffer.from('jMS_7Kip8vOMiyg5Lx6PSz5aX9LyC9aI', 'base64url'),
         ));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);

@@ -174,7 +174,7 @@ describe('Userinfo Endpoint', () => {
       container.bind(UserinfoEndpoint).toSelf().asSingleton();
 
       expect(() => container.resolve(UserinfoEndpoint)).toThrow(
-        new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".')
+        new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".'),
       );
     });
   });
@@ -385,7 +385,7 @@ describe('Userinfo Endpoint', () => {
       const { payload } = await JsonWebSignature.verify(
         signedJwt,
         async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-        ['RS256']
+        ['RS256'],
       );
 
       const jwtClaims = new JsonWebTokenClaims(JSON.parse(payload.toString('utf8')));
@@ -458,7 +458,7 @@ describe('Userinfo Endpoint', () => {
         encryptedJwt,
         rsaKeyWrapKey,
         ['RSA-OAEP'],
-        ['A128CBC-HS256']
+        ['A128CBC-HS256'],
       );
 
       const signedJwt = plaintext.toString('ascii');
@@ -468,7 +468,7 @@ describe('Userinfo Endpoint', () => {
       const { payload } = await JsonWebSignature.verify(
         signedJwt,
         async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
-        ['RS256']
+        ['RS256'],
       );
 
       const jwtClaims = new JsonWebTokenClaims(JSON.parse(payload.toString('utf8')));

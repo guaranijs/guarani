@@ -165,7 +165,7 @@ describe('Post Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid Http Request Body.'
+        'Invalid Http Request Body.',
       );
     });
 
@@ -191,7 +191,7 @@ describe('Post Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
     });
 
@@ -208,7 +208,7 @@ describe('Post Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InsufficientScopeException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
     });
 

@@ -72,7 +72,7 @@ describe('End Session Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "id_token_hint".'
+        'Invalid parameter "id_token_hint".',
       );
     });
 
@@ -81,7 +81,7 @@ describe('End Session Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "client_id".'
+        'Invalid parameter "client_id".',
       );
     });
 
@@ -100,7 +100,7 @@ describe('End Session Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "post_logout_redirect_uri".'
+        'Invalid parameter "post_logout_redirect_uri".',
       );
     });
 
@@ -115,7 +115,7 @@ describe('End Session Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'The Post Logout Redirect URI MUST NOT have a fragment component.'
+        'The Post Logout Redirect URI MUST NOT have a fragment component.',
       );
     });
 
@@ -131,7 +131,7 @@ describe('End Session Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Post Logout Redirect URI.'
+        'Invalid Post Logout Redirect URI.',
       );
     });
 
@@ -147,7 +147,7 @@ describe('End Session Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Post Logout Redirect URI.'
+        'Invalid Post Logout Redirect URI.',
       );
     });
 
@@ -163,7 +163,7 @@ describe('End Session Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported UI Locale "unknown".'
+        'Unsupported UI Locale "unknown".',
       );
     });
 
@@ -189,7 +189,7 @@ describe('End Session Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported UI Locale "pt-BR".'
+        'Unsupported UI Locale "pt-BR".',
       );
     });
 

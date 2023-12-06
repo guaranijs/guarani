@@ -58,7 +58,7 @@ export class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
    */
   public async wrap(
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
-    wrapKey: OctetSequenceKey
+    wrapKey: OctetSequenceKey,
   ): Promise<[Buffer, Buffer, Partial<GcmHeaderParameters>]> {
     this.validateJsonWebKey(wrapKey);
 
@@ -94,7 +94,7 @@ export class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     unwrapKey: OctetSequenceKey,
     wrappedKey: Buffer,
-    header: GcmHeaderParameters
+    header: GcmHeaderParameters,
   ): Promise<Buffer> {
     this.validateJsonWebKey(unwrapKey);
 
@@ -126,7 +126,7 @@ export class GcmBackend extends JsonWebEncryptionKeyWrapBackend {
 
     if (key.kty !== 'oct') {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts "oct" JSON Web Keys.`
+        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts "oct" JSON Web Keys.`,
       );
     }
 

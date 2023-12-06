@@ -32,7 +32,7 @@ export class CreateLoginsAndSessionsForeignKeys1678668719452 implements Migratio
         referencedColumnNames: ['id'],
         onDelete: 'SET NULL',
         onUpdate: 'CASCADE',
-      })
+      }),
     );
   }
 

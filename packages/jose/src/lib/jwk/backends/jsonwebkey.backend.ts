@@ -19,7 +19,7 @@ export abstract class JsonWebKeyBackend {
    */
   public abstract load(
     parameters: JsonWebKeyParameters,
-    additionalParameters?: Partial<JsonWebKeyParameters>
+    additionalParameters?: Partial<JsonWebKeyParameters>,
   ): Promise<JsonWebKey>;
 
   /**
@@ -30,7 +30,7 @@ export abstract class JsonWebKeyBackend {
    */
   public abstract generate(
     options: Dictionary<any>,
-    additionalParameters?: Partial<JsonWebKeyParameters>
+    additionalParameters?: Partial<JsonWebKeyParameters>,
   ): Promise<JsonWebKey>;
 
   /**

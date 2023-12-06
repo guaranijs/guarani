@@ -11,12 +11,12 @@ import { LazyToken } from '../types/lazy-token';
  * @param wrappedToken Function that wraps the Constructor Injectable Token to be lazy injected.
  */
 export function LazyInject<T>(
-  wrappedToken: () => AbstractConstructor<T> | Constructor<T>
+  wrappedToken: () => AbstractConstructor<T> | Constructor<T>,
 ): PropertyDecorator & ParameterDecorator {
   return function (
     target: object | AbstractConstructor<T> | Constructor<T>,
     propertyKey?: string | symbol,
-    parameterIndex?: number
+    parameterIndex?: number,
   ): void {
     const lazyToken = new LazyToken<T>(wrappedToken);
 

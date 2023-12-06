@@ -18,7 +18,7 @@ describe('getBodyParameters()', () => {
 
     expect(() => getBodyParameters(request)).toThrowWithMessage(
       UnsupportedMediaTypeException,
-      'Unexpected Content Type "application/octet-stream".'
+      'Unexpected Content Type "application/octet-stream".',
     );
   });
 

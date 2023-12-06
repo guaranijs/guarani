@@ -92,7 +92,7 @@ describe('Create Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "login_challenge".'
+        'Invalid parameter "login_challenge".',
       );
     });
 
@@ -103,7 +103,7 @@ describe('Create Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Login Challenge.'
+        'Invalid Login Challenge.',
       );
     });
 
@@ -146,7 +146,7 @@ describe('Create Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "login_challenge".'
+        'Invalid parameter "login_challenge".',
       );
     });
 
@@ -157,7 +157,7 @@ describe('Create Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Login Challenge.'
+        'Invalid Login Challenge.',
       );
     });
 

@@ -67,7 +67,7 @@ export class EndSessionEndpoint implements EndpointInterface {
     private readonly idTokenHandler: IdTokenHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
-    @Inject(LOGOUT_TICKET_SERVICE) private readonly logoutTicketService: LogoutTicketServiceInterface
+    @Inject(LOGOUT_TICKET_SERVICE) private readonly logoutTicketService: LogoutTicketServiceInterface,
   ) {
     if (typeof this.settings.userInteraction === 'undefined') {
       throw new TypeError('Missing User Interaction options.');
@@ -114,7 +114,7 @@ export class EndSessionEndpoint implements EndpointInterface {
       if (session !== null && session.activeLogin !== null) {
         if (!(await this.idTokenHandler.checkIdTokenHint(idTokenHint, client, session.activeLogin))) {
           throw new InvalidRequestException(
-            'The currently authenticated User is not the one expected by the ID Token Hint.'
+            'The currently authenticated User is not the one expected by the ID Token Hint.',
           );
         }
 
@@ -245,7 +245,7 @@ export class EndSessionEndpoint implements EndpointInterface {
   private handleFatalEndSessionError(error: OAuth2Exception): HttpResponse {
     const url = addParametersToUrl(
       new URL(this.settings.userInteraction!.errorUrl, this.settings.issuer),
-      error.toJSON()
+      error.toJSON(),
     );
 
     return new HttpResponse().redirect(url.href);

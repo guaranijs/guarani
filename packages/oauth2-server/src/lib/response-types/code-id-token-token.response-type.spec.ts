@@ -116,7 +116,7 @@ describe('Code ID Token Token Response Type', () => {
 
       await expect(responseType.handle(context, login, consent)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Missing required scope "openid".'
+        'Missing required scope "openid".',
       );
     });
 

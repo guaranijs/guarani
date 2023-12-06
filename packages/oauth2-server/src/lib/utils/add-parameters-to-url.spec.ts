@@ -17,7 +17,7 @@ describe('addParametersToUrl()', () => {
     };
 
     expect(addParametersToUrl(url, parameters).href).toEqual(
-      'https://client.example.com/oauth/callback?var1=string&var2=123&var3=true'
+      'https://client.example.com/oauth/callback?var1=string&var2=123&var3=true',
     );
   });
 
@@ -33,7 +33,7 @@ describe('addParametersToUrl()', () => {
     };
 
     expect(addParametersToUrl(url, parameters).href).toEqual(
-      'https://client.example.com/oauth/callback?tenant=tenant&var1=string&var2=123&var3=true'
+      'https://client.example.com/oauth/callback?tenant=tenant&var1=string&var2=123&var3=true',
     );
   });
 
@@ -49,7 +49,7 @@ describe('addParametersToUrl()', () => {
     };
 
     expect(addParametersToUrl(url, parameters, 'hash').href).toEqual(
-      'https://client.example.com/oauth/callback#var1=string&var2=123&var3=true'
+      'https://client.example.com/oauth/callback#var1=string&var2=123&var3=true',
     );
   });
 
@@ -65,7 +65,7 @@ describe('addParametersToUrl()', () => {
     };
 
     expect(addParametersToUrl(url, parameters, 'hash').href).toEqual(
-      'https://client.example.com/oauth/callback#tenant=tenant&var1=string&var2=123&var3=true'
+      'https://client.example.com/oauth/callback#tenant=tenant&var1=string&var2=123&var3=true',
     );
   });
 });

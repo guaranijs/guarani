@@ -47,7 +47,7 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
   public constructor(
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
-    @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface
+    @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
   ) {}
 
   /**
@@ -57,7 +57,7 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
    * @returns Select Account Context Interaction Response.
    */
   public async handleContext(
-    context: SelectAccountContextInteractionContext
+    context: SelectAccountContextInteractionContext,
   ): Promise<SelectAccountContextInteractionResponse> {
     const { grant, session } = context;
 
@@ -80,7 +80,7 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
    * @returns Select Account Decision Interaction Response.
    */
   public async handleDecision(
-    context: SelectAccountDecisionInteractionContext
+    context: SelectAccountDecisionInteractionContext,
   ): Promise<SelectAccountDecisionInteractionResponse> {
     const { grant, login } = context;
 

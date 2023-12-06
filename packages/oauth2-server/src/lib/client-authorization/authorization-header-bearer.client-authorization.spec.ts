@@ -83,7 +83,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
       await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Missing Bearer Token.'
+        'Missing Bearer Token.',
       );
     });
 
@@ -92,7 +92,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
       await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'Invalid Bearer Token.'
+        'Invalid Bearer Token.',
       );
     });
 
@@ -101,7 +101,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
       await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'Invalid Access Token.'
+        'Invalid Access Token.',
       );
     });
 
@@ -112,7 +112,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
       await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'Expired Access Token.'
+        'Expired Access Token.',
       );
     });
 
@@ -127,7 +127,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
       await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'The provided Access Token is not yet valid.'
+        'The provided Access Token is not yet valid.',
       );
     });
 
@@ -143,7 +143,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
       await expect(clientAuthorization.authorize(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'Revoked Access Token.'
+        'Revoked Access Token.',
       );
     });
 

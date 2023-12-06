@@ -45,7 +45,7 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
   public constructor(
     protected readonly scopeHandler: ScopeHandler,
     @Inject(GRANT_SERVICE) protected readonly grantService: GrantServiceInterface,
-    @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[]
+    @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[],
   ) {
     super(interactionTypes);
   }
@@ -73,7 +73,7 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(
-    request: HttpRequest
+    request: HttpRequest,
   ): Promise<ConsentDecisionInteractionContext<ConsentDecision>> {
     const context = await super.validateDecision(request);
 
@@ -104,7 +104,7 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
    * @returns Grant based on the provided Consent Challenge.
    */
   private async getGrant(
-    parameters: ConsentContextInteractionRequest | ConsentDecisionInteractionRequest
+    parameters: ConsentContextInteractionRequest | ConsentDecisionInteractionRequest,
   ): Promise<Grant> {
     if (typeof parameters.consent_challenge === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "consent_challenge".');
@@ -179,7 +179,7 @@ export class ConsentInteractionRequestValidator extends InteractionRequestValida
 
     const exception: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
       Reflect.construct(OAuth2Exception, [parameters.error_description]),
-      { error: parameters.error }
+      { error: parameters.error },
     );
 
     return exception;

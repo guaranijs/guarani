@@ -13,7 +13,7 @@ export function Optional(): ParameterDecorator & PropertyDecorator {
   return function (
     target: object | AbstractConstructor<object> | Constructor<object>,
     propertyKey?: string | symbol,
-    parameterIndex?: number
+    parameterIndex?: number,
   ): void {
     // Constructor parameters
     if (typeof propertyKey === 'undefined' && typeof parameterIndex !== 'undefined' && typeof target !== 'object') {

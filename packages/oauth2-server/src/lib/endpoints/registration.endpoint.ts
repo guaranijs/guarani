@@ -68,7 +68,7 @@ export class RegistrationEndpoint implements EndpointInterface {
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(CLIENT_SERVICE) private readonly clientService: ClientServiceInterface,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
-    @InjectAll(RegistrationRequestValidator) private readonly validators: RegistrationRequestValidator[]
+    @InjectAll(RegistrationRequestValidator) private readonly validators: RegistrationRequestValidator[],
   ) {
     if (typeof clientService.create !== 'function') {
       throw new TypeError('Missing implementation of required method "ClientServiceInterface.create".');
@@ -84,7 +84,7 @@ export class RegistrationEndpoint implements EndpointInterface {
 
     if (typeof accessTokenService.createRegistrationAccessToken !== 'function') {
       throw new TypeError(
-        'Missing implementation of required method "AccessTokenServiceInterface.createRegistrationAccessToken".'
+        'Missing implementation of required method "AccessTokenServiceInterface.createRegistrationAccessToken".',
       );
     }
   }

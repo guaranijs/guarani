@@ -7,6 +7,6 @@ import { LazyClass02Stub } from './lazy-class-02.stub';
 export class LazyClass01Stub {
   public constructor(
     @LazyInject(() => LazyClass02Stub) public readonly l2: LazyClass02Stub,
-    @Inject('Host') public readonly host: string
+    @Inject('Host') public readonly host: string,
   ) {}
 }

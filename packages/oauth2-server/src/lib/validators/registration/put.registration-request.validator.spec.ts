@@ -112,7 +112,7 @@ describe('Put Registration Request Validator', () => {
 
     const requestFactory = (
       queryData: Partial<PutQueryRegistrationRequest> = {},
-      bodyData: Partial<PutBodyRegistrationRequest> = {}
+      bodyData: Partial<PutBodyRegistrationRequest> = {},
     ): HttpRequest => {
       removeNullishValues<PutQueryRegistrationRequest>(Object.assign(queryParameters, queryData));
       removeNullishValues<PutBodyRegistrationRequest>(Object.assign(bodyParameters, bodyData));
@@ -180,7 +180,7 @@ describe('Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid Http Request Body.'
+        'Invalid Http Request Body.',
       );
     });
 
@@ -189,7 +189,7 @@ describe('Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid parameter "client_id".'
+        'Invalid parameter "client_id".',
       );
     });
 
@@ -200,9 +200,9 @@ describe('Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "client_id".'
+          'Invalid parameter "client_id".',
         );
-      }
+      },
     );
 
     it('should throw when the query and body client identifiers do not match.', async () => {
@@ -210,7 +210,7 @@ describe('Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Mismatching Client Identifiers.'
+        'Mismatching Client Identifiers.',
       );
     });
 
@@ -221,9 +221,9 @@ describe('Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "client_secret".'
+          'Invalid parameter "client_secret".',
         );
-      }
+      },
     );
 
     it('should throw when the client fails the authorization process.', async () => {
@@ -245,7 +245,7 @@ describe('Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
     });
 
@@ -258,7 +258,7 @@ describe('Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InsufficientScopeException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
 
       expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -278,7 +278,7 @@ describe('Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InsufficientScopeException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
     });
 
@@ -295,7 +295,7 @@ describe('Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Mismatching Client Secret.'
+        'Mismatching Client Secret.',
       );
     });
 

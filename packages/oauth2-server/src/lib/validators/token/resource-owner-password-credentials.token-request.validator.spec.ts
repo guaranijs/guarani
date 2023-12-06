@@ -87,8 +87,8 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
 
       expect(() => container.resolve(ResourceOwnerPasswordCredentialsTokenRequestValidator)).toThrow(
         new TypeError(
-          'Missing implementation of required method "UserServiceInterface.findByResourceOwnerCredentials".'
-        )
+          'Missing implementation of required method "UserServiceInterface.findByResourceOwnerCredentials".',
+        ),
       );
     });
   });
@@ -121,7 +121,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "username".'
+        'Invalid parameter "username".',
       );
     });
 
@@ -134,7 +134,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "password".'
+        'Invalid parameter "password".',
       );
     });
 
@@ -148,7 +148,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
     });
 

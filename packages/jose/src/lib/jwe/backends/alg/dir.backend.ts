@@ -28,7 +28,7 @@ class DirBackend extends JsonWebEncryptionKeyWrapBackend {
    */
   public async wrap(
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
-    wrapKey: OctetSequenceKey
+    wrapKey: OctetSequenceKey,
   ): Promise<[Buffer, Buffer]> {
     this.validateJsonWebKey(wrapKey);
 
@@ -51,7 +51,7 @@ class DirBackend extends JsonWebEncryptionKeyWrapBackend {
   public async unwrap(
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     unwrapKey: OctetSequenceKey,
-    wrappedKey: Buffer
+    wrappedKey: Buffer,
   ): Promise<Buffer> {
     if (wrappedKey.length !== 0) {
       throw new InvalidJsonWebEncryptionException('Expected the Encrypted Content Encryption Key to be empty.');
@@ -75,7 +75,7 @@ class DirBackend extends JsonWebEncryptionKeyWrapBackend {
 
     if (key.kty !== 'oct') {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts "oct" JSON Web Keys.`
+        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts "oct" JSON Web Keys.`,
       );
     }
   }

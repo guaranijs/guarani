@@ -73,7 +73,7 @@ export class UserinfoEndpoint implements EndpointInterface {
     private readonly clientAuthorizationHandler: ClientAuthorizationHandler,
     private readonly jwks: JsonWebKeySet,
     @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(USER_SERVICE) private readonly userService: UserServiceInterface
+    @Inject(USER_SERVICE) private readonly userService: UserServiceInterface,
   ) {
     if (typeof this.userService.getUserinfo !== 'function') {
       throw new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".');

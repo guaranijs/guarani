@@ -122,20 +122,20 @@ export class JsonWebEncryptionHeader extends JoseHeader implements JsonWebEncryp
 
     if (!Object.hasOwn(JSONWEBENCRYPTION_KEYWRAP_REGISTRY, parameters.alg)) {
       throw new UnsupportedAlgorithmException(
-        `Unsupported JSON Web Encryption Key Wrap Algorithm "${parameters.alg}".`
+        `Unsupported JSON Web Encryption Key Wrap Algorithm "${parameters.alg}".`,
       );
     }
 
     if (!Object.hasOwn(JSONWEBENCRYPTION_CONTENT_ENCRYPTION_REGISTRY, parameters.enc)) {
       throw new UnsupportedAlgorithmException(
-        `Unsupported JSON Web Encryption Content Encryption Algorithm "${parameters.enc}".`
+        `Unsupported JSON Web Encryption Content Encryption Algorithm "${parameters.enc}".`,
       );
     }
 
     if (typeof parameters.zip !== 'undefined') {
       if (!Object.hasOwn(JSONWEBENCRYPTION_COMPRESSION_REGISTRY, parameters.zip)) {
         throw new UnsupportedAlgorithmException(
-          `Unsupported JSON Web Encryption Compression Algorithm "${parameters.zip}".`
+          `Unsupported JSON Web Encryption Compression Algorithm "${parameters.zip}".`,
         );
       }
     }

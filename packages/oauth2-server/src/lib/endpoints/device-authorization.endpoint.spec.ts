@@ -90,7 +90,7 @@ describe('Device Authorization Endpoint', () => {
 
       expect(() => container.resolve(DeviceAuthorizationEndpoint)).toThrowWithMessage(
         TypeError,
-        'Missing User Interaction options.'
+        'Missing User Interaction options.',
       );
     });
   });

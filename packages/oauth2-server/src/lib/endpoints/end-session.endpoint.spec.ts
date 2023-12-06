@@ -104,7 +104,7 @@ describe('End Session Endpoint', () => {
 
       expect(() => container.resolve(EndSessionEndpoint)).toThrowWithMessage(
         TypeError,
-        'Missing User Interaction options.'
+        'Missing User Interaction options.',
       );
     });
 
@@ -133,8 +133,8 @@ describe('End Session Endpoint', () => {
       cookies = removeNullishValues(
         Object.assign<Dictionary<unknown>, Dictionary<unknown>>(
           { 'guarani:session': 'session_id', 'guarani:logout': 'logout_ticket_id' },
-          cookies
-        )
+          cookies,
+        ),
       );
 
       return new HttpRequest({
@@ -298,7 +298,7 @@ describe('End Session Endpoint', () => {
       idTokenHandlerMock.checkIdTokenHint.mockResolvedValueOnce(false);
 
       const error = new InvalidRequestException(
-        'The currently authenticated User is not the one expected by the ID Token Hint.'
+        'The currently authenticated User is not the one expected by the ID Token Hint.',
       );
 
       const location = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
@@ -522,7 +522,7 @@ describe('End Session Endpoint', () => {
     it('should redirect to the post logout url and remove the session cookie.', async () => {
       const request = requestFactory(
         { post_logout_redirect_uri: undefined },
-        { 'guarani:session': undefined, 'guarani:logout': undefined }
+        { 'guarani:session': undefined, 'guarani:logout': undefined },
       );
 
       const context = <EndSessionContext>{

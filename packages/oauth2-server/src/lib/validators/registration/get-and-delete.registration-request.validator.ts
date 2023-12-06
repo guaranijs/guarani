@@ -19,7 +19,7 @@ import { RegistrationRequestValidator } from './registration-request.validator';
 export abstract class GetAndDeleteRegistrationRequestValidator<
   TContext extends GetRegistrationContext | DeleteRegistrationContext =
     | GetRegistrationContext
-    | DeleteRegistrationContext
+    | DeleteRegistrationContext,
 > extends RegistrationRequestValidator<TContext> {
   /**
    * Instantiates a new Dynamic Registration Request Validator.
@@ -29,7 +29,7 @@ export abstract class GetAndDeleteRegistrationRequestValidator<
    */
   public constructor(
     protected readonly clientAuthorizationHandler: ClientAuthorizationHandler,
-    protected readonly accessTokenService: AccessTokenServiceInterface
+    protected readonly accessTokenService: AccessTokenServiceInterface,
   ) {
     super();
   }

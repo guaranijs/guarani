@@ -55,32 +55,32 @@ describe('Octet Key Pair Key', () => {
     it('should throw when providing a "kty" different than "OKP".', () => {
       // @ts-expect-error Invalid JSON Web Key Type.
       expect(() => new OctetKeyPairKey({ kty: 'unknown' })).toThrow(
-        new TypeError('Invalid jwk parameter "kty". Expected "OKP", got "unknown".')
+        new TypeError('Invalid jwk parameter "kty". Expected "OKP", got "unknown".'),
       );
     });
 
     it.each(invalidCurves)('should throw when passing an invalid curve type.', (crv) => {
       expect(() => new OctetKeyPairKey({ ...publicParameters, crv })).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "crv".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "crv".'),
       );
     });
 
     it('should throw when passing an unsupported curve.', () => {
       // @ts-expect-error Invalid parameter "crv".
       expect(() => new OctetKeyPairKey({ ...publicParameters, crv: 'unknown' })).toThrow(
-        new UnsupportedEllipticCurveException('Invalid jwk parameter "crv".')
+        new UnsupportedEllipticCurveException('Invalid jwk parameter "crv".'),
       );
     });
 
     it.each(invalidPublicValues)('should throw when passing an invalid public value.', (x) => {
       expect(() => new OctetKeyPairKey({ ...publicParameters, x })).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "x".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "x".'),
       );
     });
 
     it.each(invalidPrivateValues)('should throw when passing an invalid private value.', (d) => {
       expect(() => new OctetKeyPairKey({ ...privateParameters, d })).toThrow(
-        new InvalidJsonWebKeyException('Invalid jwk parameter "d".')
+        new InvalidJsonWebKeyException('Invalid jwk parameter "d".'),
       );
     });
 

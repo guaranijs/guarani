@@ -42,7 +42,7 @@ export class IdTokenTokenAuthorizationRequestValidator extends AuthorizationRequ
     @Inject(CLIENT_SERVICE) protected override readonly clientService: ClientServiceInterface,
     @InjectAll(RESPONSE_MODE) protected override readonly responseModes: ResponseModeInterface[],
     @InjectAll(RESPONSE_TYPE) protected override readonly responseTypes: ResponseTypeInterface[],
-    @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[]
+    @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[],
   ) {
     super(scopeHandler, settings, clientService, responseModes, responseTypes, displays);
   }
@@ -56,7 +56,7 @@ export class IdTokenTokenAuthorizationRequestValidator extends AuthorizationRequ
    */
   protected override getResponseMode(
     parameters: AuthorizationRequest,
-    responseType: ResponseTypeInterface
+    responseType: ResponseTypeInterface,
   ): ResponseModeInterface {
     const responseMode = super.getResponseMode(parameters, responseType);
 

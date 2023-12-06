@@ -206,7 +206,7 @@ export class DependencyInjectionContainer {
    */
   private construct<T>(
     class_: AbstractConstructor<T> | Constructor<T>,
-    requestResolutions: Map<InjectableToken<T>, T>
+    requestResolutions: Map<InjectableToken<T>, T>,
   ): T {
     const resolvedParamDependencies = this.resolveConstructorDependencies(class_, requestResolutions);
 
@@ -229,7 +229,7 @@ export class DependencyInjectionContainer {
    */
   private resolveConstructorDependencies<T>(
     class_: AbstractConstructor<T> | Constructor<T>,
-    requestResolutions: Map<InjectableToken<T>, T>
+    requestResolutions: Map<InjectableToken<T>, T>,
   ): unknown[] {
     const paramTypeDescriptors: TokenDescriptor<unknown>[] = Reflect.getMetadata(PARAM_TYPES, class_) ?? [];
 
@@ -255,11 +255,11 @@ export class DependencyInjectionContainer {
    */
   private resolvePropertiesDependencies<T>(
     classOrInstance: object | AbstractConstructor<T> | Constructor<T>,
-    requestResolutions: Map<InjectableToken<T>, T>
+    requestResolutions: Map<InjectableToken<T>, T>,
   ): void {
     const propTokens: Map<string | symbol, TokenDescriptor<unknown>> | undefined = Reflect.getMetadata(
       PROP_TOKENS,
-      classOrInstance
+      classOrInstance,
     );
 
     if (propTokens instanceof Map) {

@@ -49,7 +49,7 @@ describe('JSON Web Encryption Content Encryption AES Galois Counter Mode using 1
     const key = await A128GCM.generateContentEncryptionKey();
 
     await expect(A128GCM.encrypt(plaintext, aad, Buffer.alloc(0), key)).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 
@@ -57,7 +57,7 @@ describe('JSON Web Encryption Content Encryption AES Galois Counter Mode using 1
     const iv = await A128GCM.generateInitializationVector();
 
     await expect(A128GCM.encrypt(plaintext, aad, iv, Buffer.alloc(0))).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 
@@ -123,7 +123,7 @@ describe('JSON Web Encryption Content Encryption AES Galois Counter Mode using 1
     const key = await A192GCM.generateContentEncryptionKey();
 
     await expect(A192GCM.encrypt(plaintext, aad, Buffer.alloc(0), key)).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 
@@ -131,7 +131,7 @@ describe('JSON Web Encryption Content Encryption AES Galois Counter Mode using 1
     const iv = await A192GCM.generateInitializationVector();
 
     await expect(A192GCM.encrypt(plaintext, aad, iv, Buffer.alloc(0))).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 
@@ -197,7 +197,7 @@ describe('JSON Web Encryption Content Encryption AES Galois Counter Mode using 2
     const key = await A256GCM.generateContentEncryptionKey();
 
     await expect(A256GCM.encrypt(plaintext, aad, Buffer.alloc(0), key)).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 
@@ -205,7 +205,7 @@ describe('JSON Web Encryption Content Encryption AES Galois Counter Mode using 2
     const iv = await A256GCM.generateInitializationVector();
 
     await expect(A256GCM.encrypt(plaintext, aad, iv, Buffer.alloc(0))).rejects.toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 

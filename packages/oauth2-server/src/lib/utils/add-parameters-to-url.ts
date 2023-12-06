@@ -15,7 +15,7 @@ import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 export function addParametersToUrl(
   url: string | URL,
   parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
-  location: 'search' | 'hash' = 'search'
+  location: 'search' | 'hash' = 'search',
 ): URL {
   url = url instanceof URL ? url : new URL(url);
   url[location] += (url[location].length === 0 ? '' : '&') + stringifyQs(removeNullishValues(parameters));

@@ -106,7 +106,7 @@ export class JsonWebSignature {
   public static async verify(
     token: string,
     keyOrKeyLoader: Nullable<JsonWebKey | JsonWebKeyLoader>,
-    expectedAlgorithms: JsonWebSignatureAlgorithm[]
+    expectedAlgorithms: JsonWebSignatureAlgorithm[],
   ): Promise<JsonWebSignature> {
     if (keyOrKeyLoader !== null && !(keyOrKeyLoader instanceof JsonWebKey) && typeof keyOrKeyLoader !== 'function') {
       throw new InvalidJsonWebKeyException();
@@ -119,7 +119,7 @@ export class JsonWebSignature {
     try {
       if (!expectedAlgorithms.includes(header.alg)) {
         throw new InvalidJsonWebSignatureException(
-          `The JSON Web Signature Algorithm "${header.alg}" does not match the expected algorithms.`
+          `The JSON Web Signature Algorithm "${header.alg}" does not match the expected algorithms.`,
         );
       }
 

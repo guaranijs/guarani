@@ -85,7 +85,7 @@ const localhostPostLogoutRedirectUris = [
 
 const invalidAuthenticationMethodSigningCombinations: [
   ClientAuthentication,
-  Exclude<JsonWebSignatureAlgorithm, 'none'>
+  Exclude<JsonWebSignatureAlgorithm, 'none'>,
 ][] = [
   ['private_key_jwt', 'HS256'],
   ['client_secret_jwt', 'RS256'],
@@ -225,7 +225,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid Http Request Body.'
+        'Invalid Http Request Body.',
       );
     });
 
@@ -236,9 +236,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "redirect_uris".'
+          'Invalid parameter "redirect_uris".',
         );
-      }
+      },
     );
 
     it('should throw when providing an invalid redirect uri.', async () => {
@@ -246,7 +246,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRedirectUriException,
-        'Invalid Redirect URI "client.example.com/oauth/callback".'
+        'Invalid Redirect URI "client.example.com/oauth/callback".',
       );
     });
 
@@ -257,7 +257,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRedirectUriException,
-        'The Redirect URI "https://client.example.com/oauth/callback#fragment-component" MUST NOT have a fragment component.'
+        'The Redirect URI "https://client.example.com/oauth/callback#fragment-component" MUST NOT have a fragment component.',
       );
     });
 
@@ -268,9 +268,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "response_types".'
+          'Invalid parameter "response_types".',
         );
-      }
+      },
     );
 
     it('should throw when providing an unsupported response type.', async () => {
@@ -278,7 +278,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported response_type "unknown".'
+        'Unsupported response_type "unknown".',
       );
     });
 
@@ -289,9 +289,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "grant_types".'
+          'Invalid parameter "grant_types".',
         );
-      }
+      },
     );
 
     it('should throw when providing an unsupported grant type.', async () => {
@@ -299,7 +299,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported grant_type "unknown".'
+        'Unsupported grant_type "unknown".',
       );
     });
 
@@ -308,7 +308,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'The Response Type "code" requires the Grant Type "authorization_code".'
+        'The Response Type "code" requires the Grant Type "authorization_code".',
       );
     });
 
@@ -319,9 +319,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'The Response Types ["id_token", "id_token token", "token"] require the Grant Type "implicit".'
+          'The Response Types ["id_token", "id_token token", "token"] require the Grant Type "implicit".',
         );
-      }
+      },
     );
 
     it.each([...hybridAuthorizationCode, ...hybridImplicit])(
@@ -331,9 +331,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'The Response Types ["code id_token", "code id_token token", "code token"] require the Grant Types ["authorization_code", "implicit"].'
+          'The Response Types ["code id_token", "code id_token token", "code token"] require the Grant Types ["authorization_code", "implicit"].',
         );
-      }
+      },
     );
 
     it.each(implicitResponseTypes)(
@@ -346,9 +346,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'The Grant Type "authorization_code" requires at lease one of the Response Types ["code", "code id_token", "code id_token token", "code token"].'
+          'The Grant Type "authorization_code" requires at lease one of the Response Types ["code", "code id_token", "code id_token token", "code token"].',
         );
-      }
+      },
     );
 
     it('should throw when providing the "implicit" grant type and not providing one of "code, code id_token, code id_token token, code token, id_token, id_token token, token" response types.', async () => {
@@ -356,7 +356,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'The Grant Type "implicit" requires at lease one of the Response Types ["code id_token", "code id_token token", "code token", "id_token", "id_token token", "token"].'
+        'The Grant Type "implicit" requires at lease one of the Response Types ["code id_token", "code id_token token", "code token", "id_token", "id_token token", "token"].',
       );
     });
 
@@ -367,9 +367,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "application_type".'
+          'Invalid parameter "application_type".',
         );
-      }
+      },
     );
 
     it('should throw when providing an unsupported application type.', async () => {
@@ -377,7 +377,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported application_type "unknown".'
+        'Unsupported application_type "unknown".',
       );
     });
 
@@ -386,7 +386,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRedirectUriException,
-        'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.'
+        'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
       );
     });
 
@@ -395,7 +395,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRedirectUriException,
-        'The Redirect URI "http://client.example.com/oauth/callback" does not use the https protocol.'
+        'The Redirect URI "http://client.example.com/oauth/callback" does not use the https protocol.',
       );
     });
 
@@ -406,9 +406,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidRedirectUriException,
-          'The Authorization Server disallows using localhost as a Redirect URI for a "web" application.'
+          'The Authorization Server disallows using localhost as a Redirect URI for a "web" application.',
         );
-      }
+      },
     );
 
     it.each(invalidClientNames)(
@@ -418,9 +418,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "client_name".'
+          'Invalid parameter "client_name".',
         );
-      }
+      },
     );
 
     it.each(invalidScopes)('should throw when providing an invalid "scope" parameter.', async (scope) => {
@@ -428,7 +428,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid parameter "scope".'
+        'Invalid parameter "scope".',
       );
     });
 
@@ -451,9 +451,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "contacts".'
+          'Invalid parameter "contacts".',
         );
-      }
+      },
     );
 
     it.each(invalidLogoUris)('should throw when providing an invalid "logo_uri" parameter.', async (logoUri) => {
@@ -461,7 +461,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid parameter "logo_uri".'
+        'Invalid parameter "logo_uri".',
       );
     });
 
@@ -470,7 +470,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid Logo URI.'
+        'Invalid Logo URI.',
       );
     });
 
@@ -479,7 +479,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid parameter "client_uri".'
+        'Invalid parameter "client_uri".',
       );
     });
 
@@ -488,7 +488,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid Client URI.'
+        'Invalid Client URI.',
       );
     });
 
@@ -497,7 +497,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid parameter "policy_uri".'
+        'Invalid parameter "policy_uri".',
       );
     });
 
@@ -506,7 +506,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid Policy URI.'
+        'Invalid Policy URI.',
       );
     });
 
@@ -515,7 +515,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid parameter "tos_uri".'
+        'Invalid parameter "tos_uri".',
       );
     });
 
@@ -524,7 +524,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid Terms of Service URI.'
+        'Invalid Terms of Service URI.',
       );
     });
 
@@ -533,7 +533,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Only one of the parameters "jwks_uri" and "jwks" must be provided.'
+        'Only one of the parameters "jwks_uri" and "jwks" must be provided.',
       );
     });
 
@@ -542,7 +542,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid parameter "jwks_uri".'
+        'Invalid parameter "jwks_uri".',
       );
     });
 
@@ -551,7 +551,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid JSON Web Key Set URI.'
+        'Invalid JSON Web Key Set URI.',
       );
     });
 
@@ -560,7 +560,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid parameter "jwks".'
+        'Invalid parameter "jwks".',
       );
     });
 
@@ -569,7 +569,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid JSON Web Key Set.'
+        'Invalid JSON Web Key Set.',
       );
     });
 
@@ -578,7 +578,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'The Subject Type "pairwise" requires a Sector Identifier URI.'
+        'The Subject Type "pairwise" requires a Sector Identifier URI.',
       );
     });
 
@@ -589,9 +589,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "subject_type".'
+          'Invalid parameter "subject_type".',
         );
-      }
+      },
     );
 
     it('should throw when providing an unsupported subject type.', async () => {
@@ -599,7 +599,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported subject_type "unknown".'
+        'Unsupported subject_type "unknown".',
       );
     });
 
@@ -610,9 +610,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "sector_identifier_uri".'
+          'Invalid parameter "sector_identifier_uri".',
         );
-      }
+      },
     );
 
     it('should throw when providing an invalid sector identifier uri.', async () => {
@@ -620,7 +620,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid Sector Identifier URI.'
+        'Invalid Sector Identifier URI.',
       );
     });
 
@@ -629,7 +629,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'The Sector Identifier URI does not use the https protocol.'
+        'The Sector Identifier URI does not use the https protocol.',
       );
     });
 
@@ -640,9 +640,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "id_token_signed_response_alg".'
+          'Invalid parameter "id_token_signed_response_alg".',
         );
-      }
+      },
     );
 
     it('should throw when providing an unsupported id token signed response algorithm.', async () => {
@@ -652,7 +652,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported id_token_signed_response_alg "unknown".'
+        'Unsupported id_token_signed_response_alg "unknown".',
       );
     });
 
@@ -663,9 +663,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "id_token_encrypted_response_alg".'
+          'Invalid parameter "id_token_encrypted_response_alg".',
         );
-      }
+      },
     );
 
     it('should throw when providing an unsupported id token encrypted response key wrap algorithm.', async () => {
@@ -675,7 +675,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported id_token_encrypted_response_alg "unknown".'
+        'Unsupported id_token_encrypted_response_alg "unknown".',
       );
     });
 
@@ -686,9 +686,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "id_token_encrypted_response_enc".'
+          'Invalid parameter "id_token_encrypted_response_enc".',
         );
-      }
+      },
     );
 
     it('should throw when not providing the parameter "id_token_encrypted_response_alg" together with the parameter "id_token_encrypted_response_enc".', async () => {
@@ -697,7 +697,7 @@ describe('Post and Put Registration Request Validator', () => {
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
         'The parameter "id_token_encrypted_response_enc" must be presented together ' +
-          'with the parameter "id_token_encrypted_response_alg".'
+          'with the parameter "id_token_encrypted_response_alg".',
       );
     });
 
@@ -708,7 +708,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported id_token_encrypted_response_enc "unknown".'
+        'Unsupported id_token_encrypted_response_enc "unknown".',
       );
     });
 
@@ -719,9 +719,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "userinfo_signed_response_alg".'
+          'Invalid parameter "userinfo_signed_response_alg".',
         );
-      }
+      },
     );
 
     it('should throw when providing an unsupported id token signed response algorithm.', async () => {
@@ -731,7 +731,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported userinfo_signed_response_alg "unknown".'
+        'Unsupported userinfo_signed_response_alg "unknown".',
       );
     });
 
@@ -742,9 +742,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "userinfo_encrypted_response_alg".'
+          'Invalid parameter "userinfo_encrypted_response_alg".',
         );
-      }
+      },
     );
 
     it('should throw when providing an unsupported id token encrypted response key wrap algorithm.', async () => {
@@ -754,7 +754,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported userinfo_encrypted_response_alg "unknown".'
+        'Unsupported userinfo_encrypted_response_alg "unknown".',
       );
     });
 
@@ -765,9 +765,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "userinfo_encrypted_response_enc".'
+          'Invalid parameter "userinfo_encrypted_response_enc".',
         );
-      }
+      },
     );
 
     it('should throw when not providing the parameter "userinfo_signed_response_alg" together with the parameter "userinfo_encrypted_response_alg".', async () => {
@@ -776,7 +776,7 @@ describe('Post and Put Registration Request Validator', () => {
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
         'The parameter "userinfo_encrypted_response_alg" must be presented together ' +
-          'with the parameter "userinfo_signed_response_alg".'
+          'with the parameter "userinfo_signed_response_alg".',
       );
     });
 
@@ -786,7 +786,7 @@ describe('Post and Put Registration Request Validator', () => {
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
         'The parameter "userinfo_encrypted_response_enc" must be presented together ' +
-          'with the parameter "userinfo_encrypted_response_alg".'
+          'with the parameter "userinfo_encrypted_response_alg".',
       );
     });
 
@@ -797,7 +797,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported userinfo_encrypted_response_enc "unknown".'
+        'Unsupported userinfo_encrypted_response_enc "unknown".',
       );
     });
 
@@ -808,9 +808,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "token_endpoint_auth_method".'
+          'Invalid parameter "token_endpoint_auth_method".',
         );
-      }
+      },
     );
 
     it('should throw when providing an unsupported client authentication method.', async () => {
@@ -818,7 +818,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported token_endpoint_auth_method "unknown".'
+        'Unsupported token_endpoint_auth_method "unknown".',
       );
     });
 
@@ -829,9 +829,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "token_endpoint_auth_signing_alg".'
+          'Invalid parameter "token_endpoint_auth_signing_alg".',
         );
-      }
+      },
     );
 
     it('should throw when providing an unsupported jwt client assertion json web signature algorithm.', async () => {
@@ -841,7 +841,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported token_endpoint_auth_signing_alg "unknown".'
+        'Unsupported token_endpoint_auth_signing_alg "unknown".',
       );
     });
 
@@ -850,7 +850,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'The Client Authentication Method "client_secret_basic" does not require a Client Authentication Signing Algorithm.'
+        'The Client Authentication Method "client_secret_basic" does not require a Client Authentication Signing Algorithm.',
       );
     });
 
@@ -859,7 +859,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Missing required parameter "token_endpoint_auth_signing_alg" for Client Authentication Method "private_key_jwt".'
+        'Missing required parameter "token_endpoint_auth_signing_alg" for Client Authentication Method "private_key_jwt".',
       );
     });
 
@@ -868,7 +868,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'One of the parameters "jwks_uri" or "jwks" must be provided for Client Authentication Method "private_key_jwt".'
+        'One of the parameters "jwks_uri" or "jwks" must be provided for Client Authentication Method "private_key_jwt".',
       );
     });
 
@@ -882,9 +882,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          `Invalid JSON Web Signature Algorithm "${algorithm}" for Client Authentication Method "${method}".`
+          `Invalid JSON Web Signature Algorithm "${algorithm}" for Client Authentication Method "${method}".`,
         );
-      }
+      },
     );
 
     it.each(invalidDefaultMaxAges)(
@@ -894,9 +894,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "default_max_age".'
+          'Invalid parameter "default_max_age".',
         );
-      }
+      },
     );
 
     it.each(notPositiveIntegerDefaultMaxAges)(
@@ -906,9 +906,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'The default max age must be a positive integer.'
+          'The default max age must be a positive integer.',
         );
-      }
+      },
     );
 
     it.each(invalidRequireAuthTimes)(
@@ -918,9 +918,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "require_auth_time".'
+          'Invalid parameter "require_auth_time".',
         );
-      }
+      },
     );
 
     it.each([...invalidAcrValues, [...invalidAcrValues]])(
@@ -930,9 +930,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "default_acr_values".'
+          'Invalid parameter "default_acr_values".',
         );
-      }
+      },
     );
 
     it('should throw when providing an unsupported acr value.', async () => {
@@ -940,7 +940,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Unsupported acr_value "unknown".'
+        'Unsupported acr_value "unknown".',
       );
     });
 
@@ -951,9 +951,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "initiate_login_uri".'
+          'Invalid parameter "initiate_login_uri".',
         );
-      }
+      },
     );
 
     it('should throw when providing an invalid initiate login uri.', async () => {
@@ -961,7 +961,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid Initiate Login URI.'
+        'Invalid Initiate Login URI.',
       );
     });
 
@@ -972,9 +972,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "post_logout_redirect_uris".'
+          'Invalid parameter "post_logout_redirect_uris".',
         );
-      }
+      },
     );
 
     it('should throw when providing an invalid post logout redirect uri.', async () => {
@@ -982,7 +982,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'Invalid Post Logout Redirect URI "client.example.com/oauth/logout-callback".'
+        'Invalid Post Logout Redirect URI "client.example.com/oauth/logout-callback".',
       );
     });
 
@@ -994,7 +994,7 @@ describe('Post and Put Registration Request Validator', () => {
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
         'The Post Logout Redirect URI "https://client.example.com/oauth/logout-callback#fragment-component" ' +
-          'MUST NOT have a fragment component.'
+          'MUST NOT have a fragment component.',
       );
     });
 
@@ -1006,7 +1006,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.'
+        'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
       );
     });
 
@@ -1017,7 +1017,7 @@ describe('Post and Put Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
-        'The Post Logout Redirect URI "http://client.example.com/oauth/logout-callback" does not use the https protocol.'
+        'The Post Logout Redirect URI "http://client.example.com/oauth/logout-callback" does not use the https protocol.',
       );
     });
 
@@ -1028,9 +1028,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.'
+          'The Authorization Server disallows using localhost as a Post Logout Redirect URI for a "web" application.',
         );
-      }
+      },
     );
 
     it.each(invalidSoftwareIds)(
@@ -1040,9 +1040,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "software_id".'
+          'Invalid parameter "software_id".',
         );
-      }
+      },
     );
 
     it.each(invalidSoftwareVersions)(
@@ -1052,9 +1052,9 @@ describe('Post and Put Registration Request Validator', () => {
 
         await expect(validator.validate(request)).rejects.toThrowWithMessage(
           InvalidClientMetadataException,
-          'Invalid parameter "software_version".'
+          'Invalid parameter "software_version".',
         );
-      }
+      },
     );
 
     it('should return a post registration request context.', async () => {

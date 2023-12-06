@@ -65,7 +65,7 @@ describe('Client Authentication Handler', () => {
 
       await expect(clientAuthenticationHandler.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'No Client Authentication Method detected.'
+        'No Client Authentication Method detected.',
       );
     });
 
@@ -74,7 +74,7 @@ describe('Client Authentication Handler', () => {
 
       await expect(clientAuthenticationHandler.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'Multiple Client Authentication Methods detected.'
+        'Multiple Client Authentication Methods detected.',
       );
     });
 

@@ -99,7 +99,7 @@ describe('JSON Web Key Set', () => {
       ];
 
       expect(() => new JsonWebKeySet(jwkSetWithRepeatedKeyIdentifiers)).toThrow(
-        new InvalidJsonWebKeySetException('The use of duplicate Key Identifiers is forbidden.')
+        new InvalidJsonWebKeySetException('The use of duplicate Key Identifiers is forbidden.'),
       );
     });
 
@@ -124,7 +124,7 @@ describe('JSON Web Key Set', () => {
 
     it.each(invalidKeysParameters)('should reject an invalid "keys" json web key set parameter.', async (keys) => {
       await expect(JsonWebKeySet.load({ keys })).rejects.toThrow(
-        new InvalidJsonWebKeySetException('Invalid jwks parameter "keys".')
+        new InvalidJsonWebKeySetException('Invalid jwks parameter "keys".'),
       );
     });
 
@@ -134,16 +134,16 @@ describe('JSON Web Key Set', () => {
         await expect(JsonWebKeySet.load({ keys: [keyParameter] })).rejects.toThrow(
           new InvalidJsonWebKeySetException('The provided data is not a valid JSON Web Key Set object.', {
             cause: new InvalidJsonWebKeyException('The provided data is not a valid JSON Web Key object.'),
-          })
+          }),
         );
-      }
+      },
     );
 
     it('should throw when the "keys" json web key set parameter has an object missing the parameter "kty".', async () => {
       await expect(JsonWebKeySet.load({ keys: [{}] })).rejects.toThrow(
         new InvalidJsonWebKeySetException('The provided data is not a valid JSON Web Key Set object.', {
           cause: new InvalidJsonWebKeyException('The provided data does not have a "kty" parameter.'),
-        })
+        }),
       );
     });
 
@@ -192,7 +192,7 @@ describe('JSON Web Key Set', () => {
     it('should throw when no key matches the provided predicate.', () => {
       expect(() => jwks.get((key) => key.kid === 'unknown')).toThrowWithMessage(
         JsonWebKeyNotFoundException,
-        'No JSON Web Key matches the criteria at the JSON Web Key Set.'
+        'No JSON Web Key matches the criteria at the JSON Web Key Set.',
       );
     });
 

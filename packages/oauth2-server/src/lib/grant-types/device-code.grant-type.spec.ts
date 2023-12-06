@@ -102,7 +102,7 @@ describe('Device Code Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Authorization denied by the Authorization Server.'
+        'Authorization denied by the Authorization Server.',
       );
 
       expect(deviceCodeServiceMock.save).toHaveBeenCalledTimes(1);
@@ -131,7 +131,7 @@ describe('Device Code Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Authorization denied by the User.'
+        'Authorization denied by the User.',
       );
     });
 

@@ -40,7 +40,7 @@ describe('Elliptic Curve JSON Web Key Backend', () => {
     it('should throw when passing an unsupported elliptic curve.', async () => {
       // @ts-expect-error Unsupported Elliptic Curve.
       await expect(backend.generate({ curve: 'Ed25519' })).rejects.toThrow(
-        new TypeError('Unsupported Elliptic Curve "Ed25519" for JSON Web Key Type "EC".')
+        new TypeError('Unsupported Elliptic Curve "Ed25519" for JSON Web Key Type "EC".'),
       );
     });
 

@@ -102,7 +102,7 @@ class Controller {
     response: Response,
     loginChallenge: string,
     user: User,
-    display?: Display
+    display?: Display,
   ): Promise<void> {
     const reqParameters: LoginDecisionAcceptInteractionRequest = {
       interaction_type: 'login',

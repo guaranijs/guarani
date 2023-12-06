@@ -114,7 +114,7 @@ describe('Consent Interaction Type', () => {
 
       await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Expired Grant.'
+        'Expired Grant.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -128,7 +128,7 @@ describe('Consent Interaction Type', () => {
 
       await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
         AccountSelectionRequiredException,
-        'Account selection required.'
+        'Account selection required.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -140,7 +140,7 @@ describe('Consent Interaction Type', () => {
 
       await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
         LoginRequiredException,
-        'No active login found.'
+        'No active login found.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -232,7 +232,7 @@ describe('Consent Interaction Type', () => {
 
       await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Expired Grant.'
+        'Expired Grant.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -246,7 +246,7 @@ describe('Consent Interaction Type', () => {
 
       await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
         AccountSelectionRequiredException,
-        'Account selection required.'
+        'Account selection required.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -258,7 +258,7 @@ describe('Consent Interaction Type', () => {
 
       await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
         LoginRequiredException,
-        'No active login found.'
+        'No active login found.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -288,7 +288,7 @@ describe('Consent Interaction Type', () => {
       expect(consentServiceMock.create).toHaveBeenCalledWith(
         ['foo', 'bar'],
         context.grant.client,
-        context.grant.session.activeLogin!.user
+        context.grant.session.activeLogin!.user,
       );
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
@@ -321,7 +321,7 @@ describe('Consent Interaction Type', () => {
       expect(consentServiceMock.create).toHaveBeenCalledWith(
         ['foo', 'bar', 'offline_access'],
         context.grant.client,
-        context.grant.session.activeLogin!.user
+        context.grant.session.activeLogin!.user,
       );
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
@@ -351,7 +351,7 @@ describe('Consent Interaction Type', () => {
         const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
         await expect(
-          interactionType.handleDecision(context)
+          interactionType.handleDecision(context),
         ).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
           redirect_to: redirectTo.href,
         });
@@ -360,7 +360,7 @@ describe('Consent Interaction Type', () => {
         expect(consentServiceMock.create).toHaveBeenCalledWith(
           ['foo', 'bar'],
           context.grant.client,
-          context.grant.session.activeLogin!.user
+          context.grant.session.activeLogin!.user,
         );
 
         expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
@@ -369,7 +369,7 @@ describe('Consent Interaction Type', () => {
           interactions: ['consent'],
           consent,
         });
-      }
+      },
     );
 
     it('should return a valid subsequent consent accept decision interaction response.', async () => {
@@ -397,7 +397,7 @@ describe('Consent Interaction Type', () => {
         decision: 'deny',
         error: Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
           Reflect.construct(OAuth2Exception, [context.parameters.error_description as string]),
-          { error: context.parameters.error as string }
+          { error: context.parameters.error as string },
         ),
       });
 

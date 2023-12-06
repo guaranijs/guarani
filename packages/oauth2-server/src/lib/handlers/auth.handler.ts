@@ -22,7 +22,7 @@ export class AuthHandler {
    */
   public constructor(
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
-    @Inject(LOGIN_SERVICE) private readonly loginService: LoginServiceInterface
+    @Inject(LOGIN_SERVICE) private readonly loginService: LoginServiceInterface,
   ) {}
 
   /**

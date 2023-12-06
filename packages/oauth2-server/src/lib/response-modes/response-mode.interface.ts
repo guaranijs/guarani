@@ -23,6 +23,6 @@ export interface ResponseModeInterface {
    */
   createHttpResponse(
     redirectUri: string,
-    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>
+    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
   ): HttpResponse;
 }

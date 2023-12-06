@@ -71,7 +71,7 @@ describe('Get and Delete Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "client_id".'
+        'Invalid parameter "client_id".',
       );
     });
 
@@ -92,7 +92,7 @@ describe('Get and Delete Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidTokenException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
     });
 
@@ -105,7 +105,7 @@ describe('Get and Delete Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InsufficientScopeException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
 
       expect(accessTokenServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -125,7 +125,7 @@ describe('Get and Delete Registration Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InsufficientScopeException,
-        'Invalid Credentials.'
+        'Invalid Credentials.',
       );
     });
 

@@ -14,12 +14,12 @@ export function setTokenDescriptor<T>(
   metadataKey: string | symbol,
   target: object | AbstractConstructor<T> | Constructor<T>,
   propertyOrIndex: string | symbol | number,
-  descriptor: Partial<TokenDescriptor<T>>
+  descriptor: Partial<TokenDescriptor<T>>,
 ): void {
   const tokenDescriptors: Map<string | symbol | number, TokenDescriptor<T>> = Reflect.getMetadata(
     metadataKey,
-    target
-  ) ?? new Map();
+    target,
+  ) ?? new Map<string | symbol | number, TokenDescriptor<T>>();
 
   const tokenDescriptor = tokenDescriptors.get(propertyOrIndex) ?? <TokenDescriptor<T>>{};
 

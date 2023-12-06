@@ -38,7 +38,7 @@ class EcdsaBackend extends JsonWebSignatureBackend {
   public constructor(
     algorithm: JsonWebSignatureAlgorithm,
     hash: string,
-    curve: Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521'>
+    curve: Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521'>,
   ) {
     super(algorithm);
 
@@ -60,7 +60,7 @@ class EcdsaBackend extends JsonWebSignatureBackend {
 
     if (cryptoKey.type !== 'private') {
       throw new InvalidJsonWebKeyException(
-        'The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'
+        'The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.',
       );
     }
 
@@ -97,13 +97,13 @@ class EcdsaBackend extends JsonWebSignatureBackend {
 
     if (key.kty !== 'EC') {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "EC" JSON Web Keys.`
+        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "EC" JSON Web Keys.`,
       );
     }
 
     if (key.crv !== this.curve) {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts the Elliptic Curve "${this.curve}".`
+        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts the Elliptic Curve "${this.curve}".`,
       );
     }
   }

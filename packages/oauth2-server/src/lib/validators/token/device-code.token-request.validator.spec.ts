@@ -95,7 +95,7 @@ describe('Device Code Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "device_code".'
+        'Invalid parameter "device_code".',
       );
     });
 
@@ -109,7 +109,7 @@ describe('Device Code Token Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Invalid Device Code.'
+        'Invalid Device Code.',
       );
     });
 

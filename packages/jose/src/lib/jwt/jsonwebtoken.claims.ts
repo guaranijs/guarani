@@ -181,7 +181,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
    */
   private static validateClaimsOptions(
     claims: JsonWebTokenClaimsParameters,
-    options: Record<string, Nullable<JsonWebTokenClaimValidationOptions>>
+    options: Record<string, Nullable<JsonWebTokenClaimValidationOptions>>,
   ): void {
     Object.entries(options).forEach(([claim, option]) => {
       if (option === null) {

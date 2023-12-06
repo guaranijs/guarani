@@ -104,7 +104,7 @@ describe('Select Account Interaction Type', () => {
 
       await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Expired Grant.'
+        'Expired Grant.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -112,7 +112,7 @@ describe('Select Account Interaction Type', () => {
 
     it('should return a valid select account context response.', async () => {
       await expect(
-        interactionType.handleContext(context)
+        interactionType.handleContext(context),
       ).resolves.toStrictEqual<SelectAccountContextInteractionResponse>({
         logins: ['login0_id', 'login1_id', 'login2_id'],
         context: {
@@ -168,7 +168,7 @@ describe('Select Account Interaction Type', () => {
 
       await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Expired Grant.'
+        'Expired Grant.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -178,7 +178,7 @@ describe('Select Account Interaction Type', () => {
       const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(
-        interactionType.handleDecision(context)
+        interactionType.handleDecision(context),
       ).resolves.toStrictEqual<SelectAccountDecisionInteractionResponse>({
         redirect_to: redirectTo.href,
       });
@@ -200,7 +200,7 @@ describe('Select Account Interaction Type', () => {
       const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
 
       await expect(
-        interactionType.handleDecision(context)
+        interactionType.handleDecision(context),
       ).resolves.toStrictEqual<SelectAccountDecisionInteractionResponse>({
         redirect_to: redirectTo.href,
       });

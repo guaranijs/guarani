@@ -7,7 +7,7 @@ const invalidCeks: any[] = [undefined, null, true, 1, 1.2, 1n, 'a', Symbol('a'),
 
 const backend: JsonWebEncryptionContentEncryptionBackend = Reflect.construct(
   JsonWebEncryptionContentEncryptionBackend,
-  [null, 128, 96]
+  [null, 128, 96],
 );
 
 describe('JSON Web Encryption Content Encryption Backend', () => {
@@ -25,7 +25,7 @@ describe('JSON Web Encryption Content Encryption Backend', () => {
 
   it('should throw when the length of the content encryption key does not match the expected length.', () => {
     expect(() => backend.validateContentEncryptionKey(Buffer.alloc(24))).toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 
@@ -35,7 +35,7 @@ describe('JSON Web Encryption Content Encryption Backend', () => {
 
   it('should throw when the length of the initialization vector does not match the expected length.', () => {
     expect(() => backend.validateInitializationVector(Buffer.alloc(16))).toThrow(
-      new InvalidJsonWebEncryptionException()
+      new InvalidJsonWebEncryptionException(),
     );
   });
 

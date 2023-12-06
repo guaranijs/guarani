@@ -92,7 +92,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   describe('clientAssertionType', () => {
     it('should have "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" as its value.', () => {
       expect(clientAssertion.clientAssertionType).toEqual<ClientAssertion>(
-        'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
+        'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
       );
     });
   });
@@ -155,7 +155,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'The Authorization Server disallows using the JSON Web Signature Algorithm "none".'
+        'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
       );
     });
 
@@ -168,7 +168,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'Unsupported JSON Web Signature Algorithm "ES256".'
+        'Unsupported JSON Web Signature Algorithm "ES256".',
       );
     });
 
@@ -184,7 +184,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'Unsupported JSON Web Signature Algorithm "RS256" for Authentication Method "client_secret_jwt".'
+        'Unsupported JSON Web Signature Algorithm "RS256" for Authentication Method "client_secret_jwt".',
       );
     });
 
@@ -204,17 +204,17 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
         await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
           InvalidClientException,
-          'Invalid JSON Web Token Client Assertion.'
+          'Invalid JSON Web Token Client Assertion.',
         );
 
         Reflect.set(claims, claim, claimValue);
-      }
+      },
     );
 
     it('should throw when the "aud" claim does not point to the requested endpoint.', async () => {
       const jws = new JsonWebSignature(
         header,
-        new JsonWebTokenClaims({ ...claims, aud: 'https://server.example.com' }).toBuffer()
+        new JsonWebTokenClaims({ ...claims, aud: 'https://server.example.com' }).toBuffer(),
       );
 
       const assertion = await jws.sign(jwk);
@@ -225,14 +225,14 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'Invalid JSON Web Token Client Assertion.'
+        'Invalid JSON Web Token Client Assertion.',
       );
     });
 
     it('should throw when the "aud" claim does not point to the requested endpoint.', async () => {
       const jws = new JsonWebSignature(
         header,
-        new JsonWebTokenClaims({ ...claims, aud: ['https://server.example.com'] }).toBuffer()
+        new JsonWebTokenClaims({ ...claims, aud: ['https://server.example.com'] }).toBuffer(),
       );
 
       const assertion = await jws.sign(jwk);
@@ -243,14 +243,14 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'Invalid JSON Web Token Client Assertion.'
+        'Invalid JSON Web Token Client Assertion.',
       );
     });
 
     it('should throw when the "iss" and "sub" claims are not equal.', async () => {
       const jws = new JsonWebSignature(
         header,
-        new JsonWebTokenClaims({ ...claims, iss: 'https://idp.example.com' }).toBuffer()
+        new JsonWebTokenClaims({ ...claims, iss: 'https://idp.example.com' }).toBuffer(),
       );
 
       const assertion = await jws.sign(jwk);
@@ -261,7 +261,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'The values of "iss" and "sub" are different.'
+        'The values of "iss" and "sub" are different.',
       );
     });
 
@@ -277,7 +277,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'Invalid Client.'
+        'Invalid Client.',
       );
     });
 
@@ -297,7 +297,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'This Client is not allowed to use the Authentication Method "client_secret_jwt".'
+        'This Client is not allowed to use the Authentication Method "client_secret_jwt".',
       );
     });
 
@@ -318,7 +318,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       await expect(clientAssertion.authenticate(request)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'This Client is not allowed to use the Authentication Method "client_secret_jwt".'
+        'This Client is not allowed to use the Authentication Method "client_secret_jwt".',
       );
     });
 

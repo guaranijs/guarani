@@ -38,7 +38,7 @@ export class AuthorizationCodeTokenRequestValidator extends TokenRequestValidato
   public constructor(
     protected override readonly clientAuthenticationHandler: ClientAuthenticationHandler,
     @Inject(AUTHORIZATION_CODE_SERVICE) protected readonly authorizationCodeService: AuthorizationCodeServiceInterface,
-    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[]
+    @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
   ) {
     super(clientAuthenticationHandler, grantTypes);
   }

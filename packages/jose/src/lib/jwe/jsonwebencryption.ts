@@ -112,7 +112,7 @@ export class JsonWebEncryption {
     token: string,
     keyOrKeyLoader: JsonWebKey | JsonWebKeyLoader,
     expectedKeyWrapAlgorithms: JsonWebEncryptionKeyWrapAlgorithm[],
-    expectedContentEncryptionAlgorithms: JsonWebEncryptionContentEncryptionAlgorithm[]
+    expectedContentEncryptionAlgorithms: JsonWebEncryptionContentEncryptionAlgorithm[],
   ): Promise<JsonWebEncryption> {
     if (!(keyOrKeyLoader instanceof JsonWebKey) && typeof keyOrKeyLoader !== 'function') {
       throw new InvalidJsonWebKeyException();
@@ -125,13 +125,13 @@ export class JsonWebEncryption {
     try {
       if (!expectedKeyWrapAlgorithms.includes(header.alg)) {
         throw new InvalidJsonWebEncryptionException(
-          `The JSON Web Encryption Key Wrap Algorithm "${header.alg}" does not match the expected algorithms.`
+          `The JSON Web Encryption Key Wrap Algorithm "${header.alg}" does not match the expected algorithms.`,
         );
       }
 
       if (!expectedContentEncryptionAlgorithms.includes(header.enc)) {
         throw new InvalidJsonWebEncryptionException(
-          `The JSON Web Encryption Content Encryption Algorithm "${header.enc}" does not match the expected algorithms.`
+          `The JSON Web Encryption Content Encryption Algorithm "${header.enc}" does not match the expected algorithms.`,
         );
       }
 

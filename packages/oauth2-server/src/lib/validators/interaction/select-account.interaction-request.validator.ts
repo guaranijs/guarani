@@ -46,7 +46,7 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
     @Inject(LOGIN_SERVICE) private readonly loginService: LoginServiceInterface,
-    @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[]
+    @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[],
   ) {
     super(interactionTypes);
   }
@@ -92,7 +92,7 @@ export class SelectAccountInteractionRequestValidator extends InteractionRequest
    * @returns Grant based on the provided Login Challenge.
    */
   private async getGrant(
-    parameters: SelectAccountContextInteractionRequest | SelectAccountDecisionInteractionRequest
+    parameters: SelectAccountContextInteractionRequest | SelectAccountDecisionInteractionRequest,
   ): Promise<Grant> {
     if (typeof parameters.login_challenge === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "login_challenge".');

@@ -20,7 +20,7 @@ export class DeviceAuthorizationRequestValidator {
    */
   public constructor(
     private readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    private readonly scopeHandler: ScopeHandler
+    private readonly scopeHandler: ScopeHandler,
   ) {}
 
   /**

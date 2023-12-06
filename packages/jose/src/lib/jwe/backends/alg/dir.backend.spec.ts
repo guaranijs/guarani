@@ -25,8 +25,8 @@ describe('JSON Web Encryption Direct Key Wrap Backend', () => {
 
     expect(() => dir['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "dir" only accepts "oct" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "dir" only accepts "oct" JSON Web Keys.',
+      ),
     );
   });
 
@@ -34,7 +34,7 @@ describe('JSON Web Encryption Direct Key Wrap Backend', () => {
     const unwrapKey = new OctetSequenceKey({ kty: 'oct', k: 'AAECAwQFBgcICQoLDA0ODw' });
 
     await expect(dir.unwrap(contentEncryptionBackend, unwrapKey, Buffer.alloc(16))).rejects.toThrow(
-      new InvalidJsonWebEncryptionException('Expected the Encrypted Content Encryption Key to be empty.')
+      new InvalidJsonWebEncryptionException('Expected the Encrypted Content Encryption Key to be empty.'),
     );
   });
 
@@ -47,7 +47,7 @@ describe('JSON Web Encryption Direct Key Wrap Backend', () => {
     let wrappedKey!: Buffer;
 
     await expect(
-      (async () => ([contentEncryptionKey, wrappedKey] = await dir.wrap(contentEncryptionBackend, wrapKey)))()
+      (async () => ([contentEncryptionKey, wrappedKey] = await dir.wrap(contentEncryptionBackend, wrapKey)))(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -60,7 +60,7 @@ describe('JSON Web Encryption Direct Key Wrap Backend', () => {
     let contentEncryptionKey!: Buffer;
 
     await expect(
-      (async () => (contentEncryptionKey = await dir.unwrap(contentEncryptionBackend, unwrapKey, Buffer.alloc(0))))()
+      (async () => (contentEncryptionKey = await dir.unwrap(contentEncryptionBackend, unwrapKey, Buffer.alloc(0))))(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);

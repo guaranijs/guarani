@@ -28,7 +28,7 @@ describe('JSON Web Signature', () => {
   describe('constructor', () => {
     it.each(invalidPayloads)('should throw when the provided payload is invalid.', (invalidPayload) => {
       expect(() => new JsonWebSignature(header, invalidPayload)).toThrow(
-        new TypeError('Invalid JSON Web Signature Payload.')
+        new TypeError('Invalid JSON Web Signature Payload.'),
       );
     });
 
@@ -47,7 +47,7 @@ describe('JSON Web Signature', () => {
       'should return false when the format of the provided token is invalid.',
       (invalidToken) => {
         expect(JsonWebSignature.isJsonWebSignature(invalidToken)).toBeFalse();
-      }
+      },
     );
 
     it('should return true when the provided data is a json web signature token without signature.', () => {
@@ -70,7 +70,7 @@ describe('JSON Web Signature', () => {
 
     it('should throw when the header of the token is not a valid json object.', () => {
       expect(() => JsonWebSignature.decode('a.b.c')).toThrow(
-        new InvalidJsonWebSignatureException(undefined, { cause: new Error('Unexpected end of JSON input') })
+        new InvalidJsonWebSignatureException(undefined, { cause: new Error('Unexpected end of JSON input') }),
       );
     });
 
@@ -87,8 +87,8 @@ describe('JSON Web Signature', () => {
     it('should throw when the algorithm of the token does not match the expected algorithms.', async () => {
       await expect(JsonWebSignature.verify(token, key, ['RS256'])).rejects.toThrow(
         new InvalidJsonWebSignatureException(
-          'The JSON Web Signature Algorithm "HS256" does not match the expected algorithms.'
-        )
+          'The JSON Web Signature Algorithm "HS256" does not match the expected algorithms.',
+        ),
       );
     });
 

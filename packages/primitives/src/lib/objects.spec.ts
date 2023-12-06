@@ -76,7 +76,7 @@ describe('compare()', () => {
     expect(() => {
       return compare(
         () => null,
-        () => null
+        () => null,
       );
     }).toThrow(new TypeError('Cannot compare functions.'));
 
@@ -85,7 +85,7 @@ describe('compare()', () => {
         () => null,
         function () {
           return null;
-        }
+        },
       );
     }).toThrow(new TypeError('Cannot compare functions.'));
 
@@ -94,7 +94,7 @@ describe('compare()', () => {
         function () {
           return null;
         },
-        () => null
+        () => null,
       );
     }).toThrow(new TypeError('Cannot compare functions.'));
 
@@ -105,7 +105,7 @@ describe('compare()', () => {
         },
         function () {
           return null;
-        }
+        },
       );
     }).toThrow(new TypeError('Cannot compare functions.'));
 
@@ -291,15 +291,15 @@ describe('compare()', () => {
     expect(() => compare(123, 123n)).toThrow(new TypeError('Cannot compare objects of different types.'));
 
     expect(() => compare([467, 124], [467, '124'])).toThrow(
-      new TypeError('Cannot compare objects of different types.')
+      new TypeError('Cannot compare objects of different types.'),
     );
 
     expect(() => compare({ id: 1 }, Buffer.from([0x01]))).toThrow(
-      new TypeError('Cannot compare objects of different types.')
+      new TypeError('Cannot compare objects of different types.'),
     );
 
     expect(() => compare(new Foo(123), new Bar(123))).toThrow(
-      new TypeError('Cannot compare objects of different types.')
+      new TypeError('Cannot compare objects of different types.'),
     );
   });
 });

@@ -26,7 +26,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
   public constructor(
     protected override readonly algorithm: JsonWebEncryptionKeyWrapAlgorithm,
     private readonly padding: number,
-    private readonly hash: Nullable<string> = null
+    private readonly hash: Nullable<string> = null,
   ) {
     super(algorithm);
   }
@@ -40,7 +40,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
    */
   public async wrap(
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
-    wrapKey: RsaKey
+    wrapKey: RsaKey,
   ): Promise<[Buffer, Buffer]> {
     this.validateJsonWebKey(wrapKey);
 
@@ -68,7 +68,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
   public async unwrap(
     contentEncryptionBackend: JsonWebEncryptionContentEncryptionBackend,
     unwrapKey: RsaKey,
-    wrappedKey: Buffer
+    wrappedKey: Buffer,
   ): Promise<Buffer> {
     this.validateJsonWebKey(unwrapKey);
 
@@ -76,7 +76,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
 
     if (cryptoKey.type !== 'private') {
       throw new InvalidJsonWebKeyException(
-        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.'
+        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.',
       );
     }
 
@@ -104,7 +104,7 @@ class RsaBackend extends JsonWebEncryptionKeyWrapBackend {
 
     if (key.kty !== 'RSA') {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts "RSA" JSON Web Keys.`
+        `The JSON Web Encryption Key Wrap Algorithm "${this.algorithm}" only accepts "RSA" JSON Web Keys.`,
       );
     }
   }

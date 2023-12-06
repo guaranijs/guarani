@@ -81,16 +81,16 @@ describe('JSON Web Encryption Key Wrap RSA1_5 Backend', () => {
 
     expect(() => RSA1_5['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "RSA1_5" only accepts "RSA" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "RSA1_5" only accepts "RSA" JSON Web Keys.',
+      ),
     );
   });
 
   it('should throw when not unwrapping with a private key.', async () => {
     await expect(RSA1_5.unwrap(contentEncryptionBackend, publicKey, Buffer.alloc(0))).rejects.toThrow(
       new InvalidJsonWebKeyException(
-        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.'
-      )
+        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.',
+      ),
     );
   });
 
@@ -100,7 +100,7 @@ describe('JSON Web Encryption Key Wrap RSA1_5 Backend', () => {
     let wrappedKey!: Buffer;
 
     await expect(
-      (async () => ([, wrappedKey] = await RSA1_5.wrap(contentEncryptionBackend, publicKey)))()
+      (async () => ([, wrappedKey] = await RSA1_5.wrap(contentEncryptionBackend, publicKey)))(),
     ).resolves.not.toThrow();
 
     expect(wrappedKey.byteLength).toEqual(256);
@@ -108,7 +108,7 @@ describe('JSON Web Encryption Key Wrap RSA1_5 Backend', () => {
     let contentEncryptionKey!: Buffer;
 
     await expect(
-      (async () => (contentEncryptionKey = await RSA1_5.unwrap(contentEncryptionBackend, privateKey, wrappedKey)))()
+      (async () => (contentEncryptionKey = await RSA1_5.unwrap(contentEncryptionBackend, privateKey, wrappedKey)))(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -134,16 +134,16 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP Backend', () => {
 
     expect(() => RSA_OAEP['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "RSA-OAEP" only accepts "RSA" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "RSA-OAEP" only accepts "RSA" JSON Web Keys.',
+      ),
     );
   });
 
   it('should throw when not unwrapping with a private key.', async () => {
     await expect(RSA_OAEP.unwrap(contentEncryptionBackend, publicKey, Buffer.alloc(0))).rejects.toThrow(
       new InvalidJsonWebKeyException(
-        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.'
-      )
+        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.',
+      ),
     );
   });
 
@@ -153,7 +153,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP Backend', () => {
     let wrappedKey!: Buffer;
 
     await expect(
-      (async () => ([, wrappedKey] = await RSA_OAEP.wrap(contentEncryptionBackend, publicKey)))()
+      (async () => ([, wrappedKey] = await RSA_OAEP.wrap(contentEncryptionBackend, publicKey)))(),
     ).resolves.not.toThrow();
 
     expect(wrappedKey.byteLength).toEqual(256);
@@ -161,7 +161,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP Backend', () => {
     let contentEncryptionKey!: Buffer;
 
     await expect(
-      (async () => (contentEncryptionKey = await RSA_OAEP.unwrap(contentEncryptionBackend, privateKey, wrappedKey)))()
+      (async () => (contentEncryptionKey = await RSA_OAEP.unwrap(contentEncryptionBackend, privateKey, wrappedKey)))(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -187,16 +187,16 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-256 Backend', () => {
 
     expect(() => RSA_OAEP_256['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "RSA-OAEP-256" only accepts "RSA" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "RSA-OAEP-256" only accepts "RSA" JSON Web Keys.',
+      ),
     );
   });
 
   it('should throw when not unwrapping with a private key.', async () => {
     await expect(RSA_OAEP_256.unwrap(contentEncryptionBackend, publicKey, Buffer.alloc(0))).rejects.toThrow(
       new InvalidJsonWebKeyException(
-        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.'
-      )
+        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.',
+      ),
     );
   });
 
@@ -206,7 +206,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-256 Backend', () => {
     let wrappedKey!: Buffer;
 
     await expect(
-      (async () => ([, wrappedKey] = await RSA_OAEP_256.wrap(contentEncryptionBackend, publicKey)))()
+      (async () => ([, wrappedKey] = await RSA_OAEP_256.wrap(contentEncryptionBackend, publicKey)))(),
     ).resolves.not.toThrow();
 
     expect(wrappedKey.byteLength).toEqual(256);
@@ -216,7 +216,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-256 Backend', () => {
     await expect(
       (async () => {
         return (contentEncryptionKey = await RSA_OAEP_256.unwrap(contentEncryptionBackend, privateKey, wrappedKey));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -242,16 +242,16 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-384 Backend', () => {
 
     expect(() => RSA_OAEP_384['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "RSA-OAEP-384" only accepts "RSA" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "RSA-OAEP-384" only accepts "RSA" JSON Web Keys.',
+      ),
     );
   });
 
   it('should throw when not unwrapping with a private key.', async () => {
     await expect(RSA_OAEP_384.unwrap(contentEncryptionBackend, publicKey, Buffer.alloc(0))).rejects.toThrow(
       new InvalidJsonWebKeyException(
-        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.'
-      )
+        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.',
+      ),
     );
   });
 
@@ -261,7 +261,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-384 Backend', () => {
     let wrappedKey!: Buffer;
 
     await expect(
-      (async () => ([, wrappedKey] = await RSA_OAEP_384.wrap(contentEncryptionBackend, publicKey)))()
+      (async () => ([, wrappedKey] = await RSA_OAEP_384.wrap(contentEncryptionBackend, publicKey)))(),
     ).resolves.not.toThrow();
 
     expect(wrappedKey.byteLength).toEqual(256);
@@ -271,7 +271,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-384 Backend', () => {
     await expect(
       (async () => {
         return (contentEncryptionKey = await RSA_OAEP_384.unwrap(contentEncryptionBackend, privateKey, wrappedKey));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -297,16 +297,16 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-512 Backend', () => {
 
     expect(() => RSA_OAEP_512['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "RSA-OAEP-512" only accepts "RSA" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "RSA-OAEP-512" only accepts "RSA" JSON Web Keys.',
+      ),
     );
   });
 
   it('should throw when not unwrapping with a private key.', async () => {
     await expect(RSA_OAEP_512.unwrap(contentEncryptionBackend, publicKey, Buffer.alloc(0))).rejects.toThrow(
       new InvalidJsonWebKeyException(
-        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.'
-      )
+        'The provided JSON Web Key cannot be used to Unwrap a Wrapped Content Encryption Key.',
+      ),
     );
   });
 
@@ -316,7 +316,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-512 Backend', () => {
     let wrappedKey!: Buffer;
 
     await expect(
-      (async () => ([, wrappedKey] = await RSA_OAEP_512.wrap(contentEncryptionBackend, publicKey)))()
+      (async () => ([, wrappedKey] = await RSA_OAEP_512.wrap(contentEncryptionBackend, publicKey)))(),
     ).resolves.not.toThrow();
 
     expect(wrappedKey.byteLength).toEqual(256);
@@ -326,7 +326,7 @@ describe('JSON Web Encryption Key Wrap RSA-OAEP-512 Backend', () => {
     await expect(
       (async () => {
         return (contentEncryptionKey = await RSA_OAEP_512.unwrap(contentEncryptionBackend, privateKey, wrappedKey));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);

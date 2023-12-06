@@ -29,7 +29,7 @@ export class EndSessionRequestValidator {
    */
   public constructor(
     @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(CLIENT_SERVICE) private readonly clientService: ClientServiceInterface
+    @Inject(CLIENT_SERVICE) private readonly clientService: ClientServiceInterface,
   ) {}
 
   /**

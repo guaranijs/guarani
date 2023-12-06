@@ -27,7 +27,7 @@ export class PageDisplay implements DisplayInterface {
    */
   public createHttpResponse(
     redirectUri: string,
-    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>
+    parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
   ): HttpResponse {
     const url = addParametersToUrl(redirectUri, parameters);
     return new HttpResponse().redirect(url);

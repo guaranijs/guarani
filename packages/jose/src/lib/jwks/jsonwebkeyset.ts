@@ -64,13 +64,13 @@ export class JsonWebKeySet implements JsonWebKeySetParameters {
           return await JsonWebKey.load(keyParameters);
         } catch (exc: unknown) {
           const exception = new InvalidJsonWebKeySetException(
-            'The provided data is not a valid JSON Web Key Set object.'
+            'The provided data is not a valid JSON Web Key Set object.',
           );
 
           exception.cause = exc;
           throw exception;
         }
-      })
+      }),
     );
 
     return new JsonWebKeySet(keys);

@@ -62,8 +62,8 @@ describe('JSON Web Encryption Key Wrap ECDH-ES Backend', () => {
 
     expect(() => ECDH_ES['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES" only accepts ["EC", "OKP"] JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES" only accepts ["EC", "OKP"] JSON Web Keys.',
+      ),
     );
   });
 
@@ -72,8 +72,8 @@ describe('JSON Web Encryption Key Wrap ECDH-ES Backend', () => {
 
     expect(() => ECDH_ES['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES" only accepts the Elliptic Curves ["P-256", "P-384", "P-521", "X25519", "X448"].'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES" only accepts the Elliptic Curves ["P-256", "P-384", "P-521", "X25519", "X448"].',
+      ),
     );
   });
 
@@ -90,11 +90,11 @@ describe('JSON Web Encryption Key Wrap ECDH-ES Backend', () => {
     };
 
     const wrapPromise = expect(ECDH_ES.wrap(contentEncryptionBackend, wrapKey, header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
 
     const unwrapPromise = expect(
-      ECDH_ES.unwrap(contentEncryptionBackend, wrapKey, Buffer.alloc(0), header)
+      ECDH_ES.unwrap(contentEncryptionBackend, wrapKey, Buffer.alloc(0), header),
     ).rejects.toThrow(new InvalidJsonWebKeyException());
 
     await Promise.all([wrapPromise, unwrapPromise]);
@@ -113,11 +113,11 @@ describe('JSON Web Encryption Key Wrap ECDH-ES Backend', () => {
     };
 
     await expect(ECDH_ES.wrap(contentEncryptionBackend, myKey, header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
 
     await expect(ECDH_ES.unwrap(contentEncryptionBackend, myKey, Buffer.alloc(0), header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
   });
 
@@ -136,7 +136,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES Backend', () => {
 
   it('should unwrap a wrapped content encryption key.', async () => {
     await expect(ECDH_ES.unwrap(contentEncryptionBackend, bobKey, Buffer.alloc(0), jweHeader)).resolves.toEqual(
-      expectedContentEncryptionKey
+      expectedContentEncryptionKey,
     );
   });
 });
@@ -165,7 +165,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A128KW Backend', () => {
 
   it('should have ["P-256", "P-384", "P-521", "X25519", "X448"] as its "curves".', () => {
     expect(ECDH_ES_A128KW['curves']).toEqual<Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521' | 'X25519' | 'X448'>[]>(
-      ['P-256', 'P-384', 'P-521', 'X25519', 'X448']
+      ['P-256', 'P-384', 'P-521', 'X25519', 'X448'],
     );
   });
 
@@ -175,8 +175,8 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A128KW Backend', () => {
 
     expect(() => ECDH_ES_A128KW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A128KW" only accepts ["EC", "OKP"] JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A128KW" only accepts ["EC", "OKP"] JSON Web Keys.',
+      ),
     );
   });
 
@@ -185,8 +185,8 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A128KW Backend', () => {
 
     expect(() => ECDH_ES_A128KW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A128KW" only accepts the Elliptic Curves ["P-256", "P-384", "P-521", "X25519", "X448"].'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A128KW" only accepts the Elliptic Curves ["P-256", "P-384", "P-521", "X25519", "X448"].',
+      ),
     );
   });
 
@@ -203,11 +203,11 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A128KW Backend', () => {
     };
 
     await expect(ECDH_ES_A128KW.wrap(contentEncryptionBackend, wrapKey, header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
 
     await expect(ECDH_ES_A128KW.unwrap(contentEncryptionBackend, wrapKey, Buffer.alloc(0), header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
   });
 
@@ -224,11 +224,11 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A128KW Backend', () => {
     };
 
     await expect(ECDH_ES_A128KW.wrap(contentEncryptionBackend, myKey, header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
 
     await expect(ECDH_ES_A128KW.unwrap(contentEncryptionBackend, myKey, Buffer.alloc(0), header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
   });
 
@@ -236,7 +236,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A128KW Backend', () => {
     const [contentEncryptionKey, wrappedKey, header] = await ECDH_ES_A128KW.wrap(
       contentEncryptionBackend,
       bobKey,
-      jweHeader
+      jweHeader,
     );
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -251,7 +251,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A128KW Backend', () => {
 
   it('should unwrap a wrapped content encryption key.', async () => {
     await expect(
-      ECDH_ES_A128KW.unwrap(contentEncryptionBackend, bobKey, expectedWrappedKey, jweHeader)
+      ECDH_ES_A128KW.unwrap(contentEncryptionBackend, bobKey, expectedWrappedKey, jweHeader),
     ).resolves.toEqual(expectedContentEncryptionKey);
   });
 });
@@ -280,7 +280,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A192KW Backend', () => {
 
   it('should have ["P-256", "P-384", "P-521", "X25519", "X448"] as its "curves".', () => {
     expect(ECDH_ES_A192KW['curves']).toEqual<Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521' | 'X25519' | 'X448'>[]>(
-      ['P-256', 'P-384', 'P-521', 'X25519', 'X448']
+      ['P-256', 'P-384', 'P-521', 'X25519', 'X448'],
     );
   });
 
@@ -290,8 +290,8 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A192KW Backend', () => {
 
     expect(() => ECDH_ES_A192KW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A192KW" only accepts ["EC", "OKP"] JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A192KW" only accepts ["EC", "OKP"] JSON Web Keys.',
+      ),
     );
   });
 
@@ -300,8 +300,8 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A192KW Backend', () => {
 
     expect(() => ECDH_ES_A192KW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A192KW" only accepts the Elliptic Curves ["P-256", "P-384", "P-521", "X25519", "X448"].'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A192KW" only accepts the Elliptic Curves ["P-256", "P-384", "P-521", "X25519", "X448"].',
+      ),
     );
   });
 
@@ -318,11 +318,11 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A192KW Backend', () => {
     };
 
     await expect(ECDH_ES_A192KW.wrap(contentEncryptionBackend, wrapKey, header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
 
     await expect(ECDH_ES_A192KW.unwrap(contentEncryptionBackend, wrapKey, Buffer.alloc(0), header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
   });
 
@@ -339,11 +339,11 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A192KW Backend', () => {
     };
 
     await expect(ECDH_ES_A192KW.wrap(contentEncryptionBackend, myKey, header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
 
     await expect(ECDH_ES_A192KW.unwrap(contentEncryptionBackend, myKey, Buffer.alloc(0), header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
   });
 
@@ -351,7 +351,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A192KW Backend', () => {
     const [contentEncryptionKey, wrappedKey, header] = await ECDH_ES_A192KW.wrap(
       contentEncryptionBackend,
       bobKey,
-      jweHeader
+      jweHeader,
     );
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -366,7 +366,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A192KW Backend', () => {
 
   it('should unwrap a wrapped content encryption key.', async () => {
     await expect(
-      ECDH_ES_A192KW.unwrap(contentEncryptionBackend, bobKey, expectedWrappedKey, jweHeader)
+      ECDH_ES_A192KW.unwrap(contentEncryptionBackend, bobKey, expectedWrappedKey, jweHeader),
     ).resolves.toEqual(expectedContentEncryptionKey);
   });
 });
@@ -395,7 +395,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A256KW Backend', () => {
 
   it('should have ["P-256", "P-384", "P-521", "X25519", "X448"] as its "curves".', () => {
     expect(ECDH_ES_A256KW['curves']).toEqual<Extract<EllipticCurve, 'P-256' | 'P-384' | 'P-521' | 'X25519' | 'X448'>[]>(
-      ['P-256', 'P-384', 'P-521', 'X25519', 'X448']
+      ['P-256', 'P-384', 'P-521', 'X25519', 'X448'],
     );
   });
 
@@ -405,8 +405,8 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A256KW Backend', () => {
 
     expect(() => ECDH_ES_A256KW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A256KW" only accepts ["EC", "OKP"] JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A256KW" only accepts ["EC", "OKP"] JSON Web Keys.',
+      ),
     );
   });
 
@@ -415,8 +415,8 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A256KW Backend', () => {
 
     expect(() => ECDH_ES_A256KW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A256KW" only accepts the Elliptic Curves ["P-256", "P-384", "P-521", "X25519", "X448"].'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "ECDH-ES+A256KW" only accepts the Elliptic Curves ["P-256", "P-384", "P-521", "X25519", "X448"].',
+      ),
     );
   });
 
@@ -433,11 +433,11 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A256KW Backend', () => {
     };
 
     await expect(ECDH_ES_A256KW.wrap(contentEncryptionBackend, wrapKey, header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
 
     await expect(ECDH_ES_A256KW.unwrap(contentEncryptionBackend, wrapKey, Buffer.alloc(0), header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
   });
 
@@ -454,11 +454,11 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A256KW Backend', () => {
     };
 
     await expect(ECDH_ES_A256KW.wrap(contentEncryptionBackend, myKey, header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
 
     await expect(ECDH_ES_A256KW.unwrap(contentEncryptionBackend, myKey, Buffer.alloc(0), header)).rejects.toThrow(
-      new InvalidJsonWebKeyException()
+      new InvalidJsonWebKeyException(),
     );
   });
 
@@ -466,7 +466,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A256KW Backend', () => {
     const [contentEncryptionKey, wrappedKey, header] = await ECDH_ES_A256KW.wrap(
       contentEncryptionBackend,
       bobKey,
-      jweHeader
+      jweHeader,
     );
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -481,7 +481,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A256KW Backend', () => {
 
   it('should unwrap a wrapped content encryption key.', async () => {
     await expect(
-      ECDH_ES_A256KW.unwrap(contentEncryptionBackend, bobKey, expectedWrappedKey, jweHeader)
+      ECDH_ES_A256KW.unwrap(contentEncryptionBackend, bobKey, expectedWrappedKey, jweHeader),
     ).resolves.toEqual(expectedContentEncryptionKey);
   });
 });
@@ -508,7 +508,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A256KW Backend and JSON Web Encry
     const [contentEncryptionKey, wrappedKey, header] = await ECDH_ES_A256KW.wrap(
       contentEncryptionBackend,
       bobKey,
-      jweHeader
+      jweHeader,
     );
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -523,7 +523,7 @@ describe('JSON Web Encryption Key Wrap ECDH-ES+A256KW Backend and JSON Web Encry
 
   it('should unwrap a wrapped content encryption key.', async () => {
     await expect(
-      ECDH_ES_A256KW.unwrap(contentEncryptionBackend, bobKey, expectedWrappedKey, jweHeader)
+      ECDH_ES_A256KW.unwrap(contentEncryptionBackend, bobKey, expectedWrappedKey, jweHeader),
     ).resolves.toEqual(expectedContentEncryptionKey);
   });
 });

@@ -53,7 +53,7 @@ export class InteractionEndpoint implements EndpointInterface {
    * @param validators Interaction Request Validators registered at the Authorization Server.
    */
   public constructor(
-    @InjectAll(InteractionRequestValidator) private readonly validators: InteractionRequestValidator[]
+    @InjectAll(InteractionRequestValidator) private readonly validators: InteractionRequestValidator[],
   ) {}
 
   /**

@@ -20,7 +20,7 @@ export class AuthorizationCodeService implements AuthorizationCodeServiceInterfa
   public async create(
     parameters: CodeAuthorizationRequest,
     login: Login,
-    consent: Consent
+    consent: Consent,
   ): Promise<AuthorizationCode> {
     const now = Date.now();
 

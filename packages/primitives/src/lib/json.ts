@@ -32,7 +32,7 @@ export function parse(text: string, reviver?: (this: any, key: string, value: an
 export function stringify(
   value: any,
   replacer?: (this: any, key: string, value: any) => any,
-  space?: string | number
+  space?: string | number,
 ): string;
 
 /**

@@ -145,7 +145,7 @@ describe('Authorization Code Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Mismatching Client Identifier.'
+        'Mismatching Client Identifier.',
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -156,7 +156,7 @@ describe('Authorization Code Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Authorization Code not yet valid.'
+        'Authorization Code not yet valid.',
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -167,7 +167,7 @@ describe('Authorization Code Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Expired Authorization Code.'
+        'Expired Authorization Code.',
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -178,7 +178,7 @@ describe('Authorization Code Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Revoked Authorization Code.'
+        'Revoked Authorization Code.',
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -190,7 +190,7 @@ describe('Authorization Code Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Mismatching Redirect URI.'
+        'Mismatching Redirect URI.',
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);
@@ -204,7 +204,7 @@ describe('Authorization Code Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Invalid PKCE Code Challenge.'
+        'Invalid PKCE Code Challenge.',
       );
 
       expect(authorizationCodeServiceMock.revoke).toHaveBeenCalledTimes(1);

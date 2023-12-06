@@ -13,7 +13,7 @@ export function InjectAll<T>(token: InjectableToken<T>): ParameterDecorator & Pr
   return function (
     target: object | AbstractConstructor<T> | Constructor<T>,
     propertyKey?: string | symbol,
-    parameterIndex?: number
+    parameterIndex?: number,
   ): void {
     // Injects into an argument of the constructor.
     if (typeof propertyKey === 'undefined' && typeof parameterIndex !== 'undefined' && typeof target !== 'object') {

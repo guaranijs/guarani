@@ -71,7 +71,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
    */
   public constructor(
     private readonly validator: IntrospectionRequestValidator,
-    @Inject(SETTINGS) private readonly settings: Settings
+    @Inject(SETTINGS) private readonly settings: Settings,
   ) {}
 
   /**

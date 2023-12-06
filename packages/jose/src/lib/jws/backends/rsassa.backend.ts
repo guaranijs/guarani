@@ -56,7 +56,7 @@ class RsaSsaBackend extends JsonWebSignatureBackend {
 
     if (cryptoKey.type !== 'private') {
       throw new InvalidJsonWebKeyException(
-        'The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'
+        'The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.',
       );
     }
 
@@ -91,7 +91,7 @@ class RsaSsaBackend extends JsonWebSignatureBackend {
 
     if (key.kty !== 'RSA') {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "RSA" JSON Web Keys.`
+        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "RSA" JSON Web Keys.`,
       );
     }
   }

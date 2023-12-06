@@ -53,7 +53,7 @@ describe('Authorization Code Flow', () => {
 
     expect(firstAuthorizationResponse.status).toEqual(303);
     expect(authorizationEndpointUrl.href).toEqual(
-      `http://localhost:3000/oauth/authorize?${authorizationRequestSearchParameters}`
+      `http://localhost:3000/oauth/authorize?${authorizationRequestSearchParameters}`,
     );
 
     expect(agent.jar.getCookie('guarani:grant', CookieAccessInfo.All)?.value).toBeUndefined();

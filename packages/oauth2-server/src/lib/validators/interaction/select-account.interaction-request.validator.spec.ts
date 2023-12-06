@@ -111,7 +111,7 @@ describe('Select Account Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "login_challenge".'
+        'Invalid parameter "login_challenge".',
       );
     });
 
@@ -122,7 +122,7 @@ describe('Select Account Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Login Challenge.'
+        'Invalid Login Challenge.',
       );
     });
 
@@ -135,7 +135,7 @@ describe('Select Account Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "session_id".'
+        'Invalid parameter "session_id".',
       );
     });
 
@@ -149,7 +149,7 @@ describe('Select Account Interaction Request Validator', () => {
 
       await expect(validator.validateContext(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Session Identifier.'
+        'Invalid Session Identifier.',
       );
     });
 
@@ -199,7 +199,7 @@ describe('Select Account Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "login_challenge".'
+        'Invalid parameter "login_challenge".',
       );
     });
 
@@ -210,7 +210,7 @@ describe('Select Account Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Login Challenge.'
+        'Invalid Login Challenge.',
       );
     });
 
@@ -223,7 +223,7 @@ describe('Select Account Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "login_id".'
+        'Invalid parameter "login_id".',
       );
     });
 
@@ -237,7 +237,7 @@ describe('Select Account Interaction Request Validator', () => {
 
       await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Invalid Login Identifier.'
+        'Invalid Login Identifier.',
       );
     });
 
@@ -256,7 +256,7 @@ describe('Select Account Interaction Request Validator', () => {
           interactionType: interactionTypesMocks[2]!,
           grant,
           login,
-        }
+        },
       );
     });
   });

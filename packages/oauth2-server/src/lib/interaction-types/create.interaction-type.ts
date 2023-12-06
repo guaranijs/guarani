@@ -50,7 +50,7 @@ export class CreateInteractionType implements InteractionTypeInterface {
     private readonly authHandler: AuthHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
-    @Inject(USER_SERVICE) private readonly userService: UserServiceInterface
+    @Inject(USER_SERVICE) private readonly userService: UserServiceInterface,
   ) {}
 
   /**

@@ -36,7 +36,7 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    */
   public constructor(
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
-    @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[]
+    @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[],
   ) {
     super(interactionTypes);
   }
@@ -80,7 +80,7 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    * @returns Grant based on the provided Login Challenge.
    */
   private async getGrant(
-    parameters: CreateContextInteractionRequest | CreateDecisionInteractionRequest
+    parameters: CreateContextInteractionRequest | CreateDecisionInteractionRequest,
   ): Promise<Grant> {
     if (typeof parameters.login_challenge === 'undefined') {
       throw new InvalidRequestException('Invalid parameter "login_challenge".');

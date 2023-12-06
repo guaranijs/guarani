@@ -71,7 +71,7 @@ describe('JSON Web Signature RSASSA-PSS using SHA-256 and MGF1 with SHA-256 Back
     Object.setPrototypeOf(key, RsaKey.prototype);
 
     expect(() => PS256['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "PS256" only accepts "RSA" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "PS256" only accepts "RSA" JSON Web Keys.'),
     );
   });
 
@@ -79,7 +79,7 @@ describe('JSON Web Signature RSASSA-PSS using SHA-256 and MGF1 with SHA-256 Back
     const key = new RsaKey(publicParameters);
 
     await expect(PS256.sign(message, key)).rejects.toThrow(
-      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.')
+      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'),
     );
   });
 
@@ -120,7 +120,7 @@ describe('JSON Web Signature RSASSA-PSS using SHA-384 and MGF1 with SHA-384 Back
     Object.setPrototypeOf(key, RsaKey.prototype);
 
     expect(() => PS384['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "PS384" only accepts "RSA" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "PS384" only accepts "RSA" JSON Web Keys.'),
     );
   });
 
@@ -128,7 +128,7 @@ describe('JSON Web Signature RSASSA-PSS using SHA-384 and MGF1 with SHA-384 Back
     const key = new RsaKey(publicParameters);
 
     await expect(PS384.sign(message, key)).rejects.toThrow(
-      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.')
+      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'),
     );
   });
 
@@ -169,7 +169,7 @@ describe('JSON Web Signature RSASSA-PSS using SHA-512 and MGF1 with SHA-512 Back
     Object.setPrototypeOf(key, RsaKey.prototype);
 
     expect(() => PS512['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "PS512" only accepts "RSA" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "PS512" only accepts "RSA" JSON Web Keys.'),
     );
   });
 
@@ -177,7 +177,7 @@ describe('JSON Web Signature RSASSA-PSS using SHA-512 and MGF1 with SHA-512 Back
     const key = new RsaKey(publicParameters);
 
     await expect(PS512.sign(message, key)).rejects.toThrow(
-      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.')
+      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'),
     );
   });
 
@@ -218,7 +218,7 @@ describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-256 Backend', () => {
     Object.setPrototypeOf(key, RsaKey.prototype);
 
     expect(() => RS256['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "RS256" only accepts "RSA" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "RS256" only accepts "RSA" JSON Web Keys.'),
     );
   });
 
@@ -226,7 +226,7 @@ describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-256 Backend', () => {
     const key = new RsaKey(publicParameters);
 
     await expect(RS256.sign(message, key)).rejects.toThrow(
-      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.')
+      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'),
     );
   });
 
@@ -267,7 +267,7 @@ describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-384 Backend', () => {
     Object.setPrototypeOf(key, RsaKey.prototype);
 
     expect(() => RS384['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "RS384" only accepts "RSA" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "RS384" only accepts "RSA" JSON Web Keys.'),
     );
   });
 
@@ -275,7 +275,7 @@ describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-384 Backend', () => {
     const key = new RsaKey(publicParameters);
 
     await expect(RS384.sign(message, key)).rejects.toThrow(
-      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.')
+      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'),
     );
   });
 
@@ -316,7 +316,7 @@ describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-512 Backend', () => {
     Object.setPrototypeOf(key, RsaKey.prototype);
 
     expect(() => RS512['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "RS512" only accepts "RSA" JSON Web Keys.')
+      new InvalidJsonWebKeyException('The JSON Web Signature Algorithm "RS512" only accepts "RSA" JSON Web Keys.'),
     );
   });
 
@@ -324,7 +324,7 @@ describe('JSON Web Signature RSASSA-PKCS1-v1_5 using SHA-512 Backend', () => {
     const key = new RsaKey(publicParameters);
 
     await expect(RS512.sign(message, key)).rejects.toThrow(
-      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.')
+      new InvalidJsonWebKeyException('The provided JSON Web Key cannot be used to Sign a JSON Web Signature Message.'),
     );
   });
 

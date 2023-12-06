@@ -105,7 +105,7 @@ describe('Login Interaction Type', () => {
 
       await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Expired Grant.'
+        'Expired Grant.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -239,7 +239,7 @@ describe('Login Interaction Type', () => {
 
       await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
-        'Expired Grant.'
+        'Expired Grant.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -268,7 +268,7 @@ describe('Login Interaction Type', () => {
       });
 
       const error = new UnmetAuthenticationRequirementsException(
-        'Could not authenticate using the Authentication Context Class Reference "urn:guarani:acr:2fa".'
+        'Could not authenticate using the Authentication Context Class Reference "urn:guarani:acr:2fa".',
       );
 
       const redirectTo = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
@@ -393,7 +393,7 @@ describe('Login Interaction Type', () => {
         decision: 'deny',
         error: Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
           Reflect.construct(OAuth2Exception, [context.parameters.error_description as string]),
-          { error: context.parameters.error as string }
+          { error: context.parameters.error as string },
         ),
       });
 

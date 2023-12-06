@@ -82,7 +82,7 @@ export class HmacBackend extends JsonWebSignatureBackend {
 
     if (key.kty !== 'oct') {
       throw new InvalidJsonWebKeyException(
-        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "oct" JSON Web Keys.`
+        `The JSON Web Signature Algorithm "${this.algorithm}" only accepts "oct" JSON Web Keys.`,
       );
     }
 

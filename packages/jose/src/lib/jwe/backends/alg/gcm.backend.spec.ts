@@ -54,8 +54,8 @@ describe('JSON Web Encryption Key Wrap AES GCM using 128-bit key Backend', () =>
 
     expect(() => A128GCMKW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "A128GCMKW" only accepts "oct" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "A128GCMKW" only accepts "oct" JSON Web Keys.',
+      ),
     );
   });
 
@@ -63,7 +63,7 @@ describe('JSON Web Encryption Key Wrap AES GCM using 128-bit key Backend', () =>
     const key = await OctetSequenceKey.generate('oct', { length: 24 });
 
     expect(() => A128GCMKW['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.')
+      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.'),
     );
   });
 
@@ -79,7 +79,7 @@ describe('JSON Web Encryption Key Wrap AES GCM using 128-bit key Backend', () =>
     await expect(
       (async () => {
         return ([contentEncryptionKey, wrappedKey, header] = await A128GCMKW.wrap(contentEncryptionBackend, wrapKey));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -102,9 +102,9 @@ describe('JSON Web Encryption Key Wrap AES GCM using 128-bit key Backend', () =>
           contentEncryptionBackend,
           unwrapKey,
           Buffer.from('ABd59e-78nDpOAW98DOtpA', 'base64url'),
-          <GcmHeaderParameters>{ iv: 'AAAAAAAAAAAAAAAAAAAAAA', tag: '-PH6hQTHu7DHeVI-2wXz4w' }
+          <GcmHeaderParameters>{ iv: 'AAAAAAAAAAAAAAAAAAAAAA', tag: '-PH6hQTHu7DHeVI-2wXz4w' },
         ));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -149,8 +149,8 @@ describe('JSON Web Encryption Key Wrap AES GCM using 192-bit key Backend', () =>
 
     expect(() => A192GCMKW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "A192GCMKW" only accepts "oct" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "A192GCMKW" only accepts "oct" JSON Web Keys.',
+      ),
     );
   });
 
@@ -158,7 +158,7 @@ describe('JSON Web Encryption Key Wrap AES GCM using 192-bit key Backend', () =>
     const key = await OctetSequenceKey.generate('oct', { length: 32 });
 
     expect(() => A192GCMKW['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.')
+      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.'),
     );
   });
 
@@ -174,7 +174,7 @@ describe('JSON Web Encryption Key Wrap AES GCM using 192-bit key Backend', () =>
     await expect(
       (async () => {
         return ([contentEncryptionKey, wrappedKey, header] = await A192GCMKW.wrap(contentEncryptionBackend, wrapKey));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -197,9 +197,9 @@ describe('JSON Web Encryption Key Wrap AES GCM using 192-bit key Backend', () =>
           contentEncryptionBackend,
           unwrapKey,
           Buffer.from('qfl1lglQwz0qLnyo0bztqg', 'base64url'),
-          <GcmHeaderParameters>{ iv: 'AAAAAAAAAAAAAAAAAAAAAA', tag: 'pbyGZcfYFQ94E5JOhc1rNQ' }
+          <GcmHeaderParameters>{ iv: 'AAAAAAAAAAAAAAAAAAAAAA', tag: 'pbyGZcfYFQ94E5JOhc1rNQ' },
         ));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -244,8 +244,8 @@ describe('JSON Web Encryption Key Wrap AES GCM using 256-bit key Backend', () =>
 
     expect(() => A256GCMKW['validateJsonWebKey'](key)).toThrow(
       new InvalidJsonWebKeyException(
-        'The JSON Web Encryption Key Wrap Algorithm "A256GCMKW" only accepts "oct" JSON Web Keys.'
-      )
+        'The JSON Web Encryption Key Wrap Algorithm "A256GCMKW" only accepts "oct" JSON Web Keys.',
+      ),
     );
   });
 
@@ -253,7 +253,7 @@ describe('JSON Web Encryption Key Wrap AES GCM using 256-bit key Backend', () =>
     const key = await OctetSequenceKey.generate('oct', { length: 16 });
 
     expect(() => A256GCMKW['validateJsonWebKey'](key)).toThrow(
-      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.')
+      new InvalidJsonWebKeyException('Invalid JSON Web Key Secret Size.'),
     );
   });
 
@@ -269,7 +269,7 @@ describe('JSON Web Encryption Key Wrap AES GCM using 256-bit key Backend', () =>
     await expect(
       (async () => {
         return ([contentEncryptionKey, wrappedKey, header] = await A256GCMKW.wrap(contentEncryptionBackend, wrapKey));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);
@@ -292,9 +292,9 @@ describe('JSON Web Encryption Key Wrap AES GCM using 256-bit key Backend', () =>
           contentEncryptionBackend,
           unwrapKey,
           Buffer.from('yL9aObHACNMSfHD7f8E2CA', 'base64url'),
-          <GcmHeaderParameters>{ iv: 'AAAAAAAAAAAAAAAAAAAAAA', tag: 'Gy5-RQYMQw1x8R5w4awdjw' }
+          <GcmHeaderParameters>{ iv: 'AAAAAAAAAAAAAAAAAAAAAA', tag: 'Gy5-RQYMQw1x8R5w4awdjw' },
         ));
-      })()
+      })(),
     ).resolves.not.toThrow();
 
     expect(contentEncryptionKey).toEqual(expectedContentEncryptionKey);

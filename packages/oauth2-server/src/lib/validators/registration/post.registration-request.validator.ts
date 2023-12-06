@@ -44,7 +44,7 @@ export class PostRegistrationRequestValidator extends PostAndPutRegistrationRequ
     protected override readonly scopeHandler: ScopeHandler,
     protected override readonly clientAuthorizationHandler: ClientAuthorizationHandler,
     @Inject(ACCESS_TOKEN_SERVICE) protected override readonly accessTokenService: AccessTokenServiceInterface,
-    @Inject(SETTINGS) protected override readonly settings: Settings
+    @Inject(SETTINGS) protected override readonly settings: Settings,
   ) {
     super(scopeHandler, clientAuthorizationHandler, accessTokenService, settings);
   }

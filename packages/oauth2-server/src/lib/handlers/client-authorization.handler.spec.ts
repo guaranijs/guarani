@@ -65,7 +65,7 @@ describe('Client Authorization Handler', () => {
 
       await expect(clientAuthorizationHandler.authorize(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'No Client Authorization Method detected.'
+        'No Client Authorization Method detected.',
       );
     });
 
@@ -74,7 +74,7 @@ describe('Client Authorization Handler', () => {
 
       await expect(clientAuthorizationHandler.authorize(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Multiple Client Authorization Methods detected.'
+        'Multiple Client Authorization Methods detected.',
       );
     });
 

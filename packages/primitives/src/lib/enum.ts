@@ -19,7 +19,7 @@ export function getKeys<T extends Record<string, string | number>>(enumObj: T): 
  */
 export function getKey<T extends Record<string, string | number>>(
   enumObj: T,
-  value: string | number
+  value: string | number,
 ): Nullable<keyof T> {
   return getKeys(enumObj).find((key) => enumObj[key] === value) ?? null;
 }
@@ -54,7 +54,7 @@ export function getValues<T extends Record<string, string | number>>(enumObj: T)
  */
 export function parse<T extends Record<string, string | number>>(
   enumObj: T,
-  value: string | number
+  value: string | number,
 ): Nullable<T[keyof T]> {
   return getValues(enumObj).find((attr) => attr === value) ?? null;
 }
@@ -68,7 +68,7 @@ export function parse<T extends Record<string, string | number>>(
  */
 export function hasValue<T extends Record<string, string | number>>(
   enumObj: T,
-  value: string | number
+  value: string | number,
 ): value is T[keyof T] {
   return getKey(enumObj, value) !== null;
 }

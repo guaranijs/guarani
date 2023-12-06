@@ -52,7 +52,7 @@ describe('Client Secret JWT Client Authentication Method', () => {
 
       await expect(clientAuthentication['getClientKey'](client)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'This Client is not allowed to use the Authentication Method "client_secret_jwt".'
+        'This Client is not allowed to use the Authentication Method "client_secret_jwt".',
       );
     });
 
@@ -65,7 +65,7 @@ describe('Client Secret JWT Client Authentication Method', () => {
 
       await expect(clientAuthentication['getClientKey'](client)).rejects.toThrowWithMessage(
         InvalidClientException,
-        'This Client is not allowed to use the Authentication Method "client_secret_jwt".'
+        'This Client is not allowed to use the Authentication Method "client_secret_jwt".',
       );
     });
 

@@ -194,7 +194,7 @@ describe('Code & ID Token & Token Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid response_mode "query" for response_type "code id_token token".'
+        'Invalid response_mode "query" for response_type "code id_token token".',
       );
     });
 
@@ -215,7 +215,7 @@ describe('Code & ID Token & Token Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "nonce".'
+        'Invalid parameter "nonce".',
       );
     });
   });

@@ -127,7 +127,7 @@ export class AuthorizationServerFactory {
    */
   public static async create<T extends AuthorizationServer>(
     server: Constructor<T>,
-    options: AuthorizationServerOptions
+    options: AuthorizationServerOptions,
   ): Promise<T> {
     Reflect.set(this, 'authorizationServerOptions', options);
 

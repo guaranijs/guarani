@@ -43,7 +43,7 @@ export class IdTokenHandler {
   public constructor(
     private readonly jwks: JsonWebKeySet,
     @Inject(SETTINGS) private readonly settings: Settings,
-    @Inject(USER_SERVICE) private readonly userService: UserServiceInterface
+    @Inject(USER_SERVICE) private readonly userService: UserServiceInterface,
   ) {
     if (typeof this.userService.getUserinfo !== 'function') {
       throw new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".');
@@ -66,7 +66,7 @@ export class IdTokenHandler {
     nonce: Nullable<string>,
     maxAge: Nullable<number>,
     accessToken: Nullable<AccessToken>,
-    authorizationCode: Nullable<AuthorizationCode>
+    authorizationCode: Nullable<AuthorizationCode>,
   ): Promise<string> {
     const now = Math.ceil(Date.now() / 1000);
 
@@ -98,7 +98,7 @@ export class IdTokenHandler {
         at_hash: accessToken !== null ? this.getLeftHash(accessToken.handle, jwsHeader.alg) : undefined,
         c_hash: authorizationCode !== null ? this.getLeftHash(authorizationCode.code, jwsHeader.alg) : undefined,
       },
-      userinfo
+      userinfo,
     );
 
     const jws = new JsonWebSignature(jwsHeader, new IdTokenClaims(claims).toBuffer());
@@ -141,7 +141,7 @@ export class IdTokenHandler {
       const { payload } = await JsonWebSignature.verify(
         idToken,
         async (header) => this.jwks.find((key) => key.kid === header.kid),
-        this.settings.idTokenSignatureAlgorithms
+        this.settings.idTokenSignatureAlgorithms,
       );
 
       await JsonWebTokenClaims.parse(payload, {

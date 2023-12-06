@@ -194,7 +194,7 @@ describe('Code & Token Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid response_mode "query" for response_type "code token".'
+        'Invalid response_mode "query" for response_type "code token".',
       );
     });
   });

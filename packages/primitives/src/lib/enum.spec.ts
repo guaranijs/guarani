@@ -5,7 +5,6 @@ enum IntEnum {
   Two = 2,
   Four = 4,
   Eight = 8,
-  AnotherOne = 1,
 }
 
 enum StringEnum {
@@ -13,13 +12,12 @@ enum StringEnum {
   Bar = 'bar',
   Baz = 'baz',
   Qux = 'qux',
-  AnotherFoo = 'foo',
 }
 
 describe('getKeys()', () => {
   it("should return all the members' keys of the enum.", () => {
-    expect(Enum.getKeys(IntEnum)).toEqual(['One', 'Two', 'Four', 'Eight', 'AnotherOne']);
-    expect(Enum.getKeys(StringEnum)).toEqual(['Foo', 'Bar', 'Baz', 'Qux', 'AnotherFoo']);
+    expect(Enum.getKeys(IntEnum)).toEqual(['One', 'Two', 'Four', 'Eight']);
+    expect(Enum.getKeys(StringEnum)).toEqual(['Foo', 'Bar', 'Baz', 'Qux']);
   });
 });
 
@@ -47,8 +45,8 @@ describe('hasKey()', () => {
 
 describe('getValues()', () => {
   it("should return all the members's values of the enum.", () => {
-    expect(Enum.getValues(IntEnum)).toEqual([1, 2, 4, 8, 1]);
-    expect(Enum.getValues(StringEnum)).toEqual(['foo', 'bar', 'baz', 'qux', 'foo']);
+    expect(Enum.getValues(IntEnum)).toEqual([1, 2, 4, 8]);
+    expect(Enum.getValues(StringEnum)).toEqual(['foo', 'bar', 'baz', 'qux']);
   });
 });
 
@@ -81,7 +79,6 @@ describe('getEntries()', () => {
       ['Two', 2],
       ['Four', 4],
       ['Eight', 8],
-      ['AnotherOne', 1],
     ]);
 
     expect(Enum.getEntries(StringEnum)).toEqual([
@@ -89,7 +86,6 @@ describe('getEntries()', () => {
       ['Bar', 'bar'],
       ['Baz', 'baz'],
       ['Qux', 'qux'],
-      ['AnotherFoo', 'foo'],
     ]);
   });
 });

@@ -75,7 +75,7 @@ describe('Refresh Token Grant Type', () => {
       container.bind(RefreshTokenGrantType).toSelf().asSingleton();
 
       expect(() => container.resolve(RefreshTokenGrantType)).toThrow(
-        new TypeError('Missing implementation of required method "RefreshTokenServiceInterface.rotate".')
+        new TypeError('Missing implementation of required method "RefreshTokenServiceInterface.rotate".'),
       );
     });
   });
@@ -119,7 +119,7 @@ describe('Refresh Token Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Mismatching Client Identifier.'
+        'Mismatching Client Identifier.',
       );
     });
 
@@ -128,7 +128,7 @@ describe('Refresh Token Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Refresh Token not yet valid.'
+        'Refresh Token not yet valid.',
       );
     });
 
@@ -137,7 +137,7 @@ describe('Refresh Token Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Expired Refresh Token.'
+        'Expired Refresh Token.',
       );
     });
 
@@ -146,7 +146,7 @@ describe('Refresh Token Grant Type', () => {
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
-        'Revoked Refresh Token.'
+        'Revoked Refresh Token.',
       );
     });
 

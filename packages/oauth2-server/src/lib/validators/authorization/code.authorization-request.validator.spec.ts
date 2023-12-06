@@ -196,7 +196,7 @@ describe('Code Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid parameter "code_challenge".'
+        'Invalid parameter "code_challenge".',
       );
     });
 
@@ -217,7 +217,7 @@ describe('Code Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Unsupported code_challenge_method "unknown".'
+        'Unsupported code_challenge_method "unknown".',
       );
     });
 

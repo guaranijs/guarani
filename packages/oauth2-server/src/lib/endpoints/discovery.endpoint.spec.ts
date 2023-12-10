@@ -38,6 +38,8 @@ describe('Discovery Endpoint', () => {
     acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
     uiLocales: ['en', 'es', 'pt-BR'],
     subjectTypes: ['pairwise', 'public'],
+    enableBackChannelLogout: true,
+    includeSessionIdInLogoutToken: true,
     enableAuthorizationResponseIssuerIdentifier: true,
   };
 
@@ -136,6 +138,8 @@ describe('Discovery Endpoint', () => {
         device_authorization_endpoint: 'https://server.example.com/oauth/device_authorization',
         end_session_endpoint: 'https://server.example.com/oauth/end_session',
         authorization_response_iss_parameter_supported: true,
+        backchannel_logout_supported: true,
+        backchannel_logout_session_supported: true,
       };
 
       const response = await endpoint.handle(request);

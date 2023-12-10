@@ -202,6 +202,8 @@ export class AuthorizationServerFactory {
       enableRefreshTokenRotation: this.authorizationServerOptions.enableRefreshTokenRotation ?? false,
       enableRefreshTokenRevocation: this.authorizationServerOptions.enableRefreshTokenRevocation ?? true,
       enableRefreshTokenIntrospection: this.authorizationServerOptions.enableRefreshTokenIntrospection ?? false,
+      enableBackChannelLogout: this.authorizationServerOptions.enableBackChannelLogout ?? false,
+      includeSessionIdInLogoutToken: this.authorizationServerOptions.includeSessionIdInLogoutToken ?? false,
       devicePollingInterval: this.authorizationServerOptions.devicePollingInterval ?? 5,
       enableAuthorizationResponseIssuerIdentifier:
         this.authorizationServerOptions.enableAuthorizationResponseIssuerIdentifier ?? false,

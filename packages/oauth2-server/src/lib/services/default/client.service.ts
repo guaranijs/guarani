@@ -81,6 +81,8 @@ export class ClientService implements ClientServiceInterface {
       // requestUris: context.requestUris,
       postLogoutRedirectUris:
         context.postLogoutRedirectUris?.map((postLogoutRedirectUri) => postLogoutRedirectUri.href) ?? null,
+      backChannelLogoutUri: context.backChannelLogoutUri?.href ?? null,
+      backChannelLogoutSessionRequired: context.backChannelLogoutSessionRequired,
       softwareId: context.softwareId,
       softwareVersion: context.softwareVersion,
       createdAt: new Date(),
@@ -140,6 +142,8 @@ export class ClientService implements ClientServiceInterface {
       // requestUris: context.requestUris,
       postLogoutRedirectUris:
         context.postLogoutRedirectUris?.map((postLogoutRedirectUri) => postLogoutRedirectUri.href) ?? null,
+      backChannelLogoutUri: context.backChannelLogoutUri?.href ?? null,
+      backChannelLogoutSessionRequired: context.backChannelLogoutSessionRequired,
       softwareId: context.softwareId,
       softwareVersion: context.softwareVersion,
     });

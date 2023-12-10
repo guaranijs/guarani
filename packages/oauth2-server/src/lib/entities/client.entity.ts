@@ -199,6 +199,16 @@ export interface Client {
   postLogoutRedirectUris: Nullable<string[]>;
 
   /**
+   * Back-Channel Logout URI of the Client.
+   */
+  backChannelLogoutUri: Nullable<string>;
+
+  /**
+   * Indicates if the **sid** claim must be provided at the Logout Token.
+   */
+  backChannelLogoutSessionRequired: Nullable<boolean>;
+
+  /**
    * Unique Identifier of the Software of the Client.
    */
   softwareId: Nullable<string>;

@@ -252,4 +252,14 @@ export interface DiscoveryResponse extends Dictionary<any> {
    * Informs whether or not the Authorization Server supports Issuer Identifier on the Authorization Response.
    */
   readonly authorization_response_iss_parameter_supported: boolean;
+
+  /**
+   * Indicates if the Authorization Server supports Back-Channel Logout.
+   */
+  readonly backchannel_logout_supported?: boolean;
+
+  /**
+   * Indicates if the Authorization Server passes a **sid** claim in the Logout Token.
+   */
+  readonly backchannel_logout_session_supported?: boolean;
 }

@@ -42,6 +42,10 @@ import { Nullable } from '@guarani/types';
   'check_id_token_encrypted_response_key_wrap_and_id_token_encrypted_response_content_encryption',
   '"id_token_encrypted_response_key_wrap" IS NOT NULL OR "id_token_encrypted_response_content_encryption" IS NULL',
 )
+@Check(
+  'check_backchannel_logout_uri_and_backchannel_logout_session_required',
+  '"backchannel_logout_uri" IS NOT NULL OR "backchannel_logout_session_required" IS NULL',
+)
 export class Client extends BaseEntity implements OAuth2Client {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'clients_pk' })
   public readonly id!: string;
@@ -156,11 +160,17 @@ export class Client extends BaseEntity implements OAuth2Client {
   // @Column({ name: 'request_uris', type: 'varchar', array: true, nullable: true })
   // public requestUris!: Nullable<string[]>;
 
+  @Column({ name: 'post_logout_redirect_uris', type: 'varchar', array: true, nullable: true })
+  public postLogoutRedirectUris!: Nullable<string[]>;
+
+  @Column({ name: 'backchannel_logout_uri', type: 'varchar', nullable: true })
+  public backChannelLogoutUri!: Nullable<string>;
+
+  @Column({ name: 'backchannel_logout_session_required', type: 'boolean', nullable: true })
+  public backChannelLogoutSessionRequired!: Nullable<boolean>;
+
   @Column({ name: 'software_id', type: 'varchar', nullable: true })
   public softwareId!: Nullable<string>;
-
-  @Column({ name: 'post_logout_redirect_uris', type: 'varchar', array: true, nullable: true })
-  public postLogoutRedirectUris!: string[];
 
   @Column({ name: 'software_version', type: 'varchar', nullable: true })
   public softwareVersion!: Nullable<string>;

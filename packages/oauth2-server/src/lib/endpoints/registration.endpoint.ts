@@ -250,6 +250,8 @@ export class RegistrationEndpoint implements EndpointInterface {
       initiate_login_uri: client.initiateLoginUri ?? undefined,
       // request_uris: ,
       post_logout_redirect_uris: client.postLogoutRedirectUris ?? undefined,
+      backchannel_logout_uri: client.backChannelLogoutUri ?? undefined,
+      backchannel_logout_session_required: client.backChannelLogoutSessionRequired ?? undefined,
       software_id: client.softwareId ?? undefined,
       software_version: client.softwareVersion ?? undefined,
     });
@@ -311,6 +313,8 @@ export class RegistrationEndpoint implements EndpointInterface {
       initiate_login_uri: client.initiateLoginUri ?? undefined,
       // request_uris: ,
       post_logout_redirect_uris: client.postLogoutRedirectUris ?? undefined,
+      backchannel_logout_uri: client.backChannelLogoutUri ?? undefined,
+      backchannel_logout_session_required: client.backChannelLogoutSessionRequired ?? undefined,
       software_id: client.softwareId ?? undefined,
       software_version: client.softwareVersion ?? undefined,
     });
@@ -384,6 +388,8 @@ export class RegistrationEndpoint implements EndpointInterface {
       initiate_login_uri: client.initiateLoginUri ?? undefined,
       // request_uris: ,
       post_logout_redirect_uris: client.postLogoutRedirectUris ?? undefined,
+      backchannel_logout_uri: client.backChannelLogoutUri ?? undefined,
+      backchannel_logout_session_required: client.backChannelLogoutSessionRequired ?? undefined,
       software_id: client.softwareId ?? undefined,
       software_version: client.softwareVersion ?? undefined,
     });

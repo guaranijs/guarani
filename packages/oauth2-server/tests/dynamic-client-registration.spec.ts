@@ -80,6 +80,8 @@ describe('Dynamic Client Registration', () => {
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
       post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+      backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+      backchannel_logout_session_required: true,
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });
@@ -134,6 +136,8 @@ describe('Dynamic Client Registration', () => {
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
       post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+      backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+      backchannel_logout_session_required: true,
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });
@@ -189,6 +193,8 @@ describe('Dynamic Client Registration', () => {
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
       post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+      backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+      backchannel_logout_session_required: true,
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });
@@ -230,6 +236,8 @@ describe('Dynamic Client Registration', () => {
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
       post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+      backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+      backchannel_logout_session_required: true,
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });
@@ -282,6 +290,8 @@ describe('Dynamic Client Registration', () => {
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
       post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+      backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+      backchannel_logout_session_required: true,
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });
@@ -333,6 +343,8 @@ describe('Dynamic Client Registration', () => {
       initiate_login_uri: 'https://client.example.com/oauth/initiate/',
       // request_uris: ,
       post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+      backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+      backchannel_logout_session_required: true,
       software_id: 'TJ9C-X43C-95V1LK03',
       software_version: 'v1.4.37',
     });

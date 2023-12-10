@@ -212,6 +212,8 @@ describe('Discovery Document', () => {
       device_authorization_endpoint: 'http://localhost:3000/oauth/device_authorization',
       end_session_endpoint: 'http://localhost:3000/oauth/end_session',
       authorization_response_iss_parameter_supported: true,
+      backchannel_logout_supported: true,
+      backchannel_logout_session_supported: true,
     });
   });
 });

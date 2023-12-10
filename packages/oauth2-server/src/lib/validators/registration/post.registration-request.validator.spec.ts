@@ -70,6 +70,8 @@ describe('Post Registration Request Validator', () => {
     clientAuthenticationSignatureAlgorithms: ['ES256', 'HS256', 'RS256'],
     acrValues: ['guarani:acr:1fa', 'guarani:acr:2fa'],
     subjectTypes: ['pairwise', 'public'],
+    enableBackChannelLogout: true,
+    includeSessionIdInLogoutToken: true,
   };
 
   beforeEach(() => {
@@ -149,6 +151,8 @@ describe('Post Registration Request Validator', () => {
         initiate_login_uri: 'https://client.example.com/oauth/initiate',
         // request_uris: ,
         post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback'],
+        backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+        backchannel_logout_session_required: true,
         software_id: 'TJ9C-X43C-95V1LK03',
         software_version: 'v1.4.37',
       };
@@ -258,6 +262,8 @@ describe('Post Registration Request Validator', () => {
         initiateLoginUri: new URL('https://client.example.com/oauth/initiate'),
         // requestUris: ,
         postLogoutRedirectUris: [new URL('https://client.example.com/oauth/logout-callback')],
+        backChannelLogoutUri: new URL('https://client.example.com/oauth/backchannel_callback'),
+        backChannelLogoutSessionRequired: true,
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
       });

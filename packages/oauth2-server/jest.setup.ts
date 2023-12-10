@@ -136,6 +136,8 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
     loginUrl: '/auth/login',
   },
   enableRegistrationEndpoint: true,
+  enableBackChannelLogout: true,
+  includeSessionIdInLogoutToken: true,
   enableAuthorizationResponseIssuerIdentifier: true,
   postLogoutUrl: 'http://localhost:3000',
   secretKey: 'super_secret_passphrase_that_nobody_will_be_able_to_guess',

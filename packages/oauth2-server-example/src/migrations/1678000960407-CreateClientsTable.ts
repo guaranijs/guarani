@@ -209,6 +209,16 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
           isNullable: true,
         },
         {
+          name: 'backchannel_logout_uri',
+          type: 'varchar',
+          isNullable: true,
+        },
+        {
+          name: 'backchannel_logout_session_required',
+          type: 'boolean',
+          isNullable: true,
+        },
+        {
           name: 'software_id',
           type: 'varchar',
           isNullable: true,
@@ -262,6 +272,18 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
             '("subject_type" = \'public\' AND "pairwise_salt" IS NULL)',
         },
         {
+          name: 'check_id_token_encrypted_response_key_wrap_and_id_token_encrypted_response_content_encryption',
+          columnNames: ['id_token_encrypted_response_key_wrap', 'id_token_encrypted_response_content_encryption'],
+          expression:
+            '"id_token_encrypted_response_key_wrap" IS NOT NULL OR ' +
+            '"id_token_encrypted_response_content_encryption" IS NULL',
+        },
+        {
+          name: 'check_backchannel_logout_uri_and_backchannel_logout_session_required',
+          columnNames: ['backchannel_logout_uri', 'backchannel_logout_session_required'],
+          expression: '"backchannel_logout_uri" IS NOT NULL OR "backchannel_logout_session_required" IS NULL',
+        },
+        {
           name: 'check_secret_length',
           columnNames: ['secret'],
           expression: 'length("secret") = 32',
@@ -285,13 +307,6 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
           name: 'check_id_token_signed_response_algorithm',
           columnNames: ['id_token_signed_response_algorithm'],
           expression: '"id_token_signed_response_algorithm" <> \'none\'',
-        },
-        {
-          name: 'check_id_token_encrypted_response_key_wrap_and_id_token_encrypted_response_content_encryption',
-          columnNames: ['id_token_encrypted_response_key_wrap', 'id_token_encrypted_response_content_encryption'],
-          expression:
-            '"id_token_encrypted_response_key_wrap" IS NOT NULL OR ' +
-            '"id_token_encrypted_response_content_encryption" IS NULL',
         },
         {
           name: 'check_userinfo_signed_response_algorithm',

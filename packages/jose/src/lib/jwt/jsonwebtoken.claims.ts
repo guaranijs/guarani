@@ -90,7 +90,7 @@ export class JsonWebTokenClaims implements JsonWebTokenClaimsParameters {
         this.validateClaimsOptions(claims, options.validationOptions);
       }
 
-      return new JsonWebTokenClaims(claims);
+      return new this(claims);
     } catch (exc: unknown) {
       if (exc instanceof JoseException) {
         throw exc;

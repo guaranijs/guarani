@@ -116,7 +116,10 @@ export class IdTokenClaims extends JsonWebTokenClaims implements IdTokenClaimsPa
       throw new InvalidJsonWebTokenClaimException('Invalid claim "sid".');
     }
 
-    if (typeof claims.auth_time !== 'undefined' && typeof claims.auth_time !== 'number') {
+    if (
+      typeof claims.auth_time !== 'undefined' &&
+      (typeof claims.auth_time !== 'number' || !Number.isInteger(claims.auth_time))
+    ) {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "auth_time".');
     }
 
@@ -130,7 +133,9 @@ export class IdTokenClaims extends JsonWebTokenClaims implements IdTokenClaimsPa
 
     if (
       typeof claims.amr !== 'undefined' &&
-      (!Array.isArray(claims.amr) || claims.amr.some((method) => typeof method !== 'string' || method.length === 0))
+      (!Array.isArray(claims.amr) ||
+        claims.amr.length === 0 ||
+        claims.amr.some((method) => typeof method !== 'string' || method.length === 0))
     ) {
       throw new InvalidJsonWebTokenClaimException('Invalid claim "amr".');
     }

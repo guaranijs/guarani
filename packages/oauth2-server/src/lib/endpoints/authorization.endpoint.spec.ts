@@ -78,8 +78,10 @@ describe('Authorization Endpoint', () => {
 
   const loginServiceMock = jest.mocked<LoginServiceInterface>({
     create: jest.fn(),
+    findByUserId: jest.fn(),
     findOne: jest.fn(),
     remove: jest.fn(),
+    save: jest.fn(),
   });
 
   const consentServiceMock = jest.mocked<ConsentServiceInterface>({

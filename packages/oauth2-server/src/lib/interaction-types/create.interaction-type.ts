@@ -85,12 +85,13 @@ export class CreateInteractionType implements InteractionTypeInterface {
    */
   public async handleDecision(context: CreateDecisionInteractionContext): Promise<CreateDecisionInteractionResponse> {
     const { grant, parameters } = context;
+    const { client, session } = grant;
 
     await this.checkGrant(grant);
 
     if (!grant.interactions.includes('create')) {
       const user = await this.userService.create(parameters);
-      await this.authHandler.login(user, grant.session, null, null);
+      await this.authHandler.login(user, client, session, null, null);
 
       grant.interactions.push('create');
       await this.grantService.save(grant);

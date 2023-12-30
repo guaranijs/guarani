@@ -61,6 +61,8 @@ const invalidRequireAuthTimes: any[] = [1, 1.2, 'a', {}, []];
 const invalidAcrValues: any[] = [true, 1, 1.2, {}];
 const invalidInitiateLoginUris: any[] = [true, 1, 1.2, {}, []];
 const invalidPostLogoutRedirectUris: any[] = [true, 1, 1.2, 'a', {}];
+const invalidBackChannelLogoutUris: any[] = [true, 1, 1.2, {}, []];
+const invalidBackChannelLogoutSessionRequiredValues: any[] = [1, 1.2, 'a', {}, []];
 const invalidSoftwareIds: any[] = [true, 1, 1.2, {}, []];
 const invalidSoftwareVersions: any[] = [true, 1, 1.2, {}, []];
 
@@ -81,6 +83,10 @@ const localhostRedirectUris = ['https://localhost/oauth/callback', 'https://127.
 const localhostPostLogoutRedirectUris = [
   'https://localhost/oauth/logout-callback',
   'https://127.0.0.1/oauth/logout-callback',
+];
+const localhostBackChannelLogoutUris = [
+  'https://localhost/oauth/backchannel_callback',
+  'https://127.0.0.1/oauth/backchannel_callback',
 ];
 
 const invalidAuthenticationMethodSigningCombinations: [
@@ -138,6 +144,8 @@ describe('Post and Put Registration Request Validator', () => {
     clientAuthenticationSignatureAlgorithms: ['ES256', 'HS256', 'RS256'],
     acrValues: ['guarani:acr:1fa', 'guarani:acr:2fa'],
     subjectTypes: ['pairwise', 'public'],
+    enableBackChannelLogout: true,
+    includeSessionIdInLogoutToken: true,
   };
 
   beforeEach(() => {
@@ -209,6 +217,8 @@ describe('Post and Put Registration Request Validator', () => {
         initiate_login_uri: 'https://client.example.com/oauth/initiate',
         // request_uris: ,
         post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback'],
+        backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+        backchannel_logout_session_required: true,
         software_id: 'TJ9C-X43C-95V1LK03',
         software_version: 'v1.4.37',
       };
@@ -1033,6 +1043,123 @@ describe('Post and Put Registration Request Validator', () => {
       },
     );
 
+    it('should throw when not providing the parameter "backchannel_logout_uri" together with the parameter "backchannel_logout_session_required".', async () => {
+      const request = requestFactory({ backchannel_logout_uri: undefined });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The parameter "backchannel_logout_session_required" must be presented together ' +
+          'with the parameter "backchannel_logout_uri".',
+      );
+    });
+
+    it.each(invalidBackChannelLogoutUris)(
+      'should throw when providing an invalid "backchannel_logout_uri" parameter.',
+      async (backChannelLogoutUri) => {
+        const request = requestFactory({ backchannel_logout_uri: backChannelLogoutUri });
+
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "backchannel_logout_uri".',
+        );
+      },
+    );
+
+    it('should throw when the authorization server does not support back-channel logout.', async () => {
+      Reflect.set(settings, 'enableBackChannelLogout', false);
+
+      const request = requestFactory();
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Authorization Server does not support Back-Channel Logout.',
+      );
+
+      Reflect.set(settings, 'enableBackChannelLogout', true);
+    });
+
+    it('should throw when providing an invalid back-channel logout uri.', async () => {
+      const request = requestFactory({ backchannel_logout_uri: 'client.example.com/oauth/backchannel_callback' });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Invalid Back-Channel Logout URI "client.example.com/oauth/backchannel_callback".',
+      );
+    });
+
+    it('should throw when providing a back-channel logout uri with a fragment component.', async () => {
+      const request = requestFactory({
+        backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback#fragment-component',
+      });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Back-Channel Logout URI "https://client.example.com/oauth/backchannel_callback#fragment-component" ' +
+          'MUST NOT have a fragment component.',
+      );
+    });
+
+    it.each(invalidBackChannelLogoutSessionRequiredValues)(
+      'should throw when providing an invalid "backchannel_logout_session_required" parameter.',
+      async (backChannelLogoutSessionRequired) => {
+        const request = requestFactory({ backchannel_logout_session_required: backChannelLogoutSessionRequired });
+
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "backchannel_logout_session_required".',
+        );
+      },
+    );
+
+    it('should throw when the authorization server does not support passing the "sid" claim in the logout token.', async () => {
+      Reflect.set(settings, 'includeSessionIdInLogoutToken', false);
+
+      const request = requestFactory();
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Authorization Server does not support passing the claim "sid" in the Logout Token.',
+      );
+
+      Reflect.set(settings, 'includeSessionIdInLogoutToken', true);
+    });
+
+    it('should throw when providing a http(s) redirect uri other than localhost for a native application.', async () => {
+      const request = requestFactory({
+        redirect_uris: ['http://localhost/oauth/callback'],
+        application_type: 'native',
+        post_logout_redirect_uris: ['http://localhost/oauth/logout-callback'],
+      });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
+      );
+    });
+
+    it('should throw when not providing a https redirect uri for a web application.', async () => {
+      const request = requestFactory({
+        backchannel_logout_uri: 'http://client.example.com/oauth/backchannel_callback',
+      });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The Back-Channel Logout URI "http://client.example.com/oauth/backchannel_callback" does not use the https protocol.',
+      );
+    });
+
+    it.each(localhostBackChannelLogoutUris)(
+      'should throw when providing a localhost redirect uri for a web application.',
+      async (redirectUri) => {
+        const request = requestFactory({ backchannel_logout_uri: redirectUri });
+
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'The Authorization Server disallows using localhost as a Back-Channel Logout URI for a "web" application.',
+        );
+      },
+    );
+
     it.each(invalidSoftwareIds)(
       'should throw when providing an invalid "software_id" parameter.',
       async (softwareId) => {
@@ -1095,6 +1222,8 @@ describe('Post and Put Registration Request Validator', () => {
         initiateLoginUri: new URL('https://client.example.com/oauth/initiate'),
         // requestUris: ,
         postLogoutRedirectUris: [new URL('https://client.example.com/oauth/logout-callback')],
+        backChannelLogoutUri: new URL('https://client.example.com/oauth/backchannel_callback'),
+        backChannelLogoutSessionRequired: true,
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
       });

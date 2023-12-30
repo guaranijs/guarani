@@ -47,8 +47,10 @@ describe('Select Account Interaction Request Validator', () => {
 
   const loginServiceMock = jest.mocked<LoginServiceInterface>({
     create: jest.fn(),
+    findByUserId: jest.fn(),
     findOne: jest.fn(),
     remove: jest.fn(),
+    save: jest.fn(),
   });
 
   const interactionTypesMocks = [

@@ -140,14 +140,30 @@ export interface Settings {
   readonly enableRefreshTokenIntrospection: boolean;
 
   /**
+   * Indicates if the Authorization Server supports Back-Channel Logout.
+   *
+   * @default false
+   */
+  readonly enableBackChannelLogout: boolean;
+
+  /**
    * Polling interval of the Device Authorization Grant.
    */
   readonly devicePollingInterval: number;
 
   /**
    * Enables Authorization Response Issuer Identifier in Authorization and Token Responses.
+   *
+   * @default false
    */
   readonly enableAuthorizationResponseIssuerIdentifier: boolean;
+
+  /**
+   * Indicates if the Authorization Server passes a **sid** claim in the Logout Token.
+   *
+   * @default false
+   */
+  readonly includeSessionIdInLogoutToken: boolean;
 
   /**
    * Post Logout Url of the Authorization Server.

@@ -141,7 +141,7 @@ export class LoginInteractionType implements InteractionTypeInterface {
    */
   private async acceptLogin(context: LoginDecisionAcceptInteractionContext): Promise<LoginDecisionInteractionResponse> {
     const { acr, amr, grant, user } = context;
-    const { parameters, session } = grant;
+    const { client, parameters, session } = grant;
 
     if (acr !== null && parameters.acr_values?.includes(acr) === false) {
       await this.grantService.remove(grant);
@@ -155,8 +155,9 @@ export class LoginInteractionType implements InteractionTypeInterface {
       return { redirect_to: url.href };
     }
 
+    // TODO: Check ACR values.
     if (session.activeLogin === null) {
-      await this.authHandler.login(user, session, amr, acr);
+      await this.authHandler.login(user, client, session, amr, acr);
 
       grant.interactions.push('login');
       await this.grantService.save(grant);

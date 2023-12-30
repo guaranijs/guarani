@@ -308,7 +308,7 @@ describe('Login Interaction Type', () => {
       });
 
       expect(authHandlerMock.login).toHaveBeenCalledTimes(1);
-      expect(authHandlerMock.login).toHaveBeenCalledWith(user, context.grant.session, amr, acr);
+      expect(authHandlerMock.login).toHaveBeenCalledWith(user, context.grant.client, context.grant.session, amr, acr);
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...context.grant, interactions: ['login'] });
@@ -345,7 +345,7 @@ describe('Login Interaction Type', () => {
       });
 
       expect(authHandlerMock.login).toHaveBeenCalledTimes(1);
-      expect(authHandlerMock.login).toHaveBeenCalledWith(user, context.grant.session, amr, acr);
+      expect(authHandlerMock.login).toHaveBeenCalledWith(user, context.grant.client, context.grant.session, amr, acr);
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...context.grant, interactions: ['login'] });

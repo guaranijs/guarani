@@ -177,6 +177,16 @@ export interface PostRegistrationRequest extends Dictionary<any> {
   readonly post_logout_redirect_uris?: string[];
 
   /**
+   * Back-Channel Logout URI of the Client.
+   */
+  readonly backchannel_logout_uri?: string;
+
+  /**
+   * Indicates if the **sid** claim must be provided at the Logout Token.
+   */
+  readonly backchannel_logout_session_required?: boolean;
+
+  /**
    * Unique Identifier of the Software of the Client.
    */
   readonly software_id?: string;

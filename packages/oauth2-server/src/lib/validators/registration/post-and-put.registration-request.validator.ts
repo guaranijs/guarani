@@ -114,6 +114,12 @@ export abstract class PostAndPutRegistrationRequestValidator<
     const postLogoutRedirectUris = this.getPostLogoutRedirectUris(parameters);
 
     this.checkApplicationTypeAndPostLogoutRedirectUris(applicationType, postLogoutRedirectUris);
+    this.checkBackChannelLogoutUriAndBackChannelSessionRequired(parameters);
+
+    const backChannelLogoutUri = this.getBackChannelLogoutUri(parameters);
+    const backChannelLogoutSessionRequired = this.getBackChannelLogoutSessionRequired(parameters);
+
+    this.checkApplicationTypeAndBackChannelLogoutUri(applicationType, backChannelLogoutUri);
 
     const softwareId = this.getSoftwareId(parameters);
     const softwareVersion = this.getSoftwareVersion(parameters);
@@ -151,6 +157,8 @@ export abstract class PostAndPutRegistrationRequestValidator<
       initiateLoginUri,
       // requestUris,
       postLogoutRedirectUris,
+      backChannelLogoutUri,
+      backChannelLogoutSessionRequired,
       softwareId,
       softwareVersion,
     };
@@ -1138,6 +1146,139 @@ export abstract class PostAndPutRegistrationRequestValidator<
         }
       }
     });
+  }
+
+  /**
+   * Checks if the parameter **backchannel_logout_uri** is provided
+   * when **backchannel_logout_session_required** is provided.
+   *
+   * @param parameters Parameters of the Client Registration Request.
+   */
+  private checkBackChannelLogoutUriAndBackChannelSessionRequired(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
+  ): void {
+    if (
+      typeof parameters.backchannel_logout_session_required !== 'undefined' &&
+      typeof parameters.backchannel_logout_uri === 'undefined'
+    ) {
+      throw new InvalidClientMetadataException(
+        'The parameter "backchannel_logout_session_required" must be presented together ' +
+          'with the parameter "backchannel_logout_uri".',
+      );
+    }
+  }
+
+  /**
+   * Returns the Back-Channel Logout Uri provided by the Client.
+   *
+   * @param parameters Parameters of the Dynamic Client Registration Request.
+   * @returns Back-Channel Logout Uri provided by the Client.
+   */
+  private getBackChannelLogoutUri(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<URL> {
+    if (
+      typeof parameters.backchannel_logout_uri !== 'undefined' &&
+      typeof parameters.backchannel_logout_uri !== 'string'
+    ) {
+      throw new InvalidClientMetadataException('Invalid parameter "backchannel_logout_uri".');
+    }
+
+    if (typeof parameters.backchannel_logout_uri === 'undefined') {
+      return null;
+    }
+
+    if (!this.settings.enableBackChannelLogout) {
+      throw new InvalidClientMetadataException('The Authorization Server does not support Back-Channel Logout.');
+    }
+
+    let url: URL;
+
+    try {
+      url = new URL(parameters.backchannel_logout_uri);
+    } catch (exc: unknown) {
+      throw new InvalidClientMetadataException(
+        `Invalid Back-Channel Logout URI "${parameters.backchannel_logout_uri}".`,
+      );
+    }
+
+    if (url.hash.length !== 0) {
+      throw new InvalidClientMetadataException(
+        `The Back-Channel Logout URI "${parameters.backchannel_logout_uri}" MUST NOT have a fragment component.`,
+      );
+    }
+
+    return url;
+  }
+
+  /**
+   * Returns the Back-Channel Logout Uri provided by the Client.
+   *
+   * @param parameters Parameters of the Dynamic Client Registration Request.
+   * @returns Back-Channel Logout Uri provided by the Client.
+   */
+  private getBackChannelLogoutSessionRequired(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
+  ): Nullable<boolean> {
+    if (
+      typeof parameters.backchannel_logout_session_required !== 'undefined' &&
+      typeof parameters.backchannel_logout_session_required !== 'boolean'
+    ) {
+      throw new InvalidClientMetadataException('Invalid parameter "backchannel_logout_session_required".');
+    }
+
+    if (typeof parameters.backchannel_logout_session_required === 'undefined') {
+      return typeof parameters.backchannel_logout_uri !== 'undefined' ? false : null;
+    }
+
+    if (parameters.backchannel_logout_session_required && !this.settings.includeSessionIdInLogoutToken) {
+      throw new InvalidClientMetadataException(
+        'The Authorization Server does not support passing the claim "sid" in the Logout Token.',
+      );
+    }
+
+    return parameters.backchannel_logout_session_required;
+  }
+
+  /**
+   * Checks if the Back-Channel Logout URI provided by the Client matches the requirements of the requested Application Type.
+   *
+   * @param applicationType Application Type requested by the Client.
+   * @param backChannelLogoutUri Back-Channel Logout URI provided by the Client.
+   */
+  private checkApplicationTypeAndBackChannelLogoutUri(
+    applicationType: ApplicationType,
+    backChannelLogoutUri: Nullable<URL>,
+  ): void {
+    if (backChannelLogoutUri === null) {
+      return;
+    }
+
+    switch (applicationType) {
+      case 'native': {
+        if (backChannelLogoutUri.protocol.includes('http') && backChannelLogoutUri.hostname !== 'localhost') {
+          throw new InvalidClientMetadataException(
+            'The Authorization Server disallows using the http or https protocol - except for localhost - for a "native" application.',
+          );
+        }
+
+        break;
+      }
+
+      case 'web': {
+        if (!backChannelLogoutUri.protocol.includes('https')) {
+          throw new InvalidClientMetadataException(
+            `The Back-Channel Logout URI "${backChannelLogoutUri.href}" does not use the https protocol.`,
+          );
+        }
+
+        if (backChannelLogoutUri.hostname === 'localhost' || backChannelLogoutUri.hostname === '127.0.0.1') {
+          throw new InvalidClientMetadataException(
+            'The Authorization Server disallows using localhost as a Back-Channel Logout URI for a "web" application.',
+          );
+        }
+
+        break;
+      }
+    }
   }
 
   /**

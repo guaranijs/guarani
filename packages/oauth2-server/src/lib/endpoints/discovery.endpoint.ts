@@ -95,6 +95,8 @@ export class DiscoveryEndpoint implements EndpointInterface {
       device_authorization_endpoint: this.getEndpointPath('device_authorization'),
       end_session_endpoint: this.getEndpointPath('end_session'),
       authorization_response_iss_parameter_supported: this.settings.enableAuthorizationResponseIssuerIdentifier,
+      backchannel_logout_supported: this.settings.enableBackChannelLogout,
+      backchannel_logout_session_supported: this.settings.includeSessionIdInLogoutToken,
     });
 
     return new HttpResponse().json(discoveryResponse);

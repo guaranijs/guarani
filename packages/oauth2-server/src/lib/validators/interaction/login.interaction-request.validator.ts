@@ -173,8 +173,8 @@ export class LoginInteractionRequestValidator extends InteractionRequestValidato
    * @param parameters Parameters of the Interaction Request.
    * @returns Authentication Methods provided by the Client.
    */
-  private getAuthenticationMethods(parameters: LoginDecisionAcceptInteractionRequest): string[] {
-    return parameters.amr?.split(' ') ?? [];
+  private getAuthenticationMethods(parameters: LoginDecisionAcceptInteractionRequest): Nullable<string[]> {
+    return parameters.amr?.split(' ') ?? null;
   }
 
   /**

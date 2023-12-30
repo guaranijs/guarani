@@ -17,6 +17,8 @@ import { InteractionTypeInterface } from '../../interaction-types/interaction-ty
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { LogoutDecision } from '../../interaction-types/logout-decision.type';
+import { LogoutTypeInterface } from '../../logout-types/logout-type.interface';
+import { LOGOUT_TYPE } from '../../logout-types/logout-type.token';
 import { LogoutContextInteractionRequest } from '../../requests/interaction/logout-context.interaction-request';
 import { LogoutDecisionInteractionRequest } from '../../requests/interaction/logout-decision.interaction-request';
 import { LogoutDecisionAcceptInteractionRequest } from '../../requests/interaction/logout-decision-accept.interaction-request';
@@ -46,6 +48,11 @@ describe('Logout Interaction Request Validator', () => {
     save: jest.fn(),
   });
 
+  const logoutTypesMocks = [
+    jest.mocked<LogoutTypeInterface>({ name: 'local', logout: jest.fn() }),
+    jest.mocked<LogoutTypeInterface>({ name: 'sso', logout: jest.fn() }),
+  ];
+
   const interactionTypesMocks = [
     jest.mocked<InteractionTypeInterface>({ name: 'consent', handleContext: jest.fn(), handleDecision: jest.fn() }),
     jest.mocked<InteractionTypeInterface>({ name: 'login', handleContext: jest.fn(), handleDecision: jest.fn() }),
@@ -57,6 +64,10 @@ describe('Logout Interaction Request Validator', () => {
 
     container.bind<LogoutTicketServiceInterface>(LOGOUT_TICKET_SERVICE).toValue(logoutTicketServiceMock);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
+
+    logoutTypesMocks.forEach((logoutTypeMock) => {
+      container.bind<LogoutTypeInterface>(LOGOUT_TYPE).toValue(logoutTypeMock);
+    });
 
     interactionTypesMocks.forEach((interactionTypeMock) => {
       container.bind<InteractionTypeInterface>(INTERACTION_TYPE).toValue(interactionTypeMock);
@@ -227,8 +238,38 @@ describe('Logout Interaction Request Validator', () => {
       );
     });
 
+    it('should throw when not providing the parameter "logout_type".', async () => {
+      const request = requestFactory({ decision: 'accept', session_id: 'session_id', logout_type: undefined });
+
+      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const session = <Session>{ id: 'session_id' };
+
+      logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "logout_type".',
+      );
+    });
+
+    it('should throw when providing an unsupported logout type.', async () => {
+      const request = requestFactory({ decision: 'accept', session_id: 'session_id', logout_type: 'unknown' });
+
+      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const session = <Session>{ id: 'session_id' };
+
+      logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+
+      await expect(validator.validateDecision(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported logout_type "unknown".',
+      );
+    });
+
     it('should return a logout decision accept interaction context.', async () => {
-      const request = requestFactory({ decision: 'accept', session_id: 'session_id' });
+      const request = requestFactory({ decision: 'accept', session_id: 'session_id', logout_type: 'local' });
 
       const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
       const session = <Session>{ id: 'session_id' };
@@ -242,6 +283,7 @@ describe('Logout Interaction Request Validator', () => {
         logoutTicket,
         decision: 'accept',
         session,
+        logoutType: logoutTypesMocks[0]!,
       });
     });
     // #endregion

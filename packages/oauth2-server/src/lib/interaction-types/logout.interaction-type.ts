@@ -8,7 +8,6 @@ import { LogoutDecisionAcceptInteractionContext } from '../context/interaction/l
 import { LogoutDecisionDenyInteractionContext } from '../context/interaction/logout-decision-deny.interaction-context';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
-import { AuthHandler } from '../handlers/auth.handler';
 import { LogoutContextInteractionResponse } from '../responses/interaction/logout-context.interaction-response';
 import { LogoutDecisionInteractionResponse } from '../responses/interaction/logout-decision.interaction-response';
 import { LogoutTicketServiceInterface } from '../services/logout-ticket.service.interface';
@@ -48,12 +47,10 @@ export class LogoutInteractionType implements InteractionTypeInterface {
   /**
    * Instantiates a new Logout Interaction Type.
    *
-   * @param authHandler Instance of the Auth Handler.
    * @param settings Settings of the Authorization Server.
    * @param logoutTicketService Instance of the Logout Ticket Service.
    */
   public constructor(
-    private readonly authHandler: AuthHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(LOGOUT_TICKET_SERVICE) private readonly logoutTicketService: LogoutTicketServiceInterface,
   ) {}
@@ -118,10 +115,10 @@ export class LogoutInteractionType implements InteractionTypeInterface {
   private async acceptLogout(
     context: LogoutDecisionAcceptInteractionContext,
   ): Promise<LogoutDecisionInteractionResponse> {
-    const { logoutTicket, session } = context;
+    const { logoutTicket, logoutType, session } = context;
 
     if (session.activeLogin !== null) {
-      await this.authHandler.logout(session.activeLogin, session);
+      await logoutType.logout(logoutTicket);
 
       logoutTicket.session = session;
       await this.logoutTicketService.save(logoutTicket);

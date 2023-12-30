@@ -1,5 +1,6 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
+import { Client } from '../entities/client.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
@@ -22,8 +23,10 @@ describe('Auth Handler', () => {
 
   const loginServiceMock = jest.mocked<LoginServiceInterface>({
     create: jest.fn(),
+    findByUserId: jest.fn(),
     findOne: jest.fn(),
     remove: jest.fn(),
+    save: jest.fn(),
   });
 
   beforeEach(() => {
@@ -42,17 +45,18 @@ describe('Auth Handler', () => {
 
   describe('login()', () => {
     it('should create and return a new login.', async () => {
-      const user: User = { id: 'user_id' };
-      const session: Session = { id: 'session_id', activeLogin: null, logins: [] };
+      const user = <User>{ id: 'user_id' };
+      const client = <Client>{ id: 'client_id' };
+      const session = <Session>{ id: 'session_id', activeLogin: null, logins: [] };
       const amr: string[] = ['pwd', 'sms'];
       const acr = 'urn:guarani:acr:2fa';
 
       loginServiceMock.create.mockResolvedValueOnce(<Login>{ id: 'login_id', amr, acr, user, session });
 
-      const login = await authHandler.login(user, session, amr, acr);
+      const login = await authHandler.login(user, client, session, amr, acr);
 
       expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
-      expect(loginServiceMock.create).toHaveBeenCalledWith(user, session, amr, acr);
+      expect(loginServiceMock.create).toHaveBeenCalledWith(user, client, session, amr, acr);
 
       expect(loginServiceMock.remove).not.toHaveBeenCalled();
 
@@ -65,17 +69,18 @@ describe('Auth Handler', () => {
     });
 
     it('should remove an old login and create and return a new login.', async () => {
-      const user: User = { id: 'user_id' };
-      const session: Session = { id: 'session_id', activeLogin: null, logins: [<Login>{ id: 'old_login_id', user }] };
+      const user = <User>{ id: 'user_id' };
+      const client = <Client>{ id: 'client_id' };
+      const session = <Session>{ id: 'session_id', activeLogin: null, logins: [<Login>{ id: 'old_login_id', user }] };
       const amr: string[] = ['pwd', 'sms'];
       const acr = 'urn:guarani:acr:2fa';
 
       loginServiceMock.create.mockResolvedValueOnce(<Login>{ id: 'login_id', amr, acr, user, session });
 
-      const login = await authHandler.login(user, session, amr, acr);
+      const login = await authHandler.login(user, client, session, amr, acr);
 
       expect(loginServiceMock.create).toHaveBeenCalledTimes(1);
-      expect(loginServiceMock.create).toHaveBeenCalledWith(user, session, amr, acr);
+      expect(loginServiceMock.create).toHaveBeenCalledWith(user, client, session, amr, acr);
 
       expect(loginServiceMock.remove).toHaveBeenCalledTimes(1);
       expect(loginServiceMock.remove).toHaveBeenCalledWith(<Login>{ id: 'old_login_id', user });

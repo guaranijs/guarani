@@ -9,7 +9,7 @@ import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
-import { AuthHandler } from '../handlers/auth.handler';
+import { LogoutTypeInterface } from '../logout-types/logout-type.interface';
 import { LogoutContextInteractionResponse } from '../responses/interaction/logout-context.interaction-response';
 import { LogoutDecisionInteractionResponse } from '../responses/interaction/logout-decision.interaction-response';
 import { LogoutTicketServiceInterface } from '../services/logout-ticket.service.interface';
@@ -28,8 +28,6 @@ describe('Logout Interaction Type', () => {
   let container: DependencyInjectionContainer;
   let interactionType: LogoutInteractionType;
 
-  const authHandlerMock = jest.mocked(AuthHandler.prototype);
-
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
   const logoutTicketServiceMock = jest.mocked<LogoutTicketServiceInterface>({
@@ -43,7 +41,6 @@ describe('Logout Interaction Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
-    container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<LogoutTicketServiceInterface>(LOGOUT_TICKET_SERVICE).toValue(logoutTicketServiceMock);
     container.bind(LogoutInteractionType).toSelf().asSingleton();
@@ -211,6 +208,10 @@ describe('Logout Interaction Type', () => {
           activeLogin: { id: 'login1_id' },
           logins: [{ id: 'login0_id' }, { id: 'login1_id' }, { id: 'login2_id' }],
         },
+        logoutType: jest.mocked<LogoutTypeInterface>({
+          name: 'local',
+          logout: jest.fn(),
+        }),
       });
 
       const redirectTo = addParametersToUrl(
@@ -224,13 +225,17 @@ describe('Logout Interaction Type', () => {
 
       const { session } = context as LogoutDecisionAcceptInteractionContext;
 
-      expect(authHandlerMock.logout).toHaveBeenCalledTimes(1);
-      expect(authHandlerMock.logout).toHaveBeenCalledWith(session.activeLogin!, session);
+      expect((<LogoutDecisionAcceptInteractionContext>context).logoutType.logout).toHaveBeenCalledTimes(1);
+      expect((<LogoutDecisionAcceptInteractionContext>context).logoutType.logout).toHaveBeenCalledWith(
+        context.logoutTicket,
+      );
 
       expect(logoutTicketServiceMock.save).toHaveBeenCalledTimes(1);
       expect(logoutTicketServiceMock.save).toHaveBeenCalledWith(<LogoutTicket>{ ...context.logoutTicket, session });
 
-      const logoutOrder = authHandlerMock.logout.mock.invocationCallOrder[0]!;
+      const logoutOrder = (<jest.MockedObjectDeep<LogoutDecisionAcceptInteractionContext>>context).logoutType.logout
+        .mock.invocationCallOrder[0]!;
+
       const saveLogoutTicketOrder = logoutTicketServiceMock.save.mock.invocationCallOrder[0]!;
 
       expect(logoutOrder).toBeLessThan(saveLogoutTicketOrder);
@@ -246,6 +251,10 @@ describe('Logout Interaction Type', () => {
           activeLogin: null,
           logins: [{ id: 'login0_id' }, { id: 'login2_id' }],
         },
+        logoutType: jest.mocked<LogoutTypeInterface>({
+          name: 'local',
+          logout: jest.fn(),
+        }),
       });
 
       context.logoutTicket.session.activeLogin = null;
@@ -260,7 +269,7 @@ describe('Logout Interaction Type', () => {
         redirect_to: redirectTo.href,
       });
 
-      expect(authHandlerMock.logout).not.toHaveBeenCalled();
+      expect((<LogoutDecisionAcceptInteractionContext>context).logoutType.logout).not.toHaveBeenCalled();
       expect(logoutTicketServiceMock.save).not.toHaveBeenCalled();
     });
     // #endregion

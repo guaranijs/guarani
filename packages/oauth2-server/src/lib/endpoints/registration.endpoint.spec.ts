@@ -255,6 +255,8 @@ describe('Dynamic Client Registration Endpoint', () => {
         initiate_login_uri: 'https://client.example.com/oauth/initiate/',
         // request_uris: ,
         post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+        backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+        backchannel_logout_session_required: true,
         software_id: 'TJ9C-X43C-95V1LK03',
         software_version: 'v1.4.37',
       };
@@ -303,6 +305,8 @@ describe('Dynamic Client Registration Endpoint', () => {
           initiateLoginUri: new URL('https://client.example.com/oauth/initiate/'),
           // requestUris: ,
           postLogoutRedirectUris: [new URL('https://client.example.com/oauth/logout-callback/')],
+          backChannelLogoutUri: new URL('https://client.example.com/oauth/backchannel_callback'),
+          backChannelLogoutSessionRequired: true,
           softwareId: 'TJ9C-X43C-95V1LK03',
           softwareVersion: 'v1.4.37',
         };
@@ -343,6 +347,8 @@ describe('Dynamic Client Registration Endpoint', () => {
           // requestUris: ,
           postLogoutRedirectUris:
             context.postLogoutRedirectUris?.map((postLogoutRedirectUri) => postLogoutRedirectUri.href) ?? null,
+          backChannelLogoutUri: 'https://client.example.com/oauth/backchannel_callback',
+          backChannelLogoutSessionRequired: true,
           softwareId: context.softwareId,
           softwareVersion: context.softwareVersion,
           createdAt: new Date(now),
@@ -389,6 +395,8 @@ describe('Dynamic Client Registration Endpoint', () => {
           initiate_login_uri: 'https://client.example.com/oauth/initiate/',
           // request_uris: ,
           post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+          backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+          backchannel_logout_session_required: true,
           software_id: 'TJ9C-X43C-95V1LK03',
           software_version: 'v1.4.37',
         });
@@ -477,6 +485,8 @@ describe('Dynamic Client Registration Endpoint', () => {
         initiateLoginUri: 'https://client.example.com/oauth/initiate',
         // requestUris: ,
         postLogoutRedirectUris: ['https://client.example.com/oauth/logout-callback/'],
+        backChannelLogoutUri: 'https://client.example.com/oauth/backchannel_callback',
+        backChannelLogoutSessionRequired: true,
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
         createdAt: new Date(now),
@@ -527,6 +537,8 @@ describe('Dynamic Client Registration Endpoint', () => {
         initiate_login_uri: 'https://client.example.com/oauth/initiate',
         // request_uris: ,
         post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+        backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+        backchannel_logout_session_required: true,
         software_id: 'TJ9C-X43C-95V1LK03',
         software_version: 'v1.4.37',
       });
@@ -653,6 +665,8 @@ describe('Dynamic Client Registration Endpoint', () => {
         initiate_login_uri: 'https://client.example.com/oauth/initiate/',
         // request_uris: ,
         post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+        backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+        backchannel_logout_session_required: true,
         software_id: 'TJ9C-X43C-95V1LK03',
         software_version: 'v1.4.37',
       };
@@ -697,6 +711,8 @@ describe('Dynamic Client Registration Endpoint', () => {
         initiateLoginUri: 'https://client.example.com/oauth/initiate/',
         // requestUris: ,
         postLogoutRedirectUris: ['https://client.example.com/oauth/logout-callback/'],
+        backChannelLogoutUri: 'https://client.example.com/oauth/backchannel_callback',
+        backChannelLogoutSessionRequired: true,
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
         createdAt: new Date(now),
@@ -743,6 +759,8 @@ describe('Dynamic Client Registration Endpoint', () => {
         initiateLoginUri: new URL('https://client.example.com/oauth/initiate/'),
         // requestUris: ,
         postLogoutRedirectUris: [new URL('https://client.example.com/oauth/logout-callback/')],
+        backChannelLogoutUri: new URL('https://client.example.com/oauth/backchannel_callback'),
+        backChannelLogoutSessionRequired: true,
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
       };
@@ -786,6 +804,8 @@ describe('Dynamic Client Registration Endpoint', () => {
         initiate_login_uri: 'https://client.example.com/oauth/initiate/',
         // request_uris: ,
         post_logout_redirect_uris: ['https://client.example.com/oauth/logout-callback/'],
+        backchannel_logout_uri: 'https://client.example.com/oauth/backchannel_callback',
+        backchannel_logout_session_required: true,
         software_id: 'TJ9C-X43C-95V1LK03',
         software_version: 'v1.4.37',
       });

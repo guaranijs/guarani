@@ -29,7 +29,8 @@ export class ClientService implements ClientServiceInterface {
       authenticationMethod: 'client_secret_basic',
       scopes: ['openid', 'profile', 'email', 'phone', 'address', 'foo', 'bar', 'baz', 'qux'],
       subjectType: 'public',
-      idTokenSignedResponseAlgorithm: 'RS256',
+      idTokenSignedResponseAlgorithm: 'ES256',
+      idTokenEncryptedResponseKeyWrap: null,
       requireAuthTime: false,
       postLogoutRedirectUris: ['http://localhost:4000/oauth/logout_callback'],
       createdAt: new Date(),
@@ -81,6 +82,8 @@ export class ClientService implements ClientServiceInterface {
       // requestUris: context.requestUris,
       postLogoutRedirectUris:
         context.postLogoutRedirectUris?.map((postLogoutRedirectUri) => postLogoutRedirectUri.href) ?? null,
+      backChannelLogoutUri: context.backChannelLogoutUri?.href ?? null,
+      backChannelLogoutSessionRequired: context.backChannelLogoutSessionRequired,
       softwareId: context.softwareId,
       softwareVersion: context.softwareVersion,
       createdAt: new Date(),
@@ -140,6 +143,8 @@ export class ClientService implements ClientServiceInterface {
       // requestUris: context.requestUris,
       postLogoutRedirectUris:
         context.postLogoutRedirectUris?.map((postLogoutRedirectUri) => postLogoutRedirectUri.href) ?? null,
+      backChannelLogoutUri: context.backChannelLogoutUri?.href ?? null,
+      backChannelLogoutSessionRequired: context.backChannelLogoutSessionRequired,
       softwareId: context.softwareId,
       softwareVersion: context.softwareVersion,
     });

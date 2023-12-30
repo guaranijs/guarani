@@ -14,6 +14,8 @@ import { InteractionTypeInterface } from '../../interaction-types/interaction-ty
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { LogoutDecision } from '../../interaction-types/logout-decision.type';
+import { LogoutTypeInterface } from '../../logout-types/logout-type.interface';
+import { LOGOUT_TYPE } from '../../logout-types/logout-type.token';
 import { LogoutContextInteractionRequest } from '../../requests/interaction/logout-context.interaction-request';
 import { LogoutDecisionInteractionRequest } from '../../requests/interaction/logout-decision.interaction-request';
 import { LogoutDecisionAcceptInteractionRequest } from '../../requests/interaction/logout-decision-accept.interaction-request';
@@ -42,11 +44,13 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
    *
    * @param logoutTicketService Instance of the Logout Ticket Service.
    * @param sessionService Instance of the Session Service.
+   * @param logoutTypes Logout Types registered at the Authorization Server.
    * @param interactionTypes Interaction Types registered at the Authorization Server.
    */
   public constructor(
     @Inject(LOGOUT_TICKET_SERVICE) private readonly logoutTicketService: LogoutTicketServiceInterface,
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
+    @InjectAll(LOGOUT_TYPE) private readonly logoutTypes: LogoutTypeInterface[],
     @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[],
   ) {
     super(interactionTypes);
@@ -89,7 +93,9 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
     switch (decision) {
       case 'accept': {
         const session = await this.getSession(parameters as LogoutDecisionAcceptInteractionRequest);
-        return Object.assign(context, { session }) as LogoutDecisionAcceptInteractionContext;
+        const logoutType = this.getLogoutType(parameters as LogoutDecisionAcceptInteractionRequest);
+
+        return Object.assign(context, { session, logoutType }) as LogoutDecisionAcceptInteractionContext;
       }
 
       case 'deny': {
@@ -157,6 +163,26 @@ export class LogoutInteractionRequestValidator extends InteractionRequestValidat
     }
 
     return session;
+  }
+
+  /**
+   * Checks and returns the Logout Type requested by the Client.
+   *
+   * @param parameters Parameters of the Interaction Request.
+   * @returns Logout Type.
+   */
+  private getLogoutType(parameters: LogoutDecisionAcceptInteractionRequest): LogoutTypeInterface {
+    if (typeof parameters.logout_type === 'undefined') {
+      throw new InvalidRequestException('Invalid parameter "logout_type".');
+    }
+
+    const logoutType = this.logoutTypes.find((logoutType) => logoutType.name === parameters.logout_type);
+
+    if (typeof logoutType === 'undefined') {
+      throw new InvalidRequestException(`Unsupported logout_type "${parameters.logout_type}".`);
+    }
+
+    return logoutType;
   }
 
   /**

@@ -213,6 +213,16 @@ export interface PutRegistrationContext {
   readonly postLogoutRedirectUris: Nullable<URL[]>;
 
   /**
+   * Back-Channel Logout URI of the Client.
+   */
+  readonly backChannelLogoutUri: Nullable<URL>;
+
+  /**
+   * Indicates if the **sid** claim must be provided at the Logout Token.
+   */
+  readonly backChannelLogoutSessionRequired: Nullable<boolean>;
+
+  /**
    * Unique Identifier of the Software of the Client.
    */
   readonly softwareId: Nullable<string>;

@@ -1,5 +1,6 @@
 import { Nullable } from '@guarani/types';
 
+import { Client } from './client.entity';
 import { Session } from './session.entity';
 import { User } from './user.entity';
 
@@ -43,4 +44,9 @@ export interface Login {
    * Session to which the Login was created.
    */
   readonly session: Session;
+
+  /**
+   * Clients that were authorized by this Login.
+   */
+  readonly clients: Client[];
 }

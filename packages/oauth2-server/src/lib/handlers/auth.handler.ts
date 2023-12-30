@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@guarani/di';
 import { Nullable } from '@guarani/types';
 
+import { Client } from '../entities/client.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
@@ -29,13 +30,20 @@ export class AuthHandler {
    * Authenticates the End User with the Authorization Server and returns the resulting Login.
    *
    * @param user End User to be authenticated.
+   * @param client Client requesting Login.
    * @param session Session where the Login will be recorded.
    * @param amr Authentication Methods used in the Authentication.
    * @param acr Authentication Context Class Reference satisfied by the Authentication process.
    * @returns Login representing the Authentication of the End User.
    */
-  public async login(user: User, session: Session, amr: Nullable<string[]>, acr: Nullable<string>): Promise<Login> {
-    const login = await this.loginService.create(user, session, amr, acr);
+  public async login(
+    user: User,
+    client: Client,
+    session: Session,
+    amr: Nullable<string[]>,
+    acr: Nullable<string>,
+  ): Promise<Login> {
+    const login = await this.loginService.create(user, client, session, amr, acr);
 
     const oldLogin = session.logins.find((oldLogin) => oldLogin.user.id === login.user.id);
 
@@ -58,14 +66,15 @@ export class AuthHandler {
    * @param login Login to be destroyed.
    * @param session Session of the User-Agent.
    */
+  // TODO: Add Login / Session ID to Access Tokens and etc
   public async logout(login: Login, session: Session): Promise<void> {
-    await this.loginService.remove(login);
-
     if (session.activeLogin !== null && session.activeLogin.id === login.id) {
       session.activeLogin = null;
     }
 
     session.logins = session.logins.filter((savedLogin) => savedLogin.id !== login.id);
+
+    await this.loginService.remove(login);
     await this.sessionService.save(session);
   }
 

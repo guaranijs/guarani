@@ -16,6 +16,10 @@ import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
+import { LoginServiceInterface } from '../services/login.service.interface';
+import { LOGIN_SERVICE } from '../services/login.service.token';
+import { SessionServiceInterface } from '../services/session.service.interface';
+import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { Prompt } from '../types/prompt.type';
@@ -53,11 +57,15 @@ export class ConsentInteractionType implements InteractionTypeInterface {
    * Instantiates a new Consent Interaction Type.
    *
    * @param settings Settings of the Authorization Server.
+   * @param sessionService Instance of the Session Service.
+   * @param loginService Instance of the Login Service.
    * @param consentService Instance of the Consent Service.
    * @param grantService Instance of the Grant Service.
    */
   public constructor(
     @Inject(SETTINGS) private readonly settings: Settings,
+    @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
+    @Inject(LOGIN_SERVICE) private readonly loginService: LoginServiceInterface,
     @Inject(CONSENT_SERVICE) private readonly consentService: ConsentServiceInterface,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
   ) {}
@@ -137,6 +145,15 @@ export class ConsentInteractionType implements InteractionTypeInterface {
       // TODO: Add logging for this since the OIDC Spec only requires that we ignore the scope if this happens.
       if (scopes.includes('offline_access') && !grant.parameters.response_type.includes('code')) {
         scopes = scopes.filter((scope) => scope !== 'offline_access');
+      }
+
+      const activeLoginIncludesClient =
+        typeof session.activeLogin!.clients.find((loginClient) => loginClient.id === client.id) !== 'undefined';
+
+      if (!activeLoginIncludesClient) {
+        session.activeLogin!.clients.push(client);
+        await this.loginService.save(session.activeLogin!);
+        await this.sessionService.save(session);
       }
 
       const consent = await this.consentService.create(scopes, client, session.activeLogin!.user);

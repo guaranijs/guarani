@@ -198,7 +198,7 @@ describe('Authorization Code Flow', () => {
 
     const requestBody = stringifyQs(requestData);
 
-    const response = await request(app)
+    const response = await agent
       .post('/oauth/token')
       .auth('b1eeace9-2b0c-468e-a444-733befc3b35d', 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX', { type: 'basic' })
       .set('Content-Type', 'application/x-www-form-urlencoded')

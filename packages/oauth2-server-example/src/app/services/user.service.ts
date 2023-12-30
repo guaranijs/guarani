@@ -1,4 +1,4 @@
-import argon2 from 'argon2';
+import bcrypt from 'bcrypt';
 
 import { Injectable } from '@guarani/di';
 import { UserinfoClaimsParameters, UserServiceInterface } from '@guarani/oauth2-server';
@@ -11,7 +11,7 @@ import { User } from '../entities/user.entity';
 export class UserService implements UserServiceInterface {
   public async create(parameters: UserRegistrationDto): Promise<User> {
     const user = User.create({
-      password: await argon2.hash(parameters.password, { type: argon2.argon2id }),
+      password: bcrypt.hashSync(parameters.password, 10),
       givenName: parameters.given_name,
       familyName: parameters.family_name,
       email: parameters.email,
@@ -36,7 +36,7 @@ export class UserService implements UserServiceInterface {
       return null;
     }
 
-    if (!(await argon2.verify(user.password, password, { type: argon2.argon2id }))) {
+    if (!(await bcrypt.compare(password, user.password))) {
       return null;
     }
 

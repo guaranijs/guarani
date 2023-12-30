@@ -134,6 +134,7 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
     deviceCodeUrl: '/device',
     errorUrl: '/oauth/error',
     loginUrl: '/auth/login',
+    logoutUrl: '/auth/logout',
   },
   enableRegistrationEndpoint: true,
   enableBackChannelLogout: true,

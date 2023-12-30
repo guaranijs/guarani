@@ -35,10 +35,15 @@ import { AuthHandler } from '../handlers/auth.handler';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { IdTokenHandler } from '../handlers/id-token.handler';
+import { LogoutHandler } from '../handlers/logout.handler';
+import { LogoutTokenHandler } from '../handlers/logout-token.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { interactionTypeRegistry } from '../interaction-types/interaction-type.registry';
 import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
+import { LogoutTypeInterface } from '../logout-types/logout-type.interface';
+import { logoutTypeRegistry } from '../logout-types/logout-type.registry';
+import { LOGOUT_TYPE } from '../logout-types/logout-type.token';
 import { PkceInterface } from '../pkces/pkce.interface';
 import { pkceRegistry } from '../pkces/pkce.registry';
 import { PKCE } from '../pkces/pkce.token';
@@ -148,6 +153,7 @@ export class AuthorizationServerFactory {
     this.setGrantTypes();
     this.setDisplays();
     this.setInteractionTypes();
+    this.setLogoutTypes();
     this.setResponseTypes();
     this.setResponseModes();
     this.setPkces();
@@ -228,10 +234,7 @@ export class AuthorizationServerFactory {
     }
 
     clientAuthenticationMethods.forEach((clientAuthenticationMethod) => {
-      const constructor = <Constructor<ClientAuthenticationInterface>>(
-        clientAuthenticationRegistry[clientAuthenticationMethod]
-      );
-
+      const constructor = clientAuthenticationRegistry[clientAuthenticationMethod];
       this.container.bind<ClientAuthenticationInterface>(CLIENT_AUTHENTICATION).toClass(constructor).asSingleton();
     });
   }
@@ -259,7 +262,7 @@ export class AuthorizationServerFactory {
     }
 
     grantTypes.forEach((grantType) => {
-      const constructor = <Constructor<GrantTypeInterface>>grantTypeRegistry[grantType];
+      const constructor = grantTypeRegistry[grantType];
       this.container.bind<GrantTypeInterface>(GRANT_TYPE).toClass(constructor).asSingleton();
     });
   }
@@ -283,6 +286,15 @@ export class AuthorizationServerFactory {
   }
 
   /**
+   * Defines the Logout Types supported by the Authorization Server.
+   */
+  private static setLogoutTypes(): void {
+    Object.values(logoutTypeRegistry).forEach((logoutType) => {
+      this.container.bind<LogoutTypeInterface>(LOGOUT_TYPE).toClass(logoutType).asSingleton();
+    });
+  }
+
+  /**
    * Defines the Response Types supported by the Authorization Server.
    */
   private static setResponseTypes(): void {
@@ -293,7 +305,7 @@ export class AuthorizationServerFactory {
     }
 
     responseTypes.forEach((responseType) => {
-      const constructor = <Constructor<ResponseTypeInterface>>responseTypeRegistry[responseType];
+      const constructor = responseTypeRegistry[responseType];
       this.container.bind<ResponseTypeInterface>(RESPONSE_TYPE).toClass(constructor).asSingleton();
     });
   }
@@ -309,7 +321,7 @@ export class AuthorizationServerFactory {
     }
 
     responseModes.forEach((responseMode) => {
-      const constructor = <Constructor<ResponseModeInterface>>responseModeRegistry[responseMode];
+      const constructor = responseModeRegistry[responseMode];
       this.container.bind<ResponseModeInterface>(RESPONSE_MODE).toClass(constructor).asSingleton();
     });
   }
@@ -325,7 +337,7 @@ export class AuthorizationServerFactory {
     }
 
     pkces.forEach((pkce) => {
-      const constructor = <Constructor<PkceInterface>>pkceRegistry[pkce];
+      const constructor = pkceRegistry[pkce];
       this.container.bind<PkceInterface>(PKCE).toClass(constructor).asSingleton();
     });
   }
@@ -398,6 +410,8 @@ export class AuthorizationServerFactory {
     this.container.bind(ClientAuthenticationHandler).toSelf().asSingleton();
     this.container.bind(ScopeHandler).toSelf().asSingleton();
     this.container.bind(AuthHandler).toSelf().asSingleton();
+    this.container.bind(LogoutHandler).toSelf().asSingleton();
+    this.container.bind(LogoutTokenHandler).toSelf().asSingleton();
 
     if (this.settings.scopes.includes('openid')) {
       this.container.bind(IdTokenHandler).toSelf().asSingleton();

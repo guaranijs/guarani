@@ -15,7 +15,7 @@ export interface LoginDecisionAcceptInteractionContext extends LoginDecisionInte
   /**
    * Authentication Methods used in the Authentication.
    */
-  readonly amr: string[];
+  readonly amr: Nullable<string[]>;
 
   /**
    * Authentication Context Class Reference satisfied by the Authentication process.

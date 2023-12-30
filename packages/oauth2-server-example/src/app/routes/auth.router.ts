@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import passport from 'passport';
 
+import { BackChannelController } from '../controllers/auth/back-channel.controller';
 import { CallbackController } from '../controllers/auth/callback.controller';
 import { ConsentController } from '../controllers/auth/consent.controller';
 import { ErrorController } from '../controllers/auth/error.controller';
@@ -13,6 +14,8 @@ import { SelectAccountController } from '../controllers/auth/select-account.cont
 const router = Router();
 
 router.route('/callback').get(async (req, res) => await CallbackController.callback(req, res));
+
+router.route('/back_channel').post(async (req, res) => await BackChannelController.backChannelCallback(req, res));
 
 router.route('/logout_callback').get(async (req, res) => await LogoutCallbackController.logoutCallback(req, res));
 

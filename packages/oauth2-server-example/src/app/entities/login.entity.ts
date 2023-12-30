@@ -1,8 +1,19 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 import { Login as OAuth2Login } from '@guarani/oauth2-server';
 import { Nullable } from '@guarani/types';
 
+import { Client } from './client.entity';
 import { Session } from './session.entity';
 import { User } from './user.entity';
 
@@ -30,4 +41,20 @@ export class Login extends BaseEntity implements OAuth2Login {
   @ManyToOne(() => Session, { cascade: false, nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'session_id', referencedColumnName: 'id', foreignKeyConstraintName: 'sessions_id_fk' })
   public readonly session!: Session;
+
+  @ManyToMany(() => Client, { cascade: true, eager: true, nullable: false, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @JoinTable({
+    name: 'logins_clients',
+    joinColumn: {
+      name: 'login_id',
+      foreignKeyConstraintName: 'logins_clients_login_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'client_id',
+      foreignKeyConstraintName: 'logins_clients_client_id',
+      referencedColumnName: 'id',
+    },
+  })
+  public readonly clients!: Client[];
 }

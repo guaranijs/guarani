@@ -9,7 +9,6 @@ import {
   JsonWebSignature,
   JsonWebSignatureAlgorithm,
   JsonWebSignatureHeader,
-  JsonWebTokenClaims,
 } from '@guarani/jose';
 import { Nullable } from '@guarani/types';
 
@@ -144,13 +143,13 @@ export class IdTokenHandler {
         this.settings.idTokenSignatureAlgorithms,
       );
 
-      await JsonWebTokenClaims.parse(payload, {
+      await IdTokenClaims.parse(payload, {
         ignoreExpired: true,
         validationOptions: {
           iss: { essential: true, value: this.settings.issuer },
           sub: { essential: true, value: calculateSubjectIdentifier(login.user, client, this.settings) },
           aud: { essential: true, values: [client.id, [client.id]] },
-          sid: { essential: false, value: login.id },
+          sid: { essential: true, value: login.id },
         },
       });
 

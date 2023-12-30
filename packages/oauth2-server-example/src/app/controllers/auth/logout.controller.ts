@@ -76,6 +76,7 @@ class Controller {
       case 'accept': {
         const sessionId: string = request.signedCookies['guarani:session'];
         reqData.session_id = sessionId;
+        reqData.logout_type = 'local';
         break;
       }
 

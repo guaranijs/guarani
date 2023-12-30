@@ -1,5 +1,6 @@
 import { Nullable } from '@guarani/types';
 
+import { Client } from '../entities/client.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
@@ -19,7 +20,7 @@ export interface LoginServiceInterface {
    * @param acr Authentication Context Class Reference satisfied by the Authentication process.
    * @returns Generated Login.
    */
-  create(user: User, session: Session, amr: Nullable<string[]>, acr: Nullable<string>): Promise<Login>;
+  create(user: User, client: Client, session: Session, amr: Nullable<string[]>, acr: Nullable<string>): Promise<Login>;
 
   /**
    * Searches the application's storage for a Login containing the provided Identifier.
@@ -28,6 +29,21 @@ export interface LoginServiceInterface {
    * @returns Login based on the provided Identifier.
    */
   findOne(id: string): Promise<Nullable<Login>>;
+
+  /**
+   * Searches the application's storage for all Logins based on the provided User Identifier.
+   *
+   * @param id Identifier of the User.
+   * @returns Logins based on the provided User.
+   */
+  findByUserId(id: string): Promise<Login[]>;
+
+  /**
+   * Persists the provided Login Entity into the application's storage.
+   *
+   * @param login Login Entity to be persisted.
+   */
+  save(login: Login): Promise<void>;
 
   /**
    * Removes the provided Login.

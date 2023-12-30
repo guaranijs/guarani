@@ -4,8 +4,10 @@ import { ConsentContextInteractionContext } from '../context/interaction/consent
 import { ConsentDecisionInteractionContext } from '../context/interaction/consent-decision.interaction-context';
 import { ConsentDecisionAcceptInteractionContext } from '../context/interaction/consent-decision-accept.interaction-context';
 import { ConsentDecisionDenyInteractionContext } from '../context/interaction/consent-decision-deny.interaction-context';
+import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
+import { Login } from '../entities/login.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { AccountSelectionRequiredException } from '../exceptions/account-selection-required.exception';
 import { LoginRequiredException } from '../exceptions/login-required.exception';
@@ -17,6 +19,10 @@ import { ConsentServiceInterface } from '../services/consent.service.interface';
 import { CONSENT_SERVICE } from '../services/consent.service.token';
 import { GrantServiceInterface } from '../services/grant.service.interface';
 import { GRANT_SERVICE } from '../services/grant.service.token';
+import { LoginServiceInterface } from '../services/login.service.interface';
+import { LOGIN_SERVICE } from '../services/login.service.token';
+import { SessionServiceInterface } from '../services/session.service.interface';
+import { SESSION_SERVICE } from '../services/session.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { addParametersToUrl } from '../utils/add-parameters-to-url';
@@ -31,6 +37,21 @@ describe('Consent Interaction Type', () => {
   let interactionType: ConsentInteractionType;
 
   const settings = <Settings>{ issuer: 'https://server.example.com' };
+
+  const sessionServiceMock = jest.mocked<SessionServiceInterface>({
+    create: jest.fn(),
+    findOne: jest.fn(),
+    remove: jest.fn(),
+    save: jest.fn(),
+  });
+
+  const loginServiceMock = jest.mocked<LoginServiceInterface>({
+    create: jest.fn(),
+    findByUserId: jest.fn(),
+    findOne: jest.fn(),
+    remove: jest.fn(),
+    save: jest.fn(),
+  });
 
   const consentServiceMock = jest.mocked<ConsentServiceInterface>({
     create: jest.fn(),
@@ -52,6 +73,8 @@ describe('Consent Interaction Type', () => {
     container = new DependencyInjectionContainer();
 
     container.bind<Settings>(SETTINGS).toValue(settings);
+    container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
+    container.bind<LoginServiceInterface>(LOGIN_SERVICE).toValue(loginServiceMock);
     container.bind<ConsentServiceInterface>(CONSENT_SERVICE).toValue(consentServiceMock);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind(ConsentInteractionType).toSelf().asSingleton();
@@ -219,8 +242,8 @@ describe('Consent Interaction Type', () => {
           client: { id: 'client_id' },
           session: {
             id: 'session_id',
-            activeLogin: { id: 'login_id', user: { id: 'user_id' } },
-            logins: [{ id: 'login_id', user: { id: 'user_id' } }],
+            activeLogin: { id: 'login_id', user: { id: 'user_id' }, clients: <Client[]>[] },
+            logins: [{ id: 'login_id', user: { id: 'user_id' }, clients: <Client[]>[] }],
           },
           consent: { id: 'consent_id', scopes: ['foo', 'bar'] },
         },
@@ -291,6 +314,15 @@ describe('Consent Interaction Type', () => {
         context.grant.session.activeLogin!.user,
       );
 
+      expect(loginServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(loginServiceMock.save).toHaveBeenCalledWith(<Login>{
+        ...context.grant.session.activeLogin!,
+        clients: [context.grant.client],
+      });
+
+      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.save).toHaveBeenCalledWith(context.grant.session);
+
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{
         ...context.grant,
@@ -316,6 +348,15 @@ describe('Consent Interaction Type', () => {
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<ConsentDecisionInteractionResponse>({
         redirect_to: redirectTo.href,
       });
+
+      expect(loginServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(loginServiceMock.save).toHaveBeenCalledWith(<Login>{
+        ...context.grant.session.activeLogin!,
+        clients: [context.grant.client],
+      });
+
+      expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.save).toHaveBeenCalledWith(context.grant.session);
 
       expect(consentServiceMock.create).toHaveBeenCalledTimes(1);
       expect(consentServiceMock.create).toHaveBeenCalledWith(
@@ -356,6 +397,15 @@ describe('Consent Interaction Type', () => {
           redirect_to: redirectTo.href,
         });
 
+        expect(loginServiceMock.save).toHaveBeenCalledTimes(1);
+        expect(loginServiceMock.save).toHaveBeenCalledWith(<Login>{
+          ...context.grant.session.activeLogin!,
+          clients: [context.grant.client],
+        });
+
+        expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
+        expect(sessionServiceMock.save).toHaveBeenCalledWith(context.grant.session);
+
         expect(consentServiceMock.create).toHaveBeenCalledTimes(1);
         expect(consentServiceMock.create).toHaveBeenCalledWith(
           ['foo', 'bar'],
@@ -382,6 +432,9 @@ describe('Consent Interaction Type', () => {
         redirect_to: redirectTo.href,
       });
 
+      expect(loginServiceMock.save).not.toHaveBeenCalled();
+      expect(sessionServiceMock.save).not.toHaveBeenCalled();
+      expect(consentServiceMock.create).not.toHaveBeenCalled();
       expect(grantServiceMock.save).not.toHaveBeenCalled();
     });
     // #endregion

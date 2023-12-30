@@ -31,3 +31,7 @@ export const dataSource = new DataSource({
     User,
   ],
 });
+
+export const AppDataSource = dataSource;
+
+export default dataSource;

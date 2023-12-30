@@ -51,8 +51,8 @@
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
-        "command": "ts-node ../../node_modules/typeorm/cli.js migration:create src/migrations/{args.name}",
-        "cwd": "packages/oauth2-server-example"
+        "command": "ts-node ../../node_modules/typeorm/cli.js migration:create db/migrations/{args.name}",
+        "cwd": "packages/oauth2-server-example/src"
       }
     },
     "migration:run": {
@@ -69,6 +69,30 @@
       "options": {
         "command": "ts-node ../../../node_modules/typeorm/cli.js migration:revert --data-source data-source.migration.ts",
         "cwd": "packages/oauth2-server-example/src"
+      }
+    },
+    "seed:config": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "ts-node ./node_modules/@paranode/typeorm-seeding/cli.js config -d ./packages/oauth2-server-example/src/data-source.migration.ts",
+        "cwd": ""
+      }
+    },
+    "seed:create": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "ts-node ./node_modules/@paranode/typeorm-seeding/cli.js create -d ./packages/oauth2-server-example/src/data-source.migration.ts -f {args.name}",
+        "cwd": ""
+      }
+    },
+    "seed:run": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "ts-node --project tsconfig.base.json -r tsconfig-paths/register ./node_modules/@paranode/typeorm-seeding/cli.js seed -d ./packages/oauth2-server-example/src/data-source.migration.ts",
+        "cwd": ""
       }
     }
   },

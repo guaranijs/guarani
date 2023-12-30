@@ -219,7 +219,7 @@ describe('Create Interaction Type', () => {
       expect(userServiceMock.create).toHaveBeenCalledWith(context.parameters);
 
       expect(authHandlerMock.login).toHaveBeenCalledTimes(1);
-      expect(authHandlerMock.login).toHaveBeenCalledWith(user, grant.session, null, null);
+      expect(authHandlerMock.login).toHaveBeenCalledWith(user, grant.client, grant.session, null, null);
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...grant, interactions: ['create'] });

@@ -175,6 +175,21 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
         //   isNullable: true,
         // },
         {
+          name: 'authorization_signed_response_algorithm',
+          type: 'varchar',
+          isNullable: true,
+        },
+        {
+          name: 'authorization_encrypted_response_key_wrap',
+          type: 'varchar',
+          isNullable: true,
+        },
+        {
+          name: 'authorization_encrypted_response_content_encryption',
+          type: 'varchar',
+          isNullable: true,
+        },
+        {
           name: 'default_max_age',
           type: 'integer',
           isNullable: true,
@@ -318,6 +333,11 @@ export class CreateClientsTable1678000960407 implements MigrationInterface {
         //   columnNames: ['request_object_signing_algorithm'],
         //   expression: '"request_object_signing_algorithm" <> \'none\'',
         // },
+        {
+          name: 'check_authorization_signed_response_algorithm',
+          columnNames: ['authorization_signed_response_algorithm'],
+          expression: '"authorization_signed_response_algorithm" <> \'none\'',
+        },
         {
           name: 'check_default_max_age',
           columnNames: ['default_max_age'],

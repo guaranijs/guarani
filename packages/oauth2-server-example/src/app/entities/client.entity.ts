@@ -144,6 +144,16 @@ export class Client extends BaseEntity implements OAuth2Client {
   // @Column({ name: 'request_object_encryption_content_encryption', type: 'varchar', nullable: true })
   // public requestObjectEncryptionContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
+  @Column({ name: 'authorization_signed_response_algorithm', type: 'varchar', nullable: true })
+  @Check('check_authorization_signed_response_algorithm', '"authorization_signed_response_algorithm" <> \'none\'')
+  public authorizationSignedResponseAlgorithm!: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
+
+  @Column({ name: 'authorization_encrypted_response_key_wrap', type: 'varchar', nullable: true })
+  public authorizationEncryptedResponseKeyWrap!: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
+
+  @Column({ name: 'authorization_encrypted_response_content_encryption', type: 'varchar', nullable: true })
+  public authorizationEncryptedResponseContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
+
   @Column({ name: 'default_max_age', type: 'integer', nullable: true })
   @Check('check_default_max_age', '"default_max_age" > 0')
   public defaultMaxAge!: Nullable<number>;

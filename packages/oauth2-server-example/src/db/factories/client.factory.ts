@@ -36,6 +36,7 @@ define(Client, (faker: Faker): Client => {
     tosUri: 'http://localhost:4000/terms-of-service',
     subjectType: 'public',
     idTokenSignedResponseAlgorithm: 'ES256',
+    authorizationSignedResponseAlgorithm: 'ES256',
     defaultMaxAge: 86400,
     requireAuthTime: true,
     postLogoutRedirectUris: ['http://localhost:4000/auth/logout_callback'],

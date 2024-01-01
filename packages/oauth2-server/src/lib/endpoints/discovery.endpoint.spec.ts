@@ -4,7 +4,6 @@ import { URL } from 'url';
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
-import { AuthorizationServer } from '../authorization-server';
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
 import { DiscoveryResponse } from '../responses/discovery-response';
@@ -30,6 +29,9 @@ describe('Discovery Endpoint', () => {
     userinfoSignatureAlgorithms: ['ES256', 'RS256'],
     userinfoKeyWrapAlgorithms: ['A128KW', 'ECDH-ES', 'RSA-OAEP'],
     userinfoContentEncryptionAlgorithms: ['A128CBC-HS256', 'A128GCM'],
+    authorizationSignatureAlgorithms: ['ES256', 'RS256'],
+    authorizationKeyWrapAlgorithms: ['A128KW', 'ECDH-ES', 'RSA-OAEP'],
+    authorizationContentEncryptionAlgorithms: ['A128CBC-HS256', 'A128GCM'],
     grantTypes: ['authorization_code', 'refresh_token'],
     responseTypes: ['code'],
     responseModes: ['query'],
@@ -61,8 +63,8 @@ describe('Discovery Endpoint', () => {
 
     endpoints.forEach((endpoint) => container.bind<EndpointInterface>(ENDPOINT).toValue(endpoint));
 
+    container.bind(DependencyInjectionContainer).toValue(container);
     container.bind<Settings>(SETTINGS).toValue(settings);
-    container.bind(AuthorizationServer).toSelf().asSingleton();
     container.bind(DiscoveryEndpoint).toSelf().asSingleton();
 
     endpoint = container.resolve(DiscoveryEndpoint);
@@ -119,6 +121,9 @@ describe('Discovery Endpoint', () => {
         userinfo_signing_alg_values_supported: ['ES256', 'RS256'],
         userinfo_encryption_alg_values_supported: ['A128KW', 'ECDH-ES', 'RSA-OAEP'],
         userinfo_encryption_enc_values_supported: ['A128CBC-HS256', 'A128GCM'],
+        authorization_signing_alg_values_supported: ['ES256', 'RS256'],
+        authorization_encryption_alg_values_supported: ['A128KW', 'ECDH-ES', 'RSA-OAEP'],
+        authorization_encryption_enc_values_supported: ['A128CBC-HS256', 'A128GCM'],
         prompt_values_supported: ['consent', 'create', 'login', 'none', 'select_account'],
         display_values_supported: ['page', 'popup', 'touch', 'wap'],
         token_endpoint_auth_methods_supported: ['client_secret_basic', 'private_key_jwt'],

@@ -3,7 +3,6 @@ import { AbstractConstructor, Constructor } from '@guarani/types';
 import { Binding } from '../bindings/binding';
 import { ProviderBinding } from '../bindings/provider.binding';
 import { InvalidProviderException } from '../exceptions/invalid-provider.exception';
-import { ResolutionException } from '../exceptions/resolution.exception';
 import { PARAM_TYPES, PROP_TOKENS } from '../metadata/metadata.keys';
 import { isClassProvider } from '../providers/class.provider';
 import { isFactoryProvider } from '../providers/factory.provider';
@@ -123,7 +122,7 @@ export class DependencyInjectionContainer {
    */
   private _resolveAll<T>(token: InjectableToken<T>, requestResolutions = new Map<InjectableToken<T>, T>()): T[] {
     if (token instanceof LazyToken) {
-      throw new ResolutionException('The resolution of multiple Lazy Tokens is unsupported.');
+      return token.resolveAll((lazyToken) => this._resolveAll<T>(lazyToken, requestResolutions));
     }
 
     const bindings = this.registry.getAll<T>(token);

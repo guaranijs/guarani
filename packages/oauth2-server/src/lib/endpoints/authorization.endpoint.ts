@@ -119,7 +119,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
       return this.handleFatalAuthorizationError(error, null);
     }
 
-    const { client, display, idTokenHint, maxAge, prompts, redirectUri, state } = context;
+    const { client, display, idTokenHint, maxAge, prompts, state } = context;
 
     let grant: Nullable<Grant> = null;
     let login: Nullable<Login> = null;
@@ -272,7 +272,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
 
       this.includeAdditionalResponseParameters(authorizationResponse, { state });
 
-      const response = context.responseMode.createHttpResponse(redirectUri.href, authorizationResponse);
+      const response = await context.responseMode.createHttpResponse(context, authorizationResponse);
 
       if (grant !== null) {
         await this.grantService.remove(grant);
@@ -284,7 +284,7 @@ export class AuthorizationEndpoint implements EndpointInterface {
       const error = this.asOAuth2Exception(exc);
       const response = this.includeAdditionalResponseParameters(error.toJSON(), { state });
 
-      return context.responseMode.createHttpResponse(redirectUri.href, response);
+      return await context.responseMode.createHttpResponse(context, response);
     }
   }
 

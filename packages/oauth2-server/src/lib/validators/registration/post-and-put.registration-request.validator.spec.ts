@@ -53,6 +53,9 @@ const invalidIdTokenJWEEncs: any[] = [true, 1, 1.2, {}, []];
 const invalidUserinfoJWSAlgorithms: any[] = [true, 1, 1.2, {}, []];
 const invalidUserinfoJWEAlgs: any[] = [true, 1, 1.2, {}, []];
 const invalidUserinfoJWEEncs: any[] = [true, 1, 1.2, {}, []];
+const invalidAuthorizationJWSAlgorithms: any[] = [true, 1, 1.2, {}, []];
+const invalidAuthorizationJWEAlgs: any[] = [true, 1, 1.2, {}, []];
+const invalidAuthorizationJWEEncs: any[] = [true, 1, 1.2, {}, []];
 const invalidAuthenticationMethods: any[] = [true, 1, 1.2, {}, []];
 const invalidJWTClientAssertionJWSAlgorithms: any[] = [true, 1, 1.2, {}, []];
 const invalidDefaultMaxAges: any[] = [true, 'a', {}, []];
@@ -134,6 +137,9 @@ describe('Post and Put Registration Request Validator', () => {
     userinfoSignatureAlgorithms: ['ES256', 'HS256', 'RS256'],
     userinfoKeyWrapAlgorithms: ['A128KW', 'ECDH-ES', 'RSA-OAEP'],
     userinfoContentEncryptionAlgorithms: ['A128CBC-HS256', 'A128GCM'],
+    authorizationSignatureAlgorithms: ['ES256', 'HS256', 'RS256'],
+    authorizationKeyWrapAlgorithms: ['A128KW', 'ECDH-ES', 'RSA-OAEP'],
+    authorizationContentEncryptionAlgorithms: ['A128CBC-HS256', 'A128GCM'],
     clientAuthenticationMethods: [
       'client_secret_basic',
       'client_secret_jwt',
@@ -209,6 +215,9 @@ describe('Post and Put Registration Request Validator', () => {
         // request_object_signing_alg: '',
         // request_object_encryption_alg: '',
         // request_object_encryption_enc: '',
+        authorization_signed_response_alg: 'RS256',
+        authorization_encrypted_response_alg: 'RSA-OAEP',
+        authorization_encrypted_response_enc: 'A128GCM',
         token_endpoint_auth_method: 'private_key_jwt',
         token_endpoint_auth_signing_alg: 'RS256',
         default_max_age: 60 * 60 * 24 * 15,
@@ -734,7 +743,7 @@ describe('Post and Put Registration Request Validator', () => {
       },
     );
 
-    it('should throw when providing an unsupported id token signed response algorithm.', async () => {
+    it('should throw when providing an unsupported userinfo signed response algorithm.', async () => {
       const request = requestFactory({
         userinfo_signed_response_alg: 'unknown' as Exclude<JsonWebSignatureAlgorithm, 'none'>,
       });
@@ -757,7 +766,7 @@ describe('Post and Put Registration Request Validator', () => {
       },
     );
 
-    it('should throw when providing an unsupported id token encrypted response key wrap algorithm.', async () => {
+    it('should throw when providing an unsupported userinfo encrypted response key wrap algorithm.', async () => {
       const request = requestFactory({
         userinfo_encrypted_response_alg: 'unknown' as JsonWebEncryptionKeyWrapAlgorithm,
       });
@@ -800,7 +809,7 @@ describe('Post and Put Registration Request Validator', () => {
       );
     });
 
-    it('should throw when providing an unsupported id token encrypted response content encryption algorithm.', async () => {
+    it('should throw when providing an unsupported userinfo encrypted response content encryption algorithm.', async () => {
       const request = requestFactory({
         userinfo_encrypted_response_enc: 'unknown' as JsonWebEncryptionContentEncryptionAlgorithm,
       });
@@ -808,6 +817,95 @@ describe('Post and Put Registration Request Validator', () => {
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidClientMetadataException,
         'Unsupported userinfo_encrypted_response_enc "unknown".',
+      );
+    });
+
+    it.each(invalidAuthorizationJWSAlgorithms)(
+      'should throw when providing an invalid "authorization_signed_response_alg" parameter.',
+      async (algorithm) => {
+        const request = requestFactory({ authorization_signed_response_alg: algorithm });
+
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "authorization_signed_response_alg".',
+        );
+      },
+    );
+
+    it('should throw when providing an unsupported authorization signed response algorithm.', async () => {
+      const request = requestFactory({
+        authorization_signed_response_alg: 'unknown' as Exclude<JsonWebSignatureAlgorithm, 'none'>,
+      });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported authorization_signed_response_alg "unknown".',
+      );
+    });
+
+    it.each(invalidAuthorizationJWEAlgs)(
+      'should throw when providing an invalid "authorization_encrypted_response_alg" parameter.',
+      async (algorithm) => {
+        const request = requestFactory({ authorization_encrypted_response_alg: algorithm });
+
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "authorization_encrypted_response_alg".',
+        );
+      },
+    );
+
+    it('should throw when providing an unsupported authorization encrypted response key wrap algorithm.', async () => {
+      const request = requestFactory({
+        authorization_encrypted_response_alg: 'unknown' as JsonWebEncryptionKeyWrapAlgorithm,
+      });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported authorization_encrypted_response_alg "unknown".',
+      );
+    });
+
+    it.each(invalidAuthorizationJWEEncs)(
+      'should throw when providing an invalid "authorization_encrypted_response_enc" parameter.',
+      async (algorithm) => {
+        const request = requestFactory({ authorization_encrypted_response_enc: algorithm });
+
+        await expect(validator.validate(request)).rejects.toThrowWithMessage(
+          InvalidClientMetadataException,
+          'Invalid parameter "authorization_encrypted_response_enc".',
+        );
+      },
+    );
+
+    it('should throw when not providing the parameter "authorization_signed_response_alg" together with the parameter "authorization_encrypted_response_alg".', async () => {
+      const request = requestFactory({ authorization_signed_response_alg: undefined });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The parameter "authorization_encrypted_response_alg" must be presented together ' +
+          'with the parameter "authorization_signed_response_alg".',
+      );
+    });
+
+    it('should throw when not providing the parameter "authorization_encrypted_response_alg" together with the parameter "authorization_encrypted_response_enc".', async () => {
+      const request = requestFactory({ authorization_encrypted_response_alg: undefined });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'The parameter "authorization_encrypted_response_enc" must be presented together ' +
+          'with the parameter "authorization_encrypted_response_alg".',
+      );
+    });
+
+    it('should throw when providing an unsupported authorization encrypted response content encryption algorithm.', async () => {
+      const request = requestFactory({
+        authorization_encrypted_response_enc: 'unknown' as JsonWebEncryptionContentEncryptionAlgorithm,
+      });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidClientMetadataException,
+        'Unsupported authorization_encrypted_response_enc "unknown".',
       );
     });
 
@@ -1214,6 +1312,9 @@ describe('Post and Put Registration Request Validator', () => {
         // requestObjectSigningAlgorithm: ,
         // requestObjectEncryptionKeyWrap: ,
         // requestObjectEncryptionContentEncryption: ,
+        authorizationSignedResponseAlgorithm: 'RS256',
+        authorizationEncryptedResponseKeyWrap: 'RSA-OAEP',
+        authorizationEncryptedResponseContentEncryption: 'A128GCM',
         authenticationMethod: 'private_key_jwt',
         authenticationSigningAlgorithm: 'RS256',
         defaultMaxAge: 60 * 60 * 24 * 15,

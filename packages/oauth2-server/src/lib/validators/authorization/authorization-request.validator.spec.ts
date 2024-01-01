@@ -46,7 +46,15 @@ describe('Authorization Request Validator', () => {
       createHttpResponse: jest.fn(),
     }),
     jest.mocked<ResponseModeInterface>({
+      name: 'jwt',
+      createHttpResponse: jest.fn(),
+    }),
+    jest.mocked<ResponseModeInterface>({
       name: 'query',
+      createHttpResponse: jest.fn(),
+    }),
+    jest.mocked<ResponseModeInterface>({
+      name: 'query.jwt',
       createHttpResponse: jest.fn(),
     }),
   ];
@@ -264,6 +272,73 @@ describe('Authorization Request Validator', () => {
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
         'Unsupported response_mode "unknown".',
+      );
+    });
+
+    it('should throw when the client requests the "jwt" response mode and the default response mode for the response type is not registered.', async () => {
+      const responseModesMocks = [
+        jest.mocked<ResponseModeInterface>({
+          name: 'form_post',
+          createHttpResponse: jest.fn(),
+        }),
+        jest.mocked<ResponseModeInterface>({
+          name: 'fragment',
+          createHttpResponse: jest.fn(),
+        }),
+        jest.mocked<ResponseModeInterface>({
+          name: 'jwt',
+          createHttpResponse: jest.fn(),
+        }),
+        jest.mocked<ResponseModeInterface>({
+          name: 'query',
+          createHttpResponse: jest.fn(),
+        }),
+      ];
+
+      validator = Reflect.construct(AuthorizationRequestValidator, [
+        scopeHandlerMock,
+        settings,
+        clientServiceMock,
+        responseModesMocks,
+        responseTypesMocks,
+        displaysMocks,
+      ]);
+
+      const request = requestFactory({ response_mode: 'jwt' });
+
+      const client = <Client>{
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+      };
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Unsupported response_mode "query.jwt".',
+      );
+    });
+
+    it('should throw when the client requests a "jwt" response mode without an authorization response signing algorithm.', async () => {
+      const request = requestFactory({ response_mode: 'jwt' });
+
+      const client = <Client>{
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+        authorizationSignedResponseAlgorithm: null,
+      };
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'This Client is not allowed to request the Response Mode "query.jwt".',
       );
     });
 

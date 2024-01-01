@@ -13,6 +13,7 @@ import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
+import { ResponseMode } from '../../response-modes/response-mode.type';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
 import { ResponseType } from '../../response-types/response-type.type';
 import { ClientServiceInterface } from '../../services/client.service.interface';
@@ -62,7 +63,7 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
     const redirectUri = this.getRedirectUri(parameters, client);
     const scopes = this.getScopes(parameters, client);
     const state = this.getState(parameters);
-    const responseMode = this.getResponseMode(parameters, responseType);
+    const responseMode = this.getResponseMode(parameters, responseType, client);
     const nonce = this.getNonce(parameters);
     const prompts = this.getPrompts(parameters);
     const display = this.getDisplay(parameters);
@@ -195,17 +196,31 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
    *
    * @param parameters Parameters of the Authorization Request.
    * @param responseType Response Type requested by the Client.
+   * @param client Client requesting authorization.
    * @returns Response Mode.
    */
   protected getResponseMode(
     parameters: AuthorizationRequest,
     responseType: ResponseTypeInterface,
+    client: Client,
   ): ResponseModeInterface {
-    const responseModeName = parameters.response_mode ?? responseType.defaultResponseMode;
+    const responseModeName =
+      parameters.response_mode === 'jwt'
+        ? `${responseType.defaultResponseMode}.jwt`
+        : parameters.response_mode ?? responseType.defaultResponseMode;
+
     const responseMode = this.responseModes.find((responseMode) => responseMode.name === responseModeName);
 
     if (typeof responseMode === 'undefined') {
       throw new InvalidRequestException(`Unsupported response_mode "${responseModeName}".`);
+    }
+
+    const jwtResponseModes: ResponseMode[] = ['form_post.jwt', 'fragment.jwt', 'jwt', 'query.jwt'];
+
+    if (jwtResponseModes.includes(responseMode.name) && client.authorizationSignedResponseAlgorithm === null) {
+      throw new InvalidRequestException(
+        `This Client is not allowed to request the Response Mode "${responseModeName}".`,
+      );
     }
 
     return responseMode;

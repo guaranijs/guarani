@@ -1,9 +1,8 @@
 import { URL } from 'url';
 
-import { Inject, Injectable, LazyInject } from '@guarani/di';
+import { DependencyInjectionContainer, Inject, Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 
-import { AuthorizationServer } from '../authorization-server';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { HttpMethod } from '../http/http-method.type';
@@ -11,6 +10,7 @@ import { DiscoveryResponse } from '../responses/discovery-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { EndpointInterface } from './endpoint.interface';
+import { ENDPOINT } from './endpoint.token';
 import { Endpoint } from './endpoint.type';
 
 /**
@@ -41,11 +41,11 @@ export class DiscoveryEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Discovery Endpoint.
    *
-   * @param authorizationServer Instance of the Authorization Server.
+   * @param container Instance of the Dependency Injection Container.
    * @param settings Settings of the Authorization Server.
    */
   public constructor(
-    @LazyInject(() => AuthorizationServer) private readonly authorizationServer: AuthorizationServer,
+    private readonly container: DependencyInjectionContainer,
     @Inject(SETTINGS) private readonly settings: Settings,
   ) {}
 
@@ -76,6 +76,9 @@ export class DiscoveryEndpoint implements EndpointInterface {
       userinfo_signing_alg_values_supported: this.settings.userinfoSignatureAlgorithms,
       userinfo_encryption_alg_values_supported: this.settings.userinfoKeyWrapAlgorithms,
       userinfo_encryption_enc_values_supported: this.settings.userinfoContentEncryptionAlgorithms,
+      authorization_signing_alg_values_supported: this.settings.authorizationSignatureAlgorithms,
+      authorization_encryption_alg_values_supported: this.settings.authorizationKeyWrapAlgorithms,
+      authorization_encryption_enc_values_supported: this.settings.authorizationContentEncryptionAlgorithms,
       prompt_values_supported: ['consent', 'create', 'login', 'none', 'select_account'],
       display_values_supported: this.settings.displays,
       token_endpoint_auth_methods_supported: this.settings.clientAuthenticationMethods,
@@ -109,12 +112,12 @@ export class DiscoveryEndpoint implements EndpointInterface {
    * @returns Full Url of the Endpoint.
    */
   private getEndpointPath(name: Endpoint): string | undefined {
-    const path = this.authorizationServer['endpoints'].find((endpoint) => endpoint.name === name)?.path;
+    const endpoint = this.container.resolveAll<EndpointInterface>(ENDPOINT).find((endpoint) => endpoint.name === name);
 
-    if (typeof path === 'undefined') {
+    if (typeof endpoint === 'undefined') {
       return undefined;
     }
 
-    return new URL(path, this.settings.issuer).href;
+    return new URL(endpoint.path, this.settings.issuer).href;
   }
 }

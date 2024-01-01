@@ -1,8 +1,10 @@
 import { OutgoingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { FragmentResponseMode } from './fragment.response-mode';
 import { ResponseMode } from './response-mode.type';
 
@@ -25,8 +27,12 @@ describe('Fragment Response Mode', () => {
   });
 
   describe('createHttpResponse()', () => {
-    it('should create a redirect http response with a populated uri fragment.', () => {
-      const response = responseMode.createHttpResponse('https://example.com', {
+    it('should create a redirect http response with a populated uri fragment.', async () => {
+      const context = <AuthorizationContext>{
+        redirectUri: new URL('https://example.com'),
+      };
+
+      const response = await responseMode.createHttpResponse(context, {
         var1: 'string',
         var2: 123,
         var3: true,

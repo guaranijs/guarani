@@ -173,6 +173,21 @@ export interface PutRegistrationContext {
   // readonly requestObjectEncryptionContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   /**
+   * JSON Web Signature Algorithm used to sign the Authorization Response Token.
+   */
+  readonly authorizationSignedResponseAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithm used to encrypt the Authorization Response Token.
+   */
+  readonly authorizationEncryptedResponseKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithm used to encrypt the Authorization Response Token.
+   */
+  readonly authorizationEncryptedResponseContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
+
+  /**
    * Client Authentication Method of the Client.
    */
   readonly authenticationMethod: ClientAuthentication;

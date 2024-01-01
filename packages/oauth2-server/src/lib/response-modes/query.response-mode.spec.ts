@@ -1,8 +1,10 @@
 import { OutgoingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { QueryResponseMode } from './query.response-mode';
 import { ResponseMode } from './response-mode.type';
 
@@ -25,8 +27,12 @@ describe('Query Response Mode', () => {
   });
 
   describe('createHttpResponse()', () => {
-    it('should create a redirect http response with a populated uri query.', () => {
-      const response = responseMode.createHttpResponse('https://example.com', {
+    it('should create a redirect http response with a populated uri query.', async () => {
+      const context = <AuthorizationContext>{
+        redirectUri: new URL('https://example.com'),
+      };
+
+      const response = await responseMode.createHttpResponse(context, {
         var1: 'string',
         var2: 123,
         var3: true,
@@ -41,8 +47,12 @@ describe('Query Response Mode', () => {
       });
     });
 
-    it('should create a redirect http response with a populated uri query preserving the previous parameters.', () => {
-      const response = responseMode.createHttpResponse('https://example.com/?tenant=tenant_id', {
+    it('should create a redirect http response with a populated uri query preserving the previous parameters.', async () => {
+      const context = <AuthorizationContext>{
+        redirectUri: new URL('https://example.com/?tenant=tenant_id'),
+      };
+
+      const response = await responseMode.createHttpResponse(context, {
         var1: 'string',
         var2: 123,
         var3: true,

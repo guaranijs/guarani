@@ -1,9 +1,11 @@
 import { Buffer } from 'buffer';
 import { OutgoingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { FormPostResponseMode } from './form-post.response-mode';
 import { ResponseMode } from './response-mode.type';
 
@@ -14,7 +16,7 @@ const body = `
   <title>Authorizing...</title>
 </head>
 <body onload="document.forms[0].submit();">
-  <form method="POST" action="https:&#x2F;&#x2F;example.com">
+  <form method="POST" action="https:&#x2F;&#x2F;example.com&#x2F;">
     <input type="hidden" name="var1" value="string" />
     <input type="hidden" name="var2" value="123" />
     <input type="hidden" name="var3" value="true" />
@@ -46,8 +48,12 @@ describe('Form Post Response Mode', () => {
   });
 
   describe('createHttpResponse()', () => {
-    it('should create a http response with a populated html body.', () => {
-      const response = responseMode.createHttpResponse('https://example.com', {
+    const context = <AuthorizationContext>{
+      redirectUri: new URL('https://example.com'),
+    };
+
+    it('should create a http response with a populated html body.', async () => {
+      const response = await responseMode.createHttpResponse(context, {
         var1: 'string',
         var2: 123,
         var3: true,

@@ -2,11 +2,13 @@ import { Inject, Injectable, InjectAll } from '@guarani/di';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
+import { Client } from '../../entities/client.entity';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
+import { ResponseMode } from '../../response-modes/response-mode.type';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
 import { RESPONSE_TYPE } from '../../response-types/response-type.token';
 import { ResponseType } from '../../response-types/response-type.type';
@@ -52,16 +54,20 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
    *
    * @param parameters Parameters of the Authorization Request.
    * @param responseType Response Type requested by the Client.
+   * @param client Client requesting authorization.
    * @returns Response Mode.
    */
   protected override getResponseMode(
     parameters: AuthorizationRequest,
     responseType: ResponseTypeInterface,
+    client: Client,
   ): ResponseModeInterface {
-    const responseMode = super.getResponseMode(parameters, responseType);
+    const responseMode = super.getResponseMode(parameters, responseType, client);
 
-    if (responseMode.name === 'query') {
-      throw new InvalidRequestException('Invalid response_mode "query" for response_type "id_token".');
+    const forbiddenResponseModes: ResponseMode[] = ['query', 'query.jwt'];
+
+    if (forbiddenResponseModes.includes(responseMode.name)) {
+      throw new InvalidRequestException(`Invalid response_mode "${responseMode.name}" for response_type "id_token".`);
     }
 
     return responseMode;

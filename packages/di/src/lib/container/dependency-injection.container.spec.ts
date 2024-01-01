@@ -10,6 +10,10 @@ import { LazyClass01Stub } from './__stubs__/lazy-class-01.stub';
 import { LazyClass02Stub } from './__stubs__/lazy-class-02.stub';
 import { LazyClass03Stub } from './__stubs__/lazy-class-03.stub';
 import { LazyClass04Stub } from './__stubs__/lazy-class-04.stub';
+import { LazyClassAllStub } from './__stubs__/lazy-class-all.stub';
+import { LazyClassAll01Stub } from './__stubs__/lazy-class-all-01.stub';
+import { LazyClassAll02Stub } from './__stubs__/lazy-class-all-02.stub';
+import { LazyInterfaceAll } from './__stubs__/lazy-interface-all';
 import { DependencyInjectionContainer } from './dependency-injection.container';
 
 const TOKEN = Symbol('TOKEN');
@@ -439,9 +443,41 @@ describe('Dependency Injection Container', () => {
 
   // TODO: Add more tests.
   describe('resolveAll()', () => {
-    it('should reject when the token is a lazy token.', () => {
-      expect(() => container.resolveAll(new LazyToken(() => class {}))).toThrow(
+    it('should not reject when the token is a lazy token.', () => {
+      expect(() => container.resolveAll(new LazyToken(() => class {}))).not.toThrow(
         new ResolutionException('The resolution of multiple Lazy Tokens is unsupported.'),
+      );
+    });
+
+    it('should correctly resolve when injecting circular dependencies with the @LazyInjectAll() decorator.', () => {
+      let lcas!: LazyClassAllStub;
+
+      container.bind<string>('Host').toValue('https://example.com');
+      container.bind<LazyInterfaceAll>('LAZY_INTERFACE_ALL').toClass(LazyClassAll01Stub);
+      container.bind<LazyInterfaceAll>('LAZY_INTERFACE_ALL').toClass(LazyClassAll02Stub);
+      container.bind(LazyClassAllStub).toSelf();
+
+      expect(() => (lcas = container.resolve(LazyClassAllStub))).not.toThrow();
+
+      expect(lcas.lia).toBeInstanceOf(Array);
+
+      expect(lcas.lia).toEqual<LazyInterfaceAll[]>([
+        expect.objectContaining<LazyInterfaceAll>({ name: 'lazy_class_all_01', lcas, host: 'https://example.com' }),
+        expect.objectContaining<LazyInterfaceAll>({ name: 'lazy_class_all_02', lcas, host: 'https://example.com' }),
+      ]);
+
+      expect(lcas.lia[0]!.lcas).toEqual<LazyClassAllStub>(
+        expect.objectContaining<LazyClassAllStub>({
+          lia: lcas.lia,
+          host: 'https://example.com',
+        }),
+      );
+
+      expect(lcas.lia[1]!.lcas).toEqual<LazyClassAllStub>(
+        expect.objectContaining<LazyClassAllStub>({
+          lia: lcas.lia,
+          host: 'https://example.com',
+        }),
       );
     });
 

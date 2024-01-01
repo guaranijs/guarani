@@ -124,6 +124,21 @@ export interface DiscoveryResponse extends Dictionary<any> {
   // readonly request_object_encryption_enc_values_supported?: JsonWebEncryptionContentEncryptionAlgorithm[];
 
   /**
+   * JSON Web Signature Algorithms for Authorization Response Token supported by the Authorization Server.
+   */
+  readonly authorization_signing_alg_values_supported?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithms for Authorization Response Token supported by the Authorization Server.
+   */
+  readonly authorization_encryption_alg_values_supported?: JsonWebEncryptionKeyWrapAlgorithm[];
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithms for Authorization Response Token supported by the Authorization Server.
+   */
+  readonly authorization_encryption_enc_values_supported?: JsonWebEncryptionContentEncryptionAlgorithm[];
+
+  /**
    * Client Authentication Methods supported by the Token Endpoint.
    */
   readonly token_endpoint_auth_methods_supported?: ClientAuthentication[];

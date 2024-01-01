@@ -1795,7 +1795,7 @@ describe('Authorization Endpoint', () => {
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
           name: 'query',
-          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(location)),
+          createHttpResponse: jest.fn().mockResolvedValueOnce(new HttpResponse().redirect(location)),
         },
         prompts: <Prompt[]>[],
         maxAge: null,
@@ -1872,7 +1872,7 @@ describe('Authorization Endpoint', () => {
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
           name: 'query',
-          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(location)),
+          createHttpResponse: jest.fn().mockResolvedValueOnce(new HttpResponse().redirect(location)),
         },
         prompts: <Prompt[]>[],
         maxAge: null,
@@ -1946,7 +1946,7 @@ describe('Authorization Endpoint', () => {
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
           name: 'query',
-          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(location)),
+          createHttpResponse: jest.fn().mockResolvedValueOnce(new HttpResponse().redirect(location)),
         },
         prompts: <Prompt[]>[],
         maxAge: null,
@@ -2011,7 +2011,7 @@ describe('Authorization Endpoint', () => {
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
           name: 'query',
-          createHttpResponse: jest.fn().mockReturnValueOnce(new HttpResponse().redirect(location)),
+          createHttpResponse: jest.fn().mockResolvedValueOnce(new HttpResponse().redirect(location)),
         },
         prompts: <Prompt[]>[],
         maxAge: null,

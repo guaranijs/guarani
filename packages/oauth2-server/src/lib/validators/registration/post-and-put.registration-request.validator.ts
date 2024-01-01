@@ -101,6 +101,10 @@ export abstract class PostAndPutRegistrationRequestValidator<
     // const requestObjectSigningAlgorithm = this.getRequestObjectSigningAlgorithm(parameters);
     // const requestObjectEncryptionKeyWrap = this.getRequestObjectEncryptionKeyWrap(parameters);
     // const requestObjectEncryptionContentEncryption = this.getRequestObjectEncryptionContentEncryption(parameters);
+    const authorizationSignedResponseAlgorithm = this.getAuthorizationSignedResponseAlgorithm(parameters);
+    const authorizationEncryptedResponseKeyWrap = this.getAuthorizationEncryptedResponseKeyWrap(parameters);
+    const authorizationEncryptedResponseContentEncryption =
+      this.getAuthorizationEncryptedResponseContentEncryption(parameters);
     const authenticationMethod = this.getAuthenticationMethod(parameters);
     const authenticationSigningAlgorithm = this.getAuthenticationSigningAlgorithm(parameters);
 
@@ -149,6 +153,9 @@ export abstract class PostAndPutRegistrationRequestValidator<
       // requestObjectSigningAlgorithm,
       // requestObjectEncryptionKeyWrap,
       // requestObjectEncryptionContentEncryption,
+      authorizationSignedResponseAlgorithm,
+      authorizationEncryptedResponseKeyWrap,
+      authorizationEncryptedResponseContentEncryption,
       authenticationMethod,
       authenticationSigningAlgorithm,
       defaultMaxAge,
@@ -858,6 +865,119 @@ export abstract class PostAndPutRegistrationRequestValidator<
   // private getRequestObjectEncryptionKeyWrap(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<JsonWebEncryptionKeyWrapAlgorithm> {}
 
   // private getRequestObjectEncryptionContentEncryption(parameters: PostRegistrationRequest | PutBodyRegistrationRequest): Nullable<JsonWebEncryptionContentEncryptionAlgorithm> {}
+
+  /**
+   * Returns the JWT Authorization Response JSON Web Signature Algorithm provided by the Client.
+   *
+   * @param parameters Parameters of the Dynamic Client Registration Request.
+   * @returns JWT Authorization Response JSON Web Signature Algorithm provided by the Client.
+   */
+  private getAuthorizationSignedResponseAlgorithm(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
+  ): Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>> {
+    if (
+      typeof parameters.authorization_signed_response_alg !== 'undefined' &&
+      typeof parameters.authorization_signed_response_alg !== 'string'
+    ) {
+      throw new InvalidClientMetadataException('Invalid parameter "authorization_signed_response_alg".');
+    }
+
+    if (typeof parameters.authorization_signed_response_alg === 'undefined') {
+      return null;
+    }
+
+    if (
+      this.settings.authorizationSignatureAlgorithms?.includes(parameters.authorization_signed_response_alg) !== true
+    ) {
+      throw new InvalidClientMetadataException(
+        `Unsupported authorization_signed_response_alg "${parameters.authorization_signed_response_alg}".`,
+      );
+    }
+
+    return parameters.authorization_signed_response_alg;
+  }
+
+  /**
+   * Returns the JWT Authorization Response JSON Web Encryption Key Wrap Algorithm provided by the Client.
+   *
+   * @param parameters Parameters of the Dynamic Client Registration Request.
+   * @returns JWT Authorization Response JSON Web Encryption Key Wrap Algorithm provided by the Client.
+   */
+  private getAuthorizationEncryptedResponseKeyWrap(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
+  ): Nullable<JsonWebEncryptionKeyWrapAlgorithm> {
+    if (
+      typeof parameters.authorization_encrypted_response_alg !== 'undefined' &&
+      typeof parameters.authorization_encrypted_response_alg !== 'string'
+    ) {
+      throw new InvalidClientMetadataException('Invalid parameter "authorization_encrypted_response_alg".');
+    }
+
+    if (typeof parameters.authorization_encrypted_response_alg === 'undefined') {
+      return null;
+    }
+
+    if (typeof parameters.authorization_signed_response_alg === 'undefined') {
+      throw new InvalidClientMetadataException(
+        'The parameter "authorization_encrypted_response_alg" must be presented together ' +
+          'with the parameter "authorization_signed_response_alg".',
+      );
+    }
+
+    if (
+      this.settings.authorizationKeyWrapAlgorithms?.includes(parameters.authorization_encrypted_response_alg) !== true
+    ) {
+      throw new InvalidClientMetadataException(
+        `Unsupported authorization_encrypted_response_alg "${parameters.authorization_encrypted_response_alg}".`,
+      );
+    }
+
+    return parameters.authorization_encrypted_response_alg;
+  }
+
+  /**
+   * Returns the JWT Authorization Response JSON Web Encryption Content Encryption Algorithm provided by the Client.
+   *
+   * @param parameters Parameters of the Dynamic Client Registration Request.
+   * @returns JWT Authorization Response JSON Web Encryption Content Encryption Algorithm provided by the Client.
+   */
+  private getAuthorizationEncryptedResponseContentEncryption(
+    parameters: PostRegistrationRequest | PutBodyRegistrationRequest,
+  ): Nullable<JsonWebEncryptionContentEncryptionAlgorithm> {
+    if (
+      typeof parameters.authorization_encrypted_response_enc !== 'undefined' &&
+      typeof parameters.authorization_encrypted_response_enc !== 'string'
+    ) {
+      throw new InvalidClientMetadataException('Invalid parameter "authorization_encrypted_response_enc".');
+    }
+
+    if (
+      typeof parameters.authorization_encrypted_response_enc !== 'undefined' &&
+      typeof parameters.authorization_encrypted_response_alg === 'undefined'
+    ) {
+      throw new InvalidClientMetadataException(
+        'The parameter "authorization_encrypted_response_enc" must be presented together ' +
+          'with the parameter "authorization_encrypted_response_alg".',
+      );
+    }
+
+    if (
+      typeof parameters.authorization_encrypted_response_enc !== 'undefined' &&
+      this.settings.authorizationContentEncryptionAlgorithms?.includes(
+        parameters.authorization_encrypted_response_enc,
+      ) !== true
+    ) {
+      throw new InvalidClientMetadataException(
+        `Unsupported authorization_encrypted_response_enc "${parameters.authorization_encrypted_response_enc}".`,
+      );
+    }
+
+    if (typeof parameters.authorization_encrypted_response_enc === 'string') {
+      return parameters.authorization_encrypted_response_enc;
+    }
+
+    return typeof parameters.authorization_encrypted_response_alg === 'string' ? 'A128CBC-HS256' : null;
+  }
 
   /**
    * Returns the Client Authentication Method provided by the Client.

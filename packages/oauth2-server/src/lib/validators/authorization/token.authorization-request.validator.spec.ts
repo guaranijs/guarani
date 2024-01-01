@@ -13,6 +13,7 @@ import { HttpRequest } from '../../http/http.request';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
+import { ResponseMode } from '../../response-modes/response-mode.type';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
 import { RESPONSE_TYPE } from '../../response-types/response-type.token';
 import { ResponseType } from '../../response-types/response-type.type';
@@ -23,6 +24,8 @@ import { SETTINGS } from '../../settings/settings.token';
 import { TokenAuthorizationRequestValidator } from './token.authorization-request.validator';
 
 jest.mock('../../handlers/scope.handler');
+
+const forbiddenResponseModes: ResponseMode[] = ['query', 'query.jwt'];
 
 describe('Token Authorization Request Validator', () => {
   let container: DependencyInjectionContainer;
@@ -47,6 +50,10 @@ describe('Token Authorization Request Validator', () => {
     }),
     jest.mocked<ResponseModeInterface>({
       name: 'query',
+      createHttpResponse: jest.fn(),
+    }),
+    jest.mocked<ResponseModeInterface>({
+      name: 'query.jwt',
       createHttpResponse: jest.fn(),
     }),
   ];
@@ -164,8 +171,8 @@ describe('Token Authorization Request Validator', () => {
       };
     });
 
-    it('should throw when requesting the response mode "query".', async () => {
-      const request = requestFactory({ response_mode: 'query' });
+    it.each(forbiddenResponseModes)('should throw when requesting a forbidden response mode.', async (responseMode) => {
+      const request = requestFactory({ response_mode: responseMode });
 
       const client = <Client>{
         id: 'client_id',
@@ -181,7 +188,7 @@ describe('Token Authorization Request Validator', () => {
 
       await expect(validator.validate(request)).rejects.toThrowWithMessage(
         InvalidRequestException,
-        'Invalid response_mode "query" for response_type "token".',
+        `Invalid response_mode "${responseMode}" for response_type "token".`,
       );
     });
   });

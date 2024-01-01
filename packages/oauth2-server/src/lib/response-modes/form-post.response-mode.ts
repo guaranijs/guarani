@@ -1,7 +1,10 @@
+import { URL } from 'url';
+
 import { Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { HttpResponse } from '../http/http.response';
 import { ResponseModeInterface } from './response-mode.interface';
 import { ResponseMode } from './response-mode.type';
@@ -33,7 +36,7 @@ function sanitizeHtml(html: string): string {
  * @returns Formatted html document to be used as the body of the Http Response.
  */
 const templateFn = (
-  redirectUri: string,
+  redirectUri: URL,
   parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
 ) => `
 <!DOCTYPE html>
@@ -42,7 +45,7 @@ const templateFn = (
   <title>Authorizing...</title>
 </head>
 <body onload="document.forms[0].submit();">
-  <form method="POST" action="${sanitizeHtml(redirectUri)}">
+  <form method="POST" action="${sanitizeHtml(redirectUri.href)}">
     ${Object.entries(parameters)
       .map(([key, value]) => `<input type="hidden" name="${key}" value="${sanitizeHtml(String(value))}" />`)
       .join('\n    ')}
@@ -74,15 +77,15 @@ export class FormPostResponseMode implements ResponseModeInterface {
    * If the User-Agent supports Javascript, the form is automatically submitted as soon as the page finishes loading,
    * otherwise, a submit button is displayed for the manual redirection.
    *
-   * @param redirectUri Redirect URI that the User-Agent will be redirected to.
+   * @param context Context of the Authorization Request.
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns Http Response containing the Authorization Response Parameters.
    */
-  public createHttpResponse(
-    redirectUri: string,
+  public async createHttpResponse(
+    context: AuthorizationContext,
     parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
-  ): HttpResponse {
-    const html = templateFn(redirectUri, removeNullishValues(parameters)).trim();
+  ): Promise<HttpResponse> {
+    const html = templateFn(context.redirectUri, removeNullishValues(parameters)).trim();
     return new HttpResponse().html(html);
   }
 }

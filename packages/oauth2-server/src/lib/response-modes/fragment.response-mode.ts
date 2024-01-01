@@ -1,6 +1,7 @@
 import { Injectable } from '@guarani/di';
 import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
+import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { HttpResponse } from '../http/http.response';
 import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { ResponseModeInterface } from './response-mode.interface';
@@ -21,15 +22,15 @@ export class FragmentResponseMode implements ResponseModeInterface {
   /**
    * Creates a Redirect Response to the provided Redirect URI with the provided Parameters at the Fragment of the URI.
    *
-   * @param redirectUri Redirect URI that the User-Agent will be redirected to.
+   * @param context Context of the Authorization Request.
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
    * @returns Http Response containing the Authorization Response Parameters.
    */
-  public createHttpResponse(
-    redirectUri: string,
+  public async createHttpResponse(
+    context: AuthorizationContext,
     parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
-  ): HttpResponse {
-    const url = addParametersToUrl(redirectUri, parameters, 'hash');
+  ): Promise<HttpResponse> {
+    const url = addParametersToUrl(context.redirectUri, parameters, 'hash');
     return new HttpResponse().redirect(url);
   }
 }

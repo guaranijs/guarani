@@ -1,10 +1,9 @@
-import { URL } from 'url';
-
 import { Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
+import { AuthorizationResponseTokenHandler } from '../handlers/authorization-response-token.handler';
 import { HttpResponse } from '../http/http.response';
 import { ResponseModeInterface } from './response-mode.interface';
 import { ResponseMode } from './response-mode.type';
@@ -32,13 +31,10 @@ function sanitizeHtml(html: string): string {
  * Returns a formatted html document to be used as the body of the Http Response.
  *
  * @param redirectUri Redirect URI that the User Agent will be redirected to.
- * @param parameters Authorization Response Parameters that will be returned to the Client Application.
+ * @param token JSON Web Token Authorization Response Token containing the parameters of the authorization response.
  * @returns Formatted html document to be used as the body of the Http Response.
  */
-const templateFn = (
-  redirectUri: URL,
-  parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
-) => `
+const templateFn = (redirectUri: URL, token: string) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -46,9 +42,7 @@ const templateFn = (
 </head>
 <body onload="document.forms[0].submit();">
   <form method="POST" action="${sanitizeHtml(redirectUri.href)}">
-    ${Object.entries(parameters)
-      .map(([key, value]) => `<input type="hidden" name="${key}" value="${sanitizeHtml(String(value))}" />`)
-      .join('\n    ')}
+    <input type="hidden" name="response" value="${token}" />
     <noscript>
       <p>Your browser does not support javascript or it is disabled.</p>
       <button autofocus type="submit">Continue</button>
@@ -59,33 +53,46 @@ const templateFn = (
 `;
 
 /**
- * Implementation of the **Form Post** Response Mode.
+ * Implementation of the **Form Post JSON Web Token** Response Mode.
  *
- * @see https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html#FormPostResponseMode
+ * @see https://openid.net/specs/oauth-v2-jarm.html#section-2.3.3
  */
 @Injectable()
-export class FormPostResponseMode implements ResponseModeInterface {
+export class FormPostJwtResponseMode implements ResponseModeInterface {
   /**
    * Name of the Response Mode.
    */
-  public readonly name: ResponseMode = 'form_post';
+  public readonly name: ResponseMode = 'form_post.jwt';
 
   /**
-   * Creates an HTML form with its action as the Redirect URI and its fields as hidden inputs
-   * containing the provided Authorization Response Parameters.
+   * Instantiates a new Form Post JSON Web Token Response Mode.
+   *
+   * @param authorizationResponseTokenHandler Instance of the JSON Web Token Authorization Response Token Handler.
+   */
+  public constructor(private readonly authorizationResponseTokenHandler: AuthorizationResponseTokenHandler) {}
+
+  /**
+   * Creates an HTML form with its action as the Redirect URI and its **response** field as a hidden input
+   * containing a JSON Web Token with the provided Authorization Response Parameters.
    *
    * If the User-Agent supports Javascript, the form is automatically submitted as soon as the page finishes loading,
    * otherwise, a submit button is displayed for the manual redirection.
    *
    * @param context Context of the Authorization Request.
    * @param parameters Authorization Response Parameters that will be returned to the Client Application.
-   * @returns Http Response containing the Authorization Response Parameters.
+   * @returns Http Response containing the JSON Web Token with the Authorization Response Parameters.
    */
   public async createHttpResponse(
     context: AuthorizationContext,
     parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
   ): Promise<HttpResponse> {
-    const html = templateFn(context.redirectUri, removeNullishValues(parameters)).trim();
+    const token = await this.authorizationResponseTokenHandler.generateAuthorizationResponseToken(
+      context,
+      removeNullishValues(parameters),
+    );
+
+    const html = templateFn(context.redirectUri, token).trim();
+
     return new HttpResponse().html(html);
   }
 }

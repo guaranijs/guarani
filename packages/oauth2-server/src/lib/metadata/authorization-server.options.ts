@@ -80,6 +80,21 @@ export interface AuthorizationServerOptions {
   readonly userinfoContentEncryptionAlgorithms?: JsonWebEncryptionContentEncryptionAlgorithm[];
 
   /**
+   * JSON Web Signature Algorithms for Authorization Response Token to be registered at the Authorization Server.
+   */
+  readonly authorizationSignatureAlgorithms?: Exclude<JsonWebSignatureAlgorithm, 'none'>[];
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithms for Authorization Response Token to be registered at the Authorization Server.
+   */
+  readonly authorizationKeyWrapAlgorithms?: JsonWebEncryptionKeyWrapAlgorithm[];
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithms for Authorization Response Token to be registered at the Authorization Server.
+   */
+  readonly authorizationContentEncryptionAlgorithms?: JsonWebEncryptionContentEncryptionAlgorithm[];
+
+  /**
    * Grant Types to be registered at the Authorization Server.
    */
   readonly grantTypes?: GrantType[];

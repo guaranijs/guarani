@@ -137,6 +137,21 @@ export interface PostRegistrationRequest extends Dictionary<any> {
   // readonly request_object_encryption_enc?: JsonWebEncryptionContentEncryptionAlgorithm;
 
   /**
+   * JSON Web Signature Algorithm used to sign the Authorization Response Token.
+   */
+  readonly authorization_signed_response_alg?: Exclude<JsonWebSignatureAlgorithm, 'none'>;
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithm used to encrypt the Authorization Response Token.
+   */
+  readonly authorization_encrypted_response_alg?: JsonWebEncryptionKeyWrapAlgorithm;
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithm used to encrypt the Authorization Response Token.
+   */
+  readonly authorization_encrypted_response_enc?: JsonWebEncryptionContentEncryptionAlgorithm;
+
+  /**
    * Client Authentication Method of the Client.
    */
   readonly token_endpoint_auth_method?: ClientAuthentication;

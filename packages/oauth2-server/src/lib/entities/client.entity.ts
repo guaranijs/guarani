@@ -169,6 +169,21 @@ export interface Client {
   // requestObjectEncryptionContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   /**
+   * JSON Web Signature Algorithm used to sign the Authorization Response Token.
+   */
+  authorizationSignedResponseAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
+
+  /**
+   * JSON Web Encryption Key Wrap Algorithm used to encrypt the Authorization Response Token.
+   */
+  authorizationEncryptedResponseKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
+
+  /**
+   * JSON Web Encryption Content Encryption Algorithm used to encrypt the Authorization Response Token.
+   */
+  authorizationEncryptedResponseContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
+
+  /**
    * Default Maximum Authentication Age.
    */
   defaultMaxAge: Nullable<number>;

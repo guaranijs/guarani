@@ -1,4 +1,4 @@
-import { getContainer } from '@guarani/di';
+import { DependencyInjectionContainer, getContainer } from '@guarani/di';
 import { JsonWebKeySet } from '@guarani/jose';
 import { Constructor } from '@guarani/types';
 
@@ -32,6 +32,7 @@ import { grantTypeRegistry } from '../grant-types/grant-type.registry';
 import { GRANT_TYPE } from '../grant-types/grant-type.token';
 import { GrantType } from '../grant-types/grant-type.type';
 import { AuthHandler } from '../handlers/auth.handler';
+import { AuthorizationResponseTokenHandler } from '../handlers/authorization-response-token.handler';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { IdTokenHandler } from '../handlers/id-token.handler';
@@ -139,6 +140,7 @@ export class AuthorizationServerFactory {
     await this.configure();
 
     this.container.bind(AuthorizationServer).toClass(server).asSingleton();
+    this.container.bind(DependencyInjectionContainer).toValue(this.container);
 
     return <T>this.container.resolve(AuthorizationServer);
   }
@@ -200,6 +202,10 @@ export class AuthorizationServerFactory {
       userinfoSignatureAlgorithms: this.authorizationServerOptions.userinfoSignatureAlgorithms,
       userinfoKeyWrapAlgorithms: this.authorizationServerOptions.userinfoKeyWrapAlgorithms,
       userinfoContentEncryptionAlgorithms: this.authorizationServerOptions.userinfoContentEncryptionAlgorithms,
+      authorizationSignatureAlgorithms: this.authorizationServerOptions.authorizationSignatureAlgorithms,
+      authorizationKeyWrapAlgorithms: this.authorizationServerOptions.authorizationKeyWrapAlgorithms,
+      authorizationContentEncryptionAlgorithms:
+        this.authorizationServerOptions.authorizationContentEncryptionAlgorithms,
       jwks:
         typeof this.authorizationServerOptions.jwks !== 'undefined'
           ? await JsonWebKeySet.load(this.authorizationServerOptions.jwks)
@@ -412,6 +418,7 @@ export class AuthorizationServerFactory {
     this.container.bind(AuthHandler).toSelf().asSingleton();
     this.container.bind(LogoutHandler).toSelf().asSingleton();
     this.container.bind(LogoutTokenHandler).toSelf().asSingleton();
+    this.container.bind(AuthorizationResponseTokenHandler).toSelf().asSingleton();
 
     if (this.settings.scopes.includes('openid')) {
       this.container.bind(IdTokenHandler).toSelf().asSingleton();

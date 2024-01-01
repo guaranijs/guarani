@@ -10,6 +10,7 @@ export { Inject } from './lib/decorators/inject.decorator';
 export { InjectAll } from './lib/decorators/inject-all.decorator';
 export { Injectable } from './lib/decorators/injectable.decorator';
 export { LazyInject } from './lib/decorators/lazy-inject.decorator';
+export { LazyInjectAll } from './lib/decorators/lazy-inject-all.decorator';
 export { Optional } from './lib/decorators/optional.decorator';
 
 // Exceptions

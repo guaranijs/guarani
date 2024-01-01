@@ -1,4 +1,4 @@
-import { AbstractConstructor, Constructor } from '@guarani/types';
+import { InjectableToken } from './injectable-token.type';
 
 /**
  * Reflect's Methods used to create a Proxy Handler.
@@ -33,7 +33,7 @@ export class LazyToken<T> {
    *
    * @param wrappedToken Wrapped Injectable Token.
    */
-  public constructor(private readonly wrappedToken: () => AbstractConstructor<T> | Constructor<T>) {}
+  public constructor(private readonly wrappedToken: () => InjectableToken<T>) {}
 
   /**
    * Resolves the wrapped Injectable Token.
@@ -41,12 +41,28 @@ export class LazyToken<T> {
    * @param callback Callback function used to resolve the Injectable Token.
    * @returns Proxy that acts in lieu of the wrapped Injectable Token.
    */
-  public resolve(callback: (lazyToken: AbstractConstructor<T> | Constructor<T>) => T): T {
+  public resolve(callback: (lazyToken: InjectableToken<T>) => T): T {
     const callbackResolver = () => {
       return callback(this.wrappedToken());
     };
 
     return new Proxy({}, this.createHandler(callbackResolver)) as T;
+  }
+
+  /**
+   * Resolves all the instances of the wrapped Injectable Token.
+   *
+   * @param callback Callback function used to resolve the Injectable Token.
+   * @returns Proxies that act in lieu of the wrapped Injectable Token instances.
+   */
+  public resolveAll(callback: (lazyToken: InjectableToken<T>) => T[]): T[] {
+    const multipleCallbackResolver = () => {
+      return callback(this.wrappedToken());
+    };
+
+    const handlers = this.createHandlers(multipleCallbackResolver);
+
+    return handlers.map((handler) => new Proxy({}, handler) as T);
   }
 
   /**
@@ -58,14 +74,34 @@ export class LazyToken<T> {
   private createHandler(callbackResolver: () => T): ProxyHandler<object> {
     const handler: ProxyHandler<object> = {};
 
-    for (const method of reflectMethods) {
-      const handlerMethod = (...args: unknown[]) => {
+    reflectMethods.forEach((method) => {
+      handler[method] = (...args: unknown[]) => {
         return (<CallableFunction>Reflect[method])(callbackResolver(), ...args.slice(1));
       };
-
-      handler[method] = handlerMethod;
-    }
+    });
 
     return handler;
+  }
+
+  /**
+   * Creates a Proxy Handler for the wrapped Injectable Token's Proxy object.
+   *
+   * @param multipleCallbackResolver Callback containing the Injectable Token resolver.
+   * @returns Proxy Handlers of the wrapped Injectable Token.
+   */
+  private createHandlers(multipleCallbackResolver: () => T[]): ProxyHandler<object>[] {
+    const callbackResolvers = multipleCallbackResolver();
+
+    return callbackResolvers.map((resolvedCallback) => {
+      const handler: ProxyHandler<object> = {};
+
+      reflectMethods.forEach((method) => {
+        handler[method] = (...args: unknown[]) => {
+          return (<CallableFunction>Reflect[method])(resolvedCallback, ...args.slice(1));
+        };
+      });
+
+      return handler;
+    });
   }
 }

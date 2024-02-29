@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { BitStringNode } from './bitstring.node';
 
 const failures: any[] = [

@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { decodeLength, encodeLength } from './length';
 
 describe('encodeLength()', () => {

@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { Inject, Injectable } from '@guarani/di';
 import {
   JsonWebEncryption,

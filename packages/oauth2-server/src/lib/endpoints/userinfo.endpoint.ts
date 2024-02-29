@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { OutgoingHttpHeaders } from 'http';
 
 import { Inject, Injectable } from '@guarani/di';

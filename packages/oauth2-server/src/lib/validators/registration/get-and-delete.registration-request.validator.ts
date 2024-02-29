@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { timingSafeEqual } from 'crypto';
 
 import { DeleteRegistrationContext } from '../../context/registration/delete.registration-context';

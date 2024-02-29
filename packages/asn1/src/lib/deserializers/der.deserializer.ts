@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer';
+
 import { BerAsn1Type } from '../enums/ber/ber.asn1-type';
 import { DeserializationException } from '../exceptions/deserialization.exception';
 import { NodeOptions } from '../nodes/node.options';

@@ -1,4 +1,5 @@
 import { OutgoingHttpHeaders } from 'http';
+import { URL } from 'url';
 
 import { Inject, Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';

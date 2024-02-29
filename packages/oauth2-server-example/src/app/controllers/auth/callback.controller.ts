@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { Request, Response } from 'express';
 import { stringify as stringifyQs } from 'querystring';
+import { URL } from 'url';
 
 import { TokenResponse } from '@guarani/oauth2-server';
 import { Dictionary } from '@guarani/types';

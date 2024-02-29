@@ -1,3 +1,5 @@
+import { URL } from 'url';
+
 import { Injectable } from '@guarani/di';
 import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary, Nullable, OneOrMany } from '@guarani/types';

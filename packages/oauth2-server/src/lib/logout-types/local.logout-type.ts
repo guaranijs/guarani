@@ -3,6 +3,7 @@ import { Injectable } from '@guarani/di';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { AuthHandler } from '../handlers/auth.handler';
 import { LogoutHandler } from '../handlers/logout.handler';
+import { Logger } from '../logger/logger';
 import { LogoutTypeInterface } from './logout-type.interface';
 import { LogoutType } from './logout-type.type';
 
@@ -22,10 +23,12 @@ export class LocalLogoutType implements LogoutTypeInterface {
   /**
    * Instantiates a new Local Logout Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param authHandler Instance of the Auth Handler.
    * @param logoutHandler Instance of the Logout Handler.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly authHandler: AuthHandler,
     private readonly logoutHandler: LogoutHandler,
   ) {}
@@ -36,6 +39,10 @@ export class LocalLogoutType implements LogoutTypeInterface {
    * @param logoutTicket Logout Ticket provided by the Client.
    */
   public async logout(logoutTicket: LogoutTicket): Promise<void> {
+    this.logger.debug(`[${this.constructor.name}] Called logout()`, '0ac7148a-8d97-4476-bff0-2b4b15edb601', {
+      logout_ticket: logoutTicket,
+    });
+
     const { session } = logoutTicket;
     const login = session.activeLogin!;
 

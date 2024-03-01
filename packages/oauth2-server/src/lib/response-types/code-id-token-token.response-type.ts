@@ -5,6 +5,7 @@ import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
+import { Logger } from '../logger/logger';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { IdTokenAuthorizationResponse } from '../responses/authorization/id-token.authorization-response';
@@ -47,11 +48,13 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
   /**
    * Instantiates a new Code Response Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param idTokenHandler Instance of the ID Token Handler.
    * @param accessTokenService Instance of the Access Token Service.
    * @param authorizationCodeService Instance of the Authorization Code Service.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly idTokenHandler: IdTokenHandler,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
     @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
@@ -70,11 +73,26 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
     login: Login,
     consent: Consent,
   ): Promise<CodeAuthorizationResponse & IdTokenAuthorizationResponse & TokenAuthorizationResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, '1a03e197-2b75-48f7-a504-afff794e91df', {
+      context,
+      login,
+      consent,
+    });
+
     const { parameters } = context;
     const { client, scopes, user } = consent;
 
     if (!scopes.includes('openid')) {
-      throw new InvalidRequestException('Missing required scope "openid".');
+      const exc = new InvalidRequestException('Missing required scope "openid".');
+
+      this.logger.error(
+        `[${this.constructor.name}] Missing required scope "openid"`,
+        'dc5c6e1f-8ae2-4369-a5e3-dadcebdb4694',
+        { scopes },
+        exc,
+      );
+
+      throw exc;
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
@@ -94,6 +112,12 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
 
     response.code = authorizationCode.code;
     response.id_token = idToken;
+
+    this.logger.debug(
+      `[${this.constructor.name}] Completed "${this.name}" Response Type`,
+      '42aa169a-932e-4317-ac98-a144aeed26c4',
+      { response },
+    );
 
     return response;
   }

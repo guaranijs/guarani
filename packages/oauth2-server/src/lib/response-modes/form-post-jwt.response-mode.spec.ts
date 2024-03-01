@@ -7,10 +7,12 @@ import { Dictionary } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { AuthorizationResponseTokenHandler } from '../handlers/authorization-response-token.handler';
+import { Logger } from '../logger/logger';
 import { FormPostJwtResponseMode } from './form-post-jwt.response-mode';
 import { ResponseMode } from './response-mode.type';
 
 jest.mock('../handlers/authorization-response-token.handler');
+jest.mock('../logger/logger');
 
 const body = `
 <!DOCTYPE html>
@@ -34,11 +36,13 @@ describe('Form Post JSON Web Token Response Mode', () => {
   let container: DependencyInjectionContainer;
   let responseMode: FormPostJwtResponseMode;
 
+  const loggerMock = jest.mocked(Logger.prototype);
   const authorizationResponseTokenHandlerMock = jest.mocked(AuthorizationResponseTokenHandler.prototype);
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(AuthorizationResponseTokenHandler).toValue(authorizationResponseTokenHandlerMock);
     container.bind(FormPostJwtResponseMode).toSelf().asSingleton();
 

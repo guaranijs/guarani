@@ -6,6 +6,7 @@ import { Nullable } from '@guarani/types';
 import { PostRegistrationContext } from '../../context/registration/post.registration-context';
 import { PutRegistrationContext } from '../../context/registration/put.registration-context';
 import { Client } from '../../entities/client.entity';
+import { Logger } from '../../logger/logger';
 import { ClientServiceInterface } from '../client.service.interface';
 
 @Injectable()
@@ -37,11 +38,18 @@ export class ClientService implements ClientServiceInterface {
     },
   ];
 
-  public constructor() {
-    console.warn('Using default Client Service. This is only recommended for development.');
+  public constructor(protected readonly logger: Logger) {
+    this.logger.warning(
+      `[${this.constructor.name}] Using default Client Service. This is only recommended for development.`,
+      '8ca9951f-2d4f-462e-84f7-e319842956f8',
+    );
   }
 
   public async create(context: PostRegistrationContext): Promise<Client> {
+    this.logger.debug(`[${this.constructor.name}] Called create()`, 'a8d76fcf-7b4d-471a-bad9-c1e2df4abb8a', {
+      context,
+    });
+
     const id = randomUUID();
 
     const client: Client = {
@@ -98,10 +106,13 @@ export class ClientService implements ClientServiceInterface {
   }
 
   public async findOne(id: string): Promise<Nullable<Client>> {
+    this.logger.debug(`[${this.constructor.name}] Called findOne()`, '54f9b1c2-f478-4fdd-840d-4728dd4060a2', { id });
     return this.clients.find((client) => client.id === id) ?? null;
   }
 
   public async remove(client: Client): Promise<void> {
+    this.logger.debug(`[${this.constructor.name}] Called remove()`, '3d2c666f-2ffc-4bba-b8fc-3d1a6838e476', { client });
+
     const index = this.clients.findIndex((registeredClient) => registeredClient.id === client.id);
 
     if (index > -1) {
@@ -110,6 +121,8 @@ export class ClientService implements ClientServiceInterface {
   }
 
   public async update(client: Client, context: PutRegistrationContext): Promise<void> {
+    this.logger.debug(`[${this.constructor.name}] Called update()`, '63db326c-6790-4119-b184-85d57269c6f4', { client });
+
     const index = this.clients.findIndex((registeredClient) => registeredClient.id === client.id);
 
     Object.assign<Client, Partial<Client>>(client, {

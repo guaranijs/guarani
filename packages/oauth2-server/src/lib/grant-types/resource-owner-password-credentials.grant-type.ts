@@ -1,6 +1,7 @@
 import { Inject, Injectable, Optional } from '@guarani/di';
 
 import { ResourceOwnerPasswordCredentialsTokenContext } from '../context/token/resource-owner-password-credentials.token-context';
+import { Logger } from '../logger/logger';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -28,10 +29,12 @@ export class ResourceOwnerPasswordCredentialsGrantType implements GrantTypeInter
   /**
    * Instantiates a new Resource Owner Password Credentials Grant Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param accessTokenService Instance of the Access Token Service.
    * @param refreshTokenService Instance of the Refresh Token Service.
    */
   public constructor(
+    private readonly logger: Logger,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
     @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService?: RefreshTokenServiceInterface,
   ) {}
@@ -47,6 +50,10 @@ export class ResourceOwnerPasswordCredentialsGrantType implements GrantTypeInter
    * @returns Access Token Response.
    */
   public async handle(context: ResourceOwnerPasswordCredentialsTokenContext): Promise<TokenResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, 'a9dd1b4d-7e59-4266-8f21-92e408bc2a51', {
+      context,
+    });
+
     const { client, scopes, user } = context;
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
@@ -56,6 +63,14 @@ export class ResourceOwnerPasswordCredentialsGrantType implements GrantTypeInter
         ? await this.refreshTokenService.create(scopes, client, user, accessToken)
         : null;
 
-    return createTokenResponse(accessToken, refreshToken);
+    const response = createTokenResponse(accessToken, refreshToken);
+
+    this.logger.debug(
+      `[${this.constructor.name}] Resource Owner Password Credentials Grant completed`,
+      '9bbeb5ec-cc44-4903-9e26-55c066adc249',
+      { response },
+    );
+
+    return response;
   }
 }

@@ -5,6 +5,7 @@ import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
+import { Logger } from '../logger/logger';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { IdTokenAuthorizationResponse } from '../responses/authorization/id-token.authorization-response';
 import { ResponseTypeInterface } from './response-type.interface';
@@ -39,31 +40,58 @@ export class IdTokenResponseType implements ResponseTypeInterface {
   /**
    * Instantiates a new ID Token Response Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param idTokenHandler Instance of the ID Token Handler.
    */
-  public constructor(private readonly idTokenHandler: IdTokenHandler) {}
+  public constructor(
+    private readonly logger: Logger,
+    private readonly idTokenHandler: IdTokenHandler,
+  ) {}
 
   /**
    * Creates and returns an ID Token Response to the Client.
    *
-   * @param _context Authorization Request Context.
+   * @param context Authorization Request Context.
    * @param login Login with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns ID Token Response.
    */
   public async handle(
-    _context: AuthorizationContext,
+    context: AuthorizationContext,
     login: Login,
     consent: Consent,
   ): Promise<IdTokenAuthorizationResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, 'ff24603e-9667-47ba-9f3c-7c717b7ba104', {
+      context,
+      login,
+      consent,
+    });
+
     const { scopes } = consent;
 
     if (!scopes.includes('openid')) {
-      throw new InvalidRequestException('Missing required scope "openid".');
+      const exc = new InvalidRequestException('Missing required scope "openid".');
+
+      this.logger.error(
+        `[${this.constructor.name}] Missing required scope "openid"`,
+        'a39eab70-3a5b-46f4-85ba-e0d15923b18c',
+        { scopes },
+        exc,
+      );
+
+      throw exc;
     }
 
     const idToken = await this.idTokenHandler.generateIdToken(login, consent, null, null, null, null);
 
-    return { id_token: idToken };
+    const response: IdTokenAuthorizationResponse = { id_token: idToken };
+
+    this.logger.debug(
+      `[${this.constructor.name}] Completed "${this.name}" Response Type`,
+      '5d9dbe34-1142-4397-80d8-a834e1577e36',
+      { response },
+    );
+
+    return response;
   }
 }

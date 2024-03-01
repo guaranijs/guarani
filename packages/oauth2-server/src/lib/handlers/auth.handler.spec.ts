@@ -4,15 +4,20 @@ import { Client } from '../entities/client.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
+import { Logger } from '../logger/logger';
 import { LoginServiceInterface } from '../services/login.service.interface';
 import { LOGIN_SERVICE } from '../services/login.service.token';
 import { SessionServiceInterface } from '../services/session.service.interface';
 import { SESSION_SERVICE } from '../services/session.service.token';
 import { AuthHandler } from './auth.handler';
 
+jest.mock('../logger/logger');
+
 describe('Auth Handler', () => {
   let container: DependencyInjectionContainer;
   let authHandler: AuthHandler;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const sessionServiceMock = jest.mocked<SessionServiceInterface>({
     create: jest.fn(),
@@ -32,6 +37,7 @@ describe('Auth Handler', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
     container.bind<LoginServiceInterface>(LOGIN_SERVICE).toValue(loginServiceMock);
     container.bind(AuthHandler).toSelf().asSingleton();

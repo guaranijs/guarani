@@ -8,6 +8,7 @@ import { ConstructorOrInstance } from '@guarani/types';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { GrantType } from '../grant-types/grant-type.type';
+import { Logger } from '../logger/logger';
 import { Pkce } from '../pkces/pkce.type';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { ResponseType } from '../response-types/response-type.type';
@@ -225,6 +226,11 @@ export interface AuthorizationServerOptions {
    * *note: this is only required when supporting **pairwise** subject type identifiers.*
    */
   readonly maxLocalSubjectLength?: number;
+
+  /**
+   * Logger.
+   */
+  readonly logger?: ConstructorOrInstance<Logger>;
 
   /**
    * Access Token Service.

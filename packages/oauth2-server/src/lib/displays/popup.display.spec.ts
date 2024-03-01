@@ -4,8 +4,11 @@ import { OutgoingHttpHeaders } from 'http';
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
+import { Logger } from '../logger/logger';
 import { Display } from './display.type';
 import { PopupDisplay } from './popup.display';
+
+jest.mock('../logger/logger');
 
 const body = `
 <!DOCTYPE html>
@@ -32,9 +35,12 @@ describe('Page Display', () => {
   let container: DependencyInjectionContainer;
   let display: PopupDisplay;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(PopupDisplay).toSelf().asSingleton();
 
     display = container.resolve(PopupDisplay);

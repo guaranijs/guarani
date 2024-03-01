@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@guarani/di';
 import { CodeAuthorizationContext } from '../context/authorization/code.authorization-context';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
+import { Logger } from '../logger/logger';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { AuthorizationCodeServiceInterface } from '../services/authorization-code.service.interface';
@@ -35,9 +36,11 @@ export class CodeResponseType implements ResponseTypeInterface {
   /**
    * Instantiates a new Code Response Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param authorizationCodeService Instance of the Authorization Code Service.
    */
   public constructor(
+    private readonly logger: Logger,
     @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
   ) {}
 
@@ -69,8 +72,23 @@ export class CodeResponseType implements ResponseTypeInterface {
     login: Login,
     consent: Consent,
   ): Promise<CodeAuthorizationResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, '34a9598e-ada6-47d7-aaa0-0f14bf2daf0f', {
+      context,
+      login,
+      consent,
+    });
+
     const { parameters } = context;
     const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);
-    return { code: authorizationCode.code };
+
+    const response: CodeAuthorizationResponse = { code: authorizationCode.code };
+
+    this.logger.debug(
+      `[${this.constructor.name}] Completed "${this.name}" Response Type`,
+      'e2a1dcf7-551f-40fb-a723-a5592d1e9041',
+      { response },
+    );
+
+    return response;
   }
 }

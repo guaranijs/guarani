@@ -6,6 +6,7 @@ import { SelectAccountContextInteractionContext } from '../context/interaction/s
 import { SelectAccountDecisionInteractionContext } from '../context/interaction/select-account-decision.interaction-context';
 import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
+import { Logger } from '../logger/logger';
 import { SelectAccountContextInteractionResponse } from '../responses/interaction/select-account-context.interaction-response';
 import { SelectAccountDecisionInteractionResponse } from '../responses/interaction/select-account-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -40,11 +41,13 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
   /**
    * Instantiates a new Select Account Interaction Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param grantService Instance of the Grant Service.
    * @param sessionService Instance of the Session Service.
    */
   public constructor(
+    private readonly logger: Logger,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
     @Inject(SESSION_SERVICE) private readonly sessionService: SessionServiceInterface,
@@ -59,11 +62,15 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
   public async handleContext(
     context: SelectAccountContextInteractionContext,
   ): Promise<SelectAccountContextInteractionResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handleContext()`, '678536a1-0c90-4d21-8cc5-6f72973c0ae3', {
+      context,
+    });
+
     const { grant, session } = context;
 
     await this.checkGrant(grant);
 
-    return {
+    const response: SelectAccountContextInteractionResponse = {
       logins: session.logins.map((login) => login.id),
       context: {
         display: grant.parameters.display,
@@ -71,6 +78,14 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
         ui_locales: grant.parameters.ui_locales?.split(' '),
       },
     };
+
+    this.logger.debug(
+      `[${this.constructor.name}] Select Account Context Interaction completed`,
+      'cb170641-7ff1-445f-886e-9f99cb28233a',
+      { response },
+    );
+
+    return response;
   }
 
   /**
@@ -82,6 +97,10 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
   public async handleDecision(
     context: SelectAccountDecisionInteractionContext,
   ): Promise<SelectAccountDecisionInteractionResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handleDecision()`, '90988436-188f-4489-91ee-729d94b19ba6', {
+      context,
+    });
+
     const { grant, login } = context;
 
     await this.checkGrant(grant);
@@ -105,9 +124,23 @@ export class SelectAccountInteractionType implements InteractionTypeInterface {
    * @param grant Grant to be checked.
    */
   private async checkGrant(grant: Grant): Promise<void> {
+    this.logger.debug(`[${this.constructor.name}] Called checkGrant()`, '0e994f0f-3595-4ebf-90ed-3e97cd33d9fb', {
+      grant,
+    });
+
     if (new Date() > grant.expiresAt) {
       await this.grantService.remove(grant);
-      throw new AccessDeniedException('Expired Grant.');
+
+      const exc = new AccessDeniedException('Expired Grant.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Expired Grant`,
+        '9e2854de-27fc-4136-bd6c-c64bdba3d72a',
+        { grant },
+        exc,
+      );
+
+      throw exc;
     }
   }
 }

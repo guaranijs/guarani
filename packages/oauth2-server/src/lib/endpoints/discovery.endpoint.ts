@@ -6,6 +6,7 @@ import { removeNullishValues } from '@guarani/primitives';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { DiscoveryResponse } from '../responses/discovery-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
@@ -42,21 +43,26 @@ export class DiscoveryEndpoint implements EndpointInterface {
    * Instantiates a new Discovery Endpoint.
    *
    * @param container Instance of the Dependency Injection Container.
+   * @param logger Logger of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    */
   public constructor(
     private readonly container: DependencyInjectionContainer,
+    private readonly logger: Logger,
     @Inject(SETTINGS) private readonly settings: Settings,
   ) {}
 
   /**
    * Creates an OpenID Connect Discovery Response.
    *
-   * @param _request Http Request.
+   * @param request Http Request.
    * @returns Http Response.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async handle(_request: HttpRequest): Promise<HttpResponse> {
+  public async handle(request: HttpRequest): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, '2ee12df9-558e-4f06-87da-653ad3fe546c', {
+      request,
+    });
+
     const discoveryResponse = removeNullishValues<DiscoveryResponse>({
       issuer: this.settings.issuer,
       authorization_endpoint: this.getEndpointPath('authorization'),
@@ -102,7 +108,13 @@ export class DiscoveryEndpoint implements EndpointInterface {
       backchannel_logout_session_supported: this.settings.includeSessionIdInLogoutToken,
     });
 
-    return new HttpResponse().json(discoveryResponse);
+    const response = new HttpResponse().json(discoveryResponse);
+
+    this.logger.debug(`[${this.constructor.name}] Discovery completed`, '4dd280ba-7bfe-43a5-82da-74610a263c7d', {
+      response,
+    });
+
+    return response;
   }
 
   /**

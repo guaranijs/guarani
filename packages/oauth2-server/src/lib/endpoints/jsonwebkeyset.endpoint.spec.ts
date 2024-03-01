@@ -7,8 +7,11 @@ import { Dictionary } from '@guarani/types';
 
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { Endpoint } from './endpoint.type';
 import { JsonWebKeySetEndpoint } from './jsonwebkeyset.endpoint';
+
+jest.mock('../logger/logger');
 
 const ecKey = new EllipticCurveKey({
   kty: 'EC',
@@ -35,11 +38,13 @@ describe('JSON Web Key Set Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: JsonWebKeySetEndpoint;
 
+  const loggerMock = jest.mocked(Logger.prototype);
   const jsonWebKeySet = new JsonWebKeySet([ecKey, rsaKey]);
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(JsonWebKeySet).toValue(jsonWebKeySet);
     container.bind(JsonWebKeySetEndpoint).toSelf().asSingleton();
 

@@ -3,6 +3,7 @@ import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { HttpResponse } from '../http/http.response';
+import { Logger } from '../logger/logger';
 import { ResponseModeInterface } from './response-mode.interface';
 import { RESPONSE_MODE } from './response-mode.token';
 import { ResponseMode } from './response-mode.type';
@@ -22,9 +23,13 @@ export class JwtResponseMode implements ResponseModeInterface {
   /**
    * Instantiates a new JSON Web Token Response Mode.
    *
+   * @param logger Logger of the Authorization Server.
    * @param container Instance of the Dependency Injection Container.
    */
-  public constructor(private readonly container: DependencyInjectionContainer) {}
+  public constructor(
+    private readonly logger: Logger,
+    private readonly container: DependencyInjectionContainer,
+  ) {}
 
   /**
    * Creates a Redirect Response to the provided Redirect URI with the provided Parameters in a JSON Web Token
@@ -39,6 +44,12 @@ export class JwtResponseMode implements ResponseModeInterface {
     context: AuthorizationContext,
     parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
   ): Promise<HttpResponse> {
+    this.logger.debug(
+      `[${this.constructor.name}] Called createHttpResponse()`,
+      'b967163b-5b87-4f8b-ae96-21ea015697e0',
+      { context, parameters },
+    );
+
     const jwtResponseModeName = `${context.responseType.defaultResponseMode}.jwt`;
 
     const responseMode = this.container

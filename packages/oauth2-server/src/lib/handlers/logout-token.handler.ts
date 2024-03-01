@@ -13,6 +13,7 @@ import { Nullable } from '@guarani/types';
 import { Client } from '../entities/client.entity';
 import { Login } from '../entities/login.entity';
 import { User } from '../entities/user.entity';
+import { Logger } from '../logger/logger';
 import { LogoutTokenClaims } from '../logout-token/logout-token.claims';
 import { LogoutTokenClaimsParameters } from '../logout-token/logout-token.claims.parameters';
 import { Settings } from '../settings/settings';
@@ -28,10 +29,12 @@ export class LogoutTokenHandler {
   /**
    * Instantiates a new Logout Token Handler.
    *
+   * @param logger Logger of the Authorization Server.
    * @param jwks JSON Web Key Set of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly jwks: JsonWebKeySet,
     @Inject(SETTINGS) private readonly settings: Settings,
   ) {}
@@ -45,8 +48,23 @@ export class LogoutTokenHandler {
    * @returns Generated Logout Token.
    */
   public async generateLogoutToken(client: Client, user: Nullable<User>, login: Nullable<Login>): Promise<string> {
+    this.logger.debug(
+      `[${this.constructor.name}] Called generateLogoutToken()`,
+      'b562e0c3-b911-420c-97f2-08f071435bb3',
+      { client, user, login },
+    );
+
     if (user === null && login === null) {
-      throw new TypeError('You must provide at least one of "user" and "login".');
+      const exc = new TypeError('You must provide at least one of "user" and "login".');
+
+      this.logger.critical(
+        `[${this.constructor.name}] You must provide at least one of "user" and "login"`,
+        '979fae0f-74cb-4b84-9a6c-58fd5eeeceee',
+        null,
+        exc,
+      );
+
+      throw exc;
     }
 
     const signKey = this.jwks.get((jwk) => jwk.alg === client.idTokenSignedResponseAlgorithm && jwk.use === 'sig');
@@ -71,6 +89,12 @@ export class LogoutTokenHandler {
     const signedJwt = await jws.sign(signKey);
 
     if (client.idTokenEncryptedResponseKeyWrap === null) {
+      this.logger.debug(
+        `[${this.constructor.name}] Generated Signed Logout Token`,
+        'f7f50d47-ad8a-465b-bb47-e5e1fd912543',
+        { jws_header: jwsHeader, claims },
+      );
+
       return signedJwt;
     }
 
@@ -89,6 +113,14 @@ export class LogoutTokenHandler {
 
     const jwe = new JsonWebEncryption(jweHeader, Buffer.from(signedJwt, 'ascii'));
 
-    return await jwe.encrypt(keyWrapKey);
+    const encryptedJwt = await jwe.encrypt(keyWrapKey);
+
+    this.logger.debug(
+      `[${this.constructor.name}] Generated Encrypted Logout Token`,
+      '39524589-456e-4946-8674-4b91c5a58b2c',
+      { jws_header: jwsHeader, jwe_header: jweHeader, claims },
+    );
+
+    return encryptedJwt;
   }
 }

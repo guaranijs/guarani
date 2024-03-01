@@ -19,6 +19,7 @@ import { ClientAuthorizationHandler } from '../../handlers/client-authorization.
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { HttpMethod } from '../../http/http-method.type';
+import { Logger } from '../../logger/logger';
 import { PostRegistrationRequest } from '../../requests/registration/post.registration-request';
 import { PutBodyRegistrationRequest } from '../../requests/registration/put-body.registration-request';
 import { ResponseType } from '../../response-types/response-type.type';
@@ -30,6 +31,7 @@ import { PostAndPutRegistrationRequestValidator } from './post-and-put.registrat
 
 jest.mock('../../handlers/client-authorization.handler');
 jest.mock('../../handlers/scope.handler');
+jest.mock('../../logger/logger');
 
 const invalidBodies: any[] = [null, true, 1, 1.2, 'a', []];
 const invalidRedirectUris: any[] = [undefined, null, true, 1, 1.2, 'a', {}];
@@ -103,6 +105,8 @@ const invalidAuthenticationMethodSigningCombinations: [
 describe('Post and Put Registration Request Validator', () => {
   let validator: PostAndPutRegistrationRequestValidator;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype);
@@ -156,6 +160,7 @@ describe('Post and Put Registration Request Validator', () => {
 
   beforeEach(() => {
     validator = Reflect.construct(PostAndPutRegistrationRequestValidator, [
+      loggerMock,
       scopeHandlerMock,
       clientAuthorizationHandlerMock,
       accessTokenServiceMock,

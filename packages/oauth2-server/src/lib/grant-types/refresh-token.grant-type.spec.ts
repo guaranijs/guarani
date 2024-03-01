@@ -5,6 +5,7 @@ import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
+import { Logger } from '../logger/logger';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -16,9 +17,13 @@ import { GrantTypeInterface } from './grant-type.interface';
 import { GrantType } from './grant-type.type';
 import { RefreshTokenGrantType } from './refresh-token.grant-type';
 
+jest.mock('../logger/logger');
+
 describe('Refresh Token Grant Type', () => {
   let container: DependencyInjectionContainer;
   let grantType: RefreshTokenGrantType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const settings = <Settings>{ enableRefreshTokenRotation: false };
 
@@ -38,6 +43,7 @@ describe('Refresh Token Grant Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);

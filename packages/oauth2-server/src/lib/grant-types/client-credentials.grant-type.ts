@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@guarani/di';
 
 import { ClientCredentialsTokenContext } from '../context/token/client-credentials.token-context';
+import { Logger } from '../logger/logger';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -28,9 +29,13 @@ export class ClientCredentialsGrantType implements GrantTypeInterface {
   /**
    * Instantiates a new Client Credentials Grant Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param accessTokenService Instance of the Access Token Service.
    */
-  public constructor(@Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface) {}
+  public constructor(
+    private readonly logger: Logger,
+    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
+  ) {}
 
   /**
    * Creates the Access Token Response with the Access Token issued to the Client.
@@ -45,8 +50,20 @@ export class ClientCredentialsGrantType implements GrantTypeInterface {
    * @returns Access Token Response.
    */
   public async handle(context: ClientCredentialsTokenContext): Promise<TokenResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, '8f2a4dab-7cb6-4c10-a2bd-8e0acfdfcc8b', {
+      context,
+    });
+
     const { client, scopes } = context;
     const accessToken = await this.accessTokenService.create(scopes, client, null);
-    return createTokenResponse(accessToken, null);
+    const response = createTokenResponse(accessToken, null);
+
+    this.logger.debug(
+      `[${this.constructor.name}] Client Credentials Grant completed`,
+      '44a96591-0413-43ca-8abe-7d36b129335e',
+      { response },
+    );
+
+    return response;
   }
 }

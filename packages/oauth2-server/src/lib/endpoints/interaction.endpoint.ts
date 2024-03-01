@@ -10,6 +10,7 @@ import { UnsupportedInteractionTypeException } from '../exceptions/unsupported-i
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { InteractionRequest } from '../requests/interaction/interaction-request';
 import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
 import { EndpointInterface } from './endpoint.interface';
@@ -50,9 +51,11 @@ export class InteractionEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Interaction Endpoint.
    *
+   * @param logger Logger of the Authorization Server.
    * @param validators Interaction Request Validators registered at the Authorization Server.
    */
   public constructor(
+    private readonly logger: Logger,
     @InjectAll(InteractionRequestValidator) private readonly validators: InteractionRequestValidator[],
   ) {}
 
@@ -66,6 +69,10 @@ export class InteractionEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, '51100321-3412-481a-9d70-b74937f4f1dd', {
+      request,
+    });
+
     try {
       switch (request.method) {
         case 'GET':
@@ -83,6 +90,13 @@ export class InteractionEndpoint implements EndpointInterface {
           ? exc
           : new ServerErrorException('An unexpected error occurred.', { cause: exc });
 
+      this.logger.error(
+        `[${this.constructor.name}] Error on Interaction Endpoint`,
+        '73365dc0-8427-43d2-a770-65185bfac56b',
+        { request },
+        error,
+      );
+
       return new HttpResponse()
         .setStatus(error.statusCode)
         .setHeaders(error.headers)
@@ -98,6 +112,10 @@ export class InteractionEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handleContext(request: HttpRequest): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handleContext()`, 'd17d4df9-8661-4090-87ef-1d828cde47db', {
+      request,
+    });
+
     const parameters = request.query as InteractionRequest;
 
     const validator = this.getValidator(parameters);
@@ -105,7 +123,13 @@ export class InteractionEndpoint implements EndpointInterface {
     const context = await validator.validateContext(request);
     const interactionResponse = await context.interactionType.handleContext(context);
 
-    return new HttpResponse().setHeaders(this.headers).json(removeNullishValues(interactionResponse));
+    const response = new HttpResponse().setHeaders(this.headers).json(removeNullishValues(interactionResponse));
+
+    this.logger.debug(`[${this.constructor.name}] Interaction completed`, '7b6ec1ac-66a4-4b7d-a6bb-274a8939710f', {
+      response,
+    });
+
+    return response;
   }
 
   /**
@@ -115,6 +139,10 @@ export class InteractionEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handleDecision(request: HttpRequest): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handleDecision()`, '599336c2-45bd-4655-9a47-c69657e801a1', {
+      request,
+    });
+
     const parameters = request.form<InteractionRequest>();
 
     const validator = this.getValidator(parameters);
@@ -122,7 +150,13 @@ export class InteractionEndpoint implements EndpointInterface {
     const context = await validator.validateDecision(request);
     const interactionResponse = await context.interactionType.handleDecision(context);
 
-    return new HttpResponse().setHeaders(this.headers).json(removeNullishValues(interactionResponse));
+    const response = new HttpResponse().setHeaders(this.headers).json(removeNullishValues(interactionResponse));
+
+    this.logger.debug(`[${this.constructor.name}] Interaction completed`, '79c688f3-f1f7-4315-907e-55719d3c9270', {
+      response,
+    });
+
+    return response;
   }
 
   /**
@@ -132,14 +166,38 @@ export class InteractionEndpoint implements EndpointInterface {
    * @returns Interaction Request Validator.
    */
   private getValidator(parameters: InteractionRequest): InteractionRequestValidator {
+    this.logger.debug(`[${this.constructor.name}] Called getValidator()`, 'bcc58f23-ef8b-4cd7-a64a-ff36358a7aac', {
+      parameters,
+    });
+
     if (typeof parameters.interaction_type === 'undefined') {
-      throw new InvalidRequestException('Invalid parameter "interaction_type".');
+      const exc = new InvalidRequestException('Invalid parameter "interaction_type".');
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid parameter "interaction_type"`,
+        'e86743b6-fb58-489f-b489-e8eedaeb2fd4',
+        { parameters },
+        exc,
+      );
+
+      throw exc;
     }
 
     const validator = this.validators.find((validator) => validator.name === parameters.interaction_type);
 
     if (typeof validator === 'undefined') {
-      throw new UnsupportedInteractionTypeException(`Unsupported interaction_type "${parameters.interaction_type}".`);
+      const exc = new UnsupportedInteractionTypeException(
+        `Unsupported interaction_type "${parameters.interaction_type}".`,
+      );
+
+      this.logger.error(
+        `[${this.constructor.name}] Unsupported interaction_type "${parameters.interaction_type}"`,
+        '09e45b3f-5508-4cc9-a5c7-fe1c7734962c',
+        { parameters },
+        exc,
+      );
+
+      throw exc;
     }
 
     return validator;

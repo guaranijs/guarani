@@ -9,6 +9,7 @@ import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { DeviceAuthorizationResponse } from '../responses/device-authorization-response';
 import { DeviceCodeServiceInterface } from '../services/device-code.service.interface';
 import { DEVICE_CODE_SERVICE } from '../services/device-code.service.token';
@@ -55,17 +56,28 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Device Authorization Endpoint.
    *
+   * @param logger Logger of the Authorization Server.
    * @param validator Instance of the Device Authorization Request Validator.
    * @param deviceCodeService Instance of the Device Code Service.
    * @param settings Settings of the Authorization Server.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly validator: DeviceAuthorizationRequestValidator,
     @Inject(DEVICE_CODE_SERVICE) private readonly deviceCodeService: DeviceCodeServiceInterface,
     @Inject(SETTINGS) private readonly settings: Settings,
   ) {
     if (typeof this.settings.userInteraction === 'undefined') {
-      throw new TypeError('Missing User Interaction options.');
+      const exc = new TypeError('Missing User Interaction options.');
+
+      this.logger.critical(
+        `[${this.constructor.name}] Missing User Interaction options`,
+        '70b029b8-cd9c-44e3-bbaf-fe8f20fc7a4e',
+        null,
+        exc,
+      );
+
+      throw exc;
     }
   }
 
@@ -84,6 +96,10 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, 'c2ac08b3-b8dc-4a05-8c12-8f5b24b29278', {
+      request,
+    });
+
     try {
       const { client, scopes } = await this.validator.validate(request);
       const deviceCode = await this.deviceCodeService.create(scopes, client);
@@ -100,12 +116,27 @@ export class DeviceAuthorizationEndpoint implements EndpointInterface {
         interval: this.settings.devicePollingInterval,
       });
 
-      return new HttpResponse().setHeaders(this.headers).json(deviceAuthorizationResponse);
+      const response = new HttpResponse().setHeaders(this.headers).json(deviceAuthorizationResponse);
+
+      this.logger.debug(
+        `[${this.constructor.name}] Device Authorization completed`,
+        '5a5f5e1b-2c1f-49c4-8403-25b1a985a097',
+        { response },
+      );
+
+      return response;
     } catch (exc: unknown) {
       const error =
         exc instanceof OAuth2Exception
           ? exc
           : new ServerErrorException('An unexpected error occurred.', { cause: exc });
+
+      this.logger.error(
+        `[${this.constructor.name}] Error on Device Authorization Endpoint`,
+        '7f10bf87-acdb-472c-9a75-0a0369728da1',
+        { request },
+        error,
+      );
 
       return new HttpResponse()
         .setStatus(error.statusCode)

@@ -13,16 +13,20 @@ import { GRANT_TYPE } from '../../grant-types/grant-type.token';
 import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { DeviceCodeTokenRequest } from '../../requests/token/device-code.token-request';
 import { DeviceCodeServiceInterface } from '../../services/device-code.service.interface';
 import { DEVICE_CODE_SERVICE } from '../../services/device-code.service.token';
 import { DeviceCodeTokenRequestValidator } from './device-code.token-request.validator';
 
 jest.mock('../../handlers/client-authentication.handler');
+jest.mock('../../logger/logger');
 
 describe('Device Code Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: DeviceCodeTokenRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
 
@@ -45,6 +49,7 @@ describe('Device Code Token Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
     container.bind<DeviceCodeServiceInterface>(DEVICE_CODE_SERVICE).toValue(deviceCodeServiceMock);
 

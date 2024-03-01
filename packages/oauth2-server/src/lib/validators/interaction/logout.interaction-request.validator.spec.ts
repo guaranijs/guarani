@@ -17,6 +17,7 @@ import { InteractionTypeInterface } from '../../interaction-types/interaction-ty
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { LogoutDecision } from '../../interaction-types/logout-decision.type';
+import { Logger } from '../../logger/logger';
 import { LogoutTypeInterface } from '../../logout-types/logout-type.interface';
 import { LOGOUT_TYPE } from '../../logout-types/logout-type.token';
 import { LogoutContextInteractionRequest } from '../../requests/interaction/logout-context.interaction-request';
@@ -29,9 +30,13 @@ import { SessionServiceInterface } from '../../services/session.service.interfac
 import { SESSION_SERVICE } from '../../services/session.service.token';
 import { LogoutInteractionRequestValidator } from './logout.interaction-request.validator';
 
+jest.mock('../../logger/logger');
+
 describe('Logout Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: LogoutInteractionRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const logoutTicketServiceMock = jest.mocked<LogoutTicketServiceInterface>({
     create: jest.fn(),
@@ -62,6 +67,7 @@ describe('Logout Interaction Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<LogoutTicketServiceInterface>(LOGOUT_TICKET_SERVICE).toValue(logoutTicketServiceMock);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
 

@@ -6,11 +6,16 @@ import { removeNullishValues } from '@guarani/primitives';
 import { InteractionContext } from '../../context/interaction/interaction-context';
 import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
+import { Logger } from '../../logger/logger';
 import { InteractionRequest } from '../../requests/interaction/interaction-request';
 import { InteractionRequestValidator } from './interaction-request.validator';
 
+jest.mock('../../logger/logger');
+
 describe('Interaction Request Validator', () => {
   let validator: InteractionRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const interactionTypesMocks = [
     jest.mocked<InteractionTypeInterface>({ name: 'consent', handleContext: jest.fn(), handleDecision: jest.fn() }),
@@ -18,7 +23,7 @@ describe('Interaction Request Validator', () => {
   ];
 
   beforeEach(() => {
-    validator = Reflect.construct(InteractionRequestValidator, [interactionTypesMocks]);
+    validator = Reflect.construct(InteractionRequestValidator, [loggerMock, interactionTypesMocks]);
   });
 
   describe('validateContext()', () => {

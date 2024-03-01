@@ -10,6 +10,7 @@ import { Client } from '../../entities/client.entity';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { PkceInterface } from '../../pkces/pkce.interface';
 import { PKCE } from '../../pkces/pkce.token';
 import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
@@ -26,12 +27,15 @@ import { SETTINGS } from '../../settings/settings.token';
 import { CodeTokenAuthorizationRequestValidator } from './code-token.authorization-request.validator';
 
 jest.mock('../../handlers/scope.handler');
+jest.mock('../../logger/logger');
 
 const forbiddenResponseModes: ResponseMode[] = ['query', 'query.jwt'];
 
 describe('Code & Token Authorization Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: CodeTokenAuthorizationRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
@@ -113,6 +117,7 @@ describe('Code & Token Authorization Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ScopeHandler).toValue(scopeHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);

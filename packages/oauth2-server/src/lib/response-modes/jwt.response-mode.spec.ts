@@ -5,15 +5,20 @@ import { Dictionary } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { HttpResponse } from '../http/http.response';
+import { Logger } from '../logger/logger';
 import { ResponseTypeInterface } from '../response-types/response-type.interface';
 import { JwtResponseMode } from './jwt.response-mode';
 import { ResponseModeInterface } from './response-mode.interface';
 import { RESPONSE_MODE } from './response-mode.token';
 import { ResponseMode } from './response-mode.type';
 
+jest.mock('../logger/logger');
+
 describe('JSON Web Token Response Mode', () => {
   let container: DependencyInjectionContainer;
   let responseMode: JwtResponseMode;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const responseModesMocks = [
     jest.mocked<ResponseModeInterface>({ name: 'query', createHttpResponse: jest.fn() }),
@@ -22,6 +27,8 @@ describe('JSON Web Token Response Mode', () => {
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
+
+    container.bind(Logger).toValue(loggerMock);
 
     responseModesMocks.forEach((responseModeMock) =>
       container.bind<ResponseModeInterface>(RESPONSE_MODE).toValue(responseModeMock),

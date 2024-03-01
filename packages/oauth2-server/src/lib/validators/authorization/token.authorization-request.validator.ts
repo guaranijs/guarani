@@ -5,6 +5,7 @@ import { DISPLAY } from '../../displays/display.token';
 import { Client } from '../../entities/client.entity';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
+import { Logger } from '../../logger/logger';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
@@ -31,6 +32,7 @@ export class TokenAuthorizationRequestValidator extends AuthorizationRequestVali
   /**
    * Instantiates a new Token Authorization Request Validator.
    *
+   * @param logger Logger of the Authorization Server.
    * @param scopeHandler Instance of the Scope Handler.
    * @param settings Settings of the Authorization Server.
    * @param clientService Instance of the Client Service.
@@ -39,6 +41,7 @@ export class TokenAuthorizationRequestValidator extends AuthorizationRequestVali
    * @param displays Displays registered at the Authorization Server.
    */
   public constructor(
+    protected override readonly logger: Logger,
     protected override readonly scopeHandler: ScopeHandler,
     @Inject(SETTINGS) protected override readonly settings: Settings,
     @Inject(CLIENT_SERVICE) protected override readonly clientService: ClientServiceInterface,
@@ -46,7 +49,7 @@ export class TokenAuthorizationRequestValidator extends AuthorizationRequestVali
     @InjectAll(RESPONSE_TYPE) protected override readonly responseTypes: ResponseTypeInterface[],
     @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[],
   ) {
-    super(scopeHandler, settings, clientService, responseModes, responseTypes, displays);
+    super(logger, scopeHandler, settings, clientService, responseModes, responseTypes, displays);
   }
 
   /**
@@ -62,12 +65,29 @@ export class TokenAuthorizationRequestValidator extends AuthorizationRequestVali
     responseType: ResponseTypeInterface,
     client: Client,
   ): ResponseModeInterface {
+    this.logger.debug(`[${this.constructor.name}] Called getResponseMode()`, 'b995ad3a-8ed3-4a45-81c1-a6bbf9fccd12', {
+      parameters,
+      response_type: responseType.name,
+      client,
+    });
+
     const responseMode = super.getResponseMode(parameters, responseType, client);
 
     const forbiddenResponseModes: ResponseMode[] = ['query', 'query.jwt'];
 
     if (forbiddenResponseModes.includes(responseMode.name)) {
-      throw new InvalidRequestException(`Invalid response_mode "${responseMode.name}" for response_type "token".`);
+      const exc1 = new InvalidRequestException(
+        `Invalid response_mode "${responseMode.name}" for response_type "token".`,
+      );
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid response_mode "${responseMode.name}" for response_type "token"`,
+        '646bfec8-899d-4dd3-a3ce-8e602f5b1fcf',
+        null,
+        exc1,
+      );
+
+      throw exc1;
     }
 
     return responseMode;

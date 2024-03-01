@@ -10,6 +10,7 @@ import { Login } from '../entities/login.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { InvalidGrantException } from '../exceptions/invalid-grant.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
+import { Logger } from '../logger/logger';
 import { PkceInterface } from '../pkces/pkce.interface';
 import { PKCE } from '../pkces/pkce.token';
 import { TokenResponse } from '../responses/token-response';
@@ -23,11 +24,14 @@ import { AuthorizationCodeGrantType } from './authorization-code.grant-type';
 import { GrantTypeInterface } from './grant-type.interface';
 import { GrantType } from './grant-type.type';
 
-jest.mock<IdTokenHandler>('../handlers/id-token.handler');
+jest.mock('../handlers/id-token.handler');
+jest.mock('../logger/logger');
 
 describe('Authorization Code Grant Type', () => {
   let container: DependencyInjectionContainer;
   let grantType: AuthorizationCodeGrantType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const authorizationCodeServiceMock = jest.mocked<AuthorizationCodeServiceInterface>({
     create: jest.fn(),
@@ -57,6 +61,7 @@ describe('Authorization Code Grant Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<AuthorizationCodeServiceInterface>(AUTHORIZATION_CODE_SERVICE).toValue(authorizationCodeServiceMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);

@@ -14,16 +14,20 @@ import { GRANT_TYPE } from '../../grant-types/grant-type.token';
 import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { AuthorizationCodeTokenRequest } from '../../requests/token/authorization-code.token-request';
 import { AuthorizationCodeServiceInterface } from '../../services/authorization-code.service.interface';
 import { AUTHORIZATION_CODE_SERVICE } from '../../services/authorization-code.service.token';
 import { AuthorizationCodeTokenRequestValidator } from './authorization-code.token-request.validator';
 
 jest.mock('../../handlers/client-authentication.handler');
+jest.mock('../../logger/logger');
 
 describe('Authorization Code Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: AuthorizationCodeTokenRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
 
@@ -45,6 +49,7 @@ describe('Authorization Code Token Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
     container.bind<AuthorizationCodeServiceInterface>(AUTHORIZATION_CODE_SERVICE).toValue(authorizationCodeServiceMock);
 

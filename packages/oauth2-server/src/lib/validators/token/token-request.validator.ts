@@ -5,6 +5,7 @@ import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
 import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { TokenRequest } from '../../requests/token/token-request';
 
 /**
@@ -19,10 +20,12 @@ export abstract class TokenRequestValidator<TContext extends TokenContext = Toke
   /**
    * Instantiates a new Token Request Validator.
    *
+   * @param logger Logger of the Authorization Server.
    * @param clientAuthenticationHandler Instance of the Client Authentication Handler.
    * @param grantTypes Grant Types registered at the Authorization Server.
    */
   public constructor(
+    protected readonly logger: Logger,
     protected readonly clientAuthenticationHandler: ClientAuthenticationHandler,
     protected readonly grantTypes: GrantTypeInterface[],
   ) {}
@@ -34,12 +37,24 @@ export abstract class TokenRequestValidator<TContext extends TokenContext = Toke
    * @returns Token Context.
    */
   public async validate(request: HttpRequest): Promise<TContext> {
+    this.logger.debug(`[${this.constructor.name}] Called validate()`, 'f12ae6fa-0119-4bdd-bd34-33de4590b606', {
+      request,
+    });
+
     const parameters = request.form<TokenRequest>();
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
     const grantType = this.getGrantType(parameters, client);
 
-    return <TContext>{ parameters, client, grantType };
+    const context = <TContext>{ parameters, client, grantType };
+
+    this.logger.debug(
+      `[${this.constructor.name}] Token Request validation completed`,
+      'c67f3504-c55b-426b-af08-b7f048e025ee',
+      { context },
+    );
+
+    return context;
   }
 
   /**
@@ -50,12 +65,26 @@ export abstract class TokenRequestValidator<TContext extends TokenContext = Toke
    * @returns Grant Type.
    */
   private getGrantType(parameters: TokenRequest, client: Client): GrantTypeInterface {
+    this.logger.debug(`[${this.constructor.name}] Called getGrantType()`, '78e5a934-1a5a-4123-9cba-25397bc90ffe', {
+      parameters,
+      client,
+    });
+
     const grantType = this.grantTypes.find((grantType) => grantType.name === parameters.grant_type)!;
 
     if (!client.grantTypes.includes(grantType.name)) {
-      throw new UnauthorizedClientException(
+      const exc = new UnauthorizedClientException(
         `This Client is not allowed to request the grant_type "${grantType.name}".`,
       );
+
+      this.logger.error(
+        `[${this.constructor.name}] This Client is not allowed to request the grant_type "${grantType.name}"`,
+        'dba5311f-567f-4934-bd2b-8ae387783cb7',
+        { grant_type: grantType.name, client },
+        exc,
+      );
+
+      throw exc;
     }
 
     return grantType;

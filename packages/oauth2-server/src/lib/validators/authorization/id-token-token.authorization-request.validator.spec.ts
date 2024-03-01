@@ -10,6 +10,7 @@ import { Client } from '../../entities/client.entity';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
@@ -24,12 +25,15 @@ import { SETTINGS } from '../../settings/settings.token';
 import { IdTokenTokenAuthorizationRequestValidator } from './id-token-token.authorization-request.validator';
 
 jest.mock('../../handlers/scope.handler');
+jest.mock('../../logger/logger');
 
 const forbiddenResponseModes: ResponseMode[] = ['query', 'query.jwt'];
 
 describe('ID Token & Token Authorization Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: IdTokenTokenAuthorizationRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
@@ -106,6 +110,7 @@ describe('ID Token & Token Authorization Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ScopeHandler).toValue(scopeHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);

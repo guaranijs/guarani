@@ -9,6 +9,7 @@ import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
+import { Logger } from '../../logger/logger';
 import { CreateContextInteractionRequest } from '../../requests/interaction/create-context.interaction-request';
 import { CreateDecisionInteractionRequest } from '../../requests/interaction/create-decision.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
@@ -31,14 +32,16 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
   /**
    * Instantiates a new Create Interaction Request Validator.
    *
+   * @param logger Logger of the Authorization Server.
    * @param grantService Instance of the Grant Service.
    * @param interactionTypes Interaction Types registered at the Authorization Server.
    */
   public constructor(
+    protected override readonly logger: Logger,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
     @InjectAll(INTERACTION_TYPE) protected override readonly interactionTypes: InteractionTypeInterface[],
   ) {
-    super(interactionTypes);
+    super(logger, interactionTypes);
   }
 
   /**
@@ -48,13 +51,25 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    * @returns Context Interaction Context.
    */
   public override async validateContext(request: HttpRequest): Promise<CreateContextInteractionContext> {
+    this.logger.debug(`[${this.constructor.name}] Called validateContext()`, '887f474a-b16f-4d8e-8844-59a752898cef', {
+      request,
+    });
+
     const context = await super.validateContext(request);
 
     const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
 
-    return Object.assign(context, { grant }) as CreateContextInteractionContext;
+    Object.assign<CreateContextInteractionContext, Partial<CreateContextInteractionContext>>(context, { grant });
+
+    this.logger.debug(
+      `[${this.constructor.name}] Create Interaction Request Context validation completed`,
+      '34a37dc6-b4be-4ad6-97d6-addab7fe0144',
+      { context },
+    );
+
+    return context;
   }
 
   /**
@@ -64,13 +79,25 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
    * @returns Decision Interaction Context.
    */
   public override async validateDecision(request: HttpRequest): Promise<CreateDecisionInteractionContext> {
+    this.logger.debug(`[${this.constructor.name}] Called validateDecision()`, 'ab32fc37-1ed7-42e8-af0e-efbafb1324b1', {
+      request,
+    });
+
     const context = await super.validateDecision(request);
 
     const { parameters } = context;
 
     const grant = await this.getGrant(parameters);
 
-    return Object.assign(context, { grant }) as CreateDecisionInteractionContext;
+    Object.assign<CreateDecisionInteractionContext, Partial<CreateDecisionInteractionContext>>(context, { grant });
+
+    this.logger.debug(
+      `[${this.constructor.name}] Create Interaction Request Decision validation completed`,
+      '1ef54540-64da-458f-a89d-cfc4659e4078',
+      { context },
+    );
+
+    return context;
   }
 
   /**
@@ -82,14 +109,36 @@ export class CreateInteractionRequestValidator extends InteractionRequestValidat
   private async getGrant(
     parameters: CreateContextInteractionRequest | CreateDecisionInteractionRequest,
   ): Promise<Grant> {
+    this.logger.debug(`[${this.constructor.name}] Called getGrant()`, '518977a7-6d6c-46bf-99f8-91128f22f814', {
+      parameters,
+    });
+
     if (typeof parameters.login_challenge === 'undefined') {
-      throw new InvalidRequestException('Invalid parameter "login_challenge".');
+      const exc = new InvalidRequestException('Invalid parameter "login_challenge".');
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid parameter "login_challenge"`,
+        '7393fbba-a902-4390-944c-c2b0362ab9fc',
+        { parameters },
+        exc,
+      );
+
+      throw exc;
     }
 
     const grant = await this.grantService.findOneByLoginChallenge(parameters.login_challenge);
 
     if (grant === null) {
-      throw new AccessDeniedException('Invalid Login Challenge.');
+      const exc = new AccessDeniedException('Invalid Login Challenge.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid Login Challenge`,
+        'bee05d5a-faf2-43ad-9dc6-c41280e198bb',
+        null,
+        exc,
+      );
+
+      throw exc;
     }
 
     return grant;

@@ -12,6 +12,7 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { EndSessionRequest } from '../requests/end-session-request';
 import { LogoutTicketServiceInterface } from '../services/logout-ticket.service.interface';
 import { LOGOUT_TICKET_SERVICE } from '../services/logout-ticket.service.token';
@@ -25,11 +26,14 @@ import { EndSessionEndpoint } from './end-session.endpoint';
 import { Endpoint } from './endpoint.type';
 
 jest.mock('../handlers/id-token.handler');
+jest.mock('../logger/logger');
 jest.mock('../validators/end-session-request.validator');
 
 describe('End Session Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: EndSessionEndpoint;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const validatorMock = jest.mocked(EndSessionRequestValidator.prototype);
 
@@ -60,6 +64,7 @@ describe('End Session Endpoint', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(EndSessionRequestValidator).toValue(validatorMock);
     container.bind(IdTokenHandler).toValue(idTokenHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
@@ -185,7 +190,11 @@ describe('End Session Endpoint', () => {
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
 
       const error = new InvalidRequestException('Mismatching Client Identifier.');
-      const location = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
+
+      const location = addParametersToUrl('https://server.example.com/oauth/error', {
+        ...error.toJSON(),
+        state: 'client_state',
+      });
 
       const response = await endpoint.handle(request);
 
@@ -220,7 +229,11 @@ describe('End Session Endpoint', () => {
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
 
       const error = new InvalidRequestException('Expired Logout Ticket.');
-      const location = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
+
+      const location = addParametersToUrl('https://server.example.com/oauth/error', {
+        ...error.toJSON(),
+        state: 'client_state',
+      });
 
       const response = await endpoint.handle(request);
 
@@ -255,7 +268,11 @@ describe('End Session Endpoint', () => {
       logoutTicketServiceMock.findOne.mockResolvedValueOnce(logoutTicket);
 
       const error = new InvalidRequestException('One or more parameters changed since the initial request.');
-      const location = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
+
+      const location = addParametersToUrl('https://server.example.com/oauth/error', {
+        ...error.toJSON(),
+        state: 'client_state',
+      });
 
       const response = await endpoint.handle(request);
 
@@ -301,7 +318,10 @@ describe('End Session Endpoint', () => {
         'The currently authenticated User is not the one expected by the ID Token Hint.',
       );
 
-      const location = addParametersToUrl('https://server.example.com/oauth/error', error.toJSON());
+      const location = addParametersToUrl('https://server.example.com/oauth/error', {
+        ...error.toJSON(),
+        state: 'client_state',
+      });
 
       const response = await endpoint.handle(request);
 

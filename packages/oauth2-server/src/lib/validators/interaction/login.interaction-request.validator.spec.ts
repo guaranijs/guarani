@@ -17,6 +17,7 @@ import { InteractionTypeInterface } from '../../interaction-types/interaction-ty
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { LoginDecision } from '../../interaction-types/login-decision.type';
+import { Logger } from '../../logger/logger';
 import { LoginContextInteractionRequest } from '../../requests/interaction/login-context.interaction-request';
 import { LoginDecisionInteractionRequest } from '../../requests/interaction/login-decision.interaction-request';
 import { LoginDecisionAcceptInteractionRequest } from '../../requests/interaction/login-decision-accept.interaction-request';
@@ -29,9 +30,13 @@ import { Settings } from '../../settings/settings';
 import { SETTINGS } from '../../settings/settings.token';
 import { LoginInteractionRequestValidator } from './login.interaction-request.validator';
 
+jest.mock('../../logger/logger');
+
 describe('Login Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: LoginInteractionRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const settings = <Settings>{};
 
@@ -59,6 +64,7 @@ describe('Login Interaction Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind<UserServiceInterface>(USER_SERVICE).toValue(userServiceMock);

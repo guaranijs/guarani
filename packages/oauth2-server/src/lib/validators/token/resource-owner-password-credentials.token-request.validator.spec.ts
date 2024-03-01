@@ -14,6 +14,7 @@ import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { ResourceOwnerPasswordCredentialsTokenRequest } from '../../requests/token/resource-owner-password-credentials.token-request';
 import { UserServiceInterface } from '../../services/user.service.interface';
 import { USER_SERVICE } from '../../services/user.service.token';
@@ -21,12 +22,16 @@ import { ResourceOwnerPasswordCredentialsTokenRequestValidator } from './resourc
 
 jest.mock('../../handlers/client-authentication.handler');
 jest.mock('../../handlers/scope.handler');
+jest.mock('../../logger/logger');
 
 describe('Resource Owner Password Credentials Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: ResourceOwnerPasswordCredentialsTokenRequestValidator;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
+
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   const userServiceMock = jest.mocked<UserServiceInterface>({
@@ -48,6 +53,7 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
     container.bind(ScopeHandler).toValue(scopeHandlerMock);
     container.bind<UserServiceInterface>(USER_SERVICE).toValue(userServiceMock);

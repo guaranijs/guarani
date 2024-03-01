@@ -5,6 +5,7 @@ import { DISPLAY } from '../../displays/display.token';
 import { Client } from '../../entities/client.entity';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
+import { Logger } from '../../logger/logger';
 import { PkceInterface } from '../../pkces/pkce.interface';
 import { PKCE } from '../../pkces/pkce.token';
 import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
@@ -33,6 +34,7 @@ export class CodeTokenAuthorizationRequestValidator extends CodeAuthorizationReq
   /**
    * Instantiates a new Code & Token Authorization Request Validator.
    *
+   * @param logger Logger of the Authorization Server.
    * @param scopeHandler Instance of the Scope Handler.
    * @param settings Settings of the Authorization Server.
    * @param clientService Instance of the Client Service.
@@ -42,6 +44,7 @@ export class CodeTokenAuthorizationRequestValidator extends CodeAuthorizationReq
    * @param pkces PKCE Code Challenge Methods registered at the Authorization Server.
    */
   public constructor(
+    protected override readonly logger: Logger,
     protected override readonly scopeHandler: ScopeHandler,
     @Inject(SETTINGS) protected override readonly settings: Settings,
     @Inject(CLIENT_SERVICE) protected override readonly clientService: ClientServiceInterface,
@@ -50,7 +53,7 @@ export class CodeTokenAuthorizationRequestValidator extends CodeAuthorizationReq
     @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[],
     @InjectAll(PKCE) protected override readonly pkces: PkceInterface[],
   ) {
-    super(scopeHandler, settings, clientService, responseModes, responseTypes, displays, pkces);
+    super(logger, scopeHandler, settings, clientService, responseModes, responseTypes, displays, pkces);
   }
 
   /**
@@ -66,12 +69,29 @@ export class CodeTokenAuthorizationRequestValidator extends CodeAuthorizationReq
     responseType: ResponseTypeInterface,
     client: Client,
   ): ResponseModeInterface {
+    this.logger.debug(`[${this.constructor.name}] Called getResponseMode()`, 'e2bd494d-800a-4ca9-b393-2e1926139d0f', {
+      parameters,
+      response_type: responseType.name,
+      client,
+    });
+
     const responseMode = super.getResponseMode(parameters, responseType, client);
 
     const forbiddenResponseModes: ResponseMode[] = ['query', 'query.jwt'];
 
     if (forbiddenResponseModes.includes(responseMode.name)) {
-      throw new InvalidRequestException(`Invalid response_mode "${responseMode.name}" for response_type "code token".`);
+      const exc2 = new InvalidRequestException(
+        `Invalid response_mode "${responseMode.name}" for response_type "code token".`,
+      );
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid response_mode "${responseMode.name}" for response_type "code token"`,
+        '30bd9344-3ef5-4555-a05d-aa1e7a96d816',
+        null,
+        exc2,
+      );
+
+      throw exc2;
     }
 
     return responseMode;

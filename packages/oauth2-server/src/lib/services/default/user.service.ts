@@ -5,6 +5,7 @@ import { Dictionary, Nullable } from '@guarani/types';
 
 import { User } from '../../entities/user.entity';
 import { UserinfoClaimsParameters } from '../../id-token/userinfo.claims.parameters';
+import { Logger } from '../../logger/logger';
 import { UserServiceInterface } from '../user.service.interface';
 
 type SampleUser = User & UserinfoClaimsParameters;
@@ -45,25 +46,46 @@ export class UserService implements UserServiceInterface {
     },
   ];
 
-  public constructor() {
-    console.warn('Using default User Service. This is only recommended for development.');
+  public constructor(protected readonly logger: Logger) {
+    this.logger.warning(
+      `[${this.constructor.name}] Using default User Service. This is only recommended for development.`,
+      'e05ed4af-4a1c-400d-bee5-ab626c84cd97',
+    );
   }
 
   public async create(parameters: Dictionary<any>): Promise<SampleUser> {
+    this.logger.debug(`[${this.constructor.name}] Called create()`, '0d932b5f-042b-4b12-970f-3286165b2f8e', {
+      parameters,
+    });
+
     const user: SampleUser = { id: randomUUID(), ...parameters };
     this.users.push(user);
+
     return user;
   }
 
   public async findOne(id: string): Promise<Nullable<SampleUser>> {
+    this.logger.debug(`[${this.constructor.name}] Called findOne()`, 'ccec55bc-7cf6-431f-b319-2b567cc873e9', { id });
     return this.users.find((user) => user.id === id) ?? null;
   }
 
   public async findByResourceOwnerCredentials(username: string, password: string): Promise<Nullable<SampleUser>> {
+    this.logger.debug(
+      `[${this.constructor.name}] Called findByResourceOwnerCredentials()`,
+      '438f011a-7ef7-44b4-bcbb-ad9835130f0a',
+      { username, password },
+    );
+
     return this.users.find((user) => user.username === username && user.password === password) ?? null;
   }
 
   public async getUserinfo(user: SampleUser, scopes: string[]): Promise<UserinfoClaimsParameters> {
+    this.logger.debug(
+      `[${this.constructor.name}] Called findByResourceOwnerCredentials()`,
+      '772948cd-12c1-4a02-a1b9-df4d12f9b219',
+      { user, scopes },
+    );
+
     const claims: UserinfoClaimsParameters = {};
 
     if (scopes.includes('profile')) {

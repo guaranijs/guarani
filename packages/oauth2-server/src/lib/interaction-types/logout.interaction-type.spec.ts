@@ -9,6 +9,7 @@ import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
+import { Logger } from '../logger/logger';
 import { LogoutTypeInterface } from '../logout-types/logout-type.interface';
 import { LogoutContextInteractionResponse } from '../responses/interaction/logout-context.interaction-response';
 import { LogoutDecisionInteractionResponse } from '../responses/interaction/logout-decision.interaction-response';
@@ -22,11 +23,14 @@ import { InteractionType } from './interaction-type.type';
 import { LogoutInteractionType } from './logout.interaction-type';
 import { LogoutDecision } from './logout-decision.type';
 
+jest.mock('../logger/logger');
 jest.mock('../handlers/auth.handler');
 
 describe('Logout Interaction Type', () => {
   let container: DependencyInjectionContainer;
   let interactionType: LogoutInteractionType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
@@ -41,6 +45,7 @@ describe('Logout Interaction Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<LogoutTicketServiceInterface>(LOGOUT_TICKET_SERVICE).toValue(logoutTicketServiceMock);
     container.bind(LogoutInteractionType).toSelf().asSingleton();

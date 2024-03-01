@@ -5,6 +5,7 @@ import { DISPLAY } from '../../displays/display.token';
 import { Client } from '../../entities/client.entity';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
+import { Logger } from '../../logger/logger';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { RESPONSE_MODE } from '../../response-modes/response-mode.token';
@@ -31,6 +32,7 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
   /**
    * Instantiates a new ID Token Authorization Request Validator.
    *
+   * @param logger Logger of the Authorization Server.
    * @param scopeHandler Instance of the Scope Handler.
    * @param settings Settings of the Authorization Server.
    * @param clientService Instance of the Client Service.
@@ -39,6 +41,7 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
    * @param displays Displays registered at the Authorization Server.
    */
   public constructor(
+    protected override readonly logger: Logger,
     protected override readonly scopeHandler: ScopeHandler,
     @Inject(SETTINGS) protected override readonly settings: Settings,
     @Inject(CLIENT_SERVICE) protected override readonly clientService: ClientServiceInterface,
@@ -46,7 +49,7 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
     @InjectAll(RESPONSE_TYPE) protected override readonly responseTypes: ResponseTypeInterface[],
     @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[],
   ) {
-    super(scopeHandler, settings, clientService, responseModes, responseTypes, displays);
+    super(logger, scopeHandler, settings, clientService, responseModes, responseTypes, displays);
   }
 
   /**
@@ -62,12 +65,29 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
     responseType: ResponseTypeInterface,
     client: Client,
   ): ResponseModeInterface {
+    this.logger.debug(`[${this.constructor.name}] Called getResponseMode()`, '77304a8d-d56a-4f2c-99ce-88ef75933ab1', {
+      parameters,
+      response_type: responseType.name,
+      client,
+    });
+
     const responseMode = super.getResponseMode(parameters, responseType, client);
 
     const forbiddenResponseModes: ResponseMode[] = ['query', 'query.jwt'];
 
     if (forbiddenResponseModes.includes(responseMode.name)) {
-      throw new InvalidRequestException(`Invalid response_mode "${responseMode.name}" for response_type "id_token".`);
+      const exc1 = new InvalidRequestException(
+        `Invalid response_mode "${responseMode.name}" for response_type "id_token".`,
+      );
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid response_mode "${responseMode.name}" for response_type "id_token"`,
+        '3fad5d7f-4736-4260-b95a-e67eb137910c',
+        null,
+        exc1,
+      );
+
+      throw exc1;
     }
 
     return responseMode;
@@ -80,8 +100,21 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
    * @returns Nonce provided by the Client.
    */
   protected override getNonce(parameters: AuthorizationRequest): string {
+    this.logger.debug(`[${this.constructor.name}] Called getNonce()`, '42bf3068-8a39-4291-8253-d4d26b3af5de', {
+      parameters,
+    });
+
     if (typeof parameters.nonce === 'undefined') {
-      throw new InvalidRequestException('Invalid parameter "nonce".');
+      const exc1 = new InvalidRequestException('Invalid parameter "nonce".');
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid parameter "nonce"`,
+        'b47df73e-909f-451d-a6f0-7a2113abe24d',
+        { parameters },
+        exc1,
+      );
+
+      throw exc1;
     }
 
     return parameters.nonce;

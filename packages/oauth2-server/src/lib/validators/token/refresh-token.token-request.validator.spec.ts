@@ -14,6 +14,7 @@ import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { RefreshTokenTokenRequest } from '../../requests/token/refresh-token.token-request';
 import { RefreshTokenServiceInterface } from '../../services/refresh-token.service.interface';
 import { REFRESH_TOKEN_SERVICE } from '../../services/refresh-token.service.token';
@@ -21,12 +22,16 @@ import { RefreshTokenTokenRequestValidator } from './refresh-token.token-request
 
 jest.mock('../../handlers/client-authentication.handler');
 jest.mock('../../handlers/scope.handler');
+jest.mock('../../logger/logger');
 
 describe('Refresh Token Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: RefreshTokenTokenRequestValidator;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
+
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   const refreshTokenServiceMock = jest.mocked<RefreshTokenServiceInterface>({
@@ -47,6 +52,7 @@ describe('Refresh Token Token Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
     container.bind(ScopeHandler).toValue(scopeHandlerMock);
     container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);

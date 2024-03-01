@@ -5,6 +5,7 @@ import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
+import { Logger } from '../logger/logger';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { IdTokenAuthorizationResponse } from '../responses/authorization/id-token.authorization-response';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
@@ -43,10 +44,12 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
   /**
    * Instantiates a new ID Token Token Response Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param idTokenHandler Instance of the ID Token Handler.
    * @param accessTokenService Instance of the Access Token Service.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly idTokenHandler: IdTokenHandler,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
   ) {}
@@ -54,20 +57,35 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
   /**
    * Creates and returns an Access Token and ID Token Response to the Client.
    *
-   * @param _context Authorization Request Context.
+   * @param context Authorization Request Context.
    * @param login Login with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Access Token and ID Token Response.
    */
   public async handle(
-    _context: AuthorizationContext,
+    context: AuthorizationContext,
     login: Login,
     consent: Consent,
   ): Promise<TokenAuthorizationResponse & IdTokenAuthorizationResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, 'f5e1d54d-a2db-434b-8aa3-fd782c9cc529', {
+      context,
+      login,
+      consent,
+    });
+
     const { client, scopes, user } = consent;
 
     if (!scopes.includes('openid')) {
-      throw new InvalidRequestException('Missing required scope "openid".');
+      const exc = new InvalidRequestException('Missing required scope "openid".');
+
+      this.logger.error(
+        `[${this.constructor.name}] Missing required scope "openid"`,
+        'f27a5dd8-dffe-40bd-9721-5af7a1300e29',
+        { scopes },
+        exc,
+      );
+
+      throw exc;
     }
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
@@ -77,6 +95,12 @@ export class IdTokenTokenResponseType implements ResponseTypeInterface {
       IdTokenAuthorizationResponse;
 
     response.id_token = idToken;
+
+    this.logger.debug(
+      `[${this.constructor.name}] Completed "${this.name}" Response Type`,
+      '2a0cc5ba-9a00-4cda-8f81-6d8d5a7ac335',
+      { response },
+    );
 
     return response;
   }

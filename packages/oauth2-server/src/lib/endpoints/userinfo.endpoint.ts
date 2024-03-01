@@ -24,6 +24,7 @@ import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { HttpMethod } from '../http/http-method.type';
 import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
+import { Logger } from '../logger/logger';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
@@ -65,19 +66,30 @@ export class UserinfoEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Userinfo Endpoint.
    *
+   * @param logger Logger of the Authorization Server.
    * @param clientAuthorizationHandler Instance of the Client Authorization Handler.
    * @param jwks JSON Web Key Set of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param userService Instance of the User Service.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly clientAuthorizationHandler: ClientAuthorizationHandler,
     private readonly jwks: JsonWebKeySet,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(USER_SERVICE) private readonly userService: UserServiceInterface,
   ) {
     if (typeof this.userService.getUserinfo !== 'function') {
-      throw new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".');
+      const exc = new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".');
+
+      this.logger.critical(
+        `[${this.constructor.name}] Missing implementation of required method "UserServiceInterface.getUserinfo"`,
+        '93b62e3b-89a1-4f64-b741-c31ae229e626',
+        null,
+        exc,
+      );
+
+      throw exc;
     }
   }
 
@@ -96,6 +108,10 @@ export class UserinfoEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, 'e0e363f3-62a5-4c3a-af87-9eca9c88dd76', {
+      request,
+    });
+
     try {
       const { client, scopes, user } = await this.authorize(request);
       const claims = await this.getUserinfo(client!, user!, scopes);
@@ -103,16 +119,38 @@ export class UserinfoEndpoint implements EndpointInterface {
       const response = new HttpResponse().setHeaders(this.headers);
 
       if (client!.userinfoSignedResponseAlgorithm === null) {
-        return response.json(removeNullishValues(claims));
+        response.json(removeNullishValues(claims));
+
+        this.logger.debug(
+          `[${this.constructor.name}] JSON Userinfo completed`,
+          'c9605a97-e352-42ef-b282-872bc5824e68',
+          { response },
+        );
+
+        return response;
       }
 
       const jwt = await this.generateJsonWebTokenResponse(client!, claims);
-      return response.jwt(jwt);
+
+      response.jwt(jwt);
+
+      this.logger.debug(`[${this.constructor.name}] JWT Userinfo completed`, 'f1535b10-ad0b-44e2-8930-cb30b91d0690', {
+        response,
+      });
+
+      return response;
     } catch (exc: unknown) {
       const error =
         exc instanceof OAuth2Exception
           ? exc
           : new ServerErrorException('An unexpected error occurred.', { cause: exc });
+
+      this.logger.error(
+        `[${this.constructor.name}] Error on Userinfo Endpoint`,
+        'ed5d6f2d-fc31-48d8-a536-6a58dc28877f',
+        { request },
+        error,
+      );
 
       return new HttpResponse()
         .setStatus(error.statusCode)
@@ -129,18 +167,49 @@ export class UserinfoEndpoint implements EndpointInterface {
    * @returns Access Token based on the handle provided by the Client.
    */
   private async authorize(request: HttpRequest): Promise<AccessToken> {
+    this.logger.debug(`[${this.constructor.name}] Called authorize()`, '3f9bcc0b-5381-4a1f-88d5-14f82db1f618', {
+      request,
+    });
+
     const accessToken = await this.clientAuthorizationHandler.authorize(request);
 
     if (!accessToken.scopes.includes('openid')) {
-      throw new InsufficientScopeException('The provided Access Token is missing the required scope "openid".');
+      const exc = new InsufficientScopeException('The provided Access Token is missing the required scope "openid".');
+
+      this.logger.error(
+        `[${this.constructor.name}] The provided Access Token is missing the required scope "openid"`,
+        '548b0586-3721-4a73-95c9-d3ed2fb4eb80',
+        { access_token: accessToken },
+        exc,
+      );
+
+      throw exc;
     }
 
     if (accessToken.client === null) {
-      throw new InvalidTokenException('Invalid Credentials.');
+      const exc = new InvalidTokenException('Invalid Credentials.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Cannot use a Registration Access Token on Userinfo Endpoint`,
+        'd929765d-2dc3-43b6-8dfa-46fb2e13a894',
+        { access_token: accessToken },
+        exc,
+      );
+
+      throw exc;
     }
 
     if (accessToken.user === null) {
-      throw new InvalidTokenException('Invalid Credentials.');
+      const exc = new InvalidTokenException('Invalid Credentials.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Missing User on Access Token`,
+        '86c5ea60-f7da-45f9-b34a-f549754f4e98',
+        { access_token: accessToken },
+        exc,
+      );
+
+      throw exc;
     }
 
     return accessToken;
@@ -155,7 +224,7 @@ export class UserinfoEndpoint implements EndpointInterface {
    * @returns Claims about the provided User.
    */
   private async getUserinfo(client: Client, user: User, scopes: string[]): Promise<UserinfoClaimsParameters> {
-    // UserService.getUserinfo() does not return the "sub" claim.
+    // UserServiceInterface.getUserinfo() does not return the "sub" claim.
     const claims: UserinfoClaimsParameters = { sub: calculateSubjectIdentifier(user, client, this.settings) };
     return Object.assign(claims, await this.userService.getUserinfo!(user, scopes));
   }

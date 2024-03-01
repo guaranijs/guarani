@@ -10,6 +10,7 @@ import { UnsupportedGrantTypeException } from '../exceptions/unsupported-grant-t
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { TokenRequest } from '../requests/token/token-request';
 import { TokenRequestValidator } from '../validators/token/token-request.validator';
 import { EndpointInterface } from './endpoint.interface';
@@ -48,9 +49,13 @@ export class TokenEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Token Endpoint.
    *
+   * @param logger Logger of the Authorization Server.
    * @param validators Token Request Validators registered at the Authorization Server.
    */
-  public constructor(@InjectAll(TokenRequestValidator) private readonly validators: TokenRequestValidator[]) {}
+  public constructor(
+    private readonly logger: Logger,
+    @InjectAll(TokenRequestValidator) private readonly validators: TokenRequestValidator[],
+  ) {}
 
   /**
    * Creates a Http JSON Access Token Response.
@@ -70,6 +75,10 @@ export class TokenEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, '89cf77e3-8fb5-424f-be9d-3e52254dc75e', {
+      request,
+    });
+
     const parameters = request.form<TokenRequest>();
 
     try {
@@ -78,12 +87,25 @@ export class TokenEndpoint implements EndpointInterface {
       const context = await validator.validate(request);
       const tokenResponse = await context.grantType.handle(context);
 
-      return new HttpResponse().setHeaders(this.headers).json(removeNullishValues(tokenResponse));
+      const response = new HttpResponse().setHeaders(this.headers).json(removeNullishValues(tokenResponse));
+
+      this.logger.debug(`[${this.constructor.name}] Token completed`, 'a5bccca4-d94d-4b9d-af02-8ccf271a208c', {
+        response,
+      });
+
+      return response;
     } catch (exc: unknown) {
       const error =
         exc instanceof OAuth2Exception
           ? exc
           : new ServerErrorException('An unexpected error occurred.', { cause: exc });
+
+      this.logger.error(
+        `[${this.constructor.name}] Error on Token Endpoint`,
+        '2b1a3dfc-ed13-448d-8510-992f4d448a57',
+        { request },
+        error,
+      );
 
       return new HttpResponse()
         .setStatus(error.statusCode)
@@ -100,14 +122,36 @@ export class TokenEndpoint implements EndpointInterface {
    * @returns Token Request Validator.
    */
   private getValidator(parameters: TokenRequest): TokenRequestValidator {
+    this.logger.debug(`[${this.constructor.name}] Called getValidator()`, 'dd06bae0-16e6-41fe-b432-678ff7d90355', {
+      parameters,
+    });
+
     if (typeof parameters.grant_type === 'undefined') {
-      throw new InvalidRequestException('Invalid parameter "grant_type".');
+      const exc = new InvalidRequestException('Invalid parameter "grant_type".');
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid parameter "grant_type"`,
+        '8c9df96c-5d27-4ab8-b484-61e4c6f934c7',
+        { parameters },
+        exc,
+      );
+
+      throw exc;
     }
 
     const validator = this.validators.find((validator) => validator.name === parameters.grant_type);
 
     if (typeof validator === 'undefined') {
-      throw new UnsupportedGrantTypeException(`Unsupported grant_type "${parameters.grant_type}".`);
+      const exc = new UnsupportedGrantTypeException(`Unsupported grant_type "${parameters.grant_type}".`);
+
+      this.logger.error(
+        `[${this.constructor.name}] Unsupported grant_type "${parameters.grant_type}"`,
+        '00232cfe-e92d-487c-b313-64c1dc2f71cf',
+        { parameters },
+        exc,
+      );
+
+      throw exc;
     }
 
     return validator;

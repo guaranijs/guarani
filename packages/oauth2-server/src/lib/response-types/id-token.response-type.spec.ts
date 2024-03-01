@@ -9,6 +9,7 @@ import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
+import { Logger } from '../logger/logger';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { IdTokenAuthorizationResponse } from '../responses/authorization/id-token.authorization-response';
@@ -17,16 +18,19 @@ import { ResponseTypeInterface } from './response-type.interface';
 import { ResponseType } from './response-type.type';
 
 jest.mock('../handlers/id-token.handler');
+jest.mock('../logger/logger');
 
 describe('ID Token Response Type', () => {
   let container: DependencyInjectionContainer;
   let responseType: IdTokenResponseType;
 
+  const loggerMock = jest.mocked(Logger.prototype);
   const idTokenHandlerMock = jest.mocked(IdTokenHandler.prototype);
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(IdTokenHandler).toValue(idTokenHandlerMock);
     container.bind(IdTokenResponseType).toSelf().asSingleton();
 

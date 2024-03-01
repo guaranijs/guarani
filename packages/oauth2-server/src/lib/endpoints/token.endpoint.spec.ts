@@ -12,23 +12,27 @@ import { GrantTypeInterface } from '../grant-types/grant-type.interface';
 import { GrantType } from '../grant-types/grant-type.type';
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { TokenRequest } from '../requests/token/token-request';
 import { TokenResponse } from '../responses/token-response';
 import { TokenRequestValidator } from '../validators/token/token-request.validator';
 import { Endpoint } from './endpoint.type';
 import { TokenEndpoint } from './token.endpoint';
 
+jest.mock('../logger/logger');
 jest.mock('../validators/token/token-request.validator');
 
 describe('Token Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: TokenEndpoint;
 
+  const loggerMock = jest.mocked(Logger.prototype);
   const validatorMock = jest.mocked(TokenRequestValidator.prototype);
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(TokenRequestValidator).toValue(validatorMock);
     container.bind(TokenEndpoint).toSelf().asSingleton();
 

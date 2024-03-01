@@ -10,6 +10,7 @@ import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { UnmetAuthenticationRequirementsException } from '../exceptions/unmet-authentication-requirements.exception';
 import { AuthHandler } from '../handlers/auth.handler';
+import { Logger } from '../logger/logger';
 import { LoginContextInteractionResponse } from '../responses/interaction/login-context.interaction-response';
 import { LoginDecisionInteractionResponse } from '../responses/interaction/login-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -22,11 +23,14 @@ import { InteractionType } from './interaction-type.type';
 import { LoginInteractionType } from './login.interaction-type';
 import { LoginDecision } from './login-decision.type';
 
+jest.mock('../logger/logger');
 jest.mock('../handlers/auth.handler');
 
 describe('Login Interaction Type', () => {
   let container: DependencyInjectionContainer;
   let interactionType: LoginInteractionType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const authHandlerMock = jest.mocked(AuthHandler.prototype);
 
@@ -44,6 +48,7 @@ describe('Login Interaction Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);

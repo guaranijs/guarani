@@ -10,11 +10,14 @@ import {
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { Client } from '../entities/client.entity';
+import { Logger } from '../logger/logger';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { AuthorizationResponseTokenClaims } from '../tokens/authorization-response-token.claims';
 import { AuthorizationResponseTokenHandler } from './authorization-response-token.handler';
+
+jest.mock('../logger/logger');
 
 describe('JSON Web Token Authorization Response Token Handler', () => {
   let container: DependencyInjectionContainer;
@@ -117,6 +120,8 @@ describe('JSON Web Token Authorization Response Token Handler', () => {
 
   const jwks = new JsonWebKeySet([ecSignkey, rsaSignKey]);
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const settings = <Settings>{
     issuer: 'https://server.example.com',
     authorizationSignatureAlgorithms: ['ES256', 'RS256'],
@@ -125,6 +130,7 @@ describe('JSON Web Token Authorization Response Token Handler', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(JsonWebKeySet).toValue(jwks);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind(AuthorizationResponseTokenHandler).toSelf().asSingleton();

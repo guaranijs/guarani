@@ -2,6 +2,7 @@ import { Injectable } from '@guarani/di';
 import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
 import { HttpResponse } from '../http/http.response';
+import { Logger } from '../logger/logger';
 import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { DisplayInterface } from './display.interface';
 import { Display } from './display.type';
@@ -46,6 +47,13 @@ export class PopupDisplay implements DisplayInterface {
   public readonly name: Display = 'popup';
 
   /**
+   * Instantiates a new Popup Display.
+   *
+   * @param logger Logger of the Authorization Server.
+   */
+  public constructor(private readonly logger: Logger) {}
+
+  /**
    * Creates a Http Response to the provided Redirect URI based on the provided Parameters.
    *
    * @param redirectUri Url to be redirected.
@@ -56,9 +64,23 @@ export class PopupDisplay implements DisplayInterface {
     redirectUri: string,
     parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
   ): HttpResponse {
+    this.logger.debug(
+      `[${this.constructor.name}] Called createHttpResponse()`,
+      'b3af8410-9e82-42b7-80dc-d19b4d595265',
+      { redirect_uri: redirectUri, parameters },
+    );
+
     const url = addParametersToUrl(redirectUri, parameters);
     const html = templateFn(url.href).trim();
 
-    return new HttpResponse().html(html);
+    const response = new HttpResponse().html(html);
+
+    this.logger.debug(
+      `[${this.constructor.name}] Completed createHttpResponse()`,
+      '7eab86b9-068b-446b-bcf2-b01f56bddafb',
+      { response },
+    );
+
+    return response;
   }
 }

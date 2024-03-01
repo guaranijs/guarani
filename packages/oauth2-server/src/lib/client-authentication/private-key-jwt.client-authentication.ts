@@ -52,17 +52,51 @@ export class PrivateKeyJwtClientAuthentication extends JwtBearerClientAssertion 
    */
   // TODO: Use getClientJsonWebKey() util function.
   protected async getClientKey(client: Client, header: JsonWebSignatureHeaderParameters): Promise<JsonWebKey> {
+    this.logger.debug(`[${this.constructor.name}] Called getClientKey()`, 'e9c016c9-fff6-4625-a96b-40cbaeef45c7', {
+      client,
+      header,
+    });
+
     let clientJwks: Nullable<JsonWebKeySet> = null;
 
     if (client.jwksUri !== null) {
+      this.logger.debug(
+        `[${this.constructor.name}] Loading a JSON Web Key Set from the URI of the Client`,
+        '3f9f63ea-3c21-4b4b-97a3-d4b34bec5def',
+        { client },
+      );
+
       clientJwks = await this.getClientJwksFromUri(client.jwksUri);
     } else if (client.jwks !== null) {
+      this.logger.debug(
+        `[${this.constructor.name}] Loading the JSON Web Key Set of the Client`,
+        '6f8f34f6-152d-4c14-8c8c-61967d6a6400',
+        { client },
+      );
+
       clientJwks = await JsonWebKeySet.load(client.jwks);
     }
 
     if (clientJwks === null) {
-      throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
+      const exc = new InvalidClientException(
+        `This Client is not allowed to use the Authentication Method "${this.name}".`,
+      );
+
+      this.logger.error(
+        `[${this.constructor.name}] Client does not have a JSON Web Key Set`,
+        'dfd04cf0-6928-4b88-9ec2-fd4df0c27ddc',
+        { client },
+        exc,
+      );
+
+      throw exc;
     }
+
+    this.logger.debug(
+      `[${this.constructor.name}] Searching for a valid JSON Web Key of the Client`,
+      '6f8f34f6-152d-4c14-8c8c-61967d6a6400',
+      { client, header },
+    );
 
     const jwk = clientJwks.find((key) => {
       return (
@@ -73,8 +107,24 @@ export class PrivateKeyJwtClientAuthentication extends JwtBearerClientAssertion 
     });
 
     if (jwk === null) {
-      throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
+      const exc = new InvalidClientException(
+        `This Client is not allowed to use the Authentication Method "${this.name}".`,
+      );
+
+      this.logger.error(
+        `[${this.constructor.name}] Client does not have a JSON Web Key that matches the one on the header`,
+        '21446fd7-7159-411f-9086-6177e2ee08aa',
+        { client },
+        exc,
+      );
+
+      throw exc;
     }
+
+    this.logger.debug(`[${this.constructor.name}] Completed getClientKey()`, '63a9025d-7c5a-4a75-ac2c-ccd05300131e', {
+      client,
+      jwk,
+    });
 
     return jwk;
   }

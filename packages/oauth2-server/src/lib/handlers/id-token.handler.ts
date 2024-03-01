@@ -20,6 +20,7 @@ import { Login } from '../entities/login.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
 import { IdTokenClaimsParameters } from '../id-token/id-token.claims.parameters';
 import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
+import { Logger } from '../logger/logger';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
@@ -35,17 +36,28 @@ export class IdTokenHandler {
   /**
    * Instantiates a new ID Token Handler.
    *
+   * @param logger Logger of the Authorization Server.
    * @param jwks JSON Web Key Set of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param userService Instance of the User Service.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly jwks: JsonWebKeySet,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(USER_SERVICE) private readonly userService: UserServiceInterface,
   ) {
     if (typeof this.userService.getUserinfo !== 'function') {
-      throw new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".');
+      const exc = new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".');
+
+      this.logger.critical(
+        `[${this.constructor.name}] Missing implementation of required method "UserServiceInterface.getUserinfo"`,
+        '659af5e4-f34b-4c73-8f4f-50f3b6c41f73',
+        null,
+        exc,
+      );
+
+      throw exc;
     }
   }
 
@@ -67,6 +79,15 @@ export class IdTokenHandler {
     accessToken: Nullable<AccessToken>,
     authorizationCode: Nullable<AuthorizationCode>,
   ): Promise<string> {
+    this.logger.debug(`[${this.constructor.name}] Called generateIdToken()`, 'f8f8da4c-a20d-44ee-a97d-b7093f248a88', {
+      login,
+      consent,
+      nonce,
+      max_age: maxAge,
+      access_token: accessToken,
+      authorization_code: authorizationCode,
+    });
+
     const now = Math.ceil(Date.now() / 1000);
 
     const { client, scopes, user } = consent;
@@ -105,6 +126,12 @@ export class IdTokenHandler {
     const signedJwt = await jws.sign(signKey);
 
     if (client.idTokenEncryptedResponseKeyWrap === null) {
+      this.logger.debug(
+        `[${this.constructor.name}] Generated Signed ID Token`,
+        '53ba02db-3809-4533-bf0a-fe531afa23f7',
+        { jws_header: jwsHeader, claims },
+      );
+
       return signedJwt;
     }
 
@@ -123,7 +150,15 @@ export class IdTokenHandler {
 
     const jwe = new JsonWebEncryption(jweHeader, Buffer.from(signedJwt, 'ascii'));
 
-    return await jwe.encrypt(keyWrapKey);
+    const encryptedJwt = await jwe.encrypt(keyWrapKey);
+
+    this.logger.debug(
+      `[${this.constructor.name}] Generated Encrypted ID Token`,
+      '1c40d3b1-a7a6-4351-a331-00e85cf43041',
+      { jws_header: jwsHeader, jwe_header: jweHeader, claims },
+    );
+
+    return encryptedJwt;
   }
 
   /**
@@ -136,6 +171,12 @@ export class IdTokenHandler {
    * @returns Whether or not the authenticated User matches the User represented by the ID Token.
    */
   public async checkIdTokenHint(idToken: string, client: Client, login: Login): Promise<boolean> {
+    this.logger.debug(`[${this.constructor.name}] Called checkIdTokenHint()`, '492bfa48-4c2e-473d-9e74-8ec6982195d8', {
+      id_token: idToken,
+      client,
+      login,
+    });
+
     try {
       const { payload } = await JsonWebSignature.verify(
         idToken,
@@ -153,8 +194,20 @@ export class IdTokenHandler {
         },
       });
 
+      this.logger.debug(
+        `[${this.constructor.name}] Completed ID Token Hint check`,
+        '492bfa48-4c2e-473d-9e74-8ec6982195d8',
+        { result: true },
+      );
+
       return true;
-    } catch {
+    } catch (exc: unknown) {
+      this.logger.debug(
+        `[${this.constructor.name}] Completed ID Token Hint check`,
+        '38262405-94c5-4c0b-88cc-b73ade6f3aed',
+        { result: true, exc },
+      );
+
       return false;
     }
   }

@@ -13,11 +13,14 @@ import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
+import { Logger } from '../logger/logger';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { IdTokenHandler } from './id-token.handler';
+
+jest.mock('../logger/logger');
 
 const login = <Login>{
   id: 'login_id',
@@ -127,6 +130,9 @@ describe('ID Token Handler', () => {
   });
 
   const jwks = new JsonWebKeySet([ecSignkey, rsaSignKey]);
+
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const settings = <Settings>{ issuer: 'https://server.example.com', idTokenSignatureAlgorithms: ['ES256', 'RS256'] };
 
   const userServiceMock = jest.mocked<UserServiceInterface>({
@@ -139,6 +145,7 @@ describe('ID Token Handler', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(JsonWebKeySet).toValue(jwks);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<UserServiceInterface>(USER_SERVICE).toValue(userServiceMock);

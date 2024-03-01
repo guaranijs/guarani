@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@guarani/di';
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
+import { Logger } from '../logger/logger';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
@@ -39,27 +40,43 @@ export class TokenResponseType implements ResponseTypeInterface {
   /**
    * Instantiates a new Token Response Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param accessTokenService Instance of the Access Token Service.
    */
-  public constructor(@Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface) {}
+  public constructor(
+    private readonly logger: Logger,
+    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
+  ) {}
 
   /**
    * Creates and returns an Access Token Response to the Client.
    *
-   * @param _context Authorization Request Context.
-   * @param _login Login with the Authentication information of the End User.
+   * @param context Authorization Request Context.
+   * @param login Login with the Authentication information of the End User.
    * @param consent Consent with the scopes granted by the End User.
    * @returns Access Token Response.
    */
   public async handle(
-    _context: AuthorizationContext,
-    _login: Login,
+    context: AuthorizationContext,
+    login: Login,
     consent: Consent,
   ): Promise<TokenAuthorizationResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, '3adcb696-a357-4ef5-aaef-f56a4f26efb4', {
+      context,
+      login,
+      consent,
+    });
+
     const { client, scopes, user } = consent;
 
     const accessToken = await this.accessTokenService.create(scopes, client, user);
     const response = createTokenResponse(accessToken, null) as TokenAuthorizationResponse;
+
+    this.logger.debug(
+      `[${this.constructor.name}] Completed "${this.name}" Response Type`,
+      '8086e89d-02fc-4a67-9ba2-824d8c5b6471',
+      { response },
+    );
 
     return response;
   }

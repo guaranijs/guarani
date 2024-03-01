@@ -3,19 +3,25 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { Client } from '../entities/client.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidScopeException } from '../exceptions/invalid-scope.exception';
+import { Logger } from '../logger/logger';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { ScopeHandler } from './scope.handler';
 
+jest.mock('../logger/logger');
+
 describe('Scope Handler', () => {
   let container: DependencyInjectionContainer;
   let handler: ScopeHandler;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const settings = <Settings>{ scopes: ['foo', 'bar', 'baz', 'qux'] };
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind(ScopeHandler).toSelf().asSingleton();
 

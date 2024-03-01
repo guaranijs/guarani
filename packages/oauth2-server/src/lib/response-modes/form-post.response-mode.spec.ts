@@ -6,8 +6,11 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
+import { Logger } from '../logger/logger';
 import { FormPostResponseMode } from './form-post.response-mode';
 import { ResponseMode } from './response-mode.type';
+
+jest.mock('../logger/logger');
 
 const body = `
 <!DOCTYPE html>
@@ -33,9 +36,12 @@ describe('Form Post Response Mode', () => {
   let container: DependencyInjectionContainer;
   let responseMode: FormPostResponseMode;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(FormPostResponseMode).toSelf().asSingleton();
 
     responseMode = container.resolve(FormPostResponseMode);

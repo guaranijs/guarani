@@ -7,14 +7,19 @@ import { AccessToken } from '../entities/access-token.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { HttpRequest } from '../http/http.request';
+import { Logger } from '../logger/logger';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { AuthorizationHeaderBearerClientAuthorization } from './authorization-header-bearer.client-authorization';
 import { ClientAuthorization } from './client-authorization.type';
 
+jest.mock('../logger/logger');
+
 describe('Authorization Header Bearer Client Authorization', () => {
   let container: DependencyInjectionContainer;
   let clientAuthorization: AuthorizationHeaderBearerClientAuthorization;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
     create: jest.fn(),
@@ -25,6 +30,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind(AuthorizationHeaderBearerClientAuthorization).toSelf().asSingleton();
 

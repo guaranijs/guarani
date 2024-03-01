@@ -5,16 +5,22 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
+import { Logger } from '../logger/logger';
 import { FragmentResponseMode } from './fragment.response-mode';
 import { ResponseMode } from './response-mode.type';
+
+jest.mock('../logger/logger');
 
 describe('Fragment Response Mode', () => {
   let container: DependencyInjectionContainer;
   let responseMode: FragmentResponseMode;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(FragmentResponseMode).toSelf().asSingleton();
 
     responseMode = container.resolve(FragmentResponseMode);

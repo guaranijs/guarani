@@ -12,6 +12,7 @@ import { ClientAuthorizationHandler } from '../handlers/client-authorization.han
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
 import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
+import { Logger } from '../logger/logger';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
@@ -20,6 +21,7 @@ import { Endpoint } from './endpoint.type';
 import { UserinfoEndpoint } from './userinfo.endpoint';
 
 jest.mock('../handlers/client-authorization.handler');
+jest.mock('../logger/logger');
 
 describe('Userinfo Endpoint', () => {
   let container: DependencyInjectionContainer;
@@ -111,6 +113,8 @@ describe('Userinfo Endpoint', () => {
 
   const jwks = new JsonWebKeySet([rsaSignKey]);
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype);
 
   const settings = <Settings>{ secretKey: '0123456789abcdef' };
@@ -125,6 +129,7 @@ describe('Userinfo Endpoint', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ClientAuthorizationHandler).toValue(clientAuthorizationHandlerMock);
     container.bind(JsonWebKeySet).toValue(jwks);
     container.bind<Settings>(SETTINGS).toValue(settings);

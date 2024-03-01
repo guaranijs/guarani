@@ -3,6 +3,7 @@ import { JsonWebKeyParameters, JsonWebSignatureAlgorithm } from '@guarani/jose';
 
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
+import { Logger } from '../logger/logger';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
@@ -10,9 +11,13 @@ import { SETTINGS } from '../settings/settings.token';
 import { ClientAuthentication } from './client-authentication.type';
 import { ClientSecretJwtClientAuthentication } from './client-secret-jwt.client-authentication';
 
+jest.mock('../logger/logger');
+
 describe('Client Secret JWT Client Authentication Method', () => {
   let container: DependencyInjectionContainer;
   let clientAuthentication: ClientSecretJwtClientAuthentication;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
     findOne: jest.fn(),
@@ -23,6 +28,7 @@ describe('Client Secret JWT Client Authentication Method', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
     container.bind(ClientSecretJwtClientAuthentication).toSelf().asSingleton();

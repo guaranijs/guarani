@@ -5,16 +5,22 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
+import { Logger } from '../logger/logger';
 import { QueryResponseMode } from './query.response-mode';
 import { ResponseMode } from './response-mode.type';
+
+jest.mock('../logger/logger');
 
 describe('Query Response Mode', () => {
   let container: DependencyInjectionContainer;
   let responseMode: QueryResponseMode;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(QueryResponseMode).toSelf().asSingleton();
 
     responseMode = container.resolve(QueryResponseMode);

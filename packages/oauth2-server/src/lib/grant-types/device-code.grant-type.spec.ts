@@ -9,6 +9,7 @@ import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { AuthorizationPendingException } from '../exceptions/authorization-pending.exception';
 import { ExpiredTokenException } from '../exceptions/expired-token.exception';
 import { SlowDownException } from '../exceptions/slow-down.exception';
+import { Logger } from '../logger/logger';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -20,9 +21,13 @@ import { DeviceCodeGrantType } from './device-code.grant-type';
 import { GrantTypeInterface } from './grant-type.interface';
 import { GrantType } from './grant-type.type';
 
+jest.mock('../logger/logger');
+
 describe('Device Code Grant Type', () => {
   let container: DependencyInjectionContainer;
   let grantType: DeviceCodeGrantType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const deviceCodeServiceMock = jest.mocked<DeviceCodeServiceInterface>({
     create: jest.fn(),
@@ -46,6 +51,7 @@ describe('Device Code Grant Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<DeviceCodeServiceInterface>(DEVICE_CODE_SERVICE).toValue(deviceCodeServiceMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);

@@ -11,6 +11,7 @@ import { Client } from '../entities/client.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { RevocationRequest } from '../requests/revocation-request';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -20,11 +21,14 @@ import { RevocationRequestValidator } from '../validators/revocation-request.val
 import { Endpoint } from './endpoint.type';
 import { RevocationEndpoint } from './revocation.endpoint';
 
+jest.mock('../logger/logger');
 jest.mock('../validators/revocation-request.validator');
 
 describe('Revocation Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: RevocationEndpoint;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const validatorMock = jest.mocked(RevocationRequestValidator.prototype);
 
@@ -43,6 +47,7 @@ describe('Revocation Endpoint', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(RevocationRequestValidator).toSelf().asSingleton();
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind<RefreshTokenServiceInterface>(REFRESH_TOKEN_SERVICE).toValue(refreshTokenServiceMock);

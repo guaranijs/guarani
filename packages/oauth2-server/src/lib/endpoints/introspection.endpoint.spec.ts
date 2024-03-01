@@ -10,6 +10,7 @@ import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { IntrospectionRequest } from '../requests/introspection-request';
 import { IntrospectionResponse } from '../responses/introspection-response';
 import { Settings } from '../settings/settings';
@@ -18,12 +19,14 @@ import { IntrospectionRequestValidator } from '../validators/introspection-reque
 import { Endpoint } from './endpoint.type';
 import { IntrospectionEndpoint } from './introspection.endpoint';
 
+jest.mock('../logger/logger');
 jest.mock('../validators/introspection-request.validator');
 
 describe('Introspection Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: IntrospectionEndpoint;
 
+  const loggerMock = jest.mocked(Logger.prototype);
   const validatorMock = jest.mocked(IntrospectionRequestValidator.prototype);
 
   const settings = <Settings>{
@@ -35,6 +38,7 @@ describe('Introspection Endpoint', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(IntrospectionRequestValidator).toValue(validatorMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind(IntrospectionEndpoint).toSelf().asSingleton();

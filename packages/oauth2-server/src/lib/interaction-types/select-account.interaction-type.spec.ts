@@ -6,6 +6,7 @@ import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
+import { Logger } from '../logger/logger';
 import { SelectAccountContextInteractionResponse } from '../responses/interaction/select-account-context.interaction-response';
 import { SelectAccountDecisionInteractionResponse } from '../responses/interaction/select-account-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -19,9 +20,12 @@ import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 import { SelectAccountInteractionType } from './select-account.interaction-type';
 
+jest.mock('../logger/logger');
 describe('Select Account Interaction Type', () => {
   let container: DependencyInjectionContainer;
   let interactionType: SelectAccountInteractionType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
@@ -44,6 +48,7 @@ describe('Select Account Interaction Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);

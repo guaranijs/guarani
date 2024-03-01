@@ -7,6 +7,7 @@ import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
 import { AuthHandler } from '../handlers/auth.handler';
 import { LogoutHandler } from '../handlers/logout.handler';
+import { Logger } from '../logger/logger';
 import { LoginServiceInterface } from '../services/login.service.interface';
 import { LOGIN_SERVICE } from '../services/login.service.token';
 import { LogoutType } from './logout-type.type';
@@ -14,11 +15,13 @@ import { SsoLogoutType } from './sso.logout-type';
 
 jest.mock('../handlers/auth.handler');
 jest.mock('../handlers/logout.handler');
+jest.mock('../logger/logger');
 
 describe('SSO Logout Type', () => {
   let container: DependencyInjectionContainer;
   let logoutType: SsoLogoutType;
 
+  const loggerMock = jest.mocked(Logger.prototype);
   const authHandlerMock = jest.mocked(AuthHandler.prototype);
   const logoutHandlerMock = jest.mocked(LogoutHandler.prototype);
 
@@ -33,6 +36,7 @@ describe('SSO Logout Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind(LogoutHandler).toValue(logoutHandlerMock);
     container.bind<LoginServiceInterface>(LOGIN_SERVICE).toValue(loginServiceMock);

@@ -8,11 +8,14 @@ import { Dictionary, OneOrMany } from '@guarani/types';
 import { AccessToken } from '../entities/access-token.entity';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { HttpRequest } from '../http/http.request';
+import { Logger } from '../logger/logger';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { ClientAuthorization } from './client-authorization.type';
 import { UriQueryClientAuthorization } from './uri-query.client-authorization';
 import { UriQueryClientAuthorizationParameters } from './uri-query.client-authorization.parameters';
+
+jest.mock('../logger/logger');
 
 const methodRequests: [Dictionary<OneOrMany<string>>, boolean][] = [
   [{}, false],
@@ -24,6 +27,8 @@ describe('URI Query Client Authorization', () => {
   let container: DependencyInjectionContainer;
   let clientAuthorization: UriQueryClientAuthorization;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
     create: jest.fn(),
     findOne: jest.fn(),
@@ -33,6 +38,7 @@ describe('URI Query Client Authorization', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind(UriQueryClientAuthorization).toSelf().asSingleton();
 

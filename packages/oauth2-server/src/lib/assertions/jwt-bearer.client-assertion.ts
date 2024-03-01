@@ -16,6 +16,7 @@ import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { HttpRequest } from '../http/http.request';
+import { Logger } from '../logger/logger';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
@@ -48,10 +49,12 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
   /**
    * Instantiates a new JWT Bearer Client Authentication Method.
    *
+   * @param logger Logger of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param clientService Instance of the Client Service.
    */
   public constructor(
+    protected readonly logger: Logger,
     @Inject(SETTINGS) protected readonly settings: Settings,
     @Inject(CLIENT_SERVICE) protected readonly clientService: ClientServiceInterface,
   ) {}
@@ -62,12 +65,23 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
+    this.logger.debug(`[${this.constructor.name}] Called hasBeenRequested()`, 'e9994da2-7145-424b-bea4-85df04029eee', {
+      request,
+    });
+
     const parameters = request.form<JwtBearerClientAssertionParameters>();
 
-    return (
+    const result =
       parameters.client_assertion_type === this.clientAssertionType &&
-      JsonWebSignature.isJsonWebSignature(parameters.client_assertion)
+      JsonWebSignature.isJsonWebSignature(parameters.client_assertion);
+
+    this.logger.debug(
+      `[${this.constructor.name}] Completed hasBeenRequested()`,
+      'db2b3573-4737-4231-9521-d0407d838bee',
+      { request, result },
     );
+
+    return result;
   }
 
   /**
@@ -77,6 +91,10 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @returns Authenticated Client.
    */
   public async authenticate(request: HttpRequest): Promise<Client> {
+    this.logger.debug(`[${this.constructor.name}] Called authenticate()`, '973cc193-f980-4286-b24c-84f512e597e8', {
+      request,
+    });
+
     const { client_assertion: clientAssertion } = request.form<JwtBearerClientAssertionParameters>();
 
     try {
@@ -87,26 +105,81 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
       // TODO: allow the application to validate the claims as it sees fit.
 
       if (client.authenticationMethod !== this.name) {
-        throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
+        const exc = new InvalidClientException(
+          `This Client is not allowed to use the Authentication Method "${this.name}".`,
+        );
+
+        this.logger.error(
+          `[${this.constructor.name}] The Client is not allowed to use the Authentication Method "${this.name}"`,
+          '17b31431-4732-4505-b4ba-7970af4127fc',
+          { client },
+          exc,
+        );
+
+        throw exc;
       }
 
       if (typeof client.authenticationSigningAlgorithm !== 'string') {
-        throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
+        const exc = new InvalidClientException(
+          `This Client is not allowed to use the Authentication Method "${this.name}".`,
+        );
+
+        this.logger.error(
+          `[${this.constructor.name}] The Client is not allowed to use the Authentication Method "${this.name}"`,
+          '29d8875f-cd3e-45b5-a7b6-fd94ca32e807',
+          { client },
+          exc,
+        );
+
+        throw exc;
       }
 
       if (client.authenticationSigningAlgorithm !== header.alg) {
-        throw new InvalidClientException(`This Client is not allowed to use the Authentication Method "${this.name}".`);
+        const exc = new InvalidClientException(
+          `This Client is not allowed to use the Authentication Method "${this.name}".`,
+        );
+
+        this.logger.error(
+          `[${this.constructor.name}] The Client cannot use the Authentication Signing Algorithm "${header.alg}"`,
+          'ab1c3893-3b1a-438d-bae2-5e5d437657ba',
+          { client },
+          exc,
+        );
+
+        throw exc;
       }
 
       const clientKey = await this.getClientKey(client, header);
 
+      this.logger.debug(
+        `[${this.constructor.name}] Attempting to verify the Signature of the JSON Web Token Client Assertion`,
+        '4c238787-b699-4c64-9b56-e0d6f7e4af41',
+        { client_assertion: clientAssertion },
+      );
+
       await JsonWebSignature.verify(clientAssertion, clientKey, this.algorithms);
+
+      this.logger.debug(`[${this.constructor.name}] Completed authenticate()`, 'c89ad02e-6bbf-42cc-a232-4ec84a835bad', {
+        request,
+        client,
+      });
 
       return client;
     } catch (exc: unknown) {
-      throw exc instanceof OAuth2Exception
-        ? exc
-        : new InvalidClientException('Invalid JSON Web Token Client Assertion.', { cause: exc });
+      if (exc instanceof OAuth2Exception) {
+        throw exc;
+      }
+
+      const exception = new InvalidClientException('Invalid JSON Web Token Client Assertion.', { cause: exc });
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid JSON Web Token Client Assertion`,
+        'a1aee754-0d3d-4985-ad3c-90e42e840c5d',
+        { request },
+        exception,
+      );
+
+      throw exception;
     }
   }
 
@@ -121,25 +194,70 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
     clientAssertion: string,
     request: HttpRequest,
   ): Promise<[JsonWebSignatureHeader, JsonWebTokenClaims]> {
+    this.logger.debug(
+      `[${this.constructor.name}] Called getClientAssertionComponents()`,
+      '88021b9c-3c18-4dbd-b608-1c090e8a465b',
+      { client_assertion: clientAssertion, request },
+    );
+
+    this.logger.debug(
+      `[${this.constructor.name}] Attempting to decode the JSON Web Token Client Assertion`,
+      '4de3d83f-d721-4c8f-822f-c2926c858e4a',
+      { client_assertion: clientAssertion },
+    );
+
     const { header, payload } = JsonWebSignature.decode(clientAssertion);
 
     if (header.alg === 'none') {
-      throw new InvalidClientException(
+      const exc = new InvalidClientException(
         'The Authorization Server disallows using the JSON Web Signature Algorithm "none".',
       );
+
+      this.logger.error(
+        `[${this.constructor.name}] The Client tried to use the JSON Web Signature Algorithm "none"`,
+        '0dc5e319-d161-4a3d-b58d-590750c60236',
+        { header },
+        exc,
+      );
+
+      throw exc;
     }
 
     if (!this.settings.clientAuthenticationSignatureAlgorithms.includes(header.alg)) {
-      throw new InvalidClientException(`Unsupported JSON Web Signature Algorithm "${header.alg}".`);
+      const exc = new InvalidClientException(`Unsupported JSON Web Signature Algorithm "${header.alg}".`);
+
+      this.logger.error(
+        `[${this.constructor.name}] The Client tried to use the unsupported JSON Web Signature Algorithm "${header.alg}"`,
+        'd24fdb8d-461c-4eaa-a7f9-a278fdfc7cd8',
+        { header },
+        exc,
+      );
+
+      throw exc;
     }
 
     if (!this.algorithms.includes(header.alg)) {
-      throw new InvalidClientException(
+      const exc = new InvalidClientException(
         `Unsupported JSON Web Signature Algorithm "${header.alg}" for Authentication Method "${this.name}".`,
       );
+
+      this.logger.error(
+        `[${this.constructor.name}] The Client tried to use the unsupported JSON Web Signature Algorithm "${header.alg}"`,
+        '8db925c7-8bc2-4f24-b2ed-41b4b9221b67',
+        { header },
+        exc,
+      );
+
+      throw exc;
     }
 
     const { href: idTokenAudience } = new URL(request.path, this.settings.issuer);
+
+    this.logger.debug(
+      `[${this.constructor.name}] Attempting to parse the JSON Web Token Client Assertion Payload`,
+      'b508a67e-85c5-4dd9-a694-4030a299210f',
+      { payload: payload.toString('base64url') },
+    );
 
     const claims = await JsonWebTokenClaims.parse(payload, {
       validationOptions: {
@@ -152,7 +270,16 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
     });
 
     if (claims.iss !== claims.sub) {
-      throw new InvalidClientException('The values of "iss" and "sub" are different.');
+      const exc = new InvalidClientException('The values of "iss" and "sub" are different.');
+
+      this.logger.error(
+        `[${this.constructor.name}] The Client tried to use a JSON Web Token Client Assertion with mismatching "iss" and "sub" claims`,
+        '0239060b-d05a-417a-94eb-c8ce0579719e',
+        { claims },
+        exc,
+      );
+
+      throw exc;
     }
 
     return [header, claims];
@@ -165,10 +292,27 @@ export abstract class JwtBearerClientAssertion implements ClientAuthenticationIn
    * @returns Client of the Client Assertion.
    */
   private async getClient(id: string): Promise<Client> {
+    this.logger.debug(`[${this.constructor.name}] Called getClient()`, '9dd0b29c-8f4f-4fe7-a5db-10d2eaeab3fd', { id });
+
+    this.logger.debug(
+      `[${this.constructor.name}] Searching for a Client with the provided Identifier`,
+      '4a7a4c34-868d-4b0a-b6c1-25f5bc519130',
+      { id },
+    );
+
     const client = await this.clientService.findOne(id);
 
     if (client === null) {
-      throw new InvalidClientException('Invalid Client.');
+      const exc = new InvalidClientException('Invalid Client.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Could not find a Client with the provided Identifier`,
+        '80b344fa-9453-4223-86d4-8372f4df53af',
+        { id },
+        exc,
+      );
+
+      throw exc;
     }
 
     return client;

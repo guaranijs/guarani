@@ -7,11 +7,16 @@ import { CLIENT_AUTHORIZATION } from '../client-authorization/client-authorizati
 import { AccessToken } from '../entities/access-token.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { HttpRequest } from '../http/http.request';
+import { Logger } from '../logger/logger';
 import { ClientAuthorizationHandler } from './client-authorization.handler';
+
+jest.mock('../logger/logger');
 
 describe('Client Authorization Handler', () => {
   let container: DependencyInjectionContainer;
   let clientAuthorizationHandler: ClientAuthorizationHandler;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const clientAuthorizationMethodsMocks = [
     jest.mocked<ClientAuthorizationInterface>({
@@ -33,6 +38,8 @@ describe('Client Authorization Handler', () => {
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
+
+    container.bind(Logger).toValue(loggerMock);
 
     clientAuthorizationMethodsMocks.forEach((clientAuthorization) => {
       container.bind<ClientAuthorizationInterface>(CLIENT_AUTHORIZATION).toValue(clientAuthorization);

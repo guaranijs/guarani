@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@guarani/di';
 import { AccessToken } from '../entities/access-token.entity';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { HttpRequest } from '../http/http.request';
+import { Logger } from '../logger/logger';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { getBodyParameters } from '../utils/get-body-parameters';
@@ -36,9 +37,13 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
   /**
    * Instantiates a new Form Encoded Body Client Authorization.
    *
+   * @param logger Logger of the Authorization Server.
    * @param accessTokenService Instance of the Access Token Service.
    */
-  public constructor(@Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface) {}
+  public constructor(
+    private readonly logger: Logger,
+    @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
+  ) {}
 
   /**
    * Checks if the Client Authorization Method has been requested by the Client.
@@ -46,14 +51,32 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
    * @param request Http Request.
    */
   public hasBeenRequested(request: HttpRequest): boolean {
+    this.logger.debug(`[${this.constructor.name}] Called hasBeenRequested()`, '68793b95-975e-409f-8b21-d57968caa00c', {
+      request,
+    });
+
     if (request.method !== 'POST') {
+      this.logger.debug(
+        `[${this.constructor.name}] Completed hasBeenRequested()`,
+        '41c29d90-d935-4e7c-84a6-1087532378fc',
+        { request, result: false },
+      );
+
       return false;
     }
 
     const { access_token: accessTokenHandle } =
       getBodyParameters<FormEncodedBodyClientAuthorizationParameters>(request);
 
-    return typeof accessTokenHandle === 'string';
+    const result = typeof accessTokenHandle === 'string';
+
+    this.logger.debug(
+      `[${this.constructor.name}] Completed hasBeenRequested()`,
+      '1d3806e9-a29e-42c1-bea9-2f7b29c4190d',
+      { request, result },
+    );
+
+    return result;
   }
 
   /**
@@ -63,26 +86,77 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
    * @returns Access Token based on the provided Access Token Handle.
    */
   public async authorize(request: HttpRequest): Promise<AccessToken> {
+    this.logger.debug(`[${this.constructor.name}] Called authorize()`, 'dc82c8f6-d144-472a-a14a-3fd7c888fce0', {
+      request,
+    });
+
     const { access_token: accessTokenHandle } =
       getBodyParameters<FormEncodedBodyClientAuthorizationParameters>(request);
+
+    this.logger.debug(
+      `[${this.constructor.name}] Searching for an Access Token with the provided Handle`,
+      'f272458d-6317-4bd4-b038-5cf4151f2be7',
+      { token: accessTokenHandle },
+    );
 
     const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
 
     if (accessToken === null) {
-      throw new InvalidTokenException('Invalid Access Token.');
+      const exc = new InvalidTokenException('Invalid Access Token.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid Access Token`,
+        '4592da12-4642-48ec-92bb-d62a585d1bcc',
+        { token: accessTokenHandle },
+        exc,
+      );
+
+      throw exc;
     }
 
     if (new Date() > accessToken.expiresAt) {
-      throw new InvalidTokenException('Expired Access Token.');
+      const exc = new InvalidTokenException('Expired Access Token.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Expired Access Token`,
+        '0921b15e-231c-4ab1-a65e-78d74d9f7531',
+        { access_token: accessToken },
+        exc,
+      );
+
+      throw exc;
     }
 
     if (new Date() < accessToken.validAfter) {
-      throw new InvalidTokenException('The provided Access Token is not yet valid.');
+      const exc = new InvalidTokenException('The provided Access Token is not yet valid.');
+
+      this.logger.error(
+        `[${this.constructor.name}] The provided Access Token is not yet valid`,
+        'a7c60242-07d2-4902-b88d-c7581a089972',
+        { access_token: accessToken },
+        exc,
+      );
+
+      throw exc;
     }
 
     if (accessToken.isRevoked) {
-      throw new InvalidTokenException('Revoked Access Token.');
+      const exc = new InvalidTokenException('Revoked Access Token.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Revoked Access Token`,
+        '21e5f773-bc3a-49d3-98ae-3047b8fb79a8',
+        { access_token: accessToken },
+        exc,
+      );
+
+      throw exc;
     }
+
+    this.logger.debug(`[${this.constructor.name}] Completed authorize()`, '1e280184-65a3-48e1-86cf-4123414deda3', {
+      request,
+      access_token: accessToken,
+    });
 
     return accessToken;
   }

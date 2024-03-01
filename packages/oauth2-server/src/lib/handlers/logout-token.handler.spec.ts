@@ -12,10 +12,13 @@ import { Dictionary } from '@guarani/types';
 import { Client } from '../entities/client.entity';
 import { Login } from '../entities/login.entity';
 import { User } from '../entities/user.entity';
+import { Logger } from '../logger/logger';
 import { LogoutTokenClaims } from '../logout-token/logout-token.claims';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { LogoutTokenHandler } from './logout-token.handler';
+
+jest.mock('../logger/logger');
 
 describe('Logout Token Handler', () => {
   let container: DependencyInjectionContainer;
@@ -117,11 +120,15 @@ describe('Logout Token Handler', () => {
   });
 
   const jwks = new JsonWebKeySet([ecSignkey, rsaSignKey]);
+
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const settings = <Settings>{ issuer: 'https://server.example.com', idTokenSignatureAlgorithms: ['ES256', 'RS256'] };
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(JsonWebKeySet).toValue(jwks);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind(LogoutTokenHandler).toSelf().asSingleton();

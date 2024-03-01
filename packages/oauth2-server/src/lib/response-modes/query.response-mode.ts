@@ -3,6 +3,7 @@ import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { HttpResponse } from '../http/http.response';
+import { Logger } from '../logger/logger';
 import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { ResponseModeInterface } from './response-mode.interface';
 import { ResponseMode } from './response-mode.type';
@@ -20,6 +21,13 @@ export class QueryResponseMode implements ResponseModeInterface {
   public readonly name: ResponseMode = 'query';
 
   /**
+   * Instantiates a new Query Response Mode.
+   *
+   * @param logger Logger of the Authorization Server.
+   */
+  public constructor(private readonly logger: Logger) {}
+
+  /**
    * Creates a Redirect Response to the provided Redirect URI with the provided Parameters at the Query of the URI.
    *
    * @param context Context of the Authorization Request.
@@ -30,7 +38,14 @@ export class QueryResponseMode implements ResponseModeInterface {
     context: AuthorizationContext,
     parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
   ): Promise<HttpResponse> {
+    this.logger.debug(
+      `[${this.constructor.name}] Called createHttpResponse()`,
+      '8619f179-0aec-4495-a526-c9c64c26ee11',
+      { context, parameters },
+    );
+
     const url = addParametersToUrl(context.redirectUri, parameters);
+
     return new HttpResponse().redirect(url);
   }
 }

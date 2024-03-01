@@ -13,6 +13,7 @@ import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { GetRegistrationResponse } from '../responses/registration/get.registration-response';
 import { PostRegistrationResponse } from '../responses/registration/post.registration-response';
 import { PutRegistrationResponse } from '../responses/registration/put.registration-response';
@@ -59,33 +60,71 @@ export class RegistrationEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Registration Endpoint.
    *
+   * @param logger Logger of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param clientService Instance of the Client Service.
    * @param accessTokenService Instance of the Access Token Service.
    * @param validators Registration Request Validators registered at the Authorization Server.
    */
   public constructor(
+    private readonly logger: Logger,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(CLIENT_SERVICE) private readonly clientService: ClientServiceInterface,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
     @InjectAll(RegistrationRequestValidator) private readonly validators: RegistrationRequestValidator[],
   ) {
     if (typeof clientService.create !== 'function') {
-      throw new TypeError('Missing implementation of required method "ClientServiceInterface.create".');
+      const exc = new TypeError('Missing implementation of required method "ClientServiceInterface.create".');
+
+      this.logger.critical(
+        `[${this.constructor.name}] Missing implementation of required method "ClientServiceInterface.create"`,
+        '10235c15-2290-4181-8270-efe86d7cd0ae',
+        null,
+        exc,
+      );
+
+      throw exc;
     }
 
     if (typeof clientService.remove !== 'function') {
-      throw new TypeError('Missing implementation of required method "ClientServiceInterface.remove".');
+      const exc = new TypeError('Missing implementation of required method "ClientServiceInterface.remove".');
+
+      this.logger.critical(
+        `[${this.constructor.name}] Missing implementation of required method "ClientServiceInterface.remove"`,
+        '8c0a7eba-4ea3-478e-8558-f9b963f89854',
+        null,
+        exc,
+      );
+
+      throw exc;
     }
 
     if (typeof clientService.update !== 'function') {
-      throw new TypeError('Missing implementation of required method "ClientServiceInterface.update".');
+      const exc = new TypeError('Missing implementation of required method "ClientServiceInterface.update".');
+
+      this.logger.critical(
+        `[${this.constructor.name}] Missing implementation of required method "ClientServiceInterface.update"`,
+        '98e89835-64c2-40e5-893b-684d20d18610',
+        null,
+        exc,
+      );
+
+      throw exc;
     }
 
     if (typeof accessTokenService.createRegistrationAccessToken !== 'function') {
-      throw new TypeError(
+      const exc = new TypeError(
         'Missing implementation of required method "AccessTokenServiceInterface.createRegistrationAccessToken".',
       );
+
+      this.logger.critical(
+        `[${this.constructor.name}] Missing implementation of required method "AccessTokenServiceInterface.createRegistrationAccessToken"`,
+        'e45b8a68-ee9e-4e9b-90b5-a234f9066d04',
+        null,
+        exc,
+      );
+
+      throw exc;
     }
   }
 
@@ -96,6 +135,10 @@ export class RegistrationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, '8cf97f47-22c1-48c7-ab7b-204c5fb7ef9f', {
+      request,
+    });
+
     try {
       const validator = this.getValidator(request);
       const context = await validator.validate(request);
@@ -119,6 +162,13 @@ export class RegistrationEndpoint implements EndpointInterface {
           ? exc
           : new ServerErrorException('An unexpected error occurred.', { cause: exc });
 
+      this.logger.error(
+        `[${this.constructor.name}] Error on Registration Endpoint`,
+        '73f3ffbb-c86b-49dd-90ed-adb8cce79c46',
+        { request },
+        error,
+      );
+
       return new HttpResponse()
         .setStatus(error.statusCode)
         .setHeaders(error.headers)
@@ -134,6 +184,10 @@ export class RegistrationEndpoint implements EndpointInterface {
    * @returns Authorization Request Validator.
    */
   private getValidator(request: HttpRequest): RegistrationRequestValidator {
+    this.logger.debug(`[${this.constructor.name}] Called getValidator()`, '52fdf8cb-1cba-4de5-85c5-2f3e983cf05d', {
+      request,
+    });
+
     return this.validators.find((validator) => validator.httpMethod === request.method)!;
   }
 
@@ -146,8 +200,21 @@ export class RegistrationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handleDelete(context: DeleteRegistrationContext): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handleDelete()`, '96bbf309-8d1e-4fe9-afb9-fd8a1041301a', {
+      context,
+    });
+
     await this.decomissionClient(context);
-    return new HttpResponse().setStatus(204).setHeaders(this.headers);
+
+    const response = new HttpResponse().setStatus(204).setHeaders(this.headers);
+
+    this.logger.debug(
+      `[${this.constructor.name}] Client Decomission completed`,
+      '5d2d8613-5b70-4e1f-b468-618ebd9386ab',
+      { response },
+    );
+
+    return response;
   }
 
   /**
@@ -159,8 +226,18 @@ export class RegistrationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handleGet(context: GetRegistrationContext): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handleGet()`, '9e9f1c57-1ec2-4c48-b012-01755964d23c', {
+      context,
+    });
+
     const registrationResponse = await this.getClientMetadata(context);
-    return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
+    const response = new HttpResponse().setHeaders(this.headers).json(registrationResponse);
+
+    this.logger.debug(`[${this.constructor.name}] Client Fetch completed`, '55e3ab3b-d18e-4ebd-8a32-db139c95aa51', {
+      response,
+    });
+
+    return response;
   }
 
   /**
@@ -173,8 +250,18 @@ export class RegistrationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handlePost(context: PostRegistrationContext): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handlePost()`, '46ac4a3d-e3ca-4ea2-9d14-a8befc730944', {
+      context,
+    });
+
     const registrationResponse = await this.registerClient(context);
-    return new HttpResponse().setStatus(201).setHeaders(this.headers).json(registrationResponse);
+    const response = new HttpResponse().setStatus(201).setHeaders(this.headers).json(registrationResponse);
+
+    this.logger.debug(`[${this.constructor.name}] Client Creation completed`, 'e12f3347-62f6-4b97-bb80-0f4182d5b1d2', {
+      response,
+    });
+
+    return response;
   }
 
   /**
@@ -186,8 +273,18 @@ export class RegistrationEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   private async handlePut(context: PutRegistrationContext): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handlePut()`, '8351d3a3-2f76-4ea2-b6cc-6fef10670f5f', {
+      context,
+    });
+
     const registrationResponse = await this.updateMetadata(context);
-    return new HttpResponse().setHeaders(this.headers).json(registrationResponse);
+    const response = new HttpResponse().setHeaders(this.headers).json(registrationResponse);
+
+    this.logger.debug(`[${this.constructor.name}] Client Update completed`, '27bc8771-6c49-4ba2-bd88-93cb2bbab6f8', {
+      response,
+    });
+
+    return response;
   }
 
   /**

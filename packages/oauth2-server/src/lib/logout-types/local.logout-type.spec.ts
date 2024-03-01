@@ -6,22 +6,26 @@ import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { Session } from '../entities/session.entity';
 import { AuthHandler } from '../handlers/auth.handler';
 import { LogoutHandler } from '../handlers/logout.handler';
+import { Logger } from '../logger/logger';
 import { LocalLogoutType } from './local.logout-type';
 import { LogoutType } from './logout-type.type';
 
 jest.mock('../handlers/auth.handler');
 jest.mock('../handlers/logout.handler');
+jest.mock('../logger/logger');
 
 describe('Local Logout Type', () => {
   let container: DependencyInjectionContainer;
   let logoutType: LocalLogoutType;
 
+  const loggerMock = jest.mocked(Logger.prototype);
   const authHandlerMock = jest.mocked(AuthHandler.prototype);
   const logoutHandlerMock = jest.mocked(LogoutHandler.prototype);
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind(LogoutHandler).toValue(logoutHandlerMock);
     container.bind(LocalLogoutType).toSelf().asSingleton();

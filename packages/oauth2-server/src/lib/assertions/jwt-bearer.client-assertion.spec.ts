@@ -15,6 +15,7 @@ import { Dictionary, OneOrMany } from '@guarani/types';
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { HttpRequest } from '../http/http.request';
+import { Logger } from '../logger/logger';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { Settings } from '../settings/settings';
@@ -22,6 +23,8 @@ import { SETTINGS } from '../settings/settings.token';
 import { ClientAssertion } from './client-assertion.type';
 import { JwtBearerClientAssertion } from './jwt-bearer.client-assertion';
 import { JwtBearerClientAssertionParameters } from './jwt-bearer.client-assertion.parameters';
+
+jest.mock('../logger/logger');
 
 const now = Math.floor(Date.now() / 1000);
 
@@ -66,6 +69,8 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   let container: DependencyInjectionContainer;
   let clientAssertion: JwtBearerClientAssertion;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
     findOne: jest.fn(),
   });
@@ -78,6 +83,7 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
     container.bind(JwtBearerClientAssertion).toSelf().asSingleton();

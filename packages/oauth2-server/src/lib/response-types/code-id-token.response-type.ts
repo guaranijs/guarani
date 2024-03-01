@@ -5,6 +5,7 @@ import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
+import { Logger } from '../logger/logger';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { IdTokenAuthorizationResponse } from '../responses/authorization/id-token.authorization-response';
@@ -43,10 +44,12 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
   /**
    * Instantiates a new Code Response Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param idTokenHandler Instance of the ID Token Handler.
    * @param authorizationCodeService Instance of the Authorization Code Service.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly idTokenHandler: IdTokenHandler,
     @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
   ) {}
@@ -64,16 +67,42 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
     login: Login,
     consent: Consent,
   ): Promise<CodeAuthorizationResponse & IdTokenAuthorizationResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, '3e156477-4a68-4e36-9fcb-cb01fd919e4c', {
+      context,
+      login,
+      consent,
+    });
+
     const { parameters } = context;
     const { scopes } = consent;
 
     if (!scopes.includes('openid')) {
-      throw new InvalidRequestException('Missing required scope "openid".');
+      const exc = new InvalidRequestException('Missing required scope "openid".');
+
+      this.logger.error(
+        `[${this.constructor.name}] Missing required scope "openid"`,
+        '6fe15bed-518f-4b0a-a2cf-52771a8ed052',
+        { scopes },
+        exc,
+      );
+
+      throw exc;
     }
 
     const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);
     const idToken = await this.idTokenHandler.generateIdToken(login, consent, null, null, null, authorizationCode);
 
-    return { code: authorizationCode.code, id_token: idToken };
+    const response: CodeAuthorizationResponse & IdTokenAuthorizationResponse = {
+      code: authorizationCode.code,
+      id_token: idToken,
+    };
+
+    this.logger.debug(
+      `[${this.constructor.name}] Completed "${this.name}" Response Type`,
+      '6b073f94-fd4c-49ea-91c8-fe3511562746',
+      { response },
+    );
+
+    return response;
   }
 }

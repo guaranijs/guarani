@@ -13,15 +13,20 @@ import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
+import { Logger } from '../../logger/logger';
 import { CreateContextInteractionRequest } from '../../requests/interaction/create-context.interaction-request';
 import { CreateDecisionInteractionRequest } from '../../requests/interaction/create-decision.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
 import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { CreateInteractionRequestValidator } from './create.interaction-request.validator';
 
+jest.mock('../../logger/logger');
+
 describe('Create Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: CreateInteractionRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const grantServiceMock = jest.mocked<GrantServiceInterface>({
     create: jest.fn(),
@@ -47,6 +52,7 @@ describe('Create Interaction Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
 
     interactionTypesMocks.forEach((interactionTypeMock) => {

@@ -8,6 +8,7 @@ import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
+import { Logger } from '../logger/logger';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
@@ -17,9 +18,13 @@ import { ResponseTypeInterface } from './response-type.interface';
 import { ResponseType } from './response-type.type';
 import { TokenResponseType } from './token.response-type';
 
+jest.mock('../logger/logger');
+
 describe('Token Response Type', () => {
   let container: DependencyInjectionContainer;
   let responseType: TokenResponseType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
     create: jest.fn(),
@@ -30,6 +35,7 @@ describe('Token Response Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind(TokenResponseType).toSelf().asSingleton();
 

@@ -13,23 +13,27 @@ import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { InteractionType } from '../interaction-types/interaction-type.type';
+import { Logger } from '../logger/logger';
 import { InteractionRequest } from '../requests/interaction/interaction-request';
 import { addParametersToUrl } from '../utils/add-parameters-to-url';
 import { InteractionRequestValidator } from '../validators/interaction/interaction-request.validator';
 import { Endpoint } from './endpoint.type';
 import { InteractionEndpoint } from './interaction.endpoint';
 
+jest.mock('../logger/logger');
 jest.mock('../validators/interaction/interaction-request.validator');
 
 describe('Interaction Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: InteractionEndpoint;
 
+  const loggerMock = jest.mocked(Logger.prototype);
   const validatorMock = jest.mocked(InteractionRequestValidator.prototype);
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(InteractionRequestValidator).toValue(validatorMock);
     container.bind(InteractionEndpoint).toSelf().asSingleton();
 

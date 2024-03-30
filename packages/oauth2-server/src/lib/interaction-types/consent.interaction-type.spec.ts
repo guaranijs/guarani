@@ -12,6 +12,7 @@ import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { AccountSelectionRequiredException } from '../exceptions/account-selection-required.exception';
 import { LoginRequiredException } from '../exceptions/login-required.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
+import { Logger } from '../logger/logger';
 import { ResponseType } from '../response-types/response-type.type';
 import { ConsentContextInteractionResponse } from '../responses/interaction/consent-context.interaction-response';
 import { ConsentDecisionInteractionResponse } from '../responses/interaction/consent-decision.interaction-response';
@@ -30,11 +31,15 @@ import { ConsentInteractionType } from './consent.interaction-type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 
+jest.mock('../logger/logger');
+
 const codeLessResponseTypes: ResponseType[] = ['id_token token', 'id_token', 'token'];
 
 describe('Consent Interaction Type', () => {
   let container: DependencyInjectionContainer;
   let interactionType: ConsentInteractionType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
@@ -72,6 +77,7 @@ describe('Consent Interaction Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
     container.bind<LoginServiceInterface>(LOGIN_SERVICE).toValue(loginServiceMock);
@@ -163,7 +169,7 @@ describe('Consent Interaction Type', () => {
 
       await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
         LoginRequiredException,
-        'No active login found.',
+        'No active Login found.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
@@ -281,7 +287,7 @@ describe('Consent Interaction Type', () => {
 
       await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
         LoginRequiredException,
-        'No active login found.',
+        'No active Login found.',
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);

@@ -12,15 +12,19 @@ import { InvalidTokenException } from '../../exceptions/invalid-token.exception'
 import { ClientAuthorizationHandler } from '../../handlers/client-authorization.handler';
 import { HttpRequest } from '../../http/http.request';
 import { HttpMethod } from '../../http/http-method.type';
+import { Logger } from '../../logger/logger';
 import { DeleteRegistrationRequest } from '../../requests/registration/delete.registration-request';
 import { GetRegistrationRequest } from '../../requests/registration/get.registration-request';
 import { AccessTokenServiceInterface } from '../../services/access-token.service.interface';
 import { GetAndDeleteRegistrationRequestValidator } from './get-and-delete.registration-request.validator';
 
 jest.mock('../../handlers/client-authorization.handler');
+jest.mock('../../logger/logger');
 
 describe('Get and Delete Registration Request Validator', () => {
   let validator: GetAndDeleteRegistrationRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype);
 
@@ -32,6 +36,7 @@ describe('Get and Delete Registration Request Validator', () => {
 
   beforeEach(() => {
     validator = Reflect.construct(GetAndDeleteRegistrationRequestValidator, [
+      loggerMock,
       clientAuthorizationHandlerMock,
       accessTokenServiceMock,
     ]);

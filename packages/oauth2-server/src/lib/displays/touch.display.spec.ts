@@ -3,16 +3,22 @@ import { OutgoingHttpHeaders } from 'http';
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
+import { Logger } from '../logger/logger';
 import { Display } from './display.type';
 import { TouchDisplay } from './touch.display';
+
+jest.mock('../logger/logger');
 
 describe('Touch Display', () => {
   let container: DependencyInjectionContainer;
   let display: TouchDisplay;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(TouchDisplay).toSelf().asSingleton();
 
     display = container.resolve(TouchDisplay);

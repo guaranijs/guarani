@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@guarani/di';
 import { CodeAuthorizationContext } from '../context/authorization/code.authorization-context';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
+import { Logger } from '../logger/logger';
 import { ResponseMode } from '../response-modes/response-mode.type';
 import { CodeAuthorizationResponse } from '../responses/authorization/code.authorization-response';
 import { TokenAuthorizationResponse } from '../responses/authorization/token.authorization-response';
@@ -44,10 +45,12 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
   /**
    * Instantiates a new Code Token Response Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param accessTokenService Instance of the Access Token Service.
    * @param authorizationCodeService Instance of the Authorization Code Service.
    */
   public constructor(
+    private readonly logger: Logger,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
     @Inject(AUTHORIZATION_CODE_SERVICE) private readonly authorizationCodeService: AuthorizationCodeServiceInterface,
   ) {}
@@ -65,6 +68,12 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
     login: Login,
     consent: Consent,
   ): Promise<CodeAuthorizationResponse & TokenAuthorizationResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, '9f366a6e-267e-4830-b3bc-1ca9ec8c77ee', {
+      context,
+      login,
+      consent,
+    });
+
     const { parameters } = context;
     const { client, scopes, user } = consent;
 
@@ -74,6 +83,12 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
     const response = createTokenResponse(accessToken, null) as CodeAuthorizationResponse & TokenAuthorizationResponse;
 
     response.code = authorizationCode.code;
+
+    this.logger.debug(
+      `[${this.constructor.name}] Completed "${this.name}" Response Type`,
+      '66960b5c-90fa-425d-a4ec-44aae46bbdf9',
+      { response },
+    );
 
     return response;
   }

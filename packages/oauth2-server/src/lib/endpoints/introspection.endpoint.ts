@@ -14,6 +14,7 @@ import { ServerErrorException } from '../exceptions/server-error.exception';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { IntrospectionResponse } from '../responses/introspection-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
@@ -66,10 +67,12 @@ export class IntrospectionEndpoint implements EndpointInterface {
   /**
    * Instantiates a new Introspection Endpoint.
    *
+   * @param logger Logger of the Authorization Server.
    * @param validator Instance of the Introspection Request Validator.
    * @param settings Settings of the Authorization Server.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly validator: IntrospectionRequestValidator,
     @Inject(SETTINGS) private readonly settings: Settings,
   ) {}
@@ -94,16 +97,33 @@ export class IntrospectionEndpoint implements EndpointInterface {
    * @returns Http Response.
    */
   public async handle(request: HttpRequest): Promise<HttpResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, '796a5007-f082-4f77-8867-137c7ff068b6', {
+      request,
+    });
+
     try {
       const context = await this.validator.validate(request);
       const introspectionResponse = this.introspectToken(context);
 
-      return new HttpResponse().setHeaders(this.headers).json(introspectionResponse);
+      const response = new HttpResponse().setHeaders(this.headers).json(introspectionResponse);
+
+      this.logger.debug(`[${this.constructor.name}] Introspection completed`, 'd6572cdb-a2a3-49a0-b18b-6b70b509a8dc', {
+        response,
+      });
+
+      return response;
     } catch (exc: unknown) {
       const error =
         exc instanceof OAuth2Exception
           ? exc
           : new ServerErrorException('An unexpected error occurred.', { cause: exc });
+
+      this.logger.error(
+        `[${this.constructor.name}] Error on Introspection Endpoint`,
+        'b414272e-fc3b-49b6-a579-75ab14fc1d21',
+        { request },
+        error,
+      );
 
       return new HttpResponse()
         .setStatus(error.statusCode)
@@ -120,13 +140,24 @@ export class IntrospectionEndpoint implements EndpointInterface {
    * @returns Metadata of the Token.
    */
   private introspectToken(context: IntrospectionContext): IntrospectionResponse {
+    this.logger.debug(`[${this.constructor.name}] Called introspectToken()`, '95863c4e-0550-42bc-a5cb-7147140882ac', {
+      context,
+    });
+
     const { client, token, tokenType } = context;
 
     if (token === null || tokenType === null) {
+      this.logger.debug(`[${this.constructor.name}] No Token found`, 'f3b27330-e6f7-4eba-9eba-6a29c0184bca');
       return IntrospectionEndpoint.INACTIVE_TOKEN;
     }
 
     if (!this.checkTokenClient(token, client)) {
+      this.logger.debug(
+        `[${this.constructor.name}] Token does not pertain to the Client`,
+        'dd1621df-2e2d-4f74-b385-e128120f2d02',
+        { context },
+      );
+
       return IntrospectionEndpoint.INACTIVE_TOKEN;
     }
 
@@ -154,7 +185,25 @@ export class IntrospectionEndpoint implements EndpointInterface {
    * @returns Metadata of the provided Token Entity.
    */
   private getTokenMetadata(token: AccessToken | RefreshToken): IntrospectionResponse {
-    if (token.isRevoked || new Date() < token.validAfter || new Date() >= token.expiresAt) {
+    this.logger.debug(`[${this.constructor.name}] Called getTokenMetadata()`, '637debf9-3034-4e02-9810-39be24cf97fc', {
+      token,
+    });
+
+    if (token.isRevoked) {
+      this.logger.debug(`[${this.constructor.name}] Revoked Token`, '1503b260-3794-4a08-8d46-aff84c2c9a75', { token });
+      return IntrospectionEndpoint.INACTIVE_TOKEN;
+    }
+
+    if (new Date() < token.validAfter) {
+      this.logger.debug(`[${this.constructor.name}] Token is not yet valid`, '5d67fc61-44f4-4330-9ce9-6e914bc4223b', {
+        token,
+      });
+
+      return IntrospectionEndpoint.INACTIVE_TOKEN;
+    }
+
+    if (new Date() >= token.expiresAt) {
+      this.logger.debug(`[${this.constructor.name}] Expired Token`, 'e34865a7-a483-4d1c-9c17-2b7e720b26bc', { token });
       return IntrospectionEndpoint.INACTIVE_TOKEN;
     }
 

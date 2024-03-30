@@ -23,6 +23,7 @@ import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { JwtBearerTokenRequest } from '../../requests/token/jwt-bearer.token-request';
 import { UserServiceInterface } from '../../services/user.service.interface';
 import { USER_SERVICE } from '../../services/user.service.token';
@@ -32,12 +33,15 @@ import { JwtBearerTokenRequestValidator } from './jwt-bearer.token-request.valid
 
 jest.mock('../../handlers/client-authentication.handler');
 jest.mock('../../handlers/scope.handler');
+jest.mock('../../logger/logger');
 
 const invalidTokenFormats: string[] = ['', 'a', '.a', '.a.b', 'a.b', 'a.b.c.d'];
 
 describe('JWT Bearer Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: JwtBearerTokenRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
 
@@ -64,6 +68,7 @@ describe('JWT Bearer Token Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
     container.bind(ScopeHandler).toValue(scopeHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);

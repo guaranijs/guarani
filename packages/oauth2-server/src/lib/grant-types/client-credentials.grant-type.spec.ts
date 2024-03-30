@@ -3,6 +3,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 import { ClientCredentialsTokenContext } from '../context/token/client-credentials.token-context';
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
+import { Logger } from '../logger/logger';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -10,9 +11,13 @@ import { ClientCredentialsGrantType } from './client-credentials.grant-type';
 import { GrantTypeInterface } from './grant-type.interface';
 import { GrantType } from './grant-type.type';
 
+jest.mock('../logger/logger');
+
 describe('Client Credentials Grant Type', () => {
   let container: DependencyInjectionContainer;
   let grantType: ClientCredentialsGrantType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
     create: jest.fn(),
@@ -23,6 +28,7 @@ describe('Client Credentials Grant Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind(ClientCredentialsGrantType).toSelf().asSingleton();
 

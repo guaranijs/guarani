@@ -12,6 +12,7 @@ import { InvalidRequestException } from '../exceptions/invalid-request.exception
 import { UnsupportedTokenTypeException } from '../exceptions/unsupported-token-type.exception';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { HttpRequest } from '../http/http.request';
+import { Logger } from '../logger/logger';
 import { RevocationRequest } from '../requests/revocation-request';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -23,10 +24,13 @@ import { TokenTypeHint } from '../types/token-type-hint.type';
 import { RevocationRequestValidator } from './revocation-request.validator';
 
 jest.mock('../handlers/client-authentication.handler');
+jest.mock('../logger/logger');
 
 describe('Revocation Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: RevocationRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
 
@@ -47,6 +51,7 @@ describe('Revocation Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);

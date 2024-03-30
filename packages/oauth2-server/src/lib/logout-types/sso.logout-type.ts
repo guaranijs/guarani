@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@guarani/di';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { AuthHandler } from '../handlers/auth.handler';
 import { LogoutHandler } from '../handlers/logout.handler';
+import { Logger } from '../logger/logger';
 import { LoginServiceInterface } from '../services/login.service.interface';
 import { LOGIN_SERVICE } from '../services/login.service.token';
 import { LogoutTypeInterface } from './logout-type.interface';
@@ -24,11 +25,13 @@ export class SsoLogoutType implements LogoutTypeInterface {
   /**
    * Instantiates a new Local Logout Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param authHandler Instance of the Auth Handler.
    * @param logoutHandler Instance of the Logout Handler.
    * @param loginService Instance of the Login Service.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly authHandler: AuthHandler,
     private readonly logoutHandler: LogoutHandler,
     @Inject(LOGIN_SERVICE) private readonly loginService: LoginServiceInterface,
@@ -40,6 +43,10 @@ export class SsoLogoutType implements LogoutTypeInterface {
    * @param logoutTicket Logout Ticket provided by the Client.
    */
   public async logout(logoutTicket: LogoutTicket): Promise<void> {
+    this.logger.debug(`[${this.constructor.name}] Called logout()`, 'bc92cf9c-f36d-45b0-9dd9-beaffe11d28c', {
+      logout_ticket: logoutTicket,
+    });
+
     const { session } = logoutTicket;
     const { user } = session.activeLogin!;
 

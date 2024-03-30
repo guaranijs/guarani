@@ -7,6 +7,7 @@ import { Login } from '../entities/login.entity';
 import { User } from '../entities/user.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { AuthHandler } from '../handlers/auth.handler';
+import { Logger } from '../logger/logger';
 import { CreateContextInteractionResponse } from '../responses/interaction/create-context.interaction-response';
 import { CreateDecisionInteractionResponse } from '../responses/interaction/create-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -20,11 +21,14 @@ import { CreateInteractionType } from './create.interaction-type';
 import { InteractionTypeInterface } from './interaction-type.interface';
 import { InteractionType } from './interaction-type.type';
 
+jest.mock('../logger/logger');
 jest.mock('../handlers/auth.handler');
 
 describe('Create Interaction Type', () => {
   let container: DependencyInjectionContainer;
   let interactionType: CreateInteractionType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const authHandlerMock = jest.mocked(AuthHandler.prototype);
 
@@ -47,6 +51,7 @@ describe('Create Interaction Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);

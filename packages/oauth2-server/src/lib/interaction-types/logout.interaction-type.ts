@@ -8,6 +8,7 @@ import { LogoutDecisionAcceptInteractionContext } from '../context/interaction/l
 import { LogoutDecisionDenyInteractionContext } from '../context/interaction/logout-decision-deny.interaction-context';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
+import { Logger } from '../logger/logger';
 import { LogoutContextInteractionResponse } from '../responses/interaction/logout-context.interaction-response';
 import { LogoutDecisionInteractionResponse } from '../responses/interaction/logout-decision.interaction-response';
 import { LogoutTicketServiceInterface } from '../services/logout-ticket.service.interface';
@@ -47,10 +48,12 @@ export class LogoutInteractionType implements InteractionTypeInterface {
   /**
    * Instantiates a new Logout Interaction Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param logoutTicketService Instance of the Logout Ticket Service.
    */
   public constructor(
+    private readonly logger: Logger,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(LOGOUT_TICKET_SERVICE) private readonly logoutTicketService: LogoutTicketServiceInterface,
   ) {}
@@ -67,13 +70,17 @@ export class LogoutInteractionType implements InteractionTypeInterface {
    * @returns Logout Context Interaction Response.
    */
   public async handleContext(context: LogoutContextInteractionContext): Promise<LogoutContextInteractionResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handleContext()`, '4e11c695-1500-4c15-8dc6-e15d3ed0c485', {
+      context,
+    });
+
     const { logoutTicket } = context;
 
     await this.checkLogoutTicket(logoutTicket);
 
     const url = addParametersToUrl(new URL('/oauth/end_session', this.settings.issuer), logoutTicket.parameters);
 
-    return {
+    const response: LogoutContextInteractionResponse = {
       skip: logoutTicket.session.activeLogin === null,
       request_url: url.href,
       client: logoutTicket.client.id,
@@ -82,6 +89,14 @@ export class LogoutInteractionType implements InteractionTypeInterface {
         ui_locales: logoutTicket.parameters.ui_locales?.split(' '),
       },
     };
+
+    this.logger.debug(
+      `[${this.constructor.name}] Logout Context Interaction completed`,
+      '007d6739-fc5d-4a8d-8849-c52628aae62e',
+      { response },
+    );
+
+    return response;
   }
 
   /**
@@ -93,16 +108,38 @@ export class LogoutInteractionType implements InteractionTypeInterface {
    * @returns Logout Decision Interaction Response.
    */
   public async handleDecision(context: LogoutDecisionInteractionContext): Promise<LogoutDecisionInteractionResponse> {
-    const { logoutTicket } = context;
+    this.logger.debug(`[${this.constructor.name}] Called handleContext()`, 'b2388b95-7321-4efd-9d2e-040d06c33f1c', {
+      context,
+    });
+
+    const { decision, logoutTicket } = context;
 
     await this.checkLogoutTicket(logoutTicket);
 
-    switch (context.decision) {
-      case 'accept':
-        return await this.acceptLogout(<LogoutDecisionAcceptInteractionContext>context);
+    switch (decision) {
+      case 'accept': {
+        const response = await this.acceptLogout(<LogoutDecisionAcceptInteractionContext>context);
 
-      case 'deny':
-        return await this.denyLogout(<LogoutDecisionDenyInteractionContext>context);
+        this.logger.debug(
+          `[${this.constructor.name}] Logout Decision Interaction completed`,
+          'bb8fd0cf-4f8b-43fa-b47b-2ad9c809165f',
+          { decision, response },
+        );
+
+        return response;
+      }
+
+      case 'deny': {
+        const response = await this.denyLogout(<LogoutDecisionDenyInteractionContext>context);
+
+        this.logger.debug(
+          `[${this.constructor.name}] Logout Decision Interaction completed`,
+          'abd1cfd8-91f1-4c96-aa29-ccb7f96f5513',
+          { decision, response },
+        );
+
+        return response;
+      }
     }
   }
 
@@ -115,6 +152,10 @@ export class LogoutInteractionType implements InteractionTypeInterface {
   private async acceptLogout(
     context: LogoutDecisionAcceptInteractionContext,
   ): Promise<LogoutDecisionInteractionResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called acceptLogout()`, '9dded0af-bb61-4778-9e94-7d61e15fcbb5', {
+      context,
+    });
+
     const { logoutTicket, logoutType, session } = context;
 
     if (session.activeLogin !== null) {
@@ -136,6 +177,10 @@ export class LogoutInteractionType implements InteractionTypeInterface {
    * @returns Logout Decision Interaction Response.
    */
   private async denyLogout(context: LogoutDecisionDenyInteractionContext): Promise<LogoutDecisionInteractionResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called denyLogout()`, '98014906-e610-45d5-a73f-78e91572ce70', {
+      context,
+    });
+
     const { error, logoutTicket } = context;
 
     await this.logoutTicketService.remove(logoutTicket);
@@ -151,9 +196,23 @@ export class LogoutInteractionType implements InteractionTypeInterface {
    * @param logoutTicket Logout Ticket to be checked.
    */
   private async checkLogoutTicket(logoutTicket: LogoutTicket): Promise<void> {
+    this.logger.debug(`[${this.constructor.name}] Called checkLogoutTicket()`, '242f7e59-5b9f-4de1-8336-1f963b99bf12', {
+      logout_ticket: logoutTicket,
+    });
+
     if (new Date() > logoutTicket.expiresAt) {
       await this.logoutTicketService.remove(logoutTicket);
-      throw new AccessDeniedException('Expired Logout Ticket.');
+
+      const exc = new AccessDeniedException('Expired Logout Ticket.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Expired Logout Ticket`,
+        'fdd47c2f-0f88-49f3-8182-5c45420986a2',
+        { logout_ticket: logoutTicket },
+        exc,
+      );
+
+      throw exc;
     }
   }
 }

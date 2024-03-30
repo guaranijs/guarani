@@ -21,6 +21,7 @@ import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { HttpMethod } from '../http/http-method.type';
 import { InteractionType } from '../interaction-types/interaction-type.type';
+import { Logger } from '../logger/logger';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseTypeInterface } from '../response-types/response-type.interface';
@@ -44,11 +45,14 @@ import { Endpoint } from './endpoint.type';
 
 jest.mock('../handlers/auth.handler');
 jest.mock('../handlers/id-token.handler');
+jest.mock('../logger/logger');
 jest.mock('../validators/authorization/authorization-request.validator');
 
 describe('Authorization Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: AuthorizationEndpoint;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const authHandlerMock = jest.mocked(AuthHandler.prototype);
 
@@ -103,6 +107,7 @@ describe('Authorization Endpoint', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(IdTokenHandler).toValue(idTokenHandlerMock);
     container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);

@@ -7,11 +7,14 @@ import { Dictionary, OneOrMany } from '@guarani/types';
 import { Client } from '../entities/client.entity';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { HttpRequest } from '../http/http.request';
+import { Logger } from '../logger/logger';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
 import { ClientAuthentication } from './client-authentication.type';
 import { NoneClientAuthentication } from './none.client-authentication';
 import { NoneClientAuthenticationParameters } from './none.client-authentication.parameters';
+
+jest.mock('../logger/logger');
 
 const methodRequests: [Dictionary<OneOrMany<string>>, boolean][] = [
   [{}, false],
@@ -29,6 +32,8 @@ describe('None Client Authentication Method', () => {
   let container: DependencyInjectionContainer;
   let clientAuthentication: NoneClientAuthentication;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
     findOne: jest.fn(),
   });
@@ -36,6 +41,7 @@ describe('None Client Authentication Method', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
     container.bind(NoneClientAuthentication).toSelf().asSingleton();
 

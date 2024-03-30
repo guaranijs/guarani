@@ -7,11 +7,14 @@ import { Dictionary, OneOrMany } from '@guarani/types';
 import { AccessToken } from '../entities/access-token.entity';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { HttpRequest } from '../http/http.request';
+import { Logger } from '../logger/logger';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { ClientAuthorization } from './client-authorization.type';
 import { FormEncodedBodyClientAuthorization } from './form-encoded-body.client-authorization';
 import { FormEncodedBodyClientAuthorizationParameters } from './form-encoded-body.client-authorization.parameters';
+
+jest.mock('../logger/logger');
 
 const methodRequests: [Dictionary<OneOrMany<string>>, boolean][] = [
   [{}, false],
@@ -23,6 +26,8 @@ describe('Form Encoded Body Client Authorization', () => {
   let container: DependencyInjectionContainer;
   let clientAuthorization: FormEncodedBodyClientAuthorization;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
     create: jest.fn(),
     findOne: jest.fn(),
@@ -32,6 +37,7 @@ describe('Form Encoded Body Client Authorization', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind(FormEncodedBodyClientAuthorization).toSelf().asSingleton();
 

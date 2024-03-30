@@ -5,6 +5,7 @@ import { DISPLAY } from '../../displays/display.token';
 import { Client } from '../../entities/client.entity';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
+import { Logger } from '../../logger/logger';
 import { PkceInterface } from '../../pkces/pkce.interface';
 import { PKCE } from '../../pkces/pkce.token';
 import { CodeAuthorizationRequest } from '../../requests/authorization/code.authorization-request';
@@ -33,6 +34,7 @@ export class CodeIdTokenTokenAuthorizationRequestValidator extends CodeAuthoriza
   /**
    * Instantiates a new Code & ID Token & Token Authorization Request Validator.
    *
+   * @param logger Logger of the Authorization Server.
    * @param scopeHandler Instance of the Scope Handler.
    * @param settings Settings of the Authorization Server.
    * @param clientService Instance of the Client Service.
@@ -42,6 +44,7 @@ export class CodeIdTokenTokenAuthorizationRequestValidator extends CodeAuthoriza
    * @param pkces PKCE Code Challenge Methods registered at the Authorization Server.
    */
   public constructor(
+    protected override readonly logger: Logger,
     protected override readonly scopeHandler: ScopeHandler,
     @Inject(SETTINGS) protected override readonly settings: Settings,
     @Inject(CLIENT_SERVICE) protected override readonly clientService: ClientServiceInterface,
@@ -50,7 +53,7 @@ export class CodeIdTokenTokenAuthorizationRequestValidator extends CodeAuthoriza
     @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[],
     @InjectAll(PKCE) protected override readonly pkces: PkceInterface[],
   ) {
-    super(scopeHandler, settings, clientService, responseModes, responseTypes, displays, pkces);
+    super(logger, scopeHandler, settings, clientService, responseModes, responseTypes, displays, pkces);
   }
 
   /**
@@ -66,14 +69,29 @@ export class CodeIdTokenTokenAuthorizationRequestValidator extends CodeAuthoriza
     responseType: ResponseTypeInterface,
     client: Client,
   ): ResponseModeInterface {
+    this.logger.debug(`[${this.constructor.name}] Called getResponseMode()`, 'e51ed00f-71c6-4e47-9add-4adc22d51ff0', {
+      parameters,
+      response_type: responseType.name,
+      client,
+    });
+
     const responseMode = super.getResponseMode(parameters, responseType, client);
 
     const forbiddenResponseModes: ResponseMode[] = ['query', 'query.jwt'];
 
     if (forbiddenResponseModes.includes(responseMode.name)) {
-      throw new InvalidRequestException(
+      const exc2 = new InvalidRequestException(
         `Invalid response_mode "${responseMode.name}" for response_type "code id_token token".`,
       );
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid response_mode "${responseMode.name}" for response_type "code id_token token"`,
+        '72af734d-6845-4bbc-ab46-ef12458e3949',
+        null,
+        exc2,
+      );
+
+      throw exc2;
     }
 
     return responseMode;
@@ -86,8 +104,21 @@ export class CodeIdTokenTokenAuthorizationRequestValidator extends CodeAuthoriza
    * @returns Nonce provided by the Client.
    */
   protected override getNonce(parameters: CodeAuthorizationRequest): string {
+    this.logger.debug(`[${this.constructor.name}] Called getNonce()`, '0e75fdb0-600b-4337-be19-d3d20dc47da0', {
+      parameters,
+    });
+
     if (typeof parameters.nonce === 'undefined') {
-      throw new InvalidRequestException('Invalid parameter "nonce".');
+      const exc2 = new InvalidRequestException('Invalid parameter "nonce".');
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid parameter "nonce"`,
+        '8dd4d5d5-71bd-4aaf-bebb-4d9d561e42a6',
+        { parameters },
+        exc2,
+      );
+
+      throw exc2;
     }
 
     return parameters.nonce;

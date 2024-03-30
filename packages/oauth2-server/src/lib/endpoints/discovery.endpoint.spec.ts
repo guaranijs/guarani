@@ -6,6 +6,7 @@ import { Dictionary } from '@guarani/types';
 
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { DiscoveryResponse } from '../responses/discovery-response';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
@@ -14,9 +15,13 @@ import { EndpointInterface } from './endpoint.interface';
 import { ENDPOINT } from './endpoint.token';
 import { Endpoint } from './endpoint.type';
 
+jest.mock('../logger/logger');
+
 describe('Discovery Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: DiscoveryEndpoint;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const settings = <Settings>{
     issuer: 'https://server.example.com',
@@ -64,6 +69,7 @@ describe('Discovery Endpoint', () => {
     endpoints.forEach((endpoint) => container.bind<EndpointInterface>(ENDPOINT).toValue(endpoint));
 
     container.bind(DependencyInjectionContainer).toValue(container);
+    container.bind(Logger).toValue(loggerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind(DiscoveryEndpoint).toSelf().asSingleton();
 

@@ -6,6 +6,7 @@ import { Dictionary, Nullable, OneOrMany } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { HttpResponse } from '../http/http.response';
+import { Logger } from '../logger/logger';
 import { ResponseModeInterface } from './response-mode.interface';
 import { ResponseMode } from './response-mode.type';
 
@@ -71,6 +72,13 @@ export class FormPostResponseMode implements ResponseModeInterface {
   public readonly name: ResponseMode = 'form_post';
 
   /**
+   * Instantiates a new Form Post Response Mode.
+   *
+   * @param logger Logger of the Authorization Server.
+   */
+  public constructor(private readonly logger: Logger) {}
+
+  /**
    * Creates an HTML form with its action as the Redirect URI and its fields as hidden inputs
    * containing the provided Authorization Response Parameters.
    *
@@ -85,7 +93,14 @@ export class FormPostResponseMode implements ResponseModeInterface {
     context: AuthorizationContext,
     parameters: Dictionary<Nullable<OneOrMany<string> | OneOrMany<number> | OneOrMany<boolean>>>,
   ): Promise<HttpResponse> {
+    this.logger.debug(
+      `[${this.constructor.name}] Called createHttpResponse()`,
+      'c965cabc-1d04-4446-b46f-2ee8a1cb1bd8',
+      { context, parameters },
+    );
+
     const html = templateFn(context.redirectUri, removeNullishValues(parameters)).trim();
+
     return new HttpResponse().html(html);
   }
 }

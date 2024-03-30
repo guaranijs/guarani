@@ -9,13 +9,17 @@ import { UnauthorizedClientException } from '../../exceptions/unauthorized-clien
 import { GrantTypeInterface } from '../../grant-types/grant-type.interface';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { TokenRequest } from '../../requests/token/token-request';
 import { TokenRequestValidator } from './token-request.validator';
 
 jest.mock('../../handlers/client-authentication.handler');
+jest.mock('../../logger/logger');
 
 describe('Token Request Validator', () => {
   let validator: TokenRequestValidator<TokenContext>;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
 
@@ -29,7 +33,11 @@ describe('Token Request Validator', () => {
   ];
 
   beforeEach(() => {
-    validator = Reflect.construct(TokenRequestValidator, [clientAuthenticationHandlerMock, grantTypesMocks]);
+    validator = Reflect.construct(TokenRequestValidator, [
+      loggerMock,
+      clientAuthenticationHandlerMock,
+      grantTypesMocks,
+    ]);
   });
 
   afterEach(() => {

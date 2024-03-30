@@ -15,6 +15,7 @@ import { HttpRequest } from '../../http/http.request';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
+import { Logger } from '../../logger/logger';
 import { SelectAccountContextInteractionRequest } from '../../requests/interaction/select-account-context.interaction-request';
 import { SelectAccountDecisionInteractionRequest } from '../../requests/interaction/select-account-decision.interaction-request';
 import { GrantServiceInterface } from '../../services/grant.service.interface';
@@ -25,9 +26,13 @@ import { SessionServiceInterface } from '../../services/session.service.interfac
 import { SESSION_SERVICE } from '../../services/session.service.token';
 import { SelectAccountInteractionRequestValidator } from './select-account.interaction-request.validator';
 
+jest.mock('../../logger/logger');
+
 describe('Select Account Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: SelectAccountInteractionRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const sessionServiceMock = jest.mocked<SessionServiceInterface>({
     create: jest.fn(),
@@ -66,6 +71,7 @@ describe('Select Account Interaction Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<SessionServiceInterface>(SESSION_SERVICE).toValue(sessionServiceMock);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
     container.bind<LoginServiceInterface>(LOGIN_SERVICE).toValue(loginServiceMock);

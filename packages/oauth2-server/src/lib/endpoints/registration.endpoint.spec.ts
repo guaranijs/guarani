@@ -13,6 +13,7 @@ import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { DeleteRegistrationRequest } from '../requests/registration/delete.registration-request';
 import { GetRegistrationRequest } from '../requests/registration/get.registration-request';
 import { PostRegistrationRequest } from '../requests/registration/post.registration-request';
@@ -32,6 +33,7 @@ import { RegistrationRequestValidator } from '../validators/registration/registr
 import { Endpoint } from './endpoint.type';
 import { RegistrationEndpoint } from './registration.endpoint';
 
+jest.mock('../logger/logger');
 jest.mock('../validators/registration/registration-request.validator');
 
 const now = 1700000000000;
@@ -73,6 +75,8 @@ describe('Dynamic Client Registration Endpoint', () => {
   let container: DependencyInjectionContainer;
   let endpoint: RegistrationEndpoint;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const settings = <Settings>{ issuer: 'https://server.example.com' };
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
@@ -94,6 +98,7 @@ describe('Dynamic Client Registration Endpoint', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);

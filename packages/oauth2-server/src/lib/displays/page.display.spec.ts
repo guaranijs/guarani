@@ -3,16 +3,22 @@ import { OutgoingHttpHeaders } from 'http';
 import { DependencyInjectionContainer } from '@guarani/di';
 import { Dictionary } from '@guarani/types';
 
+import { Logger } from '../logger/logger';
 import { Display } from './display.type';
 import { PageDisplay } from './page.display';
+
+jest.mock('../logger/logger');
 
 describe('Page Display', () => {
   let container: DependencyInjectionContainer;
   let display: PageDisplay;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(PageDisplay).toSelf().asSingleton();
 
     display = container.resolve(PageDisplay);

@@ -12,6 +12,7 @@ import { ClientAuthorizationHandler } from '../../handlers/client-authorization.
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { HttpMethod } from '../../http/http-method.type';
+import { Logger } from '../../logger/logger';
 import { PostRegistrationRequest } from '../../requests/registration/post.registration-request';
 import { AccessTokenServiceInterface } from '../../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../../services/access-token.service.token';
@@ -21,12 +22,15 @@ import { PostRegistrationRequestValidator } from './post.registration-request.va
 
 jest.mock('../../handlers/client-authorization.handler');
 jest.mock('../../handlers/scope.handler');
+jest.mock('../../logger/logger');
 
 const invalidBodies: any[] = [null, true, 1, 1.2, 'a', []];
 
 describe('Post Registration Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: PostRegistrationRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
@@ -82,6 +86,7 @@ describe('Post Registration Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ScopeHandler).toValue(scopeHandlerMock);
     container.bind(ClientAuthorizationHandler).toValue(clientAuthorizationHandlerMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);

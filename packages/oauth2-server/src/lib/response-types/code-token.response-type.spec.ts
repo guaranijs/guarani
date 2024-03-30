@@ -9,6 +9,7 @@ import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
+import { Logger } from '../logger/logger';
 import { PkceInterface } from '../pkces/pkce.interface';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
@@ -22,9 +23,13 @@ import { CodeTokenResponseType } from './code-token.response-type';
 import { ResponseTypeInterface } from './response-type.interface';
 import { ResponseType } from './response-type.type';
 
+jest.mock('../logger/logger');
+
 describe('Code Token Response Type', () => {
   let container: DependencyInjectionContainer;
   let responseType: CodeTokenResponseType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
     create: jest.fn(),
@@ -41,6 +46,7 @@ describe('Code Token Response Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind<AuthorizationCodeServiceInterface>(AUTHORIZATION_CODE_SERVICE).toValue(authorizationCodeServiceMock);
     container.bind(CodeTokenResponseType).toSelf().asSingleton();

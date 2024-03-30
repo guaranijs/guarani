@@ -7,6 +7,7 @@ import { CreateDecisionInteractionContext } from '../context/interaction/create-
 import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { AuthHandler } from '../handlers/auth.handler';
+import { Logger } from '../logger/logger';
 import { CreateContextInteractionResponse } from '../responses/interaction/create-context.interaction-response';
 import { CreateDecisionInteractionResponse } from '../responses/interaction/create-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -41,12 +42,14 @@ export class CreateInteractionType implements InteractionTypeInterface {
   /**
    * Instantiates a new Create Interaction Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param authHandler Instance of the Auth Handler.
    * @param settings Settings of the Authorization Server.
    * @param grantService Instance of the Grant Service.
    * @param userService Instance of the User Service.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly authHandler: AuthHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
@@ -60,13 +63,17 @@ export class CreateInteractionType implements InteractionTypeInterface {
    * @returns Create Context Interaction Response.
    */
   public async handleContext(context: CreateContextInteractionContext): Promise<CreateContextInteractionResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handleContext()`, '8292fe43-6bb7-4cb1-9a1e-90972cd55576', {
+      context,
+    });
+
     const { grant } = context;
 
     await this.checkGrant(grant);
 
     const url = addParametersToUrl(new URL('/oauth/authorize', this.settings.issuer), grant.parameters);
 
-    return {
+    const response: CreateContextInteractionResponse = {
       skip: grant.interactions.includes('create'),
       request_url: url.href,
       context: {
@@ -75,6 +82,14 @@ export class CreateInteractionType implements InteractionTypeInterface {
         ui_locales: grant.parameters.ui_locales?.split(' '),
       },
     };
+
+    this.logger.debug(
+      `[${this.constructor.name}] Create Context Interaction completed`,
+      '4ea5d916-02cc-45b1-bfd4-7558665f44f9',
+      { response },
+    );
+
+    return response;
   }
 
   /**
@@ -84,6 +99,10 @@ export class CreateInteractionType implements InteractionTypeInterface {
    * @returns Create Decision Interaction Response.
    */
   public async handleDecision(context: CreateDecisionInteractionContext): Promise<CreateDecisionInteractionResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handleDecision()`, '42e021e3-4c3f-4bd2-8535-ec15666d73a9', {
+      context,
+    });
+
     const { grant, parameters } = context;
     const { client, session } = grant;
 
@@ -99,7 +118,15 @@ export class CreateInteractionType implements InteractionTypeInterface {
 
     const url = addParametersToUrl(new URL('/oauth/authorize', this.settings.issuer), grant.parameters);
 
-    return { redirect_to: url.href };
+    const response: CreateDecisionInteractionResponse = { redirect_to: url.href };
+
+    this.logger.debug(
+      `[${this.constructor.name}] Create Decision Interaction completed`,
+      'dabe16a8-0a63-410c-9269-0e6511f4a7db',
+      { response },
+    );
+
+    return response;
   }
 
   /**
@@ -108,9 +135,23 @@ export class CreateInteractionType implements InteractionTypeInterface {
    * @param grant Grant to be checked.
    */
   private async checkGrant(grant: Grant): Promise<void> {
+    this.logger.debug(`[${this.constructor.name}] Called checkGrant()`, '7acad2cb-6feb-4e75-9b03-33962d02b095', {
+      grant,
+    });
+
     if (new Date() > grant.expiresAt) {
       await this.grantService.remove(grant);
-      throw new AccessDeniedException('Expired Grant.');
+
+      const exc = new AccessDeniedException('Expired Grant.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Expired Grant`,
+        '0f2c6985-07d7-416e-b8dc-5ea7f2c9f586',
+        { grant },
+        exc,
+      );
+
+      throw exc;
     }
   }
 }

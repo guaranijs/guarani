@@ -10,6 +10,8 @@ import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { HttpRequest } from '../http/http.request';
+import { HttpMethod } from '../http/http-method.type';
+import { Logger } from '../logger/logger';
 import { EndSessionRequest } from '../requests/end-session-request';
 import { ClientServiceInterface } from '../services/client.service.interface';
 import { CLIENT_SERVICE } from '../services/client.service.token';
@@ -17,9 +19,15 @@ import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { EndSessionRequestValidator } from './end-session-request.validator';
 
+jest.mock('../logger/logger');
+
+const invalidHttpMethods: HttpMethod[] = ['DELETE', 'PUT'];
+
 describe('End Session Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: EndSessionRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const settings = <Settings>{ uiLocales: ['en', 'pt-BR'] };
 
@@ -30,6 +38,7 @@ describe('End Session Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind<ClientServiceInterface>(CLIENT_SERVICE).toValue(clientServiceMock);
     container.bind(EndSessionRequestValidator).toSelf().asSingleton();
@@ -65,6 +74,21 @@ describe('End Session Request Validator', () => {
         logout_hint: 'logout_hint',
         ui_locales: 'pt-BR en',
       };
+    });
+
+    it.each(invalidHttpMethods)('should throw when not using "get" or "post" http methods.', async (method) => {
+      const request = new HttpRequest({
+        body: {},
+        cookies: {},
+        headers: {},
+        method,
+        url: new URL('https://server.example.com/oauth/end_session'),
+      });
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        TypeError,
+        `Unsupported Http Method "${method}".`,
+      );
     });
 
     it('should throw when not providing the parameter "id_token_hint".', async () => {

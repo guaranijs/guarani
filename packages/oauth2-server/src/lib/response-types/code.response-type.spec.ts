@@ -8,6 +8,7 @@ import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
+import { Logger } from '../logger/logger';
 import { PkceInterface } from '../pkces/pkce.interface';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
@@ -18,9 +19,13 @@ import { CodeResponseType } from './code.response-type';
 import { ResponseTypeInterface } from './response-type.interface';
 import { ResponseType } from './response-type.type';
 
+jest.mock('../logger/logger');
+
 describe('Code Response Type', () => {
   let container: DependencyInjectionContainer;
   let responseType: CodeResponseType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const authorizationCodeServiceMock = jest.mocked<AuthorizationCodeServiceInterface>({
     create: jest.fn(),
@@ -31,6 +36,7 @@ describe('Code Response Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<AuthorizationCodeServiceInterface>(AUTHORIZATION_CODE_SERVICE).toValue(authorizationCodeServiceMock);
     container.bind(CodeResponseType).toSelf();
 

@@ -1,22 +1,26 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 
+import { Logger } from '../logger/logger';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { LogoutHandler } from './logout.handler';
 import { LogoutTokenHandler } from './logout-token.handler';
 
+jest.mock('../logger/logger');
 jest.mock('./logout-token.handler');
 
 describe('Logout Handler', () => {
   let container: DependencyInjectionContainer;
   // let logoutHandler: LogoutHandler;
 
+  const loggerMock = jest.mocked(Logger.prototype);
   const logoutTokenHandlerMock = jest.mocked(LogoutTokenHandler.prototype);
   const settings = <Settings>{ includeSessionIdInLogoutToken: true };
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(LogoutTokenHandler).toValue(logoutTokenHandlerMock);
     container.bind<Settings>(SETTINGS).toValue(settings);
     container.bind(LogoutHandler).toSelf().asSingleton();

@@ -42,6 +42,8 @@ import { ScopeHandler } from '../handlers/scope.handler';
 import { InteractionTypeInterface } from '../interaction-types/interaction-type.interface';
 import { interactionTypeRegistry } from '../interaction-types/interaction-type.registry';
 import { INTERACTION_TYPE } from '../interaction-types/interaction-type.token';
+import { ConsoleLogger } from '../logger/console.logger';
+import { Logger } from '../logger/logger';
 import { LogoutTypeInterface } from '../logout-types/logout-type.interface';
 import { logoutTypeRegistry } from '../logout-types/logout-type.registry';
 import { LOGOUT_TYPE } from '../logout-types/logout-type.token';
@@ -163,6 +165,7 @@ export class AuthorizationServerFactory {
     this.setEndpoints();
     this.setHandlers();
     this.setValidators();
+    this.setLogger();
     this.setAccessTokenService();
     this.setAuthorizationCodeService();
     this.setClientService();
@@ -467,6 +470,17 @@ export class AuthorizationServerFactory {
         .map(([, validator]) => validator)
         .forEach((validator) => this.container.bind(TokenRequestValidator).toClass(validator).asSingleton());
     }
+  }
+
+  /**
+   * Defines the Logger of the Authorization Server.
+   */
+  private static setLogger(): void {
+    const logger = this.authorizationServerOptions.logger ?? ConsoleLogger;
+
+    const binding = this.container.bind(Logger);
+
+    typeof logger === 'function' ? binding.toClass(logger).asSingleton() : binding.toValue(logger);
   }
 
   /**

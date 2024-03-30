@@ -11,6 +11,7 @@ import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { RefreshTokenTokenRequest } from '../../requests/token/refresh-token.token-request';
 import { RefreshTokenServiceInterface } from '../../services/refresh-token.service.interface';
 import { REFRESH_TOKEN_SERVICE } from '../../services/refresh-token.service.token';
@@ -29,18 +30,20 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<Ref
   /**
    * Instantiates a new Refresh Token Token Request Validator.
    *
+   * @param logger Logger of the Authorization Server.
    * @param clientAuthenticationHandler Instance of the Client Authentication Handler.
    * @param scopeHandler Scope Handler of the Authorization Server.
    * @param refreshTokenService Instance of the Refresh Token Service.
    * @param grantTypes Grant Types registered at the Authorization Server.
    */
   public constructor(
+    protected override readonly logger: Logger,
     protected override readonly clientAuthenticationHandler: ClientAuthenticationHandler,
-    protected readonly scopeHandler: ScopeHandler,
-    @Inject(REFRESH_TOKEN_SERVICE) protected readonly refreshTokenService: RefreshTokenServiceInterface,
+    private readonly scopeHandler: ScopeHandler,
+    @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: RefreshTokenServiceInterface,
     @InjectAll(GRANT_TYPE) protected override readonly grantTypes: GrantTypeInterface[],
   ) {
-    super(clientAuthenticationHandler, grantTypes);
+    super(logger, clientAuthenticationHandler, grantTypes);
   }
 
   /**
@@ -50,6 +53,10 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<Ref
    * @returns Token Context.
    */
   public override async validate(request: HttpRequest): Promise<RefreshTokenTokenContext> {
+    this.logger.debug(`[${this.constructor.name}] Called validate()`, 'd9a9b512-946c-4f18-b645-81507a500d31', {
+      request,
+    });
+
     const context = await super.validate(request);
 
     const { parameters } = context;
@@ -57,7 +64,15 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<Ref
     const refreshToken = await this.getRefreshToken(parameters);
     const scopes = this.getScopes(parameters, refreshToken, context.client);
 
-    return Object.assign(context, { refreshToken, scopes }) as RefreshTokenTokenContext;
+    Object.assign<RefreshTokenTokenContext, Partial<RefreshTokenTokenContext>>(context, { refreshToken, scopes });
+
+    this.logger.debug(
+      `[${this.constructor.name}] Refresh Token Token Request validation completed`,
+      '1a66508c-5942-4c68-82c1-2929f85c944a',
+      { context },
+    );
+
+    return context;
   }
 
   /**
@@ -67,14 +82,36 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<Ref
    * @returns Refresh Token based on the provided token.
    */
   private async getRefreshToken(parameters: RefreshTokenTokenRequest): Promise<RefreshToken> {
+    this.logger.debug(`[${this.constructor.name}] Called getRefreshToken()`, 'ea3d2423-ef01-4897-844a-6acc170c423b', {
+      parameters,
+    });
+
     if (typeof parameters.refresh_token === 'undefined') {
-      throw new InvalidRequestException('Invalid parameter "refresh_token".');
+      const exc = new InvalidRequestException('Invalid parameter "refresh_token".');
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid parameter "refresh_token"`,
+        'f81beada-6951-4a17-a92c-279f3c18d1a0',
+        { parameters },
+        exc,
+      );
+
+      throw exc;
     }
 
     const refreshToken = await this.refreshTokenService.findOne(parameters.refresh_token);
 
     if (refreshToken === null) {
-      throw new InvalidGrantException('Invalid Refresh Token.');
+      const exc = new InvalidGrantException('Invalid Refresh Token.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid Refresh Token`,
+        'e308cf51-c9fb-461e-bcd6-3e91ff0b395e',
+        null,
+        exc,
+      );
+
+      throw exc;
     }
 
     return refreshToken;
@@ -89,6 +126,10 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<Ref
    * @returns Scopes of the new Access Token.
    */
   private getScopes(parameters: RefreshTokenTokenRequest, refreshToken: RefreshToken, client: Client): string[] {
+    this.logger.debug(`[${this.constructor.name}] Called getScopes()`, '5bfc7fc9-697e-4187-9259-ef383d60a000', {
+      parameters,
+    });
+
     if (typeof parameters.scope === 'undefined') {
       return refreshToken.scopes;
     }
@@ -99,7 +140,16 @@ export class RefreshTokenTokenRequestValidator extends TokenRequestValidator<Ref
 
     requestedScopes.forEach((requestedScope) => {
       if (!refreshToken.scopes.includes(requestedScope)) {
-        throw new InvalidGrantException(`The scope "${requestedScope}" was not previously granted.`);
+        const exc = new InvalidGrantException(`The scope "${requestedScope}" was not previously granted.`);
+
+        this.logger.error(
+          `[${this.constructor.name}] The scope "${requestedScope}" was not previously granted`,
+          '83f97acd-b875-481f-b6a1-5b9ce33ec1ab',
+          null,
+          exc,
+        );
+
+        throw exc;
       }
     });
 

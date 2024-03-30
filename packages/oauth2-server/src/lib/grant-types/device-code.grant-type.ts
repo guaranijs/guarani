@@ -10,6 +10,7 @@ import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { AuthorizationPendingException } from '../exceptions/authorization-pending.exception';
 import { ExpiredTokenException } from '../exceptions/expired-token.exception';
 import { SlowDownException } from '../exceptions/slow-down.exception';
+import { Logger } from '../logger/logger';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
@@ -42,11 +43,13 @@ export class DeviceCodeGrantType implements GrantTypeInterface {
   /**
    * Instantiates a new Device Code Grant Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param deviceCodeService Instance of the Device Code Service.
    * @param accessTokenService Instance of the Access Token Service.
    * @param refreshTokenService Instance of the Refresh Token Service.
    */
   public constructor(
+    private readonly logger: Logger,
     @Inject(DEVICE_CODE_SERVICE) private readonly deviceCodeService: DeviceCodeServiceInterface,
     @Inject(ACCESS_TOKEN_SERVICE) private readonly accessTokenService: AccessTokenServiceInterface,
     @Optional() @Inject(REFRESH_TOKEN_SERVICE) private readonly refreshTokenService: RefreshTokenServiceInterface,
@@ -65,6 +68,10 @@ export class DeviceCodeGrantType implements GrantTypeInterface {
    * @returns Access Token Response.
    */
   public async handle(context: DeviceCodeTokenContext): Promise<TokenResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handle()`, 'a81764e3-1acf-4af0-88af-eb4a58c79e59', {
+      context,
+    });
+
     const { client, deviceCode } = context;
 
     await this.checkDeviceCode(deviceCode, client);
@@ -78,7 +85,15 @@ export class DeviceCodeGrantType implements GrantTypeInterface {
         ? await this.refreshTokenService.create(scopes, client, user!, accessToken)
         : null;
 
-    return createTokenResponse(accessToken, refreshToken);
+    const response = createTokenResponse(accessToken, refreshToken);
+
+    this.logger.debug(
+      `[${this.constructor.name}] Device Code Grant completed`,
+      '1bfb300c-d6f9-42aa-bc00-babaa43115ab',
+      { response },
+    );
+
+    return response;
   }
 
   /**
@@ -90,27 +105,70 @@ export class DeviceCodeGrantType implements GrantTypeInterface {
    * @param client Client requesting authorization.
    */
   private async checkDeviceCode(deviceCode: DeviceCode, client: Client): Promise<void> {
+    this.logger.debug(`[${this.constructor.name}] Called checkDeviceCode()`, '14340fd8-dfa2-4aed-8fd0-2b6fb4b8b0bc', {
+      device_code: deviceCode,
+      client,
+    });
+
     const deviceCodeClientId = Buffer.from(deviceCode.client.id, 'utf8');
     const clientId = Buffer.from(client.id, 'utf8');
 
     if (deviceCodeClientId.length !== clientId.length || !timingSafeEqual(deviceCodeClientId, clientId)) {
       deviceCode.isAuthorized = false;
+
       await this.deviceCodeService.save(deviceCode);
-      throw new AccessDeniedException('Authorization denied by the Authorization Server.');
+
+      const exc = new AccessDeniedException('Authorization denied by the Authorization Server.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Authorization denied by the Authorization Server`,
+        '045dc633-e514-4a5f-923f-cd7ec1a3337d',
+        { device_code: deviceCode, client },
+        exc,
+      );
+
+      throw exc;
     }
 
     if (new Date() >= deviceCode.expiresAt) {
-      throw new ExpiredTokenException('Expired Device Code.');
+      const exc = new ExpiredTokenException('Expired Device Code.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Expired Device Code`,
+        '71516abb-06df-4253-b47c-0044b0666c98',
+        { device_code: deviceCode },
+        exc,
+      );
+
+      throw exc;
     }
 
     if (deviceCode.isAuthorized === null) {
-      throw (await this.deviceCodeService.shouldSlowDown(deviceCode))
+      const exc = (await this.deviceCodeService.shouldSlowDown(deviceCode))
         ? new SlowDownException()
         : new AuthorizationPendingException();
+
+      this.logger.error(
+        `[${this.constructor.name}] Device Code not yet authorized`,
+        'af9f8d95-0393-4114-b0d5-984f8683acdb',
+        { device_code: deviceCode },
+        exc,
+      );
+
+      throw exc;
     }
 
     if (!deviceCode.isAuthorized) {
-      throw new AccessDeniedException('Authorization denied by the User.');
+      const exc = new AccessDeniedException('Authorization denied by the User.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Authorization denied by the User`,
+        '75f28067-434d-495e-906d-95982b88a7c2',
+        { device_code: deviceCode },
+        exc,
+      );
+
+      throw exc;
     }
   }
 }

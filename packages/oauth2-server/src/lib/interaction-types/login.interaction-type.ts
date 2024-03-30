@@ -10,6 +10,7 @@ import { Grant } from '../entities/grant.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { UnmetAuthenticationRequirementsException } from '../exceptions/unmet-authentication-requirements.exception';
 import { AuthHandler } from '../handlers/auth.handler';
+import { Logger } from '../logger/logger';
 import { LoginContextInteractionResponse } from '../responses/interaction/login-context.interaction-response';
 import { LoginDecisionInteractionResponse } from '../responses/interaction/login-decision.interaction-response';
 import { GrantServiceInterface } from '../services/grant.service.interface';
@@ -51,12 +52,14 @@ export class LoginInteractionType implements InteractionTypeInterface {
   /**
    * Instantiates a new Login Interaction Type.
    *
+   * @param logger Logger of the Authorization Server.
    * @param authHandler Instance of the Auth Handler.
    * @param settings Settings of the Authorization Server.
    * @param loginService Instance of the Login Service.
    * @param grantService Instance of the Grant Service.
    */
   public constructor(
+    private readonly logger: Logger,
     private readonly authHandler: AuthHandler,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(GRANT_SERVICE) private readonly grantService: GrantServiceInterface,
@@ -74,6 +77,10 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * @returns Login Context Interaction Response.
    */
   public async handleContext(context: LoginContextInteractionContext): Promise<LoginContextInteractionResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called handleContext()`, 'b1776075-3011-4a57-b2ef-5773b5d52777', {
+      context,
+    });
+
     const { grant } = context;
 
     await this.checkGrant(grant);
@@ -87,15 +94,24 @@ export class LoginInteractionType implements InteractionTypeInterface {
       const authTime = grant.session.activeLogin.createdAt.getTime();
       const maxAge = Number.parseInt(grant.parameters.max_age, 10) * 1000;
 
+      this.logger.debug(`[${this.constructor.name}] Checking Max Age`, '3a0a9a42-b6ae-47d4-b367-0d2d19f77c33', {
+        auth_time: authTime,
+        max_age: maxAge,
+      });
+
       skip &&= Date.now() < authTime + maxAge;
       authExp = Math.floor((authTime + maxAge) / 1000);
 
       if (!skip) {
+        this.logger.debug(`[${this.constructor.name}] Inactivating old Login`, 'd8a6ef08-9fd1-427a-8ff1-bc574d29b888', {
+          login_id: grant.session.activeLogin.id,
+        });
+
         await this.authHandler.inactivateSessionActiveLogin(grant.session);
       }
     }
 
-    return {
+    const response: LoginContextInteractionResponse = {
       skip,
       request_url: url.href,
       client: grant.client.id,
@@ -108,6 +124,14 @@ export class LoginInteractionType implements InteractionTypeInterface {
         acr_values: grant.parameters.acr_values?.split(' '),
       },
     };
+
+    this.logger.debug(
+      `[${this.constructor.name}] Login Context Interaction completed`,
+      '89554ee7-701f-4cc4-b9c4-cb197e03a030',
+      { response },
+    );
+
+    return response;
   }
 
   /**
@@ -119,16 +143,38 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * @returns Login Decision Interaction Response.
    */
   public async handleDecision(context: LoginDecisionInteractionContext): Promise<LoginDecisionInteractionResponse> {
-    const { grant } = context;
+    this.logger.debug(`[${this.constructor.name}] Called handleDecision()`, '3db2fa6e-4a7e-4acb-9cff-32af3fe907c5', {
+      context,
+    });
+
+    const { decision, grant } = context;
 
     await this.checkGrant(grant);
 
-    switch (context.decision) {
-      case 'accept':
-        return await this.acceptLogin(<LoginDecisionAcceptInteractionContext>context);
+    switch (decision) {
+      case 'accept': {
+        const response = await this.acceptLogin(<LoginDecisionAcceptInteractionContext>context);
 
-      case 'deny':
-        return await this.denyLogin(<LoginDecisionDenyInteractionContext>context);
+        this.logger.debug(
+          `[${this.constructor.name}] Login Decision Interaction completed`,
+          'a8c4ca8d-001d-444e-a470-4b7d29f90a80',
+          { decision, response },
+        );
+
+        return response;
+      }
+
+      case 'deny': {
+        const response = await this.denyLogin(<LoginDecisionDenyInteractionContext>context);
+
+        this.logger.debug(
+          `[${this.constructor.name}] Login Decision Interaction completed`,
+          '0980f8ca-571f-4d22-a36a-f16823284124',
+          { decision, response },
+        );
+
+        return response;
+      }
     }
   }
 
@@ -140,15 +186,26 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * @returns Login Decision Interaction Response.
    */
   private async acceptLogin(context: LoginDecisionAcceptInteractionContext): Promise<LoginDecisionInteractionResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called acceptLogin()`, 'e82aee0e-acc8-45d1-9516-97a1836f4bee', {
+      context,
+    });
+
     const { acr, amr, grant, user } = context;
     const { client, parameters, session } = grant;
 
     if (acr !== null && parameters.acr_values?.includes(acr) === false) {
-      await this.grantService.remove(grant);
-
       const error = new UnmetAuthenticationRequirementsException(
         `Could not authenticate using the Authentication Context Class Reference "${parameters.acr_values}".`,
       );
+
+      this.logger.error(
+        `[${this.constructor.name}] Could not authenticate using the Authentication Context Class Reference "${parameters.acr_values}"`,
+        'f7e07a95-dee0-482b-a244-f3abfc917462',
+        { acr, requested_acr: parameters.acr_values },
+        error,
+      );
+
+      await this.grantService.remove(grant);
 
       const url = addParametersToUrl(new URL('/oauth/error', this.settings.issuer), error.toJSON());
 
@@ -175,6 +232,10 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * @returns Login Decision Interaction Response.
    */
   private async denyLogin(context: LoginDecisionDenyInteractionContext): Promise<LoginDecisionInteractionResponse> {
+    this.logger.debug(`[${this.constructor.name}] Called denyLogin()`, 'e394560e-c8ae-45f9-99fc-35f88d55f2ff', {
+      context,
+    });
+
     const { error, grant } = context;
 
     await this.grantService.remove(grant);
@@ -190,9 +251,23 @@ export class LoginInteractionType implements InteractionTypeInterface {
    * @param grant Grant to be checked.
    */
   private async checkGrant(grant: Grant): Promise<void> {
+    this.logger.debug(`[${this.constructor.name}] Called checkGrant()`, 'ab2ea947-74e8-43d6-a2e6-88cbe1809322', {
+      grant,
+    });
+
     if (new Date() > grant.expiresAt) {
       await this.grantService.remove(grant);
-      throw new AccessDeniedException('Expired Grant.');
+
+      const exc = new AccessDeniedException('Expired Grant.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Expired Grant`,
+        'ed3bbf76-b645-4aa2-b808-44948d72db9f',
+        { grant },
+        exc,
+      );
+
+      throw exc;
     }
   }
 }

@@ -9,22 +9,26 @@ import { InvalidClientException } from '../exceptions/invalid-client.exception';
 import { ClientAuthenticationHandler } from '../handlers/client-authentication.handler';
 import { ScopeHandler } from '../handlers/scope.handler';
 import { HttpRequest } from '../http/http.request';
+import { Logger } from '../logger/logger';
 import { DeviceAuthorizationRequest } from '../requests/device-authorization-request';
 import { DeviceAuthorizationRequestValidator } from './device-authorization-request.validator';
 
 jest.mock('../handlers/client-authentication.handler');
 jest.mock('../handlers/scope.handler');
+jest.mock('../logger/logger');
 
 describe('Device Authorization Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: DeviceAuthorizationRequestValidator;
 
+  const loggerMock = jest.mocked(Logger.prototype);
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
     container.bind(ScopeHandler).toValue(scopeHandlerMock);
     container.bind(DeviceAuthorizationRequestValidator).toSelf().asSingleton();

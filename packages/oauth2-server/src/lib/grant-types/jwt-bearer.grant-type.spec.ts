@@ -4,15 +4,20 @@ import { JwtBearerTokenContext } from '../context/token/jwt-bearer.token-context
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
+import { Logger } from '../logger/logger';
 import { TokenResponse } from '../responses/token-response';
 import { AccessTokenServiceInterface } from '../services/access-token.service.interface';
 import { ACCESS_TOKEN_SERVICE } from '../services/access-token.service.token';
 import { GrantTypeInterface } from './grant-type.interface';
 import { JwtBearerGrantType } from './jwt-bearer.grant-type';
 
+jest.mock('../logger/logger');
+
 describe('JWT Bearer Grant Type', () => {
   let container: DependencyInjectionContainer;
   let grantType: JwtBearerGrantType;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const accessTokenServiceMock = jest.mocked<AccessTokenServiceInterface>({
     create: jest.fn(),
@@ -23,6 +28,7 @@ describe('JWT Bearer Grant Type', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind<AccessTokenServiceInterface>(ACCESS_TOKEN_SERVICE).toValue(accessTokenServiceMock);
     container.bind(JwtBearerGrantType).toSelf().asSingleton();
 

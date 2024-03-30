@@ -11,17 +11,22 @@ import { GrantType } from '../../grant-types/grant-type.type';
 import { ClientAuthenticationHandler } from '../../handlers/client-authentication.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { ClientCredentialsTokenRequest } from '../../requests/token/client-credentials.token-request';
 import { ClientCredentialsTokenRequestValidator } from './client-credentials.token-request.validator';
 
 jest.mock('../../handlers/client-authentication.handler');
 jest.mock('../../handlers/scope.handler');
+jest.mock('../../logger/logger');
 
 describe('Client Credentials Token Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: ClientCredentialsTokenRequestValidator;
 
+  const loggerMock = jest.mocked(Logger.prototype);
+
   const clientAuthenticationHandlerMock = jest.mocked(ClientAuthenticationHandler.prototype);
+
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
   const grantTypesMocks = [
@@ -36,6 +41,7 @@ describe('Client Credentials Token Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ClientAuthenticationHandler).toValue(clientAuthenticationHandlerMock);
     container.bind(ScopeHandler).toValue(scopeHandlerMock);
 

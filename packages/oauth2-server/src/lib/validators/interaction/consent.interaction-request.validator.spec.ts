@@ -18,6 +18,7 @@ import { ConsentDecision } from '../../interaction-types/consent-decision.type';
 import { InteractionTypeInterface } from '../../interaction-types/interaction-type.interface';
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
+import { Logger } from '../../logger/logger';
 import { ConsentContextInteractionRequest } from '../../requests/interaction/consent-context.interaction-request';
 import { ConsentDecisionInteractionRequest } from '../../requests/interaction/consent-decision.interaction-request';
 import { ConsentDecisionAcceptInteractionRequest } from '../../requests/interaction/consent-decision-accept.interaction-request';
@@ -27,10 +28,13 @@ import { GRANT_SERVICE } from '../../services/grant.service.token';
 import { ConsentInteractionRequestValidator } from './consent.interaction-request.validator';
 
 jest.mock('../../handlers/scope.handler');
+jest.mock('../../logger/logger');
 
 describe('Consent Interaction Request Validator', () => {
   let container: DependencyInjectionContainer;
   let validator: ConsentInteractionRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
@@ -51,6 +55,7 @@ describe('Consent Interaction Request Validator', () => {
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
+    container.bind(Logger).toValue(loggerMock);
     container.bind(ScopeHandler).toValue(scopeHandlerMock);
     container.bind<GrantServiceInterface>(GRANT_SERVICE).toValue(grantServiceMock);
 

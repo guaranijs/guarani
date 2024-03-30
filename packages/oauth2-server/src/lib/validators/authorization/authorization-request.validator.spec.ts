@@ -13,6 +13,7 @@ import { InvalidRequestException } from '../../exceptions/invalid-request.except
 import { UnauthorizedClientException } from '../../exceptions/unauthorized-client.exception';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
+import { Logger } from '../../logger/logger';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { ResponseMode } from '../../response-modes/response-mode.type';
@@ -22,11 +23,14 @@ import { Settings } from '../../settings/settings';
 import { AuthorizationRequestValidator } from './authorization-request.validator';
 
 jest.mock('../../handlers/scope.handler');
+jest.mock('../../logger/logger');
 
 const invalidMaxAges: any[] = ['', 'a', '0x12', '07', '-1', '-0x12', '-07'];
 
 describe('Authorization Request Validator', () => {
   let validator: AuthorizationRequestValidator;
+
+  const loggerMock = jest.mocked(Logger.prototype);
 
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
@@ -106,6 +110,7 @@ describe('Authorization Request Validator', () => {
 
   beforeEach(() => {
     validator = Reflect.construct(AuthorizationRequestValidator, [
+      loggerMock,
       scopeHandlerMock,
       settings,
       clientServiceMock,
@@ -296,6 +301,7 @@ describe('Authorization Request Validator', () => {
       ];
 
       validator = Reflect.construct(AuthorizationRequestValidator, [
+        loggerMock,
         scopeHandlerMock,
         settings,
         clientServiceMock,
@@ -498,6 +504,7 @@ describe('Authorization Request Validator', () => {
       const settings = <Settings>{ uiLocales: <string[]>[], acrValues: <string[]>[] };
 
       validator = Reflect.construct(AuthorizationRequestValidator, [
+        loggerMock,
         scopeHandlerMock,
         settings,
         clientServiceMock,
@@ -547,6 +554,7 @@ describe('Authorization Request Validator', () => {
       const settings = <Settings>{ uiLocales: <string[]>['en', 'pt-BR'], acrValues: <string[]>[] };
 
       validator = Reflect.construct(AuthorizationRequestValidator, [
+        loggerMock,
         scopeHandlerMock,
         settings,
         clientServiceMock,

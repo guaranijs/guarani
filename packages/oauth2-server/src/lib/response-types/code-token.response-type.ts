@@ -82,7 +82,7 @@ export class CodeTokenResponseType implements ResponseTypeInterface {
 
     const response = createTokenResponse(accessToken, null) as CodeAuthorizationResponse & TokenAuthorizationResponse;
 
-    response.code = authorizationCode.code;
+    response.code = authorizationCode.id;
 
     this.logger.debug(
       `[${this.constructor.name}] Completed "${this.name}" Response Type`,

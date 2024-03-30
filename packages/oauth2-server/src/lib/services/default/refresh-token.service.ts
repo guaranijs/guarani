@@ -30,7 +30,7 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
     const now = Date.now();
 
     const refreshToken: RefreshToken = {
-      handle: randomBytes(12).toString('hex'),
+      id: randomBytes(12).toString('hex'),
       scopes,
       isRevoked: false,
       issuedAt: new Date(now),
@@ -45,12 +45,9 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
     return refreshToken;
   }
 
-  public async findOne(handle: string): Promise<Nullable<RefreshToken>> {
-    this.logger.debug(`[${this.constructor.name}] Called findOne()`, '7b1685c4-a6c5-48b3-9874-cf938ad6f647', {
-      handle,
-    });
-
-    return this.refreshTokens.find((refreshToken) => refreshToken.handle === handle) ?? null;
+  public async findOne(id: string): Promise<Nullable<RefreshToken>> {
+    this.logger.debug(`[${this.constructor.name}] Called findOne()`, '7b1685c4-a6c5-48b3-9874-cf938ad6f647', { id });
+    return this.refreshTokens.find((refreshToken) => refreshToken.id === id) ?? null;
   }
 
   public async revoke(refreshToken: RefreshToken): Promise<void> {
@@ -69,7 +66,7 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
     const now = Date.now();
 
     const newRefreshToken: RefreshToken = {
-      handle: randomBytes(12).toString('hex'),
+      id: randomBytes(12).toString('hex'),
       scopes: refreshToken.scopes,
       isRevoked: false,
       issuedAt: new Date(now),

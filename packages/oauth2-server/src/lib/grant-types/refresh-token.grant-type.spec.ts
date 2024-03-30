@@ -106,7 +106,7 @@ describe('Refresh Token Grant Type', () => {
           grantTypes: ['authorization_code', 'refresh_token'],
         },
         refreshToken: <RefreshToken>{
-          handle: 'refresh_token',
+          id: 'refresh_token',
           isRevoked: false,
           issuedAt: new Date(now),
           expiresAt: new Date(now + 86400000),
@@ -158,7 +158,7 @@ describe('Refresh Token Grant Type', () => {
 
     it('should create a token response with the original scope and the same refresh token.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
@@ -178,7 +178,7 @@ describe('Refresh Token Grant Type', () => {
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
@@ -206,12 +206,12 @@ describe('Refresh Token Grant Type', () => {
       grantType = container.resolve(RefreshTokenGrantType);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
 
-      const refreshToken = <RefreshToken>{ handle: 'new_refresh_token' };
+      const refreshToken = <RefreshToken>{ id: 'new_refresh_token' };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       refreshTokenServiceMock.rotate!.mockResolvedValueOnce(refreshToken);
@@ -239,12 +239,12 @@ describe('Refresh Token Grant Type', () => {
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
 
-      const refreshToken = <RefreshToken>{ handle: 'new_refresh_token' };
+      const refreshToken = <RefreshToken>{ id: 'new_refresh_token' };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       refreshTokenServiceMock.rotate!.mockResolvedValueOnce(refreshToken);

@@ -10,7 +10,7 @@ export interface AccessToken {
   /**
    * Identifier of the Access Token.
    */
-  readonly handle: string;
+  readonly id: string;
 
   /**
    * Scopes granted to the Client.

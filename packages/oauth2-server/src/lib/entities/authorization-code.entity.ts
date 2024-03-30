@@ -9,7 +9,7 @@ export interface AuthorizationCode {
   /**
    * Identifier of the Authorization Code.
    */
-  readonly code: string;
+  readonly id: string;
 
   /**
    * Revocation status of the Authorization Code.

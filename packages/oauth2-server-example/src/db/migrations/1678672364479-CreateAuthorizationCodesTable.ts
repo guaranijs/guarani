@@ -8,7 +8,7 @@ export class CreateAuthorizationCodesTable1678672364479 implements MigrationInte
       name: 'authorization_codes',
       columns: [
         {
-          name: 'code',
+          name: 'id',
           type: 'uuid',
           generationStrategy: 'uuid',
           isGenerated: true,

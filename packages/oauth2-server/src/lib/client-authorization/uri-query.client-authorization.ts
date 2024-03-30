@@ -81,22 +81,22 @@ export class UriQueryClientAuthorization implements ClientAuthorizationInterface
    * Checks and returns the Access Token requested by the Client.
    *
    * @param request Http Request.
-   * @returns Access Token based on the provided Access Token Handle.
+   * @returns Access Token based on the provided Access Token Identifier.
    */
   public async authorize(request: HttpRequest): Promise<AccessToken> {
     this.logger.debug(`[${this.constructor.name}] Called authorize()`, '03720137-9bd3-4100-ac3b-8defdd86d943', {
       request,
     });
 
-    const { access_token: accessTokenHandle } = request.query as UriQueryClientAuthorizationParameters;
+    const { access_token: accessTokenId } = request.query as UriQueryClientAuthorizationParameters;
 
     this.logger.debug(
-      `[${this.constructor.name}] Searching for an Access Token with the provided Handle`,
+      `[${this.constructor.name}] Searching for an Access Token with the provided Identifier`,
       'c2eecec2-d311-42a3-8e0f-172da1a03ab4',
-      { token: accessTokenHandle },
+      { token: accessTokenId },
     );
 
-    const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
+    const accessToken = await this.accessTokenService.findOne(accessTokenId);
 
     if (accessToken === null) {
       const exc = new InvalidTokenException('Invalid Access Token.');
@@ -104,7 +104,7 @@ export class UriQueryClientAuthorization implements ClientAuthorizationInterface
       this.logger.error(
         `[${this.constructor.name}] Invalid Access Token`,
         '4ee2acef-37c9-45a3-91b1-36c1e3f655e6',
-        { token: accessTokenHandle },
+        { token: accessTokenId },
         exc,
       );
 

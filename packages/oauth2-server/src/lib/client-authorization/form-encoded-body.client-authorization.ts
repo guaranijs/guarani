@@ -65,10 +65,9 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
       return false;
     }
 
-    const { access_token: accessTokenHandle } =
-      getBodyParameters<FormEncodedBodyClientAuthorizationParameters>(request);
+    const { access_token: accessTokenId } = getBodyParameters<FormEncodedBodyClientAuthorizationParameters>(request);
 
-    const result = typeof accessTokenHandle === 'string';
+    const result = typeof accessTokenId === 'string';
 
     this.logger.debug(
       `[${this.constructor.name}] Completed hasBeenRequested()`,
@@ -83,23 +82,22 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
    * Checks and returns the Access Token requested by the Client.
    *
    * @param request Http Request.
-   * @returns Access Token based on the provided Access Token Handle.
+   * @returns Access Token based on the provided Access Token Identifier.
    */
   public async authorize(request: HttpRequest): Promise<AccessToken> {
     this.logger.debug(`[${this.constructor.name}] Called authorize()`, 'dc82c8f6-d144-472a-a14a-3fd7c888fce0', {
       request,
     });
 
-    const { access_token: accessTokenHandle } =
-      getBodyParameters<FormEncodedBodyClientAuthorizationParameters>(request);
+    const { access_token: accessTokenId } = getBodyParameters<FormEncodedBodyClientAuthorizationParameters>(request);
 
     this.logger.debug(
-      `[${this.constructor.name}] Searching for an Access Token with the provided Handle`,
+      `[${this.constructor.name}] Searching for an Access Token with the provided Identifier`,
       'f272458d-6317-4bd4-b038-5cf4151f2be7',
-      { token: accessTokenHandle },
+      { token: accessTokenId },
     );
 
-    const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
+    const accessToken = await this.accessTokenService.findOne(accessTokenId);
 
     if (accessToken === null) {
       const exc = new InvalidTokenException('Invalid Access Token.');
@@ -107,7 +105,7 @@ export class FormEncodedBodyClientAuthorization implements ClientAuthorizationIn
       this.logger.error(
         `[${this.constructor.name}] Invalid Access Token`,
         '4592da12-4642-48ec-92bb-d62a585d1bcc',
-        { token: accessTokenHandle },
+        { token: accessTokenId },
         exc,
       );
 

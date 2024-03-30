@@ -118,7 +118,7 @@ describe('Code ID Token Response Type', () => {
       const login = <Login>{};
       const consent = <Consent>{ scopes: ['openid', 'foo', 'bar'] };
 
-      const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
+      const authorizationCode = <AuthorizationCode>{ id: 'authorization_code' };
 
       authorizationCodeServiceMock.create.mockResolvedValueOnce(authorizationCode);
       idTokenHandlerMock.generateIdToken.mockResolvedValueOnce('id_token');

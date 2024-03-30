@@ -98,7 +98,7 @@ describe('Token Response Type', () => {
       };
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: consent.scopes,
         expiresAt: new Date(Date.now() + 3600000),
       };

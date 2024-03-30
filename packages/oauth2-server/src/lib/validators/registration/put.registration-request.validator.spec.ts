@@ -255,7 +255,7 @@ describe('Put Registration Request Validator', () => {
     it('should throw when providing an initial access token.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{ handle: 'access_token', client: null };
+      const accessToken = <AccessToken>{ id: 'access_token', client: null };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -268,7 +268,7 @@ describe('Put Registration Request Validator', () => {
     it('should throw when the client presents an access token that was not issued to itself.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
+      const accessToken = <AccessToken>{ id: 'access_token', client: { id: 'another_client_id' } };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -285,7 +285,7 @@ describe('Put Registration Request Validator', () => {
       const request = requestFactory();
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: ['foo', 'bar', 'baz', 'qux'],
         client: { id: 'client_id' },
       };
@@ -302,7 +302,7 @@ describe('Put Registration Request Validator', () => {
       const request = requestFactory({}, { client_secret: 'another_client_secret' });
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: ['client:update'],
         client: { id: 'client_id', secret: 'client_secret' },
       };
@@ -319,7 +319,7 @@ describe('Put Registration Request Validator', () => {
       const request = requestFactory();
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: ['client:update'],
         client: { id: 'client_id', secret: 'client_secret' },
       };

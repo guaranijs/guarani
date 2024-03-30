@@ -131,7 +131,7 @@ describe('Refresh Token Token Request Validator', () => {
         scopes: ['foo', 'bar', 'baz'],
       };
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token', scopes: ['foo', 'bar'] };
+      const refreshToken = <RefreshToken>{ id: 'refresh_token', scopes: ['foo', 'bar'] };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
@@ -154,7 +154,7 @@ describe('Refresh Token Token Request Validator', () => {
         scopes: ['foo', 'bar', 'baz'],
       };
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token', scopes: ['foo', 'bar', 'baz'] };
+      const refreshToken = <RefreshToken>{ id: 'refresh_token', scopes: ['foo', 'bar', 'baz'] };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
@@ -180,7 +180,7 @@ describe('Refresh Token Token Request Validator', () => {
         scopes: ['foo', 'bar', 'baz'],
       };
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token', scopes: ['foo', 'bar', 'baz'] };
+      const refreshToken = <RefreshToken>{ id: 'refresh_token', scopes: ['foo', 'bar', 'baz'] };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);

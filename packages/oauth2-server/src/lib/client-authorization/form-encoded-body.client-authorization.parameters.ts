@@ -5,7 +5,7 @@ import { Dictionary, OneOrMany } from '@guarani/types';
  */
 export interface FormEncodedBodyClientAuthorizationParameters extends Dictionary<OneOrMany<string>> {
   /**
-   * Access Token Handle.
+   * Access Token Identifier.
    */
   readonly access_token: string;
 }

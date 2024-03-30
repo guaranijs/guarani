@@ -31,12 +31,12 @@ export interface AccessTokenServiceInterface {
   createRegistrationAccessToken?(client: Client): Promise<AccessToken>;
 
   /**
-   * Searches the application's storage for a Access Token containing the provided Handle.
+   * Searches the application's storage for a Access Token containing the provided Identifier.
    *
-   * @param handle Handle of the Access Token.
-   * @returns Access Token based on the provided Handle.
+   * @param id Identifier of the Access Token.
+   * @returns Access Token based on the provided Identifier.
    */
-  findOne(handle: string): Promise<Nullable<AccessToken>>;
+  findOne(id: string): Promise<Nullable<AccessToken>>;
 
   /**
    * Revokes the provided Access Token.

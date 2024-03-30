@@ -9,15 +9,15 @@ import { User } from './user.entity';
 @Entity({ name: 'access_tokens' })
 export class AccessToken extends BaseEntity implements OAuth2AccessToken {
   @PrimaryColumn({
-    name: 'handle',
+    name: 'id',
     type: 'varchar',
     length: 32,
     nullable: false,
     primary: true,
     primaryKeyConstraintName: 'access_tokens_pk',
   })
-  @Check('check_handle_length', 'length("handle") = 32')
-  public readonly handle!: string;
+  @Check('check_id_length', 'length("id") = 32')
+  public readonly id!: string;
 
   @Column({ name: 'scopes', type: 'varchar', array: true, nullable: false })
   public readonly scopes!: string[];

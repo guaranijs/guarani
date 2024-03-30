@@ -116,7 +116,7 @@ describe('Form Encoded Body Client Authorization', () => {
       const request = requestFactory();
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         expiresAt: new Date(Date.now() - 3600000),
       };
 
@@ -132,7 +132,7 @@ describe('Form Encoded Body Client Authorization', () => {
       const request = requestFactory();
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         expiresAt: new Date(Date.now() + 7200000),
         validAfter: new Date(Date.now() + 3600000),
       };
@@ -149,7 +149,7 @@ describe('Form Encoded Body Client Authorization', () => {
       const request = requestFactory();
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         isRevoked: true,
         expiresAt: new Date(Date.now() + 3600000),
         validAfter: new Date(Date.now()),
@@ -167,7 +167,7 @@ describe('Form Encoded Body Client Authorization', () => {
       const request = requestFactory();
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         isRevoked: false,
         expiresAt: new Date(Date.now() + 3600000),
         validAfter: new Date(Date.now()),

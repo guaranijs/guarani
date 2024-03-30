@@ -146,7 +146,7 @@ describe('Device Code Grant Type', () => {
       Reflect.set(context.deviceCode.client, 'grantTypes', ['urn:ietf:params:oauth:grant-type:device_code']);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         expiresAt: new Date(Date.now() + 3600000),
         scopes: context.deviceCode.scopes,
       };
@@ -171,7 +171,7 @@ describe('Device Code Grant Type', () => {
       grantType = container.resolve(DeviceCodeGrantType);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         expiresAt: new Date(Date.now() + 3600000),
         scopes: context.deviceCode.scopes,
       };
@@ -189,12 +189,12 @@ describe('Device Code Grant Type', () => {
 
     it('should create a token response with a refresh token.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         expiresAt: new Date(Date.now() + 3600000),
         scopes: context.deviceCode.scopes,
       };
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token' };
+      const refreshToken = <RefreshToken>{ id: 'refresh_token' };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);

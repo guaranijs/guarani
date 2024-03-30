@@ -199,7 +199,7 @@ describe('Userinfo Endpoint', () => {
 
     it('should return an error response when the access token does not have "openid" as one of its scopes.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: ['foo', 'bar', 'baz', 'qux'],
         client: null,
       };
@@ -224,7 +224,7 @@ describe('Userinfo Endpoint', () => {
 
     it('should return an error response when the access token does not have a client.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
         client: null,
       };
@@ -249,7 +249,7 @@ describe('Userinfo Endpoint', () => {
 
     it('should return an error response when the access token does not have a user.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
         client: { id: 'client_id' },
         user: null,
@@ -275,7 +275,7 @@ describe('Userinfo Endpoint', () => {
 
     it('should return the claims of the user based on the scopes of the access token.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
         client: { id: 'client_id', subjectType: 'public', userinfoSignedResponseAlgorithm: null },
         user: { id: 'user_id' },
@@ -330,7 +330,7 @@ describe('Userinfo Endpoint', () => {
 
     it('should return a signed json web token with the claims of the user based on the scopes of the access token.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
         client: {
           id: 'client_id',
@@ -400,7 +400,7 @@ describe('Userinfo Endpoint', () => {
 
     it('should return a nested json web token with the claims of the user based on the scopes of the access token.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
         client: {
           id: 'client_id',

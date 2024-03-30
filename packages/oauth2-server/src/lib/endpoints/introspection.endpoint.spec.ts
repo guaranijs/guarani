@@ -96,7 +96,7 @@ describe('Introspection Endpoint', () => {
       const request = requestFactory();
 
       const client = <Client>{ id: 'client_id' };
-      const token = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
+      const token = <AccessToken>{ id: 'access_token', client: { id: 'another_client_id' } };
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
@@ -123,7 +123,7 @@ describe('Introspection Endpoint', () => {
       const request = requestFactory();
 
       const client = <Client>{ id: 'client_id' };
-      const token = <AccessToken>{ handle: 'access_token', isRevoked: true, client };
+      const token = <AccessToken>{ id: 'access_token', isRevoked: true, client };
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
@@ -151,7 +151,7 @@ describe('Introspection Endpoint', () => {
 
       const client = <Client>{ id: 'client_id' };
       const token = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         isRevoked: false,
         validAfter: new Date(Date.now() + 3600000),
         client,
@@ -183,7 +183,7 @@ describe('Introspection Endpoint', () => {
 
       const client = <Client>{ id: 'client_id' };
       const token = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         isRevoked: false,
         validAfter: new Date(Date.now() - 7200000),
         expiresAt: new Date(Date.now() - 3600000),
@@ -220,7 +220,7 @@ describe('Introspection Endpoint', () => {
       const user = <User>{ id: 'user_id' };
 
       const token = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: ['foo', 'bar'],
         isRevoked: false,
         issuedAt: new Date(now),

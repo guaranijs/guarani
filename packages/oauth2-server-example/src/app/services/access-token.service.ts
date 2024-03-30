@@ -14,7 +14,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     const now = Date.now();
 
     const accessToken = AccessToken.create({
-      handle: randomBytes(16).toString('hex'),
+      id: randomBytes(16).toString('hex'),
       scopes,
       issuedAt: new Date(now),
       expiresAt: new Date(now + 3600000),
@@ -27,8 +27,8 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     return accessToken;
   }
 
-  public async findOne(handle: string): Promise<Nullable<AccessToken>> {
-    return await AccessToken.findOneBy({ handle });
+  public async findOne(id: string): Promise<Nullable<AccessToken>> {
+    return await AccessToken.findOneBy({ id });
   }
 
   public async revoke(accessToken: AccessToken): Promise<void> {

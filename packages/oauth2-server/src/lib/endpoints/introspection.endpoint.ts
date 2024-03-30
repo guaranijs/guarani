@@ -167,7 +167,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
   /**
    * Checks if the Client of the Request is the same to which the Token was issued to.
    *
-   * @param token Instance of the Token retrieved based on the handle provided by the Client.
+   * @param token Instance of the Token retrieved based on the Identifier provided by the Client.
    * @param client Client of the Request.
    * @returns The Client of the Request is the same to which the Token was issued to.
    */

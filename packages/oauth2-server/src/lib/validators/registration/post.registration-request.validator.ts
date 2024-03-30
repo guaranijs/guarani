@@ -100,7 +100,7 @@ export class PostRegistrationRequestValidator extends PostAndPutRegistrationRequ
    * Retrieves the Access Token from the Request and validates it.
    *
    * @param request Http Request.
-   * @returns Access Token based on the handle provided by the Client.
+   * @returns Access Token based on the Identifier provided by the Client.
    */
   private async authorize(request: HttpRequest): Promise<AccessToken> {
     this.logger.debug(`[${this.constructor.name}] Called authorize()`, '24cab351-68a0-4541-8145-5596d21e0ae5', {
@@ -115,7 +115,7 @@ export class PostRegistrationRequestValidator extends PostAndPutRegistrationRequ
       this.logger.error(
         `[${this.constructor.name}] Must use a Registration Access Token`,
         'bec463ca-4299-49fc-ada5-90e880f17334',
-        { access_token: accessToken.handle },
+        { access_token: accessToken.id },
         exc,
       );
 
@@ -128,7 +128,7 @@ export class PostRegistrationRequestValidator extends PostAndPutRegistrationRequ
       this.logger.error(
         `[${this.constructor.name}] The Client tried to use an Access Token without the required scope`,
         '3ccc3744-c98a-4d12-807f-c2f66fc38a34',
-        { access_token: accessToken.handle },
+        { access_token: accessToken.id },
         exc,
       );
 

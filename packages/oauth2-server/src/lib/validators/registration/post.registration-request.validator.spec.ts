@@ -200,7 +200,7 @@ describe('Post Registration Request Validator', () => {
       const request = requestFactory();
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         client: { id: 'client_id' },
       };
 
@@ -216,7 +216,7 @@ describe('Post Registration Request Validator', () => {
       const request = requestFactory();
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         client: null,
         scopes: ['foo', 'bar', 'baz', 'qux'],
       };
@@ -233,7 +233,7 @@ describe('Post Registration Request Validator', () => {
       const request = requestFactory();
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         client: null,
         scopes: ['client:create'],
       };

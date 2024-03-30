@@ -27,8 +27,8 @@ const login = <Login>{
   createdAt: new Date(),
 };
 
-const accessToken = <AccessToken>{ handle: 'access_token' };
-const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
+const accessToken = <AccessToken>{ id: 'access_token' };
+const authorizationCode = <AuthorizationCode>{ id: 'authorization_code' };
 
 describe('ID Token Handler', () => {
   let container: DependencyInjectionContainer;

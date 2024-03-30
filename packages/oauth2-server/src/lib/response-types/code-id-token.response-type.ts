@@ -93,7 +93,7 @@ export class CodeIdTokenResponseType implements ResponseTypeInterface {
     const idToken = await this.idTokenHandler.generateIdToken(login, consent, null, null, null, authorizationCode);
 
     const response: CodeAuthorizationResponse & IdTokenAuthorizationResponse = {
-      code: authorizationCode.code,
+      code: authorizationCode.id,
       id_token: idToken,
     };
 

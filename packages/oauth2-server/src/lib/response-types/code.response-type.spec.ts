@@ -98,7 +98,7 @@ describe('Code Response Type', () => {
       const login = <Login>{};
       const consent = <Consent>{ client: { id: 'client_id' }, user: { id: 'user_id' } };
 
-      const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
+      const authorizationCode = <AuthorizationCode>{ id: 'authorization_code' };
 
       authorizationCodeServiceMock.create.mockResolvedValueOnce(authorizationCode);
 

@@ -110,7 +110,7 @@ describe('Revocation Endpoint', () => {
       const request = requestFactory();
 
       const client = <Client>{ id: 'client_id' };
-      const token = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
+      const token = <AccessToken>{ id: 'access_token', client: { id: 'another_client_id' } };
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
@@ -134,7 +134,7 @@ describe('Revocation Endpoint', () => {
       const request = requestFactory();
 
       const client = <Client>{ id: 'client_id' };
-      const token = <AccessToken>{ handle: 'access_token', client };
+      const token = <AccessToken>{ id: 'access_token', client };
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
@@ -158,7 +158,7 @@ describe('Revocation Endpoint', () => {
       const request = requestFactory({ token: 'refresh_token' });
 
       const client = <Client>{ id: 'client_id' };
-      const token = <RefreshToken>{ handle: 'refresh_token', client };
+      const token = <RefreshToken>{ id: 'refresh_token', client };
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,

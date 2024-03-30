@@ -8,7 +8,7 @@ export interface RefreshToken {
   /**
    * Identifier of the Refresh Token.
    */
-  readonly handle: string;
+  readonly id: string;
 
   /**
    * Scopes granted to the Client.

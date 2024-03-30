@@ -127,7 +127,7 @@ describe('Authorization Code Token Request Validator', () => {
       const request = requestFactory({ redirect_uri: undefined });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
-      const authorizationCode = <AuthorizationCode>{ code: 'code' };
+      const authorizationCode = <AuthorizationCode>{ id: 'code' };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
@@ -142,7 +142,7 @@ describe('Authorization Code Token Request Validator', () => {
       const request = requestFactory({ redirect_uri: 'client.example.com/oauth/callback' });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
-      const authorizationCode = <AuthorizationCode>{ code: 'code' };
+      const authorizationCode = <AuthorizationCode>{ id: 'code' };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
@@ -157,7 +157,7 @@ describe('Authorization Code Token Request Validator', () => {
       const request = requestFactory({ redirect_uri: 'https://client.example.com/oauth/callback#foo=bar' });
 
       const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
-      const authorizationCode = <AuthorizationCode>{ code: 'code' };
+      const authorizationCode = <AuthorizationCode>{ id: 'code' };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
@@ -176,7 +176,7 @@ describe('Authorization Code Token Request Validator', () => {
         redirectUris: ['https://client.example.org/oauth/callback'],
         grantTypes: ['authorization_code'],
       };
-      const authorizationCode = <AuthorizationCode>{ code: 'code' };
+      const authorizationCode = <AuthorizationCode>{ id: 'code' };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
@@ -195,7 +195,7 @@ describe('Authorization Code Token Request Validator', () => {
         redirectUris: ['https://client.example.com/oauth/callback'],
         grantTypes: ['authorization_code'],
       };
-      const authorizationCode = <AuthorizationCode>{ code: 'code' };
+      const authorizationCode = <AuthorizationCode>{ id: 'code' };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
@@ -214,7 +214,7 @@ describe('Authorization Code Token Request Validator', () => {
         redirectUris: ['https://client.example.com/oauth/callback'],
         grantTypes: ['authorization_code'],
       };
-      const authorizationCode = <AuthorizationCode>{ code: 'code' };
+      const authorizationCode = <AuthorizationCode>{ id: 'code' };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);

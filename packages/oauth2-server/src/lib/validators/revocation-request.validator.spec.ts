@@ -236,7 +236,7 @@ describe('Revocation Request Validator', () => {
       const request = requestFactory();
 
       const client = <Client>{ id: 'client_id' };
-      const accessToken = <AccessToken>{ handle: 'access_token', client: null };
+      const accessToken = <AccessToken>{ id: 'access_token', client: null };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
@@ -282,7 +282,7 @@ describe('Revocation Request Validator', () => {
       const request = requestFactory();
 
       const client = <Client>{ id: 'client_id' };
-      const accessToken = <AccessToken>{ handle: 'access_token', client };
+      const accessToken = <AccessToken>{ id: 'access_token', client };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
@@ -300,7 +300,7 @@ describe('Revocation Request Validator', () => {
       const request = requestFactory();
 
       const client = <Client>{ id: 'client_id' };
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token', client };
+      const refreshToken = <RefreshToken>{ id: 'refresh_token', client };
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);

@@ -125,7 +125,7 @@ export class IntrospectionRequestValidator {
   }
 
   /**
-   * Searches the application's storage for a Token that satisfies the Token Handle provided by the Client.
+   * Searches the application's storage for a Token that satisfies the Token Identifier provided by the Client.
    *
    * @param parameters Parameters of the Introspection Request.
    * @returns Resulting Token and its type.
@@ -177,15 +177,15 @@ export class IntrospectionRequestValidator {
   /**
    * Searches the application's storage for an Access Token.
    *
-   * @param handle Token Handle provided by the Client.
+   * @param id Token Identifier provided by the Client.
    * @returns Result of the search.
    */
-  private async findAccessToken(handle: string): Promise<Nullable<FindTokenResult>> {
+  private async findAccessToken(id: string): Promise<Nullable<FindTokenResult>> {
     this.logger.debug(`[${this.constructor.name}] Called findAccessToken()`, 'a4d43566-a501-4d48-bbf2-0ad1e385a655', {
-      handle,
+      id,
     });
 
-    const token = await this.accessTokenService.findOne(handle);
+    const token = await this.accessTokenService.findOne(id);
 
     return token !== null ? { token, tokenType: 'access_token' } : null;
   }
@@ -193,12 +193,12 @@ export class IntrospectionRequestValidator {
   /**
    * Searches the application's storage for a Refresh Token.
    *
-   * @param handle Token Handle provided by the Client.
+   * @param id Token Identifier provided by the Client.
    * @returns Result of the search.
    */
-  private async findRefreshToken(handle: string): Promise<Nullable<FindTokenResult>> {
+  private async findRefreshToken(id: string): Promise<Nullable<FindTokenResult>> {
     this.logger.debug(`[${this.constructor.name}] Called findRefreshToken()`, 'c85c5390-cb7b-43e6-96e8-0002ea5d8b28', {
-      handle,
+      id,
     });
 
     if (typeof this.refreshTokenService === 'undefined') {
@@ -210,7 +210,7 @@ export class IntrospectionRequestValidator {
       return null;
     }
 
-    const token = this.settings.enableRefreshTokenIntrospection ? await this.refreshTokenService.findOne(handle) : null;
+    const token = this.settings.enableRefreshTokenIntrospection ? await this.refreshTokenService.findOne(id) : null;
 
     return token !== null ? { token, tokenType: 'refresh_token' } : null;
   }

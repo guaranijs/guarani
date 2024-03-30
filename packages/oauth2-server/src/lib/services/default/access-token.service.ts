@@ -30,7 +30,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     const now = Date.now();
 
     const accessToken: AccessToken = {
-      handle: randomBytes(16).toString('hex'),
+      id: randomBytes(16).toString('hex'),
       scopes,
       isRevoked: false,
       issuedAt: new Date(now),
@@ -54,7 +54,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     const now = Date.now();
 
     const accessToken: AccessToken = {
-      handle: randomBytes(16).toString('hex'),
+      id: randomBytes(16).toString('hex'),
       scopes: ['client:create'],
       isRevoked: false,
       issuedAt: new Date(now),
@@ -79,7 +79,7 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     const now = Date.now();
 
     const accessToken: AccessToken = {
-      handle: randomBytes(16).toString('hex'),
+      id: randomBytes(16).toString('hex'),
       scopes: ['client:manage'],
       isRevoked: false,
       issuedAt: new Date(now),
@@ -94,12 +94,9 @@ export class AccessTokenService implements AccessTokenServiceInterface {
     return accessToken;
   }
 
-  public async findOne(handle: string): Promise<Nullable<AccessToken>> {
-    this.logger.debug(`[${this.constructor.name}] Called findOne()`, '39aad302-c6af-417c-a834-36ad47c12302', {
-      handle,
-    });
-
-    return this.accessTokens.find((accessToken) => accessToken.handle === handle) ?? null;
+  public async findOne(id: string): Promise<Nullable<AccessToken>> {
+    this.logger.debug(`[${this.constructor.name}] Called findOne()`, '39aad302-c6af-417c-a834-36ad47c12302', { id });
+    return this.accessTokens.find((accessToken) => accessToken.id === id) ?? null;
   }
 
   public async revoke(accessToken: AccessToken): Promise<void> {

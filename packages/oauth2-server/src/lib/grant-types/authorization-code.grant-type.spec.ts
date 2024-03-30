@@ -106,7 +106,7 @@ describe('Authorization Code Grant Type', () => {
           handle: jest.fn(),
         },
         authorizationCode: {
-          code: 'authorization_code',
+          id: 'authorization_code',
           isRevoked: false,
           parameters: {
             response_type: 'code',
@@ -224,7 +224,7 @@ describe('Authorization Code Grant Type', () => {
       grantType = container.resolve(AuthorizationCodeGrantType);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.authorizationCode.consent.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
@@ -247,7 +247,7 @@ describe('Authorization Code Grant Type', () => {
       Reflect.set(context.client, 'grantTypes', ['authorization_code']);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.authorizationCode.consent.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
@@ -267,12 +267,12 @@ describe('Authorization Code Grant Type', () => {
 
     it('should create a token response with a refresh token.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.authorizationCode.consent.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token' };
+      const refreshToken = <RefreshToken>{ id: 'refresh_token' };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);
@@ -293,12 +293,12 @@ describe('Authorization Code Grant Type', () => {
       Reflect.set(context.authorizationCode.consent, 'scopes', ['openid', 'profile', 'email', 'phone', 'address']);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.authorizationCode.consent.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token' };
+      const refreshToken = <RefreshToken>{ id: 'refresh_token' };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);

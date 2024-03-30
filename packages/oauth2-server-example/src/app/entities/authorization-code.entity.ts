@@ -8,8 +8,8 @@ import { Login } from './login.entity';
 @Entity({ name: 'authorization_codes' })
 @Unique('authorization_codes_login_id_and_consent_id_uq', ['login', 'consent'])
 export class AuthorizationCode extends BaseEntity implements OAuth2AuthorizationCode {
-  @PrimaryGeneratedColumn('uuid', { name: 'code', primaryKeyConstraintName: 'authorization_codes_pk' })
-  public readonly code!: string;
+  @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'authorization_codes_pk' })
+  public readonly id!: string;
 
   @Column({ name: 'is_revoked', type: 'boolean', default: false, nullable: false })
   public isRevoked!: boolean;

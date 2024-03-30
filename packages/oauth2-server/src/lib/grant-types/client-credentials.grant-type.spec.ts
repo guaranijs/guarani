@@ -57,7 +57,7 @@ describe('Client Credentials Grant Type', () => {
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 300000),
       };
@@ -75,7 +75,7 @@ describe('Client Credentials Grant Type', () => {
 
     it("should create a token response with the client's default scope.", async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 300000),
       };

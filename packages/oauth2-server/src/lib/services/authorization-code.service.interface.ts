@@ -22,12 +22,12 @@ export interface AuthorizationCodeServiceInterface {
   create(parameters: CodeAuthorizationRequest, login: Login, consent: Consent): Promise<AuthorizationCode>;
 
   /**
-   * Searches the application's storage for an Authorization Code containing the provided Code.
+   * Searches the application's storage for an Authorization Code containing the provided Identifier.
    *
-   * @param code Code of the Authorization Code.
-   * @returns Authorization Code based on the provided Code.
+   * @param id Identifier of the Authorization Code.
+   * @returns Authorization Code based on the provided Identifier.
    */
-  findOne(code: string): Promise<Nullable<AuthorizationCode>>;
+  findOne(id: string): Promise<Nullable<AuthorizationCode>>;
 
   /**
    * Revokes the provided Authorization Code.

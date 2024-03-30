@@ -113,9 +113,9 @@ describe('Code Token Response Type', () => {
         user: { id: 'user_id' },
       };
 
-      const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
+      const authorizationCode = <AuthorizationCode>{ id: 'authorization_code' };
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: consent.scopes,
         expiresAt: new Date(Date.now() + 3600000),
       };

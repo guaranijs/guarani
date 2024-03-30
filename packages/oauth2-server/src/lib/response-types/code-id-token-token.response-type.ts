@@ -110,7 +110,7 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
       IdTokenAuthorizationResponse &
       TokenAuthorizationResponse;
 
-    response.code = authorizationCode.code;
+    response.code = authorizationCode.id;
     response.id_token = idToken;
 
     this.logger.debug(

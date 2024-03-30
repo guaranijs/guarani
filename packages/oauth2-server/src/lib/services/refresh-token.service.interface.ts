@@ -23,12 +23,12 @@ export interface RefreshTokenServiceInterface {
   create(scopes: string[], client: Client, user: User, accessToken: AccessToken): Promise<RefreshToken>;
 
   /**
-   * Searches the application's storage for a Refresh Token containing the provided Handle.
+   * Searches the application's storage for a Refresh Token containing the provided Identifier.
    *
-   * @param handle Handle of the Refresh Token.
-   * @returns Refresh Token based on the provided Handle.
+   * @param id Identifier of the Refresh Token.
+   * @returns Refresh Token based on the provided Identifier.
    */
-  findOne(handle: string): Promise<Nullable<RefreshToken>>;
+  findOne(id: string): Promise<Nullable<RefreshToken>>;
 
   /**
    * Revokes the provided Refresh Token.
@@ -38,7 +38,7 @@ export interface RefreshTokenServiceInterface {
   revoke(refreshToken: RefreshToken): Promise<void>;
 
   /**
-   * Rotates the Refresh Token by creating a new Refresh Token with the same metadata and different handle,
+   * Rotates the Refresh Token by creating a new Refresh Token with the same metadata and different Identifier,
    * and revoking the old refresh token used to refresh the Access Token.
    *
    * *note: this method is only required when supporting **refresh token rotation**.*

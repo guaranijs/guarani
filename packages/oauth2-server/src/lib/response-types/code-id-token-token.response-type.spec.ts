@@ -130,12 +130,12 @@ describe('Code ID Token Token Response Type', () => {
       const consent = <Consent>{ scopes: ['openid', 'foo', 'bar'] };
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: consent.scopes,
         expiresAt: new Date(Date.now() + 3600000),
       };
 
-      const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
+      const authorizationCode = <AuthorizationCode>{ id: 'authorization_code' };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       authorizationCodeServiceMock.create.mockResolvedValueOnce(authorizationCode);

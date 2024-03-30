@@ -91,7 +91,7 @@ describe('Dynamic Client Registration', () => {
 
     const response = await agent
       .post('/oauth/register')
-      .auth(initialAccessToken.handle, { type: 'bearer' })
+      .auth(initialAccessToken.id, { type: 'bearer' })
       .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
       .send(requestBody);

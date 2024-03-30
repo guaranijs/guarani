@@ -164,7 +164,7 @@ export class UserinfoEndpoint implements EndpointInterface {
    * Retrieves the Access Token from the Authorization Header and validates it.
    *
    * @param request Http Request.
-   * @returns Access Token based on the handle provided by the Client.
+   * @returns Access Token based on the Identifier provided by the Client.
    */
   private async authorize(request: HttpRequest): Promise<AccessToken> {
     this.logger.debug(`[${this.constructor.name}] Called authorize()`, '3f9bcc0b-5381-4a1f-88d5-14f82db1f618', {

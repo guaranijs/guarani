@@ -112,7 +112,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
     });
 
     it('should throw when the access token is expired.', async () => {
-      const accessToken = <AccessToken>{ handle: 'access_token', expiresAt: new Date(Date.now() - 3600000) };
+      const accessToken = <AccessToken>{ id: 'access_token', expiresAt: new Date(Date.now() - 3600000) };
 
       accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
 
@@ -124,7 +124,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
     it('should throw when the access token is not yet valid.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         expiresAt: new Date(Date.now() + 7200000),
         validAfter: new Date(Date.now() + 3600000),
       };
@@ -139,7 +139,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
     it('should throw when the access token is revoked.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         isRevoked: true,
         expiresAt: new Date(Date.now() + 3600000),
         validAfter: new Date(Date.now()),
@@ -155,7 +155,7 @@ describe('Authorization Header Bearer Client Authorization', () => {
 
     it('should return an authorized access token.', async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         isRevoked: false,
         expiresAt: new Date(Date.now() + 3600000),
         validAfter: new Date(Date.now()),

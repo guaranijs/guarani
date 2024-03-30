@@ -5,7 +5,7 @@ import { AuthorizationResponse } from './authorization-response';
  */
 export interface CodeAuthorizationResponse extends AuthorizationResponse {
   /**
-   * Authorization Code handle issued to the Client.
+   * Authorization Code Identifier issued to the Client.
    */
   code: string;
 }

@@ -20,7 +20,7 @@ import { ClientAuthorization } from './client-authorization.type';
  * ```
  *
  * This scheme denotes the type of the flow, which in this case is **Bearer**, and the Access Token,
- * a String that contains the Access Token Handle provided by the Client.
+ * a String that contains the Access Token Identifier provided by the Client.
  */
 @Injectable()
 export class AuthorizationHeaderBearerClientAuthorization implements ClientAuthorizationInterface {
@@ -65,7 +65,7 @@ export class AuthorizationHeaderBearerClientAuthorization implements ClientAutho
    * Checks and returns the Access Token requested by the Client.
    *
    * @param request Http Request.
-   * @returns Access Token based on the provided Access Token Handle.
+   * @returns Access Token based on the provided Access Token Identifier.
    */
   public async authorize(request: HttpRequest): Promise<AccessToken> {
     this.logger.debug(`[${this.constructor.name}] Called authorize()`, 'f4045b3c-8d2a-4531-b077-9bc62c334e7c', {
@@ -74,9 +74,9 @@ export class AuthorizationHeaderBearerClientAuthorization implements ClientAutho
 
     const { authorization } = request.headers;
 
-    const [, accessTokenHandle] = authorization!.split(' ', 2);
+    const [, accessTokenId] = authorization!.split(' ', 2);
 
-    if (typeof accessTokenHandle === 'undefined') {
+    if (typeof accessTokenId === 'undefined') {
       const exc = new InvalidRequestException('Missing Bearer Token.');
 
       this.logger.error(
@@ -89,13 +89,13 @@ export class AuthorizationHeaderBearerClientAuthorization implements ClientAutho
       throw exc;
     }
 
-    if (!/^[a-zA-Z0-9+/\-_.~=]+$/.test(accessTokenHandle)) {
+    if (!/^[a-zA-Z0-9+/\-_.~=]+$/.test(accessTokenId)) {
       const exc = new InvalidTokenException('Invalid Bearer Token.');
 
       this.logger.error(
         `[${this.constructor.name}] The Client provided an invalid Bearer Token`,
         '103dba13-ed3f-467a-aca0-246595ab3a4d',
-        { token: accessTokenHandle },
+        { token: accessTokenId },
         exc,
       );
 
@@ -103,12 +103,12 @@ export class AuthorizationHeaderBearerClientAuthorization implements ClientAutho
     }
 
     this.logger.debug(
-      `[${this.constructor.name}] Searching for an Access Token with the provided Handle`,
+      `[${this.constructor.name}] Searching for an Access Token with the provided Identifier`,
       'f654c1e8-6b48-4542-acad-66f689d00bbd',
-      { token: accessTokenHandle },
+      { token: accessTokenId },
     );
 
-    const accessToken = await this.accessTokenService.findOne(accessTokenHandle);
+    const accessToken = await this.accessTokenService.findOne(accessTokenId);
 
     if (accessToken === null) {
       const exc = new InvalidTokenException('Invalid Access Token.');
@@ -116,7 +116,7 @@ export class AuthorizationHeaderBearerClientAuthorization implements ClientAutho
       this.logger.error(
         `[${this.constructor.name}] Invalid Access Token`,
         'cefea084-4ec0-4cd1-bace-024acb22d789',
-        { token: accessTokenHandle },
+        { token: accessTokenId },
         exc,
       );
 

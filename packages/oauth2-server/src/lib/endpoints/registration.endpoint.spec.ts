@@ -278,7 +278,7 @@ describe('Dynamic Client Registration Endpoint', () => {
         const context = <PostRegistrationContext>{
           parameters,
           accessToken: <AccessToken>{
-            handle: 'initial_access_token',
+            id: 'initial_access_token',
             scopes: ['client:create'],
           },
           redirectUris: [new URL('https://client.example.com/oauth/callback/')],
@@ -368,7 +368,7 @@ describe('Dynamic Client Registration Endpoint', () => {
           createdAt: new Date(now),
         };
 
-        const accessToken = <AccessToken>{ handle: 'registration_access_token' };
+        const accessToken = <AccessToken>{ id: 'registration_access_token' };
 
         const registrationResponse = removeNullishValues<PostRegistrationResponse>({
           client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
@@ -514,7 +514,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       const context = <GetRegistrationContext>{
         parameters,
-        accessToken: { handle: 'access_token', client },
+        accessToken: { id: 'access_token', client },
         client,
       };
 
@@ -609,7 +609,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
       const context = <DeleteRegistrationContext>{
         parameters: request.query as DeleteRegistrationRequest,
-        accessToken: { handle: 'access_token' },
+        accessToken: { id: 'access_token' },
         client,
       };
 
@@ -747,7 +747,7 @@ describe('Dynamic Client Registration Endpoint', () => {
         createdAt: new Date(now),
       };
 
-      const accessToken = <AccessToken>{ handle: 'access_token', client };
+      const accessToken = <AccessToken>{ id: 'access_token', client };
 
       const context = <PutRegistrationContext>{
         queryParameters,

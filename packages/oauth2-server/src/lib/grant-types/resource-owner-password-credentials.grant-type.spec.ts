@@ -86,7 +86,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
@@ -111,7 +111,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
       grantType = container.resolve(ResourceOwnerPasswordCredentialsGrantType);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
@@ -131,7 +131,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
@@ -149,7 +149,7 @@ describe('Resource Owner Password Credentials Grant Type', () => {
 
     it("should create a token response with the client's default scope and without a refresh token if the client does not use it.", async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
@@ -169,12 +169,12 @@ describe('Resource Owner Password Credentials Grant Type', () => {
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token' };
+      const refreshToken = <RefreshToken>{ id: 'refresh_token' };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);
@@ -190,12 +190,12 @@ describe('Resource Owner Password Credentials Grant Type', () => {
 
     it("should create a token response with the client's default scope and with a refresh token.", async () => {
       const accessToken = <AccessToken>{
-        handle: 'access_token',
+        id: 'access_token',
         scopes: context.scopes,
         expiresAt: new Date(Date.now() + 86400000),
       };
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token' };
+      const refreshToken = <RefreshToken>{ id: 'refresh_token' };
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);

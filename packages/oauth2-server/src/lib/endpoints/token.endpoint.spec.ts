@@ -144,9 +144,11 @@ describe('Token Endpoint', () => {
         refresh_token: 'refresh_token',
       };
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <TokenContext>{
         parameters,
-        client: <Client>{ id: 'client_id' },
+        client,
         grantType: <GrantTypeInterface>{
           name: 'authorization_code',
           handle: jest.fn().mockResolvedValueOnce(accessTokenResponse),

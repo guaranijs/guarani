@@ -34,16 +34,19 @@ export class AuthorizationCodeService implements AuthorizationCodeServiceInterfa
 
     const now = Date.now();
 
-    const authorizationCode: AuthorizationCode = {
-      id: randomUUID(),
-      isRevoked: false,
-      parameters,
-      issuedAt: new Date(now),
-      expiresAt: new Date(now + 300000),
-      validAfter: new Date(now),
-      login,
-      consent,
-    };
+    const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+      Reflect.construct(AuthorizationCode, []),
+      {
+        id: randomUUID(),
+        isRevoked: false,
+        parameters,
+        issuedAt: new Date(now),
+        expiresAt: new Date(now + 300000),
+        validAfter: new Date(now),
+        login,
+        consent,
+      },
+    );
 
     this.authorizationCodes.push(authorizationCode);
 

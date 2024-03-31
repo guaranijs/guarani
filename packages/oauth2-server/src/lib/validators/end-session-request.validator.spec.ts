@@ -118,7 +118,7 @@ describe('End Session Request Validator', () => {
     it('should throw when providing an invalid redirect uri.', async () => {
       const request = requestFactory({ post_logout_redirect_uri: 'client.example.com/oauth/logout_callback' });
 
-      const client = <Client>{ id: 'client_id' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -133,7 +133,7 @@ describe('End Session Request Validator', () => {
         post_logout_redirect_uri: 'https://client.example.com/oauth/logout_callback#foo=bar',
       });
 
-      const client = <Client>{ id: 'client_id' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -146,10 +146,10 @@ describe('End Session Request Validator', () => {
     it('should throw when the client has no registered post logout redirect uris.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         postLogoutRedirectUris: null,
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -162,10 +162,10 @@ describe('End Session Request Validator', () => {
     it('should throw when the client is not allowed to use the provided redirect uri.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         postLogoutRedirectUris: ['https://client.example.org/oauth/logout_callback'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -178,10 +178,10 @@ describe('End Session Request Validator', () => {
     it('should throw when requesting an unsupported ui locale.', async () => {
       const request = requestFactory({ ui_locales: 'unknown' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         postLogoutRedirectUris: ['https://client.example.com/oauth/logout_callback'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -204,10 +204,10 @@ describe('End Session Request Validator', () => {
 
       const request = requestFactory({ ui_locales: 'pt-BR' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         postLogoutRedirectUris: ['https://client.example.com/oauth/logout_callback'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -220,10 +220,10 @@ describe('End Session Request Validator', () => {
     it('should return an end session context.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         postLogoutRedirectUris: ['https://client.example.com/oauth/logout_callback'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 

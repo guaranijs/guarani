@@ -1,23 +1,28 @@
-import { Nullable } from '@guarani/types';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { Login } from './login.entity';
 
 /**
  * OAuth 2.0 Session Entity.
  */
-export interface Session {
+export abstract class Session implements Dictionary<any> {
   /**
    * Identifier of the Session.
    */
-  readonly id: string;
+  public readonly id!: string;
 
   /**
    * Currently active Login.
    */
-  activeLogin: Nullable<Login>;
+  public activeLogin!: Nullable<Login>;
 
   /**
    * Logins created within the Session.
    */
-  logins: Login[];
+  public logins!: Login[];
+
+  /**
+   * Additional Session Parameters.
+   */
+  [parameter: string]: unknown;
 }

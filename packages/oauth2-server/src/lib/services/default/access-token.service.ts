@@ -29,16 +29,19 @@ export class AccessTokenService implements AccessTokenServiceInterface {
 
     const now = Date.now();
 
-    const accessToken: AccessToken = {
-      id: randomBytes(16).toString('hex'),
-      scopes,
-      isRevoked: false,
-      issuedAt: new Date(now),
-      expiresAt: new Date(now + 3600000),
-      validAfter: new Date(now),
-      client,
-      user,
-    };
+    const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+      Reflect.construct(AccessToken, []),
+      {
+        id: randomBytes(16).toString('hex'),
+        scopes,
+        isRevoked: false,
+        issuedAt: new Date(now),
+        expiresAt: new Date(now + 3600000),
+        validAfter: new Date(now),
+        client,
+        user,
+      },
+    );
 
     this.accessTokens.push(accessToken);
 
@@ -53,16 +56,19 @@ export class AccessTokenService implements AccessTokenServiceInterface {
 
     const now = Date.now();
 
-    const accessToken: AccessToken = {
-      id: randomBytes(16).toString('hex'),
-      scopes: ['client:create'],
-      isRevoked: false,
-      issuedAt: new Date(now),
-      expiresAt: new Date(now + 300000),
-      validAfter: new Date(now),
-      client: null,
-      user: null,
-    };
+    const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+      Reflect.construct(AccessToken, []),
+      {
+        id: randomBytes(16).toString('hex'),
+        scopes: ['client:create'],
+        isRevoked: false,
+        issuedAt: new Date(now),
+        expiresAt: new Date(now + 300000),
+        validAfter: new Date(now),
+        client: null,
+        user: null,
+      },
+    );
 
     this.accessTokens.push(accessToken);
 
@@ -78,16 +84,19 @@ export class AccessTokenService implements AccessTokenServiceInterface {
 
     const now = Date.now();
 
-    const accessToken: AccessToken = {
-      id: randomBytes(16).toString('hex'),
-      scopes: ['client:manage'],
-      isRevoked: false,
-      issuedAt: new Date(now),
-      expiresAt: new Date(now + 86400000),
-      validAfter: new Date(now),
-      client,
-      user: null,
-    };
+    const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+      Reflect.construct(AccessToken, []),
+      {
+        id: randomBytes(16).toString('hex'),
+        scopes: ['client:manage'],
+        isRevoked: false,
+        issuedAt: new Date(now),
+        expiresAt: new Date(now + 86400000),
+        validAfter: new Date(now),
+        client,
+        user: null,
+      },
+    );
 
     this.accessTokens.push(accessToken);
 

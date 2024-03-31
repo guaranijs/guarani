@@ -7,7 +7,11 @@ describe('createTokenResponse()', () => {
   it('should return a token response based on the data of the provided access token.', () => {
     expect(
       createTokenResponse(
-        <AccessToken>{ id: 'access_token', scopes: ['foo', 'bar'], expiresAt: new Date(Date.now() + 3600000) },
+        Object.assign<AccessToken, Partial<AccessToken>>(Reflect.construct(AccessToken, []), {
+          id: 'access_token',
+          scopes: ['foo', 'bar'],
+          expiresAt: new Date(Date.now() + 3600000),
+        }),
         null,
       ),
     ).toStrictEqual<TokenResponse>({
@@ -22,8 +26,14 @@ describe('createTokenResponse()', () => {
   it('should return a token response based on the data of the provided access token and refresh token.', () => {
     expect(
       createTokenResponse(
-        <AccessToken>{ id: 'access_token', scopes: ['foo', 'bar'], expiresAt: new Date(Date.now() + 3600000) },
-        <RefreshToken>{ id: 'refresh_token' },
+        Object.assign<AccessToken, Partial<AccessToken>>(Reflect.construct(AccessToken, []), {
+          id: 'access_token',
+          scopes: ['foo', 'bar'],
+          expiresAt: new Date(Date.now() + 3600000),
+        }),
+        Object.assign<RefreshToken, Partial<RefreshToken>>(Reflect.construct(RefreshToken, []), {
+          id: 'refresh_token',
+        }),
       ),
     ).toStrictEqual<TokenResponse>({
       access_token: 'access_token',

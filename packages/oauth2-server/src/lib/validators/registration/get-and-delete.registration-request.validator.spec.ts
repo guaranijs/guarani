@@ -6,6 +6,7 @@ import { removeNullishValues } from '@guarani/primitives';
 import { DeleteRegistrationContext } from '../../context/registration/delete.registration-context';
 import { GetRegistrationContext } from '../../context/registration/get.registration-context';
 import { AccessToken } from '../../entities/access-token.entity';
+import { Client } from '../../entities/client.entity';
 import { InsufficientScopeException } from '../../exceptions/insufficient-scope.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { InvalidTokenException } from '../../exceptions/invalid-token.exception';
@@ -47,7 +48,7 @@ describe('Get and Delete Registration Request Validator', () => {
   });
 
   describe.each<HttpMethod>(['GET', 'DELETE'])('validate()', (method) => {
-    const scopes: Record<string, string[][][]> = {
+    const expectedScopes: Record<string, string[][][]> = {
       GET: [[['client:manage']], [['client:read']], [['client:manage', 'client:read']]],
       DELETE: [[['client:manage']], [['client:delete']], [['client:manage', 'client:delete']]],
     };
@@ -67,7 +68,7 @@ describe('Get and Delete Registration Request Validator', () => {
     };
 
     beforeEach(() => {
-      Reflect.set(validator, 'expectedScopes', scopes[method]![2]![0]);
+      Reflect.set(validator, 'expectedScopes', expectedScopes[method]![2]![0]);
       parameters = { client_id: 'client_id' };
     });
 
@@ -91,7 +92,10 @@ describe('Get and Delete Registration Request Validator', () => {
     it('should throw when providing an initial access token.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{ id: 'access_token', client: null };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', client: null },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -104,7 +108,14 @@ describe('Get and Delete Registration Request Validator', () => {
     it('should throw when the client presents an access token that was not issued to itself.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{ id: 'access_token', client: { id: 'another_client_id' } };
+      const anotherClient: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'another_client_id',
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', client: anotherClient },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -120,11 +131,14 @@ describe('Get and Delete Registration Request Validator', () => {
     it('should throw when the client presents an access token that is not a registration access token.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{
-        id: 'access_token',
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-        client: { id: 'client_id' },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', scopes: ['foo', 'bar', 'baz', 'qux'], client },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -134,10 +148,17 @@ describe('Get and Delete Registration Request Validator', () => {
       );
     });
 
-    it.each(scopes[method]!)('should return a registration request context.', async (scopes) => {
+    it.each(expectedScopes[method]!)('should return a registration request context.', async (scopes) => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{ id: 'access_token', scopes, client: { id: 'client_id' } };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', scopes, client },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 

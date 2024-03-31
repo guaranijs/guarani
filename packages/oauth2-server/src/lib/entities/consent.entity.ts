@@ -1,4 +1,4 @@
-import { Nullable } from '@guarani/types';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { Client } from './client.entity';
 import { User } from './user.entity';
@@ -6,36 +6,48 @@ import { User } from './user.entity';
 /**
  * OAuth 2.0 Consent Entity.
  */
-export interface Consent {
+export abstract class Consent implements Dictionary<any> {
   /**
    * Identifier of the Consent.
    */
-  readonly id: string;
+  public readonly id!: string;
 
   /**
    * Scopes granted by the Authenticated End User.
    */
-  readonly scopes: string[];
+  public readonly scopes!: string[];
 
   /**
    * Creation Date of the Consent.
    */
-  readonly createdAt: Date;
+  public readonly createdAt!: Date;
 
   /**
    * Expiration Date of the Consent.
    *
    * *note: a **null** value indicates that the consent does not expire.*
    */
-  readonly expiresAt: Nullable<Date>;
+  public readonly expiresAt!: Nullable<Date>;
 
   /**
    * Client authorized by the Authenticated End User.
    */
-  readonly client: Client;
+  public readonly client!: Client;
 
   /**
    * Authenticated End User.
    */
-  readonly user: User;
+  public readonly user!: User;
+
+  /**
+   * Additional Consent Parameters.
+   */
+  [parameter: string]: unknown;
+
+  /**
+   * Expiration status of the Consent.
+   */
+  public get isExpired(): boolean {
+    return this.expiresAt !== null && new Date() >= this.expiresAt;
+  }
 }

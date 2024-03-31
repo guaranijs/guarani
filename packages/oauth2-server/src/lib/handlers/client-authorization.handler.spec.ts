@@ -86,7 +86,10 @@ describe('Client Authorization Handler', () => {
     });
 
     it('should return an authorized client.', async () => {
-      const accessToken = <AccessToken>{ id: 'access_token' };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token' },
+      );
 
       clientAuthorizationMethodsMocks[0]!.hasBeenRequested.mockReturnValueOnce(true);
       clientAuthorizationMethodsMocks[0]!.authorize.mockResolvedValueOnce(accessToken);

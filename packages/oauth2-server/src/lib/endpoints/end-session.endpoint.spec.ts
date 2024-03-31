@@ -6,8 +6,11 @@ import { removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { EndSessionContext } from '../context/end-session-context';
+import { Client } from '../entities/client.entity';
+import { Login } from '../entities/login.entity';
 import { LogoutTicket } from '../entities/logout-ticket.entity';
 import { Session } from '../entities/session.entity';
+import { User } from '../entities/user.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { HttpRequest } from '../http/http.request';
@@ -167,23 +170,32 @@ describe('End Session Endpoint', () => {
     it('should redirect to the error endpoint if the client presents a logout ticket not issued to itself.', async () => {
       const request = requestFactory();
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const anotherClient: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'another_client_id',
+      });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout_callback'),
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
         uiLocales: ['pt-BR', 'en'],
       };
 
-      const logoutTicket = <LogoutTicket>{
-        id: 'logout_ticket_id',
-        parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: { id: 'another_client_id' },
-      };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        {
+          id: 'logout_ticket_id',
+          parameters,
+          expiresAt: new Date(Date.now() + 300000),
+          client: anotherClient,
+        },
+      );
 
       validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
@@ -206,23 +218,28 @@ describe('End Session Endpoint', () => {
     it('should redirect to the error endpoint if the client presents an expired logout ticket.', async () => {
       const request = requestFactory();
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout_callback'),
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
         uiLocales: ['pt-BR', 'en'],
       };
 
-      const logoutTicket = <LogoutTicket>{
-        id: 'logout_ticket_id',
-        parameters,
-        expiresAt: new Date(Date.now() - 3600000),
-        client: { id: 'client_id' },
-      };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        {
+          id: 'logout_ticket_id',
+          parameters,
+          expiresAt: new Date(Date.now() - 3600000),
+          client,
+        },
+      );
 
       validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
@@ -245,23 +262,28 @@ describe('End Session Endpoint', () => {
     it('should redirect to the error endpoint if the initial parameters changed.', async () => {
       const request = requestFactory();
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout_callback'),
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
         uiLocales: ['pt-BR', 'en'],
       };
 
-      const logoutTicket = <LogoutTicket>{
-        id: 'logout_ticket_id',
-        parameters: { ...parameters, state: 'another_client_state' },
-        expiresAt: new Date(Date.now() + 300000),
-        client: { id: 'client_id' },
-      };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        {
+          id: 'logout_ticket_id',
+          parameters: { ...parameters, state: 'another_client_state' },
+          expiresAt: new Date(Date.now() + 300000),
+          client,
+        },
+      );
 
       validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
@@ -284,29 +306,38 @@ describe('End Session Endpoint', () => {
     it('should redirect to the error endpoint when the authenticated user does not match the user of "id_token_hint".', async () => {
       const request = requestFactory();
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout_callback'),
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
         uiLocales: ['pt-BR', 'en'],
       };
 
-      const logoutTicket = <LogoutTicket>{
-        id: 'logout_ticket_id',
-        parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: { id: 'client_id' },
-      };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        {
+          id: 'logout_ticket_id',
+          parameters,
+          expiresAt: new Date(Date.now() + 300000),
+          client,
+        },
+      );
 
-      const session = <Session>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id', user });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
-        activeLogin: { id: 'login_id', user: { id: 'user_id' } },
-        logins: [{ id: 'login_id', user: { id: 'user_id' } }],
-      };
+        activeLogin: login,
+        logins: [login],
+      });
 
       validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
@@ -333,30 +364,39 @@ describe('End Session Endpoint', () => {
     it('should create a logout ticket and redirect to the logout endpoint when there is an active login.', async () => {
       const request = requestFactory({}, { 'guarani:logout': undefined });
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout_callback'),
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
         uiLocales: ['pt-BR', 'en'],
       };
 
-      const session = <Session>{
-        id: 'session_id',
-        activeLogin: { id: 'login_id', user: { id: 'user_id' } },
-        logins: [{ id: 'login_id', user: { id: 'user_id' } }],
-      };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
-      const logoutTicket = <LogoutTicket>{
-        id: 'logout_ticket_id',
-        logoutChallenge: 'logout_challenge',
-        parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: { id: 'client_id' },
-      };
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id', user });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+        id: 'session_id',
+        activeLogin: login,
+        logins: [login],
+      });
+
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        {
+          id: 'logout_ticket_id',
+          logoutChallenge: 'logout_challenge',
+          parameters,
+          expiresAt: new Date(Date.now() + 300000),
+          client,
+        },
+      );
 
       validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
@@ -378,30 +418,39 @@ describe('End Session Endpoint', () => {
     it('should redirect to the logout endpoint when there is an active login.', async () => {
       const request = requestFactory();
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout_callback'),
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
         uiLocales: ['pt-BR', 'en'],
       };
 
-      const logoutTicket = <LogoutTicket>{
-        id: 'logout_ticket_id',
-        logoutChallenge: 'logout_challenge',
-        parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: { id: 'client_id' },
-      };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        {
+          id: 'logout_ticket_id',
+          logoutChallenge: 'logout_challenge',
+          parameters,
+          expiresAt: new Date(Date.now() + 300000),
+          client,
+        },
+      );
 
-      const session = <Session>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id', user });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
-        activeLogin: { id: 'login_id', user: { id: 'user_id' } },
-        logins: [{ id: 'login_id', user: { id: 'user_id' } }],
-      };
+        activeLogin: login,
+        logins: [login],
+      });
 
       validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
@@ -423,11 +472,13 @@ describe('End Session Endpoint', () => {
     it('should redirect to the post logout redirect uri and remove the session cookie.', async () => {
       const request = requestFactory({}, { 'guarani:session': undefined, 'guarani:logout': undefined });
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout_callback'),
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
@@ -451,30 +502,39 @@ describe('End Session Endpoint', () => {
     it('should redirect to the post logout redirect uri and remove the logout ticket.', async () => {
       const request = requestFactory();
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout_callback'),
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
         uiLocales: ['pt-BR', 'en'],
       };
 
-      const logoutTicket = <LogoutTicket>{
-        id: 'logout_ticket_id',
-        logoutChallenge: 'logout_challenge',
-        parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: { id: 'client_id' },
-      };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        {
+          id: 'logout_ticket_id',
+          logoutChallenge: 'logout_challenge',
+          parameters,
+          expiresAt: new Date(Date.now() + 300000),
+          client,
+        },
+      );
 
-      const session = <Session>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id', user });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: null,
-        logins: [{ id: 'login_id', user: { id: 'user_id' } }],
-      };
+        logins: [login],
+      });
 
       validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
@@ -497,30 +557,39 @@ describe('End Session Endpoint', () => {
     it('should redirect to the post logout redirect uri.', async () => {
       const request = requestFactory({}, { 'guarani:logout': undefined });
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         postLogoutRedirectUri: new URL('https://client.example.com/oauth/logout_callback'),
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
         uiLocales: ['pt-BR', 'en'],
       };
 
-      const logoutTicket = <LogoutTicket>{
-        id: 'logout_ticket_id',
-        logoutChallenge: 'logout_challenge',
-        parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: { id: 'client_id' },
-      };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        {
+          id: 'logout_ticket_id',
+          logoutChallenge: 'logout_challenge',
+          parameters,
+          expiresAt: new Date(Date.now() + 300000),
+          client,
+        },
+      );
 
-      const session = <Session>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id', user });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: null,
-        logins: [{ id: 'login_id', user: { id: 'user_id' } }],
-      };
+        logins: [login],
+      });
 
       validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
@@ -545,11 +614,13 @@ describe('End Session Endpoint', () => {
         { 'guarani:session': undefined, 'guarani:logout': undefined },
       );
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
         uiLocales: ['pt-BR', 'en'],
@@ -572,29 +643,38 @@ describe('End Session Endpoint', () => {
     it('should redirect to the post logout url and remove the logout ticket.', async () => {
       const request = requestFactory({ post_logout_redirect_uri: undefined });
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
         uiLocales: ['pt-BR', 'en'],
       };
 
-      const logoutTicket = <LogoutTicket>{
-        id: 'logout_ticket_id',
-        logoutChallenge: 'logout_challenge',
-        parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: { id: 'client_id' },
-      };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        {
+          id: 'logout_ticket_id',
+          logoutChallenge: 'logout_challenge',
+          parameters,
+          expiresAt: new Date(Date.now() + 300000),
+          client,
+        },
+      );
 
-      const session = <Session>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id', user });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: null,
-        logins: [{ id: 'login_id', user: { id: 'user_id' } }],
-      };
+        logins: [login],
+      });
 
       validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);
@@ -617,29 +697,38 @@ describe('End Session Endpoint', () => {
     it('should redirect to the post logout url.', async () => {
       const request = requestFactory({ post_logout_redirect_uri: undefined }, { 'guarani:logout': undefined });
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <EndSessionContext>{
         parameters,
         cookies: request.cookies,
         idTokenHint: 'id_token_hint',
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         logoutHint: 'johndoe@email.com',
         uiLocales: ['pt-BR', 'en'],
       };
 
-      const logoutTicket = <LogoutTicket>{
-        id: 'logout_ticket_id',
-        logoutChallenge: 'logout_challenge',
-        parameters,
-        expiresAt: new Date(Date.now() + 300000),
-        client: { id: 'client_id' },
-      };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        {
+          id: 'logout_ticket_id',
+          logoutChallenge: 'logout_challenge',
+          parameters,
+          expiresAt: new Date(Date.now() + 300000),
+          client,
+        },
+      );
 
-      const session = <Session>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id', user });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: null,
-        logins: [{ id: 'login_id', user: { id: 'user_id' } }],
-      };
+        logins: [login],
+      });
 
       validatorMock.getEndSessionParameters.mockReturnValueOnce(request.query as EndSessionRequest);
       validatorMock.validate.mockResolvedValueOnce(context);

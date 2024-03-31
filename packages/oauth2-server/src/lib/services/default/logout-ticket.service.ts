@@ -28,15 +28,18 @@ export class LogoutTicketService implements LogoutTicketServiceInterface {
       session,
     });
 
-    const logoutTicket: LogoutTicket = {
-      id: randomUUID(),
-      logoutChallenge: randomBytes(16).toString('hex'),
-      parameters,
-      createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 300000),
-      client,
-      session,
-    };
+    const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+      Reflect.construct(LogoutTicket, []),
+      {
+        id: randomUUID(),
+        logoutChallenge: randomBytes(16).toString('hex'),
+        parameters,
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 300000),
+        client,
+        session,
+      },
+    );
 
     this.logoutTickets.push(logoutTicket);
 

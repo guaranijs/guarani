@@ -78,11 +78,11 @@ describe('Private Key JWT Client Authentication Method', () => {
 
   describe('getClientKey()', () => {
     it('should throw when the client does not have a jwks registered.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         jwks: null,
         jwksUri: null,
-      };
+      });
 
       await expect(clientAuthentication['getClientKey'](client, header)).rejects.toThrowWithMessage(
         InvalidClientException,
@@ -91,12 +91,12 @@ describe('Private Key JWT Client Authentication Method', () => {
     });
 
     it('should throw when the client does not have the requested json web key registered.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         authenticationMethod: 'private_key_jwt',
         jwks: jwks.toJSON(),
         jwksUri: null,
-      };
+      });
 
       await expect(
         clientAuthentication['getClientKey'](client, { ...header, kid: 'rsa-key' }),
@@ -111,23 +111,23 @@ describe('Private Key JWT Client Authentication Method', () => {
         .spyOn<PrivateKeyJwtClientAuthentication, any>(clientAuthentication, 'getClientJwksFromUri')
         .mockResolvedValueOnce(JsonWebKeySet.load(jwks));
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         authenticationMethod: 'private_key_jwt',
         jwks: null,
         jwksUri: 'https://client.example.com/oauth/jwks',
-      };
+      });
 
       await expect(clientAuthentication['getClientKey'](client, header)).resolves.toMatchObject(ecKey);
     });
 
     it('should return a json web key from the "jwks" of the client.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         authenticationMethod: 'private_key_jwt',
         jwks: jwks.toJSON(),
         jwksUri: null,
-      };
+      });
 
       await expect(clientAuthentication['getClientKey'](client, header)).resolves.toMatchObject(ecKey);
     });

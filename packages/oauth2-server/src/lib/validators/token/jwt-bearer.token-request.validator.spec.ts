@@ -135,7 +135,10 @@ describe('JWT Bearer Token Request Validator', () => {
     it('should throw when not providing the parameter "assertion".', async () => {
       const request = requestFactory({ assertion: undefined });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -148,7 +151,10 @@ describe('JWT Bearer Token Request Validator', () => {
     it.each(invalidTokenFormats)('should throw when the provided assertion is invalid.', async (assertion) => {
       const request = requestFactory({ assertion });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -176,7 +182,10 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -203,7 +212,10 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -231,7 +243,10 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -258,7 +273,10 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -285,7 +303,10 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -313,7 +334,10 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -340,7 +364,10 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -368,11 +395,11 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
-      };
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -400,12 +427,12 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: 'qDM80igvja4Tg_tNsEuWDhl2bMM6_NgJEldFhIEuwqQ',
         secretExpiresAt: new Date(Date.now() - 3600000),
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
-      };
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -447,13 +474,13 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: null,
         jwksUri: null,
-      };
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -497,13 +524,13 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: jwks.toJSON(),
         jwksUri: null,
-      };
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -547,13 +574,13 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: jwks.toJSON(),
         jwksUri: null,
-      };
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -597,13 +624,13 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: jwks.toJSON(),
         jwksUri: null,
-      };
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -647,13 +674,13 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: jwks.toJSON(),
         jwksUri: null,
-      };
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -697,13 +724,13 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         jwks: jwks.toJSON(),
         jwksUri: null,
-      };
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       userServiceMock.findOne.mockResolvedValueOnce(null);
@@ -748,16 +775,16 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion, scope: 'foo bar' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         scopes: ['foo', 'bar', 'baz'],
         jwks: jwks.toJSON(),
         jwksUri: null,
-      };
+      });
 
-      const user = <User>{ id: 'user_id' };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
       const scopes = ['foo', 'bar'];
 
@@ -810,16 +837,16 @@ describe('JWT Bearer Token Request Validator', () => {
 
       const request = requestFactory({ assertion, scope: 'foo bar' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: null,
         grantTypes: ['urn:ietf:params:oauth:grant-type:jwt-bearer'],
         scopes: ['foo', 'bar', 'baz'],
         jwks: jwks.toJSON(),
         jwksUri: null,
-      };
+      });
 
-      const user = <User>{ id: 'user_id' };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       userServiceMock.findOne.mockResolvedValueOnce(user);

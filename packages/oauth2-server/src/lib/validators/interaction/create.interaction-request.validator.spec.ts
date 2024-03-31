@@ -116,7 +116,7 @@ describe('Create Interaction Request Validator', () => {
     it('should return a create context interaction context.', async () => {
       const request = requestFactory();
 
-      const grant = <Grant>{ id: 'grant_id' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), { id: 'grant_id' });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -170,7 +170,7 @@ describe('Create Interaction Request Validator', () => {
     it('should return a create decision interaction context.', async () => {
       const request = requestFactory();
 
-      const grant = <Grant>{ id: 'grant_id' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), { id: 'grant_id' });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 

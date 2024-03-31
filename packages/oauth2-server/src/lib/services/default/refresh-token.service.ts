@@ -29,16 +29,19 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
 
     const now = Date.now();
 
-    const refreshToken: RefreshToken = {
-      id: randomBytes(12).toString('hex'),
-      scopes,
-      isRevoked: false,
-      issuedAt: new Date(now),
-      expiresAt: new Date(now + 86400000),
-      validAfter: new Date(now),
-      client,
-      user,
-    };
+    const refreshToken: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+      Reflect.construct(RefreshToken, []),
+      {
+        id: randomBytes(12).toString('hex'),
+        scopes,
+        isRevoked: false,
+        issuedAt: new Date(now),
+        expiresAt: new Date(now + 86400000),
+        validAfter: new Date(now),
+        client,
+        user,
+      },
+    );
 
     this.refreshTokens.push(refreshToken);
 
@@ -65,16 +68,19 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
 
     const now = Date.now();
 
-    const newRefreshToken: RefreshToken = {
-      id: randomBytes(12).toString('hex'),
-      scopes: refreshToken.scopes,
-      isRevoked: false,
-      issuedAt: new Date(now),
-      expiresAt: refreshToken.expiresAt,
-      validAfter: new Date(now),
-      client: refreshToken.client,
-      user: refreshToken.user,
-    };
+    const newRefreshToken: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+      Reflect.construct(RefreshToken, []),
+      {
+        id: randomBytes(12).toString('hex'),
+        scopes: refreshToken.scopes,
+        isRevoked: false,
+        issuedAt: new Date(now),
+        expiresAt: refreshToken.expiresAt,
+        validAfter: new Date(now),
+        client: refreshToken.client,
+        user: refreshToken.user,
+      },
+    );
 
     this.refreshTokens.push(newRefreshToken);
 

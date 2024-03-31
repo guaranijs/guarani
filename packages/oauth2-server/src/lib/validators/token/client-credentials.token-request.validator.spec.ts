@@ -86,7 +86,12 @@ describe('Client Credentials Token Request Validator', () => {
     it('should return a client credentials token context with the requested scope.', async () => {
       const request = requestFactory({ scope: 'foo bar' });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['client_credentials'], scopes: ['foo', 'bar', 'baz'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['client_credentials'],
+        scopes: ['foo', 'bar', 'baz'],
+      });
+
       const scopes = ['foo', 'bar'];
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
@@ -105,7 +110,11 @@ describe('Client Credentials Token Request Validator', () => {
     it("should return a client credentials token context with the client's default scope.", async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['client_credentials'], scopes: ['foo', 'bar', 'baz'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['client_credentials'],
+        scopes: ['foo', 'bar', 'baz'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 

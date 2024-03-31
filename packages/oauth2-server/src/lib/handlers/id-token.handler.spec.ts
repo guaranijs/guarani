@@ -10,8 +10,10 @@ import {
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';
+import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
+import { User } from '../entities/user.entity';
 import { IdTokenClaims } from '../id-token/id-token.claims';
 import { Logger } from '../logger/logger';
 import { UserServiceInterface } from '../services/user.service.interface';
@@ -21,14 +23,6 @@ import { SETTINGS } from '../settings/settings.token';
 import { IdTokenHandler } from './id-token.handler';
 
 jest.mock('../logger/logger');
-
-const login = <Login>{
-  id: 'login_id',
-  createdAt: new Date(),
-};
-
-const accessToken = <AccessToken>{ id: 'access_token' };
-const authorizationCode = <AuthorizationCode>{ id: 'authorization_code' };
 
 describe('ID Token Handler', () => {
   let container: DependencyInjectionContainer;
@@ -188,15 +182,24 @@ describe('ID Token Handler', () => {
 
       idTokenHandler = container.resolve(IdTokenHandler);
 
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
       await expect(
         idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
@@ -220,15 +223,24 @@ describe('ID Token Handler', () => {
 
       idTokenHandler = container.resolve(IdTokenHandler);
 
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
       await expect(
         idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
@@ -239,16 +251,25 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a signed id token with the default claims.', async () => {
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-          idTokenEncryptedResponseKeyWrap: null,
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+        idTokenEncryptedResponseKeyWrap: null,
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
@@ -269,16 +290,30 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a signed id token with the default claims and the "at_hash" claim.', async () => {
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-          idTokenEncryptedResponseKeyWrap: null,
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+        idTokenEncryptedResponseKeyWrap: null,
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token' },
+      );
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
@@ -299,16 +334,30 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a signed id token with the default claims and the "c_hash" claim.', async () => {
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-          idTokenEncryptedResponseKeyWrap: null,
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+        idTokenEncryptedResponseKeyWrap: null,
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
+
+      const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        { id: 'authorization_code' },
+      );
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
@@ -329,16 +378,35 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a signed id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-          idTokenEncryptedResponseKeyWrap: null,
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+        idTokenEncryptedResponseKeyWrap: null,
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token' },
+      );
+
+      const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        { id: 'authorization_code' },
+      );
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
@@ -369,19 +437,28 @@ describe('ID Token Handler', () => {
     });
 
     it('should throw when the client does not have a json web key set registered.', async () => {
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          jwksUri: null,
-          jwks: null,
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
-          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        jwksUri: null,
+        jwks: null,
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+        idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+        idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
       await expect(
         idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
@@ -395,19 +472,28 @@ describe('ID Token Handler', () => {
         RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256', use: 'enc' }),
       ]);
 
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          jwksUri: null,
-          jwks: new JsonWebKeySet(keysWithUnsupportedAlg).toJSON(true),
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
-          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        jwksUri: null,
+        jwks: new JsonWebKeySet(keysWithUnsupportedAlg).toJSON(true),
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+        idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+        idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
       await expect(
         idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
@@ -424,19 +510,28 @@ describe('ID Token Handler', () => {
         RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256' }),
       ]);
 
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          jwksUri: null,
-          jwks: new JsonWebKeySet(keysWithInvalidSig).toJSON(true),
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
-          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        jwksUri: null,
+        jwks: new JsonWebKeySet(keysWithInvalidSig).toJSON(true),
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+        idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+        idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
       await expect(
         idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
@@ -447,19 +542,28 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a nested id token with the default claims.', async () => {
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          jwksUri: null,
-          jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
-          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        jwksUri: null,
+        jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+        idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+        idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
@@ -482,19 +586,33 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a nested id token with the default claims and the "at_hash" claim.', async () => {
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          jwksUri: null,
-          jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
-          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        jwksUri: null,
+        jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+        idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+        idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token' },
+      );
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
@@ -517,19 +635,33 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a nested id token with the default claims and the "c_hash" claim.', async () => {
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          jwksUri: null,
-          jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
-          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        jwksUri: null,
+        jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+        idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+        idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
+
+      const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        { id: 'authorization_code' },
+      );
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
@@ -552,19 +684,38 @@ describe('ID Token Handler', () => {
     });
 
     it('should generate a nested id token with the default claims and the "at_hash" and "c_hash" claims.', async () => {
-      const consent = <Consent>{
-        client: {
-          id: 'client_id',
-          jwksUri: null,
-          jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
-          subjectType: 'public',
-          idTokenSignedResponseAlgorithm: 'ES256',
-          idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
-          idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-        },
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        jwksUri: null,
+        jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
+        subjectType: 'public',
+        idTokenSignedResponseAlgorithm: 'ES256',
+        idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
+        idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        client,
         scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        user: { id: 'user_id' },
-      };
+        user,
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token' },
+      );
+
+      const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        { id: 'authorization_code' },
+      );
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 

@@ -74,7 +74,10 @@ describe('Token Request Validator', () => {
     it('should throw when the client is not allowed to request the provided "grant_type".', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['client_credentials'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['client_credentials'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -87,7 +90,10 @@ describe('Token Request Validator', () => {
     it('should return a token context.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['authorization_code'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 

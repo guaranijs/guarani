@@ -137,7 +137,7 @@ describe('Select Account Interaction Request Validator', () => {
     it('should throw when not providing the parameter "session_id".', async () => {
       const request = requestFactory({ session_id: undefined });
 
-      const grant = <Grant>{ id: 'grant_id' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), { id: 'grant_id' });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -150,7 +150,7 @@ describe('Select Account Interaction Request Validator', () => {
     it('should throw when no session is found.', async () => {
       const request = requestFactory();
 
-      const grant = <Grant>{ id: 'grant_id' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), { id: 'grant_id' });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(null);
@@ -164,12 +164,24 @@ describe('Select Account Interaction Request Validator', () => {
     it('should return a select account context interaction context with the login identifiers of the session.', async () => {
       const request = requestFactory();
 
-      const grant = <Grant>{ id: 'grant_id' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), { id: 'grant_id' });
 
-      const session = <Session>{
+      const login0: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login0_id',
+      });
+
+      const login1: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login1_id',
+      });
+
+      const login2: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login2_id',
+      });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
-        logins: [{ id: 'login0_id' }, { id: 'login1_id' }, { id: 'login2_id' }],
-      };
+        logins: [login0, login1, login2],
+      });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -199,7 +211,7 @@ describe('Select Account Interaction Request Validator', () => {
     };
 
     beforeEach(() => {
-      parameters = { interaction_type: 'select_account', login_challenge: 'login_challenge', login_id: 'login1_id' };
+      parameters = { interaction_type: 'select_account', login_challenge: 'login_challenge', login_id: 'login_id' };
     });
 
     it('should throw when not providing the parameter "login_challenge".', async () => {
@@ -225,7 +237,7 @@ describe('Select Account Interaction Request Validator', () => {
     it('should throw when not providing the parameter "login_id".', async () => {
       const request = requestFactory({ login_id: undefined });
 
-      const grant = <Grant>{ id: 'grant_id' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), { id: 'grant_id' });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -238,7 +250,7 @@ describe('Select Account Interaction Request Validator', () => {
     it('should throw when no login is found.', async () => {
       const request = requestFactory();
 
-      const grant = <Grant>{ id: 'grant_id' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), { id: 'grant_id' });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
       loginServiceMock.findOne.mockResolvedValueOnce(null);
@@ -252,8 +264,14 @@ describe('Select Account Interaction Request Validator', () => {
     it('should return a select account decision interaction context.', async () => {
       const request = requestFactory();
 
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
-      const login = <Login>{ id: 'login1_id' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+      });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+      });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
       loginServiceMock.findOne.mockResolvedValueOnce(login);

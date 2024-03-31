@@ -8,6 +8,7 @@ import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
+import { User } from '../entities/user.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { IdTokenHandler } from '../handlers/id-token.handler';
 import { Logger } from '../logger/logger';
@@ -63,8 +64,11 @@ describe('ID Token Token Response Type', () => {
 
   describe('handle()', () => {
     let context: AuthorizationContext;
+    let client: Client;
 
     beforeEach(() => {
+      client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       context = <AuthorizationContext>{
         parameters: {
           response_type: 'id_token token',
@@ -80,7 +84,7 @@ describe('ID Token Token Response Type', () => {
           defaultResponseMode: 'fragment',
           handle: jest.fn(),
         }),
-        client: <Client>{ id: 'client_id' },
+        client,
         redirectUri: new URL('https://client.example.com/oauth/callback'),
         scopes: ['openid', 'foo', 'bar'],
         state: 'client_state',
@@ -100,12 +104,16 @@ describe('ID Token Token Response Type', () => {
       Reflect.set(context.parameters, 'scope', 'foo bar');
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
-      const login = <Login>{};
-      const consent = <Consent>{
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        id: 'consent_id',
         scopes: ['foo', 'bar'],
-        client: { id: 'client_id' },
-        user: { id: 'user_id' },
-      };
+        client,
+        user,
+      });
 
       await expect(responseType.handle(context, login, consent)).rejects.toThrowWithMessage(
         InvalidRequestException,
@@ -114,18 +122,25 @@ describe('ID Token Token Response Type', () => {
     });
 
     it('should create an id token token authorization response.', async () => {
-      const login = <Login>{};
-      const consent = <Consent>{
-        scopes: ['openid', 'foo', 'bar'],
-        client: { id: 'client_id' },
-        user: { id: 'user_id' },
-      };
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
-      const accessToken = <AccessToken>{
-        id: 'access_token',
-        scopes: consent.scopes,
-        expiresAt: new Date(Date.now() + 3600000),
-      };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        id: 'consent_id',
+        scopes: ['openid', 'foo', 'bar'],
+        client,
+        user,
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: consent.scopes,
+          expiresAt: new Date(Date.now() + 3600000),
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       idTokenHandlerMock.generateIdToken.mockResolvedValueOnce('id_token');

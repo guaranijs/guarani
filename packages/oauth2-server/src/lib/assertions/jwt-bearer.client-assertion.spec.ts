@@ -293,10 +293,12 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       const request = requestFactory({ client_assertion: assertion });
 
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         authenticationMethod: 'client_secret_basic',
       });
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
 
       Reflect.set(clientAssertion, 'name', 'client_secret_jwt');
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
@@ -313,11 +315,13 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       const request = requestFactory({ client_assertion: assertion });
 
-      clientServiceMock.findOne.mockResolvedValueOnce(<Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         authenticationMethod: 'client_secret_jwt',
         authenticationSigningAlgorithm: 'HS512',
       });
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
 
       Reflect.set(clientAssertion, 'name', 'client_secret_jwt');
       Reflect.set(clientAssertion, 'algorithms', ['HS256']);
@@ -334,11 +338,11 @@ describe('JWT Bearer Client Assertion Client Authentication Method', () => {
 
       const request = requestFactory({ client_assertion: assertion });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         authenticationMethod: 'client_secret_jwt',
         authenticationSigningAlgorithm: 'HS256',
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 

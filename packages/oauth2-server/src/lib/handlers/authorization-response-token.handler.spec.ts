@@ -157,9 +157,12 @@ describe('JSON Web Token Authorization Response Token Handler', () => {
 
       authorizationResponseTokenHandler = container.resolve(AuthorizationResponseTokenHandler);
 
-      const context = <AuthorizationContext>{
-        client: <Client>{ id: 'client_id', authorizationSignedResponseAlgorithm: 'ES256' },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        authorizationSignedResponseAlgorithm: 'ES256',
+      });
+
+      const context = <AuthorizationContext>{ client };
 
       const parameters: CodeAuthorizationResponse = { code: 'authorization_code', state: 'client_state' };
 
@@ -185,9 +188,12 @@ describe('JSON Web Token Authorization Response Token Handler', () => {
 
       authorizationResponseTokenHandler = container.resolve(AuthorizationResponseTokenHandler);
 
-      const context = <AuthorizationContext>{
-        client: <Client>{ id: 'client_id', authorizationSignedResponseAlgorithm: 'ES256' },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        authorizationSignedResponseAlgorithm: 'ES256',
+      });
+
+      const context = <AuthorizationContext>{ client };
 
       const parameters: CodeAuthorizationResponse = { code: 'authorization_code', state: 'client_state' };
 
@@ -200,13 +206,13 @@ describe('JSON Web Token Authorization Response Token Handler', () => {
     });
 
     it('should generate a signed jwt authorization response token with the default claims.', async () => {
-      const context = <AuthorizationContext>{
-        client: <Client>{
-          id: 'client_id',
-          authorizationSignedResponseAlgorithm: 'ES256',
-          authorizationEncryptedResponseKeyWrap: null,
-        },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        authorizationSignedResponseAlgorithm: 'ES256',
+        authorizationEncryptedResponseKeyWrap: null,
+      });
+
+      const context = <AuthorizationContext>{ client };
 
       const parameters: CodeAuthorizationResponse = { code: 'authorization_code', state: 'client_state' };
 
@@ -234,16 +240,16 @@ describe('JSON Web Token Authorization Response Token Handler', () => {
     });
 
     it('should throw when the client does not have a json web key set registered.', async () => {
-      const context = <AuthorizationContext>{
-        client: <Client>{
-          id: 'client_id',
-          jwksUri: null,
-          jwks: null,
-          authorizationSignedResponseAlgorithm: 'ES256',
-          authorizationEncryptedResponseKeyWrap: 'RSA-OAEP',
-          authorizationEncryptedResponseContentEncryption: 'A128CBC-HS256',
-        },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        jwksUri: null,
+        jwks: null,
+        authorizationSignedResponseAlgorithm: 'ES256',
+        authorizationEncryptedResponseKeyWrap: 'RSA-OAEP',
+        authorizationEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const context = <AuthorizationContext>{ client };
 
       const parameters: CodeAuthorizationResponse = { code: 'authorization_code', state: 'client_state' };
 
@@ -259,16 +265,16 @@ describe('JSON Web Token Authorization Response Token Handler', () => {
         RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256', use: 'enc' }),
       ]);
 
-      const context = <AuthorizationContext>{
-        client: <Client>{
-          id: 'client_id',
-          jwksUri: null,
-          jwks: new JsonWebKeySet(keysWithUnsupportedAlg).toJSON(true),
-          authorizationSignedResponseAlgorithm: 'ES256',
-          authorizationEncryptedResponseKeyWrap: 'RSA-OAEP',
-          authorizationEncryptedResponseContentEncryption: 'A128CBC-HS256',
-        },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        jwksUri: null,
+        jwks: new JsonWebKeySet(keysWithUnsupportedAlg).toJSON(true),
+        authorizationSignedResponseAlgorithm: 'ES256',
+        authorizationEncryptedResponseKeyWrap: 'RSA-OAEP',
+        authorizationEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const context = <AuthorizationContext>{ client };
 
       const parameters: CodeAuthorizationResponse = { code: 'authorization_code', state: 'client_state' };
 
@@ -287,16 +293,16 @@ describe('JSON Web Token Authorization Response Token Handler', () => {
         RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256' }),
       ]);
 
-      const context = <AuthorizationContext>{
-        client: <Client>{
-          id: 'client_id',
-          jwksUri: null,
-          jwks: new JsonWebKeySet(keysWithInvalidSig).toJSON(true),
-          authorizationSignedResponseAlgorithm: 'ES256',
-          authorizationEncryptedResponseKeyWrap: 'RSA-OAEP',
-          authorizationEncryptedResponseContentEncryption: 'A128CBC-HS256',
-        },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        jwksUri: null,
+        jwks: new JsonWebKeySet(keysWithInvalidSig).toJSON(true),
+        authorizationSignedResponseAlgorithm: 'ES256',
+        authorizationEncryptedResponseKeyWrap: 'RSA-OAEP',
+        authorizationEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const context = <AuthorizationContext>{ client };
 
       const parameters: CodeAuthorizationResponse = { code: 'authorization_code', state: 'client_state' };
 
@@ -309,16 +315,16 @@ describe('JSON Web Token Authorization Response Token Handler', () => {
     });
 
     it('should generate a nested logout token with the default claims.', async () => {
-      const context = <AuthorizationContext>{
-        client: <Client>{
-          id: 'client_id',
-          jwksUri: null,
-          jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
-          authorizationSignedResponseAlgorithm: 'ES256',
-          authorizationEncryptedResponseKeyWrap: 'RSA-OAEP',
-          authorizationEncryptedResponseContentEncryption: 'A128CBC-HS256',
-        },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        jwksUri: null,
+        jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
+        authorizationSignedResponseAlgorithm: 'ES256',
+        authorizationEncryptedResponseKeyWrap: 'RSA-OAEP',
+        authorizationEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const context = <AuthorizationContext>{ client };
 
       const parameters: CodeAuthorizationResponse = { code: 'authorization_code', state: 'client_state' };
 

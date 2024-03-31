@@ -99,7 +99,10 @@ describe('Authorization Code Token Request Validator', () => {
     it('should throw when not providing the parameter "code".', async () => {
       const request = requestFactory({ code: undefined });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['authorization_code'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -112,7 +115,10 @@ describe('Authorization Code Token Request Validator', () => {
     it('should throw when no authorization code is found.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['authorization_code'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(null);
@@ -126,8 +132,15 @@ describe('Authorization Code Token Request Validator', () => {
     it('should throw when not providing the parameter "redirect_uri".', async () => {
       const request = requestFactory({ redirect_uri: undefined });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
-      const authorizationCode = <AuthorizationCode>{ id: 'code' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['authorization_code'],
+      });
+
+      const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        { id: 'code' },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
@@ -141,8 +154,15 @@ describe('Authorization Code Token Request Validator', () => {
     it('should throw when providing an invalid redirect uri.', async () => {
       const request = requestFactory({ redirect_uri: 'client.example.com/oauth/callback' });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
-      const authorizationCode = <AuthorizationCode>{ id: 'code' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['authorization_code'],
+      });
+
+      const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        { id: 'code' },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
@@ -156,8 +176,15 @@ describe('Authorization Code Token Request Validator', () => {
     it('should throw when the provided redirect uri has a fragment component.', async () => {
       const request = requestFactory({ redirect_uri: 'https://client.example.com/oauth/callback#foo=bar' });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code'] };
-      const authorizationCode = <AuthorizationCode>{ id: 'code' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['authorization_code'],
+      });
+
+      const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        { id: 'code' },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
@@ -171,12 +198,16 @@ describe('Authorization Code Token Request Validator', () => {
     it('should throw when the client is not allowed to use the provided redirect uri.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.org/oauth/callback'],
         grantTypes: ['authorization_code'],
-      };
-      const authorizationCode = <AuthorizationCode>{ id: 'code' };
+      });
+
+      const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        { id: 'code' },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
@@ -190,12 +221,16 @@ describe('Authorization Code Token Request Validator', () => {
     it('should throw when not providing the parameter "code_verifier".', async () => {
       const request = requestFactory({ code_verifier: undefined });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         grantTypes: ['authorization_code'],
-      };
-      const authorizationCode = <AuthorizationCode>{ id: 'code' };
+      });
+
+      const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        { id: 'code' },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);
@@ -209,12 +244,16 @@ describe('Authorization Code Token Request Validator', () => {
     it('should return an authorization code token context.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         grantTypes: ['authorization_code'],
-      };
-      const authorizationCode = <AuthorizationCode>{ id: 'code' };
+      });
+
+      const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        { id: 'code' },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       authorizationCodeServiceMock.findOne.mockResolvedValueOnce(authorizationCode);

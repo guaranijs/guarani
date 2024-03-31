@@ -101,7 +101,10 @@ describe('None Client Authentication Method', () => {
     it('should throw when requesting with a client with a secret.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', secret: 'client_secret' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        secret: 'client_secret',
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -114,11 +117,11 @@ describe('None Client Authentication Method', () => {
     it('should throw when requesting with a client not authorized to use this authentication method.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: null,
         authenticationMethod: 'unknown' as ClientAuthentication,
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -131,7 +134,11 @@ describe('None Client Authentication Method', () => {
     it('should return an instance of a client.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', secret: null, authenticationMethod: 'none' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        secret: null,
+        authenticationMethod: 'none',
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 

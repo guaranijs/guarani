@@ -275,12 +275,17 @@ describe('Dynamic Client Registration Endpoint', () => {
       async (clientParams, responseParams) => {
         const request = requestFactory();
 
-        const context = <PostRegistrationContext>{
-          parameters,
-          accessToken: <AccessToken>{
+        const initialAccessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+          Reflect.construct(AccessToken, []),
+          {
             id: 'initial_access_token',
             scopes: ['client:create'],
           },
+        );
+
+        const context = <PostRegistrationContext>{
+          parameters,
+          accessToken: initialAccessToken,
           redirectUris: [new URL('https://client.example.com/oauth/callback/')],
           responseTypes: ['code'],
           grantTypes: ['authorization_code', 'refresh_token'],
@@ -322,10 +327,10 @@ describe('Dynamic Client Registration Endpoint', () => {
           softwareVersion: 'v1.4.37',
         };
 
-        const client = <Client>{
+        const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
           id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
           ...clientParams,
-          name: context.clientName,
+          name: context.clientName!,
           redirectUris: context.redirectUris.map((redirectUri) => redirectUri.href),
           responseTypes: context.responseTypes,
           grantTypes: context.grantTypes,
@@ -341,7 +346,7 @@ describe('Dynamic Client Registration Endpoint', () => {
           jwksUri: context.jwksUri?.href ?? null,
           jwks: context.jwks,
           subjectType: context.subjectType,
-          sectorIdentifierUri: context.sectorIdentifierUri,
+          sectorIdentifierUri: context.sectorIdentifierUri?.href ?? null,
           idTokenSignedResponseAlgorithm: context.idTokenSignedResponseAlgorithm,
           idTokenEncryptedResponseKeyWrap: context.idTokenEncryptedResponseKeyWrap,
           idTokenEncryptedResponseContentEncryption: context.idTokenEncryptedResponseContentEncryption,
@@ -366,15 +371,18 @@ describe('Dynamic Client Registration Endpoint', () => {
           softwareId: context.softwareId,
           softwareVersion: context.softwareVersion,
           createdAt: new Date(now),
-        };
+        });
 
-        const accessToken = <AccessToken>{ id: 'registration_access_token' };
+        const registrationAccessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+          Reflect.construct(AccessToken, []),
+          { id: 'registration_access_token' },
+        );
 
         const registrationResponse = removeNullishValues<PostRegistrationResponse>({
           client_id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
           client_id_issued_at: client.secret !== null ? Math.floor(now / 1000) : undefined,
           ...responseParams,
-          registration_access_token: 'registration_access_token',
+          registration_access_token: registrationAccessToken.id,
           registration_client_uri:
             'https://server.example.com/oauth/register?client_id=b1eeace9-2b0c-468e-a444-733befc3b35d',
           redirect_uris: ['https://client.example.com/oauth/callback/'],
@@ -420,7 +428,7 @@ describe('Dynamic Client Registration Endpoint', () => {
 
         validatorMock.validate.mockResolvedValueOnce(context);
         clientServiceMock.create!.mockResolvedValueOnce(client);
-        accessTokenServiceMock.createRegistrationAccessToken!.mockResolvedValueOnce(accessToken);
+        accessTokenServiceMock.createRegistrationAccessToken!.mockResolvedValueOnce(registrationAccessToken);
 
         const response = await endpoint.handle(request);
 
@@ -466,7 +474,7 @@ describe('Dynamic Client Registration Endpoint', () => {
     it('should return the metadata of the client.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
         secret: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
         secretExpiresAt: new Date(now + 86400000),
@@ -510,11 +518,16 @@ describe('Dynamic Client Registration Endpoint', () => {
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
         createdAt: new Date(now),
-      };
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', client },
+      );
 
       const context = <GetRegistrationContext>{
         parameters,
-        accessToken: { id: 'access_token', client },
+        accessToken,
         client,
       };
 
@@ -605,11 +618,16 @@ describe('Dynamic Client Registration Endpoint', () => {
     it('should decomission the client from the authorization server.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id' };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token' },
+      );
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
 
       const context = <DeleteRegistrationContext>{
         parameters: request.query as DeleteRegistrationRequest,
-        accessToken: { id: 'access_token' },
+        accessToken,
         client,
       };
 
@@ -701,7 +719,7 @@ describe('Dynamic Client Registration Endpoint', () => {
     it('should return the updated metadata of the registered client.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
         secret: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
         secretExpiresAt: null,
@@ -745,9 +763,12 @@ describe('Dynamic Client Registration Endpoint', () => {
         softwareId: 'TJ9C-X43C-95V1LK03',
         softwareVersion: 'v1.4.37',
         createdAt: new Date(now),
-      };
+      });
 
-      const accessToken = <AccessToken>{ id: 'access_token', client };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', client },
+      );
 
       const context = <PutRegistrationContext>{
         queryParameters,

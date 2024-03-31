@@ -68,9 +68,25 @@ describe('Device Code Grant Type', () => {
 
   describe('handle()', () => {
     let context: DeviceCodeTokenContext;
+    let client: Client;
+    let deviceCode: DeviceCode;
 
     beforeEach(() => {
       const now = Date.now();
+
+      client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:device_code', 'refresh_token'],
+      });
+
+      deviceCode = Object.assign<DeviceCode, Partial<DeviceCode>>(Reflect.construct(DeviceCode, []), {
+        id: 'device_code',
+        scopes: ['foo', 'bar', 'baz'],
+        isAuthorized: true,
+        issuedAt: new Date(now),
+        expiresAt: new Date(now + 300000),
+        client,
+      });
 
       context = <DeviceCodeTokenContext>{
         parameters: {
@@ -81,21 +97,8 @@ describe('Device Code Grant Type', () => {
           name: 'urn:ietf:params:oauth:grant-type:device_code',
           handle: jest.fn(),
         },
-        client: <Client>{
-          id: 'client_id',
-          grantTypes: ['urn:ietf:params:oauth:grant-type:device_code', 'refresh_token'],
-        },
-        deviceCode: <DeviceCode>{
-          id: 'device_code',
-          scopes: ['foo', 'bar', 'baz'],
-          isAuthorized: true,
-          issuedAt: new Date(now),
-          expiresAt: new Date(now + 300000),
-          client: {
-            id: 'client_id',
-            grantTypes: ['urn:ietf:params:oauth:grant-type:device_code', 'refresh_token'],
-          },
-        },
+        client,
+        deviceCode,
       };
     });
 
@@ -104,7 +107,11 @@ describe('Device Code Grant Type', () => {
     });
 
     it('should throw when the client presents a device code that was not issued to itself.', async () => {
-      Reflect.set(context.deviceCode.client, 'id', 'another_client_id');
+      const anotherClient: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'another_client_id',
+      });
+
+      Reflect.set(deviceCode, 'client', anotherClient);
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
@@ -112,28 +119,28 @@ describe('Device Code Grant Type', () => {
       );
 
       expect(deviceCodeServiceMock.save).toHaveBeenCalledTimes(1);
-      expect(deviceCodeServiceMock.save).toBeCalledWith({ ...context.deviceCode, isAuthorized: false });
+      expect(deviceCodeServiceMock.save).toHaveBeenCalledWith({ ...context.deviceCode, isAuthorized: false });
     });
 
     it('should throw when the device code has expired.', async () => {
-      Reflect.set(context.deviceCode, 'expiresAt', new Date(Date.now() - 300000));
+      Reflect.set(deviceCode, 'expiresAt', new Date(Date.now() - 300000));
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(ExpiredTokenException, 'Expired Device Code.');
     });
 
     it('should throw when the application decides that the client should slow down.', async () => {
-      context.deviceCode.isAuthorized = null;
+      deviceCode.isAuthorized = null;
       deviceCodeServiceMock.shouldSlowDown.mockResolvedValueOnce(true);
-      await expect(grantType.handle(context)).rejects.toThrowError(SlowDownException);
+      await expect(grantType.handle(context)).rejects.toThrow(SlowDownException);
     });
 
     it('should throw when the authorization is still pending.', async () => {
-      context.deviceCode.isAuthorized = null;
+      deviceCode.isAuthorized = null;
       deviceCodeServiceMock.shouldSlowDown.mockResolvedValueOnce(false);
-      await expect(grantType.handle(context)).rejects.toThrowError(AuthorizationPendingException);
+      await expect(grantType.handle(context)).rejects.toThrow(AuthorizationPendingException);
     });
 
     it('should throw when the end user denies authorization.', async () => {
-      context.deviceCode.isAuthorized = false;
+      deviceCode.isAuthorized = false;
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
@@ -142,14 +149,16 @@ describe('Device Code Grant Type', () => {
     });
 
     it('should create a token response without a refresh token if the client does not support it.', async () => {
-      Reflect.set(context.client, 'grantTypes', ['urn:ietf:params:oauth:grant-type:device_code']);
-      Reflect.set(context.deviceCode.client, 'grantTypes', ['urn:ietf:params:oauth:grant-type:device_code']);
+      Reflect.set(client, 'grantTypes', ['urn:ietf:params:oauth:grant-type:device_code']);
 
-      const accessToken = <AccessToken>{
-        id: 'access_token',
-        expiresAt: new Date(Date.now() + 3600000),
-        scopes: context.deviceCode.scopes,
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          expiresAt: new Date(Date.now() + 3600000),
+          scopes: deviceCode.scopes,
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
@@ -170,11 +179,14 @@ describe('Device Code Grant Type', () => {
 
       grantType = container.resolve(DeviceCodeGrantType);
 
-      const accessToken = <AccessToken>{
-        id: 'access_token',
-        expiresAt: new Date(Date.now() + 3600000),
-        scopes: context.deviceCode.scopes,
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          expiresAt: new Date(Date.now() + 3600000),
+          scopes: deviceCode.scopes,
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
@@ -188,13 +200,19 @@ describe('Device Code Grant Type', () => {
     });
 
     it('should create a token response with a refresh token.', async () => {
-      const accessToken = <AccessToken>{
-        id: 'access_token',
-        expiresAt: new Date(Date.now() + 3600000),
-        scopes: context.deviceCode.scopes,
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          expiresAt: new Date(Date.now() + 3600000),
+          scopes: deviceCode.scopes,
+        },
+      );
 
-      const refreshToken = <RefreshToken>{ id: 'refresh_token' };
+      const refreshToken: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+        Reflect.construct(RefreshToken, []),
+        { id: 'refresh_token' },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);

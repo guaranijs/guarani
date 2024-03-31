@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import { EndSessionRequest } from '../requests/end-session-request';
 import { Client } from './client.entity';
 import { Session } from './session.entity';
@@ -5,39 +7,51 @@ import { Session } from './session.entity';
 /**
  * OAuth 2.0 Logout Ticket Entity.
  */
-export interface LogoutTicket {
+export abstract class LogoutTicket implements Dictionary<any> {
   /**
    * Identifier of the Logout Ticket.
    */
-  readonly id: string;
+  public readonly id!: string;
 
   /**
    * Logout Challenge of the Logout Ticket.
    */
-  readonly logoutChallenge: string;
+  public readonly logoutChallenge!: string;
 
   /**
    * Parameters of the End Session Request.
    */
-  readonly parameters: EndSessionRequest;
+  public readonly parameters!: EndSessionRequest;
 
   /**
    * Creation Date of the Logout Ticket.
    */
-  readonly createdAt: Date;
+  public readonly createdAt!: Date;
 
   /**
    * Expiration Date of the Logout Ticket.
    */
-  readonly expiresAt: Date;
+  public readonly expiresAt!: Date;
 
   /**
    * Client requesting logout.
    */
-  readonly client: Client;
+  public readonly client!: Client;
 
   /**
    * Session of the User-Agent.
    */
-  session: Session;
+  public session!: Session;
+
+  /**
+   * Additional Logout Ticket Parameters.
+   */
+  [parameter: string]: unknown;
+
+  /**
+   * Expiration status of the Logout Ticket.
+   */
+  public get isExpired(): boolean {
+    return new Date() >= this.expiresAt;
+  }
 }

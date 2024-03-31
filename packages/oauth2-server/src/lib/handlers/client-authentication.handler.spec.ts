@@ -86,11 +86,11 @@ describe('Client Authentication Handler', () => {
     });
 
     it('should return an authenticated client.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: 'client_secret',
         authenticationMethod: 'client_secret_basic',
-      };
+      });
 
       clientAuthenticationMethodsMocks[0]!.hasBeenRequested.mockReturnValueOnce(true);
       clientAuthenticationMethodsMocks[0]!.authenticate.mockResolvedValueOnce(client);

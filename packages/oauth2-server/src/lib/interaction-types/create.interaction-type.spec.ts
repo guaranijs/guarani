@@ -2,8 +2,9 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { CreateContextInteractionContext } from '../context/interaction/create-context.interaction-context';
 import { CreateDecisionInteractionContext } from '../context/interaction/create-decision.interaction-context';
+import { Client } from '../entities/client.entity';
 import { Grant } from '../entities/grant.entity';
-import { Login } from '../entities/login.entity';
+import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 import { AuthHandler } from '../handlers/auth.handler';
@@ -73,9 +74,38 @@ describe('Create Interaction Type', () => {
 
   describe('handleContext()', () => {
     let context: CreateContextInteractionContext;
+    let client: Client;
+    let session: Session;
+    let grant: Grant;
 
     beforeEach(() => {
       const now = Date.now();
+
+      client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+        id: 'session_id',
+        activeLogin: null,
+        logins: [],
+      });
+
+      grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: {
+          response_type: 'code',
+          client_id: 'client_id',
+          redirect_uri: 'https://client.example.com/oauth/callback',
+          scope: 'foo bar baz',
+          state: 'client_state',
+          response_mode: 'query',
+          prompt: 'create',
+        },
+        interactions: [],
+        expiresAt: new Date(now + 300000),
+        client,
+        session,
+      });
 
       context = <CreateContextInteractionContext>{
         parameters: {
@@ -87,32 +117,12 @@ describe('Create Interaction Type', () => {
           handleContext: jest.fn(),
           handleDecision: jest.fn(),
         },
-        grant: <Grant>{
-          id: 'grant_id',
-          loginChallenge: 'login_challenge',
-          parameters: {
-            response_type: 'code',
-            client_id: 'client_id',
-            redirect_uri: 'https://client.example.com/oauth/callback',
-            scope: 'foo bar baz',
-            state: 'client_state',
-            response_mode: 'query',
-            prompt: 'create',
-          },
-          interactions: <InteractionType[]>[],
-          expiresAt: new Date(now + 300000),
-          client: { id: 'client_id' },
-          session: {
-            id: 'session_id',
-            activeLogin: null,
-            logins: <Login[]>[],
-          },
-        },
+        grant,
       };
     });
 
     it('should throw when the grant is expired.', async () => {
-      Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
+      Reflect.set(grant, 'expiresAt', new Date(Date.now() - 3600000));
 
       await expect(interactionType.handleContext(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
@@ -120,13 +130,13 @@ describe('Create Interaction Type', () => {
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
     });
 
     it('should return a valid skip create context response.', async () => {
-      context.grant.interactions.push('create');
+      grant.interactions.push('create');
 
-      const requestUrl = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
+      const requestUrl = addParametersToUrl('https://server.example.com/oauth/authorize', grant.parameters);
 
       await expect(interactionType.handleContext(context)).resolves.toStrictEqual<CreateContextInteractionResponse>({
         skip: true,
@@ -156,9 +166,41 @@ describe('Create Interaction Type', () => {
 
   describe('handleDecision()', () => {
     let context: CreateDecisionInteractionContext;
+    let client: Client;
+    let session: Session;
+    let grant: Grant;
+    let user: User;
 
     beforeEach(() => {
       const now = Date.now();
+
+      client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+        id: 'session_id',
+        activeLogin: null,
+        logins: [],
+      });
+
+      grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+        parameters: {
+          response_type: 'code',
+          client_id: 'client_id',
+          redirect_uri: 'https://client.example.com/oauth/callback',
+          scope: 'foo bar baz',
+          state: 'client_state',
+          response_mode: 'query',
+          prompt: 'create',
+        },
+        interactions: <InteractionType[]>[],
+        expiresAt: new Date(now + 300000),
+        client,
+        session,
+      });
+
+      user = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
       context = <CreateDecisionInteractionContext>{
         parameters: {
@@ -170,33 +212,13 @@ describe('Create Interaction Type', () => {
           handleContext: jest.fn(),
           handleDecision: jest.fn(),
         }),
-        grant: <Grant>{
-          id: 'grant_id',
-          loginChallenge: 'login_challenge',
-          parameters: {
-            response_type: 'code',
-            client_id: 'client_id',
-            redirect_uri: 'https://client.example.com/oauth/callback',
-            scope: 'foo bar baz',
-            state: 'client_state',
-            response_mode: 'query',
-            prompt: 'create',
-          },
-          interactions: <InteractionType[]>[],
-          expiresAt: new Date(now + 300000),
-          client: { id: 'client_id' },
-          session: {
-            id: 'session_id',
-            activeLogin: null,
-            logins: <Login[]>[],
-          },
-        },
-        user: <User>{ id: 'user_id' },
+        grant,
+        user,
       };
     });
 
     it('should throw when the grant is expired.', async () => {
-      Reflect.set(context.grant, 'expiresAt', new Date(Date.now() - 3600000));
+      Reflect.set(grant, 'expiresAt', new Date(Date.now() - 3600000));
 
       await expect(interactionType.handleDecision(context)).rejects.toThrowWithMessage(
         AccessDeniedException,
@@ -204,15 +226,11 @@ describe('Create Interaction Type', () => {
       );
 
       expect(grantServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(grantServiceMock.remove).toHaveBeenCalledWith(context.grant);
+      expect(grantServiceMock.remove).toHaveBeenCalledWith(grant);
     });
 
     it('should return a valid first time create decision interaction response.', async () => {
-      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
-
-      const { grant } = context;
-
-      const user = <User>{ id: 'user_id' };
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', grant.parameters);
 
       userServiceMock.create.mockResolvedValueOnce(user);
 
@@ -224,16 +242,16 @@ describe('Create Interaction Type', () => {
       expect(userServiceMock.create).toHaveBeenCalledWith(context.parameters);
 
       expect(authHandlerMock.login).toHaveBeenCalledTimes(1);
-      expect(authHandlerMock.login).toHaveBeenCalledWith(user, grant.client, grant.session, null, null);
+      expect(authHandlerMock.login).toHaveBeenCalledWith(user, client, session, null, null);
 
       expect(grantServiceMock.save).toHaveBeenCalledTimes(1);
       expect(grantServiceMock.save).toHaveBeenCalledWith(<Grant>{ ...grant, interactions: ['create'] });
     });
 
     it('should return a valid subsequent create decision interaction response.', async () => {
-      context.grant.interactions.push('create');
+      grant.interactions.push('create');
 
-      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', context.grant.parameters);
+      const redirectTo = addParametersToUrl('https://server.example.com/oauth/authorize', grant.parameters);
 
       await expect(interactionType.handleDecision(context)).resolves.toStrictEqual<CreateDecisionInteractionResponse>({
         redirect_to: redirectTo.href,

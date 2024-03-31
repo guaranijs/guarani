@@ -6,6 +6,7 @@ import { removeNullishValues } from '@guarani/primitives';
 
 import { PutRegistrationContext } from '../../context/registration/put.registration-context';
 import { AccessToken } from '../../entities/access-token.entity';
+import { Client } from '../../entities/client.entity';
 import { InsufficientScopeException } from '../../exceptions/insufficient-scope.exception';
 import { InvalidClientMetadataException } from '../../exceptions/invalid-client-metadata.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
@@ -255,7 +256,10 @@ describe('Put Registration Request Validator', () => {
     it('should throw when providing an initial access token.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{ id: 'access_token', client: null };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', client: null },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -268,7 +272,14 @@ describe('Put Registration Request Validator', () => {
     it('should throw when the client presents an access token that was not issued to itself.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{ id: 'access_token', client: { id: 'another_client_id' } };
+      const anotherClient: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'another_client_id',
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', client: anotherClient },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -284,11 +295,14 @@ describe('Put Registration Request Validator', () => {
     it('should throw when the client presents an access token that is not a registration access token.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{
-        id: 'access_token',
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-        client: { id: 'client_id' },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', scopes: ['foo', 'bar', 'baz', 'qux'], client },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -301,11 +315,15 @@ describe('Put Registration Request Validator', () => {
     it('should throw when the client secret of the client and the request do not match.', async () => {
       const request = requestFactory({}, { client_secret: 'another_client_secret' });
 
-      const accessToken = <AccessToken>{
-        id: 'access_token',
-        scopes: ['client:update'],
-        client: { id: 'client_id', secret: 'client_secret' },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        secret: 'client_secret',
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', scopes: ['client:update'], client },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -318,11 +336,15 @@ describe('Put Registration Request Validator', () => {
     it('should return a put registration request context.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{
-        id: 'access_token',
-        scopes: ['client:update'],
-        client: { id: 'client_id', secret: 'client_secret' },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        secret: 'client_secret',
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', scopes: ['client:update'], client },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -330,7 +352,7 @@ describe('Put Registration Request Validator', () => {
         queryParameters,
         bodyParameters,
         accessToken,
-        client: accessToken.client!,
+        client,
         clientId: 'client_id',
         clientSecret: 'client_secret',
         redirectUris: [new URL('https://client.example.com/oauth/callback')],

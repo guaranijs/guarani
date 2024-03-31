@@ -4,16 +4,37 @@ import { Injectable } from '@guarani/di';
 import { Dictionary, Nullable } from '@guarani/types';
 
 import { User } from '../../entities/user.entity';
+import { AddressClaimParameters } from '../../id-token/address.claim.parameters';
 import { UserinfoClaimsParameters } from '../../id-token/userinfo.claims.parameters';
 import { Logger } from '../../logger/logger';
 import { UserServiceInterface } from '../user.service.interface';
 
-type SampleUser = User & UserinfoClaimsParameters;
+class SampleUser extends User implements UserinfoClaimsParameters {
+  public name?: string;
+  public given_name?: string;
+  public middle_name?: string;
+  public family_name?: string;
+  public nickname?: string;
+  public preferred_username?: string;
+  public profile?: string;
+  public picture?: string;
+  public website?: string;
+  public email?: string;
+  public email_verified?: boolean;
+  public gender?: string;
+  public birthdate?: string;
+  public zoneinfo?: string;
+  public locale?: string;
+  public phone_number?: string;
+  public phone_number_verified?: boolean;
+  public address?: AddressClaimParameters;
+  public updated_at?: number;
+}
 
 @Injectable()
 export class UserService implements UserServiceInterface {
   protected readonly users: SampleUser[] = [
-    {
+    Object.assign<SampleUser, Partial<SampleUser>>(Reflect.construct(SampleUser, []), {
       id: '16907c32-687b-493c-85ba-f41f2c9d4daa',
       username: 'johndoe',
       password: 'secretpassword',
@@ -43,7 +64,7 @@ export class UserService implements UserServiceInterface {
         country: 'United States of America',
       },
       updated_at: Math.ceil(Date.now() / 1000),
-    },
+    }),
   ];
 
   public constructor(protected readonly logger: Logger) {
@@ -58,7 +79,11 @@ export class UserService implements UserServiceInterface {
       parameters,
     });
 
-    const user: SampleUser = { id: randomUUID(), ...parameters };
+    const user: SampleUser = Object.assign<SampleUser, Partial<SampleUser>>(Reflect.construct(SampleUser, []), {
+      id: randomUUID(),
+      ...parameters,
+    });
+
     this.users.push(user);
 
     return user;

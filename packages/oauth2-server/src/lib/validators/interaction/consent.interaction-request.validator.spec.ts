@@ -19,6 +19,7 @@ import { InteractionTypeInterface } from '../../interaction-types/interaction-ty
 import { INTERACTION_TYPE } from '../../interaction-types/interaction-type.token';
 import { InteractionType } from '../../interaction-types/interaction-type.type';
 import { Logger } from '../../logger/logger';
+import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ConsentContextInteractionRequest } from '../../requests/interaction/consent-context.interaction-request';
 import { ConsentDecisionInteractionRequest } from '../../requests/interaction/consent-decision.interaction-request';
 import { ConsentDecisionAcceptInteractionRequest } from '../../requests/interaction/consent-decision-accept.interaction-request';
@@ -120,7 +121,10 @@ describe('Consent Interaction Request Validator', () => {
     it('should return a consent context interaction context.', async () => {
       const request = requestFactory();
 
-      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+      });
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
@@ -177,7 +181,10 @@ describe('Consent Interaction Request Validator', () => {
     it('should throw when not providing the parameter "decision".', async () => {
       const request = requestFactory({ decision: undefined });
 
-      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+      });
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
@@ -190,7 +197,10 @@ describe('Consent Interaction Request Validator', () => {
     it('should throw when providing an unsupported decision.', async () => {
       const request = requestFactory({ decision: 'unknown' as ConsentDecision });
 
-      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+      });
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
@@ -204,7 +214,10 @@ describe('Consent Interaction Request Validator', () => {
     it('should throw when not providing the parameter "grant_scope".', async () => {
       const request = requestFactory({ decision: 'accept', grant_scope: undefined });
 
-      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+      });
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
@@ -217,7 +230,10 @@ describe('Consent Interaction Request Validator', () => {
     it('should throw when requesting an unsupported scope.', async () => {
       const request = requestFactory({ decision: 'accept', grant_scope: 'foo bar unknown' });
 
-      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+      });
 
       const error = new InvalidScopeException('Unsupported scope "unknown".');
 
@@ -233,7 +249,11 @@ describe('Consent Interaction Request Validator', () => {
     it('should throw when granting a scope that was not previously requested.', async () => {
       const request = requestFactory({ decision: 'accept', grant_scope: 'foo bar baz' });
 
-      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge', parameters: { scope: 'foo bar' } };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+        parameters: <AuthorizationRequest>{ scope: 'foo bar' },
+      });
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
       scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
@@ -247,7 +267,11 @@ describe('Consent Interaction Request Validator', () => {
     it('should return a consent decision accept interaction context.', async () => {
       const request = requestFactory({ decision: 'accept', grant_scope: 'foo bar' });
 
-      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge', parameters: { scope: 'foo bar' } };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+        parameters: <AuthorizationRequest>{ scope: 'foo bar' },
+      });
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
       scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
@@ -268,7 +292,10 @@ describe('Consent Interaction Request Validator', () => {
     it('should throw when not providing the parameter "error".', async () => {
       const request = requestFactory({ decision: 'deny', error: undefined });
 
-      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+      });
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
@@ -281,7 +308,10 @@ describe('Consent Interaction Request Validator', () => {
     it('should throw when not providing the parameter "error_description".', async () => {
       const request = requestFactory({ decision: 'deny', error: 'consent_denied', error_description: undefined });
 
-      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+      });
 
       grantServiceMock.findOneByConsentChallenge.mockResolvedValueOnce(grant);
 
@@ -298,7 +328,10 @@ describe('Consent Interaction Request Validator', () => {
         error_description: 'Lorem ipsum dolor sit amet...',
       });
 
-      const grant = <Grant>{ id: 'grant_id', consentChallenge: 'consent_challenge' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        consentChallenge: 'consent_challenge',
+      });
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
         Reflect.construct(OAuth2Exception, [parameters.error_description as string]),

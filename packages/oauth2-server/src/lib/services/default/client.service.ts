@@ -12,7 +12,7 @@ import { ClientServiceInterface } from '../client.service.interface';
 @Injectable()
 export class ClientService implements ClientServiceInterface {
   protected readonly clients = <Client[]>[
-    {
+    Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
       id: 'b1eeace9-2b0c-468e-a444-733befc3b35d',
       secret: 'z9IyV0Pd6_-0XRJP5DN-UvFYeP56sbNX',
       name: 'Dev Client #1',
@@ -35,7 +35,7 @@ export class ClientService implements ClientServiceInterface {
       requireAuthTime: false,
       postLogoutRedirectUris: ['http://localhost:4000/oauth/logout_callback'],
       createdAt: new Date(),
-    },
+    }),
   ];
 
   public constructor(protected readonly logger: Logger) {
@@ -52,7 +52,7 @@ export class ClientService implements ClientServiceInterface {
 
     const id = randomUUID();
 
-    const client: Client = {
+    const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
       id,
       secret: this.secretToken(),
       secretExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
@@ -98,7 +98,7 @@ export class ClientService implements ClientServiceInterface {
       softwareId: context.softwareId,
       softwareVersion: context.softwareVersion,
       createdAt: new Date(),
-    };
+    });
 
     this.clients.push(client);
 

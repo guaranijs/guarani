@@ -11,9 +11,9 @@ import { Settings } from '../../settings/settings';
 import { SETTINGS } from '../../settings/settings.token';
 import { DeviceCodeServiceInterface } from '../device-code.service.interface';
 
-interface SampleDeviceCode extends DeviceCode {
-  waitTime: number;
-  lastPolled: Nullable<Date>;
+class SampleDeviceCode extends DeviceCode {
+  public waitTime!: number;
+  public lastPolled!: Nullable<Date>;
 }
 
 @Injectable()
@@ -45,18 +45,21 @@ export class DeviceCodeService implements DeviceCodeServiceInterface {
 
     const now = Date.now();
 
-    const deviceCode: SampleDeviceCode = {
-      id: randomUUID(),
-      userCode,
-      scopes,
-      isAuthorized: null,
-      waitTime: 5,
-      lastPolled: null,
-      issuedAt: new Date(now),
-      expiresAt: new Date(now + 1800000),
-      client,
-      user: null,
-    };
+    const deviceCode: SampleDeviceCode = Object.assign<SampleDeviceCode, Partial<SampleDeviceCode>>(
+      Reflect.construct(SampleDeviceCode, []),
+      {
+        id: randomUUID(),
+        userCode,
+        scopes,
+        isAuthorized: null,
+        waitTime: 5,
+        lastPolled: null,
+        issuedAt: new Date(now),
+        expiresAt: new Date(now + 1800000),
+        client,
+        user: null,
+      },
+    );
 
     this.deviceCodes.push(deviceCode);
 

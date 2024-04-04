@@ -142,7 +142,7 @@ describe('Logout Token Handler', () => {
 
   describe('generateLogoutToken()', () => {
     it('should throw when both "user" and "login" parameters are null.', async () => {
-      const client = <Client>{ id: 'client_id' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
 
       await expect(logoutTokenHandler.generateLogoutToken(client, null, null)).rejects.toThrowWithMessage(
         TypeError,
@@ -164,9 +164,11 @@ describe('Logout Token Handler', () => {
 
       logoutTokenHandler = container.resolve(LogoutTokenHandler);
 
-      const client = <Client>{ id: 'client_id' };
-      const user = <User>{ id: 'user_id' };
-      const login = <Login>{ id: 'login_id' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
       await expect(logoutTokenHandler.generateLogoutToken(client, user, login)).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
@@ -188,9 +190,11 @@ describe('Logout Token Handler', () => {
 
       logoutTokenHandler = container.resolve(LogoutTokenHandler);
 
-      const client = <Client>{ id: 'client_id' };
-      const user = <User>{ id: 'user_id' };
-      const login = <Login>{ id: 'login_id' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
       await expect(logoutTokenHandler.generateLogoutToken(client, user, login)).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
@@ -199,15 +203,16 @@ describe('Logout Token Handler', () => {
     });
 
     it('should generate a signed logout token with the default claims.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         subjectType: 'public',
         idTokenSignedResponseAlgorithm: 'ES256',
         idTokenEncryptedResponseKeyWrap: null,
-      };
+      });
 
-      const user = <User>{ id: 'user_id' };
-      const login = <Login>{ id: 'login_id' };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
       const logoutToken = await logoutTokenHandler.generateLogoutToken(client, user, login);
 
@@ -230,14 +235,14 @@ describe('Logout Token Handler', () => {
     });
 
     it('should generate a signed logout token with the default claims and no "sub" claim.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         subjectType: 'public',
         idTokenSignedResponseAlgorithm: 'ES256',
         idTokenEncryptedResponseKeyWrap: null,
-      };
+      });
 
-      const login = <Login>{ id: 'login_id' };
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
       const logoutToken = await logoutTokenHandler.generateLogoutToken(client, null, login);
 
@@ -260,14 +265,14 @@ describe('Logout Token Handler', () => {
     });
 
     it('should generate a signed logout token with the default claims and no "sid" claim.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         subjectType: 'public',
         idTokenSignedResponseAlgorithm: 'ES256',
         idTokenEncryptedResponseKeyWrap: null,
-      };
+      });
 
-      const user = <User>{ id: 'user_id' };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
       const logoutToken = await logoutTokenHandler.generateLogoutToken(client, user, null);
 
@@ -290,7 +295,7 @@ describe('Logout Token Handler', () => {
     });
 
     it('should throw when the client does not have a json web key set registered.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         jwksUri: null,
         jwks: null,
@@ -298,10 +303,11 @@ describe('Logout Token Handler', () => {
         idTokenSignedResponseAlgorithm: 'ES256',
         idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
         idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-      };
+      });
 
-      const user = <User>{ id: 'user_id' };
-      const login = <Login>{ id: 'login_id' };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
       await expect(logoutTokenHandler.generateLogoutToken(client, user, login)).rejects.toThrowWithMessage(
         Error,
@@ -316,7 +322,7 @@ describe('Logout Token Handler', () => {
         RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256', use: 'enc' }),
       ]);
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         jwksUri: null,
         jwks: new JsonWebKeySet(keysWithUnsupportedAlg).toJSON(true),
@@ -324,10 +330,11 @@ describe('Logout Token Handler', () => {
         idTokenSignedResponseAlgorithm: 'ES256',
         idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
         idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-      };
+      });
 
-      const user = <User>{ id: 'user_id' };
-      const login = <Login>{ id: 'login_id' };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
       await expect(logoutTokenHandler.generateLogoutToken(client, user, login)).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
@@ -342,7 +349,7 @@ describe('Logout Token Handler', () => {
         RsaKey.generate('RSA', { modulus: 2048 }, { alg: 'RSA-OAEP-256' }),
       ]);
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         jwksUri: null,
         jwks: new JsonWebKeySet(keysWithInvalidSig).toJSON(true),
@@ -350,10 +357,11 @@ describe('Logout Token Handler', () => {
         idTokenSignedResponseAlgorithm: 'ES256',
         idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
         idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-      };
+      });
 
-      const user = <User>{ id: 'user_id' };
-      const login = <Login>{ id: 'login_id' };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
       await expect(logoutTokenHandler.generateLogoutToken(client, user, login)).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
@@ -362,7 +370,7 @@ describe('Logout Token Handler', () => {
     });
 
     it('should generate a nested logout token with the default claims.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         jwksUri: null,
         jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
@@ -370,10 +378,11 @@ describe('Logout Token Handler', () => {
         idTokenSignedResponseAlgorithm: 'ES256',
         idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
         idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-      };
+      });
 
-      const user = <User>{ id: 'user_id' };
-      const login = <Login>{ id: 'login_id' };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
       const logoutToken = await logoutTokenHandler.generateLogoutToken(client, user, login);
 
@@ -403,7 +412,7 @@ describe('Logout Token Handler', () => {
     });
 
     it('should generate a nested logout token with the default claims and no "sub" claim.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         jwksUri: null,
         jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
@@ -411,9 +420,9 @@ describe('Logout Token Handler', () => {
         idTokenSignedResponseAlgorithm: 'ES256',
         idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
         idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-      };
+      });
 
-      const login = <Login>{ id: 'login_id' };
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
       const logoutToken = await logoutTokenHandler.generateLogoutToken(client, null, login);
 
@@ -443,7 +452,7 @@ describe('Logout Token Handler', () => {
     });
 
     it('should generate a nested logout token with the default claims and no "sid" claim.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         jwksUri: null,
         jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
@@ -451,9 +460,9 @@ describe('Logout Token Handler', () => {
         idTokenSignedResponseAlgorithm: 'ES256',
         idTokenEncryptedResponseKeyWrap: 'RSA-OAEP',
         idTokenEncryptedResponseContentEncryption: 'A128CBC-HS256',
-      };
+      });
 
-      const user = <User>{ id: 'user_id' };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
       const logoutToken = await logoutTokenHandler.generateLogoutToken(client, user, null);
 

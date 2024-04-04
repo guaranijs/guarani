@@ -18,11 +18,6 @@ import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { TokenTypeHint } from '../types/token-type-hint.type';
 
-interface FindTokenResult {
-  readonly token: AccessToken | RefreshToken;
-  readonly tokenType: TokenTypeHint;
-}
-
 /**
  * Implementation of the Introspection Request Validator.
  */
@@ -94,15 +89,15 @@ export class IntrospectionRequestValidator {
     const parameters = request.form<IntrospectionRequest>();
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
-    const tokenResult = await this.findToken(parameters);
+    const token = await this.findToken(parameters);
 
-    if (tokenResult === null || tokenResult.token.client === null) {
-      const context: IntrospectionContext = { client, parameters, token: null, tokenType: null };
+    if (token === null || token.client === null) {
+      const context: IntrospectionContext = { client, parameters, token: null };
 
       this.logger.debug(
         `[${this.constructor.name}] Introspection Request validation completed`,
         'd7ade187-6b06-4833-9cb4-9553d665d1fc',
-        { context, token_result: tokenResult },
+        { context },
       );
 
       return context;
@@ -111,8 +106,7 @@ export class IntrospectionRequestValidator {
     const context: IntrospectionContext = {
       client,
       parameters,
-      token: tokenResult.token,
-      tokenType: tokenResult.tokenType,
+      token,
     };
 
     this.logger.debug(
@@ -125,12 +119,12 @@ export class IntrospectionRequestValidator {
   }
 
   /**
-   * Searches the application's storage for a Token that satisfies the Token Handle provided by the Client.
+   * Searches the application's storage for a Token that satisfies the Token Identifier provided by the Client.
    *
    * @param parameters Parameters of the Introspection Request.
    * @returns Resulting Token and its type.
    */
-  private async findToken(parameters: IntrospectionRequest): Promise<Nullable<FindTokenResult>> {
+  private async findToken(parameters: IntrospectionRequest): Promise<Nullable<AccessToken | RefreshToken>> {
     this.logger.debug(`[${this.constructor.name}] Called findToken()`, '1255c96a-4d1f-45a6-b3eb-c5681d0f0dbb', {
       parameters,
     });
@@ -177,28 +171,26 @@ export class IntrospectionRequestValidator {
   /**
    * Searches the application's storage for an Access Token.
    *
-   * @param handle Token Handle provided by the Client.
+   * @param id Token Identifier provided by the Client.
    * @returns Result of the search.
    */
-  private async findAccessToken(handle: string): Promise<Nullable<FindTokenResult>> {
+  private async findAccessToken(id: string): Promise<Nullable<AccessToken>> {
     this.logger.debug(`[${this.constructor.name}] Called findAccessToken()`, 'a4d43566-a501-4d48-bbf2-0ad1e385a655', {
-      handle,
+      id,
     });
 
-    const token = await this.accessTokenService.findOne(handle);
-
-    return token !== null ? { token, tokenType: 'access_token' } : null;
+    return await this.accessTokenService.findOne(id);
   }
 
   /**
    * Searches the application's storage for a Refresh Token.
    *
-   * @param handle Token Handle provided by the Client.
+   * @param id Token Identifier provided by the Client.
    * @returns Result of the search.
    */
-  private async findRefreshToken(handle: string): Promise<Nullable<FindTokenResult>> {
+  private async findRefreshToken(id: string): Promise<Nullable<RefreshToken>> {
     this.logger.debug(`[${this.constructor.name}] Called findRefreshToken()`, 'c85c5390-cb7b-43e6-96e8-0002ea5d8b28', {
-      handle,
+      id,
     });
 
     if (typeof this.refreshTokenService === 'undefined') {
@@ -210,8 +202,6 @@ export class IntrospectionRequestValidator {
       return null;
     }
 
-    const token = this.settings.enableRefreshTokenIntrospection ? await this.refreshTokenService.findOne(handle) : null;
-
-    return token !== null ? { token, tokenType: 'refresh_token' } : null;
+    return this.settings.enableRefreshTokenIntrospection ? await this.refreshTokenService.findOne(id) : null;
   }
 }

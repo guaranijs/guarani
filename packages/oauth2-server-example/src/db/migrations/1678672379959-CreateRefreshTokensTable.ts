@@ -8,7 +8,7 @@ export class CreateRefreshTokensTable1678672379959 implements MigrationInterface
       name: 'refresh_tokens',
       columns: [
         {
-          name: 'handle',
+          name: 'id',
           type: 'varchar',
           isNullable: false,
           isPrimary: true,
@@ -57,9 +57,9 @@ export class CreateRefreshTokensTable1678672379959 implements MigrationInterface
       ],
       checks: [
         {
-          name: 'check_handle_length',
-          columnNames: ['handle'],
-          expression: 'length("handle") = 24',
+          name: 'check_id_length',
+          columnNames: ['id'],
+          expression: 'length("id") = 24',
         },
       ],
       foreignKeys: [

@@ -94,7 +94,10 @@ describe('Device Code Token Request Validator', () => {
     it('should throw when not providing the parameter "device_code".', async () => {
       const request = requestFactory({ device_code: undefined });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -107,7 +110,10 @@ describe('Device Code Token Request Validator', () => {
     it('should throw when no device code is found.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       deviceCodeServiceMock.findOne.mockResolvedValueOnce(null);
@@ -121,8 +127,14 @@ describe('Device Code Token Request Validator', () => {
     it('should return a device code token context.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'] };
-      const deviceCode = <DeviceCode>{ id: 'device_code' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['urn:ietf:params:oauth:grant-type:device_code'],
+      });
+
+      const deviceCode: DeviceCode = Object.assign<DeviceCode, Partial<DeviceCode>>(Reflect.construct(DeviceCode, []), {
+        id: 'device_code',
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       deviceCodeServiceMock.findOne.mockResolvedValueOnce(deviceCode);

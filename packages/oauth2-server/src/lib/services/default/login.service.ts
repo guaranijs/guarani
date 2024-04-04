@@ -36,7 +36,7 @@ export class LoginService implements LoginServiceInterface {
       acr,
     });
 
-    const login: Login = {
+    const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
       id: randomUUID(),
       amr,
       acr,
@@ -45,7 +45,7 @@ export class LoginService implements LoginServiceInterface {
       user,
       session,
       clients: [client],
-    };
+    });
 
     this.logins.push(login);
 

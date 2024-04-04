@@ -64,8 +64,11 @@ describe('Code ID Token Response Type', () => {
 
   describe('handle()', () => {
     let context: CodeAuthorizationContext;
+    let client: Client;
 
     beforeEach(() => {
+      client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       context = <CodeAuthorizationContext>{
         parameters: {
           response_type: 'code id_token',
@@ -83,7 +86,7 @@ describe('Code ID Token Response Type', () => {
           defaultResponseMode: 'fragment',
           handle: jest.fn(),
         }),
-        client: <Client>{ id: 'client_id' },
+        client,
         redirectUri: new URL('https://client.example.com/oauth/callback'),
         scopes: ['openid', 'foo', 'bar'],
         codeChallenge: 'code_challenge',
@@ -105,8 +108,12 @@ describe('Code ID Token Response Type', () => {
       Reflect.set(context.parameters, 'scope', 'foo bar');
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
-      const login = <Login>{};
-      const consent = <Consent>{ scopes: ['foo', 'bar'] };
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        id: 'consent_id',
+        scopes: ['foo', 'bar'],
+      });
 
       await expect(responseType.handle(context, login, consent)).rejects.toThrowWithMessage(
         InvalidRequestException,
@@ -115,10 +122,17 @@ describe('Code ID Token Response Type', () => {
     });
 
     it('should create a code id token authorization response.', async () => {
-      const login = <Login>{};
-      const consent = <Consent>{ scopes: ['openid', 'foo', 'bar'] };
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
-      const authorizationCode = <AuthorizationCode>{ code: 'authorization_code' };
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        id: 'consent_id',
+        scopes: ['openid', 'foo', 'bar'],
+      });
+
+      const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        { id: 'authorization_code' },
+      );
 
       authorizationCodeServiceMock.create.mockResolvedValueOnce(authorizationCode);
       idTokenHandlerMock.generateIdToken.mockResolvedValueOnce('id_token');

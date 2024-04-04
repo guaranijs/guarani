@@ -4,6 +4,7 @@ import { DependencyInjectionContainer } from '@guarani/di';
 
 import { AuthorizationCodeTokenContext } from '../context/token/authorization-code.token-context';
 import { AccessToken } from '../entities/access-token.entity';
+import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
@@ -85,28 +86,35 @@ describe('Authorization Code Grant Type', () => {
 
   describe('handle()', () => {
     let context: AuthorizationCodeTokenContext;
+    let client: Client;
+    let login: Login;
+    let consent: Consent;
+    let authorizationCode: AuthorizationCode;
 
     beforeEach(() => {
       const now = Date.now();
 
-      context = <AuthorizationCodeTokenContext>{
-        parameters: {
-          grant_type: 'authorization_code',
-          code: 'authorization_code',
-          code_verifier: 'code_challenge',
-          redirect_uri: 'https://client.example.com/oauth/callback',
-        },
-        client: <Client>{
-          id: 'client_id',
-          redirectUris: ['https://client.example.com/oauth/callback'],
-          grantTypes: ['authorization_code', 'refresh_token'],
-        },
-        grantType: <GrantTypeInterface>{
-          name: 'authorization_code',
-          handle: jest.fn(),
-        },
-        authorizationCode: {
-          code: 'authorization_code',
+      client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        grantTypes: ['authorization_code', 'refresh_token'],
+      });
+
+      login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        createdAt: new Date(Date.now()),
+      });
+
+      consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        id: 'consent_id',
+        scopes: ['foo', 'bar', 'baz'],
+        client,
+      });
+
+      authorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+        Reflect.construct(AuthorizationCode, []),
+        {
+          id: 'authorization_code',
           isRevoked: false,
           parameters: {
             response_type: 'code',
@@ -129,24 +137,37 @@ describe('Authorization Code Grant Type', () => {
           issuedAt: new Date(now),
           expiresAt: new Date(now + 300000),
           validAfter: new Date(now),
-          login: <Login>{ id: 'login_id', createdAt: new Date(now) },
-          consent: <Consent>{
-            id: 'consent_id',
-            scopes: ['foo', 'bar', 'baz'],
-            client: {
-              id: 'client_id',
-              redirectUris: ['https://client.example.com/oauth/callback'],
-              grantTypes: ['authorization_code', 'refresh_token'],
-            },
-          },
+          login,
+          consent,
         },
+      );
+
+      context = <AuthorizationCodeTokenContext>{
+        parameters: {
+          grant_type: 'authorization_code',
+          code: 'authorization_code',
+          code_verifier: 'code_challenge',
+          redirect_uri: 'https://client.example.com/oauth/callback',
+        },
+        client,
+        grantType: <GrantTypeInterface>{
+          name: 'authorization_code',
+          handle: jest.fn(),
+        },
+        authorizationCode,
         redirectUri: new URL('https://client.example.com/oauth/callback'),
         codeVerifier: 'code_challenge',
       };
     });
 
     it('should throw on a mismatching client identifier.', async () => {
-      Reflect.set(context.authorizationCode.consent.client, 'id', 'another_client_id');
+      const anotherClient: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'another_client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        grantTypes: ['authorization_code', 'refresh_token'],
+      });
+
+      Reflect.set(consent, 'client', anotherClient);
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
@@ -157,7 +178,7 @@ describe('Authorization Code Grant Type', () => {
     });
 
     it('should throw on an authorization code not yet valid.', async () => {
-      Reflect.set(context.authorizationCode, 'validAfter', new Date(Date.now() + 3600000));
+      Reflect.set(authorizationCode, 'validAfter', new Date(Date.now() + 3600000));
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
@@ -168,7 +189,7 @@ describe('Authorization Code Grant Type', () => {
     });
 
     it('should throw on an expired authorization code.', async () => {
-      Reflect.set(context.authorizationCode, 'expiresAt', new Date(Date.now() - 300000));
+      Reflect.set(authorizationCode, 'expiresAt', new Date(Date.now() - 300000));
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
@@ -179,7 +200,7 @@ describe('Authorization Code Grant Type', () => {
     });
 
     it('should throw on a revoked authorization code.', async () => {
-      Reflect.set(context.authorizationCode, 'isRevoked', true);
+      Reflect.set(authorizationCode, 'isRevoked', true);
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
@@ -223,11 +244,14 @@ describe('Authorization Code Grant Type', () => {
 
       grantType = container.resolve(AuthorizationCodeGrantType);
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: context.authorizationCode.consent.scopes,
-        expiresAt: new Date(Date.now() + 86400000),
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: consent.scopes,
+          expiresAt: new Date(Date.now() + 86400000),
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
@@ -243,14 +267,16 @@ describe('Authorization Code Grant Type', () => {
     });
 
     it('should create a token response without a refresh token if the client does not use it.', async () => {
-      Reflect.set(context.authorizationCode.consent.client, 'grantTypes', ['authorization_code']);
-      Reflect.set(context.client, 'grantTypes', ['authorization_code']);
+      Reflect.set(client, 'grantTypes', ['authorization_code']);
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: context.authorizationCode.consent.scopes,
-        expiresAt: new Date(Date.now() + 86400000),
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: consent.scopes,
+          expiresAt: new Date(Date.now() + 86400000),
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
@@ -266,13 +292,19 @@ describe('Authorization Code Grant Type', () => {
     });
 
     it('should create a token response with a refresh token.', async () => {
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: context.authorizationCode.consent.scopes,
-        expiresAt: new Date(Date.now() + 86400000),
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: consent.scopes,
+          expiresAt: new Date(Date.now() + 86400000),
+        },
+      );
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token' };
+      const refreshToken: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+        Reflect.construct(RefreshToken, []),
+        { id: 'refresh_token' },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);
@@ -289,16 +321,22 @@ describe('Authorization Code Grant Type', () => {
     });
 
     it('should create a token response with a refresh token and without an id token.', async () => {
-      Reflect.set(context.authorizationCode.parameters, 'scope', 'openid profile email phone address');
-      Reflect.set(context.authorizationCode.consent, 'scopes', ['openid', 'profile', 'email', 'phone', 'address']);
+      Reflect.set(authorizationCode.parameters, 'scope', 'openid profile email phone address');
+      Reflect.set(consent, 'scopes', ['openid', 'profile', 'email', 'phone', 'address']);
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: context.authorizationCode.consent.scopes,
-        expiresAt: new Date(Date.now() + 86400000),
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: consent.scopes,
+          expiresAt: new Date(Date.now() + 86400000),
+        },
+      );
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token' };
+      const refreshToken: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+        Reflect.construct(RefreshToken, []),
+        { id: 'refresh_token' },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
       refreshTokenServiceMock.create.mockResolvedValueOnce(refreshToken);

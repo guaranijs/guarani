@@ -4,7 +4,7 @@ import {
   JsonWebKeySetParameters,
   JsonWebSignatureAlgorithm,
 } from '@guarani/jose';
-import { Nullable } from '@guarani/types';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { ClientAuthentication } from '../client-authentication/client-authentication.type';
 import { GrantType } from '../grant-types/grant-type.type';
@@ -15,226 +15,238 @@ import { SubjectType } from '../types/subject-type.type';
 /**
  * OAuth 2.0 Client Entity.
  */
-export interface Client {
+export abstract class Client implements Dictionary<any> {
   /**
    * Identifier of the Client.
    */
-  readonly id: string;
+  public readonly id!: string;
 
   /**
    * Secret of the Client.
    */
-  secret: Nullable<string>;
+  public secret!: Nullable<string>;
 
   /**
    * Expiration Date of the Client Secret.
    *
    * A **null** value indicates that the Client Secret will not expire.
    */
-  secretExpiresAt: Nullable<Date>;
+  public secretExpiresAt!: Nullable<Date>;
 
   /**
    * Name of the Client.
    */
-  name: string;
+  public name!: string;
 
   /**
    * Redirect URIs of the Client.
    */
-  redirectUris: string[];
+  public redirectUris!: string[];
 
   /**
    * Response Types of the Client.
    */
-  responseTypes: ResponseType[];
+  public responseTypes!: ResponseType[];
 
   /**
    * Grant Types of the Client.
    */
-  grantTypes: (GrantType | 'implicit')[];
+  public grantTypes!: (GrantType | 'implicit')[];
 
   /**
    * Application Type of the Client.
    */
-  applicationType: ApplicationType;
+  public applicationType!: ApplicationType;
 
   /**
    * Client Authentication Method of the Client.
    */
-  authenticationMethod: ClientAuthentication;
+  public authenticationMethod!: ClientAuthentication;
 
   /**
    * JSON Web Signature Algorithm used to validate the JWT Bearer Client Assertion.
    */
-  authenticationSigningAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
+  public authenticationSigningAlgorithm!: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   /**
    * Scopes of the Client.
    */
-  scopes: string[];
+  public scopes!: string[];
 
   /**
    * URI of the Home Page of the Client.
    */
-  clientUri: Nullable<string>;
+  public clientUri!: Nullable<string>;
 
   /**
    * URI of the Logo of the Client.
    */
-  logoUri: Nullable<string>;
+  public logoUri!: Nullable<string>;
 
   /**
    * Array of email addresses of people responsible for the Client.
    */
-  contacts: Nullable<string[]>;
+  public contacts!: Nullable<string[]>;
 
   /**
    * URI of the Privacy Policy page of the Client.
    */
-  policyUri: Nullable<string>;
+  public policyUri!: Nullable<string>;
 
   /**
    * URI of the Terms of Services page of the Client.
    */
-  tosUri: Nullable<string>;
+  public tosUri!: Nullable<string>;
 
   /**
    * JSON Web Key Set URL of the Client.
    */
-  jwksUri: Nullable<string>;
+  public jwksUri!: Nullable<string>;
 
   /**
    * JSON Web Key Set object containing the JSON Web Keys of the Client.
    */
-  jwks: Nullable<JsonWebKeySetParameters>;
+  public jwks!: Nullable<JsonWebKeySetParameters>;
 
   /**
    * Subject Type for responses to the Client.
    */
-  subjectType: SubjectType;
+  public subjectType!: SubjectType;
 
   /**
    * Https Url used to calculate the Pseudonymous Identifiers of the Client.
    */
-  sectorIdentifierUri: Nullable<string>;
+  public sectorIdentifierUri!: Nullable<string>;
 
   /**
    * Client Salt for the Pairwise Subject Type.
    */
-  pairwiseSalt: Nullable<string>;
+  public pairwiseSalt!: Nullable<string>;
 
   /**
    * JSON Web Signature Algorithm used to sign the ID Token issued to the Client.
    */
-  idTokenSignedResponseAlgorithm: Exclude<JsonWebSignatureAlgorithm, 'none'>;
+  public idTokenSignedResponseAlgorithm!: Exclude<JsonWebSignatureAlgorithm, 'none'>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the ID Token issued to the Client.
    */
-  idTokenEncryptedResponseKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
+  public idTokenEncryptedResponseKeyWrap!: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the ID Token issued to the Client.
    */
-  idTokenEncryptedResponseContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
+  public idTokenEncryptedResponseContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   /**
    * JSON Web Signature Algorithm used to sign the Userinfo JWT Response.
    */
-  userinfoSignedResponseAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
+  public userinfoSignedResponseAlgorithm!: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the Userinfo JWT Response.
    */
-  userinfoEncryptedResponseKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
+  public userinfoEncryptedResponseKeyWrap!: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the Userinfo JWT Response.
    */
-  userinfoEncryptedResponseContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
+  public userinfoEncryptedResponseContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   /**
    * JSON Web Signature Algorithm used to sign the Request Object sent to the Authorization Server.
    */
-  // requestObjectSigningAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
+  // public requestObjectSigningAlgorithm!: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the Request Object sent to the Authorization Server.
    */
-  // requestObjectEncryptionKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
+  // public requestObjectEncryptionKeyWrap!: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the Request Object sent to the Authorization Server.
    */
-  // requestObjectEncryptionContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
+  // public requestObjectEncryptionContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   /**
    * JSON Web Signature Algorithm used to sign the Authorization Response Token.
    */
-  authorizationSignedResponseAlgorithm: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
+  public authorizationSignedResponseAlgorithm!: Nullable<Exclude<JsonWebSignatureAlgorithm, 'none'>>;
 
   /**
    * JSON Web Encryption Key Wrap Algorithm used to encrypt the Authorization Response Token.
    */
-  authorizationEncryptedResponseKeyWrap: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
+  public authorizationEncryptedResponseKeyWrap!: Nullable<JsonWebEncryptionKeyWrapAlgorithm>;
 
   /**
    * JSON Web Encryption Content Encryption Algorithm used to encrypt the Authorization Response Token.
    */
-  authorizationEncryptedResponseContentEncryption: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
+  public authorizationEncryptedResponseContentEncryption!: Nullable<JsonWebEncryptionContentEncryptionAlgorithm>;
 
   /**
    * Default Maximum Authentication Age.
    */
-  defaultMaxAge: Nullable<number>;
+  public defaultMaxAge!: Nullable<number>;
 
   /**
    * Indicates if the claim **auth_time** is required in the ID Token.
    */
-  requireAuthTime: boolean;
+  public requireAuthTime!: boolean;
 
   /**
    * Default Authentication Context Class References of the Client.
    */
-  defaultAcrValues: Nullable<string[]>;
+  public defaultAcrValues!: Nullable<string[]>;
 
   /**
    * Url that a third party can use to initiate a login by the Client.
    */
-  initiateLoginUri: Nullable<string>;
+  public initiateLoginUri!: Nullable<string>;
 
   /**
    * Pre-registered Request URIs of the Client.
    */
-  // requestUris: Nullable<string[]>;
+  // public requestUris!: Nullable<string[]>;
 
   /**
    * Post Logout Redirect URIs of the Client.
    */
-  postLogoutRedirectUris: Nullable<string[]>;
+  public postLogoutRedirectUris!: Nullable<string[]>;
 
   /**
    * Back-Channel Logout URI of the Client.
    */
-  backChannelLogoutUri: Nullable<string>;
+  public backChannelLogoutUri!: Nullable<string>;
 
   /**
    * Indicates if the **sid** claim must be provided at the Logout Token.
    */
-  backChannelLogoutSessionRequired: Nullable<boolean>;
+  public backChannelLogoutSessionRequired!: Nullable<boolean>;
 
   /**
    * Unique Identifier of the Software of the Client.
    */
-  softwareId: Nullable<string>;
+  public softwareId!: Nullable<string>;
 
   /**
    * Version of the Software of the Client.
    */
-  softwareVersion: Nullable<string>;
+  public softwareVersion!: Nullable<string>;
 
   /**
    * Creation Date of the Client.
    */
-  readonly createdAt: Date;
+  public readonly createdAt!: Date;
+
+  /**
+   * Additional Client Parameters.
+   */
+  [parameter: string]: unknown;
+
+  /**
+   * Expiration status of the Client's Secret.
+   */
+  public get isSecretExpired(): boolean {
+    return this.secretExpiresAt !== null && new Date() >= this.secretExpiresAt;
+  }
 }

@@ -137,9 +137,9 @@ export class RevocationEndpoint implements EndpointInterface {
       context,
     });
 
-    const { client, token, tokenType } = context;
+    const { client, token } = context;
 
-    if (token === null || tokenType === null) {
+    if (token === null) {
       this.logger.debug(`[${this.constructor.name}] No Token found`, '392b2f22-97c9-42f1-a330-5e89cd8ed73a');
       return;
     }
@@ -154,15 +154,15 @@ export class RevocationEndpoint implements EndpointInterface {
       return;
     }
 
-    switch (tokenType) {
-      case 'access_token':
+    switch (true) {
+      case token instanceof AccessToken:
         this.logger.debug(`[${this.constructor.name}] Revoked Access Token`, '78f45220-e889-4106-b848-32f016329a4a', {
           token,
         });
 
         return await this.accessTokenService.revoke(<AccessToken>token);
 
-      case 'refresh_token':
+      case token instanceof RefreshToken:
         this.logger.debug(`[${this.constructor.name}] Revoked Refresh Token`, '5e2977f3-5ed9-4c46-9956-34d9c4771c8d', {
           token,
         });
@@ -174,7 +174,7 @@ export class RevocationEndpoint implements EndpointInterface {
   /**
    * Checks if the Client of the Request is the same to which the Token was issued to.
    *
-   * @param token Instance of the Token retrieved based on the handle provided by the Client.
+   * @param token Instance of the Token retrieved based on the Identifier provided by the Client.
    * @param client Client of the Request.
    * @returns The Client of the Request is the same to which the Token was issued to.
    */

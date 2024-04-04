@@ -18,11 +18,6 @@ import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { TokenTypeHint } from '../types/token-type-hint.type';
 
-interface FindTokenResult {
-  readonly token: AccessToken | RefreshToken;
-  readonly tokenType: TokenTypeHint;
-}
-
 /**
  * Implementation of the Revocation Request Validator.
  */
@@ -94,15 +89,15 @@ export class RevocationRequestValidator {
     const parameters = request.form<RevocationRequest>();
 
     const client = await this.clientAuthenticationHandler.authenticate(request);
-    const tokenResult = await this.findToken(parameters);
+    const token = await this.findToken(parameters);
 
-    if (tokenResult === null || tokenResult.token.client === null) {
-      const context: RevocationContext = { client, parameters, token: null, tokenType: null };
+    if (token === null || token.client === null) {
+      const context: RevocationContext = { client, parameters, token: null };
 
       this.logger.debug(
         `[${this.constructor.name}] Revocation Request validation completed`,
         '1a635a72-3b8a-47e1-9a07-69b12389e97a',
-        { context, token_result: tokenResult },
+        { context },
       );
 
       return context;
@@ -111,8 +106,7 @@ export class RevocationRequestValidator {
     const context: RevocationContext = {
       client,
       parameters,
-      token: tokenResult.token,
-      tokenType: tokenResult.tokenType,
+      token,
     };
 
     this.logger.debug(
@@ -125,12 +119,12 @@ export class RevocationRequestValidator {
   }
 
   /**
-   * Searches the application's storage for a Token that satisfies the Token Handle provided by the Client.
+   * Searches the application's storage for a Token that satisfies the Token Identifier provided by the Client.
    *
    * @param parameters Parameters of the Revocation Request.
    * @returns Resulting Token and its type.
    */
-  private async findToken(parameters: RevocationRequest): Promise<Nullable<FindTokenResult>> {
+  private async findToken(parameters: RevocationRequest): Promise<Nullable<AccessToken | RefreshToken>> {
     this.logger.debug(`[${this.constructor.name}] Called findToken()`, '718534b0-cd9a-46e5-935b-2546df66d134', {
       parameters,
     });
@@ -177,28 +171,26 @@ export class RevocationRequestValidator {
   /**
    * Searches the application's storage for an Access Token.
    *
-   * @param handle Token Handle provided by the Client.
+   * @param id Token Identifier provided by the Client.
    * @returns Result of the search.
    */
-  private async findAccessToken(handle: string): Promise<Nullable<FindTokenResult>> {
+  private async findAccessToken(id: string): Promise<Nullable<AccessToken>> {
     this.logger.debug(`[${this.constructor.name}] Called findAccessToken()`, '77ce1124-9053-4c43-b98d-61da0c8319c5', {
-      handle,
+      id,
     });
 
-    const token = await this.accessTokenService.findOne(handle);
-
-    return token !== null ? { token, tokenType: 'access_token' } : null;
+    return await this.accessTokenService.findOne(id);
   }
 
   /**
    * Searches the application's storage for a Refresh Token.
    *
-   * @param handle Token Handle provided by the Client.
+   * @param id Token Identifier provided by the Client.
    * @returns Result of the search.
    */
-  private async findRefreshToken(handle: string): Promise<Nullable<FindTokenResult>> {
+  private async findRefreshToken(id: string): Promise<Nullable<RefreshToken>> {
     this.logger.debug(`[${this.constructor.name}] Called findRefreshToken()`, '82d97b04-d9b4-4669-872b-4bd717b8b840', {
-      handle,
+      id,
     });
 
     if (typeof this.refreshTokenService === 'undefined') {
@@ -210,8 +202,6 @@ export class RevocationRequestValidator {
       return null;
     }
 
-    const token = this.settings.enableRefreshTokenRevocation ? await this.refreshTokenService.findOne(handle) : null;
-
-    return token !== null ? { token, tokenType: 'refresh_token' } : null;
+    return this.settings.enableRefreshTokenRevocation ? await this.refreshTokenService.findOne(id) : null;
   }
 }

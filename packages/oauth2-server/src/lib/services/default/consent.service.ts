@@ -27,14 +27,14 @@ export class ConsentService implements ConsentServiceInterface {
       user,
     });
 
-    const consent: Consent = {
+    const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
       id: randomUUID(),
       scopes,
       createdAt: new Date(),
       expiresAt: null,
       client,
       user,
-    };
+    });
 
     this.consents.push(consent);
 

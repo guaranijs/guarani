@@ -160,7 +160,7 @@ describe('Revocation Request Validator', () => {
     it('should search for an access token and then a refresh token when providing an "access_token" token_type_hint.', async () => {
       const request = requestFactory({ token_type_hint: 'access_token' });
 
-      const client = <Client>{ id: 'client_id' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
@@ -170,7 +170,6 @@ describe('Revocation Request Validator', () => {
         parameters,
         client,
         token: null,
-        tokenType: null,
       });
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -185,7 +184,7 @@ describe('Revocation Request Validator', () => {
     it('should search for a refresh token and then an access token when providing a "refresh_token" token_type_hint.', async () => {
       const request = requestFactory({ token_type_hint: 'refresh_token' });
 
-      const client = <Client>{ id: 'client_id' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
@@ -195,7 +194,6 @@ describe('Revocation Request Validator', () => {
         parameters,
         client,
         token: null,
-        tokenType: null,
       });
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -210,7 +208,7 @@ describe('Revocation Request Validator', () => {
     it('should search for an access token and then a refresh token when not providing a token_type_hint.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
@@ -220,7 +218,6 @@ describe('Revocation Request Validator', () => {
         parameters,
         client,
         token: null,
-        tokenType: null,
       });
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -235,8 +232,12 @@ describe('Revocation Request Validator', () => {
     it('should return a null revocation context token when the access token does not have a client.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id' };
-      const accessToken = <AccessToken>{ handle: 'access_token', client: null };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', client: null },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
@@ -246,7 +247,6 @@ describe('Revocation Request Validator', () => {
         parameters,
         client,
         token: null,
-        tokenType: null,
       });
     });
 
@@ -263,7 +263,7 @@ describe('Revocation Request Validator', () => {
 
       validator = container.resolve(RevocationRequestValidator);
 
-      const client = <Client>{ id: 'client_id' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
@@ -272,7 +272,6 @@ describe('Revocation Request Validator', () => {
         parameters,
         client,
         token: null,
-        tokenType: null,
       });
 
       expect(refreshTokenServiceMock.findOne).not.toHaveBeenCalled();
@@ -281,8 +280,12 @@ describe('Revocation Request Validator', () => {
     it('should return an access token revocation context.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id' };
-      const accessToken = <AccessToken>{ handle: 'access_token', client };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', client },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       accessTokenServiceMock.findOne.mockResolvedValueOnce(accessToken);
@@ -292,15 +295,18 @@ describe('Revocation Request Validator', () => {
         parameters,
         client,
         token: accessToken,
-        tokenType: 'access_token',
       });
     });
 
     it('should return a refresh token revocation context.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id' };
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token', client };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const refreshToken: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+        Reflect.construct(RefreshToken, []),
+        { id: 'refresh_token', client },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       accessTokenServiceMock.findOne.mockResolvedValueOnce(null);
@@ -310,7 +316,6 @@ describe('Revocation Request Validator', () => {
         parameters,
         client,
         token: refreshToken,
-        tokenType: 'refresh_token',
       });
     });
   });

@@ -1,3 +1,5 @@
+import { Dictionary } from '@guarani/types';
+
 import { CodeAuthorizationRequest } from '../requests/authorization/code.authorization-request';
 import { Consent } from './consent.entity';
 import { Login } from './login.entity';
@@ -5,44 +7,56 @@ import { Login } from './login.entity';
 /**
  * OAuth 2.0 Authorization Code Entity.
  */
-export interface AuthorizationCode {
+export abstract class AuthorizationCode implements Dictionary<any> {
   /**
    * Identifier of the Authorization Code.
    */
-  readonly code: string;
+  public readonly id!: string;
 
   /**
    * Revocation status of the Authorization Code.
    */
-  isRevoked: boolean;
+  public isRevoked!: boolean;
 
   /**
    * Parameters of the Authorization Request.
    */
-  readonly parameters: CodeAuthorizationRequest;
+  public readonly parameters!: CodeAuthorizationRequest;
 
   /**
    * Issuance Date of the Authorization Code.
    */
-  readonly issuedAt: Date;
+  public readonly issuedAt!: Date;
 
   /**
    * Expiration Date of the Authorization Code.
    */
-  readonly expiresAt: Date;
+  public readonly expiresAt!: Date;
 
   /**
    * Date when the Authorization Code will become valid.
    */
-  readonly validAfter: Date;
+  public readonly validAfter!: Date;
 
   /**
    * Login with the Authentication information of the End User.
    */
-  readonly login: Login;
+  public readonly login!: Login;
 
   /**
    * Consent with the scopes granted by the End User.
    */
-  readonly consent: Consent;
+  public readonly consent!: Consent;
+
+  /**
+   * Additional Authorization Code Parameters.
+   */
+  [parameter: string]: unknown;
+
+  /**
+   * Expiration status of the Authorization Code.
+   */
+  public get isExpired(): boolean {
+    return new Date() >= this.expiresAt;
+  }
 }

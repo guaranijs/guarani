@@ -50,12 +50,19 @@ describe('Scope Handler', () => {
 
   describe('getAllowedScopes()', () => {
     it('should return the default scopes of the client when a scope is not requested.', () => {
-      const client = <Client>{ scopes: ['foo', 'bar'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        scopes: ['foo', 'bar'],
+      });
+
       expect(handler.getAllowedScopes(client, null)).toEqual(['foo', 'bar']);
     });
 
     it("should throw when the client requests a scope it's not allowed to.", () => {
-      const client = <Client>{ scopes: ['foo', 'bar'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        scopes: ['foo', 'bar'],
+      });
 
       expect(() => handler.getAllowedScopes(client, 'foo qux')).toThrowWithMessage(
         AccessDeniedException,
@@ -64,7 +71,10 @@ describe('Scope Handler', () => {
     });
 
     it('should return the scope requested by the client.', () => {
-      const client = <Client>{ scopes: ['foo', 'bar'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        scopes: ['foo', 'bar'],
+      });
 
       expect(handler.getAllowedScopes(client, 'foo')).toEqual(['foo']);
       expect(handler.getAllowedScopes(client, 'foo bar')).toEqual(['foo', 'bar']);

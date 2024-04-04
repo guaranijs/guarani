@@ -136,7 +136,10 @@ describe('Logout Interaction Request Validator', () => {
     it('should return a login context interaction context.', async () => {
       const request = requestFactory();
 
-      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' },
+      );
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
@@ -193,7 +196,10 @@ describe('Logout Interaction Request Validator', () => {
     it('should throw when not providing the parameter "decision".', async () => {
       const request = requestFactory({ decision: undefined });
 
-      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' },
+      );
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
@@ -206,7 +212,10 @@ describe('Logout Interaction Request Validator', () => {
     it('should throw when providing an unsupported decision.', async () => {
       const request = requestFactory({ decision: 'unknown' as LogoutDecision });
 
-      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' },
+      );
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
@@ -220,7 +229,10 @@ describe('Logout Interaction Request Validator', () => {
     it('should throw when not providing the parameter "session_id".', async () => {
       const request = requestFactory({ decision: 'accept', session_id: undefined });
 
-      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' },
+      );
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
@@ -233,7 +245,10 @@ describe('Logout Interaction Request Validator', () => {
     it('should throw when no session is found.', async () => {
       const request = requestFactory({ decision: 'accept', session_id: 'session_id' });
 
-      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' },
+      );
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
       sessionServiceMock.findOne.mockResolvedValueOnce(null);
@@ -247,8 +262,14 @@ describe('Logout Interaction Request Validator', () => {
     it('should throw when not providing the parameter "logout_type".', async () => {
       const request = requestFactory({ decision: 'accept', session_id: 'session_id', logout_type: undefined });
 
-      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
-      const session = <Session>{ id: 'session_id' };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' },
+      );
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+        id: 'session_id',
+      });
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -262,8 +283,14 @@ describe('Logout Interaction Request Validator', () => {
     it('should throw when providing an unsupported logout type.', async () => {
       const request = requestFactory({ decision: 'accept', session_id: 'session_id', logout_type: 'unknown' });
 
-      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
-      const session = <Session>{ id: 'session_id' };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' },
+      );
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+        id: 'session_id',
+      });
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -277,8 +304,14 @@ describe('Logout Interaction Request Validator', () => {
     it('should return a logout decision accept interaction context.', async () => {
       const request = requestFactory({ decision: 'accept', session_id: 'session_id', logout_type: 'local' });
 
-      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
-      const session = <Session>{ id: 'session_id' };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' },
+      );
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+        id: 'session_id',
+      });
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -298,7 +331,10 @@ describe('Logout Interaction Request Validator', () => {
     it('should throw when not providing the parameter "error".', async () => {
       const request = requestFactory({ decision: 'deny', error: undefined });
 
-      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' },
+      );
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
@@ -311,7 +347,10 @@ describe('Logout Interaction Request Validator', () => {
     it('should throw when not providing the parameter "error_description".', async () => {
       const request = requestFactory({ decision: 'deny', error: 'logout_denied', error_description: undefined });
 
-      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' },
+      );
 
       logoutTicketServiceMock.findOneByLogoutChallenge.mockResolvedValueOnce(logoutTicket);
 
@@ -328,7 +367,10 @@ describe('Logout Interaction Request Validator', () => {
         error_description: 'Lorem ipsum dolor sit amet...',
       });
 
-      const logoutTicket = <LogoutTicket>{ id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' };
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', logoutChallenge: 'logout_challenge' },
+      );
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
         Reflect.construct(OAuth2Exception, [parameters.error_description as string]),

@@ -8,15 +8,15 @@ import { User } from './user.entity';
 @Entity({ name: 'refresh_tokens' })
 export class RefreshToken extends BaseEntity implements OAuth2RefreshToken {
   @PrimaryColumn({
-    name: 'handle',
+    name: 'id',
     type: 'varchar',
     length: 24,
     nullable: false,
     primary: true,
     primaryKeyConstraintName: 'refresh_tokens_pk',
   })
-  @Check('check_handle_length', 'length("handle") = 24')
-  public readonly handle!: string;
+  @Check('check_id_length', 'length("id") = 24')
+  public readonly id!: string;
 
   @Column({ name: 'scopes', type: 'varchar', array: true, nullable: false })
   public readonly scopes!: string[];

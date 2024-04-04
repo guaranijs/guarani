@@ -178,7 +178,10 @@ describe('Authorization Request Validator', () => {
     it('should throw when the client is not allowed to request the provided "response_type".', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', responseTypes: ['id_token'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        responseTypes: ['id_token'],
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -191,7 +194,10 @@ describe('Authorization Request Validator', () => {
     it('should throw when not providing the parameter "redirect_uri".', async () => {
       const request = requestFactory({ redirect_uri: undefined });
 
-      const client = <Client>{ id: 'client_id', responseTypes: ['code'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        responseTypes: ['code'],
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -204,7 +210,10 @@ describe('Authorization Request Validator', () => {
     it('should throw when providing an invalid redirect uri.', async () => {
       const request = requestFactory({ redirect_uri: 'client.example.com/oauth/callback' });
 
-      const client = <Client>{ id: 'client_id', responseTypes: ['code'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        responseTypes: ['code'],
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -217,7 +226,10 @@ describe('Authorization Request Validator', () => {
     it('should throw when the provided redirect uri has a fragment component.', async () => {
       const request = requestFactory({ redirect_uri: 'https://client.example.com/oauth/callback#foo=bar' });
 
-      const client = <Client>{ id: 'client_id', responseTypes: ['code'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        responseTypes: ['code'],
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -230,11 +242,11 @@ describe('Authorization Request Validator', () => {
     it('should throw when the client is not allowed to use the provided redirect uri.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.org/oauth/callback'],
         responseTypes: ['code'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -247,11 +259,11 @@ describe('Authorization Request Validator', () => {
     it('should throw when not providing the parameter "scope".', async () => {
       const request = requestFactory({ scope: undefined });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -264,12 +276,12 @@ describe('Authorization Request Validator', () => {
     it('should throw when requesting an unsupported response mode.', async () => {
       const request = requestFactory({ response_mode: 'unknown' as ResponseMode });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -312,12 +324,12 @@ describe('Authorization Request Validator', () => {
 
       const request = requestFactory({ response_mode: 'jwt' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -331,13 +343,13 @@ describe('Authorization Request Validator', () => {
     it('should throw when the client requests a "jwt" response mode without an authorization response signing algorithm.', async () => {
       const request = requestFactory({ response_mode: 'jwt' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
         authorizationSignedResponseAlgorithm: null,
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -351,12 +363,12 @@ describe('Authorization Request Validator', () => {
     it('should throw when requesting an unsupported prompt.', async () => {
       const request = requestFactory({ prompt: 'unknown' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -370,12 +382,12 @@ describe('Authorization Request Validator', () => {
     it('should throw when requesting the prompt "none" together with another prompt.', async () => {
       const request = requestFactory({ prompt: 'none login consent' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -389,12 +401,12 @@ describe('Authorization Request Validator', () => {
     it('should throw when requesting the prompts "create" and "login" together.', async () => {
       const request = requestFactory({ prompt: 'create login' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -408,12 +420,12 @@ describe('Authorization Request Validator', () => {
     it('should throw when requesting the prompts "create" and "select_account" together.', async () => {
       const request = requestFactory({ prompt: 'create select_account' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -427,12 +439,12 @@ describe('Authorization Request Validator', () => {
     it('should throw when requesting the prompts "login" and "select_account" together.', async () => {
       const request = requestFactory({ prompt: 'login select_account' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -446,12 +458,12 @@ describe('Authorization Request Validator', () => {
     it('should throw when requesting an unsupported display.', async () => {
       const request = requestFactory({ display: 'unknown' as Display });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -465,12 +477,12 @@ describe('Authorization Request Validator', () => {
     it.each(invalidMaxAges)('should throw when providing an invalid "max_age" parameter.', async (maxAge) => {
       const request = requestFactory({ max_age: maxAge });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -484,12 +496,12 @@ describe('Authorization Request Validator', () => {
     it('should throw when requesting an unsupported ui locale.', async () => {
       const request = requestFactory({ ui_locales: 'unknown' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -515,12 +527,12 @@ describe('Authorization Request Validator', () => {
 
       const request = requestFactory({ ui_locales: 'pt-BR' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -534,12 +546,12 @@ describe('Authorization Request Validator', () => {
     it('should throw when requesting an unsupported authentication context class reference.', async () => {
       const request = requestFactory({ acr_values: 'unknown' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -565,12 +577,12 @@ describe('Authorization Request Validator', () => {
 
       const request = requestFactory({ acr_values: 'urn:guarani:acr:2fa' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz']);
@@ -584,12 +596,12 @@ describe('Authorization Request Validator', () => {
     it('should return an authorization context.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       const scopes: string[] = ['foo', 'bar', 'baz'];
 

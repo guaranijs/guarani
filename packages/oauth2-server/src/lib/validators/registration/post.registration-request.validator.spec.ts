@@ -5,6 +5,7 @@ import { removeNullishValues } from '@guarani/primitives';
 
 import { PostRegistrationContext } from '../../context/registration/post.registration-context';
 import { AccessToken } from '../../entities/access-token.entity';
+import { Client } from '../../entities/client.entity';
 import { InsufficientScopeException } from '../../exceptions/insufficient-scope.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { InvalidTokenException } from '../../exceptions/invalid-token.exception';
@@ -199,10 +200,14 @@ describe('Post Registration Request Validator', () => {
     it('should throw when providing an access token with a client.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        client: { id: 'client_id' },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', client },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -215,11 +220,10 @@ describe('Post Registration Request Validator', () => {
     it('should throw when not providing an initial access token.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        client: null,
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', client: null, scopes: ['foo', 'bar', 'baz', 'qux'] },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 
@@ -232,11 +236,10 @@ describe('Post Registration Request Validator', () => {
     it('should return a post registration request context.', async () => {
       const request = requestFactory();
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        client: null,
-        scopes: ['client:create'],
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        { id: 'access_token', client: null, scopes: ['client:create'] },
+      );
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
 

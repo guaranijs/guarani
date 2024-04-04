@@ -51,10 +51,18 @@ describe('Auth Handler', () => {
 
   describe('login()', () => {
     it('should create and return a new login.', async () => {
-      const user = <User>{ id: 'user_id' };
-      const client = <Client>{ id: 'client_id' };
-      const session = <Session>{ id: 'session_id', activeLogin: null, logins: [] };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+        id: 'session_id',
+        activeLogin: null,
+        logins: [],
+      });
+
       const amr: string[] = ['pwd', 'sms'];
+
       const acr = 'urn:guarani:acr:2fa';
 
       loginServiceMock.create.mockResolvedValueOnce(<Login>{ id: 'login_id', amr, acr, user, session });
@@ -75,10 +83,23 @@ describe('Auth Handler', () => {
     });
 
     it('should remove an old login and create and return a new login.', async () => {
-      const user = <User>{ id: 'user_id' };
-      const client = <Client>{ id: 'client_id' };
-      const session = <Session>{ id: 'session_id', activeLogin: null, logins: [<Login>{ id: 'old_login_id', user }] };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const oldLogin: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'old_login_id',
+        user,
+      });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+        id: 'session_id',
+        activeLogin: null,
+        logins: [oldLogin],
+      });
+
       const amr: string[] = ['pwd', 'sms'];
+
       const acr = 'urn:guarani:acr:2fa';
 
       loginServiceMock.create.mockResolvedValueOnce(<Login>{ id: 'login_id', amr, acr, user, session });
@@ -89,7 +110,7 @@ describe('Auth Handler', () => {
       expect(loginServiceMock.create).toHaveBeenCalledWith(user, client, session, amr, acr);
 
       expect(loginServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(loginServiceMock.remove).toHaveBeenCalledWith(<Login>{ id: 'old_login_id', user });
+      expect(loginServiceMock.remove).toHaveBeenCalledWith(oldLogin);
 
       expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
       expect(sessionServiceMock.save).toHaveBeenCalledWith({
@@ -102,11 +123,15 @@ describe('Auth Handler', () => {
 
   describe('logout()', () => {
     it('should remove the active login from the session.', async () => {
-      const session = <Session>{
+      const login1: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login1' });
+
+      const login2: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login2' });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
-        activeLogin: { id: 'login1_id' },
-        logins: [{ id: 'login1_id' }, { id: 'login2_id' }],
-      };
+        activeLogin: login1,
+        logins: [login1, login2],
+      });
 
       const login = session.activeLogin!;
 
@@ -119,7 +144,7 @@ describe('Auth Handler', () => {
       expect(sessionServiceMock.save).toHaveBeenCalledWith({
         id: 'session_id',
         activeLogin: null,
-        logins: [{ id: 'login2_id' }],
+        logins: [login2],
       });
 
       const removeLoginOrder = loginServiceMock.remove.mock.invocationCallOrder[0]!;
@@ -129,24 +154,26 @@ describe('Auth Handler', () => {
     });
 
     it('should remove a login that is not the active login from the session.', async () => {
-      const session = <Session>{
+      const login1: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login1' });
+
+      const login2: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login2' });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
-        activeLogin: { id: 'login1_id' },
-        logins: [{ id: 'login1_id' }, { id: 'login2_id' }],
-      };
+        activeLogin: login1,
+        logins: [login1, login2],
+      });
 
-      const login = <Login>{ id: 'login2_id' };
-
-      await authHandler.logout(login, session);
+      await authHandler.logout(login2, session);
 
       expect(loginServiceMock.remove).toHaveBeenCalledTimes(1);
-      expect(loginServiceMock.remove).toHaveBeenCalledWith(login);
+      expect(loginServiceMock.remove).toHaveBeenCalledWith(login2);
 
       expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
       expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{
         id: 'session_id',
-        activeLogin: { id: 'login1_id' },
-        logins: [{ id: 'login1_id' }],
+        activeLogin: login1,
+        logins: [login1],
       });
 
       const removeLoginOrder = loginServiceMock.remove.mock.invocationCallOrder[0]!;
@@ -158,11 +185,15 @@ describe('Auth Handler', () => {
 
   describe('inactivateSessionActiveLogin()', () => {
     it('should remove the active login from the session.', async () => {
-      const session = <Session>{
+      const login1: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login1' });
+
+      const login2: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login2' });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
-        activeLogin: { id: 'login1_id' },
-        logins: [{ id: 'login1_id' }, { id: 'login2_id' }],
-      };
+        activeLogin: login1,
+        logins: [login1, login2],
+      });
 
       await authHandler.inactivateSessionActiveLogin(session);
 

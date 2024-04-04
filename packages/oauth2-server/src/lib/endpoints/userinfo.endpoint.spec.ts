@@ -6,6 +6,8 @@ import { JsonWebEncryption, JsonWebKeySet, JsonWebSignature, JsonWebTokenClaims,
 import { removeNullishValues } from '@guarani/primitives';
 
 import { AccessToken } from '../entities/access-token.entity';
+import { Client } from '../entities/client.entity';
+import { User } from '../entities/user.entity';
 import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
@@ -198,11 +200,14 @@ describe('Userinfo Endpoint', () => {
     });
 
     it('should return an error response when the access token does not have "openid" as one of its scopes.', async () => {
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-        client: null,
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['foo', 'bar', 'baz', 'qux'],
+          client: null,
+        },
+      );
 
       const error = new InsufficientScopeException('The provided Access Token is missing the required scope "openid".');
       const errorParameters = removeNullishValues(error.toJSON());
@@ -223,11 +228,14 @@ describe('Userinfo Endpoint', () => {
     });
 
     it('should return an error response when the access token does not have a client.', async () => {
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        client: null,
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+          client: null,
+        },
+      );
 
       const error = new InvalidTokenException('Invalid Credentials.');
       const errorParameters = removeNullishValues(error.toJSON());
@@ -248,12 +256,17 @@ describe('Userinfo Endpoint', () => {
     });
 
     it('should return an error response when the access token does not have a user.', async () => {
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        client: { id: 'client_id' },
-        user: null,
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+          client,
+          user: null,
+        },
+      );
 
       const error = new InvalidTokenException('Invalid Credentials.');
       const errorParameters = removeNullishValues(error.toJSON());
@@ -274,12 +287,23 @@ describe('Userinfo Endpoint', () => {
     });
 
     it('should return the claims of the user based on the scopes of the access token.', async () => {
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        client: { id: 'client_id', subjectType: 'public', userinfoSignedResponseAlgorithm: null },
-        user: { id: 'user_id' },
-      };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        userinfoSignedResponseAlgorithm: null,
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+          client,
+          user,
+        },
+      );
 
       const claims: UserinfoClaimsParameters = {
         name: 'John H. Doe',
@@ -329,18 +353,25 @@ describe('Userinfo Endpoint', () => {
     });
 
     it('should return a signed json web token with the claims of the user based on the scopes of the access token.', async () => {
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        client: {
-          id: 'client_id',
-          subjectType: 'public',
-          userinfoSignedResponseAlgorithm: 'RS256',
-          userinfoEncryptedResponseKeyWrap: null,
-          userinfoEncryptedResponseContentEncryption: null,
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        userinfoSignedResponseAlgorithm: 'RS256',
+        userinfoEncryptedResponseKeyWrap: null,
+        userinfoEncryptedResponseContentEncryption: null,
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+          client,
+          user,
         },
-        user: { id: 'user_id' },
-      };
+      );
 
       const claims: UserinfoClaimsParameters = {
         name: 'John H. Doe',
@@ -399,20 +430,27 @@ describe('Userinfo Endpoint', () => {
     });
 
     it('should return a nested json web token with the claims of the user based on the scopes of the access token.', async () => {
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: ['openid', 'profile', 'email', 'phone', 'address'],
-        client: {
-          id: 'client_id',
-          subjectType: 'public',
-          jwksUri: null,
-          jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
-          userinfoSignedResponseAlgorithm: 'RS256',
-          userinfoEncryptedResponseKeyWrap: 'RSA-OAEP',
-          userinfoEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        jwksUri: null,
+        jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
+        userinfoSignedResponseAlgorithm: 'RS256',
+        userinfoEncryptedResponseKeyWrap: 'RSA-OAEP',
+        userinfoEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+          client,
+          user,
         },
-        user: { id: 'user_id' },
-      };
+      );
 
       const claims: UserinfoClaimsParameters = {
         name: 'John H. Doe',

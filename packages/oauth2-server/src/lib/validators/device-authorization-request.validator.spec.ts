@@ -73,7 +73,11 @@ describe('Device Authorization Request Validator', () => {
       const request = requestFactory({ scope: 'foo bar' });
 
       const scopes: string[] = ['foo', 'bar'];
-      const client = <Client>{ id: 'client_id', scopes: ['foo', 'bar', 'baz'] };
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        scopes: ['foo', 'bar', 'baz'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();
@@ -90,7 +94,11 @@ describe('Device Authorization Request Validator', () => {
       const request = requestFactory();
 
       const scopes: string[] = ['foo', 'bar', 'baz'];
-      const client = <Client>{ id: 'client_id', scopes };
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        scopes,
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       scopeHandlerMock.checkRequestedScope.mockReturnValueOnce();

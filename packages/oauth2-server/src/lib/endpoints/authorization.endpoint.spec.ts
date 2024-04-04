@@ -7,10 +7,12 @@ import { Dictionary } from '@guarani/types';
 
 import { AuthorizationContext } from '../context/authorization/authorization-context';
 import { DisplayInterface } from '../displays/display.interface';
+import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Grant } from '../entities/grant.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
+import { User } from '../entities/user.entity';
 import { ConsentRequiredException } from '../exceptions/consent-required.exception';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { LoginRequiredException } from '../exceptions/login-required.exception';
@@ -223,17 +225,23 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const anotherClient: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'another_client_id',
+      });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
       };
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
-        client: { id: 'another_client_id' },
-      };
+        client: anotherClient,
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
@@ -261,18 +269,20 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
       };
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         expiresAt: new Date(Date.now() - 3600000),
-        client: { id: 'client_id' },
-      };
+        client,
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
@@ -300,19 +310,21 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
       };
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         parameters: { ...context.parameters, state: 'another_client_state' },
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       grantServiceMock.findOne.mockResolvedValueOnce(grant);
@@ -338,18 +350,20 @@ describe('Authorization Endpoint', () => {
 
       const request = requestFactory();
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
       };
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: null,
         logins: [],
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.create.mockResolvedValueOnce(session);
@@ -371,18 +385,20 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'invalid_session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
       };
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: null,
         logins: [],
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
 
@@ -407,12 +423,14 @@ describe('Authorization Endpoint', () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/register';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: ['create'],
         display: <DisplayInterface>{
@@ -421,22 +439,22 @@ describe('Authorization Endpoint', () => {
         },
       };
 
-      const login = <Login>{ id: 'login_id' };
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         parameters: context.parameters,
         interactions: <InteractionType[]>[],
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -457,19 +475,21 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: ['select_account'],
       };
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: null,
         logins: [],
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -494,12 +514,14 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/select-account';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: ['select_account'],
         display: <DisplayInterface>{
@@ -508,22 +530,22 @@ describe('Authorization Endpoint', () => {
         },
       };
 
-      const login = <Login>{ id: 'login_id' };
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         parameters: context.parameters,
         interactions: <InteractionType[]>[],
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -545,12 +567,14 @@ describe('Authorization Endpoint', () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/select-account';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: ['select_account'],
         display: <DisplayInterface>{
@@ -559,22 +583,22 @@ describe('Authorization Endpoint', () => {
         },
       };
 
-      const login = <Login>{ id: 'login_id' };
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         parameters: context.parameters,
         interactions: <InteractionType[]>[],
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -595,19 +619,21 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: ['none'],
       };
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: null,
         logins: [],
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -632,12 +658,14 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         display: <DisplayInterface>{
@@ -646,13 +674,13 @@ describe('Authorization Endpoint', () => {
         },
       };
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: null,
         logins: [],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
@@ -660,7 +688,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -682,12 +710,14 @@ describe('Authorization Endpoint', () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         display: <DisplayInterface>{
@@ -696,13 +726,13 @@ describe('Authorization Endpoint', () => {
         },
       };
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: null,
         logins: [],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
@@ -710,7 +740,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -732,27 +762,31 @@ describe('Authorization Endpoint', () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: ['none'],
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         expiresAt: new Date(Date.now() - 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
@@ -760,7 +794,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -792,25 +826,29 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: ['none'],
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         expiresAt: new Date(Date.now() - 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -841,12 +879,14 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         display: <DisplayInterface>{
@@ -855,19 +895,21 @@ describe('Authorization Endpoint', () => {
         },
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         expiresAt: new Date(Date.now() - 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
@@ -875,7 +917,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -900,12 +942,14 @@ describe('Authorization Endpoint', () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         display: <DisplayInterface>{
@@ -914,19 +958,21 @@ describe('Authorization Endpoint', () => {
         },
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         expiresAt: new Date(Date.now() - 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
@@ -934,7 +980,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -959,29 +1005,33 @@ describe('Authorization Endpoint', () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: ['none'],
         maxAge: 86400,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now() - 1296000000),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
@@ -989,7 +1039,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1020,27 +1070,31 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: ['none'],
         maxAge: 86400,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now() - 1296000000),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1068,12 +1122,14 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         display: <DisplayInterface>{
@@ -1083,20 +1139,22 @@ describe('Authorization Endpoint', () => {
         maxAge: 86400,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now() - 1296000000),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
@@ -1104,7 +1162,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1128,12 +1186,14 @@ describe('Authorization Endpoint', () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         display: <DisplayInterface>{
@@ -1143,20 +1203,22 @@ describe('Authorization Endpoint', () => {
         maxAge: 86400,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now() - 1296000000),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
@@ -1164,7 +1226,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1187,30 +1249,34 @@ describe('Authorization Endpoint', () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         maxAge: null,
         idTokenHint: 'header.payload.signature',
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
@@ -1218,7 +1284,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1253,28 +1319,32 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         maxAge: null,
         idTokenHint: 'header.payload.signature',
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1307,12 +1377,14 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: ['login'],
         display: <DisplayInterface>{
@@ -1323,20 +1395,22 @@ describe('Authorization Endpoint', () => {
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
@@ -1344,7 +1418,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1369,13 +1443,15 @@ describe('Authorization Endpoint', () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/login?login_challenge=login_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
         state: 'client_state',
-        client: { id: 'client_id' },
+        client,
         prompts: ['login'],
         display: <DisplayInterface>{
           name: 'page',
@@ -1385,20 +1461,22 @@ describe('Authorization Endpoint', () => {
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
         parameters: context.parameters,
@@ -1406,7 +1484,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1432,28 +1510,32 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
         state: 'client_state',
-        client: { id: 'client_id' },
+        client,
         prompts: ['none'],
         maxAge: null,
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1479,12 +1561,14 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/consent?consent_challenge=consent_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         display: <DisplayInterface>{
@@ -1495,20 +1579,22 @@ describe('Authorization Endpoint', () => {
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         consentChallenge: 'consent_challenge',
         parameters: context.parameters,
@@ -1516,7 +1602,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1539,12 +1625,14 @@ describe('Authorization Endpoint', () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/consent?consent_challenge=consent_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         display: <DisplayInterface>{
@@ -1555,20 +1643,22 @@ describe('Authorization Endpoint', () => {
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         consentChallenge: 'consent_challenge',
         parameters: context.parameters,
@@ -1577,7 +1667,7 @@ describe('Authorization Endpoint', () => {
         client: context.client,
         session,
         consent: null,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1599,33 +1689,37 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
         state: 'client_state',
-        client: { id: 'client_id' },
+        client,
         prompts: ['none'],
         maxAge: null,
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const consent = <Consent>{
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
         id: 'consent_id',
         expiresAt: new Date(Date.now() - 3600000),
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1651,12 +1745,14 @@ describe('Authorization Endpoint', () => {
 
       request.cookies['guarani:session'] = 'session_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/consent?consent_challenge=consent_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         display: <DisplayInterface>{
@@ -1667,25 +1763,27 @@ describe('Authorization Endpoint', () => {
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const consent = <Consent>{
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
         id: 'consent_id',
         expiresAt: new Date(Date.now() - 3600000),
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         consentChallenge: 'consent_challenge',
         parameters: context.parameters,
@@ -1693,7 +1791,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1716,12 +1814,14 @@ describe('Authorization Endpoint', () => {
       request.cookies['guarani:session'] = 'session_id';
       request.cookies['guarani:grant'] = 'grant_id';
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const redirectUrl = 'https://server.example.com/auth/consent?consent_challenge=consent_challenge';
 
       const context = <AuthorizationContext>{
         parameters,
         cookies: request.cookies,
-        client: { id: 'client_id' },
+        client,
         state: 'client_state',
         prompts: <Prompt[]>[],
         display: <DisplayInterface>{
@@ -1732,25 +1832,27 @@ describe('Authorization Endpoint', () => {
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const consent = <Consent>{
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
         id: 'consent_id',
         expiresAt: new Date(Date.now() - 3600000),
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         consentChallenge: 'consent_challenge',
         parameters: context.parameters,
@@ -1758,7 +1860,7 @@ describe('Authorization Endpoint', () => {
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1785,6 +1887,8 @@ describe('Authorization Endpoint', () => {
 
       const authorizationResponse: AuthorizationResponse = { code: 'code', state: 'client_state' };
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const location = addParametersToUrl('https://client.example.com/oauth/callback', authorizationResponse);
 
       const context = <AuthorizationContext>{
@@ -1795,7 +1899,7 @@ describe('Authorization Endpoint', () => {
           defaultResponseMode: 'query',
           handle: jest.fn().mockResolvedValueOnce(authorizationResponse),
         },
-        client: { id: 'client_id' },
+        client,
         redirectUri: new URL('https://client.example.com/oauth/callback'),
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
@@ -1807,32 +1911,34 @@ describe('Authorization Endpoint', () => {
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const consent = <Consent>{
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
         id: 'consent_id',
         expiresAt: new Date(Date.now() + 3600000),
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         parameters: context.parameters,
         interactions: <InteractionType[]>[],
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1859,6 +1965,8 @@ describe('Authorization Endpoint', () => {
 
       const authorizationResponse: AuthorizationResponse = { code: 'code', state: 'client_state' };
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const location = addParametersToUrl('https://client.example.com/oauth/callback', {
         ...authorizationResponse,
         iss: settings.issuer,
@@ -1872,7 +1980,7 @@ describe('Authorization Endpoint', () => {
           defaultResponseMode: 'query',
           handle: jest.fn().mockResolvedValueOnce(authorizationResponse),
         },
-        client: { id: 'client_id' },
+        client,
         redirectUri: new URL('https://client.example.com/oauth/callback'),
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
@@ -1884,32 +1992,34 @@ describe('Authorization Endpoint', () => {
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const consent = <Consent>{
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
         id: 'consent_id',
         expiresAt: new Date(Date.now() + 3600000),
-      };
+      });
 
-      const grant = <Grant>{
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         parameters: context.parameters,
         interactions: <InteractionType[]>[],
         expiresAt: new Date(Date.now() + 3600000),
         client: context.client,
         session,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1936,6 +2046,8 @@ describe('Authorization Endpoint', () => {
 
       const authorizationResponse: AuthorizationResponse = { code: 'code', state: 'client_state' };
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const location = addParametersToUrl('https://client.example.com/oauth/callback', authorizationResponse);
 
       const context = <AuthorizationContext>{
@@ -1946,7 +2058,7 @@ describe('Authorization Endpoint', () => {
           defaultResponseMode: 'query',
           handle: jest.fn().mockResolvedValueOnce(authorizationResponse),
         },
-        client: { id: 'client_id' },
+        client,
         redirectUri: new URL('https://client.example.com/oauth/callback'),
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
@@ -1958,23 +2070,25 @@ describe('Authorization Endpoint', () => {
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const consent = <Consent>{
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
         id: 'consent_id',
         expiresAt: new Date(Date.now() + 3600000),
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);
@@ -1998,6 +2112,8 @@ describe('Authorization Endpoint', () => {
 
       const authorizationResponse: AuthorizationResponse = { code: 'code', state: 'client_state' };
 
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       const location = addParametersToUrl('https://client.example.com/oauth/callback', {
         ...authorizationResponse,
         iss: settings.issuer,
@@ -2011,7 +2127,7 @@ describe('Authorization Endpoint', () => {
           defaultResponseMode: 'query',
           handle: jest.fn().mockResolvedValueOnce(authorizationResponse),
         },
-        client: { id: 'client_id' },
+        client,
         redirectUri: new URL('https://client.example.com/oauth/callback'),
         state: 'client_state',
         responseMode: <ResponseModeInterface>{
@@ -2023,23 +2139,25 @@ describe('Authorization Endpoint', () => {
         idTokenHint: null,
       };
 
-      const login = <Login>{
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
         id: 'login_id',
         createdAt: new Date(Date.now()),
         expiresAt: new Date(Date.now() + 3600000),
-        user: { id: 'user_id' },
-      };
+        user,
+      });
 
-      const session = <Session>{
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
         id: 'session_id',
         activeLogin: login,
         logins: [login],
-      };
+      });
 
-      const consent = <Consent>{
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
         id: 'consent_id',
         expiresAt: new Date(Date.now() + 3600000),
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce(context);
       sessionServiceMock.findOne.mockResolvedValueOnce(session);

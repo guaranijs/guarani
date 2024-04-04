@@ -8,7 +8,7 @@ export class CreateAccessTokensTable1678672372374 implements MigrationInterface 
       name: 'access_tokens',
       columns: [
         {
-          name: 'handle',
+          name: 'id',
           type: 'varchar',
           isNullable: false,
           isPrimary: true,
@@ -57,9 +57,9 @@ export class CreateAccessTokensTable1678672372374 implements MigrationInterface 
       ],
       checks: [
         {
-          name: 'check_handle_length',
-          columnNames: ['handle'],
-          expression: 'length("handle") = 32',
+          name: 'check_id_length',
+          columnNames: ['id'],
+          expression: 'length("id") = 32',
         },
       ],
       foreignKeys: [

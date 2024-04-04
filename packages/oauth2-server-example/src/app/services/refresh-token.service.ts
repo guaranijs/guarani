@@ -14,7 +14,7 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
     const now = Date.now();
 
     const refreshToken = RefreshToken.create({
-      handle: randomBytes(12).toString('hex'),
+      id: randomBytes(12).toString('hex'),
       scopes,
       issuedAt: new Date(now),
       expiresAt: new Date(now + 3600000),
@@ -27,8 +27,8 @@ export class RefreshTokenService implements RefreshTokenServiceInterface {
     return refreshToken;
   }
 
-  public async findOne(handle: string): Promise<Nullable<RefreshToken>> {
-    return await RefreshToken.findOneBy({ handle });
+  public async findOne(id: string): Promise<Nullable<RefreshToken>> {
+    return await RefreshToken.findOneBy({ id });
   }
 
   public async revoke(refreshToken: RefreshToken): Promise<void> {

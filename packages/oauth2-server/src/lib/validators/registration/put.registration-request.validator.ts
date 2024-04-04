@@ -271,7 +271,7 @@ export class PutRegistrationRequestValidator extends PostAndPutRegistrationReque
    *
    * @param request Http Request.
    * @param clientId Identifier of the Client of the Request.
-   * @returns Access Token based on the handle provided by the Client.
+   * @returns Access Token based on the Identifier provided by the Client.
    */
   private async authorize(request: HttpRequest, clientId: string): Promise<AccessToken> {
     this.logger.debug(`[${this.constructor.name}] Called authorize()`, '8e41ec09-28ce-4b42-a901-211446669da2', {
@@ -286,7 +286,7 @@ export class PutRegistrationRequestValidator extends PostAndPutRegistrationReque
       this.logger.error(
         `[${this.constructor.name}] Cannot use a Registration Access Token`,
         '77a99028-79c2-41bb-a522-133cbb65da8f',
-        { access_token: accessToken.handle },
+        { access_token: accessToken.id },
         exc,
       );
 
@@ -306,7 +306,7 @@ export class PutRegistrationRequestValidator extends PostAndPutRegistrationReque
       this.logger.error(
         `[${this.constructor.name}] The Client tried to use an Access Token not issued to itself`,
         '22f83017-9211-4552-b3ab-60b2b58d9e66',
-        { client_id: clientId, access_token: accessToken.handle },
+        { client_id: clientId, access_token: accessToken.id },
         exc,
       );
 
@@ -319,7 +319,7 @@ export class PutRegistrationRequestValidator extends PostAndPutRegistrationReque
       this.logger.error(
         `[${this.constructor.name}] The Client tried to use an Access Token without the required scope`,
         'a5d36b0e-31d0-43b0-b1da-85b125521516',
-        { access_token: accessToken.handle },
+        { access_token: accessToken.id },
         exc,
       );
 

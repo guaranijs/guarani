@@ -38,7 +38,13 @@ describe('Authorization Server', () => {
 
   describe('endpoint()', () => {
     it('should throw when requesting an unsupported endpoint.', async () => {
-      const request = <HttpRequest>{};
+      const request = new HttpRequest({
+        method: 'GET',
+        body: {},
+        cookies: {},
+        headers: {},
+        url: new URL('https://server.example.com/oauth/authorization'),
+      });
 
       await expect(authorizationServer.endpoint('authorization', request)).rejects.toThrowWithMessage(
         TypeError,
@@ -47,7 +53,13 @@ describe('Authorization Server', () => {
     });
 
     it('should execute the requested endpoint.', async () => {
-      const request = <HttpRequest>{};
+      const request = new HttpRequest({
+        method: 'GET',
+        body: {},
+        cookies: {},
+        headers: {},
+        url: new URL('https://server.example.com/oauth/authorization'),
+      });
 
       await expect(authorizationServer.endpoint('token', request)).resolves.not.toThrow();
 

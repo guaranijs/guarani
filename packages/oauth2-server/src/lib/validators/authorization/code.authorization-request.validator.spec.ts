@@ -187,12 +187,12 @@ describe('Code Authorization Request Validator', () => {
     it('should throw when not providing the parameter "code_challenge".', async () => {
       const request = requestFactory({ code_challenge: undefined });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       const scopes: string[] = ['foo', 'bar', 'baz'];
 
@@ -208,12 +208,12 @@ describe('Code Authorization Request Validator', () => {
     it('should throw when requesting an unsupported code challenge method.', async () => {
       const request = requestFactory({ code_challenge_method: 'unknown' as Pkce });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       const scopes: string[] = ['foo', 'bar', 'baz'];
 
@@ -229,12 +229,12 @@ describe('Code Authorization Request Validator', () => {
     it('should return a code authorization context.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       const scopes: string[] = ['foo', 'bar', 'baz'];
 

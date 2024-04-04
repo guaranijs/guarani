@@ -44,11 +44,13 @@ describe('Client Credentials Grant Type', () => {
   describe('handle()', () => {
     let context: ClientCredentialsTokenContext;
 
+    const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
     beforeEach(() => {
       context = <ClientCredentialsTokenContext>{
         parameters: { grant_type: 'client_credentials' },
         grantType: <GrantTypeInterface>{ name: 'client_credentials', handle: jest.fn() },
-        client: <Client>{ id: 'client_id' },
+        client,
         scopes: ['foo', 'bar', 'baz'],
       };
     });
@@ -56,11 +58,14 @@ describe('Client Credentials Grant Type', () => {
     it('should create a token response with the requested scope.', async () => {
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: context.scopes,
-        expiresAt: new Date(Date.now() + 300000),
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: context.scopes,
+          expiresAt: new Date(Date.now() + 300000),
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
@@ -74,11 +79,14 @@ describe('Client Credentials Grant Type', () => {
     });
 
     it("should create a token response with the client's default scope.", async () => {
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: context.scopes,
-        expiresAt: new Date(Date.now() + 300000),
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: context.scopes,
+          expiresAt: new Date(Date.now() + 300000),
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 

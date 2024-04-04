@@ -313,7 +313,7 @@ export class RegistrationEndpoint implements EndpointInterface {
             ? Math.floor(client.secretExpiresAt.getTime() / 1000)
             : 0
           : undefined,
-      registration_access_token: registrationAccessToken.handle,
+      registration_access_token: registrationAccessToken.id,
       registration_client_uri: registrationClientUri.href,
       redirect_uris: client.redirectUris,
       response_types: client.responseTypes,
@@ -379,7 +379,7 @@ export class RegistrationEndpoint implements EndpointInterface {
             ? Math.floor(client.secretExpiresAt.getTime() / 1000)
             : 0
           : undefined,
-      registration_access_token: context.accessToken.handle,
+      registration_access_token: context.accessToken.id,
       registration_client_uri: registrationClientUri.href,
       redirect_uris: client.redirectUris,
       response_types: client.responseTypes,
@@ -457,7 +457,7 @@ export class RegistrationEndpoint implements EndpointInterface {
             ? Math.floor(client.secretExpiresAt.getTime() / 1000)
             : 0
           : undefined,
-      registration_access_token: context.accessToken.handle,
+      registration_access_token: context.accessToken.id,
       registration_client_uri: registrationClientUri.href,
       redirect_uris: client.redirectUris,
       response_types: client.responseTypes,

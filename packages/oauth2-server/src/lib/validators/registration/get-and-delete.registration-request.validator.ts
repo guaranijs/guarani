@@ -100,7 +100,7 @@ export abstract class GetAndDeleteRegistrationRequestValidator<
    * @param request Http Request.
    * @param clientId Identifier of the Client of the Request.
    * @param scopes Expected Scopes for the Request.
-   * @returns Access Token based on the handle provided by the Client.
+   * @returns Access Token based on the Identifier provided by the Client.
    */
   private async authorize(request: HttpRequest, clientId: string, scopes: string[]): Promise<AccessToken> {
     this.logger.debug(`[${this.constructor.name}] Called authorize()`, '4568ca16-1cc1-4fc9-a949-ea10b16e4cd6', {
@@ -117,7 +117,7 @@ export abstract class GetAndDeleteRegistrationRequestValidator<
       this.logger.error(
         `[${this.constructor.name}] Cannot use a Registration Access Token`,
         '83b83dd2-a6bc-44c7-987a-1787b8947b2a',
-        { access_token: accessToken.handle },
+        { access_token: accessToken.id },
         exc,
       );
 
@@ -137,7 +137,7 @@ export abstract class GetAndDeleteRegistrationRequestValidator<
       this.logger.error(
         `[${this.constructor.name}] The Client tried to use an Access Token not issued to itself`,
         'df86545a-b926-4c59-99f8-df8b6479095d',
-        { client_id: clientId, access_token: accessToken.handle },
+        { client_id: clientId, access_token: accessToken.id },
         exc,
       );
 
@@ -150,7 +150,7 @@ export abstract class GetAndDeleteRegistrationRequestValidator<
       this.logger.error(
         `[${this.constructor.name}] The Client tried to use an Access Token without the required scope`,
         'b53318f2-401a-49a9-bb7d-db6ec3141007',
-        { client_id: clientId, access_token: accessToken.handle },
+        { client_id: clientId, access_token: accessToken.id },
         exc,
       );
 

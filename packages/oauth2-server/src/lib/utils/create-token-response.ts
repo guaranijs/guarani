@@ -13,10 +13,10 @@ import { TokenResponse } from '../responses/token-response';
  */
 export function createTokenResponse(accessToken: AccessToken, refreshToken: Nullable<RefreshToken>): TokenResponse {
   return {
-    access_token: accessToken.handle,
+    access_token: accessToken.id,
     token_type: 'Bearer',
     expires_in: Math.ceil((accessToken.expiresAt.getTime() - Date.now()) / 1000),
     scope: accessToken.scopes.join(' '),
-    refresh_token: refreshToken?.handle,
+    refresh_token: refreshToken?.id,
   };
 }

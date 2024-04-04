@@ -115,8 +115,8 @@ export class IdTokenHandler {
         amr: login.amr ?? undefined,
         acr: login.acr ?? undefined,
         azp: client.id,
-        at_hash: accessToken !== null ? this.getLeftHash(accessToken.handle, jwsHeader.alg) : undefined,
-        c_hash: authorizationCode !== null ? this.getLeftHash(authorizationCode.code, jwsHeader.alg) : undefined,
+        at_hash: accessToken !== null ? this.getLeftHash(accessToken.id, jwsHeader.alg) : undefined,
+        c_hash: authorizationCode !== null ? this.getLeftHash(authorizationCode.id, jwsHeader.alg) : undefined,
       },
       userinfo,
     );
@@ -213,15 +213,15 @@ export class IdTokenHandler {
   }
 
   /**
-   * Creates a left hash of the provided handle.
+   * Creates a left hash of the provided Identifier.
    *
-   * A left hash is created by hashing the provided handle with a SHA-2 algorithm based on the provided
+   * A left hash is created by hashing the provided Identifier with a SHA-2 algorithm based on the provided
    * JSON Web Signature Algorithm (i.e. the algorithm RS256 uses SHA-256), then Base64Url encoding the left-most
    * portion of the hash.
    *
-   * @param token Handle used to create the left hash.
+   * @param token Identifier used to create the left hash.
    * @param alg JSON Web Signature Algorithm used to create the ID Token.
-   * @returns Base64Url encoded left hash of the provided handle.
+   * @returns Base64Url encoded left hash of the provided Identifier.
    */
   private getLeftHash(token: string, alg: JsonWebSignatureAlgorithm): string {
     const hashAlgorithm = `sha${alg.substring(2)}`;

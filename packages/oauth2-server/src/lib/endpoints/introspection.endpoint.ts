@@ -144,9 +144,9 @@ export class IntrospectionEndpoint implements EndpointInterface {
       context,
     });
 
-    const { client, token, tokenType } = context;
+    const { client, token } = context;
 
-    if (token === null || tokenType === null) {
+    if (token === null) {
       this.logger.debug(`[${this.constructor.name}] No Token found`, 'f3b27330-e6f7-4eba-9eba-6a29c0184bca');
       return IntrospectionEndpoint.INACTIVE_TOKEN;
     }
@@ -167,7 +167,7 @@ export class IntrospectionEndpoint implements EndpointInterface {
   /**
    * Checks if the Client of the Request is the same to which the Token was issued to.
    *
-   * @param token Instance of the Token retrieved based on the handle provided by the Client.
+   * @param token Instance of the Token retrieved based on the Identifier provided by the Client.
    * @param client Client of the Request.
    * @returns The Client of the Request is the same to which the Token was issued to.
    */

@@ -45,28 +45,41 @@ describe('Local Logout Type', () => {
 
   describe('logout()', () => {
     it('should logout all clients from the local login.', async () => {
-      const logoutTicket = <LogoutTicket>{
-        id: 'logout_ticket_id',
-        session: <Session>{
-          id: 'session_id',
-          activeLogin: <Login>{
-            id: 'login_id',
-            clients: [
-              <Client>{ id: 'client1_id' },
-              <Client>{ id: 'client2_id' },
-              <Client>{ id: 'client3_id' },
-              <Client>{ id: 'client4_id' },
-            ],
-          },
-        },
-      };
+      const client1: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client1_id',
+      });
+
+      const client2: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client2_id',
+      });
+
+      const client3: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client3_id',
+      });
+
+      const client4: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client4_id',
+      });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), {
+        id: 'login_id',
+        clients: [client1, client2, client3, client4],
+      });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+        id: 'session_id',
+        activeLogin: login,
+      });
+
+      const logoutTicket: LogoutTicket = Object.assign<LogoutTicket, Partial<LogoutTicket>>(
+        Reflect.construct(LogoutTicket, []),
+        { id: 'logout_ticket_id', session },
+      );
 
       await expect(logoutType.logout(logoutTicket)).resolves.not.toThrow();
 
-      const login = logoutTicket.session.activeLogin!;
-
       expect(authHandlerMock.logout).toHaveBeenCalledTimes(1);
-      expect(authHandlerMock.logout).toHaveBeenCalledWith(login, logoutTicket.session);
+      expect(authHandlerMock.logout).toHaveBeenCalledWith(login, session);
 
       expect(logoutHandlerMock.notifyClient).toHaveBeenCalledTimes(4);
 

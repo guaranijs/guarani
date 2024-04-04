@@ -5,22 +5,27 @@ import { calculateSubjectIdentifier } from './calculate-subject-identifier';
 
 describe('calculateSubjectIdentifier()', () => {
   it('should return the local identifier of the user.', () => {
-    const user = <User>{ id: 'user_id' };
-    const client = <Client>{ id: 'client_id', subjectType: 'public' };
+    const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+    const client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+      id: 'client_id',
+      subjectType: 'public',
+    });
+
     const settings = <Settings>{};
 
     expect(calculateSubjectIdentifier(user, client, settings)).toEqual('user_id');
   });
 
   it('should return the aes-128-cbc encrypted digest of the identifier of the user.', () => {
-    const user = <User>{ id: 'user_id' };
+    const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
-    const client = <Client>{
+    const client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
       id: 'client_id',
       subjectType: 'pairwise',
       sectorIdentifierUri: 'https://client.example.com/redirect_uris.json',
       pairwiseSalt: '0123456789abcdef0123456789abcdef',
-    };
+    });
 
     const settings = <Settings>{ secretKey: '0123456789abcdef', maxLocalSubjectLength: 16 };
 

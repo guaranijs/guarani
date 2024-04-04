@@ -28,8 +28,8 @@ export class AuthorizationCodeService implements AuthorizationCodeServiceInterfa
     return authorizationCode;
   }
 
-  public async findOne(code: string): Promise<Nullable<AuthorizationCode>> {
-    return await AuthorizationCode.findOneBy({ code });
+  public async findOne(id: string): Promise<Nullable<AuthorizationCode>> {
+    return await AuthorizationCode.findOneBy({ id });
   }
 
   public async revoke(authorizationCode: AuthorizationCode): Promise<void> {

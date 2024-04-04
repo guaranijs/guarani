@@ -34,28 +34,28 @@ export class AuthorizationCodeService implements AuthorizationCodeServiceInterfa
 
     const now = Date.now();
 
-    const authorizationCode: AuthorizationCode = {
-      code: randomUUID(),
-      isRevoked: false,
-      parameters,
-      issuedAt: new Date(now),
-      expiresAt: new Date(now + 300000),
-      validAfter: new Date(now),
-      login,
-      consent,
-    };
+    const authorizationCode: AuthorizationCode = Object.assign<AuthorizationCode, Partial<AuthorizationCode>>(
+      Reflect.construct(AuthorizationCode, []),
+      {
+        id: randomUUID(),
+        isRevoked: false,
+        parameters,
+        issuedAt: new Date(now),
+        expiresAt: new Date(now + 300000),
+        validAfter: new Date(now),
+        login,
+        consent,
+      },
+    );
 
     this.authorizationCodes.push(authorizationCode);
 
     return authorizationCode;
   }
 
-  public async findOne(code: string): Promise<Nullable<AuthorizationCode>> {
-    this.logger.debug(`[${this.constructor.name}] Called findOne()`, 'f32c431e-075e-4138-bb96-7be2e76bd1e0', {
-      code,
-    });
-
-    return this.authorizationCodes.find((authorizationCode) => authorizationCode.code === code) ?? null;
+  public async findOne(id: string): Promise<Nullable<AuthorizationCode>> {
+    this.logger.debug(`[${this.constructor.name}] Called findOne()`, 'f32c431e-075e-4138-bb96-7be2e76bd1e0', { id });
+    return this.authorizationCodes.find((authorizationCode) => authorizationCode.id === id) ?? null;
   }
 
   public async revoke(authorizationCode: AuthorizationCode): Promise<void> {

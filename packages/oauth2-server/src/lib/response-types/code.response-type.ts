@@ -81,7 +81,7 @@ export class CodeResponseType implements ResponseTypeInterface {
     const { parameters } = context;
     const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);
 
-    const response: CodeAuthorizationResponse = { code: authorizationCode.code };
+    const response: CodeAuthorizationResponse = { code: authorizationCode.id };
 
     this.logger.debug(
       `[${this.constructor.name}] Completed "${this.name}" Response Type`,

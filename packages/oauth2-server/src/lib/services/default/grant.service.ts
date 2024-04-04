@@ -28,7 +28,7 @@ export class GrantService implements GrantServiceInterface {
       session,
     });
 
-    const grant: Grant = {
+    const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
       id: randomUUID(),
       loginChallenge: randomBytes(16).toString('hex'),
       consentChallenge: randomBytes(16).toString('hex'),
@@ -39,7 +39,7 @@ export class GrantService implements GrantServiceInterface {
       client,
       session,
       consent: null,
-    };
+    });
 
     this.grants.push(grant);
 

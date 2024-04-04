@@ -1,4 +1,4 @@
-import { Nullable } from '@guarani/types';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { InteractionType } from '../interaction-types/interaction-type.type';
 import { AuthorizationRequest } from '../requests/authorization/authorization-request';
@@ -9,54 +9,66 @@ import { Session } from './session.entity';
 /**
  * OAuth 2.0 Grant Entity.
  */
-export interface Grant {
+export abstract class Grant implements Dictionary<any> {
   /**
    * Identifier of the Grant.
    */
-  readonly id: string;
+  public readonly id!: string;
 
   /**
    * Login Challenge of the Grant.
    */
-  readonly loginChallenge: string;
+  public readonly loginChallenge!: string;
 
   /**
    * Consent Challenge of the Grant.
    */
-  readonly consentChallenge: string;
+  public readonly consentChallenge!: string;
 
   /**
    * Parameters of the Authorization Request.
    */
-  readonly parameters: AuthorizationRequest;
+  public readonly parameters!: AuthorizationRequest;
 
   /**
    * Interactions processed by the Authorization Server.
    */
-  readonly interactions: InteractionType[];
+  public readonly interactions!: InteractionType[];
 
   /**
    * Creation Date of the Grant.
    */
-  readonly createdAt: Date;
+  public readonly createdAt!: Date;
 
   /**
    * Expiration Date of the Grant.
    */
-  readonly expiresAt: Date;
+  public readonly expiresAt!: Date;
 
   /**
    * Client requesting authorization.
    */
-  readonly client: Client;
+  public readonly client!: Client;
 
   /**
    * Session for the User-Agent.
    */
-  readonly session: Session;
+  public readonly session!: Session;
 
   /**
    * End User Consent.
    */
-  consent: Nullable<Consent>;
+  public consent!: Nullable<Consent>;
+
+  /**
+   * Additional Grant Parameters.
+   */
+  [parameter: string]: unknown;
+
+  /**
+   * Expiration status of the Grant.
+   */
+  public get isExpired(): boolean {
+    return new Date() >= this.expiresAt;
+  }
 }

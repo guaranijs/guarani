@@ -41,8 +41,14 @@ describe('JWT Bearer Grant Type', () => {
 
   describe('handle()', () => {
     let context: JwtBearerTokenContext;
+    let client: Client;
+    let user: User;
 
     beforeEach(() => {
+      client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      user = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
       context = <JwtBearerTokenContext>{
         parameters: {
           grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
@@ -52,8 +58,8 @@ describe('JWT Bearer Grant Type', () => {
           name: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
           handle: jest.fn(),
         },
-        client: <Client>{ id: 'client_id' },
-        user: <User>{ id: 'user_id' },
+        client,
+        user,
         scopes: ['foo', 'bar', 'baz'],
       };
     });
@@ -61,11 +67,14 @@ describe('JWT Bearer Grant Type', () => {
     it('should create a token response with the requested scope.', async () => {
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        expiresAt: new Date(Date.now() + 300000),
-        scopes: context.scopes,
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          expiresAt: new Date(Date.now() + 300000),
+          scopes: context.scopes,
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
@@ -81,11 +90,14 @@ describe('JWT Bearer Grant Type', () => {
     });
 
     it("should create a token response with the client's default scope.", async () => {
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        expiresAt: new Date(Date.now() + 300000),
-        scopes: context.scopes,
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          expiresAt: new Date(Date.now() + 300000),
+          scopes: context.scopes,
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 

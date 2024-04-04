@@ -117,13 +117,17 @@ describe('Device Authorization Endpoint', () => {
       const request = requestFactory();
 
       const scopes: string[] = ['foo', 'bar'];
-      const client = <Client>{ id: 'client_id', scopes };
 
-      const deviceCode = <DeviceCode>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        scopes,
+      });
+
+      const deviceCode: DeviceCode = Object.assign<DeviceCode, Partial<DeviceCode>>(Reflect.construct(DeviceCode, []), {
         id: 'device_code',
         userCode: 'user_code',
         expiresAt: new Date(Date.now() + 300000),
-      };
+      });
 
       const deviceAuthorizationResponse: DeviceAuthorizationResponse = {
         device_code: 'device_code',

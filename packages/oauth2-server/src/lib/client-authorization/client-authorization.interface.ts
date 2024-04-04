@@ -22,7 +22,7 @@ export interface ClientAuthorizationInterface {
    * Checks and returns the Access Token requested by the Client.
    *
    * @param request Http Request.
-   * @returns Access Token based on the provided Access Token Handle.
+   * @returns Access Token based on the provided Access Token Identifier.
    */
   authorize(request: HttpRequest): Promise<AccessToken>;
 }

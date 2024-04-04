@@ -133,7 +133,10 @@ describe('Client Secret Basic Authentication Method', () => {
     });
 
     it('should throw when a client does not have a secret.', async () => {
-      const client = <Client>{ id: 'client_id', secret: null };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        secret: null,
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -145,7 +148,10 @@ describe('Client Secret Basic Authentication Method', () => {
     });
 
     it("should throw when the provided secret does not match the client's one.", async () => {
-      const client = <Client>{ id: 'client_id', secret: 'invalid_secret' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        secret: 'invalid_secret',
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -155,11 +161,11 @@ describe('Client Secret Basic Authentication Method', () => {
     });
 
     it('should throw when requesting with a client with an expired secret.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: 'client_secret',
         secretExpiresAt: new Date(Date.now() - 3600000),
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -169,11 +175,11 @@ describe('Client Secret Basic Authentication Method', () => {
     });
 
     it('should throw when requesting with a client not authorized to use this authentication method.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: 'client_secret',
         authenticationMethod: 'unknown' as ClientAuthentication,
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 
@@ -185,11 +191,11 @@ describe('Client Secret Basic Authentication Method', () => {
     });
 
     it('should return an instance of a client.', async () => {
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         secret: 'client_secret',
         authenticationMethod: 'client_secret_basic',
-      };
+      });
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
 

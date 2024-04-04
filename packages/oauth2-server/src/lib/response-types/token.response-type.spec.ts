@@ -8,6 +8,7 @@ import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
+import { User } from '../entities/user.entity';
 import { Logger } from '../logger/logger';
 import { ResponseModeInterface } from '../response-modes/response-mode.interface';
 import { ResponseMode } from '../response-modes/response-mode.type';
@@ -56,8 +57,11 @@ describe('Token Response Type', () => {
 
   describe('handle()', () => {
     let context: AuthorizationContext;
+    let client: Client;
 
     beforeEach(() => {
+      client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
       context = <AuthorizationContext>{
         parameters: {
           response_type: 'token',
@@ -73,9 +77,9 @@ describe('Token Response Type', () => {
           defaultResponseMode: 'fragment',
           handle: jest.fn(),
         }),
-        client: <Client>{ id: 'client_id' },
+        client,
         redirectUri: new URL('https://client.example.com/oauth/callback'),
-        scopes: ['openid', 'foo', 'bar'],
+        scopes: ['foo', 'bar'],
         state: 'client_state',
         responseMode: jest.mocked<ResponseModeInterface>({ name: 'fragment', createHttpResponse: jest.fn() }),
         nonce: 'client_nonce',
@@ -90,18 +94,25 @@ describe('Token Response Type', () => {
     });
 
     it('should create a token authorization response.', async () => {
-      const login = <Login>{};
-      const consent = <Consent>{
-        scopes: ['foo', 'bar'],
-        client: { id: 'client_id' },
-        user: { id: 'user_id' },
-      };
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id' });
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: consent.scopes,
-        expiresAt: new Date(Date.now() + 3600000),
-      };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const consent: Consent = Object.assign<Consent, Partial<Consent>>(Reflect.construct(Consent, []), {
+        id: 'consent_id',
+        scopes: ['foo', 'bar'],
+        client,
+        user,
+      });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: consent.scopes,
+          expiresAt: new Date(Date.now() + 3600000),
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 

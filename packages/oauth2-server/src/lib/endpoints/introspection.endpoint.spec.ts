@@ -95,14 +95,21 @@ describe('Introspection Endpoint', () => {
     it('should return an inactive token response when the client is not the owner of the token.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id' };
-      const token = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const anotherClient: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'another_client_id',
+      });
+
+      const token: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(Reflect.construct(AccessToken, []), {
+        id: 'access_token',
+        client: anotherClient,
+      });
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -122,14 +129,18 @@ describe('Introspection Endpoint', () => {
     it('should return an inactive token response when the token is revoked.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id' };
-      const token = <AccessToken>{ handle: 'access_token', isRevoked: true, client };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const token: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(Reflect.construct(AccessToken, []), {
+        id: 'access_token',
+        isRevoked: true,
+        client,
+      });
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -149,19 +160,19 @@ describe('Introspection Endpoint', () => {
     it('should return an inactive token response when the token is not yet valid.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id' };
-      const token = <AccessToken>{
-        handle: 'access_token',
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const token: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(Reflect.construct(AccessToken, []), {
+        id: 'access_token',
         isRevoked: false,
         validAfter: new Date(Date.now() + 3600000),
         client,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -181,20 +192,20 @@ describe('Introspection Endpoint', () => {
     it('should return an inactive token response when the token is expired.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id' };
-      const token = <AccessToken>{
-        handle: 'access_token',
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const token: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(Reflect.construct(AccessToken, []), {
+        id: 'access_token',
         isRevoked: false,
         validAfter: new Date(Date.now() - 7200000),
         expiresAt: new Date(Date.now() - 3600000),
         client,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -216,11 +227,15 @@ describe('Introspection Endpoint', () => {
 
       const now = Date.now();
 
-      const client = <Client>{ id: 'client_id', subjectType: 'public' };
-      const user = <User>{ id: 'user_id' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+      });
 
-      const token = <AccessToken>{
-        handle: 'access_token',
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const token: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(Reflect.construct(AccessToken, []), {
+        id: 'access_token',
         scopes: ['foo', 'bar'],
         isRevoked: false,
         issuedAt: new Date(now),
@@ -228,13 +243,12 @@ describe('Introspection Endpoint', () => {
         expiresAt: new Date(now + 3600000),
         client,
         user,
-      };
+      });
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const introspectionResponse = removeNullishValues<IntrospectionResponse>({

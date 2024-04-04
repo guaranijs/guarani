@@ -7,6 +7,7 @@ import { removeNullishValues } from '@guarani/primitives';
 import { LoginContextInteractionContext } from '../../context/interaction/login-context.interaction-context';
 import { LoginDecisionAcceptInteractionContext } from '../../context/interaction/login-decision-accept.interaction-context';
 import { LoginDecisionDenyInteractionContext } from '../../context/interaction/login-decision-deny.interaction-context';
+import { Client } from '../../entities/client.entity';
 import { Grant } from '../../entities/grant.entity';
 import { User } from '../../entities/user.entity';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
@@ -130,7 +131,10 @@ describe('Login Interaction Request Validator', () => {
     it('should return a login context interaction context.', async () => {
       const request = requestFactory();
 
-      const grant = <Grant>{ id: 'grant_id', loginChallenge: 'login_challenge' };
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
+        id: 'grant_id',
+        loginChallenge: 'login_challenge',
+      });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -184,11 +188,16 @@ describe('Login Interaction Request Validator', () => {
     it('should throw when not providing the parameter "decision".', async () => {
       const request = requestFactory({ decision: undefined });
 
-      const grant = <Grant>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+      });
+
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        client: { id: 'client_id', subjectType: 'public' },
-      };
+        client,
+      });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -201,11 +210,16 @@ describe('Login Interaction Request Validator', () => {
     it('should throw when providing an unsupported decision.', async () => {
       const request = requestFactory({ decision: 'unknown' as LoginDecision });
 
-      const grant = <Grant>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+      });
+
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        client: { id: 'client_id', subjectType: 'public' },
-      };
+        client,
+      });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -219,11 +233,16 @@ describe('Login Interaction Request Validator', () => {
     it('should throw when not providing the parameter "subject".', async () => {
       const request = requestFactory({ decision: 'accept', subject: undefined });
 
-      const grant = <Grant>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+      });
+
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        client: { id: 'client_id', subjectType: 'public' },
-      };
+        client,
+      });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -236,11 +255,16 @@ describe('Login Interaction Request Validator', () => {
     it('should throw when no user is found.', async () => {
       const request = requestFactory({ decision: 'accept', subject: 'user_id' });
 
-      const grant = <Grant>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+      });
+
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        client: { id: 'client_id', subjectType: 'public' },
-      };
+        client,
+      });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
       userServiceMock.findOne.mockResolvedValueOnce(null);
@@ -259,13 +283,18 @@ describe('Login Interaction Request Validator', () => {
         acr: 'guarani:acr:2fa',
       });
 
-      const grant = <Grant>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+      });
+
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        client: { id: 'client_id', subjectType: 'public' },
-      };
+        client,
+      });
 
-      const user = <User>{ id: 'user_id' };
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
       userServiceMock.findOne.mockResolvedValueOnce(user);
@@ -286,11 +315,16 @@ describe('Login Interaction Request Validator', () => {
     it('should throw when not providing the parameter "error".', async () => {
       const request = requestFactory({ decision: 'deny', error: undefined });
 
-      const grant = <Grant>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+      });
+
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        client: { id: 'client_id', subjectType: 'public' },
-      };
+        client,
+      });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -303,11 +337,16 @@ describe('Login Interaction Request Validator', () => {
     it('should throw when not providing the parameter "error_description".', async () => {
       const request = requestFactory({ decision: 'deny', error: 'login_denied', error_description: undefined });
 
-      const grant = <Grant>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+      });
+
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        client: { id: 'client_id', subjectType: 'public' },
-      };
+        client,
+      });
 
       grantServiceMock.findOneByLoginChallenge.mockResolvedValueOnce(grant);
 
@@ -324,11 +363,16 @@ describe('Login Interaction Request Validator', () => {
         error_description: 'Lorem ipsum dolor sit amet...',
       });
 
-      const grant = <Grant>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+      });
+
+      const grant: Grant = Object.assign<Grant, Partial<Grant>>(Reflect.construct(Grant, []), {
         id: 'grant_id',
         loginChallenge: 'login_challenge',
-        client: { id: 'client_id', subjectType: 'public' },
-      };
+        client,
+      });
 
       const error: OAuth2Exception = Object.assign<OAuth2Exception, Partial<OAuth2Exception>>(
         Reflect.construct(OAuth2Exception, [parameters.error_description as string]),

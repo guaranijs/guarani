@@ -109,14 +109,21 @@ describe('Revocation Endpoint', () => {
     it('should not revoke when the client is not the owner of the token.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id' };
-      const token = <AccessToken>{ handle: 'access_token', client: { id: 'another_client_id' } };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const anotherClient: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'another_client_id',
+      });
+
+      const token: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(Reflect.construct(AccessToken, []), {
+        id: 'access_token',
+        client: anotherClient,
+      });
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -133,14 +140,17 @@ describe('Revocation Endpoint', () => {
     it('should revoke an access token.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id' };
-      const token = <AccessToken>{ handle: 'access_token', client };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const token: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(Reflect.construct(AccessToken, []), {
+        id: 'access_token',
+        client,
+      });
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -157,14 +167,17 @@ describe('Revocation Endpoint', () => {
     it('should revoke a refresh token.', async () => {
       const request = requestFactory({ token: 'refresh_token' });
 
-      const client = <Client>{ id: 'client_id' };
-      const token = <RefreshToken>{ handle: 'refresh_token', client };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const token: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+        Reflect.construct(RefreshToken, []),
+        { id: 'refresh_token', client },
+      );
 
       validatorMock.validate.mockResolvedValueOnce({
         parameters,
         client,
         token,
-        tokenType: 'refresh_token',
       });
 
       const response = await endpoint.handle(request);

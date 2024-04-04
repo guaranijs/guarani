@@ -88,9 +88,25 @@ describe('Refresh Token Grant Type', () => {
 
   describe('handle()', () => {
     let context: RefreshTokenTokenContext;
+    let client: Client;
+    let refreshToken: RefreshToken;
 
     beforeEach(() => {
       const now = Date.now();
+
+      client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['authorization_code', 'refresh_token'],
+      });
+
+      refreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(Reflect.construct(RefreshToken, []), {
+        id: 'refresh_token',
+        isRevoked: false,
+        issuedAt: new Date(now),
+        expiresAt: new Date(now + 86400000),
+        validAfter: new Date(now),
+        client,
+      });
 
       context = <RefreshTokenTokenContext>{
         parameters: {
@@ -101,27 +117,18 @@ describe('Refresh Token Grant Type', () => {
           name: 'refresh_token',
           handle: jest.fn(),
         },
-        client: <Client>{
-          id: 'client_id',
-          grantTypes: ['authorization_code', 'refresh_token'],
-        },
-        refreshToken: <RefreshToken>{
-          handle: 'refresh_token',
-          isRevoked: false,
-          issuedAt: new Date(now),
-          expiresAt: new Date(now + 86400000),
-          validAfter: new Date(now),
-          client: {
-            id: 'client_id',
-            grantTypes: ['authorization_code', 'refresh_token'],
-          },
-        },
+        client,
+        refreshToken,
         scopes: ['foo', 'bar', 'baz'],
       };
     });
 
     it('should throw when providing a mismathching client identifier.', async () => {
-      Reflect.set(context.refreshToken.client, 'id', 'another_client_id');
+      const anotherClient: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'another_client_id',
+      });
+
+      Reflect.set(refreshToken, 'client', anotherClient);
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
@@ -130,7 +137,7 @@ describe('Refresh Token Grant Type', () => {
     });
 
     it('should throw when the refresh token not yet valid.', async () => {
-      Reflect.set(context.refreshToken, 'validAfter', new Date(Date.now() + 86400000));
+      Reflect.set(refreshToken, 'validAfter', new Date(Date.now() + 86400000));
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
@@ -139,7 +146,7 @@ describe('Refresh Token Grant Type', () => {
     });
 
     it('should throw when the refresh token is expired.', async () => {
-      Reflect.set(context.refreshToken, 'expiresAt', new Date(Date.now() - 86400000));
+      Reflect.set(refreshToken, 'expiresAt', new Date(Date.now() - 86400000));
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
@@ -148,7 +155,7 @@ describe('Refresh Token Grant Type', () => {
     });
 
     it('should throw when the refresh token is revoked.', async () => {
-      context.refreshToken.isRevoked = true;
+      refreshToken.isRevoked = true;
 
       await expect(grantType.handle(context)).rejects.toThrowWithMessage(
         InvalidGrantException,
@@ -157,11 +164,14 @@ describe('Refresh Token Grant Type', () => {
     });
 
     it('should create a token response with the original scope and the same refresh token.', async () => {
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: context.scopes,
-        expiresAt: new Date(Date.now() + 86400000),
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: context.scopes,
+          expiresAt: new Date(Date.now() + 86400000),
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
@@ -177,11 +187,14 @@ describe('Refresh Token Grant Type', () => {
     it('should create a token response with the requested scope and the same refresh token.', async () => {
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: context.scopes,
-        expiresAt: new Date(Date.now() + 86400000),
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: context.scopes,
+          expiresAt: new Date(Date.now() + 86400000),
+        },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
 
@@ -205,16 +218,22 @@ describe('Refresh Token Grant Type', () => {
 
       grantType = container.resolve(RefreshTokenGrantType);
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: context.scopes,
-        expiresAt: new Date(Date.now() + 86400000),
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: context.scopes,
+          expiresAt: new Date(Date.now() + 86400000),
+        },
+      );
 
-      const refreshToken = <RefreshToken>{ handle: 'new_refresh_token' };
+      const newRefreshToken: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+        Reflect.construct(RefreshToken, []),
+        { id: 'new_refresh_token' },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
-      refreshTokenServiceMock.rotate!.mockResolvedValueOnce(refreshToken);
+      refreshTokenServiceMock.rotate!.mockResolvedValueOnce(newRefreshToken);
 
       await expect(grantType.handle(context)).resolves.toStrictEqual<TokenResponse>({
         access_token: 'access_token',
@@ -238,16 +257,22 @@ describe('Refresh Token Grant Type', () => {
 
       Reflect.set(context, 'scopes', ['foo', 'bar']);
 
-      const accessToken = <AccessToken>{
-        handle: 'access_token',
-        scopes: context.scopes,
-        expiresAt: new Date(Date.now() + 86400000),
-      };
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: context.scopes,
+          expiresAt: new Date(Date.now() + 86400000),
+        },
+      );
 
-      const refreshToken = <RefreshToken>{ handle: 'new_refresh_token' };
+      const newRefreshToken: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+        Reflect.construct(RefreshToken, []),
+        { id: 'new_refresh_token' },
+      );
 
       accessTokenServiceMock.create.mockResolvedValueOnce(accessToken);
-      refreshTokenServiceMock.rotate!.mockResolvedValueOnce(refreshToken);
+      refreshTokenServiceMock.rotate!.mockResolvedValueOnce(newRefreshToken);
 
       await expect(grantType.handle(context)).resolves.toStrictEqual<TokenResponse>({
         access_token: 'access_token',

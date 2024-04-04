@@ -98,7 +98,10 @@ describe('Refresh Token Token Request Validator', () => {
     it('should throw when not providing the parameter "refresh_token".', async () => {
       const request = requestFactory({ refresh_token: undefined });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code', 'refresh_token'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['authorization_code', 'refresh_token'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -111,7 +114,10 @@ describe('Refresh Token Token Request Validator', () => {
     it('should throw when no refresh_token is found.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['authorization_code', 'refresh_token'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['authorization_code', 'refresh_token'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(null);
@@ -125,13 +131,16 @@ describe('Refresh Token Token Request Validator', () => {
     it('should throw when the client requests a scope that was not previously granted.', async () => {
       const request = requestFactory({ scope: 'foo bar baz' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         grantTypes: ['authorization_code', 'refresh_token'],
         scopes: ['foo', 'bar', 'baz'],
-      };
+      });
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token', scopes: ['foo', 'bar'] };
+      const refreshToken: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+        Reflect.construct(RefreshToken, []),
+        { id: 'refresh_token', scopes: ['foo', 'bar'] },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
@@ -148,13 +157,16 @@ describe('Refresh Token Token Request Validator', () => {
     it('should return a refresh token token context with the requested scopes.', async () => {
       const request = requestFactory({ scope: 'foo bar' });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         grantTypes: ['authorization_code', 'refresh_token'],
         scopes: ['foo', 'bar', 'baz'],
-      };
+      });
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token', scopes: ['foo', 'bar', 'baz'] };
+      const refreshToken: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+        Reflect.construct(RefreshToken, []),
+        { id: 'refresh_token', scopes: ['foo', 'bar', 'baz'] },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);
@@ -174,13 +186,16 @@ describe('Refresh Token Token Request Validator', () => {
     it('should return a refresh token token context with the original scopes.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         grantTypes: ['authorization_code', 'refresh_token'],
         scopes: ['foo', 'bar', 'baz'],
-      };
+      });
 
-      const refreshToken = <RefreshToken>{ handle: 'refresh_token', scopes: ['foo', 'bar', 'baz'] };
+      const refreshToken: RefreshToken = Object.assign<RefreshToken, Partial<RefreshToken>>(
+        Reflect.construct(RefreshToken, []),
+        { id: 'refresh_token', scopes: ['foo', 'bar', 'baz'] },
+      );
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       refreshTokenServiceMock.findOne.mockResolvedValueOnce(refreshToken);

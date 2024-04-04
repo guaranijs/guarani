@@ -21,7 +21,12 @@ export class SessionService implements SessionServiceInterface {
   public async create(): Promise<Session> {
     this.logger.debug(`[${this.constructor.name}] Called create()`, '19874028-ca56-4ed8-b1f7-62ccd90a7144');
 
-    const session: Session = { id: randomUUID(), activeLogin: null, logins: [] };
+    const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+      id: randomUUID(),
+      activeLogin: null,
+      logins: [],
+    });
+
     this.sessions.push(session);
 
     return session;

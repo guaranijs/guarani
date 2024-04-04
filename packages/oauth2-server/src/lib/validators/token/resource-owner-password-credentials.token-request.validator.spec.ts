@@ -121,7 +121,10 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
     it('should throw when not providing the parameter "username".', async () => {
       const request = requestFactory({ username: undefined });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['password'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['password'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -134,7 +137,10 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
     it('should throw when not providing the parameter "password".', async () => {
       const request = requestFactory({ password: undefined });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['password'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['password'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
 
@@ -147,7 +153,10 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
     it('should throw when no user is found.', async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['password'] };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['password'],
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       userServiceMock.findByResourceOwnerCredentials!.mockResolvedValueOnce(null);
@@ -161,8 +170,18 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
     it('should return a resource owner password credentials token context with the requested scope.', async () => {
       const request = requestFactory({ scope: 'foo bar' });
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['password'], scopes: ['foo', 'bar', 'baz'] };
-      const user = <User>{ id: 'user_id', username: 'username', password: 'password' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['password'],
+        scopes: ['foo', 'bar', 'baz'],
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), {
+        id: 'user_id',
+        username: 'username',
+        password: 'password',
+      });
+
       const scopes = ['foo', 'bar'];
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
@@ -183,8 +202,17 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
     it("should return a resource owner password credentials token context with the client's default scope.", async () => {
       const request = requestFactory();
 
-      const client = <Client>{ id: 'client_id', grantTypes: ['password'], scopes: ['foo', 'bar', 'baz'] };
-      const user = <User>{ id: 'user_id', username: 'username', password: 'password' };
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        grantTypes: ['password'],
+        scopes: ['foo', 'bar', 'baz'],
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), {
+        id: 'user_id',
+        username: 'username',
+        password: 'password',
+      });
 
       clientAuthenticationHandlerMock.authenticate.mockResolvedValueOnce(client);
       userServiceMock.findByResourceOwnerCredentials!.mockResolvedValueOnce(user);

@@ -192,12 +192,12 @@ describe('Code & ID Token Authorization Request Validator', () => {
     it.each(forbiddenResponseModes)('should throw when requesting a forbidden response mode.', async (responseMode) => {
       const request = requestFactory({ response_mode: responseMode });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code id_token'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       const scopes: string[] = ['foo', 'bar', 'baz'];
 
@@ -213,12 +213,12 @@ describe('Code & ID Token Authorization Request Validator', () => {
     it('should throw when not providing the parameter "nonce".', async () => {
       const request = requestFactory({ nonce: undefined });
 
-      const client = <Client>{
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         redirectUris: ['https://client.example.com/oauth/callback'],
         responseTypes: ['code id_token'],
         scopes: ['foo', 'bar', 'baz', 'qux'],
-      };
+      });
 
       const scopes: string[] = ['foo', 'bar', 'baz'];
 

@@ -144,9 +144,9 @@ export class IntrospectionEndpoint implements EndpointInterface {
       context,
     });
 
-    const { client, token, tokenType } = context;
+    const { client, token } = context;
 
-    if (token === null || tokenType === null) {
+    if (token === null) {
       this.logger.debug(`[${this.constructor.name}] No Token found`, 'f3b27330-e6f7-4eba-9eba-6a29c0184bca');
       return IntrospectionEndpoint.INACTIVE_TOKEN;
     }

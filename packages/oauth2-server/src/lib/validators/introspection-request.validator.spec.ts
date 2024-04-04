@@ -170,7 +170,6 @@ describe('Introspection Request Validator', () => {
         parameters,
         client,
         token: null,
-        tokenType: null,
       });
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -195,7 +194,6 @@ describe('Introspection Request Validator', () => {
         parameters,
         client,
         token: null,
-        tokenType: null,
       });
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -220,7 +218,6 @@ describe('Introspection Request Validator', () => {
         parameters,
         client,
         token: null,
-        tokenType: null,
       });
 
       expect(accessTokenServiceMock.findOne).toHaveBeenCalledTimes(1);
@@ -250,7 +247,6 @@ describe('Introspection Request Validator', () => {
         parameters,
         client,
         token: null,
-        tokenType: null,
       });
     });
 
@@ -276,7 +272,6 @@ describe('Introspection Request Validator', () => {
         parameters,
         client,
         token: null,
-        tokenType: null,
       });
 
       expect(refreshTokenServiceMock.findOne).not.toHaveBeenCalled();
@@ -300,7 +295,6 @@ describe('Introspection Request Validator', () => {
         parameters,
         client,
         token: accessToken,
-        tokenType: 'access_token',
       });
     });
 
@@ -322,7 +316,6 @@ describe('Introspection Request Validator', () => {
         parameters,
         client,
         token: refreshToken,
-        tokenType: 'refresh_token',
       });
     });
   });

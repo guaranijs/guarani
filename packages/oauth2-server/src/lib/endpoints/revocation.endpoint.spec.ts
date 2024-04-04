@@ -124,7 +124,6 @@ describe('Revocation Endpoint', () => {
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -152,7 +151,6 @@ describe('Revocation Endpoint', () => {
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -180,7 +178,6 @@ describe('Revocation Endpoint', () => {
         parameters,
         client,
         token,
-        tokenType: 'refresh_token',
       });
 
       const response = await endpoint.handle(request);

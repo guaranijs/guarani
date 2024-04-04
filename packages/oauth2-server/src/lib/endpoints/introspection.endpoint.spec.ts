@@ -110,7 +110,6 @@ describe('Introspection Endpoint', () => {
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -142,7 +141,6 @@ describe('Introspection Endpoint', () => {
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -175,7 +173,6 @@ describe('Introspection Endpoint', () => {
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -209,7 +206,6 @@ describe('Introspection Endpoint', () => {
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const response = await endpoint.handle(request);
@@ -253,7 +249,6 @@ describe('Introspection Endpoint', () => {
         parameters,
         client,
         token,
-        tokenType: 'access_token',
       });
 
       const introspectionResponse = removeNullishValues<IntrospectionResponse>({

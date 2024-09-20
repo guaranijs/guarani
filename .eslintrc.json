@@ -23,12 +23,7 @@
         "simple-import-sort/imports": [
           "error",
           {
-            "groups": [
-              ["^\\u0000"], // Side effect imports
-              ["^\\w"], // Packages
-              ["^@\\w"], // Workspace packages
-              ["^\\.\\.(?!/?$)", "^\\./(?=.*/)(?!/?$)", "^\\.(?!/?$)"] // Parent and relative imports
-            ]
+            "groups": [["^\\u0000"], ["^\\w"], ["^@\\w"], ["^\\.\\.(?!/?$)", "^\\./(?=.*/)(?!/?$)", "^\\.(?!/?$)"]]
           }
         ],
         "simple-import-sort/exports": "error",
@@ -49,13 +44,18 @@
       "extends": ["plugin:@nx/typescript"],
       "rules": {
         "@typescript-eslint/no-non-null-assertion": "off",
-        "@typescript-eslint/no-explicit-any": "off"
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-extra-semi": "error",
+        "no-extra-semi": "off"
       }
     },
     {
       "files": ["*.js", "*.jsx"],
       "extends": ["plugin:@nx/javascript"],
-      "rules": {}
+      "rules": {
+        "@typescript-eslint/no-extra-semi": "error",
+        "no-extra-semi": "off"
+      }
     },
     {
       "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx"],

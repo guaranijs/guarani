@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/oauth2-server-example/src",
   "projectType": "application",
+  "tags": [],
   "targets": {
     "build": {
       "executor": "@nx/webpack:webpack",
@@ -41,11 +42,7 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/oauth2-server-example/**/*.ts"]
-      }
+      "executor": "@nx/eslint:lint"
     },
     "migration:create": {
       "executor": "nx:run-commands",
@@ -95,6 +92,5 @@
         "cwd": ""
       }
     }
-  },
-  "tags": []
+  }
 }

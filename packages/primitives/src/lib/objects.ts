@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 
-import { Comparable, Dictionary } from '@guarani/types';
+import { AbstractConstructor, Comparable, Constructor, Dictionary } from '@guarani/types';
 
 /**
  * Removes null and undefined values from the properties of an object or an array of objects.
@@ -151,4 +151,34 @@ export function compare(obj1: unknown, obj2: unknown): number {
   }
 
   throw new TypeError('Cannot compare objects of different types.');
+}
+
+/**
+ * Applies all provided Mixins into a single constructor.
+ *
+ * @param Mixins Constructors to be applied as Mixins.
+ * @returns Constructor with all Mixins applied.
+ */
+export function mixin(...Mixins: (AbstractConstructor<any> | Constructor<any>)[]): any {
+  const BaseMixin = Mixins.shift();
+
+  if (typeof BaseMixin === 'undefined') {
+    throw new TypeError('You must provide at least one Mixin.');
+  }
+
+  if (Mixins.length === 0) {
+    return BaseMixin;
+  }
+
+  Mixins.forEach((Mixin) => {
+    Object.getOwnPropertyNames(Mixin.prototype).forEach((name) => {
+      Object.defineProperty(
+        BaseMixin.prototype,
+        name,
+        Object.getOwnPropertyDescriptor(Mixin.prototype, name) || Object.create(null),
+      );
+    });
+  });
+
+  return BaseMixin;
 }

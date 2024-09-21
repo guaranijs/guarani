@@ -1,12 +1,14 @@
 import { BaseEntity, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { Consent as OAuth2Consent } from '@guarani/oauth2-server';
+import { mixin } from '@guarani/primitives';
 
 import { Client } from './client.entity';
 import { User } from './user.entity';
 
 @Entity({ name: 'consents' })
-export class Consent extends BaseEntity implements OAuth2Consent {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class Consent extends mixin(BaseEntity, OAuth2Consent) {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'consents_pk' })
   public readonly id!: string;
 
@@ -27,3 +29,6 @@ export class Consent extends BaseEntity implements OAuth2Consent {
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id', foreignKeyConstraintName: 'users_id_fk' })
   public readonly user!: User;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface Consent extends BaseEntity, OAuth2Consent {}

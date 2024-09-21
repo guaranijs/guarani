@@ -1,12 +1,14 @@
 import { BaseEntity, Check, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 import { RefreshToken as OAuth2RefreshToken } from '@guarani/oauth2-server';
+import { mixin } from '@guarani/primitives';
 
 import { Client } from './client.entity';
 import { User } from './user.entity';
 
 @Entity({ name: 'refresh_tokens' })
-export class RefreshToken extends BaseEntity implements OAuth2RefreshToken {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class RefreshToken extends mixin(BaseEntity, OAuth2RefreshToken) {
   @PrimaryColumn({
     name: 'id',
     type: 'varchar',
@@ -41,3 +43,6 @@ export class RefreshToken extends BaseEntity implements OAuth2RefreshToken {
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id', foreignKeyConstraintName: 'users_id_fk' })
   public readonly user!: User;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface RefreshToken extends BaseEntity, OAuth2RefreshToken {}

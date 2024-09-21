@@ -11,12 +11,14 @@ import {
 } from 'typeorm';
 
 import { EndSessionRequest, LogoutTicket as OAuth2LogoutTicket } from '@guarani/oauth2-server';
+import { mixin } from '@guarani/primitives';
 
 import { Client } from './client.entity';
 import { Session } from './session.entity';
 
 @Entity({ name: 'logout_tickets' })
-export class LogoutTicket extends BaseEntity implements OAuth2LogoutTicket {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class LogoutTicket extends mixin(BaseEntity, OAuth2LogoutTicket) {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'logout_tickets_pk' })
   public readonly id!: string;
 
@@ -41,3 +43,6 @@ export class LogoutTicket extends BaseEntity implements OAuth2LogoutTicket {
   @JoinColumn({ name: 'session_id', referencedColumnName: 'id', foreignKeyConstraintName: 'sessions_id_fk' })
   public readonly session!: Session;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface LogoutTicket extends BaseEntity, OAuth2LogoutTicket {}

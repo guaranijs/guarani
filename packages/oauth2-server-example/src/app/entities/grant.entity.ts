@@ -12,6 +12,7 @@ import {
 } from 'typeorm';
 
 import { AuthorizationRequest, Grant as OAuth2Grant, InteractionType } from '@guarani/oauth2-server';
+import { mixin } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
 
 import { Client } from './client.entity';
@@ -20,7 +21,8 @@ import { Session } from './session.entity';
 
 @Entity({ name: 'grants' })
 @Unique('grants_login_challenge_and_consent_challenge_uq', ['loginChallenge', 'consentChallenge'])
-export class Grant extends BaseEntity implements OAuth2Grant {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class Grant extends mixin(BaseEntity, OAuth2Grant) {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'grants_pk' })
   public readonly id!: string;
 
@@ -56,3 +58,6 @@ export class Grant extends BaseEntity implements OAuth2Grant {
   @JoinColumn({ name: 'consent_id', referencedColumnName: 'id', foreignKeyConstraintName: 'consents_id_fk' })
   public consent!: Nullable<Consent>;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface Grant extends BaseEntity, OAuth2Grant {}

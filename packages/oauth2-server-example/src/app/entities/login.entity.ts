@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 
 import { Login as OAuth2Login } from '@guarani/oauth2-server';
+import { mixin } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
 
 import { Client } from './client.entity';
@@ -18,7 +19,8 @@ import { Session } from './session.entity';
 import { User } from './user.entity';
 
 @Entity({ name: 'logins' })
-export class Login extends BaseEntity implements OAuth2Login {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class Login extends mixin(BaseEntity, OAuth2Login) {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'logins_pk' })
   public readonly id!: string;
 
@@ -58,3 +60,6 @@ export class Login extends BaseEntity implements OAuth2Login {
   })
   public readonly clients!: Client[];
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface Login extends BaseEntity, OAuth2Login {}

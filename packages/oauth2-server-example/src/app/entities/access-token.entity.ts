@@ -1,13 +1,15 @@
 import { BaseEntity, Check, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 import { AccessToken as OAuth2AccessToken } from '@guarani/oauth2-server';
+import { mixin } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
 
 import { Client } from './client.entity';
 import { User } from './user.entity';
 
 @Entity({ name: 'access_tokens' })
-export class AccessToken extends BaseEntity implements OAuth2AccessToken {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class AccessToken extends mixin(BaseEntity, OAuth2AccessToken) {
   @PrimaryColumn({
     name: 'id',
     type: 'varchar',
@@ -42,3 +44,6 @@ export class AccessToken extends BaseEntity implements OAuth2AccessToken {
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id', foreignKeyConstraintName: 'users_id_fk' })
   public readonly user!: Nullable<User>;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface AccessToken extends BaseEntity, OAuth2AccessToken {}

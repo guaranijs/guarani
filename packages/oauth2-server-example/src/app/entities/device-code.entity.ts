@@ -2,13 +2,15 @@ import { BaseEntity, Check, Column, Entity, JoinColumn, ManyToOne, PrimaryGenera
 import { URL } from 'url';
 
 import { DeviceCode as OAuth2DeviceCode } from '@guarani/oauth2-server';
+import { mixin } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
 
 import { Client } from './client.entity';
 import { User } from './user.entity';
 
 @Entity({ name: 'device_codes' })
-export class DeviceCode extends BaseEntity implements OAuth2DeviceCode {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class DeviceCode extends mixin(BaseEntity, OAuth2DeviceCode) {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'device_codes_pk' })
   public readonly id!: string;
 
@@ -48,3 +50,6 @@ export class DeviceCode extends BaseEntity implements OAuth2DeviceCode {
     return url.href;
   }
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface DeviceCode extends BaseEntity, OAuth2DeviceCode {}

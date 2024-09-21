@@ -23,6 +23,7 @@ import {
   ResponseType,
   SubjectType,
 } from '@guarani/oauth2-server';
+import { mixin } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
 
 @Entity({ name: 'clients' })
@@ -46,7 +47,8 @@ import { Nullable } from '@guarani/types';
   'check_backchannel_logout_uri_and_backchannel_logout_session_required',
   '"backchannel_logout_uri" IS NOT NULL OR "backchannel_logout_session_required" IS NULL',
 )
-export class Client extends BaseEntity implements OAuth2Client {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class Client extends mixin(BaseEntity, OAuth2Client) {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'clients_pk' })
   public readonly id!: string;
 
@@ -194,3 +196,6 @@ export class Client extends BaseEntity implements OAuth2Client {
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
   public deletedAt!: Nullable<Date>;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface Client extends BaseEntity, OAuth2Client {}

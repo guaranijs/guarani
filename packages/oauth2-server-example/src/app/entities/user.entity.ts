@@ -9,12 +9,14 @@ import {
 } from 'typeorm';
 
 import { User as OAuth2User } from '@guarani/oauth2-server';
+import { mixin } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
 
 import { Address } from './address.entity';
 
 @Entity({ name: 'users' })
-export class User extends BaseEntity implements OAuth2User {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class User extends mixin(BaseEntity, OAuth2User) {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'users_pk' })
   public readonly id!: string;
 
@@ -73,3 +75,6 @@ export class User extends BaseEntity implements OAuth2User {
     return components.join(' ');
   }
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface User extends BaseEntity, OAuth2User {}

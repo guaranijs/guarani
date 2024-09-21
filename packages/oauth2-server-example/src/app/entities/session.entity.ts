@@ -1,12 +1,14 @@
 import { BaseEntity, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { Session as OAuth2Session } from '@guarani/oauth2-server';
+import { mixin } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
 
 import { Login } from './login.entity';
 
 @Entity({ name: 'sessions' })
-export class Session extends BaseEntity implements OAuth2Session {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class Session extends mixin(BaseEntity, OAuth2Session) {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'sessions_pk' })
   public readonly id!: string;
 
@@ -23,3 +25,6 @@ export class Session extends BaseEntity implements OAuth2Session {
   })
   public logins!: Login[];
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface Session extends BaseEntity, OAuth2Session {}

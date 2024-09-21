@@ -1,13 +1,15 @@
 import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
 import { AuthorizationCode as OAuth2AuthorizationCode, CodeAuthorizationRequest } from '@guarani/oauth2-server';
+import { mixin } from '@guarani/primitives';
 
 import { Consent } from './consent.entity';
 import { Login } from './login.entity';
 
 @Entity({ name: 'authorization_codes' })
 @Unique('authorization_codes_login_id_and_consent_id_uq', ['login', 'consent'])
-export class AuthorizationCode extends BaseEntity implements OAuth2AuthorizationCode {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class AuthorizationCode extends mixin(BaseEntity, OAuth2AuthorizationCode) {
   @PrimaryGeneratedColumn('uuid', { name: 'id', primaryKeyConstraintName: 'authorization_codes_pk' })
   public readonly id!: string;
 
@@ -34,3 +36,6 @@ export class AuthorizationCode extends BaseEntity implements OAuth2Authorization
   @JoinColumn({ name: 'consent_id', referencedColumnName: 'id', foreignKeyConstraintName: 'consents_id_fk' })
   public readonly consent!: Consent;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface AuthorizationCode extends BaseEntity, OAuth2AuthorizationCode {}

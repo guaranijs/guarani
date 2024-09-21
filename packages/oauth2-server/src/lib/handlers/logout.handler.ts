@@ -46,6 +46,7 @@ export class LogoutHandler {
 
     switch (true) {
       case client.backChannelLogoutUri !== null:
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         return await this.notifyBackChannelClient(client, user, login).catch(() => {});
     }
   }

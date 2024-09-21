@@ -324,7 +324,7 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
     const responseModeName =
       parameters.response_mode === 'jwt'
         ? `${responseType.defaultResponseMode}.jwt`
-        : parameters.response_mode ?? responseType.defaultResponseMode;
+        : (parameters.response_mode ?? responseType.defaultResponseMode);
 
     const responseMode = this.responseModes.find((responseMode) => responseMode.name === responseModeName);
 

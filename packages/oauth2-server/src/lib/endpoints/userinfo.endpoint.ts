@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer';
+import { timingSafeEqual } from 'crypto';
 import { OutgoingHttpHeaders } from 'http';
 
 import { Inject, Injectable } from '@guarani/di';
@@ -19,6 +20,7 @@ import { InsufficientScopeException } from '../exceptions/insufficient-scope.exc
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
 import { OAuth2Exception } from '../exceptions/oauth2.exception';
 import { ServerErrorException } from '../exceptions/server-error.exception';
+import { AuthHandler } from '../handlers/auth.handler';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
@@ -68,6 +70,7 @@ export class UserinfoEndpoint implements EndpointInterface {
    *
    * @param logger Logger of the Authorization Server.
    * @param clientAuthorizationHandler Instance of the Client Authorization Handler.
+   * @param authHandler Instance of the Auth Handler.
    * @param jwks JSON Web Key Set of the Authorization Server.
    * @param settings Settings of the Authorization Server.
    * @param userService Instance of the User Service.
@@ -75,6 +78,7 @@ export class UserinfoEndpoint implements EndpointInterface {
   public constructor(
     private readonly logger: Logger,
     private readonly clientAuthorizationHandler: ClientAuthorizationHandler,
+    private readonly authHandler: AuthHandler,
     private readonly jwks: JsonWebKeySet,
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(USER_SERVICE) private readonly userService: UserServiceInterface,
@@ -205,6 +209,38 @@ export class UserinfoEndpoint implements EndpointInterface {
       this.logger.error(
         `[${this.constructor.name}] Missing User on Access Token`,
         '86c5ea60-f7da-45f9-b34a-f549754f4e98',
+        { access_token: accessToken },
+        exc,
+      );
+
+      throw exc;
+    }
+
+    const authUser = await this.authHandler.findAuthUser(request);
+
+    if (authUser === null && !accessToken.scopes.includes('offline_access')) {
+      const exc = new InvalidTokenException('The Access Token does not allow Offline Access.');
+
+      this.logger.error(
+        `[${this.constructor.name}] The Access Token does not allow Offline Access`,
+        '0a0ad58f-e34a-4ea5-b1cd-c7ccd73858ce',
+        { access_token: accessToken },
+        exc,
+      );
+
+      throw exc;
+    }
+
+    if (
+      authUser !== null &&
+      (authUser.id.length !== accessToken.user.id.length ||
+        !timingSafeEqual(Buffer.from(authUser.id), Buffer.from(accessToken.user.id)))
+    ) {
+      const exc = new InvalidTokenException('Invalid Credentials.');
+
+      this.logger.error(
+        `[${this.constructor.name}] Mismatching User Identifiers`,
+        '0cbc3c3c-2a2f-4399-a909-fc1f08949294',
         { access_token: accessToken },
         exc,
       );

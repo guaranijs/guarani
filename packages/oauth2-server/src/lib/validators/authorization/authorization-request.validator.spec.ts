@@ -593,6 +593,76 @@ describe('Authorization Request Validator', () => {
       );
     });
 
+    it('should return an authorization context without the "offline_access" scope if not requested together with the "consent" prompt.', async () => {
+      const request = requestFactory({ prompt: undefined });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux', 'offline_access'],
+      });
+
+      const scopes: string[] = ['foo', 'bar', 'baz', 'offline_access'];
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
+
+      await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationContext>({
+        parameters,
+        cookies: request.cookies,
+        responseType: responseTypesMocks[0]!,
+        client,
+        redirectUri: new URL('https://client.example.com/oauth/callback'),
+        scopes: ['foo', 'bar', 'baz'],
+        state: 'client_state',
+        responseMode: responseModesMocks[0]!,
+        nonce: 'client_nonce',
+        prompts: [],
+        display: displaysMocks[1]!,
+        maxAge: 300,
+        loginHint: 'login_hint',
+        idTokenHint: 'id_token_hint',
+        uiLocales: ['pt-BR', 'en'],
+        acrValues: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
+      });
+    });
+
+    it('should return an authorization context without the "offline_access" scope if not requested together with a "code" response type.', async () => {
+      const request = requestFactory({ response_type: 'token' });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['token'],
+        scopes: ['foo', 'bar', 'baz', 'qux', 'offline_access'],
+      });
+
+      const scopes: string[] = ['foo', 'bar', 'baz', 'offline_access'];
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
+
+      await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationContext>({
+        parameters,
+        cookies: request.cookies,
+        responseType: responseTypesMocks[6]!,
+        client,
+        redirectUri: new URL('https://client.example.com/oauth/callback'),
+        scopes: ['foo', 'bar', 'baz'],
+        state: 'client_state',
+        responseMode: responseModesMocks[0]!,
+        nonce: 'client_nonce',
+        prompts: ['consent'],
+        display: displaysMocks[1]!,
+        maxAge: 300,
+        loginHint: 'login_hint',
+        idTokenHint: 'id_token_hint',
+        uiLocales: ['pt-BR', 'en'],
+        acrValues: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
+      });
+    });
+
     it('should return an authorization context.', async () => {
       const request = requestFactory();
 

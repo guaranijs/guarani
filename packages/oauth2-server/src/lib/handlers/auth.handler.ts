@@ -5,6 +5,7 @@ import { Client } from '../entities/client.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
+import { HttpRequest } from '../http/http.request';
 import { Logger } from '../logger/logger';
 import { LoginServiceInterface } from '../services/login.service.interface';
 import { LOGIN_SERVICE } from '../services/login.service.token';
@@ -119,5 +120,26 @@ export class AuthHandler {
 
     session.activeLogin = null;
     await this.sessionService.save(session);
+  }
+
+  /**
+   * Searches the application for an Authenticated End User.
+   *
+   * @param request Http Request.
+   * @returns Authenticated User.
+   */
+  public async findAuthUser(request: HttpRequest): Promise<Nullable<User>> {
+    this.logger.debug(`[${this.constructor.name}] Called findAuthUser()`, 'c2611dc3-ec91-4dab-8acb-8d4e656ffa99', {
+      request,
+    });
+
+    if (!Object.hasOwn(request.cookies, 'guarani:session')) {
+      return null;
+    }
+
+    const sessionId = request.cookies['guarani:session'] as string;
+    const session = await this.sessionService.findOne(sessionId);
+
+    return session?.activeLogin?.user ?? null;
   }
 }

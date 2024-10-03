@@ -1,9 +1,12 @@
+import { URL } from 'url';
+
 import { DependencyInjectionContainer } from '@guarani/di';
 
 import { Client } from '../entities/client.entity';
 import { Login } from '../entities/login.entity';
 import { Session } from '../entities/session.entity';
 import { User } from '../entities/user.entity';
+import { HttpRequest } from '../http/http.request';
 import { Logger } from '../logger/logger';
 import { LoginServiceInterface } from '../services/login.service.interface';
 import { LOGIN_SERVICE } from '../services/login.service.token';
@@ -199,6 +202,89 @@ describe('Auth Handler', () => {
 
       expect(sessionServiceMock.save).toHaveBeenCalledTimes(1);
       expect(sessionServiceMock.save).toHaveBeenCalledWith(<Session>{ ...session, activeLogin: null });
+    });
+  });
+
+  describe('findAuthUser()', () => {
+    it('should return null when no sessions are registered in the http request.', async () => {
+      const request = new HttpRequest({
+        body: {},
+        cookies: {},
+        headers: {},
+        method: 'GET',
+        url: new URL('https://server.example.com/oauth/userinfo'),
+      });
+
+      expect(authHandler.findAuthUser(request)).resolves.toBeNull();
+
+      expect(sessionServiceMock.findOne).not.toHaveBeenCalled();
+    });
+
+    it('should return null when the session is not found.', async () => {
+      const request = new HttpRequest({
+        body: {},
+        cookies: { 'guarani:session': 'session_id' },
+        headers: {},
+        method: 'GET',
+        url: new URL('https://server.example.com/oauth/userinfo'),
+      });
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(null);
+
+      expect(authHandler.findAuthUser(request)).resolves.toBeNull();
+
+      expect(sessionServiceMock.findOne).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.findOne).toHaveBeenCalledWith('session_id');
+    });
+
+    it('should return null when the session has no active login.', async () => {
+      const request = new HttpRequest({
+        body: {},
+        cookies: { 'guarani:session': 'session_id' },
+        headers: {},
+        method: 'GET',
+        url: new URL('https://server.example.com/oauth/userinfo'),
+      });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+        id: 'session_id',
+        activeLogin: null,
+        logins: [],
+      });
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+
+      expect(authHandler.findAuthUser(request)).resolves.toBeNull();
+
+      expect(sessionServiceMock.findOne).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.findOne).toHaveBeenCalledWith('session_id');
+    });
+
+    it('should return the authenticated end user.', async () => {
+      const request = new HttpRequest({
+        body: {},
+        cookies: { 'guarani:session': 'session_id' },
+        headers: {},
+        method: 'GET',
+        url: new URL('https://server.example.com/oauth/userinfo'),
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const login: Login = Object.assign<Login, Partial<Login>>(Reflect.construct(Login, []), { id: 'login_id', user });
+
+      const session: Session = Object.assign<Session, Partial<Session>>(Reflect.construct(Session, []), {
+        id: 'session_id',
+        activeLogin: login,
+        logins: [login],
+      });
+
+      sessionServiceMock.findOne.mockResolvedValueOnce(session);
+
+      expect(authHandler.findAuthUser(request)).resolves.toBe(user);
+
+      expect(sessionServiceMock.findOne).toHaveBeenCalledTimes(1);
+      expect(sessionServiceMock.findOne).toHaveBeenCalledWith('session_id');
     });
   });
 });

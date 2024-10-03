@@ -68,7 +68,7 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
     const client = await this.getClient(parameters);
     const responseType = this.getResponseType(parameters, client);
     const redirectUri = this.getRedirectUri(parameters, client);
-    const scopes = this.getScopes(parameters, client);
+    let scopes = this.getScopes(parameters, client);
     const state = this.getState(parameters);
     const responseMode = this.getResponseMode(parameters, responseType, client);
     const nonce = this.getNonce(parameters);
@@ -79,6 +79,8 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
     const idTokenHint = this.getIdTokenHint(parameters);
     const uiLocales = this.getUiLocales(parameters);
     const acrValues = this.getAcrValues(parameters);
+
+    scopes = this.checkOfflineAccessScope(scopes, prompts, responseType);
 
     const context = <TContext>{
       parameters,
@@ -610,5 +612,36 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
     });
 
     return requestedAcrValues;
+  }
+
+  /**
+   * Checks the **offline_access** Scope conditions for the Authorization Request.
+   *
+   * @param scopes Scopes requested by the Client.
+   * @param prompts Prompts requested by the Client.
+   * @param responseType Response Type requested by the Client.
+   * @returns Allowed Scopes after checking for Offline Access conditions.
+   */
+  protected checkOfflineAccessScope(
+    scopes: string[],
+    prompts: Prompt[],
+    responseType: ResponseTypeInterface,
+  ): string[] {
+    this.logger.debug(
+      `[${this.constructor.name}] Called checkOfflineAccessScope()`,
+      '260f1547-beeb-4b21-adc9-59273d5a5eed',
+      { scopes, prompts, response_type: responseType.name },
+    );
+
+    if (scopes.includes('offline_access') && (!prompts.includes('consent') || !responseType.name.includes('code'))) {
+      this.logger.debug(
+        `[${this.constructor.name}] Removing "offline_access" scope`,
+        '72b2b93c-21bb-449c-a032-dfde4ecfd007',
+      );
+
+      scopes = scopes.filter((scope) => scope !== 'offline_access');
+    }
+
+    return scopes;
   }
 }

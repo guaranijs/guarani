@@ -10,6 +10,7 @@ import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
 import { InsufficientScopeException } from '../exceptions/insufficient-scope.exception';
 import { InvalidTokenException } from '../exceptions/invalid-token.exception';
+import { AuthHandler } from '../handlers/auth.handler';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
@@ -22,6 +23,7 @@ import { SETTINGS } from '../settings/settings.token';
 import { Endpoint } from './endpoint.type';
 import { UserinfoEndpoint } from './userinfo.endpoint';
 
+jest.mock('../handlers/auth.handler');
 jest.mock('../handlers/client-authorization.handler');
 jest.mock('../logger/logger');
 
@@ -117,6 +119,8 @@ describe('Userinfo Endpoint', () => {
 
   const loggerMock = jest.mocked(Logger.prototype);
 
+  const authHandlerMock = jest.mocked(AuthHandler.prototype);
+
   const clientAuthorizationHandlerMock = jest.mocked(ClientAuthorizationHandler.prototype);
 
   const settings = <Settings>{ secretKey: '0123456789abcdef' };
@@ -132,6 +136,7 @@ describe('Userinfo Endpoint', () => {
     container = new DependencyInjectionContainer();
 
     container.bind(Logger).toValue(loggerMock);
+    container.bind(AuthHandler).toValue(authHandlerMock);
     container.bind(ClientAuthorizationHandler).toValue(clientAuthorizationHandlerMock);
     container.bind(JsonWebKeySet).toValue(jwks);
     container.bind<Settings>(SETTINGS).toValue(settings);
@@ -286,7 +291,154 @@ describe('Userinfo Endpoint', () => {
       expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
     });
 
-    it('should return the claims of the user based on the scopes of the access token.', async () => {
+    it('should return an error response when no user is authenticated and the access token does not allow offline access.', async () => {
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), { id: 'client_id' });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+          client,
+          user,
+        },
+      );
+
+      const error = new InvalidTokenException('The Access Token does not allow Offline Access.');
+      const errorParameters = removeNullishValues(error.toJSON());
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+      authHandlerMock.findAuthUser.mockResolvedValueOnce(null);
+
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(error.statusCode);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...error.headers,
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
+    });
+
+    it.each([
+      ['user_id', 'another_user_id'],
+      ['user_id', 'user_io'],
+    ])(
+      "should return an error response when trying to access another user's information.",
+      async (userId, anotherUserId) => {
+        const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+          id: 'client_id',
+        });
+
+        const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: userId });
+
+        const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+          Reflect.construct(AccessToken, []),
+          {
+            id: 'access_token',
+            scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+            client,
+            user,
+          },
+        );
+
+        const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: anotherUserId });
+
+        const error = new InvalidTokenException('Invalid Credentials.');
+        const errorParameters = removeNullishValues(error.toJSON());
+
+        clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+
+        authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
+
+        const response = await endpoint.handle(request);
+
+        expect(response.statusCode).toEqual(error.statusCode);
+
+        expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+          'Content-Type': 'application/json',
+          ...error.headers,
+          ...endpoint['headers'],
+        });
+
+        expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual(errorParameters);
+      },
+    );
+
+    it('should return the claims of a logged out user based on the scopes of the access token.', async () => {
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        userinfoSignedResponseAlgorithm: null,
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address', 'offline_access'],
+          client,
+          user,
+        },
+      );
+
+      const claims: UserinfoClaimsParameters = {
+        name: 'John H. Doe',
+        given_name: 'John',
+        middle_name: 'Harold',
+        family_name: 'Doe',
+        nickname: 'jay',
+        preferred_username: 'j.doe',
+        profile: 'https://resource-server.example.com/users/user_id',
+        picture: 'https://resource-server.example.com/users/user_id/profile.jpg',
+        website: 'https://johndoe.blog.example.com',
+        email: 'johndoe@email.com',
+        email_verified: true,
+        gender: 'male',
+        birthdate: '1994-07-23',
+        zoneinfo: 'America/Los_Angeles',
+        locale: 'en-US',
+        phone_number: '+15001234567',
+        phone_number_verified: true,
+        address: {
+          formatted: '123 Main Street, Apt 12, Los Angeles LA 12345-6789, US',
+          street_address: '123 Main Street, Apt 12',
+          locality: 'Los Angeles',
+          region: 'LA',
+          postal_code: '12345-6789',
+          country: 'US',
+        },
+        updated_at: 1680845015,
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+      authHandlerMock.findAuthUser.mockResolvedValueOnce(null);
+      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<UserinfoClaimsParameters>({
+        sub: 'user_id',
+        ...claims,
+      });
+    });
+
+    it('should return the claims of a logged in user based on the scopes of the access token.', async () => {
       const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         subjectType: 'public',
@@ -305,6 +457,8 @@ describe('Userinfo Endpoint', () => {
         },
       );
 
+      const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
       const claims: UserinfoClaimsParameters = {
         name: 'John H. Doe',
         given_name: 'John',
@@ -335,6 +489,7 @@ describe('Userinfo Endpoint', () => {
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+      authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
       userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);
@@ -352,7 +507,76 @@ describe('Userinfo Endpoint', () => {
       });
     });
 
-    it('should return a signed json web token with the claims of the user based on the scopes of the access token.', async () => {
+    it('should return the claims of a logged in user based on the scopes of the offline access token.', async () => {
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        userinfoSignedResponseAlgorithm: null,
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address', 'offline_access'],
+          client,
+          user,
+        },
+      );
+
+      const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const claims: UserinfoClaimsParameters = {
+        name: 'John H. Doe',
+        given_name: 'John',
+        middle_name: 'Harold',
+        family_name: 'Doe',
+        nickname: 'jay',
+        preferred_username: 'j.doe',
+        profile: 'https://resource-server.example.com/users/user_id',
+        picture: 'https://resource-server.example.com/users/user_id/profile.jpg',
+        website: 'https://johndoe.blog.example.com',
+        email: 'johndoe@email.com',
+        email_verified: true,
+        gender: 'male',
+        birthdate: '1994-07-23',
+        zoneinfo: 'America/Los_Angeles',
+        locale: 'en-US',
+        phone_number: '+15001234567',
+        phone_number_verified: true,
+        address: {
+          formatted: '123 Main Street, Apt 12, Los Angeles LA 12345-6789, US',
+          street_address: '123 Main Street, Apt 12',
+          locality: 'Los Angeles',
+          region: 'LA',
+          postal_code: '12345-6789',
+          country: 'US',
+        },
+        updated_at: 1680845015,
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+      authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
+      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+
+      const response = await endpoint.handle(request);
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/json',
+        ...endpoint['headers'],
+      });
+
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<UserinfoClaimsParameters>({
+        sub: 'user_id',
+        ...claims,
+      });
+    });
+
+    it('should return a signed json web token with the claims of the logged out user based on the scopes of the access token.', async () => {
       const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         subjectType: 'public',
@@ -367,7 +591,7 @@ describe('Userinfo Endpoint', () => {
         Reflect.construct(AccessToken, []),
         {
           id: 'access_token',
-          scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+          scopes: ['openid', 'profile', 'email', 'phone', 'address', 'offline_access'],
           client,
           user,
         },
@@ -403,6 +627,7 @@ describe('Userinfo Endpoint', () => {
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+      authHandlerMock.findAuthUser.mockResolvedValueOnce(null);
       userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);
@@ -429,7 +654,167 @@ describe('Userinfo Endpoint', () => {
       expect(jwtClaims).toMatchObject(claims);
     });
 
-    it('should return a nested json web token with the claims of the user based on the scopes of the access token.', async () => {
+    it('should return a signed json web token with the claims of the logged in user based on the scopes of the access token.', async () => {
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        userinfoSignedResponseAlgorithm: 'RS256',
+        userinfoEncryptedResponseKeyWrap: null,
+        userinfoEncryptedResponseContentEncryption: null,
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+          client,
+          user,
+        },
+      );
+
+      const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const claims: UserinfoClaimsParameters = {
+        name: 'John H. Doe',
+        given_name: 'John',
+        middle_name: 'Harold',
+        family_name: 'Doe',
+        nickname: 'jay',
+        preferred_username: 'j.doe',
+        profile: 'https://resource-server.example.com/users/user_id',
+        picture: 'https://resource-server.example.com/users/user_id/profile.jpg',
+        website: 'https://johndoe.blog.example.com',
+        email: 'johndoe@email.com',
+        email_verified: true,
+        gender: 'male',
+        birthdate: '1994-07-23',
+        zoneinfo: 'America/Los_Angeles',
+        locale: 'en-US',
+        phone_number: '+15001234567',
+        phone_number_verified: true,
+        address: {
+          formatted: '123 Main Street, Apt 12, Los Angeles LA 12345-6789, US',
+          street_address: '123 Main Street, Apt 12',
+          locality: 'Los Angeles',
+          region: 'LA',
+          postal_code: '12345-6789',
+          country: 'US',
+        },
+        updated_at: 1680845015,
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+      authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
+      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+
+      const response = await endpoint.handle(request);
+
+      const signedJwt = response.body.toString('utf8');
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/jwt',
+        ...endpoint['headers'],
+      });
+
+      expect(JsonWebSignature.isJsonWebSignature(signedJwt)).toBeTrue();
+
+      const { payload } = await JsonWebSignature.verify(
+        signedJwt,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['RS256'],
+      );
+
+      const jwtClaims = new JsonWebTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(jwtClaims).toMatchObject(claims);
+    });
+
+    it('should return a signed json web token with the claims of the logged in user based on the scopes of the offline access token.', async () => {
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        userinfoSignedResponseAlgorithm: 'RS256',
+        userinfoEncryptedResponseKeyWrap: null,
+        userinfoEncryptedResponseContentEncryption: null,
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address', 'offline_access'],
+          client,
+          user,
+        },
+      );
+
+      const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const claims: UserinfoClaimsParameters = {
+        name: 'John H. Doe',
+        given_name: 'John',
+        middle_name: 'Harold',
+        family_name: 'Doe',
+        nickname: 'jay',
+        preferred_username: 'j.doe',
+        profile: 'https://resource-server.example.com/users/user_id',
+        picture: 'https://resource-server.example.com/users/user_id/profile.jpg',
+        website: 'https://johndoe.blog.example.com',
+        email: 'johndoe@email.com',
+        email_verified: true,
+        gender: 'male',
+        birthdate: '1994-07-23',
+        zoneinfo: 'America/Los_Angeles',
+        locale: 'en-US',
+        phone_number: '+15001234567',
+        phone_number_verified: true,
+        address: {
+          formatted: '123 Main Street, Apt 12, Los Angeles LA 12345-6789, US',
+          street_address: '123 Main Street, Apt 12',
+          locality: 'Los Angeles',
+          region: 'LA',
+          postal_code: '12345-6789',
+          country: 'US',
+        },
+        updated_at: 1680845015,
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+      authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
+      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+
+      const response = await endpoint.handle(request);
+
+      const signedJwt = response.body.toString('utf8');
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/jwt',
+        ...endpoint['headers'],
+      });
+
+      expect(JsonWebSignature.isJsonWebSignature(signedJwt)).toBeTrue();
+
+      const { payload } = await JsonWebSignature.verify(
+        signedJwt,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['RS256'],
+      );
+
+      const jwtClaims = new JsonWebTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(jwtClaims).toMatchObject(claims);
+    });
+
+    it('should return a nested json web token with the claims of the logged out user based on the scopes of the access token.', async () => {
       const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
         id: 'client_id',
         subjectType: 'public',
@@ -446,7 +831,7 @@ describe('Userinfo Endpoint', () => {
         Reflect.construct(AccessToken, []),
         {
           id: 'access_token',
-          scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+          scopes: ['openid', 'profile', 'email', 'phone', 'address', 'offline_access'],
           client,
           user,
         },
@@ -482,6 +867,193 @@ describe('Userinfo Endpoint', () => {
       };
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+      authHandlerMock.findAuthUser.mockResolvedValueOnce(null);
+      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+
+      const response = await endpoint.handle(request);
+
+      const encryptedJwt = response.body.toString('utf8');
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/jwt',
+        ...endpoint['headers'],
+      });
+
+      expect(JsonWebEncryption.isJsonWebEncryption(encryptedJwt)).toBeTrue();
+
+      const { plaintext } = await JsonWebEncryption.decrypt(
+        encryptedJwt,
+        rsaKeyWrapKey,
+        ['RSA-OAEP'],
+        ['A128CBC-HS256'],
+      );
+
+      const signedJwt = plaintext.toString('ascii');
+
+      expect(JsonWebSignature.isJsonWebSignature(signedJwt)).toBeTrue();
+
+      const { payload } = await JsonWebSignature.verify(
+        signedJwt,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['RS256'],
+      );
+
+      const jwtClaims = new JsonWebTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(jwtClaims).toMatchObject(claims);
+    });
+
+    it('should return a nested json web token with the claims of the logged in user based on the scopes of the access token.', async () => {
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        jwksUri: null,
+        jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
+        userinfoSignedResponseAlgorithm: 'RS256',
+        userinfoEncryptedResponseKeyWrap: 'RSA-OAEP',
+        userinfoEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address'],
+          client,
+          user,
+        },
+      );
+
+      const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const claims: UserinfoClaimsParameters = {
+        name: 'John H. Doe',
+        given_name: 'John',
+        middle_name: 'Harold',
+        family_name: 'Doe',
+        nickname: 'jay',
+        preferred_username: 'j.doe',
+        profile: 'https://resource-server.example.com/users/user_id',
+        picture: 'https://resource-server.example.com/users/user_id/profile.jpg',
+        website: 'https://johndoe.blog.example.com',
+        email: 'johndoe@email.com',
+        email_verified: true,
+        gender: 'male',
+        birthdate: '1994-07-23',
+        zoneinfo: 'America/Los_Angeles',
+        locale: 'en-US',
+        phone_number: '+15001234567',
+        phone_number_verified: true,
+        address: {
+          formatted: '123 Main Street, Apt 12, Los Angeles LA 12345-6789, US',
+          street_address: '123 Main Street, Apt 12',
+          locality: 'Los Angeles',
+          region: 'LA',
+          postal_code: '12345-6789',
+          country: 'US',
+        },
+        updated_at: 1680845015,
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+      authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
+      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+
+      const response = await endpoint.handle(request);
+
+      const encryptedJwt = response.body.toString('utf8');
+
+      expect(response.statusCode).toEqual(200);
+
+      expect(response.headers).toStrictEqual<OutgoingHttpHeaders>({
+        'Content-Type': 'application/jwt',
+        ...endpoint['headers'],
+      });
+
+      expect(JsonWebEncryption.isJsonWebEncryption(encryptedJwt)).toBeTrue();
+
+      const { plaintext } = await JsonWebEncryption.decrypt(
+        encryptedJwt,
+        rsaKeyWrapKey,
+        ['RSA-OAEP'],
+        ['A128CBC-HS256'],
+      );
+
+      const signedJwt = plaintext.toString('ascii');
+
+      expect(JsonWebSignature.isJsonWebSignature(signedJwt)).toBeTrue();
+
+      const { payload } = await JsonWebSignature.verify(
+        signedJwt,
+        async (header) => jwks.find((jwk) => jwk.kid === header.kid)!,
+        ['RS256'],
+      );
+
+      const jwtClaims = new JsonWebTokenClaims(JSON.parse(payload.toString('utf8')));
+
+      expect(jwtClaims).toMatchObject(claims);
+    });
+
+    it('should return a nested json web token with the claims of the logged in user based on the scopes of the offline access token.', async () => {
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        subjectType: 'public',
+        jwksUri: null,
+        jwks: new JsonWebKeySet([rsaKeyWrapKey]).toJSON(true),
+        userinfoSignedResponseAlgorithm: 'RS256',
+        userinfoEncryptedResponseKeyWrap: 'RSA-OAEP',
+        userinfoEncryptedResponseContentEncryption: 'A128CBC-HS256',
+      });
+
+      const user: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const accessToken: AccessToken = Object.assign<AccessToken, Partial<AccessToken>>(
+        Reflect.construct(AccessToken, []),
+        {
+          id: 'access_token',
+          scopes: ['openid', 'profile', 'email', 'phone', 'address', 'offline_access'],
+          client,
+          user,
+        },
+      );
+
+      const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
+
+      const claims: UserinfoClaimsParameters = {
+        name: 'John H. Doe',
+        given_name: 'John',
+        middle_name: 'Harold',
+        family_name: 'Doe',
+        nickname: 'jay',
+        preferred_username: 'j.doe',
+        profile: 'https://resource-server.example.com/users/user_id',
+        picture: 'https://resource-server.example.com/users/user_id/profile.jpg',
+        website: 'https://johndoe.blog.example.com',
+        email: 'johndoe@email.com',
+        email_verified: true,
+        gender: 'male',
+        birthdate: '1994-07-23',
+        zoneinfo: 'America/Los_Angeles',
+        locale: 'en-US',
+        phone_number: '+15001234567',
+        phone_number_verified: true,
+        address: {
+          formatted: '123 Main Street, Apt 12, Los Angeles LA 12345-6789, US',
+          street_address: '123 Main Street, Apt 12',
+          locality: 'Los Angeles',
+          region: 'LA',
+          postal_code: '12345-6789',
+          country: 'US',
+        },
+        updated_at: 1680845015,
+      };
+
+      clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
+      authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
       userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);

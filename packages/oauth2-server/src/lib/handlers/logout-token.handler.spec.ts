@@ -13,9 +13,9 @@ import { Client } from '../entities/client.entity';
 import { Login } from '../entities/login.entity';
 import { User } from '../entities/user.entity';
 import { Logger } from '../logger/logger';
-import { LogoutTokenClaims } from '../logout-token/logout-token.claims';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { LogoutTokenClaims } from '../tokens/logout-token.claims';
 import { LogoutTokenHandler } from './logout-token.handler';
 
 jest.mock('../logger/logger');

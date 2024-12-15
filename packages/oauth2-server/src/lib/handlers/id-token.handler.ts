@@ -17,14 +17,14 @@ import { AuthorizationCode } from '../entities/authorization-code.entity';
 import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
-import { IdTokenClaims } from '../id-token/id-token.claims';
-import { IdTokenClaimsParameters } from '../id-token/id-token.claims.parameters';
-import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
 import { Logger } from '../logger/logger';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { IdTokenClaims } from '../tokens/id-token.claims';
+import { IdTokenClaimsParameters } from '../tokens/id-token.claims.parameters';
+import { UserinfoClaimsParameters } from '../tokens/userinfo.claims.parameters';
 import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
 import { getClientJsonWebKey } from '../utils/get-client-jsonwebkey';
 

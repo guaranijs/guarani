@@ -89,6 +89,7 @@ export { User } from './lib/entities/user.entity';
 
 // Exceptions
 export { AccessDeniedException } from './lib/exceptions/access-denied.exception';
+export { AccountSelectionRequiredException } from './lib/exceptions/account-selection-required.exception';
 export { AuthorizationPendingException } from './lib/exceptions/authorization-pending.exception';
 export { ConsentRequiredException } from './lib/exceptions/consent-required.exception';
 export { ErrorCode } from './lib/exceptions/error-code.enum';
@@ -122,20 +123,19 @@ export { GrantType } from './lib/grant-types/grant-type.type';
 
 // Handlers
 export { AuthHandler } from './lib/handlers/auth.handler';
+export { AuthorizationResponseTokenHandler } from './lib/handlers/authorization-response-token.handler';
 export { ClientAuthenticationHandler } from './lib/handlers/client-authentication.handler';
 export { ClientAuthorizationHandler } from './lib/handlers/client-authorization.handler';
 export { IdTokenHandler } from './lib/handlers/id-token.handler';
+export { LogoutHandler } from './lib/handlers/logout.handler';
+export { LogoutTokenHandler } from './lib/handlers/logout-token.handler';
 export { ScopeHandler } from './lib/handlers/scope.handler';
 
 // Http
 export { HttpRequest } from './lib/http/http.request';
 export { HttpResponse } from './lib/http/http.response';
 export { HttpMethod } from './lib/http/http-method.type';
-
-// ID Token
-export { AddressClaimParameters } from './lib/id-token/address.claim.parameters';
-export { IdTokenClaimsParameters } from './lib/id-token/id-token.claims.parameters';
-export { UserinfoClaimsParameters } from './lib/id-token/userinfo.claims.parameters';
+export { HttpRequestParameters } from './lib/http/http-request.parameters';
 
 // Interaction Types
 export { ConsentDecision } from './lib/interaction-types/consent-decision.type';
@@ -144,6 +144,16 @@ export { INTERACTION_TYPE } from './lib/interaction-types/interaction-type.token
 export { InteractionType } from './lib/interaction-types/interaction-type.type';
 export { LoginDecision } from './lib/interaction-types/login-decision.type';
 export { LogoutDecision } from './lib/interaction-types/logout-decision.type';
+
+// Logger
+export { ConsoleLogger } from './lib/logger/console.logger';
+export { Logger } from './lib/logger/logger';
+export { LoggerLevel } from './lib/logger/logger-level.enum';
+
+// Logout Types
+export { LogoutTypeInterface } from './lib/logout-types/logout-type.interface';
+export { LOGOUT_TYPE } from './lib/logout-types/logout-type.token';
+export { LogoutType } from './lib/logout-types/logout-type.type';
 
 // Metadata
 export { AuthorizationServerFactory } from './lib/metadata/authorization-server.factory';
@@ -220,6 +230,7 @@ export { LoginDecisionInteractionResponse } from './lib/responses/interaction/lo
 export { LogoutContext } from './lib/responses/interaction/logout.context';
 export { LogoutContextInteractionResponse } from './lib/responses/interaction/logout-context.interaction-response';
 export { LogoutDecisionInteractionResponse } from './lib/responses/interaction/logout-decision.interaction-response';
+export { SelectAccountContext } from './lib/responses/interaction/select-account.context';
 export { SelectAccountContextInteractionResponse } from './lib/responses/interaction/select-account-context.interaction-response';
 export { SelectAccountDecisionInteractionResponse } from './lib/responses/interaction/select-account-decision.interaction-response';
 export { IntrospectionResponse } from './lib/responses/introspection-response';
@@ -267,6 +278,13 @@ export { USER_SERVICE } from './lib/services/user.service.token';
 export { Settings } from './lib/settings/settings';
 export { SETTINGS } from './lib/settings/settings.token';
 export { UserInteractionSettings } from './lib/settings/user-interaction.settings';
+
+// Tokens
+export { AddressClaimParameters } from './lib/tokens/address.claim.parameters';
+export { AuthorizationResponseTokenClaimsParameters } from './lib/tokens/authorization-response-token.claims.parameters';
+export { IdTokenClaimsParameters } from './lib/tokens/id-token.claims.parameters';
+export { LogoutTokenClaimsParameters } from './lib/tokens/logout-token.claims.parameters';
+export { UserinfoClaimsParameters } from './lib/tokens/userinfo.claims.parameters';
 
 // Types
 export { AccessTokenType } from './lib/types/access-token-type.type';

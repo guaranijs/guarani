@@ -14,10 +14,10 @@ import { Client } from '../entities/client.entity';
 import { Login } from '../entities/login.entity';
 import { User } from '../entities/user.entity';
 import { Logger } from '../logger/logger';
-import { LogoutTokenClaims } from '../logout-token/logout-token.claims';
-import { LogoutTokenClaimsParameters } from '../logout-token/logout-token.claims.parameters';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { LogoutTokenClaims } from '../tokens/logout-token.claims';
+import { LogoutTokenClaimsParameters } from '../tokens/logout-token.claims.parameters';
 import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
 import { getClientJsonWebKey } from '../utils/get-client-jsonwebkey';
 

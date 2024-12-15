@@ -14,12 +14,12 @@ import { Client } from '../entities/client.entity';
 import { Consent } from '../entities/consent.entity';
 import { Login } from '../entities/login.entity';
 import { User } from '../entities/user.entity';
-import { IdTokenClaims } from '../id-token/id-token.claims';
 import { Logger } from '../logger/logger';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { IdTokenClaims } from '../tokens/id-token.claims';
 import { IdTokenHandler } from './id-token.handler';
 
 jest.mock('../logger/logger');

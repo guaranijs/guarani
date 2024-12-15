@@ -25,12 +25,12 @@ import { ClientAuthorizationHandler } from '../handlers/client-authorization.han
 import { HttpRequest } from '../http/http.request';
 import { HttpResponse } from '../http/http.response';
 import { HttpMethod } from '../http/http-method.type';
-import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
 import { Logger } from '../logger/logger';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { UserinfoClaimsParameters } from '../tokens/userinfo.claims.parameters';
 import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
 import { getClientJsonWebKey } from '../utils/get-client-jsonwebkey';
 import { EndpointInterface } from './endpoint.interface';

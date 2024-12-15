@@ -4,9 +4,9 @@ import { Injectable } from '@guarani/di';
 import { Dictionary, Nullable } from '@guarani/types';
 
 import { User } from '../../entities/user.entity';
-import { AddressClaimParameters } from '../../id-token/address.claim.parameters';
-import { UserinfoClaimsParameters } from '../../id-token/userinfo.claims.parameters';
 import { Logger } from '../../logger/logger';
+import { AddressClaimParameters } from '../../tokens/address.claim.parameters';
+import { UserinfoClaimsParameters } from '../../tokens/userinfo.claims.parameters';
 import { UserServiceInterface } from '../user.service.interface';
 
 class SampleUser extends User implements UserinfoClaimsParameters {

@@ -14,12 +14,12 @@ import { AuthHandler } from '../handlers/auth.handler';
 import { ClientAuthorizationHandler } from '../handlers/client-authorization.handler';
 import { HttpRequest } from '../http/http.request';
 import { HttpMethod } from '../http/http-method.type';
-import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
 import { Logger } from '../logger/logger';
 import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { UserinfoClaimsParameters } from '../tokens/userinfo.claims.parameters';
 import { Endpoint } from './endpoint.type';
 import { UserinfoEndpoint } from './userinfo.endpoint';
 

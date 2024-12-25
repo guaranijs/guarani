@@ -79,4 +79,9 @@ export interface AuthorizationRequest extends Dictionary<OneOrMany<string>> {
    * Space delimited list of Authentication Context Class References requested by the Client in order of preference.
    */
   readonly acr_values?: string;
+
+  /**
+   * Claims requested by the Client.
+   */
+  readonly claims?: string;
 }

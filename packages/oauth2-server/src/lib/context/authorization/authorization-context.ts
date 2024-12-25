@@ -7,6 +7,7 @@ import { Client } from '../../entities/client.entity';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
 import { ResponseModeInterface } from '../../response-modes/response-mode.interface';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
+import { AuthorizationRequestClaimsParameter } from '../../types/authorization-request-claims-parameter.type';
 import { Prompt } from '../../types/prompt.type';
 
 /**
@@ -94,4 +95,9 @@ export interface AuthorizationContext<TRequest extends AuthorizationRequest = Au
    * Authentication Context Class References requested by the Client in order of preference.
    */
   readonly acrValues: string[];
+
+  /**
+   * Claims requested by the Client.
+   */
+  readonly claims: Nullable<Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>>;
 }

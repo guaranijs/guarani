@@ -1,6 +1,7 @@
 import { URL } from 'url';
 
-import { Nullable } from '@guarani/types';
+import { isPlainObject, JSON } from '@guarani/primitives';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { AuthorizationContext } from '../../context/authorization/authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
@@ -19,6 +20,7 @@ import { ResponseTypeInterface } from '../../response-types/response-type.interf
 import { ResponseType } from '../../response-types/response-type.type';
 import { ClientServiceInterface } from '../../services/client.service.interface';
 import { Settings } from '../../settings/settings';
+import { AuthorizationRequestClaimsParameter } from '../../types/authorization-request-claims-parameter.type';
 import { Prompt } from '../../types/prompt.type';
 
 /**
@@ -79,6 +81,7 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
     const idTokenHint = this.getIdTokenHint(parameters);
     const uiLocales = this.getUiLocales(parameters);
     const acrValues = this.getAcrValues(parameters);
+    const claims = this.getClaims(parameters);
 
     scopes = this.checkOfflineAccessScope(scopes, prompts, responseType);
 
@@ -99,6 +102,7 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
       idTokenHint,
       uiLocales,
       acrValues,
+      claims,
     };
 
     this.logger.debug(
@@ -612,6 +616,122 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
     });
 
     return requestedAcrValues;
+  }
+
+  /**
+   * Checks and returns the Claims requested by the Client.
+   *
+   * @param parameters Parameters of the Authorization Request.
+   * @returns Claims requested by the Client.
+   */
+  protected getClaims(
+    parameters: AuthorizationRequest,
+  ): Nullable<Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>> {
+    this.logger.debug(`[${this.constructor.name}] Called getClaims()`, '98edab77-17e7-4c15-8984-de1880e08435', {
+      parameters,
+    });
+
+    if (typeof parameters.claims === 'undefined') {
+      return null;
+    }
+
+    let claimsParameter: Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>;
+
+    try {
+      claimsParameter = JSON.parse(parameters.claims);
+    } catch {
+      const exc = new InvalidRequestException('Invalid parameter "claims".');
+
+      this.logger.error(
+        `[${this.constructor.name}] Invalid parameter "claims"`,
+        'e8030e14-5c9a-4b47-973c-8587b77f3b48',
+        { parameters },
+        exc,
+      );
+
+      throw exc;
+    }
+
+    if (!isPlainObject(claimsParameter)) {
+      const exc = new InvalidRequestException('The "claims" parameter is not a valid JSON object.');
+
+      this.logger.error(
+        `[${this.constructor.name}] The "claims" parameter is not a valid JSON object`,
+        'cc9ae78e-f26c-47cb-87e7-e5bfef4934f6',
+        { parameters },
+        exc,
+      );
+
+      throw exc;
+    }
+
+    Object.entries(claimsParameter).forEach(([topLevelClaim, claims]) => {
+      if (!isPlainObject(claims)) {
+        const exc = new InvalidRequestException(`The top-level claim "${topLevelClaim}" is not a valid JSON object.`);
+
+        this.logger.error(
+          `[${this.constructor.name}] The top-level claim "${topLevelClaim}" is not a valid JSON object`,
+          '15e4a7b1-7641-4df7-aa47-d91bf8ba04d2',
+          { parameters },
+          exc,
+        );
+
+        throw exc;
+      }
+
+      Object.entries(claims).forEach(([claim, options]) => {
+        if (typeof options === 'undefined' || options === null) {
+          return;
+        }
+
+        if (!isPlainObject(options)) {
+          const exc = new InvalidRequestException(
+            `The options for the claim "${topLevelClaim}.${claim}" is not a valid JSON object.`,
+          );
+
+          this.logger.error(
+            `[${this.constructor.name}] The options for the claim "${topLevelClaim}.${claim}" is not a valid JSON object`,
+            '9fbed645-bed1-465c-ba9f-12aede2e14ae',
+            { parameters },
+            exc,
+          );
+
+          throw exc;
+        }
+
+        if (typeof options.value !== 'undefined' && typeof options.values !== 'undefined') {
+          const exc = new InvalidRequestException(
+            `Cannot have both "value" and "values" options for the claim "${topLevelClaim}.${claim}".`,
+          );
+
+          this.logger.error(
+            `[${this.constructor.name}] Cannot have both "value" and "values" options for the claim "${topLevelClaim}.${claim}"`,
+            'c043be0c-e47b-4266-b2ce-409337bec30b',
+            { parameters },
+            exc,
+          );
+
+          throw exc;
+        }
+
+        if (typeof options.values !== 'undefined' && !Array.isArray(options.values)) {
+          const exc = new InvalidRequestException(
+            `The "values" option for the claim "${topLevelClaim}.${claim}" must be an array.`,
+          );
+
+          this.logger.error(
+            `[${this.constructor.name}] The "values" option for the claim "${topLevelClaim}.${claim}" must be an array`,
+            '93fd129c-fc1a-4cb0-9ff1-60066178de6b',
+            { parameters },
+            exc,
+          );
+
+          throw exc;
+        }
+      });
+    });
+
+    return claimsParameter;
   }
 
   /**

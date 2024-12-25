@@ -1,7 +1,8 @@
 import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
-import { removeNullishValues } from '@guarani/primitives';
+import { JSON, removeNullishValues } from '@guarani/primitives';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { AuthorizationContext } from '../../context/authorization/authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
@@ -20,6 +21,7 @@ import { ResponseMode } from '../../response-modes/response-mode.type';
 import { ResponseTypeInterface } from '../../response-types/response-type.interface';
 import { ClientServiceInterface } from '../../services/client.service.interface';
 import { Settings } from '../../settings/settings';
+import { AuthorizationRequestClaimsParameter } from '../../types/authorization-request-claims-parameter.type';
 import { AuthorizationRequestValidator } from './authorization-request.validator';
 
 jest.mock('../../handlers/scope.handler');
@@ -126,6 +128,7 @@ describe('Authorization Request Validator', () => {
 
   describe('validate()', () => {
     let parameters: AuthorizationRequest;
+    let claimsParameter: Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>;
 
     const requestFactory = (data: Partial<AuthorizationRequest> = {}): HttpRequest => {
       removeNullishValues<AuthorizationRequest>(Object.assign(parameters, data));
@@ -140,6 +143,17 @@ describe('Authorization Request Validator', () => {
     };
 
     beforeEach(() => {
+      claimsParameter = {
+        userinfo: {
+          null_option: null,
+          essential_option: { essential: true },
+          value_option: { value: 'value' },
+          values_option: { values: ['value_0', 'value_1'] },
+          essential_value_option: { essential: true, value: 'essential_value' },
+          essential_values_option: { essential: true, values: ['essential_value_0', 'essential_value_1'] },
+        },
+      };
+
       parameters = {
         response_type: 'code',
         client_id: 'client_id',
@@ -155,6 +169,7 @@ describe('Authorization Request Validator', () => {
         id_token_hint: 'id_token_hint',
         ui_locales: 'pt-BR en',
         acr_values: 'urn:guarani:acr:2fa urn:guarani:acr:1fa',
+        claims: JSON.stringify(claimsParameter),
       };
     });
 
@@ -593,6 +608,130 @@ describe('Authorization Request Validator', () => {
       );
     });
 
+    it('should throw when the provided "claims" parameter is invalid.', async () => {
+      const request = requestFactory({ claims: '{"invalid_json":}' });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+      });
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Invalid parameter "claims".',
+      );
+    });
+
+    it('should throw when the provided "claims" parameter is not a valid json object.', async () => {
+      const request = requestFactory({ claims: 'null' });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+      });
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'The "claims" parameter is not a valid JSON object.',
+      );
+    });
+
+    it('should throw when a top-level "claims" is not a valid json object.', async () => {
+      const request = requestFactory({
+        claims: JSON.stringify({ userinfo: null }),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+      });
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'The top-level claim "userinfo" is not a valid JSON object.',
+      );
+    });
+
+    it('should throw when the options of a claim is not a valid json object.', async () => {
+      const request = requestFactory({
+        claims: JSON.stringify({ userinfo: { email: 'invalid_claim_options' } }),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+      });
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'The options for the claim "userinfo.email" is not a valid JSON object.',
+      );
+    });
+
+    it('should throw when a claim has both the "value" and "values" options.', async () => {
+      const request = requestFactory({
+        claims: JSON.stringify({
+          userinfo: { email: { value: 'abc@email.com', values: ['abc@email.com', 'xyz@email.com'] } },
+        }),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+      });
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'Cannot have both "value" and "values" options for the claim "userinfo.email".',
+      );
+    });
+
+    it('should throw when the "values" option of a claim is not an array.', async () => {
+      const request = requestFactory({
+        claims: JSON.stringify({ userinfo: { email: { values: 'abc@email.com' } } }),
+      });
+
+      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
+        id: 'client_id',
+        redirectUris: ['https://client.example.com/oauth/callback'],
+        responseTypes: ['code'],
+        scopes: ['foo', 'bar', 'baz', 'qux'],
+      });
+
+      clientServiceMock.findOne.mockResolvedValueOnce(client);
+      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
+
+      await expect(validator.validate(request)).rejects.toThrowWithMessage(
+        InvalidRequestException,
+        'The "values" option for the claim "userinfo.email" must be an array.',
+      );
+    });
+
     it('should return an authorization context without the "offline_access" scope if not requested together with the "consent" prompt.', async () => {
       const request = requestFactory({ prompt: undefined });
 
@@ -625,6 +764,7 @@ describe('Authorization Request Validator', () => {
         idTokenHint: 'id_token_hint',
         uiLocales: ['pt-BR', 'en'],
         acrValues: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
+        claims: claimsParameter,
       });
     });
 
@@ -660,6 +800,7 @@ describe('Authorization Request Validator', () => {
         idTokenHint: 'id_token_hint',
         uiLocales: ['pt-BR', 'en'],
         acrValues: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
+        claims: claimsParameter,
       });
     });
 
@@ -695,6 +836,7 @@ describe('Authorization Request Validator', () => {
         idTokenHint: 'id_token_hint',
         uiLocales: ['pt-BR', 'en'],
         acrValues: ['urn:guarani:acr:2fa', 'urn:guarani:acr:1fa'],
+        claims: claimsParameter,
       });
     });
   });

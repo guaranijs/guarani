@@ -178,6 +178,7 @@ Reflect.set(global, 'endToEndAuthorizationServerOptions', {
   enableBackChannelLogout: true,
   includeSessionIdInLogoutToken: true,
   enableAuthorizationResponseIssuerIdentifier: true,
+  enableClaimsAuthorizationRequestParameter: true,
   postLogoutUrl: 'http://localhost:3000',
   secretKey: 'super_secret_passphrase_that_nobody_will_be_able_to_guess',
 });

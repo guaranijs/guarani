@@ -211,6 +211,13 @@ export interface AuthorizationServerOptions {
   readonly enableAuthorizationResponseIssuerIdentifier?: boolean;
 
   /**
+   * Enables the Client to request the **claims** Authorization Request Parameter.
+   *
+   * @default true
+   */
+  readonly enableClaimsAuthorizationRequestParameter?: boolean;
+
+  /**
    * Post Logout Url of the Authorization Server.
    */
   readonly postLogoutUrl?: string;

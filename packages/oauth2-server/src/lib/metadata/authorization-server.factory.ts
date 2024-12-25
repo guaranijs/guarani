@@ -222,6 +222,8 @@ export class AuthorizationServerFactory {
       devicePollingInterval: this.authorizationServerOptions.devicePollingInterval ?? 5,
       enableAuthorizationResponseIssuerIdentifier:
         this.authorizationServerOptions.enableAuthorizationResponseIssuerIdentifier ?? false,
+      enableClaimsAuthorizationRequestParameter:
+        this.authorizationServerOptions.enableClaimsAuthorizationRequestParameter ?? true,
       postLogoutUrl: this.authorizationServerOptions.postLogoutUrl,
       secretKey: this.authorizationServerOptions.secretKey,
       maxLocalSubjectLength: this.authorizationServerOptions.maxLocalSubjectLength,

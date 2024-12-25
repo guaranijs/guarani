@@ -174,6 +174,13 @@ export interface Settings {
   readonly enableAuthorizationResponseIssuerIdentifier: boolean;
 
   /**
+   * Enables the Client to request the **claims** Authorization Request Parameter.
+   *
+   * @default true
+   */
+  readonly enableClaimsAuthorizationRequestParameter: boolean;
+
+  /**
    * Indicates if the Authorization Server passes a **sid** claim in the Logout Token.
    *
    * @default false

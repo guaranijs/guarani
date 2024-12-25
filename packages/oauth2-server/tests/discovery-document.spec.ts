@@ -197,6 +197,7 @@ describe('Discovery Document', () => {
       ],
       // service_documentation: '',
       ui_locales_supported: ['en', 'es', 'pt-BR'],
+      claims_parameter_supported: true,
       // op_policy_uri: '',
       // op_tos_uri: '',
       revocation_endpoint: 'http://localhost:3000/oauth/revoke',

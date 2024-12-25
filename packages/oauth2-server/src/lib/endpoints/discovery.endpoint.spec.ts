@@ -48,6 +48,7 @@ describe('Discovery Endpoint', () => {
     enableBackChannelLogout: true,
     includeSessionIdInLogoutToken: true,
     enableAuthorizationResponseIssuerIdentifier: true,
+    enableClaimsAuthorizationRequestParameter: true,
   };
 
   const endpoints = <jest.MockedObject<EndpointInterface>[]>[
@@ -136,6 +137,7 @@ describe('Discovery Endpoint', () => {
         token_endpoint_auth_signing_alg_values_supported: ['HS256', 'RS256'],
         // service_documentation: '',
         ui_locales_supported: ['en', 'es', 'pt-BR'],
+        claims_parameter_supported: true,
         // op_policy_uri: '',
         // op_tos_uri: '',
         revocation_endpoint: 'https://server.example.com/oauth/revoke',

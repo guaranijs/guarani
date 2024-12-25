@@ -186,7 +186,7 @@ export interface DiscoveryResponse extends Dictionary<any> {
   /**
    * Informs whether or not the Authorization Server supports the usage of the Authorization Request Parameter **Claims**.
    */
-  // readonly claims_parameter_supported?: boolean;
+  readonly claims_parameter_supported?: boolean;
 
   /**
    * Informs whether or not the Authorization Server supports the usage of the Authorization Request Parameter **Request**.

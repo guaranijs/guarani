@@ -124,6 +124,7 @@ export { GrantType } from './lib/grant-types/grant-type.type';
 // Handlers
 export { AuthHandler } from './lib/handlers/auth.handler';
 export { AuthorizationResponseTokenHandler } from './lib/handlers/authorization-response-token.handler';
+export { ClaimsHandler } from './lib/handlers/claims.handler';
 export { ClientAuthenticationHandler } from './lib/handlers/client-authentication.handler';
 export { ClientAuthorizationHandler } from './lib/handlers/client-authorization.handler';
 export { IdTokenHandler } from './lib/handlers/id-token.handler';

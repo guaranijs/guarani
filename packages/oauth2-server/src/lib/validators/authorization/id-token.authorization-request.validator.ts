@@ -1,9 +1,10 @@
-import { Inject, Injectable, InjectAll } from '@guarani/di';
+import { Inject, Injectable, InjectAll, Optional } from '@guarani/di';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
 import { Client } from '../../entities/client.entity';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
+import { ClaimsHandler } from '../../handlers/claims.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { Logger } from '../../logger/logger';
 import { AuthorizationRequest } from '../../requests/authorization/authorization-request';
@@ -39,6 +40,7 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
    * @param responseModes Response Modes registered at the Authorization Server.
    * @param responseTypes Response Types registered at the Authorization Server.
    * @param displays Displays registered at the Authorization Server.
+   * @param claimsHandler Instance of the Claims Handler.
    */
   public constructor(
     protected override readonly logger: Logger,
@@ -48,8 +50,9 @@ export class IdTokenAuthorizationRequestValidator extends AuthorizationRequestVa
     @InjectAll(RESPONSE_MODE) protected override readonly responseModes: ResponseModeInterface[],
     @InjectAll(RESPONSE_TYPE) protected override readonly responseTypes: ResponseTypeInterface[],
     @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[],
+    @Optional() protected override readonly claimsHandler?: ClaimsHandler,
   ) {
-    super(logger, scopeHandler, settings, clientService, responseModes, responseTypes, displays);
+    super(logger, scopeHandler, settings, clientService, responseModes, responseTypes, displays, claimsHandler);
   }
 
   /**

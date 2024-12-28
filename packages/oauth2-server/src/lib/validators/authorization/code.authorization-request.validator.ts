@@ -1,9 +1,10 @@
-import { Inject, Injectable, InjectAll } from '@guarani/di';
+import { Inject, Injectable, InjectAll, Optional } from '@guarani/di';
 
 import { CodeAuthorizationContext } from '../../context/authorization/code.authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
+import { ClaimsHandler } from '../../handlers/claims.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { Logger } from '../../logger/logger';
@@ -42,6 +43,7 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
    * @param responseTypes Response Types registered at the Authorization Server.
    * @param displays Displays registered at the Authorization Server.
    * @param pkces PKCE Code Challenge Methods registered at the Authorization Server.
+   * @param claimsHandler Instance of the Claims Handler.
    */
   public constructor(
     protected override readonly logger: Logger,
@@ -52,8 +54,9 @@ export class CodeAuthorizationRequestValidator extends AuthorizationRequestValid
     @InjectAll(RESPONSE_TYPE) protected override readonly responseTypes: ResponseTypeInterface[],
     @InjectAll(DISPLAY) protected override readonly displays: DisplayInterface[],
     @InjectAll(PKCE) protected readonly pkces: PkceInterface[],
+    @Optional() protected override readonly claimsHandler?: ClaimsHandler,
   ) {
-    super(logger, scopeHandler, settings, clientService, responseModes, responseTypes, displays);
+    super(logger, scopeHandler, settings, clientService, responseModes, responseTypes, displays, claimsHandler);
   }
 
   /**

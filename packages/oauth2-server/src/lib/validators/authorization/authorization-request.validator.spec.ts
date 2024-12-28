@@ -12,6 +12,7 @@ import { AccessDeniedException } from '../../exceptions/access-denied.exception'
 import { InvalidClientException } from '../../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { UnauthorizedClientException } from '../../exceptions/unauthorized-client.exception';
+import { ClaimsHandler } from '../../handlers/claims.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { Logger } from '../../logger/logger';
@@ -24,6 +25,7 @@ import { Settings } from '../../settings/settings';
 import { AuthorizationRequestClaimsParameter } from '../../types/authorization-request-claims-parameter.type';
 import { AuthorizationRequestValidator } from './authorization-request.validator';
 
+jest.mock('../../handlers/claims.handler');
 jest.mock('../../handlers/scope.handler');
 jest.mock('../../logger/logger');
 
@@ -36,7 +38,11 @@ describe('Authorization Request Validator', () => {
 
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
-  const settings = <Settings>{ uiLocales: ['en', 'pt-BR'], acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'] };
+  const settings = <Settings>{
+    uiLocales: ['en', 'pt-BR'],
+    acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
+    enableClaimsAuthorizationRequestParameter: true,
+  };
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
     findOne: jest.fn(),
@@ -110,6 +116,8 @@ describe('Authorization Request Validator', () => {
     jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
   ];
 
+  const claimsHandlerMock = jest.mocked(ClaimsHandler.prototype);
+
   beforeEach(() => {
     validator = Reflect.construct(AuthorizationRequestValidator, [
       loggerMock,
@@ -119,11 +127,38 @@ describe('Authorization Request Validator', () => {
       responseModesMocks,
       responseTypesMocks,
       displaysMocks,
+      claimsHandlerMock,
     ]);
   });
 
   afterEach(() => {
     jest.resetAllMocks();
+  });
+
+  describe('constructor', () => {
+    // TODO: Find a way to make this work
+    it.skip('should throw when allowing the "claims" authorization request parameter without a claims handler.', () => {
+      const settings = <Settings>{
+        uiLocales: ['en', 'pt-BR'],
+        acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
+        enableClaimsAuthorizationRequestParameter: false,
+      };
+
+      expect(() =>
+        Reflect.construct(AuthorizationRequestValidator, [
+          loggerMock,
+          scopeHandlerMock,
+          settings,
+          clientServiceMock,
+          responseModesMocks,
+          responseTypesMocks,
+          displaysMocks,
+        ]),
+      ).toThrowWithMessage(
+        TypeError,
+        'Cannot use the "claims" Authorization Request parameter without a Claims Handler.',
+      );
+    });
   });
 
   describe('validate()', () => {
@@ -335,6 +370,7 @@ describe('Authorization Request Validator', () => {
         responseModesMocks,
         responseTypesMocks,
         displaysMocks,
+        claimsHandlerMock,
       ]);
 
       const request = requestFactory({ response_mode: 'jwt' });
@@ -608,130 +644,6 @@ describe('Authorization Request Validator', () => {
       );
     });
 
-    it('should throw when the provided "claims" parameter is invalid.', async () => {
-      const request = requestFactory({ claims: '{"invalid_json":}' });
-
-      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      });
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Invalid parameter "claims".',
-      );
-    });
-
-    it('should throw when the provided "claims" parameter is not a valid json object.', async () => {
-      const request = requestFactory({ claims: 'null' });
-
-      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      });
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'The "claims" parameter is not a valid JSON object.',
-      );
-    });
-
-    it('should throw when a top-level "claims" is not a valid json object.', async () => {
-      const request = requestFactory({
-        claims: JSON.stringify({ userinfo: null }),
-      });
-
-      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      });
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'The top-level claim "userinfo" is not a valid JSON object.',
-      );
-    });
-
-    it('should throw when the options of a claim is not a valid json object.', async () => {
-      const request = requestFactory({
-        claims: JSON.stringify({ userinfo: { email: 'invalid_claim_options' } }),
-      });
-
-      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      });
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'The options for the claim "userinfo.email" is not a valid JSON object.',
-      );
-    });
-
-    it('should throw when a claim has both the "value" and "values" options.', async () => {
-      const request = requestFactory({
-        claims: JSON.stringify({
-          userinfo: { email: { value: 'abc@email.com', values: ['abc@email.com', 'xyz@email.com'] } },
-        }),
-      });
-
-      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      });
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'Cannot have both "value" and "values" options for the claim "userinfo.email".',
-      );
-    });
-
-    it('should throw when the "values" option of a claim is not an array.', async () => {
-      const request = requestFactory({
-        claims: JSON.stringify({ userinfo: { email: { values: 'abc@email.com' } } }),
-      });
-
-      const client: Client = Object.assign<Client, Partial<Client>>(Reflect.construct(Client, []), {
-        id: 'client_id',
-        redirectUris: ['https://client.example.com/oauth/callback'],
-        responseTypes: ['code'],
-        scopes: ['foo', 'bar', 'baz', 'qux'],
-      });
-
-      clientServiceMock.findOne.mockResolvedValueOnce(client);
-      scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(['foo', 'bar', 'baz', 'qux']);
-
-      await expect(validator.validate(request)).rejects.toThrowWithMessage(
-        InvalidRequestException,
-        'The "values" option for the claim "userinfo.email" must be an array.',
-      );
-    });
-
     it('should return an authorization context without the "offline_access" scope if not requested together with the "consent" prompt.', async () => {
       const request = requestFactory({ prompt: undefined });
 
@@ -746,6 +658,7 @@ describe('Authorization Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
+      claimsHandlerMock.checkRequestedClaims.mockReturnValueOnce(claimsParameter);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationContext>({
         parameters,
@@ -782,6 +695,7 @@ describe('Authorization Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
+      claimsHandlerMock.checkRequestedClaims.mockReturnValueOnce(claimsParameter);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationContext>({
         parameters,
@@ -818,6 +732,7 @@ describe('Authorization Request Validator', () => {
 
       clientServiceMock.findOne.mockResolvedValueOnce(client);
       scopeHandlerMock.getAllowedScopes.mockReturnValueOnce(scopes);
+      claimsHandlerMock.checkRequestedClaims.mockReturnValueOnce(claimsParameter);
 
       await expect(validator.validate(request)).resolves.toStrictEqual<AuthorizationContext>({
         parameters,

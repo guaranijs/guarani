@@ -2,12 +2,14 @@ import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
+import { JSON, removeNullishValues } from '@guarani/primitives';
+import { Dictionary, Nullable } from '@guarani/types';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
 import { Client } from '../../entities/client.entity';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
+import { ClaimsHandler } from '../../handlers/claims.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { Logger } from '../../logger/logger';
@@ -22,8 +24,10 @@ import { ClientServiceInterface } from '../../services/client.service.interface'
 import { CLIENT_SERVICE } from '../../services/client.service.token';
 import { Settings } from '../../settings/settings';
 import { SETTINGS } from '../../settings/settings.token';
+import { AuthorizationRequestClaimsParameter } from '../../types/authorization-request-claims-parameter.type';
 import { IdTokenTokenAuthorizationRequestValidator } from './id-token-token.authorization-request.validator';
 
+jest.mock('../../handlers/claims.handler');
 jest.mock('../../handlers/scope.handler');
 jest.mock('../../logger/logger');
 
@@ -37,7 +41,11 @@ describe('ID Token & Token Authorization Request Validator', () => {
 
   const scopeHandlerMock = jest.mocked(ScopeHandler.prototype);
 
-  const settings = <Settings>{ uiLocales: ['en', 'pt-BR'], acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'] };
+  const settings = <Settings>{
+    uiLocales: ['en', 'pt-BR'],
+    acrValues: ['urn:guarani:acr:1fa', 'urn:guarani:acr:2fa'],
+    enableClaimsAuthorizationRequestParameter: true,
+  };
 
   const clientServiceMock = jest.mocked<ClientServiceInterface>({
     findOne: jest.fn(),
@@ -107,6 +115,8 @@ describe('ID Token & Token Authorization Request Validator', () => {
     jest.mocked<DisplayInterface>({ name: 'page', createHttpResponse: jest.fn() }),
   ];
 
+  const claimsHandlerMock = jest.mocked(ClaimsHandler.prototype);
+
   beforeEach(() => {
     container = new DependencyInjectionContainer();
 
@@ -127,6 +137,8 @@ describe('ID Token & Token Authorization Request Validator', () => {
       container.bind<DisplayInterface>(DISPLAY).toValue(displayMock);
     });
 
+    container.bind(ClaimsHandler).toValue(claimsHandlerMock);
+
     container.bind(IdTokenTokenAuthorizationRequestValidator).toSelf().asSingleton();
 
     validator = container.resolve(IdTokenTokenAuthorizationRequestValidator);
@@ -144,6 +156,7 @@ describe('ID Token & Token Authorization Request Validator', () => {
 
   describe('validate()', () => {
     let parameters: AuthorizationRequest;
+    let claimsParameter: Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>;
 
     const requestFactory = (data: Partial<AuthorizationRequest> = {}): HttpRequest => {
       removeNullishValues<AuthorizationRequest>(Object.assign(parameters, data));
@@ -158,6 +171,17 @@ describe('ID Token & Token Authorization Request Validator', () => {
     };
 
     beforeEach(() => {
+      claimsParameter = {
+        userinfo: {
+          null_option: null,
+          essential_option: { essential: true },
+          value_option: { value: 'value' },
+          values_option: { values: ['value_0', 'value_1'] },
+          essential_value_option: { essential: true, value: 'essential_value' },
+          essential_values_option: { essential: true, values: ['essential_value_0', 'essential_value_1'] },
+        },
+      };
+
       parameters = {
         response_type: 'id_token token',
         client_id: 'client_id',
@@ -173,6 +197,7 @@ describe('ID Token & Token Authorization Request Validator', () => {
         id_token_hint: 'id_token_hint',
         ui_locales: 'pt-BR en',
         acr_values: 'urn:guarani:acr:2fa urn:guarani:acr:1fa',
+        claims: JSON.stringify(claimsParameter),
       };
     });
 

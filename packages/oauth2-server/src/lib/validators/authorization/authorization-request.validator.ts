@@ -1,6 +1,6 @@
 import { URL } from 'url';
 
-import { isPlainObject, JSON } from '@guarani/primitives';
+import { Optional } from '@guarani/di';
 import { Dictionary, Nullable } from '@guarani/types';
 
 import { AuthorizationContext } from '../../context/authorization/authorization-context';
@@ -10,6 +10,7 @@ import { AccessDeniedException } from '../../exceptions/access-denied.exception'
 import { InvalidClientException } from '../../exceptions/invalid-client.exception';
 import { InvalidRequestException } from '../../exceptions/invalid-request.exception';
 import { UnauthorizedClientException } from '../../exceptions/unauthorized-client.exception';
+import { ClaimsHandler } from '../../handlers/claims.handler';
 import { ScopeHandler } from '../../handlers/scope.handler';
 import { HttpRequest } from '../../http/http.request';
 import { Logger } from '../../logger/logger';
@@ -42,6 +43,7 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
    * @param responseModes Response Modes registered at the Authorization Server.
    * @param responseTypes Response Types registered at the Authorization Server.
    * @param displays Displays registered at the Authorization Server.
+   * @param claimsHandler Instance of the Claims Handler.
    */
   public constructor(
     protected readonly logger: Logger,
@@ -51,7 +53,21 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
     protected readonly responseModes: ResponseModeInterface[],
     protected readonly responseTypes: ResponseTypeInterface[],
     protected readonly displays: DisplayInterface[],
-  ) {}
+    @Optional() protected readonly claimsHandler?: ClaimsHandler,
+  ) {
+    if (this.settings.enableClaimsAuthorizationRequestParameter && typeof this.claimsHandler === 'undefined') {
+      const exc = new TypeError('Cannot use the "claims" Authorization Request parameter without a Claims Handler.');
+
+      this.logger.critical(
+        `[${this.constructor.name}] Cannot use the "claims" Authorization Request parameter without a Claims Handler`,
+        '868902cd-befb-4511-853d-cb08301ac3f2',
+        null,
+        exc,
+      );
+
+      throw exc;
+    }
+  }
 
   /**
    * Validates the Http Authorization Request and returns the actors of the Authorization Context.
@@ -81,7 +97,7 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
     const idTokenHint = this.getIdTokenHint(parameters);
     const uiLocales = this.getUiLocales(parameters);
     const acrValues = this.getAcrValues(parameters);
-    const claims = this.getClaims(parameters);
+    const claims = this.getClaims(parameters, client);
 
     scopes = this.checkOfflineAccessScope(scopes, prompts, responseType);
 
@@ -622,116 +638,23 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
    * Checks and returns the Claims requested by the Client.
    *
    * @param parameters Parameters of the Authorization Request.
+   * @param client Client requesting Authorization.
    * @returns Claims requested by the Client.
    */
   protected getClaims(
     parameters: AuthorizationRequest,
+    client: Client,
   ): Nullable<Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>> {
     this.logger.debug(`[${this.constructor.name}] Called getClaims()`, '98edab77-17e7-4c15-8984-de1880e08435', {
       parameters,
+      client,
     });
 
-    if (typeof parameters.claims === 'undefined') {
+    if (typeof this.claimsHandler === 'undefined' || typeof parameters.claims === 'undefined') {
       return null;
     }
 
-    let claimsParameter: Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>;
-
-    try {
-      claimsParameter = JSON.parse(parameters.claims);
-    } catch {
-      const exc = new InvalidRequestException('Invalid parameter "claims".');
-
-      this.logger.error(
-        `[${this.constructor.name}] Invalid parameter "claims"`,
-        'e8030e14-5c9a-4b47-973c-8587b77f3b48',
-        { parameters },
-        exc,
-      );
-
-      throw exc;
-    }
-
-    if (!isPlainObject(claimsParameter)) {
-      const exc = new InvalidRequestException('The "claims" parameter is not a valid JSON object.');
-
-      this.logger.error(
-        `[${this.constructor.name}] The "claims" parameter is not a valid JSON object`,
-        'cc9ae78e-f26c-47cb-87e7-e5bfef4934f6',
-        { parameters },
-        exc,
-      );
-
-      throw exc;
-    }
-
-    Object.entries(claimsParameter).forEach(([topLevelClaim, claims]) => {
-      if (!isPlainObject(claims)) {
-        const exc = new InvalidRequestException(`The top-level claim "${topLevelClaim}" is not a valid JSON object.`);
-
-        this.logger.error(
-          `[${this.constructor.name}] The top-level claim "${topLevelClaim}" is not a valid JSON object`,
-          '15e4a7b1-7641-4df7-aa47-d91bf8ba04d2',
-          { parameters },
-          exc,
-        );
-
-        throw exc;
-      }
-
-      Object.entries(claims).forEach(([claim, options]) => {
-        if (typeof options === 'undefined' || options === null) {
-          return;
-        }
-
-        if (!isPlainObject(options)) {
-          const exc = new InvalidRequestException(
-            `The options for the claim "${topLevelClaim}.${claim}" is not a valid JSON object.`,
-          );
-
-          this.logger.error(
-            `[${this.constructor.name}] The options for the claim "${topLevelClaim}.${claim}" is not a valid JSON object`,
-            '9fbed645-bed1-465c-ba9f-12aede2e14ae',
-            { parameters },
-            exc,
-          );
-
-          throw exc;
-        }
-
-        if (typeof options.value !== 'undefined' && typeof options.values !== 'undefined') {
-          const exc = new InvalidRequestException(
-            `Cannot have both "value" and "values" options for the claim "${topLevelClaim}.${claim}".`,
-          );
-
-          this.logger.error(
-            `[${this.constructor.name}] Cannot have both "value" and "values" options for the claim "${topLevelClaim}.${claim}"`,
-            'c043be0c-e47b-4266-b2ce-409337bec30b',
-            { parameters },
-            exc,
-          );
-
-          throw exc;
-        }
-
-        if (typeof options.values !== 'undefined' && !Array.isArray(options.values)) {
-          const exc = new InvalidRequestException(
-            `The "values" option for the claim "${topLevelClaim}.${claim}" must be an array.`,
-          );
-
-          this.logger.error(
-            `[${this.constructor.name}] The "values" option for the claim "${topLevelClaim}.${claim}" must be an array`,
-            '93fd129c-fc1a-4cb0-9ff1-60066178de6b',
-            { parameters },
-            exc,
-          );
-
-          throw exc;
-        }
-      });
-    });
-
-    return claimsParameter;
+    return this.claimsHandler.checkRequestedClaims(parameters.claims);
   }
 
   /**

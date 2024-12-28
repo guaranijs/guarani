@@ -95,6 +95,16 @@ describe('Code Response Type', () => {
         idTokenHint: null,
         uiLocales: [],
         acrValues: [],
+        claims: {
+          userinfo: {
+            null_option: null,
+            essential_option: { essential: true },
+            value_option: { value: 'value' },
+            values_option: { values: ['value_0', 'value_1'] },
+            essential_value_option: { essential: true, value: 'essential_value' },
+            essential_values_option: { essential: true, values: ['essential_value_0', 'essential_value_1'] },
+          },
+        },
       };
     });
 

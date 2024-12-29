@@ -1,7 +1,7 @@
 import { Dictionary, Nullable } from '@guarani/types';
 
 import { User } from '../entities/user.entity';
-import { UserinfoClaimsParameters } from '../id-token/userinfo.claims.parameters';
+import { UserinfoClaimsParameters } from '../tokens/userinfo.claims.parameters';
 
 /**
  * Interface of the User Service.

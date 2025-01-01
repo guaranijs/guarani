@@ -3,7 +3,6 @@ import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { JSON, removeNullishValues } from '@guarani/primitives';
-import { Dictionary, Nullable } from '@guarani/types';
 
 import { DisplayInterface } from '../../displays/display.interface';
 import { DISPLAY } from '../../displays/display.token';
@@ -156,7 +155,7 @@ describe('ID Token Authorization Request Validator', () => {
 
   describe('validate()', () => {
     let parameters: AuthorizationRequest;
-    let claimsParameter: Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>;
+    let claimsParameter: AuthorizationRequestClaimsParameter;
 
     const requestFactory = (data: Partial<AuthorizationRequest> = {}): HttpRequest => {
       removeNullishValues<AuthorizationRequest>(Object.assign(parameters, data));

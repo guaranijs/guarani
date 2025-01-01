@@ -1,7 +1,32 @@
+import { Dictionary, Nullable } from '@guarani/types';
+
 /**
- * Definition of the options for the **claims** Authorization Request Parameter.
+ * Definition of the **claims** Authorization Request Parameter.
  */
-export interface AuthorizationRequestClaimsParameter {
+export interface AuthorizationRequestClaimsParameter
+  extends Dictionary<AuthorizationRequestClaimsParameterIndividualClaim> {
+  /**
+   * Defines the set of user claims to be returned at the Userinfo Endpoint.
+   */
+  readonly userinfo?: AuthorizationRequestClaimsParameterIndividualClaim;
+
+  /**
+   * Defines the set of user claims to be returned in the ID Token.
+   */
+  readonly id_token?: AuthorizationRequestClaimsParameterIndividualClaim;
+}
+
+/**
+ * Definition of an individual claim of the **claims** Authorization Request Parameter.
+ */
+export type AuthorizationRequestClaimsParameterIndividualClaim = Dictionary<
+  Nullable<AuthorizationRequestClaimsParameterOptions>
+>;
+
+/**
+ * Definition of the options for an individual claim of the **claims** Authorization Request Parameter.
+ */
+export interface AuthorizationRequestClaimsParameterOptions extends Dictionary<unknown> {
   /**
    * Defines if the Claim is Essential.
    *

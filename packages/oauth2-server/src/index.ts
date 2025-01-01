@@ -290,6 +290,11 @@ export { UserinfoClaimsParameters } from './lib/tokens/userinfo.claims.parameter
 // Types
 export { AccessTokenType } from './lib/types/access-token-type.type';
 export { ApplicationType } from './lib/types/application-type.type';
+export {
+  AuthorizationRequestClaimsParameter,
+  AuthorizationRequestClaimsParameterIndividualClaim,
+  AuthorizationRequestClaimsParameterOptions,
+} from './lib/types/authorization-request-claims-parameter.type';
 export { Prompt } from './lib/types/prompt.type';
 export { SubjectType } from './lib/types/subject-type.type';
 export { TokenTypeHint } from './lib/types/token-type-hint.type';

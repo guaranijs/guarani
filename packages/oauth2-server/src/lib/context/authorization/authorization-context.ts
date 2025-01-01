@@ -99,5 +99,5 @@ export interface AuthorizationContext<TRequest extends AuthorizationRequest = Au
   /**
    * Claims requested by the Client.
    */
-  readonly claims: Nullable<Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>>;
+  readonly claims: Nullable<AuthorizationRequestClaimsParameter>;
 }

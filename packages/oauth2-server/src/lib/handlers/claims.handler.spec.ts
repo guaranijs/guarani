@@ -1,6 +1,5 @@
 import { DependencyInjectionContainer } from '@guarani/di';
 import { JSON } from '@guarani/primitives';
-import { Dictionary, Nullable } from '@guarani/types';
 
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { Logger } from '../logger/logger';
@@ -100,7 +99,7 @@ describe('Claims Handler', () => {
     });
 
     it('should return the parsed claims requested by the client.', () => {
-      const claims: Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>> = {
+      const claims: AuthorizationRequestClaimsParameter = {
         userinfo: {
           null_option: null,
           essential_option: { essential: true },

@@ -2,7 +2,6 @@ import { stringify as stringifyQs } from 'querystring';
 import { URL } from 'url';
 
 import { JSON, removeNullishValues } from '@guarani/primitives';
-import { Dictionary, Nullable } from '@guarani/types';
 
 import { AuthorizationContext } from '../../context/authorization/authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
@@ -163,7 +162,7 @@ describe('Authorization Request Validator', () => {
 
   describe('validate()', () => {
     let parameters: AuthorizationRequest;
-    let claimsParameter: Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>;
+    let claimsParameter: AuthorizationRequestClaimsParameter;
 
     const requestFactory = (data: Partial<AuthorizationRequest> = {}): HttpRequest => {
       removeNullishValues<AuthorizationRequest>(Object.assign(parameters, data));

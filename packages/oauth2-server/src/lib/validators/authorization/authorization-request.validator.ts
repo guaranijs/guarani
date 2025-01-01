@@ -1,7 +1,7 @@
 import { URL } from 'url';
 
 import { Optional } from '@guarani/di';
-import { Dictionary, Nullable } from '@guarani/types';
+import { Nullable } from '@guarani/types';
 
 import { AuthorizationContext } from '../../context/authorization/authorization-context';
 import { DisplayInterface } from '../../displays/display.interface';
@@ -641,10 +641,7 @@ export abstract class AuthorizationRequestValidator<TContext extends Authorizati
    * @param client Client requesting Authorization.
    * @returns Claims requested by the Client.
    */
-  protected getClaims(
-    parameters: AuthorizationRequest,
-    client: Client,
-  ): Nullable<Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>> {
+  protected getClaims(parameters: AuthorizationRequest, client: Client): Nullable<AuthorizationRequestClaimsParameter> {
     this.logger.debug(`[${this.constructor.name}] Called getClaims()`, '98edab77-17e7-4c15-8984-de1880e08435', {
       parameters,
       client,

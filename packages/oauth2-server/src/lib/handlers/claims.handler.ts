@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@guarani/di';
 import { isPlainObject, JSON } from '@guarani/primitives';
-import { Dictionary, Nullable } from '@guarani/types';
 
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { Logger } from '../logger/logger';
@@ -30,7 +29,7 @@ export class ClaimsHandler {
    * @param claims Claims requested by the Client.
    * @returns Parsed Claims parameter requested by the Client.
    */
-  public checkRequestedClaims(claims: string): Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>> {
+  public checkRequestedClaims(claims: string): AuthorizationRequestClaimsParameter {
     this.logger.debug(
       `[${this.constructor.name}] Called checkRequestedClaims()`,
       '73f9c527-8e27-4891-9096-4c4d1d73fec9',
@@ -52,7 +51,7 @@ export class ClaimsHandler {
       throw exc;
     }
 
-    let parsedClaims: Dictionary<Dictionary<Nullable<AuthorizationRequestClaimsParameter>>>;
+    let parsedClaims: AuthorizationRequestClaimsParameter;
 
     try {
       parsedClaims = JSON.parse(claims);

@@ -133,7 +133,7 @@ describe('ID Token Handler', () => {
     create: jest.fn(),
     findByResourceOwnerCredentials: jest.fn(),
     findOne: jest.fn(),
-    getUserinfo: jest.fn(),
+    getUserClaims: jest.fn(),
   });
 
   beforeEach(() => {
@@ -153,7 +153,7 @@ describe('ID Token Handler', () => {
   });
 
   describe('constructor', () => {
-    it('should reject not implementing user service\'s "getUserInfo()".', () => {
+    it('should reject not implementing user service\'s "getUserClaims()".', () => {
       container.delete<UserServiceInterface>(USER_SERVICE);
       container.delete(IdTokenHandler);
 
@@ -162,7 +162,7 @@ describe('ID Token Handler', () => {
 
       expect(() => container.resolve(IdTokenHandler)).toThrowWithMessage(
         TypeError,
-        'Missing implementation of required method "UserServiceInterface.getUserinfo".',
+        'Missing implementation of required method "UserServiceInterface.getUserClaims".',
       );
     });
   });
@@ -271,7 +271,7 @@ describe('ID Token Handler', () => {
         user,
       });
 
-      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+      userServiceMock.getUserClaims!.mockResolvedValueOnce({ sub: 'user_id' });
 
       const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null);
 
@@ -315,7 +315,7 @@ describe('ID Token Handler', () => {
         { id: 'access_token' },
       );
 
-      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+      userServiceMock.getUserClaims!.mockResolvedValueOnce({ sub: 'user_id' });
 
       const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, accessToken, null);
 
@@ -359,7 +359,7 @@ describe('ID Token Handler', () => {
         { id: 'authorization_code' },
       );
 
-      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+      userServiceMock.getUserClaims!.mockResolvedValueOnce({ sub: 'user_id' });
 
       const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, null, authorizationCode);
 
@@ -408,7 +408,7 @@ describe('ID Token Handler', () => {
         { id: 'authorization_code' },
       );
 
-      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+      userServiceMock.getUserClaims!.mockResolvedValueOnce({ sub: 'user_id' });
 
       const idToken = await idTokenHandler.generateIdToken(
         login,
@@ -565,7 +565,7 @@ describe('ID Token Handler', () => {
         user,
       });
 
-      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+      userServiceMock.getUserClaims!.mockResolvedValueOnce({ sub: 'user_id' });
 
       const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null);
 
@@ -614,7 +614,7 @@ describe('ID Token Handler', () => {
         { id: 'access_token' },
       );
 
-      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+      userServiceMock.getUserClaims!.mockResolvedValueOnce({ sub: 'user_id' });
 
       const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, accessToken, null);
 
@@ -663,7 +663,7 @@ describe('ID Token Handler', () => {
         { id: 'authorization_code' },
       );
 
-      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+      userServiceMock.getUserClaims!.mockResolvedValueOnce({ sub: 'user_id' });
 
       const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, null, authorizationCode);
 
@@ -717,7 +717,7 @@ describe('ID Token Handler', () => {
         { id: 'authorization_code' },
       );
 
-      userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
+      userServiceMock.getUserClaims!.mockResolvedValueOnce({ sub: 'user_id' });
 
       const idToken = await idTokenHandler.generateIdToken(
         login,

@@ -30,7 +30,8 @@ import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
-import { UserinfoClaimsParameters } from '../tokens/userinfo.claims.parameters';
+import { UserClaimsParameters } from '../tokens/user.claims.parameters';
+import { AuthorizationRequestClaimsParameter } from '../types/authorization-request-claims-parameter.type';
 import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
 import { getClientJsonWebKey } from '../utils/get-client-jsonwebkey';
 import { EndpointInterface } from './endpoint.interface';
@@ -83,11 +84,11 @@ export class UserinfoEndpoint implements EndpointInterface {
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(USER_SERVICE) private readonly userService: UserServiceInterface,
   ) {
-    if (typeof this.userService.getUserinfo !== 'function') {
-      const exc = new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".');
+    if (typeof this.userService.getUserClaims !== 'function') {
+      const exc = new TypeError('Missing implementation of required method "UserServiceInterface.getUserClaims".');
 
       this.logger.critical(
-        `[${this.constructor.name}] Missing implementation of required method "UserServiceInterface.getUserinfo"`,
+        `[${this.constructor.name}] Missing implementation of required method "UserServiceInterface.getUserClaims"`,
         '93b62e3b-89a1-4f64-b741-c31ae229e626',
         null,
         exc,
@@ -117,13 +118,13 @@ export class UserinfoEndpoint implements EndpointInterface {
     });
 
     try {
-      const { client, scopes, user } = await this.authorize(request);
-      const claims = await this.getUserinfo(client!, user!, scopes);
+      const { claims, client, scopes, user } = await this.authorize(request);
+      const userClaims = await this.getUserClaims(client!, user!, scopes, claims);
 
       const response = new HttpResponse().setHeaders(this.headers);
 
       if (client!.userinfoSignedResponseAlgorithm === null) {
-        response.json(removeNullishValues(claims));
+        response.json(removeNullishValues(userClaims));
 
         this.logger.debug(
           `[${this.constructor.name}] JSON Userinfo completed`,
@@ -134,7 +135,7 @@ export class UserinfoEndpoint implements EndpointInterface {
         return response;
       }
 
-      const jwt = await this.generateJsonWebTokenResponse(client!, claims);
+      const jwt = await this.generateJsonWebTokenResponse(client!, userClaims);
 
       response.jwt(jwt);
 
@@ -259,10 +260,15 @@ export class UserinfoEndpoint implements EndpointInterface {
    * @param scopes Scopes requested by the Client.
    * @returns Claims about the provided User.
    */
-  private async getUserinfo(client: Client, user: User, scopes: string[]): Promise<UserinfoClaimsParameters> {
-    // UserServiceInterface.getUserinfo() does not return the "sub" claim.
-    const claims: UserinfoClaimsParameters = { sub: calculateSubjectIdentifier(user, client, this.settings) };
-    return Object.assign(claims, await this.userService.getUserinfo!(user, scopes));
+  private async getUserClaims(
+    client: Client,
+    user: User,
+    scopes: string[],
+    claims: AuthorizationRequestClaimsParameter,
+  ): Promise<UserClaimsParameters> {
+    // UserServiceInterface.getUserClaims() does not return the "sub" claim.
+    const userClaims: UserClaimsParameters = { sub: calculateSubjectIdentifier(user, client, this.settings) };
+    return Object.assign(userClaims, await this.userService.getUserClaims!(user, scopes, claims));
   }
 
   /**
@@ -272,7 +278,7 @@ export class UserinfoEndpoint implements EndpointInterface {
    * @param claims Claims containing the Userinfo retrieved by the Authorization Server.
    * @returns JSON Web Token containing the Userinfo Claims.
    */
-  private async generateJsonWebTokenResponse(client: Client, claims: UserinfoClaimsParameters): Promise<string> {
+  private async generateJsonWebTokenResponse(client: Client, claims: UserClaimsParameters): Promise<string> {
     const signKey = this.jwks.get((jwk) => jwk.alg === client.userinfoSignedResponseAlgorithm! && jwk.use === 'sig');
 
     const jwsHeader = new JsonWebSignatureHeader({

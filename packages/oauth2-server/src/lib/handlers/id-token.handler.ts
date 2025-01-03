@@ -24,7 +24,7 @@ import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
 import { IdTokenClaims } from '../tokens/id-token.claims';
 import { IdTokenClaimsParameters } from '../tokens/id-token.claims.parameters';
-import { UserinfoClaimsParameters } from '../tokens/userinfo.claims.parameters';
+import { UserClaimsParameters } from '../tokens/user.claims.parameters';
 import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifier';
 import { getClientJsonWebKey } from '../utils/get-client-jsonwebkey';
 
@@ -47,11 +47,11 @@ export class IdTokenHandler {
     @Inject(SETTINGS) private readonly settings: Settings,
     @Inject(USER_SERVICE) private readonly userService: UserServiceInterface,
   ) {
-    if (typeof this.userService.getUserinfo !== 'function') {
-      const exc = new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".');
+    if (typeof this.userService.getUserClaims !== 'function') {
+      const exc = new TypeError('Missing implementation of required method "UserServiceInterface.getUserClaims".');
 
       this.logger.critical(
-        `[${this.constructor.name}] Missing implementation of required method "UserServiceInterface.getUserinfo"`,
+        `[${this.constructor.name}] Missing implementation of required method "UserServiceInterface.getUserClaims"`,
         '659af5e4-f34b-4c73-8f4f-50f3b6c41f73',
         null,
         exc,
@@ -92,7 +92,7 @@ export class IdTokenHandler {
 
     const { client, scopes, user } = consent;
 
-    const userinfo = await this.userService.getUserinfo!(user, scopes);
+    const userinfo = await this.userService.getUserClaims!(user, scopes);
 
     const signKey = this.jwks.get((jwk) => jwk.alg === client.idTokenSignedResponseAlgorithm && jwk.use === 'sig');
 
@@ -102,7 +102,7 @@ export class IdTokenHandler {
       typ: 'JWT',
     });
 
-    const claims: IdTokenClaimsParameters = Object.assign<IdTokenClaimsParameters, UserinfoClaimsParameters>(
+    const claims: IdTokenClaimsParameters = Object.assign<IdTokenClaimsParameters, UserClaimsParameters>(
       {
         iss: this.settings.issuer,
         sub: calculateSubjectIdentifier(user, client, this.settings),

@@ -1,10 +1,14 @@
 import { Inject, Injectable } from '@guarani/di';
 import { isPlainObject, JSON } from '@guarani/primitives';
 
+import { User } from '../entities/user.entity';
 import { InvalidRequestException } from '../exceptions/invalid-request.exception';
 import { Logger } from '../logger/logger';
+import { UserServiceInterface } from '../services/user.service.interface';
+import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
+import { UserClaimsParameters } from '../tokens/user.claims.parameters';
 import { AuthorizationRequestClaimsParameter } from '../types/authorization-request-claims-parameter.type';
 
 /**
@@ -17,11 +21,26 @@ export class ClaimsHandler {
    *
    * @param logger Logger of the Authorization Server.
    * @param settings Settings of the Authorization Server.
+   * @param userService Instance of the User Service.
    */
   public constructor(
     private readonly logger: Logger,
     @Inject(SETTINGS) private readonly settings: Settings,
-  ) {}
+    @Inject(USER_SERVICE) private readonly userService: UserServiceInterface,
+  ) {
+    if (typeof this.userService.getUserClaims !== 'function') {
+      const exc = new TypeError('Missing implementation of required method "UserServiceInterface.getUserClaims".');
+
+      this.logger.critical(
+        `[${this.constructor.name}] Missing implementation of required method "UserServiceInterface.getUserClaims"`,
+        '93b62e3b-89a1-4f64-b741-c31ae229e626',
+        null,
+        exc,
+      );
+
+      throw exc;
+    }
+  }
 
   /**
    * Checks if the claims parameter requested by the Client are valid.
@@ -81,8 +100,8 @@ export class ClaimsHandler {
       throw exc;
     }
 
-    Object.entries(parsedClaims).forEach(([topLevelClaim, claims]) => {
-      if (!isPlainObject(claims)) {
+    Object.entries(parsedClaims).forEach(([topLevelClaim, individualClaims]) => {
+      if (!isPlainObject(individualClaims)) {
         const exc = new InvalidRequestException(`The top-level claim "${topLevelClaim}" is not a valid JSON object.`);
 
         this.logger.error(
@@ -95,18 +114,18 @@ export class ClaimsHandler {
         throw exc;
       }
 
-      Object.entries(claims).forEach(([claim, options]) => {
-        if (typeof options === 'undefined' || options === null) {
+      Object.entries(individualClaims).forEach(([individualClaim, individualClaimOptions]) => {
+        if (typeof individualClaimOptions === 'undefined' || individualClaimOptions === null) {
           return;
         }
 
-        if (!isPlainObject(options)) {
+        if (!isPlainObject(individualClaimOptions)) {
           const exc = new InvalidRequestException(
-            `The options for the claim "${topLevelClaim}.${claim}" is not a valid JSON object.`,
+            `The options for the claim "${topLevelClaim}.${individualClaim}" is not a valid JSON object.`,
           );
 
           this.logger.error(
-            `[${this.constructor.name}] The options for the claim "${topLevelClaim}.${claim}" is not a valid JSON object`,
+            `[${this.constructor.name}] The options for the claim "${topLevelClaim}.${individualClaim}" is not a valid JSON object`,
             '9fbed645-bed1-465c-ba9f-12aede2e14ae',
             { requested_claims: parsedClaims },
             exc,
@@ -115,13 +134,16 @@ export class ClaimsHandler {
           throw exc;
         }
 
-        if (typeof options.value !== 'undefined' && typeof options.values !== 'undefined') {
+        if (
+          typeof individualClaimOptions.value !== 'undefined' &&
+          typeof individualClaimOptions.values !== 'undefined'
+        ) {
           const exc = new InvalidRequestException(
-            `Cannot have both "value" and "values" options for the claim "${topLevelClaim}.${claim}".`,
+            `Cannot have both "value" and "values" options for the claim "${topLevelClaim}.${individualClaim}".`,
           );
 
           this.logger.error(
-            `[${this.constructor.name}] Cannot have both "value" and "values" options for the claim "${topLevelClaim}.${claim}"`,
+            `[${this.constructor.name}] Cannot have both "value" and "values" options for the claim "${topLevelClaim}.${individualClaim}"`,
             'c043be0c-e47b-4266-b2ce-409337bec30b',
             { requested_claims: parsedClaims },
             exc,
@@ -130,13 +152,13 @@ export class ClaimsHandler {
           throw exc;
         }
 
-        if (typeof options.values !== 'undefined' && !Array.isArray(options.values)) {
+        if (typeof individualClaimOptions.values !== 'undefined' && !Array.isArray(individualClaimOptions.values)) {
           const exc = new InvalidRequestException(
-            `The "values" option for the claim "${topLevelClaim}.${claim}" must be an array.`,
+            `The "values" option for the claim "${topLevelClaim}.${individualClaim}" must be an array.`,
           );
 
           this.logger.error(
-            `[${this.constructor.name}] The "values" option for the claim "${topLevelClaim}.${claim}" must be an array`,
+            `[${this.constructor.name}] The "values" option for the claim "${topLevelClaim}.${individualClaim}" must be an array`,
             '93fd129c-fc1a-4cb0-9ff1-60066178de6b',
             { requested_claims: parsedClaims },
             exc,
@@ -148,5 +170,23 @@ export class ClaimsHandler {
     });
 
     return parsedClaims;
+  }
+
+  /**
+   * Retrieves the claims of the provided User based on the requested scopes and claims.
+   *
+   * @param user End User to have its information gathered.
+   * @param scopes Scopes requested by the Client.
+   * @param claims Claims requested by the Client.
+   * @returns Claims about the provided User.
+   */
+  public async getUserClaims(
+    user: User,
+    scopes: string[],
+    claims: AuthorizationRequestClaimsParameter,
+  ): Promise<UserClaimsParameters> {
+    const userClaims = await this.userService.getUserClaims!(user, scopes, claims);
+
+    return userClaims;
   }
 }

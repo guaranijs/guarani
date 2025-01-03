@@ -38,7 +38,6 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
     create: jest.fn(),
     findOne: jest.fn(),
     findByResourceOwnerCredentials: jest.fn(),
-    getUserinfo: jest.fn(),
   });
 
   const grantTypesMocks = [
@@ -82,7 +81,6 @@ describe('Resource Owner Password Credentials Token Request Validator', () => {
       const userServiceMock = jest.mocked<UserServiceInterface>({
         create: jest.fn(),
         findOne: jest.fn(),
-        getUserinfo: jest.fn(),
       });
 
       container.delete<UserServiceInterface>(USER_SERVICE);

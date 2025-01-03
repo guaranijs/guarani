@@ -1,7 +1,8 @@
 import { Dictionary, Nullable } from '@guarani/types';
 
 import { User } from '../entities/user.entity';
-import { UserinfoClaimsParameters } from '../tokens/userinfo.claims.parameters';
+import { UserClaimsParameters } from '../tokens/user.claims.parameters';
+import { AuthorizationRequestClaimsParameter } from '../types/authorization-request-claims-parameter.type';
 
 /**
  * Interface of the User Service.
@@ -42,11 +43,16 @@ export interface UserServiceInterface {
   findByResourceOwnerCredentials?(username: string, password: string): Promise<Nullable<User>>;
 
   /**
-   * Retrieves claims about the provided User based on the provided scopes.
+   * Retrieves the claims of the provided User based on the requested scopes and claims.
    *
-   * @param user End User to have it's information gathered.
+   * @param user End User to have its information gathered.
    * @param scopes Scopes requested by the Client.
+   * @param claims Claims requested by the Client.
    * @returns Claims about the provided User.
    */
-  getUserinfo?(user: User, scopes: string[]): Promise<UserinfoClaimsParameters>;
+  getUserClaims?(
+    user: User,
+    scopes: string[],
+    claims: AuthorizationRequestClaimsParameter,
+  ): Promise<UserClaimsParameters>;
 }

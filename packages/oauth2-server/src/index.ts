@@ -285,15 +285,19 @@ export { AddressClaimParameters } from './lib/tokens/address.claim.parameters';
 export { AuthorizationResponseTokenClaimsParameters } from './lib/tokens/authorization-response-token.claims.parameters';
 export { IdTokenClaimsParameters } from './lib/tokens/id-token.claims.parameters';
 export { LogoutTokenClaimsParameters } from './lib/tokens/logout-token.claims.parameters';
-export { UserinfoClaimsParameters } from './lib/tokens/userinfo.claims.parameters';
+export {
+  UserAggregatedClaimsParameter,
+  UserClaimsParameters,
+  UserDistributedClaimsParameter,
+} from './lib/tokens/user.claims.parameters';
 
 // Types
 export { AccessTokenType } from './lib/types/access-token-type.type';
 export { ApplicationType } from './lib/types/application-type.type';
 export {
   AuthorizationRequestClaimsParameter,
-  AuthorizationRequestClaimsParameterIndividualClaim,
-  AuthorizationRequestClaimsParameterOptions,
+  AuthorizationRequestClaimsParameterClaimOptions,
+  AuthorizationRequestClaimsParameterIndividualClaims,
 } from './lib/types/authorization-request-claims-parameter.type';
 export { Prompt } from './lib/types/prompt.type';
 export { SubjectType } from './lib/types/subject-type.type';

@@ -54,7 +54,6 @@ describe('Login Interaction Request Validator', () => {
     create: jest.fn(),
     findOne: jest.fn(),
     findByResourceOwnerCredentials: jest.fn(),
-    getUserinfo: jest.fn(),
   });
 
   const interactionTypesMocks = [

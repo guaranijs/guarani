@@ -19,7 +19,7 @@ import { UserServiceInterface } from '../services/user.service.interface';
 import { USER_SERVICE } from '../services/user.service.token';
 import { Settings } from '../settings/settings';
 import { SETTINGS } from '../settings/settings.token';
-import { UserinfoClaimsParameters } from '../tokens/userinfo.claims.parameters';
+import { UserClaimsParameters } from '../tokens/user.claims.parameters';
 import { Endpoint } from './endpoint.type';
 import { UserinfoEndpoint } from './userinfo.endpoint';
 
@@ -129,7 +129,7 @@ describe('Userinfo Endpoint', () => {
     create: jest.fn(),
     findOne: jest.fn(),
     findByResourceOwnerCredentials: jest.fn(),
-    getUserinfo: jest.fn(),
+    getUserClaims: jest.fn(),
   });
 
   beforeEach(() => {
@@ -178,7 +178,7 @@ describe('Userinfo Endpoint', () => {
   });
 
   describe('constructor', () => {
-    it('should throw when the user service does not implement the method "getUserInfo".', () => {
+    it('should throw when the user service does not implement the method "getUserClaims".', () => {
       container.delete(UserinfoEndpoint);
       container.delete<UserServiceInterface>(USER_SERVICE);
 
@@ -186,7 +186,7 @@ describe('Userinfo Endpoint', () => {
       container.bind(UserinfoEndpoint).toSelf().asSingleton();
 
       expect(() => container.resolve(UserinfoEndpoint)).toThrow(
-        new TypeError('Missing implementation of required method "UserServiceInterface.getUserinfo".'),
+        new TypeError('Missing implementation of required method "UserServiceInterface.getUserClaims".'),
       );
     });
   });
@@ -390,7 +390,7 @@ describe('Userinfo Endpoint', () => {
         },
       );
 
-      const claims: UserinfoClaimsParameters = {
+      const claims: UserClaimsParameters = {
         name: 'John H. Doe',
         given_name: 'John',
         middle_name: 'Harold',
@@ -421,7 +421,7 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
       authHandlerMock.findAuthUser.mockResolvedValueOnce(null);
-      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+      userServiceMock.getUserClaims!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);
 
@@ -432,7 +432,7 @@ describe('Userinfo Endpoint', () => {
         ...endpoint['headers'],
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<UserinfoClaimsParameters>({
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<UserClaimsParameters>({
         sub: 'user_id',
         ...claims,
       });
@@ -459,7 +459,7 @@ describe('Userinfo Endpoint', () => {
 
       const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
-      const claims: UserinfoClaimsParameters = {
+      const claims: UserClaimsParameters = {
         name: 'John H. Doe',
         given_name: 'John',
         middle_name: 'Harold',
@@ -490,7 +490,7 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
       authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
-      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+      userServiceMock.getUserClaims!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);
 
@@ -501,7 +501,7 @@ describe('Userinfo Endpoint', () => {
         ...endpoint['headers'],
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<UserinfoClaimsParameters>({
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<UserClaimsParameters>({
         sub: 'user_id',
         ...claims,
       });
@@ -528,7 +528,7 @@ describe('Userinfo Endpoint', () => {
 
       const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
-      const claims: UserinfoClaimsParameters = {
+      const claims: UserClaimsParameters = {
         name: 'John H. Doe',
         given_name: 'John',
         middle_name: 'Harold',
@@ -559,7 +559,7 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
       authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
-      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+      userServiceMock.getUserClaims!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);
 
@@ -570,7 +570,7 @@ describe('Userinfo Endpoint', () => {
         ...endpoint['headers'],
       });
 
-      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<UserinfoClaimsParameters>({
+      expect(JSON.parse(response.body.toString('utf8'))).toStrictEqual<UserClaimsParameters>({
         sub: 'user_id',
         ...claims,
       });
@@ -597,7 +597,7 @@ describe('Userinfo Endpoint', () => {
         },
       );
 
-      const claims: UserinfoClaimsParameters = {
+      const claims: UserClaimsParameters = {
         name: 'John H. Doe',
         given_name: 'John',
         middle_name: 'Harold',
@@ -628,7 +628,7 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
       authHandlerMock.findAuthUser.mockResolvedValueOnce(null);
-      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+      userServiceMock.getUserClaims!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);
 
@@ -677,7 +677,7 @@ describe('Userinfo Endpoint', () => {
 
       const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
-      const claims: UserinfoClaimsParameters = {
+      const claims: UserClaimsParameters = {
         name: 'John H. Doe',
         given_name: 'John',
         middle_name: 'Harold',
@@ -708,7 +708,7 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
       authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
-      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+      userServiceMock.getUserClaims!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);
 
@@ -757,7 +757,7 @@ describe('Userinfo Endpoint', () => {
 
       const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
-      const claims: UserinfoClaimsParameters = {
+      const claims: UserClaimsParameters = {
         name: 'John H. Doe',
         given_name: 'John',
         middle_name: 'Harold',
@@ -788,7 +788,7 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
       authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
-      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+      userServiceMock.getUserClaims!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);
 
@@ -837,7 +837,7 @@ describe('Userinfo Endpoint', () => {
         },
       );
 
-      const claims: UserinfoClaimsParameters = {
+      const claims: UserClaimsParameters = {
         name: 'John H. Doe',
         given_name: 'John',
         middle_name: 'Harold',
@@ -868,7 +868,7 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
       authHandlerMock.findAuthUser.mockResolvedValueOnce(null);
-      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+      userServiceMock.getUserClaims!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);
 
@@ -930,7 +930,7 @@ describe('Userinfo Endpoint', () => {
 
       const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
-      const claims: UserinfoClaimsParameters = {
+      const claims: UserClaimsParameters = {
         name: 'John H. Doe',
         given_name: 'John',
         middle_name: 'Harold',
@@ -961,7 +961,7 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
       authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
-      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+      userServiceMock.getUserClaims!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);
 
@@ -1023,7 +1023,7 @@ describe('Userinfo Endpoint', () => {
 
       const authUser: User = Object.assign<User, Partial<User>>(Reflect.construct(User, []), { id: 'user_id' });
 
-      const claims: UserinfoClaimsParameters = {
+      const claims: UserClaimsParameters = {
         name: 'John H. Doe',
         given_name: 'John',
         middle_name: 'Harold',
@@ -1054,7 +1054,7 @@ describe('Userinfo Endpoint', () => {
 
       clientAuthorizationHandlerMock.authorize.mockResolvedValueOnce(accessToken);
       authHandlerMock.findAuthUser.mockResolvedValueOnce(authUser);
-      userServiceMock.getUserinfo!.mockResolvedValueOnce(claims);
+      userServiceMock.getUserClaims!.mockResolvedValueOnce(claims);
 
       const response = await endpoint.handle(request);
 

@@ -6,10 +6,11 @@ import { Dictionary, Nullable } from '@guarani/types';
 import { User } from '../../entities/user.entity';
 import { Logger } from '../../logger/logger';
 import { AddressClaimParameters } from '../../tokens/address.claim.parameters';
-import { UserinfoClaimsParameters } from '../../tokens/userinfo.claims.parameters';
+import { UserClaimsParameters } from '../../tokens/user.claims.parameters';
+import { AuthorizationRequestClaimsParameter } from '../../types/authorization-request-claims-parameter.type';
 import { UserServiceInterface } from '../user.service.interface';
 
-class SampleUser extends User implements UserinfoClaimsParameters {
+class SampleUser extends User implements UserClaimsParameters {
   public name?: string;
   public given_name?: string;
   public middle_name?: string;
@@ -104,38 +105,43 @@ export class UserService implements UserServiceInterface {
     return this.users.find((user) => user.username === username && user.password === password) ?? null;
   }
 
-  public async getUserinfo(user: SampleUser, scopes: string[]): Promise<UserinfoClaimsParameters> {
+  public async getUserClaims(
+    user: SampleUser,
+    scopes: string[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _claims: AuthorizationRequestClaimsParameter,
+  ): Promise<UserClaimsParameters> {
     this.logger.debug(
       `[${this.constructor.name}] Called findByResourceOwnerCredentials()`,
       '772948cd-12c1-4a02-a1b9-df4d12f9b219',
       { user, scopes },
     );
 
-    const claims: UserinfoClaimsParameters = {};
+    const userClaims: UserClaimsParameters = {};
 
     if (scopes.includes('profile')) {
-      claims.name = user.name;
-      claims.given_name = user.given_name;
-      claims.middle_name = user.middle_name;
-      claims.family_name = user.family_name;
-      claims.picture = user.picture;
-      claims.gender = user.gender;
-      claims.birthdate = user.birthdate;
-      claims.updated_at = user.updated_at;
+      userClaims.name = user.name;
+      userClaims.given_name = user.given_name;
+      userClaims.middle_name = user.middle_name;
+      userClaims.family_name = user.family_name;
+      userClaims.picture = user.picture;
+      userClaims.gender = user.gender;
+      userClaims.birthdate = user.birthdate;
+      userClaims.updated_at = user.updated_at;
     }
 
     if (scopes.includes('email')) {
-      claims.email = user.email;
-      claims.email_verified = user.email_verified;
+      userClaims.email = user.email;
+      userClaims.email_verified = user.email_verified;
     }
 
     if (scopes.includes('phone')) {
-      claims.phone_number = user.phone_number;
-      claims.phone_number_verified = user.phone_number_verified;
+      userClaims.phone_number = user.phone_number;
+      userClaims.phone_number_verified = user.phone_number_verified;
     }
 
     if (scopes.includes('address') && user.address != null) {
-      claims.address = {
+      userClaims.address = {
         formatted: user.address.formatted,
         street_address: user.address.street_address,
         locality: user.address.locality,
@@ -145,6 +151,6 @@ export class UserService implements UserServiceInterface {
       };
     }
 
-    return claims;
+    return userClaims;
   }
 }

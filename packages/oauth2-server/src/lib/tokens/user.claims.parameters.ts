@@ -3,9 +3,9 @@ import { Dictionary } from '@guarani/types';
 import { AddressClaimParameters } from './address.claim.parameters';
 
 /**
- * OpenID Connect Userinfo Claims.
+ * OpenID Connect User Claims.
  */
-export interface UserinfoClaimsParameters extends Dictionary<unknown> {
+export interface UserClaimsParameters extends Dictionary<unknown> {
   /**
    * Formatted name of the User.
    */
@@ -104,4 +104,40 @@ export interface UserinfoClaimsParameters extends Dictionary<unknown> {
    * Time the information of the User was last updated, represented as Unix time.
    */
   updated_at?: number;
+
+  /**
+   * Defines the Aggregated and Distributed Claims of the End User.
+   */
+  _claim_names?: Dictionary<string>;
+
+  /**
+   * Defines the sources from which the Aggregated and Distributed Claims can be retrieved.
+   */
+  _claim_sources?: Dictionary<UserAggregatedClaimsParameter | UserDistributedClaimsParameter>;
+}
+
+/**
+ * Aggregated Claims of the End User.
+ */
+export interface UserAggregatedClaimsParameter extends Dictionary<unknown> {
+  /**
+   * JSON Web Token containing the Aggregated Claims of the End User.
+   */
+  readonly JWT: string;
+}
+
+/**
+ * Distributed Claims of the End User.
+ */
+export interface UserDistributedClaimsParameter extends Dictionary<unknown> {
+  /**
+   * Remote Resource Endpoint from which the Claims can be retrieved.
+   * The endpoint URL **MUST** return the Claims as a JSON Web Token.
+   */
+  readonly endpoint: string;
+
+  /**
+   * Access Token used to authorize the Client on the remote Resource Endpoint.
+   */
+  readonly access_token?: string;
 }

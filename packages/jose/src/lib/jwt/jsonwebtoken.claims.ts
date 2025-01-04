@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import { isDeepStrictEqual } from 'util';
 
-import { removeNullishValues } from '@guarani/primitives';
+import { JSON, removeNullishValues } from '@guarani/primitives';
 import { Nullable, OneOrMany } from '@guarani/types';
 
 import { ExpiredJsonWebTokenException } from '../exceptions/expired-jsonwebtoken.exception';

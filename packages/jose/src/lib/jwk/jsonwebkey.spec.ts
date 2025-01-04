@@ -1,5 +1,7 @@
 import { Buffer } from 'buffer';
 
+import { JSON } from '@guarani/primitives';
+
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { UnsupportedAlgorithmException } from '../exceptions/unsupported-algorithm.exception';
 import { EllipticCurveKey } from './backends/elliptic-curve/elliptic-curve.key';

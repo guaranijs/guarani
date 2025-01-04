@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer';
 import { createHash, KeyObject } from 'crypto';
 
+import { JSON } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { JsonWebKey } from '../jsonwebkey';

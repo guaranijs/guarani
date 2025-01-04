@@ -1,5 +1,7 @@
 import { Buffer } from 'buffer';
 
+import { JSON } from '@guarani/primitives';
+
 import { InvalidJsonWebEncryptionException } from '../exceptions/invalid-jsonwebencryption.exception';
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';
 import { JoseException } from '../exceptions/jose.exception';

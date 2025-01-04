@@ -1,4 +1,4 @@
-import { isPlainObject, removeNullishValues } from '@guarani/primitives';
+import { isPlainObject, JSON, removeNullishValues } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
 
 import { InvalidJsonWebKeySetException } from '../exceptions/invalid-jsonwebkeyset.exception';

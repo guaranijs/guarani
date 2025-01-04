@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer';
 
+import { JSON } from '@guarani/primitives';
 import { Nullable } from '@guarani/types';
 
 import { InvalidJsonWebKeyException } from '../exceptions/invalid-jsonwebkey.exception';

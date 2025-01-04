@@ -1,5 +1,7 @@
 import { Buffer } from 'buffer';
 
+import { JSON } from '@guarani/primitives';
+
 import { InvalidJsonWebTokenClaimException } from '../exceptions/invalid-jsonwebtoken-claim.exception';
 import { JsonWebTokenClaims } from './jsonwebtoken.claims';
 import { JsonWebTokenClaimsParameters } from './jsonwebtoken.claims.parameters';

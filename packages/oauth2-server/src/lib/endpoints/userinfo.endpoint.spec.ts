@@ -3,7 +3,7 @@ import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { JsonWebEncryption, JsonWebKeySet, JsonWebSignature, JsonWebTokenClaims, RsaKey } from '@guarani/jose';
-import { removeNullishValues } from '@guarani/primitives';
+import { JSON, removeNullishValues } from '@guarani/primitives';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { Client } from '../entities/client.entity';

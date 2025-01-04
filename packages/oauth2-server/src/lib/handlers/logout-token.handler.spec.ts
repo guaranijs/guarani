@@ -7,6 +7,7 @@ import {
   JsonWebSignature,
   RsaKey,
 } from '@guarani/jose';
+import { JSON } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';

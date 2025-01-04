@@ -1,6 +1,8 @@
 import { Buffer } from 'buffer';
 import { URL } from 'url';
 
+import { JSON } from '@guarani/primitives';
+
 import { HttpResponse } from './http.response';
 
 describe('Http Response', () => {

@@ -6,7 +6,7 @@ import { User } from './user.entity';
 /**
  * OAuth 2.0 Refresh Token Entity.
  */
-export abstract class RefreshToken implements Dictionary<any> {
+export abstract class RefreshToken implements Dictionary<unknown> {
   /**
    * Identifier of the Refresh Token.
    */

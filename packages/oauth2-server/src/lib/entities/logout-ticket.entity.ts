@@ -7,7 +7,7 @@ import { Session } from './session.entity';
 /**
  * OAuth 2.0 Logout Ticket Entity.
  */
-export abstract class LogoutTicket implements Dictionary<any> {
+export abstract class LogoutTicket implements Dictionary<unknown> {
   /**
    * Identifier of the Logout Ticket.
    */

@@ -2,6 +2,7 @@ import { Buffer } from 'buffer';
 import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
 
+import { JSON } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 /**

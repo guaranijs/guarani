@@ -3,6 +3,7 @@ import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
 import { EllipticCurveKey, JsonWebKeySet, RsaKey } from '@guarani/jose';
+import { JSON } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { HttpRequest } from '../http/http.request';

@@ -7,7 +7,7 @@ import { User } from './user.entity';
 /**
  * OAuth 2.0 Login Entity.
  */
-export abstract class Login implements Dictionary<any> {
+export abstract class Login implements Dictionary<unknown> {
   /**
    * Identifier of the Login.
    */

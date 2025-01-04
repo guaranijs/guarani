@@ -3,7 +3,7 @@ import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
+import { JSON, removeNullishValues } from '@guarani/primitives';
 
 import { DeleteRegistrationContext } from '../context/registration/delete.registration-context';
 import { GetRegistrationContext } from '../context/registration/get.registration-context';

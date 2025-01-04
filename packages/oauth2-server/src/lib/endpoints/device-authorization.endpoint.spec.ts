@@ -2,6 +2,7 @@ import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
+import { JSON } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { Client } from '../entities/client.entity';

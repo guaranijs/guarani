@@ -6,7 +6,7 @@ import { User } from './user.entity';
 /**
  * OAuth 2.0 Device Code Entity.
  */
-export abstract class DeviceCode implements Dictionary<any> {
+export abstract class DeviceCode implements Dictionary<unknown> {
   /**
    * Identifier of the Device Code.
    */

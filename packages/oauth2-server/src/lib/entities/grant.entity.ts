@@ -9,7 +9,7 @@ import { Session } from './session.entity';
 /**
  * OAuth 2.0 Grant Entity.
  */
-export abstract class Grant implements Dictionary<any> {
+export abstract class Grant implements Dictionary<unknown> {
   /**
    * Identifier of the Grant.
    */

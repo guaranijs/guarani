@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebTokenClaimException } from '@guarani/jose';
+import { JSON } from '@guarani/primitives';
 
 import { AuthorizationResponseTokenClaims } from './authorization-response-token.claims';
 import { AuthorizationResponseTokenClaimsParameters } from './authorization-response-token.claims.parameters';

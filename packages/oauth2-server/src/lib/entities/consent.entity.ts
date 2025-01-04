@@ -6,7 +6,7 @@ import { User } from './user.entity';
 /**
  * OAuth 2.0 Consent Entity.
  */
-export abstract class Consent implements Dictionary<any> {
+export abstract class Consent implements Dictionary<unknown> {
   /**
    * Identifier of the Consent.
    */

@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebTokenClaimException } from '@guarani/jose';
+import { JSON } from '@guarani/primitives';
 
 import { IdTokenClaims } from './id-token.claims';
 import { IdTokenClaimsParameters } from './id-token.claims.parameters';

@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer';
 
 import { InvalidJsonWebTokenClaimException, InvalidJsonWebTokenClaimsException } from '@guarani/jose';
+import { JSON } from '@guarani/primitives';
 
 import { LogoutTokenClaims } from './logout-token.claims';
 import { LogoutTokenClaimsParameters } from './logout-token.claims.parameters';

@@ -15,7 +15,7 @@ import { SubjectType } from '../types/subject-type.type';
 /**
  * OAuth 2.0 Client Entity.
  */
-export abstract class Client implements Dictionary<any> {
+export abstract class Client implements Dictionary<unknown> {
   /**
    * Identifier of the Client.
    */

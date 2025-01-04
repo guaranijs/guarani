@@ -7,6 +7,7 @@ import {
   JsonWebSignature,
   RsaKey,
 } from '@guarani/jose';
+import { JSON } from '@guarani/primitives';
 
 import { AccessToken } from '../entities/access-token.entity';
 import { AuthorizationCode } from '../entities/authorization-code.entity';

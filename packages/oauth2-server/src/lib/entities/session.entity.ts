@@ -5,7 +5,7 @@ import { Login } from './login.entity';
 /**
  * OAuth 2.0 Session Entity.
  */
-export abstract class Session implements Dictionary<any> {
+export abstract class Session implements Dictionary<unknown> {
   /**
    * Identifier of the Session.
    */

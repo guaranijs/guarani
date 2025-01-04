@@ -7,7 +7,7 @@ import { Login } from './login.entity';
 /**
  * OAuth 2.0 Authorization Code Entity.
  */
-export abstract class AuthorizationCode implements Dictionary<any> {
+export abstract class AuthorizationCode implements Dictionary<unknown> {
   /**
    * Identifier of the Authorization Code.
    */

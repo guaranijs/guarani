@@ -2,7 +2,7 @@ import { OutgoingHttpHeaders } from 'http';
 import { URL } from 'url';
 
 import { DependencyInjectionContainer } from '@guarani/di';
-import { removeNullishValues } from '@guarani/primitives';
+import { JSON, removeNullishValues } from '@guarani/primitives';
 import { Dictionary } from '@guarani/types';
 
 import { InteractionContext } from '../context/interaction/interaction-context';

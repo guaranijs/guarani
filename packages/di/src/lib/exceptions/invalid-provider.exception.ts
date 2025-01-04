@@ -1,3 +1,5 @@
+import { JSON } from '@guarani/primitives';
+
 import { DependencyInjectionException } from './dependency-injection.exception';
 
 /**

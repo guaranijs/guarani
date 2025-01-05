@@ -95,7 +95,7 @@ export class AuthorizationCodeGrantType implements GrantTypeInterface {
       const response = createTokenResponse(accessToken, refreshToken);
 
       if (scopes.includes('openid')) {
-        response.id_token = await this.idTokenHandler!.generateIdToken(login, consent, null, null, null, null);
+        response.id_token = await this.idTokenHandler!.generateIdToken(login, consent, null, null);
       }
 
       this.logger.debug(

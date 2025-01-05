@@ -203,7 +203,7 @@ describe('ID Token Handler', () => {
       });
 
       await expect(
-        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
+        idTokenHandler.generateIdToken(login, consent, null, null, { nonce: 'nonce', maxAge: 1296000 }),
       ).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
         'No JSON Web Key matches the criteria at the JSON Web Key Set.',
@@ -244,7 +244,7 @@ describe('ID Token Handler', () => {
       });
 
       await expect(
-        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
+        idTokenHandler.generateIdToken(login, consent, null, null, { nonce: 'nonce', maxAge: 1296000 }),
       ).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
         'No JSON Web Key matches the criteria at the JSON Web Key Set.',
@@ -274,7 +274,10 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, null, null, {
+        nonce: 'nonce',
+        maxAge: 1296000,
+      });
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -318,7 +321,7 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, accessToken, null);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, accessToken, null, { nonce: 'nonce' });
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -362,7 +365,7 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, null, authorizationCode);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, null, authorizationCode, { nonce: 'nonce' });
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -411,14 +414,9 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(
-        login,
-        consent,
-        'nonce',
-        null,
-        accessToken,
-        authorizationCode,
-      );
+      const idToken = await idTokenHandler.generateIdToken(login, consent, accessToken, authorizationCode, {
+        nonce: 'nonce',
+      });
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -462,7 +460,7 @@ describe('ID Token Handler', () => {
       });
 
       await expect(
-        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
+        idTokenHandler.generateIdToken(login, consent, null, null, { nonce: 'nonce', maxAge: 1296000 }),
       ).rejects.toThrowWithMessage(Error, 'The Client does not have a JSON Web Key Set registered.');
     });
 
@@ -497,7 +495,7 @@ describe('ID Token Handler', () => {
       });
 
       await expect(
-        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
+        idTokenHandler.generateIdToken(login, consent, null, null, { nonce: 'nonce', maxAge: 1296000 }),
       ).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
         'No JSON Web Key matches the criteria at the JSON Web Key Set.',
@@ -535,7 +533,7 @@ describe('ID Token Handler', () => {
       });
 
       await expect(
-        idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null),
+        idTokenHandler.generateIdToken(login, consent, null, null, { nonce: 'nonce', maxAge: 1296000 }),
       ).rejects.toThrowWithMessage(
         JsonWebKeyNotFoundException,
         'No JSON Web Key matches the criteria at the JSON Web Key Set.',
@@ -568,7 +566,10 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', 1296000, null, null);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, null, null, {
+        nonce: 'nonce',
+        maxAge: 1296000,
+      });
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -617,7 +618,7 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, accessToken, null);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, accessToken, null, { nonce: 'nonce' });
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -666,7 +667,7 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(login, consent, 'nonce', null, null, authorizationCode);
+      const idToken = await idTokenHandler.generateIdToken(login, consent, null, authorizationCode, { nonce: 'nonce' });
 
       expect(idToken).toEqual(expect.any(String));
 
@@ -720,14 +721,9 @@ describe('ID Token Handler', () => {
 
       userServiceMock.getUserinfo!.mockResolvedValueOnce({ sub: 'user_id' });
 
-      const idToken = await idTokenHandler.generateIdToken(
-        login,
-        consent,
-        'nonce',
-        null,
-        accessToken,
-        authorizationCode,
-      );
+      const idToken = await idTokenHandler.generateIdToken(login, consent, accessToken, authorizationCode, {
+        nonce: 'nonce',
+      });
 
       expect(idToken).toEqual(expect.any(String));
 

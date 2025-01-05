@@ -29,6 +29,21 @@ import { calculateSubjectIdentifier } from '../utils/calculate-subject-identifie
 import { getClientJsonWebKey } from '../utils/get-client-jsonwebkey';
 
 /**
+ * Options for the Generate ID Token functionality.
+ */
+interface GenerateIdTokenOptions {
+  /**
+   * Nonce provided by the Client.
+   */
+  readonly nonce?: string;
+
+  /**
+   * Max Age requested by the Client.
+   */
+  readonly maxAge?: number;
+}
+
+/**
  * Handler used to aggregate the operations of the OpenID Connect ID Token.
  */
 @Injectable()
@@ -64,9 +79,10 @@ export class IdTokenHandler {
   /**
    * Generates an ID Token to be used by the Client for authentication purposes.
    *
-   * @param parameters Parameters of the Authorization Request.
    * @param login Login containing the currently Authenticated User.
    * @param consent Consent granted by the Authenticated User.
+   * @param nonce Nonce provided by the Client.
+   * @param maxAge Max Age requested by the Client.
    * @param accessToken Access Token issued to the Client.
    * @param authorizationCode Authorization Code issued to the Client.
    * @returns Generated ID Token.
@@ -74,18 +90,16 @@ export class IdTokenHandler {
   public async generateIdToken(
     login: Login,
     consent: Consent,
-    nonce: Nullable<string>,
-    maxAge: Nullable<number>,
     accessToken: Nullable<AccessToken>,
     authorizationCode: Nullable<AuthorizationCode>,
+    options: GenerateIdTokenOptions = {},
   ): Promise<string> {
     this.logger.debug(`[${this.constructor.name}] Called generateIdToken()`, 'f8f8da4c-a20d-44ee-a97d-b7093f248a88', {
       login,
       consent,
-      nonce,
-      max_age: maxAge,
       access_token: accessToken,
       authorization_code: authorizationCode,
+      options,
     });
 
     const now = Math.ceil(Date.now() / 1000);
@@ -110,8 +124,8 @@ export class IdTokenHandler {
         exp: now + 86400,
         iat: now,
         sid: login.id,
-        nonce: nonce ?? undefined,
-        auth_time: maxAge !== null ? Math.floor(login.createdAt.getTime() / 1000) : undefined,
+        nonce: options.nonce,
+        auth_time: typeof options.maxAge !== 'undefined' ? Math.floor(login.createdAt.getTime() / 1000) : undefined,
         amr: login.amr ?? undefined,
         acr: login.acr ?? undefined,
         azp: client.id,

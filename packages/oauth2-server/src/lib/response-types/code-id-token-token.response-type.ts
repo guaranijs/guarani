@@ -79,7 +79,7 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
       consent,
     });
 
-    const { parameters } = context;
+    const { maxAge, nonce, parameters } = context;
     const { client, scopes, user } = consent;
 
     if (!scopes.includes('openid')) {
@@ -97,14 +97,10 @@ export class CodeIdTokenTokenResponseType implements ResponseTypeInterface {
 
     const authorizationCode = await this.authorizationCodeService.create(parameters, login, consent);
     const accessToken = await this.accessTokenService.create(scopes, client, user);
-    const idToken = await this.idTokenHandler.generateIdToken(
-      login,
-      consent,
-      null,
-      null,
-      accessToken,
-      authorizationCode,
-    );
+    const idToken = await this.idTokenHandler.generateIdToken(login, consent, accessToken, authorizationCode, {
+      maxAge: maxAge ?? undefined,
+      nonce: nonce ?? undefined,
+    });
 
     const response = createTokenResponse(accessToken, null) as CodeAuthorizationResponse &
       IdTokenAuthorizationResponse &

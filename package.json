@@ -1,0 +1,43 @@
+{
+    "name": "@guarani/source",
+    "version": "0.0.0",
+    "private": true,
+    "description": "Guarani is a Web Security Framework aimed at providing Authentication, Authorization, Identity Management and much more.",
+    "license": "MIT",
+    "homepage": "https://github.com/guaranijs/guarani#readme",
+    "bugs": {
+        "email": "guaranijs@gmail.com",
+        "url": "https://github.com/guaranijs/guarani/issue"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/guaranijs/guarani.git"
+    },
+    "author": {
+        "name": "Revensky",
+        "url": "https://github.com/revensky"
+    },
+    "scripts": {
+        "prepare": "husky"
+    },
+    "keywords": [
+        "Guarani",
+        "Web",
+        "Security",
+        "Framework",
+        "Authentication",
+        "Authorization",
+        "Identity",
+        "Management",
+        "Provider",
+        "Cryptography"
+    ],
+    "dependencies": {},
+    "devDependencies": {
+        "@nx/js": "22.0.3",
+        "nx": "22.0.3",
+        "prettier": "^2.6.2",
+        "tslib": "^2.3.0",
+        "typescript": "~5.9.2"
+    }
+}

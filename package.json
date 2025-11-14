@@ -1,85 +1,85 @@
 {
-    "name": "@guarani/source",
-    "version": "0.0.0",
-    "private": true,
-    "description": "Guarani is a Web Security Framework aimed at providing Authentication, Authorization, Identity Management and much more.",
-    "license": "MIT",
-    "homepage": "https://github.com/guaranijs/guarani#readme",
-    "bugs": {
-        "email": "guaranijs@gmail.com",
-        "url": "https://github.com/guaranijs/guarani/issue"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+ssh://git@github.com/guaranijs/guarani.git"
-    },
-    "author": {
-        "name": "Revensky",
-        "url": "https://github.com/revensky"
-    },
-    "scripts": {
-        "prepare": "husky"
-    },
-    "keywords": [
-        "Guarani",
-        "Web",
-        "Security",
-        "Framework",
-        "Authentication",
-        "Authorization",
-        "Identity",
-        "Management",
-        "Provider",
-        "Cryptography"
-    ],
-    "devDependencies": {
-        "@commitlint/cli": "^20.1.0",
-        "@commitlint/config-conventional": "^20.0.0",
-        "@eslint/js": "^9.8.0",
-        "@jscutlery/semver": "^5.7.1",
-        "@nx/eslint": "22.0.3",
-        "@nx/eslint-plugin": "22.0.3",
-        "@nx/jest": "22.0.3",
-        "@nx/js": "22.0.3",
-        "@types/jest": "^30.0.0",
-        "@types/node": "20.19.9",
-        "commitizen": "^4.3.1",
-        "cz-conventional-changelog": "^3.3.0",
-        "eslint": "^9.8.0",
-        "eslint-config-prettier": "^10.0.0",
-        "eslint-plugin-jest": "^29.1.0",
-        "eslint-plugin-prettier": "^5.5.4",
-        "eslint-plugin-simple-import-sort": "^12.1.1",
-        "globals": "^16.5.0",
-        "husky": "^9.1.7",
-        "jest": "^30.0.2",
-        "jest-environment-node": "^30.0.2",
-        "jest-extended": "^7.0.0",
-        "jest-util": "^30.0.2",
-        "jsonc-eslint-parser": "^2.1.0",
-        "lint-staged": "^16.2.6",
-        "neostandard": "^0.12.2",
-        "ngx-deploy-npm": "^9.0.0",
-        "nx": "22.0.3",
-        "prettier": "^2.6.2",
-        "ts-jest": "^29.4.0",
-        "ts-node": "10.9.1",
-        "tslib": "^2.3.0",
-        "typescript": "~5.9.2",
-        "typescript-eslint": "^8.40.0",
-        "verdaccio": "^6.0.5"
-    },
-    "nx": {
-        "includedScripts": [],
-        "targets": {
-            "local-registry": {
-                "executor": "@nx/js:verdaccio",
-                "options": {
-                    "port": 4873,
-                    "config": ".verdaccio/config.yml",
-                    "storage": "tmp/local-registry/storage"
-                }
-            }
+  "name": "@guarani/source",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Guarani is a Web Security Framework aimed at providing Authentication, Authorization, Identity Management and much more.",
+  "license": "MIT",
+  "homepage": "https://github.com/guaranijs/guarani#readme",
+  "bugs": {
+    "email": "guaranijs@gmail.com",
+    "url": "https://github.com/guaranijs/guarani/issue"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/guaranijs/guarani.git"
+  },
+  "author": {
+    "name": "Revensky",
+    "url": "https://github.com/revensky"
+  },
+  "scripts": {
+    "prepare": "husky"
+  },
+  "keywords": [
+    "Guarani",
+    "Web",
+    "Security",
+    "Framework",
+    "Authentication",
+    "Authorization",
+    "Identity",
+    "Management",
+    "Provider",
+    "Cryptography"
+  ],
+  "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@eslint/js": "^9.8.0",
+    "@jscutlery/semver": "^5.7.1",
+    "@nx/eslint": "22.0.3",
+    "@nx/eslint-plugin": "22.0.3",
+    "@nx/jest": "22.0.3",
+    "@nx/js": "22.0.3",
+    "@types/jest": "^30.0.0",
+    "@types/node": "20.19.9",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^9.8.0",
+    "eslint-config-prettier": "^10.0.0",
+    "eslint-plugin-jest": "^29.1.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "jest": "^30.0.2",
+    "jest-environment-node": "^30.0.2",
+    "jest-extended": "^7.0.0",
+    "jest-util": "^30.0.2",
+    "jsonc-eslint-parser": "^2.1.0",
+    "lint-staged": "^16.2.6",
+    "neostandard": "^0.12.2",
+    "ngx-deploy-npm": "^9.0.0",
+    "nx": "22.0.3",
+    "prettier": "^2.6.2",
+    "ts-jest": "^29.4.0",
+    "ts-node": "10.9.1",
+    "tslib": "^2.3.0",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "^8.40.0",
+    "verdaccio": "^6.0.5"
+  },
+  "nx": {
+    "includedScripts": [],
+    "targets": {
+      "local-registry": {
+        "executor": "@nx/js:verdaccio",
+        "options": {
+          "port": 4873,
+          "config": ".verdaccio/config.yml",
+          "storage": "tmp/local-registry/storage"
         }
+      }
     }
+  }
 }
